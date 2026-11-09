@@ -43,7 +43,7 @@
 
 ## 3. O repositório novo, privado
 
-- [ ] 3.1 Com o sim do usuário, o `riq0007/grafite` criado privado e vazio (decisões 3 e 4):
+- [x] 3.1 Com o sim do usuário, o `riq0007/grafite` criado privado e vazio (decisões 3 e 4):
   - a descrição em pt-BR;
   - sem wiki, projetos nem Issues;
   - nas Actions, só as ações do GitHub e as do dono, o token só de leitura por padrão e sem aprovar PRs.
