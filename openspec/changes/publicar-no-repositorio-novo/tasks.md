@@ -23,7 +23,7 @@
 - [x] 1.4 A versão 0.1.11 (decisão 9): as `package.json` da API, do coletor e do comando de operação, e o contrato da API pelo `pnpm contrato:gerar`.
 
   Verificar: `pnpm contrato:verificar` e `pnpm test` passam, e o diff muda os mesmos quatro arquivos da 0.1.10.
-- [ ] 1.5 O PR do `dev` para a `main` do repositório antigo (decisão 2), com o `.gitleaksignore` ainda na árvore. O usuário revisa o README e faz o merge.
+- [x] 1.5 O PR do `dev` para a `main` do repositório antigo (decisão 2), com o `.gitleaksignore` ainda na árvore. O usuário revisa o README e faz o merge.
 
   Verificar: os jobs do PR passam, e o CI da `main` passa depois do merge.
 
