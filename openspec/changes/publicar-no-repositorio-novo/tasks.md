@@ -77,7 +77,7 @@
 
 ## 5. Público e protegido
 
-- [ ] 5.1 Com o sim do usuário, o repositório vira público. Logo depois entram as proteções da decisão 4:
+- [x] 5.1 Com o sim do usuário, o repositório vira público. Logo depois entram as proteções da decisão 4:
   - a aprovação dos PRs de fora;
   - a busca de segredos, com o bloqueio no push;
   - os rulesets da `main` e das tags `v*`.
