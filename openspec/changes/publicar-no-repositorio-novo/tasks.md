@@ -116,10 +116,16 @@
 
 ## 8. Verificação
 
-- [ ] 8.1 A conferência de fora, num clone anônimo do repositório publicado, numa pasta descartável:
+- [x] 8.1 A conferência de fora, num clone anônimo do repositório publicado, numa pasta descartável:
   - só os commits do repositório novo, todos com o e-mail noreply no autor e no committer;
   - só a tag `v0.1.11`;
   - a guarda dos termos, com a lista local, não acha nada;
   - `openspec validate publicar-no-repositorio-novo --strict` passa, e o mapa traz a change em andamento.
 
   Verificar: os comandos dão o esperado, e as contagens ficam registradas nesta tarefa.
+
+  Contagens de 09/11, num clone sem login, antes do push dos últimos tiques:
+  - 8 commits, todos com o e-mail noreply no autor e no committer, e nenhum dos commits do repositório anterior;
+  - 4.497 objetos guardados, os mesmos que os commits alcançam;
+  - uma tag só, a `v0.1.11`, anotada, com o autor no noreply;
+  - a guarda dos termos, com as sete listas do CI e com as oito, não achou nada nos 3.653 arquivos.
