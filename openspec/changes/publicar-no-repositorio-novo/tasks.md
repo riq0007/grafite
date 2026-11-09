@@ -89,7 +89,7 @@
 
 ## 6. A versão 0.1.11
 
-- [ ] 6.1 A tag anotada `v0.1.11`, "Grafite 0.1.11", no clone novo, na `main` com o CI verde, e a release pelo `versao.yml` (decisão 9).
+- [x] 6.1 A tag anotada `v0.1.11`, "Grafite 0.1.11", no clone novo, na `main` com o CI verde, e a release pelo `versao.yml` (decisão 9).
 
   Verificar:
   - a release `v0.1.11` sai publicada, como a mais recente, com os seis arquivos;
