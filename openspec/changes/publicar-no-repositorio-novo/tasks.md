@@ -108,7 +108,7 @@
   - `git remote -v` aponta o `riq0007/grafite`, e `git log` tem só os commits do repositório novo;
   - o `.git/hooks/pre-commit` cita o `D:/grafite`, e o commit seguinte roda os ganchos;
   - o `pnpm dev` sobe com o banco do desenvolvimento de antes, com os dados que já estavam nele.
-- [ ] 7.2 O repositório antigo (decisão 10):
+- [x] 7.2 O repositório antigo (decisão 10):
   - o usuário decide o webhook, as pré-releases de ensaio e o rascunho órfão;
   - com o sim dele, o repositório é arquivado no GitHub.
 
