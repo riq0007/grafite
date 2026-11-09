@@ -1,0 +1,127 @@
+/* O painel "Colunas": as disponíveis e as à vista lado a lado, ou uma sobre a outra no estreito. */
+.painel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--esp-12) * 5), 1fr));
+  gap: var(--esp-4);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.secao {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* Como o rótulo de um campo, um pouco mais forte: nomeia a parte do painel. */
+.titulo {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.grupos {
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: var(--esp-3);
+  max-height: calc(var(--esp-12) * 8);
+  overflow: auto;
+}
+
+.fixa {
+  margin-inline-start: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.vazio {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+.ordem {
+  display: grid;
+  align-content: start;
+  max-height: calc(var(--esp-12) * 9);
+  overflow: auto;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+}
+
+/* A principal, fora da lista que se reordena: no alto, sem alça nem botões. */
+.principal {
+  display: flex;
+  align-items: baseline;
+  min-height: var(--altura-controle);
+  padding: var(--esp-1) var(--esp-2) var(--esp-1) calc(var(--altura-controle) + var(--esp-1));
+  align-content: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.lista {
+  display: grid;
+  outline: none;
+}
+
+.lista[data-empty] {
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-height: var(--altura-controle);
+  padding-inline: var(--esp-1);
+  border-bottom: 1px solid var(--cor-linha);
+  outline: none;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.item[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+.item[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A coluna arrastada fica esmaecida no lugar de onde saiu. */
+.item[data-dragging] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.rotulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alca {
+  cursor: grab;
+}
+
+/* Onde a coluna arrastada vai entrar: um traço na cor de destaque entre as linhas. */
+.indicador {
+  outline: none;
+}
+
+.indicador[data-drop-target] {
+  height: 0;
+  outline: 1px solid var(--cor-destaque);
+}
+
+/* O botão de um grupo recolhido fica alinhado ao início, como os grupos. */
+.grupos > button {
+  justify-self: start;
+}

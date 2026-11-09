@@ -1,0 +1,39 @@
+diff --git a/dist/private/menu/useSafelyMouseToSubmenu.cjs b/dist/private/menu/useSafelyMouseToSubmenu.cjs
+index 6fbb9c303841ff53d2f4f63560e1902669dc795d..709d2b8fa2b88f239f46a92328d810dd872cedbd 100644
+--- a/dist/private/menu/useSafelyMouseToSubmenu.cjs
++++ b/dist/private/menu/useSafelyMouseToSubmenu.cjs
+@@ -19,7 +19,7 @@ $parcel$export(module.exports, "useSafelyMouseToSubmenu", function () { return $
+ 
+ const $654d0dc3db8fecae$var$ALLOWED_INVALID_MOVEMENTS = 2;
+ const $654d0dc3db8fecae$var$THROTTLE_TIME = 50;
+-const $654d0dc3db8fecae$var$TIMEOUT_TIME = 1000;
++const $654d0dc3db8fecae$var$TIMEOUT_TIME = 150; // Grafite: 150 ms (Apêndice B da spec mestre)
+ const $654d0dc3db8fecae$var$ANGLE_PADDING = Math.PI / 12; // 15°
+ function $654d0dc3db8fecae$export$85ec83e04c95f50a(options) {
+     let { menuRef: menuRef, submenuRef: submenuRef, isOpen: isOpen, isDisabled: isDisabled } = options;
+diff --git a/dist/private/menu/useSafelyMouseToSubmenu.js b/dist/private/menu/useSafelyMouseToSubmenu.js
+index 6d801716f9009adfdfeb616849716a3574375ff6..6cb8569e4a5bba58d1e80320aa9a852eb5959c38 100644
+--- a/dist/private/menu/useSafelyMouseToSubmenu.js
++++ b/dist/private/menu/useSafelyMouseToSubmenu.js
+@@ -13,7 +13,7 @@ import {useRef as $eQBS0$useRef, useState as $eQBS0$useState, useEffect as $eQBS
+ 
+ const $43575285b6c61e86$var$ALLOWED_INVALID_MOVEMENTS = 2;
+ const $43575285b6c61e86$var$THROTTLE_TIME = 50;
+-const $43575285b6c61e86$var$TIMEOUT_TIME = 1000;
++const $43575285b6c61e86$var$TIMEOUT_TIME = 150; // Grafite: 150 ms (Apêndice B da spec mestre)
+ const $43575285b6c61e86$var$ANGLE_PADDING = Math.PI / 12; // 15°
+ function $43575285b6c61e86$export$85ec83e04c95f50a(options) {
+     let { menuRef: menuRef, submenuRef: submenuRef, isOpen: isOpen, isDisabled: isDisabled } = options;
+diff --git a/dist/private/menu/useSafelyMouseToSubmenu.mjs b/dist/private/menu/useSafelyMouseToSubmenu.mjs
+index 0fc3e3d54032b47dd95fd290b07825f62b3f7174..573966d62fd8d343a31cee7ba3d18d03dedc289b 100644
+--- a/dist/private/menu/useSafelyMouseToSubmenu.mjs
++++ b/dist/private/menu/useSafelyMouseToSubmenu.mjs
+@@ -13,7 +13,7 @@ import {useRef as $iKSsv$useRef, useState as $iKSsv$useState, useEffect as $iKSs
+ 
+ const $eac5d44fa99b2e3b$var$ALLOWED_INVALID_MOVEMENTS = 2;
+ const $eac5d44fa99b2e3b$var$THROTTLE_TIME = 50;
+-const $eac5d44fa99b2e3b$var$TIMEOUT_TIME = 1000;
++const $eac5d44fa99b2e3b$var$TIMEOUT_TIME = 150; // Grafite: 150 ms (Apêndice B da spec mestre)
+ const $eac5d44fa99b2e3b$var$ANGLE_PADDING = Math.PI / 12; // 15°
+ function $eac5d44fa99b2e3b$export$85ec83e04c95f50a(options) {
+     let { menuRef: menuRef, submenuRef: submenuRef, isOpen: isOpen, isDisabled: isDisabled } = options;

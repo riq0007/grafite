@@ -1,0 +1,13 @@
+/* Uma linha de texto, com as ações no fim, que quebra quando falta largura. */
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.texto {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

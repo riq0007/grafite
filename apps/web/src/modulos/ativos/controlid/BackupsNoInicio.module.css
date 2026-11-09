@@ -1,0 +1,67 @@
+/*
+ * Os backups do Control iD no Início (change inicio-ajustavel, design, decisão 6): uma linha por
+ * controle, com o nome, os rostos, os dias sem backup e a faixa, que quebra embaixo quando não cabe.
+ */
+.controles {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.controle {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) minmax(0, 7rem) minmax(0, 10rem) auto;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-4);
+  padding-block: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+/*
+ * Estreito, a linha vira três faixas: o nome, os rostos e os dias sem backup lado a lado, e a faixa
+ * dos dias (change telas-no-celular, design, decisão 1).
+ */
+@container (max-width: 720px) {
+  .controle {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .nome,
+  .controle > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.nome {
+  overflow: hidden;
+  color: var(--cor-texto);
+  font-weight: var(--peso-medio);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rostos {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+}
+
+.dias {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Os dias sem backup no texto da atenção; o texto já diz a situação. */
+.dias[data-sem-backup] {
+  color: var(--cor-atencao);
+  font-weight: var(--peso-medio);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto-2);
+}

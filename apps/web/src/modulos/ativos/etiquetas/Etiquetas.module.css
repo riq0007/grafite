@@ -1,0 +1,74 @@
+/* A tela das etiquetas (design do P1f, decisões 1 e 3): as folhas nas medidas do formato, que chegam
+   em milímetros pelas variáveis do elemento, e a impressão, que leva só a cópia das folhas no portal
+   do body, sem a casca. */
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.escolhas {
+  display: grid;
+  gap: var(--esp-4);
+  max-width: calc(var(--esp-12) * 12);
+}
+
+/* A prévia rola de lado quando a folha não cabe, como no celular. */
+.previa {
+  display: grid;
+  justify-content: start;
+  gap: var(--esp-4);
+  overflow-x: auto;
+  padding-bottom: var(--esp-2);
+}
+
+.folha {
+  margin: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--colunas-da-folha), var(--largura-da-posicao));
+  grid-auto-rows: var(--altura-da-posicao);
+  align-content: start;
+  column-gap: var(--espaco-entre-colunas);
+  row-gap: var(--espaco-entre-linhas);
+  width: var(--largura-da-pagina);
+  height: var(--altura-da-pagina);
+  padding: var(--margem-de-cima) var(--margem-do-lado);
+  background-color: var(--cor-etiqueta-fundo);
+  outline: 1px solid var(--cor-linha);
+}
+
+.posicao {
+  width: var(--largura-da-posicao);
+  height: var(--altura-da-posicao);
+  overflow: hidden;
+}
+
+@media screen {
+  .impressao {
+    display: none;
+  }
+}
+
+/* No papel, só as folhas: uma por página, sem a casca e sem a linha da prévia. O seletor pelo
+   body vale mais que a classe de cada filho dele, como a da casca. */
+@media print {
+  :global(body) > :not(.impressao) {
+    display: none;
+  }
+
+  .impressao {
+    display: block;
+  }
+
+  .impressao .folha {
+    outline: 0;
+    break-after: page;
+  }
+
+  .impressao .folha:last-child {
+    break-after: auto;
+  }
+}

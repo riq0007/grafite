@@ -1,0 +1,17 @@
+{
+  "name": "@grafite/api-client",
+  "private": true,
+  "description": "Cliente tipado gerado do OpenAPI.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  }
+}

@@ -1,0 +1,74 @@
+/* A área do arquivo em cima, as ações abaixo dela, e a regra ou o progresso no fim. */
+.escolha {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* A área onde se solta um arquivo: o contorno tracejado diz que ela recebe o arquivo. */
+.area {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--altura-controle);
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px dashed var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  transition:
+    border-color var(--dur-rapida) var(--curva-padrao),
+    background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* Com um arquivo sobre ela, a área se destaca. */
+.area[data-drop-target] {
+  border-style: solid;
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-hover);
+}
+
+.area[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.arquivo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* O nome longo é cortado no fim, e o inteiro fica na dica. */
+.nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tamanho,
+.vazio {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+  white-space: nowrap;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+/* O "Baixar" é um link com a forma do botão secundário. */
+.acoes a {
+  text-decoration: none;
+}
+
+.regras {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

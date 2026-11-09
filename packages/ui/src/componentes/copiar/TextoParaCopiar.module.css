@@ -1,0 +1,38 @@
+/* O valor e, embaixo, o botão de copiar com a situação ao lado. */
+.texto {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* Selecionável de uma vez, para copiar à mão quando o navegador não deixa. */
+.valor {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+  user-select: all;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.acao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.falha {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

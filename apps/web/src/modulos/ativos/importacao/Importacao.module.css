@@ -1,0 +1,81 @@
+/* As telas das importações: a lista, a importação nova, as colunas, a prévia, o acompanhamento e o
+   resultado. */
+.lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+  min-width: 0;
+}
+
+.item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.linhaDoItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.nome {
+  font-weight: var(--peso-forte);
+  overflow-wrap: anywhere;
+}
+
+.detalhes {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.escolhas {
+  display: grid;
+  gap: var(--esp-4);
+  max-width: calc(var(--esp-12) * 12);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+/* As colunas lado a lado enquanto cabem, cada uma com pelo menos 240 px. */
+.colunas {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 5), 1fr));
+  gap: var(--esp-3);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+/* As ações destrutivas, separadas das outras (ANTISLOP §38). */
+.acoesDestrutivas {
+  margin-inline-start: auto;
+}
+
+.andamento {
+  display: grid;
+  gap: var(--esp-2);
+  max-width: calc(var(--esp-12) * 12);
+}

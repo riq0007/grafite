@@ -1,0 +1,124 @@
+.botao {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1px solid transparent;
+  border-radius: var(--raio-controle);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  white-space: nowrap;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    color var(--dur-rapida) var(--curva-padrao);
+}
+
+.rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* Foco só pelo teclado, com o anel do destaque (3:1 verificado nos seis temas). */
+.botao[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.botao[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* Primário: preenchimento do destaque. Hover e pressionado se afastam do texto. */
+.botao[data-nivel="primario"] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.botao[data-nivel="primario"][data-hovered] {
+  background-color: var(--cor-destaque-hover);
+}
+
+.botao[data-nivel="primario"][data-pressed] {
+  background-color: var(--cor-destaque-pressionado);
+}
+
+/*
+ * Secundário e destrutivo: superfície neutra com borda (change componentes-v3, design, decisão 2).
+ * O secundário usa a linha forte, mais calma que a borda de controle dos campos: o rótulo já o
+ * identifica (WCAG 1.4.11). O destrutivo usa a borda e o texto da situação crítica.
+ */
+.botao[data-nivel="secundario"],
+.botao[data-nivel="destrutivo"] {
+  background-color: var(--cor-superficie-2);
+  border-color: var(--cor-linha-forte);
+  color: var(--cor-texto);
+}
+
+.botao[data-nivel="destrutivo"] {
+  border-color: var(--cor-critico-borda);
+  color: var(--cor-critico);
+}
+
+/* Terciário: sem fundo nem borda até o hover. */
+.botao[data-nivel="terciario"] {
+  background-color: transparent;
+  color: var(--cor-texto);
+}
+
+/* Camadas neutras de interação, por cima do fundo de cada nível. */
+.botao:not([data-nivel="primario"])[data-hovered] {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.botao:not([data-nivel="primario"])[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+/* Carregando: o rótulo some sem sair do layout, e o indicador ocupa o centro. */
+.botao[data-pending] {
+  cursor: progress;
+}
+
+.botao[data-pending] .rotulo {
+  opacity: 0;
+}
+
+.indicador {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.giro {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 60 100;
+  animation: girar var(--dur-giro) linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

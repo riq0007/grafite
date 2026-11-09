@@ -1,0 +1,166 @@
+/* Sem véu: a lista continua à vista atrás da prévia. Acima da barra e do dock, como as outras
+   camadas modais. */
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--esp-6) var(--margem-lateral);
+}
+
+/* Superfície sólida: a prévia é conteúdo (ANTISLOP §17). */
+.painel {
+  box-sizing: border-box;
+  width: min(100%, var(--largura-previa));
+  max-height: 100%;
+  overflow: auto;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-janela);
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-material);
+  outline: none;
+}
+
+/* Abre com opacidade e escala leve; com movimento reduzido, a escala zera. */
+.painel[data-entering] {
+  animation:
+    aparecer var(--dur-media) var(--curva-padrao),
+    crescer var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.painel[data-exiting] {
+  animation:
+    aparecer var(--dur-media) var(--curva-saida) reverse,
+    crescer var(--dur-deslocamento) var(--curva-saida) reverse;
+}
+
+/* No celular, na largura da tela, colada às bordas. */
+[data-postura="celular"] .fundo {
+  padding: 0;
+}
+
+[data-postura="celular"] .painel {
+  width: 100%;
+  border-radius: 0;
+  border-width: 0;
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--esp-4);
+  padding: var(--esp-6);
+  outline: none;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.titulos {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+  margin-right: auto;
+}
+
+.titulo {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.subtitulo {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.posicao {
+  padding-top: var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Imagem e campos lado a lado; abaixo de 480 px de largura, um sobre o outro. */
+.corpo {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-6);
+}
+
+@container (width < 480px) {
+  .corpo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.visual {
+  display: grid;
+  place-items: center;
+}
+
+/* A miniatura no tamanho da prévia: o mesmo quadrado, sem distorção, até 256 px. */
+.imagem {
+  --tamanho-miniatura: min(var(--tamanho-imagem-previa), 60vw);
+}
+
+.campos {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+}
+
+.campo {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.rotulo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.valor {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scale(0.97);
+  }
+}
+
+.erro {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-3);
+}
+
+.textoDoErro {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

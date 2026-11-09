@@ -1,0 +1,86 @@
+/*
+ * O cadastro tira o limite de 960 px do formulário: a lista das etapas e a imagem ficam fora dele,
+ * e o limite fica na área dos campos (spec posturas-da-casca, "Layout fluido").
+ */
+.formulario {
+  --largura-maxima-do-formulario: none;
+}
+
+/* O painel da etapa aberta: o nome, a imagem com os campos ao lado e, embaixo, os botões. */
+.painel {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/*
+ * O título da etapa, com o desenho do carimbo de seção do @grafite/ui (change
+ * cabecalho-em-toda-tela, design, decisão 4), sem trocar o elemento, que recebe o foco ao mudar de
+ * etapa.
+ */
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.titulo::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--cor-linha-forte);
+}
+
+/* A imagem à esquerda e os campos ao lado; na janela estreita, a imagem vai para cima. */
+.ladoALado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--esp-4);
+}
+
+.imagem {
+  --tamanho-miniatura: calc(var(--esp-12) * 3);
+}
+
+.campos {
+  display: grid;
+  flex: 1 1 18rem;
+  gap: var(--esp-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.campo {
+  display: grid;
+  gap: var(--esp-1);
+  align-content: start;
+  min-width: 0;
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.aviso {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

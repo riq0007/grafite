@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafite · referência do brainstorming</title>
+<style>
+  /* Protótipo descartável do brainstorming (24/09/2026). Não é código do produto. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg-primary:#1d1d1f; --bg-secondary:#2d2d2f; --bg-tertiary:#3d3d3f; --border:#424245; --text-primary:#f5f5f7; --text-secondary:#86868b; --accent:#0a84ff; --selected-bg:rgba(10,132,255,.15); --selected-border:#0a84ff; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; padding: 2rem; }
+  h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: .5rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .25rem; }
+  .subtitle { color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 1100px; }
+  .cards { display: grid; gap: 1rem; }
+  .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; }
+  .card.selected { border-color: var(--selected-border); border-width: 2px; }
+  .card-body { padding: 1rem; }
+  .card-body p { color: var(--text-secondary); font-size: .85rem; }
+</style>
+<script>
+  function toggleSelect(el) {
+    el.parentElement.querySelectorAll('.selected').forEach(function (x) { if (x !== el) x.classList.remove('selected'); });
+    el.classList.toggle('selected');
+  }
+</script>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Sacramento&display=swap" rel="stylesheet">
+
+<style>
+  .bv-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 12px}
+  .bv-seg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:9px;background:var(--bg-secondary)}
+  .bv-seg button{font:inherit;font-size:.8rem;border:0;background:transparent;color:var(--text-secondary);padding:.3rem .8rem;border-radius:6px;cursor:pointer}
+  .bv-seg button.on{background:var(--accent);color:#fff}
+  .bv-btn{font:inherit;font-size:.8rem;padding:.35rem .85rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer}
+  .bv-chk{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-secondary);cursor:pointer}
+
+  .bv-screen{--bg:#111113;--surface:#1b1b1e;--surface-2:#242428;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.13);--text:#ececef;--text-2:#9d9da6;--accent:#5aa2ff;--ok:#43d18a;--warn:#f2b44c;--crit:#ff6b5e;--info:#5aa2ff;--thumb-bg:#26262b;--zebra:rgba(255,255,255,.018);--mat:rgba(40,40,45,.78);--mat-line:rgba(255,255,255,.1);--mat-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 .5px rgba(0,0,0,.6);--r:12px;
+    position:relative;height:470px;border-radius:12px;overflow:hidden;background:var(--bg);color:var(--text);font-family:"Instrument Sans",system-ui,sans-serif;font-size:12px;line-height:1.35;border:1px solid var(--border);text-align:left;-webkit-font-smoothing:antialiased}
+  .bv-instant,.bv-instant *{transition:none!important;animation:none!important}
+  .bv-screen svg.bv-ic{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .bv-mat{background:var(--mat);border:1px solid var(--mat-line);box-shadow:var(--mat-shadow);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%)}
+  .bv-layer{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s}
+  .bv-layer.on{opacity:1;visibility:visible;transition:opacity .35s ease,visibility 0s}
+
+  /* carregamento */
+  .bv-boot{display:grid;place-items:center}
+  .bv-boot-in{display:flex;flex-direction:column;align-items:center;gap:22px}
+  .bv-mark{width:44px;height:44px;border-radius:12px;background:var(--accent);box-shadow:inset 0 0 0 9px color-mix(in srgb,var(--accent) 45%,var(--bg));transform:scale(.88);opacity:0;transition:transform .55s cubic-bezier(.2,1.25,.3,1),opacity .3s ease}
+  .bv-boot.on .bv-mark{transform:none;opacity:1}
+  .bv-bar{width:180px;height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
+  .bv-bar i{display:block;height:100%;width:0;background:var(--text);border-radius:2px;transition:width .3s ease}
+  .bv-step{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:var(--text-2);height:14px}
+
+  /* olá */
+  .bv-hello{display:grid;place-items:center}
+  .bv-hello-in{width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .45s ease,opacity .35s ease}
+  .bv-hello svg{width:min(520px,90%);height:auto;overflow:visible}
+  .bv-word{font-family:"Sacramento",cursive;font-size:230px;fill:transparent;stroke:var(--text);stroke-width:1.4;stroke-dasharray:1500;stroke-dashoffset:1500}
+  #bv-mask-r{transform-box:fill-box;transform-origin:0 50%;transform:scaleX(0);transition:transform 2s cubic-bezier(.45,.05,.35,1)}
+  .bv-hello.draw #bv-mask-r{transform:scaleX(1)}
+  .bv-hello.draw .bv-word{animation:bv-draw 2.1s cubic-bezier(.45,.05,.3,1) forwards,bv-fill .7s ease 1.75s forwards}
+  @keyframes bv-draw{to{stroke-dashoffset:0}}
+  @keyframes bv-fill{to{fill:var(--text);stroke-width:0}}
+  .bv-sub{font-size:15px;color:var(--text-2);opacity:0;transform:translateY(6px);transition:opacity .5s ease 2.1s,transform .5s ease 2.1s}
+  .bv-note{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:var(--warn);opacity:0;transition:opacity .5s ease 2.4s}
+  .bv-hello.draw .bv-sub{opacity:1;transform:none}
+  .bv-hello.draw .bv-note{opacity:1}
+  .bv-hello.leave .bv-hello-in{transform:scale(.96);opacity:0}
+
+  /* casca montando */
+  .bv-mb{position:absolute;z-index:3;left:0;right:0;top:0;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:rgba(24,24,27,.82);border-bottom:1px solid var(--line);font-size:11.5px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transform:translateY(-100%);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+  .bv-mb-l,.bv-mb-r{display:flex;align-items:center;gap:14px;white-space:nowrap}
+  .bv-mb-l span,.bv-si{color:var(--text-2)}
+  .bv-si{display:inline-flex;align-items:center;gap:5px}
+  .bv-bell{color:var(--warn);font-weight:600}
+  .bv-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block}
+  .bv-mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.92em}
+  .bv-av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line-2);font-size:9px;font-weight:600}
+  .bv-mk{width:12px;height:12px;border-radius:3.5px;background:var(--accent);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 45%,var(--bg))}
+  .bv-win{position:absolute;z-index:1;left:14px;right:14px;top:42px;bottom:88px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;opacity:0;transform:scale(.985);transition:opacity .4s ease .08s,transform .5s cubic-bezier(.2,.8,.2,1) .08s}
+  .bv-tb{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .bv-tb h5{font-size:14px;font-weight:600;margin:0 auto 0 0}
+  .bv-tb small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:var(--text-2)}
+  .bv-tr{display:grid;grid-template-columns:36px minmax(140px,1.6fr) minmax(150px,1.8fr) 70px 112px;align-items:center;height:34px;padding:0 12px 0 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .bv-tr>span{overflow:hidden;text-overflow:ellipsis;padding-right:10px}
+  .bv-th{height:28px;font-size:10.5px;color:var(--text-2);font-weight:500}
+  .bv-tr:nth-child(odd):not(.bv-th){background:var(--zebra)}
+  .bv-thumb{width:22px;height:22px;border-radius:7px;background:var(--thumb-bg);display:grid;place-items:center;border:1px solid var(--line);padding:0!important}
+  .bv-thumb svg{width:84%;height:84%}
+  .bv-badge{font-style:normal;display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.03em;padding:2px 6px;border-radius:5px}
+  .bv-badge.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+  .bv-badge.crit{color:var(--crit);background:color-mix(in srgb,var(--crit) 16%,transparent)}
+  .bv-badge.info{color:var(--info);background:color-mix(in srgb,var(--info) 16%,transparent)}
+  .bv-dock{position:absolute;z-index:4;left:50%;bottom:12px;display:flex;align-items:flex-end;gap:5px;padding:6px;border-radius:17px;transform:translate(-50%,140%);transition:transform .62s cubic-bezier(.2,1.3,.3,1) .16s}
+  .bv-di{position:relative;width:48px;height:48px;border-radius:10px;display:grid;place-items:center;color:var(--text-2)}
+  .bv-di svg.bv-ic{width:48%;height:48%}
+  .bv-di.cur::after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:var(--text-2)}
+  .bv-dsep{width:1px;height:29px;background:var(--line-2);margin:0 3px;align-self:center}
+  .bv-toast{position:absolute;z-index:5;top:40px;right:14px;width:262px;display:flex;gap:10px;padding:10px 12px;border-radius:12px;transform:translateX(calc(100% + 24px));opacity:0;transition:transform .55s cubic-bezier(.2,1.25,.3,1),opacity .25s ease}
+  .bv-toast.in{transform:none;opacity:1}
+  .bv-toast-ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;color:var(--crit);background:color-mix(in srgb,var(--crit) 17%,transparent)}
+  .bv-toast-b{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .bv-toast-b b{font-size:12px;font-weight:600}
+  .bv-toast-b span{color:var(--text-2);font-size:11px}
+  .bv-sev{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px!important;letter-spacing:.06em;font-weight:600;color:var(--crit)!important}
+  .bv-shell.on .bv-mb{transform:none}
+  .bv-shell.on .bv-win{opacity:1;transform:none}
+  .bv-shell.on .bv-dock{transform:translate(-50%,0)}
+
+  /* movimento reduzido: só troca de opacidade, sem deslocamentos nem traço */
+  .bv-screen.rm .bv-mb,.bv-screen.rm .bv-win,.bv-screen.rm .bv-toast,.bv-screen.rm .bv-mark,.bv-screen.rm .bv-hello-in,.bv-screen.rm .bv-sub{transform:none!important}
+  .bv-screen.rm .bv-dock{transform:translate(-50%,0)!important}
+  .bv-screen.rm .bv-word{animation:none!important;fill:var(--text);stroke-width:0}
+  .bv-screen.rm #bv-mask-r{transform:none!important;transition:none!important}
+  .bv-screen.rm .bv-sub,.bv-screen.rm .bv-note{transition-delay:0s!important}
+
+  @container (max-width:600px){ .bv-col-h{display:none} .bv-tr{grid-template-columns:36px minmax(120px,1.5fr) minmax(130px,1.8fr) 112px} }
+  .bv-screen{container-type:inline-size}
+  .bv-legend{margin-top:10px;font-size:.8rem;color:var(--text-secondary)}
+  .bv-legend b{color:var(--text-primary);font-weight:600}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="b-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></symbol>
+    <symbol id="b-assets" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
+    <symbol id="b-ops" viewBox="0 0 24 24"><path d="M14.5 4.5a4.5 4.5 0 0 0-5.3 5.8L4 15.5 8.5 20l5.2-5.2a4.5 4.5 0 0 0 5.8-5.3l-2.7 2.7-2.6-.6-.6-2.6 2.9-2.5z"/></symbol>
+    <symbol id="b-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="18" r="2.2"/><path d="M12 7.2v4.3M12 11.5l-5.6 4.7M12 11.5l5.6 4.7"/></symbol>
+    <symbol id="b-map" viewBox="0 0 24 24"><path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+    <symbol id="b-vault" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5V17"/></symbol>
+    <symbol id="b-gov" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7" rx=".8"/><rect x="10.5" y="6" width="3" height="12" rx=".8"/><rect x="15.5" y="13" width="3" height="5" rx=".8"/></symbol>
+    <symbol id="b-settings" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="b-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="b-alert" viewBox="0 0 24 24"><path d="M12 4 21 19.5H3z"/><path d="M12 10v4.5M12 17.2v.3"/></symbol>
+    <symbol id="b-printer" viewBox="0 0 48 48"><rect x="13" y="6" width="22" height="11" rx="1.5" fill="#f1f2f4"/><rect x="5" y="15" width="38" height="20" rx="3.5" fill="#c9cdd3"/><rect x="5" y="15" width="38" height="6" rx="3" fill="#dcdfe3"/><rect x="11" y="30" width="26" height="11" rx="1.2" fill="#f7f8f9" stroke="#b8bdc4" stroke-width=".6"/><rect x="30" y="23" width="8" height="3.2" rx="1" fill="#3b424c"/><circle cx="10.5" cy="24.6" r="1.3" fill="#3ccf7e"/></symbol>
+    <symbol id="b-switch" viewBox="0 0 48 48"><rect x="2" y="16" width="44" height="16" rx="1.8" fill="#2a2f36"/><rect x="2" y="16" width="44" height="3" rx="1.5" fill="#39404a"/><g fill="#0f1215"><rect x="5" y="21" width="2.4" height="2.8" rx=".3"/><rect x="8" y="21" width="2.4" height="2.8" rx=".3"/><rect x="11" y="21" width="2.4" height="2.8" rx=".3"/><rect x="14" y="21" width="2.4" height="2.8" rx=".3"/><rect x="17" y="21" width="2.4" height="2.8" rx=".3"/><rect x="20" y="21" width="2.4" height="2.8" rx=".3"/><rect x="23" y="21" width="2.4" height="2.8" rx=".3"/><rect x="26" y="21" width="2.4" height="2.8" rx=".3"/><rect x="5" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="8" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="11" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="14" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="17" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="20" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="23" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="26" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="31" y="21" width="4" height="7.4" rx=".5"/><rect x="36" y="21" width="4" height="7.4" rx=".5"/></g><circle cx="43" cy="22.5" r=".9" fill="#3ccf7e"/><circle cx="43" cy="26" r=".9" fill="#f2b44c"/></symbol>
+    <symbol id="b-idface" viewBox="0 0 48 48"><rect x="14" y="3" width="20" height="42" rx="4.5" fill="#23272d"/><rect x="16.5" y="8.5" width="15" height="19" rx="1.6" fill="#35607f"/><rect x="16.5" y="8.5" width="15" height="7" rx="1.6" fill="#44769a"/><circle cx="24" cy="5.8" r="1.1" fill="#8d949e"/><rect x="18.5" y="31" width="11" height="10" rx="1.4" fill="#343a42"/><circle cx="24" cy="36" r="2.2" fill="none" stroke="#5d6570" stroke-width=".8"/></symbol>
+    <symbol id="b-desktop" viewBox="0 0 48 48"><rect x="3" y="8" width="31" height="21" rx="2.2" fill="#22262c"/><rect x="5" y="10" width="27" height="17" rx="1" fill="#4f7cab"/><rect x="5" y="10" width="27" height="7" rx="1" fill="#6a93bd"/><rect x="16.5" y="29" width="4" height="6" fill="#9aa1aa"/><rect x="11" y="35" width="15" height="2.6" rx="1.3" fill="#b9bec5"/><rect x="36" y="11" width="9" height="26" rx="1.6" fill="#caced4"/><rect x="38" y="14" width="5" height="1.4" rx=".7" fill="#7b828c"/><circle cx="40.5" cy="32" r="1.1" fill="#3ccf7e"/></symbol>
+  </defs>
+</svg>
+
+<h2>Carregamento e boas-vindas</h2>
+<p class="subtitle">Primeiro acesso: o carregamento mostra etapas reais, nunca uma barra de tempo falso. Depois o "olá" é escrito à mão e a casca se monta com os seus padrões. Nos acessos seguintes, o "olá" não aparece e o carregamento só é exibido se demorar mais que meio segundo. Com movimento reduzido, tudo vira troca simples de opacidade. Dados ilustrativos.</p>
+
+<div class="bv-ctrl">
+  <div class="bv-seg" id="bv-mode" role="group" aria-label="Tipo de acesso">
+    <button type="button" class="on" data-v="first">Primeiro acesso</button>
+    <button type="button" data-v="next">Acesso seguinte</button>
+  </div>
+  <button type="button" class="bv-btn" id="bv-play">Repetir</button>
+  <button type="button" class="bv-btn" id="bv-skip">Pular</button>
+  <label class="bv-chk"><input type="checkbox" id="bv-rm"> Movimento reduzido</label>
+</div>
+
+<div class="bv-screen" id="bv">
+  <div class="bv-layer bv-boot">
+    <div class="bv-boot-in">
+      <div class="bv-mark" aria-hidden="true"></div>
+      <div class="bv-bar"><i></i></div>
+      <div class="bv-step" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="bv-layer bv-hello">
+    <div class="bv-hello-in">
+      <svg viewBox="0 0 520 250" role="img" aria-label="olá">
+        <defs>
+          <linearGradient id="bv-fade" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".86" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+          <mask id="bv-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="520" height="250"><rect id="bv-mask-r" x="0" y="0" width="520" height="250" fill="url(#bv-fade)"/></mask>
+        </defs>
+        <text class="bv-word" x="260" y="185" text-anchor="middle" mask="url(#bv-mask)">olá</text>
+      </svg>
+      <div class="bv-sub">Bem-vindo de volta</div>
+      <div class="bv-note">3 alertas novos desde o seu último acesso</div>
+    </div>
+  </div>
+
+  <div class="bv-layer bv-shell">
+    <div class="bv-mb">
+      <div class="bv-mb-l"><i class="bv-mk" aria-hidden="true"></i><b>Visão geral</b><span>Painel</span><span>Alertas</span></div>
+      <div class="bv-mb-r">
+        <span class="bv-si"><i class="bv-dot"></i>Rede</span>
+        <span class="bv-si bv-bell"><svg class="bv-ic"><use href="#b-bell"/></svg>3</span>
+        <span class="bv-si bv-mono">qui 24 set 14:32</span>
+        <span class="bv-av">TI</span>
+      </div>
+    </div>
+    <div class="bv-win">
+      <div class="bv-tb"><h5>O que resolver agora</h5><small>4 abertos</small></div>
+      <div class="bv-tr bv-th"><span></span><span>Ativo</span><span>Ocorrência</span><span class="bv-col-h">Há</span><span>Severidade</span></div>
+      <div class="bv-tr"><span class="bv-thumb"><svg><use href="#b-switch"/></svg></span><span>Aruba 2930F 48p</span><span>Coleta atrasada · 3 ciclos</span><span class="bv-mono bv-col-h">32 min</span><span><em class="bv-badge crit">CRÍTICO</em></span></div>
+      <div class="bv-tr"><span class="bv-thumb"><svg><use href="#b-printer"/></svg></span><span>HP LaserJet M404dn</span><span>Toner preto em 8%</span><span class="bv-mono bv-col-h">1 h</span><span><em class="bv-badge warn">ATENÇÃO</em></span></div>
+      <div class="bv-tr"><span class="bv-thumb"><svg><use href="#b-idface"/></svg></span><span>Control iD iDFace</span><span>Backup da noite falhou</span><span class="bv-mono bv-col-h">7 h</span><span><em class="bv-badge warn">ATENÇÃO</em></span></div>
+      <div class="bv-tr"><span class="bv-thumb"><svg><use href="#b-desktop"/></svg></span><span>Dell OptiPlex 7010</span><span>Garantia vence em 12 dias</span><span class="bv-mono bv-col-h">1 d</span><span><em class="bv-badge info">INFORMAÇÃO</em></span></div>
+    </div>
+    <div class="bv-dock bv-mat">
+      <span class="bv-di cur"><svg class="bv-ic"><use href="#b-overview"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-assets"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-ops"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-network"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-map"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-vault"/></svg></span>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-gov"/></svg></span>
+      <i class="bv-dsep"></i>
+      <span class="bv-di"><svg class="bv-ic"><use href="#b-settings"/></svg></span>
+    </div>
+    <div class="bv-toast bv-mat">
+      <span class="bv-toast-ic"><svg class="bv-ic"><use href="#b-alert"/></svg></span>
+      <div class="bv-toast-b"><span class="bv-sev">CRÍTICO</span><b>Coleta atrasada</b><span>Aruba 2930F 48p · 3 ciclos sem resposta</span></div>
+    </div>
+  </div>
+</div>
+<p class="bv-legend">O quadrado azul é só um marcador: o logo de verdade sai da etapa de identidade. A primeira tela depois do login é <b>"O que resolver agora"</b>, e não um painel de gráficos.</p>
+
+<script>
+(function () {
+  var bv = document.getElementById('bv');
+  var boot = bv.querySelector('.bv-boot'), hello = bv.querySelector('.bv-hello'), shell = bv.querySelector('.bv-shell');
+  var bar = bv.querySelector('.bv-bar i'), step = bv.querySelector('.bv-step'), toast = bv.querySelector('.bv-toast');
+  var mode = 'first', timers = [];
+  var STEPS = [['Validando sessão', 25, 380], ['Carregando suas preferências', 55, 360], ['Conectando alertas', 85, 320], ['Pronto', 100, 260]];
+  function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    bv.classList.add('bv-instant');
+    [boot, hello, shell].forEach(function (l) { l.classList.remove('on'); });
+    hello.classList.remove('draw', 'leave'); toast.classList.remove('in');
+    bar.style.width = '0'; step.textContent = '';
+    void bv.offsetWidth;
+    bv.classList.remove('bv-instant');
+  }
+  function play() {
+    reset();
+    var rm = bv.classList.contains('rm'), t = 60;
+    at(t, function () { boot.classList.add('on'); });
+    t += 250;
+    STEPS.forEach(function (s) { at(t, function () { step.textContent = s[0]; bar.style.width = s[1] + '%'; }); t += s[2]; });
+    t += 150;
+    if (mode === 'first') {
+      at(t, function () { boot.classList.remove('on'); hello.classList.add('on'); });
+      at(t + 250, function () { hello.classList.add('draw'); });
+      t += rm ? 1600 : 3700;
+      at(t, function () { hello.classList.add('leave'); });
+      t += 380;
+      at(t, function () { hello.classList.remove('on'); });
+    } else {
+      at(t, function () { boot.classList.remove('on'); });
+      t += 200;
+    }
+    at(t, function () { shell.classList.add('on'); });
+    at(t + 1100, function () { toast.classList.add('in'); });
+  }
+  function skip() { reset(); shell.classList.add('on'); toast.classList.add('in'); }
+  document.getElementById('bv-play').addEventListener('click', play);
+  document.getElementById('bv-skip').addEventListener('click', skip);
+  document.querySelectorAll('#bv-mode button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      mode = b.dataset.v;
+      document.querySelectorAll('#bv-mode button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      play();
+    });
+  });
+  var rmBox = document.getElementById('bv-rm');
+  rmBox.addEventListener('change', function () { bv.classList.toggle('rm', rmBox.checked); play(); });
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { rmBox.checked = true; bv.classList.add('rm'); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(play); else play();
+})();
+</script>
+
+</body>
+</html>

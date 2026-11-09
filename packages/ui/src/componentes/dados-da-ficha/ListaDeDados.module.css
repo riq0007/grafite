@@ -1,0 +1,39 @@
+/*
+ * A lista de dados da ficha (change cabecalhos-e-fichas, design, decisão 3): o rótulo numa coluna
+ * de 10 passos, no texto secundário, e o valor ao lado; abaixo de 480 px, o rótulo em cima.
+ */
+.conteiner {
+  container-type: inline-size;
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.par {
+  display: grid;
+  grid-template-columns: calc(var(--esp-12) * 3) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--esp-3);
+}
+
+@container (max-width: 480px) {
+  .par {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--esp-1);
+  }
+}
+
+.rotulo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.valor {
+  margin: 0;
+  min-width: 0;
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}

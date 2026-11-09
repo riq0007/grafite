@@ -1,0 +1,14 @@
+{
+  "node": {
+    "versao": "24.22.1",
+    "arquivo": "node-v24.22.1-x64.msi",
+    "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-x64.msi",
+    "sha256": "3bda4baf1ee709b33cf920dd633106ddb23951e322bff9c03ec9f64ab8981b01"
+  },
+  "postgres": {
+    "versao": "18.6",
+    "arquivo": "postgresql-18.6-1-windows-x64.exe",
+    "url": "https://get.enterprisedb.com/postgresql/postgresql-18.6-1-windows-x64.exe",
+    "sha256": "cae561e98d09f3f4a1a95759249240f86f66d71dcf33d14b6f7be894078401d1"
+  }
+}

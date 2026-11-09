@@ -1,0 +1,211 @@
+/* Checkbox, rádio e interruptor: controle desenhado seguido do texto, que é o nome. */
+.escolha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  cursor: default;
+}
+
+/* Com o texto em mais de uma linha, a caixa e a bolinha acompanham a primeira linha. O
+   interruptor, mais alto que a linha, continua no centro. */
+.escolha:has(> :is(.caixa, .bolinha)) {
+  align-items: flex-start;
+}
+
+.escolha > :is(.caixa, .bolinha) {
+  margin-block-start: calc((1lh - var(--esp-4)) / 2);
+}
+
+.escolha[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.caixa,
+.bolinha {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--esp-4);
+  height: var(--esp-4);
+  border: 1px solid var(--cor-borda-controle);
+  background-color: var(--cor-superficie);
+  color: var(--cor-sobre-destaque);
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* Segue a base de raio, sem chegar ao círculo: círculo é do rádio. */
+.caixa {
+  border-radius: calc(var(--raio-controle) * 0.5);
+}
+
+.bolinha {
+  border-radius: 50%;
+}
+
+.escolha[data-hovered] :is(.caixa, .bolinha, .trilho) {
+  border-color: var(--cor-texto-2);
+}
+
+.escolha[data-pressed] :is(.caixa, .bolinha) {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.escolha:is([data-selected], [data-indeterminate]) .caixa {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-destaque);
+}
+
+/* Marcado e pressionado: o destaque pressionado, cujo contraste com a marca é verificado. */
+.escolha:is([data-selected], [data-indeterminate])[data-pressed] .caixa {
+  background-image: none;
+  background-color: var(--cor-destaque-pressionado);
+}
+
+/* Miolo claro de 6 px no centro do círculo preenchido. */
+.escolha[data-selected] .bolinha {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-sobre-destaque);
+  box-shadow: inset 0 0 0 4px var(--cor-destaque);
+}
+
+.escolha[data-invalid] :is(.caixa, .bolinha) {
+  border-color: var(--cor-critico);
+}
+
+.escolha[data-focus-visible] :is(.caixa, .bolinha, .trilho) {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.marca {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.opcoesDoGrupo {
+  display: grid;
+  gap: var(--esp-2);
+  justify-items: start;
+}
+
+/* Interruptor: medidas derivadas da altura do controle, então acompanha a densidade. */
+.trilho {
+  --altura-do-trilho: calc(var(--altura-controle) * 0.6);
+  --raio-do-trilho: min(var(--raio-controle), calc(var(--altura-do-trilho) / 2));
+
+  box-sizing: border-box;
+  position: relative;
+  flex: none;
+  width: calc(var(--altura-do-trilho) * 1.75);
+  height: var(--altura-do-trilho);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-do-trilho);
+  background-color: var(--cor-superficie-2);
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.pino {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: calc(var(--altura-do-trilho) - 4px);
+  height: calc(var(--altura-do-trilho) - 4px);
+  border-radius: max(0px, calc(var(--raio-do-trilho) - 2px));
+  background-color: var(--cor-texto-2);
+  transition:
+    transform var(--dur-deslocamento) var(--curva-padrao),
+    background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.escolha[data-selected] .trilho {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-destaque);
+}
+
+.escolha[data-selected] .pino {
+  background-color: var(--cor-sobre-destaque);
+  transform: translateX(calc(var(--altura-do-trilho) * 0.75));
+}
+
+/* Controle segmentado: o segmento escolhido leva o preenchimento do destaque. */
+.segmentado {
+  display: grid;
+  gap: var(--esp-1);
+  justify-items: start;
+}
+
+.trilhoSegmentado {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+}
+
+/*
+ * No celular, as opções que não cabem quebram a linha dentro do trilho, sem alargar a tela (change
+ * cabecalho-em-toda-tela, design, decisão 7). No computador, o trilho fica numa linha só.
+ */
+[data-postura="celular"] .trilhoSegmentado {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.segmento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--altura-controle) - 6px);
+  padding: 0 var(--esp-3);
+  border-radius: max(0px, calc(var(--raio-controle) - 3px));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  cursor: default;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.segmento[data-hovered]:not([data-selected]) {
+  background-color: var(--cor-hover);
+}
+
+.segmento[data-pressed]:not([data-selected]) {
+  background-color: var(--cor-pressionado);
+}
+
+.segmento[data-selected] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.segmento[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.segmento[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* O interruptor com a explicação embaixo, alinhada ao nome, depois do trilho. */
+.interruptorComDescricao {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.descricaoDoInterruptor {
+  padding-inline-start: calc(var(--altura-controle) * 0.6 * 1.75 + var(--esp-2));
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

@@ -1,0 +1,31 @@
+.gatilho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  text-align: start;
+  cursor: default;
+}
+
+.gatilho[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+[data-invalid] > .gatilho {
+  border-color: var(--cor-critico);
+}
+
+.valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valor[data-placeholder] {
+  color: var(--cor-texto-2);
+}
+
+.seta {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}

@@ -1,0 +1,83 @@
+/* A grade dos ícones de tipo: cada opção é um quadro com a bolinha do rádio, o desenho e o nome.
+   A escolha aparece pela bolinha preenchida e pela borda, e não só pela cor. */
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 2), 1fr));
+  gap: var(--esp-2);
+}
+
+.opcao {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--esp-2);
+  padding: var(--esp-4) var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  text-align: center;
+  cursor: default;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.opcao[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.opcao[data-pressed] {
+  background-color: var(--cor-pressionado);
+}
+
+.opcao[data-selected] {
+  border-color: var(--cor-destaque);
+  box-shadow: inset 0 0 0 1px var(--cor-destaque);
+}
+
+.opcao[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.opcao[data-readonly] {
+  cursor: default;
+}
+
+.opcao[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* A bolinha do rádio, no canto do quadro. */
+.marca {
+  position: absolute;
+  inset-block-start: var(--esp-2);
+  inset-inline-start: var(--esp-2);
+  box-sizing: border-box;
+  width: var(--esp-4);
+  height: var(--esp-4);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: 50%;
+  background-color: var(--cor-superficie);
+}
+
+.opcao[data-selected] .marca {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-sobre-destaque);
+  box-shadow: inset 0 0 0 4px var(--cor-destaque);
+}
+
+.icone {
+  width: var(--esp-8);
+  height: var(--esp-8);
+  color: var(--cor-texto-2);
+}
+
+.opcao[data-selected] .icone {
+  color: var(--cor-texto);
+}
+
+.nome {
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+}

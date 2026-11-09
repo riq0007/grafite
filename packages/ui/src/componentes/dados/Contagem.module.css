@@ -1,0 +1,46 @@
+/* A contagem: o rótulo, o número de instrumento, a capacidade e a variação, de cima para baixo. */
+.contagem {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.rotulo {
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--esp-1);
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-numeral);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.capacidade,
+.unidade {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.capacidade {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.variacao,
+.semValor {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

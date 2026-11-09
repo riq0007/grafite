@@ -1,0 +1,52 @@
+/*
+ * A área da janela que rola, abaixo da barra das abas. Ela ocupa o resto da coluna da janela, com o
+ * respiro por dentro. As faixas esmaecidas valem zero até haver conteúdo além da borda delas, e o
+ * foco que rola até um elemento para fora delas.
+ */
+.rolagem {
+  --faixa-de-cima-da-janela: var(--esp-6);
+  --faixa-de-baixo-da-janela: var(--esp-8);
+  --esmaecer-em-cima: 0px;
+  --esmaecer-embaixo: 0px;
+
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--respiro-da-janela, var(--esp-6));
+  scroll-padding-block: var(--faixa-de-cima-da-janela) var(--faixa-de-baixo-da-janela);
+  outline: none;
+}
+
+.rolagem[data-mais-acima] {
+  --esmaecer-em-cima: var(--faixa-de-cima-da-janela);
+}
+
+.rolagem[data-mais-abaixo] {
+  --esmaecer-embaixo: var(--faixa-de-baixo-da-janela);
+}
+
+/*
+ * A máscara só existe com conteúdo além de uma borda: o degradê no conteúdo, e uma camada opaca na
+ * largura da barra de rolagem, que não esmaece. A máscara lê só a opacidade, e a cor do texto da
+ * janela é opaca em todos os temas.
+ */
+.rolagem[data-mais-acima],
+.rolagem[data-mais-abaixo] {
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent,
+      currentColor var(--esmaecer-em-cima),
+      currentColor calc(100% - var(--esmaecer-embaixo)),
+      transparent
+    ),
+    linear-gradient(currentColor, currentColor);
+  mask-size:
+    calc(100% - var(--largura-da-barra, 0px)) 100%,
+    var(--largura-da-barra, 0px) 100%;
+  mask-position:
+    left top,
+    right top;
+  mask-repeat: no-repeat;
+}

@@ -1,0 +1,44 @@
+/* Estilos de base: só tokens semânticos (docs/ANTISLOP.md, seção 12 da spec mestre). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+kbd,
+samp,
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+/* Números que se comparam em coluna ficam alinhados. */
+.numero,
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* Cursor suavizado (spec cursor-suavizado): com o ponto e o anel à vista, o cursor do sistema some.
+   O atributo só existe fora dos campos de texto e de [data-cursor-nativo] (cursor.ts decide). */
+html[data-cursor-suavizado],
+html[data-cursor-suavizado] * {
+  /* biome-ignore lint/complexity/noImportantStyles: vence o cursor de qualquer componente, com qualquer especificidade */
+  cursor: none !important;
+}

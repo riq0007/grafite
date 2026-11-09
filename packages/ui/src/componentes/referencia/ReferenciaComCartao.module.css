@@ -1,0 +1,39 @@
+/* A moldura da referência não muda o texto: o link dentro dela é quem aparece. */
+.referencia {
+  display: inline;
+}
+
+/* O link da referência fica na cor do texto em volta, sublinhado de leve, e o sublinhado acende sob
+   o ponteiro: a tabela e a ficha não viram uma parede de links. */
+.referencia > a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--cor-linha-forte);
+  text-underline-offset: 2px;
+}
+
+.referencia > a:hover {
+  text-decoration-color: currentColor;
+}
+
+.referencia > a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+/* O cartão tem largura própria, não a da referência. */
+.painel {
+  min-width: 0;
+  padding: 0;
+}
+
+.conteudo {
+  outline: none;
+}
+
+.conteudo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+  border-radius: var(--raio-menu);
+}

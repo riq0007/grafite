@@ -1,0 +1,174 @@
+/* Os backups do Control iD: a seção da ficha, a tela dos backups e o visualizador do conteúdo. */
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/*
+ * O cabeçalho da tela, igual em todos os módulos (change redesenho-da-interface, design, decisão
+ * 3): o título à esquerda, com a ação principal logo ao lado, maior, e as outras depois; uma linha o
+ * separa do conteúdo.
+ */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3) var(--esp-4);
+  padding-bottom: var(--esp-4);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.cabecalho [data-nivel="primario"] {
+  min-height: calc(var(--altura-controle) + var(--esp-2));
+  padding-inline: var(--esp-5);
+}
+
+.tela {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Cada backup da ficha: o momento e a situação à esquerda, os números no meio, as ações à direita. */
+.lista {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* A linha empilha pela largura da lista, e não pela da janela: na ficha, a coluna é estreita. */
+  container-type: inline-size;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+@container (width < 720px) {
+  .item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.quando {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.momento {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.detalhe {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+/* O visualizador: a busca e a lista de pessoas em cartões com a foto. */
+.conteudo {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.linhas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 6), 1fr));
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.semFoto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.foto {
+  width: var(--esp-12);
+  height: var(--esp-12);
+  border-radius: var(--raio-controle);
+  object-fit: cover;
+  background: var(--cor-superficie-2);
+}
+
+.titulo {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.dados {
+  display: grid;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+}
+
+.dados div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+}
+
+.dados dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.dados dt::after {
+  content: ":";
+}
+
+.dados dd {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+/* Os dois lados do comparador, lado a lado enquanto cabem. */
+.lados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--esp-12) * 8)), 1fr));
+  gap: var(--esp-4);
+}

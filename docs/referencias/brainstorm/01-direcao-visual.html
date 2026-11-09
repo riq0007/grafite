@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafite · referência do brainstorming</title>
+<style>
+  /* Protótipo descartável do brainstorming (24/09/2026). Não é código do produto. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg-primary:#1d1d1f; --bg-secondary:#2d2d2f; --bg-tertiary:#3d3d3f; --border:#424245; --text-primary:#f5f5f7; --text-secondary:#86868b; --accent:#0a84ff; --selected-bg:rgba(10,132,255,.15); --selected-border:#0a84ff; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; padding: 2rem; }
+  h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: .5rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .25rem; }
+  .subtitle { color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 1100px; }
+  .cards { display: grid; gap: 1rem; }
+  .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; }
+  .card.selected { border-color: var(--selected-border); border-width: 2px; }
+  .card-body { padding: 1rem; }
+  .card-body p { color: var(--text-secondary); font-size: .85rem; }
+</style>
+<script>
+  function toggleSelect(el) {
+    el.parentElement.querySelectorAll('.selected').forEach(function (x) { if (x !== el) x.classList.remove('selected'); });
+    el.classList.toggle('selected');
+  }
+</script>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  .dv-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:0 0 1rem}
+  .dv-modes{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:9px;background:var(--bg-secondary)}
+  .dv-modes button{font:inherit;font-size:.8rem;border:0;background:transparent;color:var(--text-secondary);padding:.3rem .85rem;border-radius:6px;cursor:pointer}
+  .dv-modes button.on{background:var(--accent);color:#fff}
+  .dv-note{font-size:.8rem;color:var(--text-secondary)}
+  .cards.dv-stack{grid-template-columns:1fr;gap:1.25rem}
+  .dv-frame{padding:14px;background:var(--bg-tertiary)}
+  .card.selected .dv-frame{background:var(--selected-bg)}
+  .card-body .dv-spec{margin-top:.5rem;font-size:.78rem;color:var(--text-secondary)}
+
+  /* ---------- casca ---------- */
+  .dv-shell{container-type:inline-size;position:relative;border-radius:10px;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:12px;line-height:1.35;-webkit-font-smoothing:antialiased;text-align:left}
+  .dv-shell svg.dv-ic{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .dv-mono{font-family:var(--mono);font-size:.92em}
+
+  .dv-menubar{position:relative;z-index:3;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--menubar);border-bottom:1px solid var(--line);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);font-size:11.5px}
+  .dv-mb-l,.dv-mb-r{display:flex;align-items:center;gap:14px;white-space:nowrap}
+  .dv-mb-l span{color:var(--text-2)}
+  .dv-mb-l b{font-weight:600}
+  .dv-mark{width:12px;height:12px;border-radius:3.5px;background:var(--accent);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 45%,var(--bg))}
+  .dv-si{display:inline-flex;align-items:center;gap:5px;color:var(--text-2)}
+  .dv-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block}
+  .dv-si-warn{color:var(--warn);font-weight:600}
+  .dv-av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line-2);font-size:9px;font-weight:600;color:var(--text)}
+
+  .dv-stage{position:relative;height:372px;padding:14px 14px 70px}
+  .dv-win{position:relative;z-index:1;height:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-win);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--win-shadow)}
+  .dv-tb{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .dv-title{display:flex;align-items:baseline;gap:7px;margin-right:auto;white-space:nowrap}
+  .dv-title h5{font-size:14px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .dv-num{font-family:var(--mono);font-size:11px;color:var(--text-2)}
+  .dv-search{display:flex;align-items:center;gap:6px;height:26px;padding:0 9px;min-width:190px;border-radius:var(--r-ctl);background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);font-size:11.5px;white-space:nowrap}
+  .dv-seg{display:flex;padding:2px;border-radius:var(--r-ctl);background:var(--surface-2);border:1px solid var(--line)}
+  .dv-seg span{padding:3px 9px;border-radius:calc(var(--r-ctl) - 2px);color:var(--text-2);font-size:11px}
+  .dv-seg span.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .dv-btn{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:var(--r-ctl);background:var(--accent);color:var(--on-accent);font-weight:600;font-size:11.5px;white-space:nowrap}
+
+  .dv-table{flex:1;overflow:hidden}
+  .dv-tr{display:grid;grid-template-columns:calc(var(--thumb) + 14px) minmax(150px,2.1fr) minmax(84px,.9fr) minmax(120px,1.3fr) minmax(104px,.9fr);align-items:center;height:var(--row);padding:0 12px 0 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .dv-tr>span{overflow:hidden;text-overflow:ellipsis;padding-right:10px}
+  .dv-th{height:28px;font-size:10.5px;color:var(--text-2);font-weight:500}
+  .dv-tr:nth-child(odd):not(.dv-th){background:var(--zebra)}
+  .dv-tr.hl{background:color-mix(in srgb,var(--accent) 13%,transparent)!important}
+  .dv-thumb{width:var(--thumb);height:var(--thumb);border-radius:var(--r-thumb);background:var(--thumb-bg);display:grid;place-items:center;padding:0!important;border:1px solid var(--line)}
+  .dv-thumb svg{width:84%;height:84%}
+  .dv-thumb.gen svg{width:56%;height:56%;fill:none;stroke:var(--text-2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .dv-name{display:flex;flex-direction:column;line-height:1.2}
+  .dv-name small{color:var(--text-2);font-size:10.5px}
+  .dv-badge{font-style:normal;display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.03em;padding:2px 6px;border-radius:var(--r-badge)}
+  .dv-badge.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+  .dv-badge.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+  .dv-badge.neu{color:var(--neutral);background:color-mix(in srgb,var(--neutral) 16%,transparent)}
+
+  .dv-mat{background:var(--mat);border:1px solid var(--mat-line);box-shadow:var(--mat-shadow);backdrop-filter:blur(var(--blur)) saturate(170%);-webkit-backdrop-filter:blur(var(--blur)) saturate(170%)}
+
+  .dv-toast{position:absolute;z-index:4;top:24px;right:24px;width:264px;display:flex;gap:10px;padding:10px 12px;border-radius:var(--r-toast)}
+  .dv-toast-ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:var(--warn);background:color-mix(in srgb,var(--warn) 17%,transparent);flex:none}
+  .dv-toast-body{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .dv-toast-body b{font-size:12px;font-weight:600}
+  .dv-toast-body>span{color:var(--text-2);font-size:11px}
+  .dv-toast-act{display:flex;align-items:center;gap:12px;margin-top:4px;font-size:11px}
+  .dv-link{color:var(--accent);font-weight:600}
+  .dv-toast-act small{margin-left:auto;color:var(--text-2);font-size:10px}
+
+  .dv-dock{position:absolute;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:6px;border-radius:var(--r-dock)}
+  .dv-di{position:relative;width:var(--dock-i);height:var(--dock-i);border-radius:var(--r-di);display:grid;place-items:center;color:var(--text-2)}
+  .dv-di>svg.dv-ic{width:17px;height:17px}
+  .dv-di.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+  .dv-di.on::after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+  .dv-dsep{width:1px;height:22px;background:var(--line-2);margin:0 3px}
+
+  .dv-menu{position:absolute;left:0;top:0;width:178px;padding:5px;border-radius:var(--r-menu);color:var(--text);z-index:7;visibility:hidden}
+  .dv-mi{position:relative;display:flex;align-items:center;justify-content:space-between;height:26px;padding:0 9px;border-radius:calc(var(--r-menu) - 4px);font-size:12px;white-space:nowrap}
+  .dv-mi-head{height:22px;font-size:10px;color:var(--text-2);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .dv-mi.on{background:var(--accent);color:var(--on-accent)}
+  .dv-mi svg.dv-ic{width:12px;height:12px;opacity:.85}
+  .dv-sep{height:1px;background:var(--line-2);margin:4px 6px}
+  .dv-sub{width:132px;z-index:8}
+
+  @container (max-width:720px){
+    .dv-tr{grid-template-columns:calc(var(--thumb) + 14px) minmax(120px,2fr) minmax(76px,1fr) minmax(96px,1fr)}
+    .dv-col-loc{display:none}
+    .dv-search{min-width:0}.dv-search span{display:none}
+  }
+  @container (max-width:540px){ .dv-seg,.dv-toast,.dv-mb-l span{display:none} }
+
+  /* ---------- A · Grafite ---------- */
+  .dv-a{--font:"Instrument Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--r-win:12px;--r-ctl:7px;--r-thumb:7px;--r-badge:5px;--r-toast:12px;--r-dock:17px;--r-di:10px;--r-menu:10px;--row:40px;--thumb:28px;--dock-i:34px;--blur:22px;--win-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .dv-root[data-mode=dark] .dv-a{--bg:#111113;--surface:#1b1b1e;--surface-2:#242428;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.13);--text:#ececef;--text-2:#9d9da6;--accent:#5aa2ff;--on-accent:#fff;--ok:#43d18a;--warn:#f2b44c;--neutral:#9d9da6;--zebra:rgba(255,255,255,.018);--thumb-bg:#26262b;--menubar:rgba(24,24,27,.82);--mat:rgba(40,40,45,.78);--mat-line:rgba(255,255,255,.1);--mat-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 .5px rgba(0,0,0,.6)}
+  .dv-root[data-mode=light] .dv-a{--bg:#e8e8ec;--surface:#fff;--surface-2:#f4f4f6;--line:rgba(0,0,0,.07);--line-2:rgba(0,0,0,.12);--text:#1d1d20;--text-2:#6d6d75;--accent:#2f6fe4;--on-accent:#fff;--ok:#1f9d5c;--warn:#b7791f;--neutral:#6d6d75;--zebra:rgba(0,0,0,.018);--thumb-bg:#eef0f3;--menubar:rgba(250,250,252,.82);--mat:rgba(248,248,250,.8);--mat-line:rgba(255,255,255,.75);--mat-shadow:0 14px 40px rgba(20,20,30,.18),0 0 0 .5px rgba(0,0,0,.12)}
+
+  /* ---------- B · Instrumento ---------- */
+  .dv-b{--font:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;--r-win:0px;--r-ctl:3px;--r-thumb:2px;--r-badge:2px;--r-toast:4px;--r-dock:0px;--r-di:0px;--r-menu:4px;--row:35px;--thumb:24px;--dock-i:36px;--blur:10px;--win-shadow:none;font-size:11.5px}
+  .dv-root[data-mode=dark] .dv-b{--bg:#0c0c0b;--surface:#141412;--surface-2:#1d1d1a;--line:rgba(255,238,210,.08);--line-2:rgba(255,238,210,.15);--text:#ece8e1;--text-2:#9a958b;--accent:#ff8a1f;--on-accent:#1a0e02;--ok:#7fd48b;--warn:#ffc04d;--neutral:#9a958b;--zebra:rgba(255,238,210,.02);--thumb-bg:#201f1c;--menubar:#10100e;--mat:rgba(22,22,20,.93);--mat-line:rgba(255,238,210,.16);--mat-shadow:0 10px 30px rgba(0,0,0,.55)}
+  .dv-root[data-mode=light] .dv-b{--bg:#e6e4df;--surface:#f7f6f3;--surface-2:#ecEAe5;--line:rgba(40,30,10,.1);--line-2:rgba(40,30,10,.18);--text:#1b1a17;--text-2:#6a665e;--accent:#d4600a;--on-accent:#fff;--ok:#2f8f45;--warn:#a86a00;--neutral:#6a665e;--zebra:rgba(40,30,10,.025);--thumb-bg:#ebe9e4;--menubar:#efede9;--mat:rgba(247,246,243,.95);--mat-line:rgba(40,30,10,.18);--mat-shadow:0 10px 30px rgba(40,30,10,.16)}
+  .dv-b .dv-menubar{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .dv-b .dv-mark{border-radius:0}
+  .dv-b .dv-stage{display:grid;grid-template-columns:52px 1fr;padding:0;height:386px}
+  .dv-b .dv-win{grid-column:2;grid-row:1;border:0;border-left:1px solid var(--line)}
+  .dv-b .dv-dock{position:relative;grid-column:1;grid-row:1;left:auto;bottom:auto;transform:none;flex-direction:column;justify-content:flex-start;gap:2px;padding:8px 0;background:var(--surface);border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;height:100%}
+  .dv-b .dv-di{width:52px;height:40px}
+  .dv-b .dv-di.on{background:var(--surface-2)}
+  .dv-b .dv-di.on::after{left:0;top:8px;bottom:8px;margin:0;width:2px;height:auto;border-radius:0}
+  .dv-b .dv-dsep{width:24px;height:1px;margin:6px 0}
+  .dv-b .dv-mi{height:25px}
+  .dv-b .dv-mi.on{background:var(--surface-2);color:var(--accent);box-shadow:inset 2px 0 0 var(--accent)}
+  .dv-b .dv-mi-head,.dv-b .dv-th,.dv-b .dv-num{font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;font-size:9.5px}
+  .dv-b .dv-badge{font-family:var(--mono);background:transparent!important;border:1px solid currentColor;font-weight:500}
+  .dv-b .dv-toast{top:14px;right:14px;border-left:2px solid var(--warn)}
+  .dv-b .dv-toast-ic{border-radius:2px}
+  .dv-b .dv-title h5{font-size:13px}
+  .dv-b .dv-btn{font-weight:500}
+  .dv-b .dv-seg span.on{box-shadow:none;background:var(--bg)}
+
+  /* ---------- C · Alumínio ---------- */
+  .dv-c{--font:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--r-win:16px;--r-ctl:9px;--r-thumb:10px;--r-badge:6px;--r-toast:15px;--r-dock:22px;--r-di:12px;--r-menu:13px;--row:44px;--thumb:32px;--dock-i:38px;--blur:30px;font-size:12.5px}
+  .dv-root[data-mode=dark] .dv-c{--bg:#0f1113;--surface:#181a1d;--surface-2:#202327;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#e8eaed;--text-2:#8f96a0;--accent:#35c3b2;--on-accent:#04201c;--ok:#4cc38a;--warn:#e9b04f;--neutral:#8f96a0;--zebra:rgba(255,255,255,.016);--thumb-bg:#22262b;--menubar:rgba(20,22,25,.7);--mat:rgba(36,39,44,.74);--mat-line:rgba(255,255,255,.11);--mat-shadow:0 20px 50px rgba(0,0,0,.5);--win-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .dv-root[data-mode=light] .dv-c{--bg:#e2e5e9;--surface:#fff;--surface-2:#f5f6f8;--line:rgba(15,23,42,.07);--line-2:rgba(15,23,42,.12);--text:#15181d;--text-2:#687080;--accent:#0e8c7f;--on-accent:#fff;--ok:#1d9a58;--warn:#b97503;--neutral:#687080;--zebra:rgba(15,23,42,.018);--thumb-bg:#f0f2f5;--menubar:rgba(255,255,255,.62);--mat:rgba(255,255,255,.72);--mat-line:rgba(255,255,255,.8);--mat-shadow:0 20px 50px rgba(20,24,33,.2),0 0 0 .5px rgba(15,23,42,.08);--win-shadow:0 10px 30px rgba(20,24,33,.10)}
+  .dv-c .dv-mark{border-radius:5px}
+  .dv-c .dv-stage{padding:16px 16px 80px;height:380px}
+  .dv-c .dv-dock{bottom:14px;padding:7px;gap:6px}
+  .dv-c .dv-menu{padding:6px;width:186px}
+  .dv-c .dv-mi{height:28px}
+  .dv-c .dv-mi.on{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--accent);font-weight:600}
+  .dv-c .dv-tb{padding:12px 14px}
+  .dv-c .dv-title h5{font-size:15px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></symbol>
+    <symbol id="i-assets" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
+    <symbol id="i-ops" viewBox="0 0 24 24"><path d="M14.5 4.5a4.5 4.5 0 0 0-5.3 5.8L4 15.5 8.5 20l5.2-5.2a4.5 4.5 0 0 0 5.8-5.3l-2.7 2.7-2.6-.6-.6-2.6 2.9-2.5z"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="18" r="2.2"/><path d="M12 7.2v4.3M12 11.5l-5.6 4.7M12 11.5l5.6 4.7"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+    <symbol id="i-vault" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5V17"/></symbol>
+    <symbol id="i-gov" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7" rx=".8"/><rect x="10.5" y="6" width="3" height="12" rx=".8"/><rect x="15.5" y="13" width="3" height="5" rx=".8"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 21 19.5H3z"/><path d="M12 10v4.5M12 17.2v.3"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+
+    <symbol id="img-printer" viewBox="0 0 48 48"><rect x="13" y="6" width="22" height="11" rx="1.5" fill="#f1f2f4"/><rect x="5" y="15" width="38" height="20" rx="3.5" fill="#c9cdd3"/><rect x="5" y="15" width="38" height="6" rx="3" fill="#dcdfe3"/><rect x="11" y="30" width="26" height="11" rx="1.2" fill="#f7f8f9" stroke="#b8bdc4" stroke-width=".6"/><rect x="30" y="23" width="8" height="3.2" rx="1" fill="#3b424c"/><circle cx="10.5" cy="24.6" r="1.3" fill="#3ccf7e"/></symbol>
+    <symbol id="img-desktop" viewBox="0 0 48 48"><rect x="3" y="8" width="31" height="21" rx="2.2" fill="#22262c"/><rect x="5" y="10" width="27" height="17" rx="1" fill="#4f7cab"/><rect x="5" y="10" width="27" height="7" rx="1" fill="#6a93bd"/><rect x="16.5" y="29" width="4" height="6" fill="#9aa1aa"/><rect x="11" y="35" width="15" height="2.6" rx="1.3" fill="#b9bec5"/><rect x="36" y="11" width="9" height="26" rx="1.6" fill="#caced4"/><rect x="38" y="14" width="5" height="1.4" rx=".7" fill="#7b828c"/><circle cx="40.5" cy="32" r="1.1" fill="#3ccf7e"/></symbol>
+    <symbol id="img-switch" viewBox="0 0 48 48"><rect x="2" y="16" width="44" height="16" rx="1.8" fill="#2a2f36"/><rect x="2" y="16" width="44" height="3" rx="1.5" fill="#39404a"/><g fill="#0f1215"><rect x="5" y="21" width="2.4" height="2.8" rx=".3"/><rect x="8" y="21" width="2.4" height="2.8" rx=".3"/><rect x="11" y="21" width="2.4" height="2.8" rx=".3"/><rect x="14" y="21" width="2.4" height="2.8" rx=".3"/><rect x="17" y="21" width="2.4" height="2.8" rx=".3"/><rect x="20" y="21" width="2.4" height="2.8" rx=".3"/><rect x="23" y="21" width="2.4" height="2.8" rx=".3"/><rect x="26" y="21" width="2.4" height="2.8" rx=".3"/><rect x="5" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="8" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="11" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="14" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="17" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="20" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="23" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="26" y="25.6" width="2.4" height="2.8" rx=".3"/><rect x="31" y="21" width="4" height="7.4" rx=".5"/><rect x="36" y="21" width="4" height="7.4" rx=".5"/></g><circle cx="43" cy="22.5" r=".9" fill="#3ccf7e"/><circle cx="43" cy="26" r=".9" fill="#f2b44c"/></symbol>
+    <symbol id="img-idface" viewBox="0 0 48 48"><rect x="14" y="3" width="20" height="42" rx="4.5" fill="#23272d"/><rect x="16.5" y="8.5" width="15" height="19" rx="1.6" fill="#35607f"/><rect x="16.5" y="8.5" width="15" height="7" rx="1.6" fill="#44769a"/><circle cx="24" cy="5.8" r="1.1" fill="#8d949e"/><rect x="18.5" y="31" width="11" height="10" rx="1.4" fill="#343a42"/><circle cx="24" cy="36" r="2.2" fill="none" stroke="#5d6570" stroke-width=".8"/></symbol>
+  </defs>
+</svg>
+
+<h2>Qual direção de identidade combina com o sistema?</h2>
+<p class="subtitle">A mesma tela nas três direções: barra superior, lista de ativos com imagem, um alerta de KPI e o dock com o menu em árvore aberto. Compare forma, tipografia, cor de destaque e materiais. As três terão versões clara e escura, e dock, cantos e tema continuam personalizáveis pelo usuário. Dados ilustrativos.</p>
+
+<div class="dv-top">
+  <div class="dv-modes" role="group" aria-label="Modo de cor">
+    <button type="button" class="on" onclick="dvMode('dark',this)">Escuro</button>
+    <button type="button" onclick="dvMode('light',this)">Claro</button>
+  </div>
+  <span class="dv-note">Clique numa direção para selecioná-la.</span>
+</div>
+
+<div class="dv-root" data-mode="dark">
+  <div class="cards dv-stack">
+    <div class="card" data-choice="a" onclick="toggleSelect(this)">
+      <div class="dv-frame"><div class="dv-shell dv-a"></div></div>
+      <div class="card-body">
+        <h3>A · Grafite</h3>
+        <p>Profissional e neutro, na linha do macOS. Cantos médios, vidro fosco só no dock, nos menus e nos avisos, e destaque azul.</p>
+        <p class="dv-spec">Instrument Sans + JetBrains Mono · dock embaixo · linha de 40 px</p>
+      </div>
+    </div>
+
+    <div class="card" data-choice="b" onclick="toggleSelect(this)">
+      <div class="dv-frame"><div class="dv-shell dv-b"></div></div>
+      <div class="card-body">
+        <h3>B · Instrumento</h3>
+        <p>Técnico e denso, como o painel de um equipamento. Cantos quase retos, superfícies sólidas, rótulos em fonte monoespaçada, destaque âmbar e dock como trilho lateral.</p>
+        <p class="dv-spec">IBM Plex Sans + IBM Plex Mono · dock à esquerda · linha de 35 px</p>
+      </div>
+    </div>
+
+    <div class="card" data-choice="c" onclick="toggleSelect(this)">
+      <div class="dv-frame"><div class="dv-shell dv-c"></div></div>
+      <div class="card-body">
+        <h3>C · Alumínio</h3>
+        <p>Leve e arejado, na linha do macOS claro. Cantos generosos, dock flutuante, vidro mais presente e destaque verde-petróleo.</p>
+        <p class="dv-spec">Hanken Grotesk + JetBrains Mono · dock flutuante · linha de 44 px</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="dv-tpl">
+  <div class="dv-menubar">
+    <div class="dv-mb-l">
+      <i class="dv-mark" aria-hidden="true"></i>
+      <b>Ativos</b><span>Visualizar</span><span>Filtros</span><span>Ações</span>
+    </div>
+    <div class="dv-mb-r">
+      <span class="dv-si"><svg class="dv-ic"><use href="#i-search"/></svg></span>
+      <span class="dv-si"><i class="dv-dot"></i>Rede</span>
+      <span class="dv-si dv-si-warn"><svg class="dv-ic"><use href="#i-bell"/></svg>3</span>
+      <span class="dv-si dv-mono">qui 24 set 14:32</span>
+      <span class="dv-av">TI</span>
+    </div>
+  </div>
+  <div class="dv-stage">
+    <div class="dv-win">
+      <div class="dv-tb">
+        <div class="dv-title"><h5>Ativos</h5><span class="dv-num">1.284</span></div>
+        <div class="dv-search"><svg class="dv-ic"><use href="#i-search"/></svg><span>Buscar nome, patrimônio, IP…</span></div>
+        <div class="dv-seg"><span class="on">Lista</span><span>Galeria</span><span>Colunas</span></div>
+        <span class="dv-btn"><svg class="dv-ic"><use href="#i-plus"/></svg>Novo ativo</span>
+      </div>
+      <div class="dv-table">
+        <div class="dv-tr dv-th"><span></span><span>Ativo</span><span>Patrimônio</span><span class="dv-col-loc">Local</span><span>Situação</span></div>
+        <div class="dv-tr hl"><span class="dv-thumb"><svg><use href="#img-printer"/></svg></span><span class="dv-name">HP LaserJet M404dn<small>Impressora</small></span><span class="dv-mono">PAT-00412</span><span class="dv-col-loc">Almoxarifado · Jundiaí</span><span><em class="dv-badge ok">EM USO</em></span></div>
+        <div class="dv-tr"><span class="dv-thumb"><svg><use href="#img-desktop"/></svg></span><span class="dv-name">Dell OptiPlex 7010<small>Computador</small></span><span class="dv-mono">PAT-00388</span><span class="dv-col-loc">Engenharia · Sala 2</span><span><em class="dv-badge ok">EM USO</em></span></div>
+        <div class="dv-tr"><span class="dv-thumb"><svg><use href="#img-switch"/></svg></span><span class="dv-name">Aruba 2930F 48p<small>Switch</small></span><span class="dv-mono">PAT-00102</span><span class="dv-col-loc">CPD · Rack A</span><span><em class="dv-badge ok">EM USO</em></span></div>
+        <div class="dv-tr"><span class="dv-thumb"><svg><use href="#img-idface"/></svg></span><span class="dv-name">Control iD iDFace<small>Controle de acesso</small></span><span class="dv-mono">PAT-00251</span><span class="dv-col-loc">Portaria principal</span><span><em class="dv-badge warn">EM MANUTENÇÃO</em></span></div>
+        <div class="dv-tr"><span class="dv-thumb gen"><svg><use href="#i-assets"/></svg></span><span class="dv-name">Nobreak 3 kVA<small>Energia · sem imagem</small></span><span class="dv-mono">PAT-00517</span><span class="dv-col-loc">CPD</span><span><em class="dv-badge neu">EM ESTOQUE</em></span></div>
+      </div>
+    </div>
+    <div class="dv-toast dv-mat">
+      <span class="dv-toast-ic"><svg class="dv-ic"><use href="#i-alert"/></svg></span>
+      <div class="dv-toast-body">
+        <b>Toner abaixo de 10%</b>
+        <span>HP LaserJet M404dn · Almoxarifado</span>
+        <div class="dv-toast-act"><span class="dv-link">Abrir</span><span class="dv-link">Adiar 1 h</span><small>agora</small></div>
+      </div>
+    </div>
+    <div class="dv-dock dv-mat">
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-overview"/></svg></span>
+      <span class="dv-di on"><svg class="dv-ic"><use href="#i-assets"/></svg></span>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-ops"/></svg></span>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-network"/></svg></span>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-map"/></svg></span>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-vault"/></svg></span>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-gov"/></svg></span>
+      <i class="dv-dsep"></i>
+      <span class="dv-di"><svg class="dv-ic"><use href="#i-settings"/></svg></span>
+    </div>
+    <div class="dv-menu dv-rootmenu dv-mat">
+      <div class="dv-mi dv-mi-head">Ativos</div>
+      <div class="dv-mi">Todos os ativos</div>
+      <div class="dv-mi">Computadores</div>
+      <div class="dv-mi">Impressoras</div>
+      <div class="dv-mi on" data-anchor>Rede<svg class="dv-ic"><use href="#i-chevron"/></svg></div>
+      <div class="dv-mi">Controle de acesso</div>
+      <div class="dv-sep"></div>
+      <div class="dv-mi">Importar planilha</div>
+    </div>
+    <div class="dv-menu dv-sub dv-mat">
+      <div class="dv-mi">Switches</div>
+      <div class="dv-mi">Racks</div>
+    </div>
+  </div>
+</template>
+
+<script>
+  (function () {
+    var tpl = document.getElementById('dv-tpl');
+    document.querySelectorAll('.dv-shell').forEach(function (el) {
+      el.appendChild(tpl.content.cloneNode(true));
+    });
+    // Os menus ficam fora do dock: um backdrop-filter aninhado só desfoca o próprio pai.
+    function place(stage) {
+      var item = stage.querySelector('.dv-di.on');
+      var menu = stage.querySelector('.dv-rootmenu');
+      var sub = stage.querySelector('.dv-sub');
+      var s = stage.getBoundingClientRect();
+      var i = item.getBoundingClientRect();
+      var mw = menu.offsetWidth, mh = menu.offsetHeight, left, top;
+      if (stage.closest('.dv-b')) { left = i.right - s.left + 8; top = i.top - s.top; }
+      else { left = i.left - s.left + i.width / 2 - mw / 2; top = i.top - s.top - mh - 12; }
+      menu.style.left = Math.max(8, Math.min(left, s.width - mw - 8)) + 'px';
+      menu.style.top = Math.max(8, top) + 'px';
+      var a = menu.querySelector('[data-anchor]').getBoundingClientRect();
+      sub.style.left = (a.right - s.left + 6) + 'px';
+      sub.style.top = (a.top - s.top - 5) + 'px';
+      menu.style.visibility = sub.style.visibility = 'visible';
+    }
+    var stages = document.querySelectorAll('.dv-stage');
+    function placeAll() { stages.forEach(place); }
+    placeAll();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeAll);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(placeAll); stages.forEach(function (s) { ro.observe(s); }); }
+  })();
+  function dvMode(mode, btn) {
+    document.querySelector('.dv-root').setAttribute('data-mode', mode);
+    document.querySelectorAll('.dv-modes button').forEach(function (b) { b.classList.toggle('on', b === btn); });
+  }
+</script>
+
+</body>
+</html>

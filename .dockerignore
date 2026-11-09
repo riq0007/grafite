@@ -1,0 +1,20 @@
+# Só o necessário para compilar: nada de dependências locais, saídas ou segredos.
+**/node_modules
+**/dist
+**/.turbo
+**/storybook-static
+**/test-results
+**/playwright-report
+**/coverage
+packages/ui/visual/referencias
+.git
+.github
+.superpowers
+docs
+openspec
+.env
+.env.*
+!.env.example
+*.log
+# A senha fixa do desenvolvimento (admin123) só é gravada pelo pnpm dev, nunca pela imagem.
+apps/api/scripts/desenvolvimento.ts

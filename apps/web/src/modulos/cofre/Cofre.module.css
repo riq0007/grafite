@@ -1,0 +1,78 @@
+/* As telas do Cofre: o título com a ação principal, os filtros, a lista e a ficha do segredo. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* Os filtros lado a lado enquanto cabem, cada um com pelo menos 192 px. */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  align-items: end;
+  gap: var(--esp-3);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.semValor {
+  color: var(--cor-texto-2);
+}
+
+/* A data da validade e, ao lado, o que passou, em texto. */
+.validade {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* Sublinhado, para o link não depender só da cor. */
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* O valor revelado, em fonte mono, que quebra em qualquer ponto para caber. */
+.valor {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,0 +1,72 @@
+.abas {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/*
+ * A faixa das abas, com a linha de base. As abas que não cabem rolam de lado, e a contenção da
+ * largura impede que elas alarguem a tela, como as sete seções dos padrões no celular.
+ */
+.faixa {
+  contain: inline-size;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+/*
+ * O indicador da aba escolhida cobre a linha de base, um pixel abaixo das abas. O espaço embaixo,
+ * desfeito pela margem negativa, põe esse pixel dentro da área que rola, por cima da linha.
+ */
+.lista {
+  display: flex;
+  gap: var(--esp-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+  margin-bottom: -1px;
+}
+
+.aba {
+  position: relative;
+  flex: none;
+  white-space: nowrap;
+  padding: var(--esp-2) 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  outline: none;
+  cursor: default;
+  transition: color var(--dur-rapida) var(--curva-padrao);
+}
+
+.aba:is([data-hovered], [data-selected]) {
+  color: var(--cor-texto);
+}
+
+/* Indicador da aba escolhida: o destaque, sobre a linha de base (3:1 verificado). */
+.aba[data-selected]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background-color: var(--cor-destaque);
+}
+
+.aba[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.aba[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.painel {
+  outline: none;
+}
+
+.painel[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}

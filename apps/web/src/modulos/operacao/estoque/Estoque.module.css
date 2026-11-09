@@ -1,0 +1,36 @@
+/* O consumível na linha do estoque: o código em cima e o nome, o tipo e a cor embaixo. */
+.consumivel {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.descricao {
+  overflow-wrap: anywhere;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As ações de lançar ao lado do título; estreito, elas descem. */
+.lancamentos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* O campo do lançamento envolvido para receber o foco da recusa, sem mudar o desenho do formulário. */
+.campo {
+  display: contents;
+}
+
+/* A linha do Operação na ficha de outro registro, como a do fornecedor: o texto e os links. */
+.relacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

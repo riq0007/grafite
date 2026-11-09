@@ -1,0 +1,41 @@
+/* As operações sensíveis: um cartão para cada uma, com a explicação antes da ação. */
+.tela {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.cartao {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+}
+
+.cartao h2 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.cartao p {
+  margin: 0;
+}
+
+.nota {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.detalhe {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

@@ -1,0 +1,93 @@
+/* O módulo Painéis: a grade que ocupa a área da janela e o cadastro (change painel-de-dashboards). */
+.tela {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.telaDoCadastro {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+/* A grade vai até o fim da área, pela altura medida; a forma (colunas e linhas) vem do domínio. */
+.grade {
+  display: grid;
+  flex: none;
+  gap: var(--esp-3);
+  min-height: 0;
+}
+
+.bloco {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+}
+
+.topoDoBloco {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.nomeDoPainel {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.acoesDoBloco {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+.abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-dado);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* O conteúdo do painel ocupa o resto do bloco, num fundo neutro enquanto carrega. */
+.conteudo {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: var(--cor-superficie);
+}

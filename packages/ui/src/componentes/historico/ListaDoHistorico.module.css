@@ -1,0 +1,56 @@
+.historico {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+
+/* Cada registro separado do seguinte por uma linha. */
+.registro {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3) 0;
+  border-bottom: 1px solid var(--cor-linha);
+  min-width: 0;
+}
+
+.registro:first-child {
+  padding-top: 0;
+}
+
+.acao {
+  margin: 0;
+  font-weight: var(--peso-medio);
+}
+
+.quando,
+.travas,
+.vazio {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.mudancas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--esp-1);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+.campo {
+  color: var(--cor-texto-2);
+}
+
+.detalhe {
+  font-size: var(--texto-dado);
+}

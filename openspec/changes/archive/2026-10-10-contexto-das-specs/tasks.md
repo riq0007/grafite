@@ -1,0 +1,13 @@
+## 1. O mapa
+
+- [x] 1.1 Escrever o `docs/mapa.md`, com estas seções, nesta ordem: Como usar (três linhas); Spec mestre por seção (uma linha por seção de 1 a 15 e pelos apêndices A, B e C, com o que ela decide, e as subseções 3.2, 4.4, 5.2, 5.3, 5.4, 7.2, 7.4 e 12.3); ANTISLOP por tema (as 51 seções agrupadas por assunto, pelos títulos); Contrato de módulo por seção (uma linha por seção do `docs/casca/modulos.md`, dizendo quando abri-la); Capacidades (cada pasta de `openspec/specs/`, com o que cobre e com as que mudaram junto em duas ou mais changes arquivadas); Changes arquivadas (uma linha por change, com a descrição que está hoje no `CLAUDE.md`, sem mudar o texto); Glossário (termo, uma linha e onde está especificado). Verificar: as sete seções estão no arquivo, nesta ordem, e ele tem de 180 a 250 linhas.
+- [x] 1.2 Escrever o `apps/web/src/modulos/mapa.test.ts`, que reprova quando: uma pasta de `openspec/specs/` não aparece na tabela de capacidades; uma linha da tabela cita uma pasta que não existe; um caminho entre crases que começa com `docs/`, `openspec/`, `apps/` ou `packages/` não existe; uma seção da spec mestre citada no mapa não tem título no arquivo; um termo do glossário aponta para uma capacidade ou um documento que não existe. Cada caso confere primeiro um exemplo com o erro. Ver os cinco casos falharem com o conferidor vazio e completar o mapa pelo que o teste apontar. Verificar: o teste passa no `pnpm test`.
+
+## 2. O CLAUDE.md e os agentes
+
+- [x] 2.1 No `CLAUDE.md`, abrir as Referências pelo mapa; deixar cada change arquivada só com o nome e o caminho, numa linha por fase; manter as outras linhas (spec mestre, ANTISLOP, brainstorm, specs, runbook e contrato de módulo); acrescentar à regra 7 onde está como um agente de feature é despachado e o que ele entrega. Verificar: o `CLAUDE.md` fica com menos linhas do que as 87 de antes.
+- [x] 2.2 Escrever o `docs/agentes.md`, em até 60 linhas: os papéis do orquestrador e do agente de feature, uma sessão por change numa worktree, o pedido de mudança compartilhada, a entrega, o esforço e o modelo, o ritmo pela janela de uso, quando começa e o modelo de brief do agente. Verificar: o arquivo tem até 60 linhas e o brief, inteiro.
+
+## 3. Fechamento
+
+- [x] 3.1 Conferir `pnpm lint`, `pnpm typecheck` e `pnpm test` verdes, `openspec validate contexto-das-specs --strict` sem erros e o `CLAUDE.md` menor do que antes; arquivar a change e apagar a proposta `docs/propostas/2026-10-10-contexto-barato.md`, que fica valendo pela change arquivada e pelos dois documentos novos. Verificar: os comandos passam, e a change está em `openspec/changes/archive/`.

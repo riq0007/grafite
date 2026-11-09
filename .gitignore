@@ -1,0 +1,28 @@
+# dependências e builds
+node_modules/
+dist/
+build/
+coverage/
+storybook-static/
+.turbo/
+playwright-report/
+test-results/
+
+# segredos: nunca versionar (ver spec, seção 9)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ferramentas locais
+.superpowers/
+*.log
+.DS_Store
+Thumbs.db
+# Os roteiros da demonstração e as worktrees do Claude Code: um clone novo não tem o .git/info/exclude.
+/demonstracao/
+.claude/worktrees/
+
+# Arquivos enviados no desenvolvimento (pnpm dev): GRAFITE_ARQUIVOS_PASTA=.grafite/arquivos.
+.grafite/

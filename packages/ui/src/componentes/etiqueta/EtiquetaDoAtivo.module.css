@@ -1,0 +1,59 @@
+/* A etiqueta do ativo (design do P1f, decisões 1 e 2): as medidas do formato chegam em milímetros
+   pelas variáveis do próprio elemento, e as cores são as fixas da impressão, iguais em todo tema. */
+.etiqueta {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: var(--lado-do-qr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--respiro-da-etiqueta);
+  width: var(--largura-da-etiqueta);
+  height: var(--altura-da-etiqueta);
+  padding: var(--respiro-da-etiqueta);
+  overflow: hidden;
+  color: var(--cor-etiqueta-texto);
+  background-color: var(--cor-etiqueta-fundo);
+  font-family: var(--fonte-interface);
+  line-height: 1.15;
+}
+
+/* O QR já tem a margem branca dele; aqui ele só ganha o lado do formato. */
+.qr {
+  width: var(--lado-do-qr);
+  height: var(--lado-do-qr);
+}
+
+.texto {
+  display: grid;
+  align-content: center;
+  gap: calc(var(--respiro-da-etiqueta) / 2);
+  min-width: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.patrimonio {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-do-patrimonio);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* O nome em até duas linhas, cortado no fim com reticências. */
+.nome {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--texto-do-nome);
+  overflow-wrap: anywhere;
+}
+
+.organizacao {
+  font-size: var(--texto-da-organizacao);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,90 @@
+/* O cartucho: a placa da tinta, o corpo que enche de baixo para cima e a legenda embaixo. */
+.cartucho {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--esp-2);
+  width: 88px;
+  margin: 0;
+}
+
+.corpo {
+  display: grid;
+  grid-template-rows: 18px 72px;
+  width: 32px;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-rotulo);
+  background: var(--cor-superficie-afundada);
+}
+
+/*
+ * A placa: a faixa da tinta no topo e a letra no texto do tema, sobre a superfície 2, com o
+ * contraste do texto garantido em qualquer tema, e o nome em texto embaixo.
+ */
+.placa {
+  display: grid;
+  place-items: center;
+  border-top: 3px solid var(--tinta);
+  border-bottom: 1px solid var(--cor-linha-forte);
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: 1;
+}
+
+.tanque {
+  position: relative;
+}
+
+.nivel {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  background: var(--tinta);
+}
+
+/* O que a impressora não mede: hachurado, sem altura que sugira um percentual. */
+.cartucho[data-hachurado] .tanque {
+  background: repeating-linear-gradient(-45deg, var(--tinta) 0 1px, transparent 1px 6px);
+}
+
+/* O limite: uma marca de lado a lado, na altura dele. */
+.limite {
+  position: absolute;
+  inset-inline: -1px;
+  height: 0;
+  border-top: 1px dashed var(--cor-texto);
+}
+
+.legenda {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.estado {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.nome {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+.estimativa {
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+}

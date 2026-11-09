@@ -1,0 +1,116 @@
+.painel {
+  box-sizing: border-box;
+  min-width: var(--trigger-width);
+  overflow: auto;
+  padding: var(--esp-1);
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+  outline: none;
+}
+
+/* Só esmaece: aparecer é mudança de estado, e esmaecer respeita o movimento reduzido. */
+.painel[data-entering] {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao);
+}
+
+.painel[data-exiting] {
+  animation: aparecer var(--dur-opacidade) var(--curva-saida) reverse;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+.lista {
+  outline: none;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: calc(var(--altura-controle) - var(--esp-1));
+  padding: 0 var(--esp-2);
+  /* Raio concêntrico ao do painel: o de fora menos o respiro. */
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  outline: none;
+  cursor: default;
+}
+
+.opcao[data-focused] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.opcao[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.marca {
+  display: inline-flex;
+  width: var(--esp-4);
+  visibility: hidden;
+}
+
+.opcao[data-selected] .marca {
+  visibility: visible;
+}
+
+.popover {
+  padding: var(--esp-3);
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--esp-3);
+  outline: none;
+}
+
+.tituloDoPopover {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.dica {
+  max-width: calc(var(--esp-12) * 6);
+  padding: var(--esp-1) var(--esp-2);
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-rotulo);
+  background-color: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-normal);
+}
+
+.dica[data-entering] {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao);
+}
+
+.dica[data-exiting] {
+  animation: aparecer var(--dur-opacidade) var(--curva-saida) reverse;
+}
+
+/* Menus: abrem com leve escala a partir do item (Apêndice B); a escala some com movimento reduzido. */
+.painel.deMenu[data-entering] {
+  transform-origin: var(--trigger-anchor-point);
+  animation:
+    aparecer var(--dur-menu) var(--curva-padrao),
+    crescer var(--dur-escala-menu) var(--curva-padrao);
+}
+
+@keyframes crescer {
+  from {
+    transform: scale(0.97);
+  }
+}

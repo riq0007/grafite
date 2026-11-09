@@ -1,0 +1,2 @@
+ALTER TABLE "tipos_de_ativo" ADD COLUMN "primeiro_cartao" text;--> statement-breakpoint
+ALTER TABLE "tipos_de_ativo" ADD CONSTRAINT "tipos_de_ativo_primeiro_cartao_valido" CHECK ("tipos_de_ativo"."primeiro_cartao" is null or length("tipos_de_ativo"."primeiro_cartao") between 1 and 60);

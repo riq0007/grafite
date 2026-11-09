@@ -1,0 +1,83 @@
+/*
+ * O Início em blocos (change inicio-ajustavel, design, decisões 1 e 4): a busca no topo, como um
+ * campo grande, e os blocos em coluna, separados pelo espaço e pelo carimbo de cada um.
+ */
+.inicio {
+  display: grid;
+  gap: var(--esp-8);
+  align-content: start;
+  min-width: 0;
+}
+
+/* A busca e o Personalizar, lado a lado enquanto cabem. */
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+/* O campo do topo: um poço largo, com a lupa, o convite e a tecla do atalho. */
+.busca {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  flex: 1;
+  min-width: min(100%, calc(var(--esp-12) * 5));
+  max-width: calc(var(--esp-12) * 12);
+  min-height: calc(var(--altura-controle) * 1.5);
+  padding: 0 var(--esp-4);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  text-align: start;
+  cursor: text;
+}
+
+.busca:hover {
+  border-color: var(--cor-texto-2);
+}
+
+.busca:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.textoDaBusca {
+  flex: 1;
+  min-width: 0;
+}
+
+.bloco {
+  display: grid;
+  gap: var(--esp-3);
+  align-content: start;
+  min-width: 0;
+}
+
+/* Subir, Descer e Ocultar de cada bloco, no modo Personalizar. */
+.arrumar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+}
+
+.ocultos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oculto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  max-width: calc(var(--esp-12) * 8);
+  color: var(--cor-texto-2);
+}

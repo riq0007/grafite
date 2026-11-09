@@ -1,0 +1,56 @@
+.busca {
+  gap: var(--esp-2);
+  color: var(--cor-texto-2);
+}
+
+/* No toque não há teclado à mão: o atalho sai de vista, e o botão fica só com a lupa. */
+[data-postura="tablet"] .atalho,
+[data-postura="celular"] .atalho {
+  display: none;
+}
+
+.sino {
+  gap: var(--esp-1);
+  color: var(--cor-texto-2);
+}
+
+/* O número de não lidas: um rótulo em cápsula, o único formato que pede o círculo completo. */
+.contador {
+  box-sizing: border-box;
+  min-width: calc(var(--esp-4) + var(--esp-1));
+  padding: 0 var(--esp-1);
+  border-radius: calc(var(--esp-4) + var(--esp-1));
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  line-height: calc(var(--esp-4) + var(--esp-1));
+  text-align: center;
+}
+
+/*
+ * O aviso do ambiente de teste: o tom de atenção tingido, como o rótulo de situação, com o ícone e
+ * o texto, numa linha só.
+ */
+.ambiente {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: calc(var(--esp-1) / 2) var(--esp-2);
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-atencao);
+  background-color: color-mix(in srgb, var(--cor-atencao) var(--tinta-rotulo), transparent);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  white-space: nowrap;
+}
+
+/* O modo Foco ligado, em texto ao lado do sino: o estado nunca fica só na cor. */
+.foco {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}

@@ -1,0 +1,42 @@
+/* O editor de filtro: a coluna, a condição, os campos do valor e as ações, um abaixo do outro. */
+.editor {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: calc(var(--esp-12) * 5);
+}
+
+/* O nome da coluna nomeia o editor. */
+.coluna {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* "De" e "Até" lado a lado. */
+.intervalo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-2);
+}
+
+/* As opções e o "Mostrar mais" embaixo delas, alinhado ao início. */
+.escolha {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.escolha > button {
+  justify-self: start;
+}
+
+/* Muitas opções rolam por dentro, com o rótulo e a recusa à vista. */
+.opcoes > :nth-child(2) {
+  max-height: calc(var(--esp-12) * 5);
+  overflow: auto;
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}

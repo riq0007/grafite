@@ -1,0 +1,161 @@
+/* As telas do Alertas: o título com a contagem, os filtros, as listas, as ações das linhas e o
+   bloco da ficha do ativo. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A seção com uma ação: o carimbo até a ação, à direita. */
+.cabecalhoDaSecao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.cabecalhoDaSecao > :first-child {
+  flex: 1;
+}
+
+.contagemDoTitulo {
+  color: var(--cor-texto-2);
+  font-weight: normal;
+}
+
+/* Os filtros lado a lado enquanto cabem, cada um com pelo menos 192 px. */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  align-items: end;
+  gap: var(--esp-3);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* A situação e, ao lado, o silêncio do ativo, em texto. */
+.situacao {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.silenciado {
+  color: var(--cor-texto-2);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* O escopo e, abaixo, o registro escolhido. */
+.escopo {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/* O texto que explica a tela, logo abaixo do cabeçalho (change regras-indicadores-e-tarefas). */
+.explicacao {
+  max-width: 80ch;
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+/* Os indicadores da organização, depois dos quatro, com o título da seção e "Novo indicador". */
+.indicadoresCriados {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+  margin-top: var(--esp-6);
+}
+
+/* As exceções da regra: cada uma num quadro, com o lugar, o efeito e "Tirar". */
+.excecoes {
+  display: grid;
+  gap: var(--esp-3);
+  padding-top: var(--esp-2);
+}
+
+.excecao {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+}
+
+.legendaDaExcecao {
+  padding: 0 var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.erroDaExcecao {
+  margin: 0;
+  color: var(--cor-critico);
+  font-size: var(--texto-dado);
+}
+
+/* O bloco Alertas na ficha do ativo: o título, os alertas abertos, os resolvidos e o silêncio. */
+.blocoDaFicha {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.alertasDoAtivo {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada alerta numa linha, que quebra no celular: a severidade, o texto, o há, a situação e as ações. */
+.alertaDoAtivo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.textoDoAlerta {
+  font-weight: 600;
+}
+
+.situacaoNaFicha {
+  color: var(--cor-texto-2);
+}
+
+.silencio {
+  display: grid;
+  gap: var(--esp-2);
+  justify-items: start;
+}
+
+.link {
+  color: var(--cor-destaque-texto);
+}
+
+/* Quem reconheceu ou até quando o alerta foi adiado, ao lado do selo da situação. */
+.detalheDaSituacao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

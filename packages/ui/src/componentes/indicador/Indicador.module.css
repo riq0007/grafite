@@ -1,0 +1,87 @@
+/*
+ * O indicador fica na superfície da janela, sem cartão em volta: uma seção com a linha de cima, o
+ * número com a meta ao lado e, fora da meta, a decisão. O número usa algarismos tabulares.
+ */
+.indicador {
+  display: grid;
+  gap: var(--esp-3);
+  padding-block: var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+  outline: none;
+}
+
+/* O foco chega pelo endereço, como o da notificação; o anel aparece só pelo teclado. */
+.indicador:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.titulos {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.nome {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+.mede {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-6);
+}
+
+.valor {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-titulo-grande);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--entrelinha-justa);
+}
+
+.semValor {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.contexto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+}
+
+.contexto p {
+  margin: 0;
+}
+
+.decisao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

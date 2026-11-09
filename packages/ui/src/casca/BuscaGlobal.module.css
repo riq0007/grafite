@@ -1,0 +1,191 @@
+/* Camada da busca: sem véu, como o Spotlight; o material separa a busca do conteúdo, que continua
+   à vista. Fica acima da barra e do dock. */
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  padding: 14vh var(--margem-lateral) var(--esp-4);
+}
+
+/* No celular, a busca ocupa a largura da tela, no topo, com os cantos de baixo arredondados. */
+[data-postura="celular"] .fundo {
+  padding: 0;
+}
+
+.painel {
+  box-sizing: border-box;
+  width: min(100%, calc(var(--esp-12) * 11.5));
+  overflow: hidden;
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-janela);
+  background-color: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+  transform-origin: top center;
+  outline: none;
+}
+
+[data-postura="celular"] .painel {
+  width: 100%;
+  border-width: 0 0 1px;
+  border-radius: 0 0 var(--raio-janela) var(--raio-janela);
+}
+
+/* Abre e fecha em 180 ms (Apêndice B), com leve escala; com movimento reduzido, a escala zera. */
+.painel[data-entering] {
+  animation:
+    aparecer var(--dur-busca) var(--curva-padrao),
+    crescer var(--dur-escala-busca) var(--curva-padrao);
+}
+
+.painel[data-exiting] {
+  animation:
+    aparecer var(--dur-busca) var(--curva-saida) reverse,
+    crescer var(--dur-escala-busca) var(--curva-saida) reverse;
+}
+
+.dialogo {
+  display: grid;
+  outline: none;
+}
+
+.campo {
+  position: relative;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.lupa {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--esp-4);
+  display: flex;
+  align-items: center;
+  color: var(--cor-texto-2);
+  pointer-events: none;
+}
+
+.entrada {
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(var(--esp-12) - var(--esp-1));
+  padding: 0 var(--esp-4) 0 calc(var(--esp-4) * 2 + var(--esp-2));
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-subtitulo);
+  outline: none;
+  appearance: none;
+}
+
+.entrada::placeholder {
+  color: var(--cor-texto-2);
+  opacity: 1;
+}
+
+/* A cruz nativa do campo de busca não segue os tokens; o Esc já fecha a busca. */
+.entrada::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.lista {
+  max-height: min(calc(var(--esp-12) * 8), 56vh);
+  overflow: auto;
+  padding: var(--esp-1);
+  outline: none;
+}
+
+.grupo + .grupo {
+  margin-top: var(--esp-1);
+}
+
+.nomeDoGrupo {
+  padding: var(--esp-2) var(--esp-2) var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.resultado {
+  display: grid;
+  grid-template-columns: var(--esp-4) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: calc(var(--esp-8) + var(--esp-1));
+  padding: 0 var(--esp-2);
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  outline: none;
+  cursor: default;
+}
+
+.resultado[data-focused] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.icone {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+.rotulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminho {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  white-space: nowrap;
+}
+
+/* No escolhido, o ícone e o caminho usam a cor sobre o destaque, sem opacidade (contraste). */
+.resultado[data-focused] .icone,
+.resultado[data-focused] .caminho {
+  color: inherit;
+}
+
+/* Linha de estado de um provedor ("Buscando…", erro): não é escolhível e não recua como desabilitada. */
+.estado {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--esp-8) + var(--esp-1));
+  padding: 0 var(--esp-2) 0 calc(var(--esp-2) * 2 + var(--esp-4));
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  outline: none;
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.vazio {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scale(0.98);
+  }
+}

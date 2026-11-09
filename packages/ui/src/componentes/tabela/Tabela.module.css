@@ -1,0 +1,375 @@
+/* Rola nos dois sentidos: nada é cortado (o rótulo de situação não quebra nem trunca). */
+.rolagem {
+  --esmaecer-a-esquerda: 0px;
+  --esmaecer-a-direita: 0px;
+
+  overflow: auto;
+}
+
+/*
+ * A borda do lado em que há mais colunas esmaece, como a faixa da janela (change
+ * rolagem-das-tabelas, design, decisão 2): o degradê no conteúdo e uma camada opaca em cada barra
+ * de rolagem, que não esmaece. A máscara lê só a opacidade, e a cor do texto é opaca em todos os
+ * temas.
+ */
+.rolagem[data-mais-a-esquerda] {
+  --esmaecer-a-esquerda: var(--esp-8);
+}
+
+.rolagem[data-mais-a-direita] {
+  --esmaecer-a-direita: var(--esp-8);
+}
+
+.rolagem[data-mais-a-esquerda],
+.rolagem[data-mais-a-direita] {
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent,
+      currentColor var(--esmaecer-a-esquerda),
+      currentColor calc(100% - var(--esmaecer-a-direita)),
+      transparent
+    ),
+    linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor);
+  mask-size:
+    calc(100% - var(--largura-da-barra, 0px)) calc(100% - var(--altura-da-barra, 0px)),
+    100% var(--altura-da-barra, 0px),
+    var(--largura-da-barra, 0px) 100%;
+  mask-position:
+    left top,
+    left bottom,
+    right top;
+  mask-repeat: no-repeat;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  outline: none;
+}
+
+/*
+ * Cabeçalho fixo: fundo opaco, para as linhas passarem por baixo sem vazar. O nome da coluna vem em
+ * legenda, como o carimbo de uma prancha (change componentes-v3, design, decisão 4).
+ */
+.coluna {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--altura-linha);
+  padding: 0 var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha-forte);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: start;
+  white-space: nowrap;
+  outline: none;
+}
+
+.coluna[data-allows-sorting][data-hovered] {
+  color: var(--cor-texto);
+}
+
+.coluna[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.conteudoDaColuna {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+/* Na tabela redimensionável: o rótulo, a ordem, o menu e a borda que arrasta. */
+.cabecalhoDaColuna {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.cabecalhoDaColuna .conteudoDaColuna {
+  flex: 1;
+  min-width: 0;
+}
+
+.coluna[data-alinhamento="fim"] {
+  text-align: end;
+}
+
+.coluna[data-alinhamento="fim"] .conteudoDaColuna {
+  justify-content: flex-end;
+}
+
+.rotuloDaColuna {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* O menu da coluna, discreto como a seta da ordem, inteiro ao parar o mouse ou com o foco. */
+.botaoDaColuna {
+  flex: none;
+  opacity: 0.55;
+}
+
+.coluna[data-hovered] .botaoDaColuna,
+.botaoDaColuna[data-focus-visible],
+.botaoDaColuna[data-pressed] {
+  opacity: 1;
+}
+
+/* A borda que arrasta: a área toda à direita do cabeçalho, com a linha à vista ao usá-la. */
+.borda {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--esp-2);
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.borda::after {
+  content: "";
+  position: absolute;
+  top: var(--esp-2);
+  right: 0;
+  bottom: var(--esp-2);
+  width: 2px;
+  background-color: transparent;
+}
+
+.borda[data-hovered]::after {
+  background-color: var(--cor-linha-forte);
+}
+
+.borda[data-focus-visible]::after,
+.borda[data-resizing]::after {
+  background-color: var(--cor-foco);
+}
+
+.envoltorio {
+  min-width: 0;
+}
+
+/* Ordenável sem ordem aplicada: a seta dupla, discreta; aplicada: a seta da direção. */
+.ordem {
+  display: inline-flex;
+  opacity: 0.55;
+}
+
+.ordem[data-ativa] {
+  color: var(--cor-texto);
+  opacity: 1;
+}
+
+.linha {
+  height: var(--altura-linha);
+  outline: none;
+}
+
+/*
+ * Linhas alternadas, a menos que o usuário as tenha desligado (Ajustes › Tabelas). Na tabela
+ * virtualizada, o React Aria reaproveita as linhas fora de ordem: vale a posição de cada uma.
+ */
+/* Com a especificidade baixa: o hover e a seleção, que vêm depois, ficam por cima da alternada. */
+.tabela:where(:not(.virtualizada):not([data-sem-linhas-alternadas])) .linha:where(:nth-child(even)),
+.virtualizada:where(:not([data-sem-linhas-alternadas])) .linha:where([data-par]) {
+  background-color: var(--cor-zebra);
+}
+
+.linha[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+/* A mesma tinta cujo contraste o verificador mede ("texto sobre a linha selecionada"). */
+.linha[data-selected] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+}
+
+/*
+ * A marca lateral da seleção, no destaque: com o destaque monocromático, a linha selecionada não
+ * depende da tinta do fundo. Vai na primeira célula, que pinta a sombra em qualquer navegador,
+ * também quando a linha é um <tr>.
+ */
+.linha[data-selected] > .celula:first-child {
+  box-shadow: inset 2px 0 0 var(--cor-destaque);
+}
+
+.linha[data-focus-visible],
+.celula[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.celula {
+  padding: 0 var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: none;
+}
+
+/* Na tabela redimensionável, o que não cabe na largura da coluna termina em reticências. */
+.envoltorio .celula {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.celula[data-alinhamento="fim"] {
+  text-align: end;
+}
+
+.celula[data-mono] {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * As espécies da coluna (change tabelas-consistentes, design, decisão 2). O número fica à direita e
+ * na mono, o código na mono, a data numa linha, e as ações à direita, lado a lado, sem quebrar a
+ * linha.
+ */
+.conteudoNumero {
+  display: block;
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.conteudoCodigo {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.conteudoData {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.conteudoAcoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-1);
+  white-space: nowrap;
+}
+
+/* O contêiner que a tela põe nas ações também não quebra: a linha fica na altura dela. */
+.conteudoAcoes > [class] {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* "Carregar mais", logo depois da tabela. */
+.carregarMais {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--esp-3);
+}
+
+/* A tabela virtualizada ocupa a altura que recebe e rola por dentro; a área não rola. */
+.areaVirtualizada {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.envoltorioVirtualizado {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.virtualizada {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* "Carregando mais…", na última linha, enquanto a página seguinte chega. */
+.carregandoMais {
+  display: flex;
+  align-items: center;
+  height: var(--altura-linha);
+  padding: 0 var(--esp-3);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Na tabela virtualizada, as células são blocos posicionados: o texto fica no meio da linha. */
+.virtualizada .coluna {
+  display: flex;
+  align-items: center;
+}
+
+.virtualizada .cabecalhoDaColuna {
+  flex: 1;
+}
+
+.virtualizada .celula {
+  line-height: calc(var(--altura-linha) - 1px);
+}
+
+/* "3 selecionados", com "Limpar seleção" ao lado. */
+.contagemDaSelecao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/*
+ * Enquanto as linhas novas não chegam, uma linha de progresso no alto da tabela, por cima da borda, sem
+ * deslocar nada e sem tirar o contraste do texto das linhas de antes. Parada com o movimento reduzido.
+ */
+.progresso {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 2px;
+  margin-bottom: -2px;
+  background-color: var(--cor-destaque);
+  animation: pulsarOProgresso var(--dur-ciclo) ease-in-out infinite;
+}
+
+@keyframes pulsarOProgresso {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* O esqueleto da primeira carga: linhas na altura da densidade, sob as colunas. */
+.esqueletoDasLinhas {
+  display: grid;
+}
+
+.linhaDoEsqueleto {
+  display: flex;
+  align-items: center;
+  height: var(--altura-linha);
+  padding-inline: var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+}

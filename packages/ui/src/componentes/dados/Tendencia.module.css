@@ -1,0 +1,49 @@
+/* A tendência: a linha curta na tinta, o último valor em mono e o período ao lado. */
+.tendencia {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.grafico {
+  flex: none;
+  overflow: visible;
+}
+
+.linha {
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.projecao {
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+
+.ponto {
+  fill: var(--tinta);
+}
+
+.valor {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.unidade {
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-2);
+}
+
+.periodo,
+.semValor {
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+}

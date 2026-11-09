@@ -1,0 +1,14 @@
+/* Código QR (spec componentes-base): módulos escuros sobre fundo claro em qualquer tema, com as
+   cores fixas dos tokens, porque quem lê é a câmera do celular. */
+.codigo {
+  display: block;
+  flex: none;
+}
+
+.fundo {
+  fill: var(--cor-qr-fundo);
+}
+
+.modulos {
+  fill: var(--cor-qr-modulo);
+}

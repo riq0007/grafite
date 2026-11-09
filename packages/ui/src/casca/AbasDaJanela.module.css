@@ -1,0 +1,139 @@
+/*
+ * A barra fica no topo da janela, colada nas bordas, fora da área que rola: só o conteúdo rola
+ * abaixo dela. As abas que não cabem rolam de lado, e a contenção da largura impede que elas
+ * alarguem a janela.
+ */
+.barra {
+  flex: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  contain: inline-size;
+  border-start-start-radius: calc(var(--raio-janela) - 1px);
+  border-start-end-radius: calc(var(--raio-janela) - 1px);
+  background-color: var(--cor-superficie-2);
+}
+
+/*
+ * Uma grade de uma linha: cada aba numa coluna ímpar, pela subgrade da lista, e o botão de fechar
+ * dela na coluna seguinte. A linha de baixo da barra passa por trás das abas, e a da frente a
+ * cobre com a cor da janela: ela é a que continua no conteúdo, pela forma, e não só pela cor.
+ */
+.trilho {
+  display: grid;
+  grid-template-columns: repeat(var(--colunas-das-abas), auto);
+  justify-content: start;
+  width: max-content;
+  min-width: 100%;
+  box-shadow: inset 0 -1px 0 var(--cor-linha);
+}
+
+.lista {
+  display: grid;
+  grid-row: 1;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+.aba,
+.fechar {
+  grid-row: 1;
+  color: var(--cor-texto-2);
+  outline: none;
+  animation: entrada var(--dur-deslocamento) var(--curva-padrao);
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* A aba que abre sobe um pouco ao entrar; com movimento reduzido, a duração é zero. */
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(var(--esp-1));
+  }
+}
+
+.aba {
+  display: flex;
+  align-items: center;
+  min-height: var(--altura-controle);
+  padding: var(--esp-2) var(--esp-4);
+  border-inline-end: 1px solid var(--cor-linha);
+  white-space: nowrap;
+  font-size: var(--texto-corpo);
+  cursor: default;
+}
+
+/* Com o botão de fechar, a divisória vai depois dele. */
+.aba[data-fechavel] {
+  padding-inline-end: var(--esp-1);
+  border-inline-end: 0;
+}
+
+.fechar {
+  display: inline-grid;
+  place-items: center;
+  padding: 0 var(--esp-2);
+  border: 0;
+  border-inline-end: 1px solid var(--cor-linha);
+  background-color: transparent;
+}
+
+.aba[data-hovered]:not([data-frente]),
+.fechar[data-hovered] {
+  background-color: var(--cor-hover);
+  color: var(--cor-texto);
+}
+
+.aba[data-frente],
+.fechar[data-frente] {
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+.aba[data-frente] {
+  font-weight: var(--peso-medio);
+}
+
+.fechar[data-pressed] {
+  background-color: var(--cor-pressionado);
+}
+
+/* O anel de foco por dentro: a barra rola e cortaria o de fora. */
+.aba[data-focus-visible],
+.fechar[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* No toque, cada aba e cada botão de fechar são alvos de pelo menos 44 px. */
+[data-postura="tablet"] .aba,
+[data-postura="celular"] .aba {
+  min-height: var(--alvo-toque);
+}
+
+[data-postura="tablet"] .fechar,
+[data-postura="celular"] .fechar {
+  min-width: var(--alvo-toque);
+}
+
+.painel {
+  outline: none;
+}
+
+/*
+ * O painel visível empilha o que a tela põe, como o cabeçalho e o "Carregando…", a 4 passos um do
+ * outro (change cabecalho-em-toda-tela, design, decisão 5). A coluna `minmax(0, 1fr)` deixa a
+ * tabela larga rolar por dentro, sem alargar a janela; o painel de trás continua escondido.
+ */
+.painel:not([hidden]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--esp-4);
+}
+
+.painel:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}

@@ -1,0 +1,126 @@
+{
+  "id": "8e786bdb-e098-453f-ada6-eb258a2bde46",
+  "prevId": "37cff10d-6e3e-43ed-a2e5-7cc05fd032bc",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.enderecos_de_acesso": {
+      "name": "enderecos_de_acesso",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco": {
+          "name": "endereco",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "enderecos_de_acesso_org_id_organizacoes_id_fk": {
+          "name": "enderecos_de_acesso_org_id_organizacoes_id_fk",
+          "tableFrom": "enderecos_de_acesso",
+          "tableTo": "organizacoes",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "enderecos_de_acesso_endereco_unico": {
+          "name": "enderecos_de_acesso_endereco_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "endereco"
+          ]
+        },
+        "enderecos_de_acesso_org_id_id_unico": {
+          "name": "enderecos_de_acesso_org_id_id_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "org_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "enderecos_de_acesso_endereco_normalizado": {
+          "name": "enderecos_de_acesso_endereco_normalizado",
+          "value": "\"enderecos_de_acesso\".\"endereco\" ~ '^[a-z0-9:._-]+$' and \"enderecos_de_acesso\".\"endereco\" !~ '^[^:]*:[^:]*$' and right(\"enderecos_de_acesso\".\"endereco\", 1) <> '.'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.organizacoes": {
+      "name": "organizacoes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

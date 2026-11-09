@@ -1,0 +1,75 @@
+.cartao {
+  display: grid;
+  gap: var(--esp-3);
+  box-sizing: border-box;
+  width: calc(var(--esp-12) * 6);
+  max-width: calc(100vw - var(--esp-8));
+  padding: var(--esp-3);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.midia {
+  display: inline-flex;
+  flex: none;
+}
+
+.nomes {
+  display: grid;
+  min-width: 0;
+}
+
+.nome {
+  margin: 0;
+  overflow: hidden;
+  font-weight: var(--peso-forte);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tipo {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.detalhes {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-dado);
+}
+
+.estado {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1) var(--esp-4);
+  font-size: var(--texto-dado);
+}
+
+.acoes a {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.acoes a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}

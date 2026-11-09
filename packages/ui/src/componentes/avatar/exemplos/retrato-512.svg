@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" width="512" height="384">
+  <title>Retrato de 512 px (imagem de exemplo)</title>
+  <rect width="64" height="48" fill="#8fb3c9"/>
+  <circle cx="32" cy="19" r="9" fill="#e8c4a6"/>
+  <path d="M14 48c1.5-10.5 8.8-16 18-16s16.5 5.5 18 16z" fill="#3d5a73"/>
+</svg>

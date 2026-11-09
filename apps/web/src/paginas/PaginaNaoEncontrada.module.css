@@ -1,0 +1,11 @@
+.descricao {
+  margin: 0 0 var(--esp-3);
+  color: var(--cor-texto-2);
+}
+
+/* Sublinhado, para o link não depender só da cor. */
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

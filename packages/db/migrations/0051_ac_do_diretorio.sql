@@ -1,0 +1,2 @@
+ALTER TABLE "diretorios" ADD COLUMN "ac_do_servidor" text;--> statement-breakpoint
+ALTER TABLE "diretorios" ADD CONSTRAINT "diretorios_ac_valida" CHECK (("diretorios"."ac_do_servidor" is null or length(trim("diretorios"."ac_do_servidor")) between 1 and 20000));

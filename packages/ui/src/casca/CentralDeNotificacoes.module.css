@@ -1,0 +1,122 @@
+.grupo {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.dia {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada notificação separada da seguinte por uma linha, sem cartões. */
+.item {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3) 0;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.linhaDeCima {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* "Não lida" em texto; o ponto do destaque só reforça. */
+.naoLida {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.naoLida::before {
+  width: var(--esp-2);
+  height: var(--esp-2);
+  border-radius: 50%;
+  background-color: var(--cor-destaque);
+  content: "";
+}
+
+.horario {
+  margin-left: auto;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.titulo {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.descricao,
+.origem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Filtros no topo, com "Marcar todas como lidas" à direita quando cabe. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  padding-bottom: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.marcarTodas {
+  margin-left: auto;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin-top: var(--esp-1);
+}
+
+/* O modo Foco no topo da central, com a explicação em texto. */
+.foco {
+  display: grid;
+  gap: var(--esp-1);
+  padding-bottom: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.explicacao,
+.carregando {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Como está o alerta de que a notificação trata, em texto. */
+.situacaoDoAlerta {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+/* A página seguinte, ao fim da lista. */
+.carregarMais {
+  display: flex;
+  justify-content: center;
+  padding: var(--esp-3) 0;
+}

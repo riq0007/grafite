@@ -1,0 +1,107 @@
+/* Barra de progresso: o preenchimento no destaque contra a superfície 2 (3:1 verificado). */
+.progresso {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.cabecalhoDoProgresso {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+.rotuloDoProgresso {
+  color: var(--cor-texto);
+}
+
+.valorDoProgresso {
+  color: var(--cor-texto-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.trilho {
+  height: var(--esp-1);
+  overflow: hidden;
+  border-radius: min(var(--raio-controle), calc(var(--esp-1) / 2));
+  background-color: var(--cor-superficie-2);
+}
+
+.preenchimento {
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--cor-destaque);
+  transition: width var(--dur-media) var(--curva-padrao);
+}
+
+/* Sem valor: um trecho vai e vem; com movimento reduzido, fica parado. */
+.progresso[data-indeterminate] .preenchimento {
+  width: 40%;
+  animation: vaiEVem var(--dur-ciclo) var(--curva-padrao) infinite;
+}
+
+@keyframes vaiEVem {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* Esqueleto: pulso de opacidade (sem gradiente: ANTISLOP), parado com movimento reduzido. */
+.esqueleto {
+  display: block;
+  height: calc(var(--texto-corpo) * var(--entrelinha-justa));
+  border-radius: var(--raio-rotulo);
+  background-color: var(--cor-superficie-2);
+  animation: pulsar var(--dur-ciclo) ease-in-out infinite;
+}
+
+.esqueleto[data-forma="bloco"] {
+  border-radius: var(--raio-controle);
+}
+
+.esqueleto[data-forma="circulo"] {
+  border-radius: 50%;
+}
+
+@keyframes pulsar {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.vazio {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-8) var(--esp-4);
+  text-align: center;
+}
+
+.iconeDoVazio {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+.tituloDoVazio {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-medio);
+}
+
+.descricaoDoVazio {
+  max-width: calc(var(--esp-12) * 8);
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+.acaoDoVazio {
+  margin-top: var(--esp-2);
+}

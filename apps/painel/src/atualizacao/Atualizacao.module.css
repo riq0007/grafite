@@ -1,0 +1,34 @@
+/* A atualização: a escolha do pacote, o ambiente e a ação. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  max-width: var(--largura-formulario);
+  min-width: 0;
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.opcao {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.detalhe {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--esp-2);
+}

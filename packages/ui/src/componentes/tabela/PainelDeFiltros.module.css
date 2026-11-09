@@ -1,0 +1,99 @@
+/* O painel de filtros: a lista das colunas à esquerda e o editor à direita, ou um de cada vez. */
+.painel {
+  display: grid;
+  grid-template-columns: minmax(calc(var(--esp-12) * 4), 1fr) minmax(calc(var(--esp-12) * 5), 1.4fr);
+  gap: var(--esp-4);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.painel[data-estreito] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.lista {
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.lista > button {
+  justify-self: start;
+}
+
+/* As colunas rolam por dentro, com a busca sempre à vista. */
+.colunas {
+  max-height: calc(var(--esp-12) * 8);
+  overflow: auto;
+  outline: none;
+}
+
+.grupo + .grupo {
+  margin-top: var(--esp-1);
+}
+
+.nomeDoGrupo {
+  padding: var(--esp-2) var(--esp-2) var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+/* Cada coluna na altura de um controle, com "Filtrada" à direita do rótulo. */
+.coluna {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--altura-controle);
+  padding-inline: var(--esp-2);
+  border-radius: var(--raio-controle);
+  outline: none;
+  cursor: default;
+}
+
+.coluna[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+/* A mesma tinta da linha selecionada da tabela. */
+.coluna[data-selected] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+}
+
+.coluna[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.rotulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filtrada {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.editor {
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.editor > button {
+  justify-self: start;
+}
+
+.vazio {
+  margin: 0;
+  color: var(--cor-texto-2);
+}

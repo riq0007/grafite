@@ -1,0 +1,10 @@
+/*
+ * Fontes da interface, servidas pelo próprio sistema (o servidor interno pode não ter
+ * internet). Licença SIL OFL. Cada arquivo declara os subconjuntos com unicode-range:
+ * o navegador baixa só o que o texto usa (latin e latin-ext para pt-BR).
+ */
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";

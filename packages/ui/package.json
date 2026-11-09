@@ -1,0 +1,59 @@
+{
+  "name": "@grafite/ui",
+  "private": true,
+  "description": "Tokens, ícones, marca e componentes base.",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens/gerado/tokens.css",
+    "./fontes.css": "./src/fontes.css",
+    "./base.css": "./src/base.css",
+    "./carregamento": "./src/chegada/carregamento.ts",
+    "./carregamento.css": "./src/chegada/carregamento.css"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --project unitario",
+    "test:stories": "vitest run --project catalogo",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@fontsource/instrument-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@internationalized/date": "^3.12.4",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-aria": "3.52.1",
+    "react-aria-components": "^1.21.1",
+    "react-dom": "^19.3.0",
+    "react-stately": "3.50.0",
+    "uqr": "^0.1.3"
+  },
+  "devDependencies": {
+    "@fontsource/sacramento": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-vitest": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/opentype.js": "^1.3.10",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
+    "happy-dom": "^20.14.5",
+    "opentype.js": "^2.0.0",
+    "playwright": "^1.63.0",
+    "storybook": "^10.6.0",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11"
+  }
+}

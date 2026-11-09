@@ -1,0 +1,3 @@
+ALTER TABLE "indicadores_da_organizacao" DROP CONSTRAINT "indicadores_da_organizacao_indicador_valido";--> statement-breakpoint
+CREATE INDEX "ordens_de_servico_resolvida_idx" ON "ordens_de_servico" USING btree ("org_id","resolvida_em") WHERE "ordens_de_servico"."resolvida_em" is not null;--> statement-breakpoint
+ALTER TABLE "indicadores_da_organizacao" ADD CONSTRAINT "indicadores_da_organizacao_indicador_valido" CHECK ("indicadores_da_organizacao"."indicador" in ('toner', 'critico', 'disponibilidade', 'que-voltam', 'resolucao-das-os', 'os-repetidas', 'paginas-por-toner'));

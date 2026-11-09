@@ -1,0 +1,96 @@
+/* As configurações: um cartão para cada uma, numa grade que aproveita a largura. */
+.tela {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: var(--esp-4);
+  align-items: start;
+  min-width: 0;
+}
+
+.cartao {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+  min-width: 0;
+}
+
+.cartao h2 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--esp-2);
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--esp-2);
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  overflow-wrap: anywhere;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--texto-dado);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.tabela tbody th {
+  font-weight: var(--peso-normal);
+}
+
+.tabela thead th {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.semTexto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}

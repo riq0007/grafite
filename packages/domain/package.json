@@ -1,0 +1,14 @@
+{
+  "name": "@grafite/domain",
+  "private": true,
+  "description": "Regras de negócio puras.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  }
+}

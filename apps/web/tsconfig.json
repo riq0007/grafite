@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vite-plugin-pwa/client"]
+  },
+  "include": [
+    "src",
+    "e2e",
+    "e2e-pilha",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "playwright.pilha.config.ts"
+  ]
+}

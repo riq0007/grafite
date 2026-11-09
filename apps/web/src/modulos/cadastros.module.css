@@ -1,0 +1,6 @@
+/* O campo e o link de cadastro embaixo dele, juntos, com o respiro do formulário fora. */
+.campoComCadastro {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}

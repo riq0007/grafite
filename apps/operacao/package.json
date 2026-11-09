@@ -1,0 +1,24 @@
+{
+  "name": "@grafite/comando-de-operacao",
+  "private": true,
+  "description": "Comando de operação do servidor: instalar, atualizar, voltar, backup e restauração.",
+  "type": "module",
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run -c vitest.integration.config.ts --passWithNoTests"
+  },
+  "dependencies": {
+    "@grafite/db": "workspace:*",
+    "@grafite/domain": "workspace:*",
+    "@grafite/operacao": "workspace:*",
+    "pg": "^8.23.1",
+    "zod": "^4.6.5"
+  },
+  "version": "0.1.11",
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "selfsigned": "^5.5.0"
+  }
+}

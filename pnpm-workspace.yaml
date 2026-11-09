@@ -1,0 +1,17 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Scripts de instalação ficam bloqueados por padrão; só os listados como true rodam.
+allowBuilds:
+  # Instala os ganchos do Git.
+  lefthook: true
+  # Confere o binário da plataforma.
+  esbuild: true
+  # Compilação nativa opcional (ssh2 funciona sem ela) e avisos de CLI: desnecessários.
+  cpu-features: false
+  ssh2: false
+  protobufjs: false
+
+patchedDependencies:
+  react-aria: patches/react-aria.patch

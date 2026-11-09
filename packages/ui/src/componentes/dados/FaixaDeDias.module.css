@@ -1,0 +1,84 @@
+/* A faixa de dias: os quadrados quebram em linhas, e o resumo fica ao lado ou embaixo. */
+.faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  min-width: 0;
+}
+
+.dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dia {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+/* Concluído: cheio. */
+.dia[data-situacao="ok"] {
+  background: var(--cor-ok-forte);
+}
+
+/* Parcial: meio cheio, na diagonal, com o contorno. */
+.dia[data-situacao="parcial"] {
+  border: 1px solid var(--cor-atencao-forte);
+}
+
+.meio {
+  position: absolute;
+  inset: 0;
+  background: var(--cor-atencao-forte);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+/* Falha: cheio, com o X na cor sobre o preenchimento. */
+.dia[data-situacao="falha"] {
+  background: var(--cor-critico-forte);
+}
+
+.x::before,
+.x::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  right: 1px;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: var(--cor-sobre-critico);
+  rotate: 45deg;
+}
+
+.x::after {
+  rotate: -45deg;
+}
+
+/* Sem nada: só o contorno. */
+.dia[data-situacao="nada"] {
+  border: 1px solid var(--cor-linha-forte);
+}
+
+.resumo {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

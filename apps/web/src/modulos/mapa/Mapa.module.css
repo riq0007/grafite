@@ -1,0 +1,122 @@
+/* O mapa da planta: a lista das plantas e o mapa, com a barra, o canvas e o painel ao lado. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.plantas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 6), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planta {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.nomeDaPlanta {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+/*
+ * O mapa ocupa a área até o fim da janela, pela altura medida, com o painel à direita, que rola
+ * dentro dela; no estreito, o painel vai para baixo, e o quadro tem altura própria.
+ */
+.mapa {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--esp-12) * 7);
+  gap: var(--esp-3);
+  height: var(--altura-do-mapa, calc(var(--esp-12) * 12));
+}
+
+@media (max-width: 900px) {
+  .mapa {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .quadro {
+    height: calc(var(--esp-12) * 10);
+  }
+}
+
+.quadro {
+  position: relative;
+  min-height: calc(var(--esp-12) * 12);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.canvas[data-posicionando="true"] {
+  cursor: crosshair;
+}
+
+.painel {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bloco {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.tituloDoBloco {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-1);
+  max-height: calc(var(--esp-12) * 5);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}

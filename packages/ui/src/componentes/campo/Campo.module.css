@@ -1,0 +1,170 @@
+/* align-content: start impede que a grade estique rótulo e caixa numa célula mais alta. */
+.campo {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.rotulo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-2);
+}
+
+/*
+ * Caixa de entrada: vale para o campo de texto, a área de texto, a seleção e a busca. É um poço, na
+ * superfície afundada (change componentes-v3, design, decisão 3); a borda de controle tem 3:1 contra
+ * a superfície ao redor, e o gerador garante o texto e o de exemplo sobre a afundada.
+ */
+.entrada {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-2);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-justa);
+  outline: none;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.entrada::placeholder {
+  color: var(--cor-texto-2);
+  opacity: 1;
+}
+
+/* O hover reforça a borda; o fundo não muda, para o texto de exemplo manter o contraste. */
+.entrada[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+/* No campo de texto o anel aparece em qualquer foco: ele mostra onde a digitação cai. */
+.entrada:is(input, textarea)[data-focused],
+.entrada[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.entrada[data-invalid] {
+  border-color: var(--cor-critico);
+}
+
+.entrada[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.area {
+  min-height: calc(var(--altura-controle) * 3);
+  padding: var(--esp-2);
+  line-height: var(--entrelinha-normal);
+  resize: vertical;
+}
+
+.descricao {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+/*
+ * O formulário para nos 960 px. O que tem a lista das etapas e a imagem ao lado dos campos tira o
+ * limite pela variável, e o limite fica na área dos campos (change janela-rolavel-e-campos-em-colunas).
+ */
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+  max-width: var(--largura-maxima-do-formulario, var(--largura-formulario));
+}
+
+/* Linha de campos: o elemento de fora é o container, e o de dentro se arranja pela largura dele. */
+.linha {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.camposDaLinha {
+  display: grid;
+  align-items: start;
+  gap: var(--esp-4);
+}
+
+/* A partir de 480 px, lado a lado em colunas iguais: com dois campos, 232 px para cada um. */
+@container (width >= 480px) {
+  .camposDaLinha {
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+  }
+}
+
+/* Campo com uma ação dentro da caixa, como "Mostrar senha": a ação fica à direita, por cima da
+   borda interna, e a entrada reserva o espaço dela para o texto não passar por baixo. */
+.comAcao {
+  position: relative;
+  display: grid;
+}
+
+.entradaComAcao {
+  padding-inline-end: var(--altura-controle);
+}
+
+.acaoDoCampo {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: var(--altura-controle);
+}
+
+/* Campo de data: as partes (dia, mês e ano) em linha, e o anel em qualquer foco dentro dele,
+   como no campo de texto. */
+.data {
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  cursor: text;
+}
+
+.data[data-focus-within] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.segmento {
+  padding-inline: calc(var(--esp-1) / 2);
+  border-radius: var(--raio-rotulo);
+  outline: none;
+}
+
+.segmento[data-placeholder] {
+  color: var(--cor-texto-2);
+}
+
+.segmento[data-type="literal"] {
+  padding: 0;
+  color: var(--cor-texto-2);
+}
+
+.segmento[data-focused] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}

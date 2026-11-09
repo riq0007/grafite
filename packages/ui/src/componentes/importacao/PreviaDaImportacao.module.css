@@ -1,0 +1,76 @@
+.previa {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+
+/* Cada linha separada da seguinte por uma linha, como o histórico. */
+.linha {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3) 0;
+  border-bottom: 1px solid var(--cor-linha);
+  min-width: 0;
+}
+
+.linha:first-child {
+  padding-top: 0;
+}
+
+.cabecalho {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.numero {
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.ativo {
+  color: var(--cor-texto-2);
+  overflow-wrap: anywhere;
+}
+
+.mudancas,
+.erros {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--esp-1);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+.campo,
+.seguros,
+.vazio {
+  color: var(--cor-texto-2);
+}
+
+.seguros,
+.vazio {
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+/* O erro é dito em texto; a cor da situação crítica só reforça. */
+.erros {
+  color: var(--cor-critico);
+}
+
+.campoDoErro {
+  font-weight: var(--peso-medio);
+}

@@ -1,0 +1,4 @@
+{
+  "_origem": "Montada pelos campos que o PMG lê das informações do sistema (src/lib/controlid-client.ts), e não lida de um controle: um modelo que só informa o firmware, sem a série e sem o produto.",
+  "firmware": "4.1.0"
+}

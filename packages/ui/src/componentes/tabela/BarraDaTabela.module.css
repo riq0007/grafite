@@ -1,0 +1,44 @@
+/* As faixas da barra, uma sob a outra. */
+.barra {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* Cada faixa quebra em mais linhas quando falta largura, sem esconder nenhum controle. */
+.faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--altura-controle);
+}
+
+/* Na primeira faixa, os controles se alinham pela base: os campos têm o rótulo em cima. */
+.faixa[data-faixa="primeira"] {
+  align-items: flex-end;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+/* A busca ocupa o que sobra da primeira faixa. */
+.faixa[data-faixa="primeira"] > :has(input[type="search"]) {
+  flex: 1 1 calc(var(--esp-12) * 6);
+}
+
+/* A contagem fica à direita da primeira faixa, na altura dos controles. */
+.contagem {
+  display: flex;
+  align-items: center;
+  min-height: var(--altura-controle);
+  margin: 0 0 0 auto;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  white-space: nowrap;
+}
+
+.selecionados {
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}

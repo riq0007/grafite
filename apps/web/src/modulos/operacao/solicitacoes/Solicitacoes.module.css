@@ -1,0 +1,52 @@
+/* A impressora do toner na gaveta: o nome, o total de páginas e a quantidade de cada cor. */
+.impressora {
+  display: grid;
+  gap: var(--esp-3);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+}
+
+.nomeDaImpressora {
+  margin: 0;
+  padding: 0;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+/* O total de páginas e "Tirar" na mesma linha; estreito, o botão desce. */
+.cabecalhoDaImpressora {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.contador {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As cinco cores lado a lado enquanto cabem, cada uma com pelo menos 144 px. */
+.cores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 3), 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+/* A recusa da impressora inteira, com o ícone, como a de um campo. */
+.erroDaImpressora {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: 0;
+  color: var(--cor-critico);
+  font-size: var(--texto-dado);
+}

@@ -1,0 +1,143 @@
+/* A distribuição de software: a tela com a Base e as Distribuições, a ficha e as gavetas. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.aba {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+  padding-top: var(--esp-4);
+}
+
+.busca {
+  max-width: 28rem;
+}
+
+.acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* O comando numa linha, cortado; inteiro na edição. */
+.comando {
+  display: block;
+  max-width: 18rem;
+  overflow: hidden;
+  font-family: var(--fonte-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+/* A escolha das máquinas: as escolhidas em cima, a busca e os resultados embaixo. */
+.escolhidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.escolhida {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-1) var(--esp-1) var(--esp-1) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+  font-size: var(--texto-dado);
+}
+
+.resultados {
+  display: grid;
+  gap: var(--esp-1);
+  max-height: 20rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.resultado {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-controle);
+}
+
+.resultado:hover {
+  background: var(--cor-superficie-2);
+}
+
+.detalhe {
+  margin: 0 0 0 calc(var(--esp-5) + var(--esp-1));
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* O log como chegou do agente: uma linha por passo, na ordem. */
+.log {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: var(--esp-3);
+  overflow-x: auto;
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  list-style: none;
+}
+
+.log li {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.secao h3 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+}
+
+/* A aba Softwares da ficha do ativo: os instalados e, depois, as distribuições. */
+.partes {
+  display: grid;
+  gap: var(--esp-8);
+  min-width: 0;
+}

@@ -1,0 +1,14 @@
+# Todo arquivo de texto usa LF, inclusive no Windows (spec plataforma-base).
+* text=auto eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.glb binary
+*.ktx2 binary

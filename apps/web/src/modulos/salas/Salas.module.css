@@ -1,0 +1,230 @@
+/* O módulo Salas: a agenda em grade, as reservas em cartões e o cadastro (change salas-de-reuniao). */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* A navegação entre os dias, com o dia escrito ao lado. */
+.navegacaoDoDia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.diaDaAgenda {
+  margin: 0 0 0 var(--esp-3);
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  text-transform: capitalize;
+}
+
+/* A grade rola de lado dentro da área quando as salas não cabem. */
+.areaDaGrade {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.grade {
+  display: grid;
+  position: relative;
+  min-width: 100%;
+}
+
+.cantoDaGrade {
+  grid-column: 1;
+  grid-row: 1;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.cabecalhoDaSala {
+  display: grid;
+  gap: 2px;
+  padding: var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  border-left: 1px solid var(--cor-linha);
+}
+
+.nomeDaSala {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.horaDaGrade {
+  padding: 0 var(--esp-2);
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+/* O horário livre: o espaço da meia hora, que abre a Nova reserva. */
+.horarioLivre {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--cor-linha);
+  border-left: 1px solid var(--cor-linha);
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.horarioLivre:hover {
+  background: var(--cor-hover);
+}
+
+.horarioLivre:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A reserva por cima dos horários, com a situação na borda e em texto. */
+.bloco {
+  z-index: 1;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  margin: 2px var(--esp-1);
+  padding: var(--esp-2);
+  overflow: hidden;
+  border: 1px solid var(--cor-linha-forte);
+  border-left: 3px solid var(--cor-ok);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+}
+
+.bloco[data-situacao="pendente"] {
+  border-left-color: var(--cor-atencao);
+}
+
+.horarioDoBloco {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+}
+
+.assuntoDoBloco {
+  overflow: hidden;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quemDoBloco {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+/* As reservas e os convites, um cartão por reserva. */
+.reservas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--esp-12) * 8)), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reserva {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.topoDaReserva {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.assuntoDaReserva {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.comentario {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+.respostas {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Os participantes escolhidos na Nova reserva, cada um com "Tirar". */
+.participantes {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.convidados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.convidado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding-left: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}

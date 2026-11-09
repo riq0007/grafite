@@ -1,0 +1,750 @@
+name: Versão
+
+# Os pacotes da versão (spec operacao-servicos, "Pacote da versão", e spec operacao-em-linux,
+# "Pacote da versão para Linux"; design do F2d, decisões 5 e 17, e change servidor-linux-com-docker,
+# decisões 6 e 13): o zip para o servidor Windows e o tar para o servidor Linux com o Docker, cada
+# um instalado do zero antes de valer. Na tag vX.Y.Z, a release da versão; por pedido manual, uma
+# release de ensaio, marcada como pré-lançamento, para provar o caminho sem publicar uma versão. Num
+# PR que muda a operação, as imagens ou o pacote, os pacotes são montados e instalados, sem
+# release. Os jobs rodam nos executores hospedados pelo GitHub, cada um numa máquina nova: o do
+# Windows no windows-2022 e os outros no ubuntu-24.04 (spec plataforma-base, "Executores do CI";
+# change ci-nos-executores-do-github, design, decisões 1 e 6).
+on:
+  push:
+    tags: ['v*.*.*']
+  pull_request:
+    paths:
+      - '.github/workflows/versao.yml'
+      - '.github/scripts/**'
+      - 'apps/operacao/**'
+      - 'packages/operacao/**'
+      - 'Dockerfile'
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: 'A versão do ensaio, x.y.z: a mesma de apps/api/package.json.'
+        required: true
+
+concurrency:
+  group: versao-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# No Windows, o bash dos passos é o Git Bash da imagem.
+defaults:
+  run:
+    shell: bash
+
+# As ferramentas que vão no pacote, com as versões fixadas. O hash do WinSW-x64.exe é o do manifesto
+# do Scoop para a v2.12.0, que a release do WinSW não publica.
+env:
+  CADDY: v2.11.7
+  CADDY_DNS_CLOUDFLARE: v0.2.4
+  XCADDY: v0.4.7
+  WINSW: v2.12.0
+  WINSW_SHA256: 05b82d46ad331cc16bdc00de5c6332c1ef818df8ceefcd49c726553209b3a0da
+
+# A release nasce como rascunho, na tag e no ensaio. Cada job de plataforma monta o pacote dele,
+# instala de teste e só então sobe os arquivos ao rascunho; o job da release o publica com os seis
+# arquivos, e o rascunho de uma execução que não chega lá é apagado pelo id (change
+# ci-nos-executores-do-github, design, decisão 6). Os pacotes não passam de um job a outro: o tar
+# de uns 400 MB não cabe na cota de artefatos.
+jobs:
+  rascunho:
+    name: Rascunho da release
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      id: ${{ steps.rascunho.outputs.id }}
+      tag: ${{ steps.rascunho.outputs.tag }}
+      versao: ${{ steps.versao.outputs.versao }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: A versão, que tem de ser a da API
+        id: versao
+        env:
+          PEDIDA: ${{ github.event_name == 'push' && github.ref_name || inputs.versao }}
+        run: |
+          api="$(node -p "require('./apps/api/package.json').version")"
+          versao="${PEDIDA#v}"
+          if [ "$versao" != "$api" ]; then
+            echo "::error::A versão pedida, $versao, não é a da API, $api."
+            exit 1
+          fi
+          echo "versao=$versao" >> "$GITHUB_OUTPUT"
+
+      # Uma release que já existe na tag, publicada ou em rascunho, fica como está: quem opera decide.
+      - name: O rascunho, sem outra release na mesma tag
+        id: rascunho
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSAO: ${{ steps.versao.outputs.versao }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            tag="$GITHUB_REF_NAME"
+            titulo="Grafite $VERSAO"
+            notas="Pacotes do Grafite $VERSAO: o zip para o servidor Windows, com o atalho de instalação Instalar-Grafite.cmd ao lado, e o tar para o servidor Linux com o Docker, com o roteiro de instalação instalar.sh ao lado. Confira o hash com o .sha256 e siga o runbook (docs/operacao/runbook.md)."
+            ensaio=false
+          else
+            tag="ensaio-v$VERSAO-$GITHUB_RUN_NUMBER"
+            titulo="Ensaio $VERSAO ($GITHUB_RUN_NUMBER)"
+            notas="Ensaio dos pacotes, por pedido manual. Não instale na produção."
+            ensaio=true
+          fi
+          existentes="$(TAG="$tag" gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '.[] | select(.tag_name == env.TAG) | "\(.id) (\(if .draft then "rascunho" else "publicada" end))"' | tr '\n' ' ')"
+          if [ -n "$existentes" ]; then
+            echo "::error::A tag $tag já tem release: ${existentes}. Apague pelo id o rascunho que sobrou, ou publique outra versão."
+            exit 1
+          fi
+          id="$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" -f name="$titulo" -f body="$notas" \
+            -F draft=true -F prerelease="$ensaio" --jq .id)"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "O rascunho da release \"$titulo\", na tag $tag, tem o id $id." >> "$GITHUB_STEP_SUMMARY"
+
+  # O pacote para Windows e a instalação dele num Windows de verdade (design do F2d, decisão 17): o
+  # PostgreSQL 18 do instalador oficial, o atalho de instalação com o arquivo de respostas, no modo
+  # interno, e cada promessa da spec conferida de fora, como quem opera conferiria. A máquina é nova
+  # e descartada no fim, como um servidor recém-chegado: nada é desfeito depois (change
+  # ci-nos-executores-do-github, design, decisão 7). Os passos da instalação rodam no Windows
+  # PowerShell 5.1, o da produção; os que chamam programas conferem o código de saída de cada um.
+  windows:
+    name: Pacote e instalação no Windows
+    needs: [rascunho]
+    if: ${{ !cancelled() && needs.rascunho.result != 'failure' }}
+    runs-on: windows-2022
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    defaults:
+      run:
+        # O 5.1 lê o script do passo, que o executor grava sem BOM, como ANSI, e as mensagens em
+        # pt-BR saíam truncadas: este shell o lê como UTF-8, para no stop e sai com o código do
+        # último programa, como o shell powershell do executor.
+        shell: 'powershell -NoLogo -NoProfile -NonInteractive -Command "$ErrorActionPreference = ''Stop''; [Console]::OutputEncoding = [Text.Encoding]::UTF8; . ([ScriptBlock]::Create([IO.File]::ReadAllText(''{0}'', [Text.Encoding]::UTF8))); if ((Test-Path -LiteralPath variable:\LASTEXITCODE)) {{ exit $LASTEXITCODE }}"'
+    env:
+      GRAFITE: C:\Grafite\grafite.ps1
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+
+      - name: A versão, que tem de ser a da API
+        shell: bash
+        env:
+          PEDIDA: ${{ github.event_name == 'push' && github.ref_name || inputs.versao }}
+        run: |
+          api="$(node -p "require('./apps/api/package.json').version")"
+          # Num PR, sem tag nem pedido, vale a da API.
+          versao="${PEDIDA#v}"
+          versao="${versao:-$api}"
+          if [ "$versao" != "$api" ]; then
+            echo "::error::A versão pedida, $versao, não é a da API, $api."
+            exit 1
+          fi
+          echo "VERSAO=$versao" >> "$GITHUB_ENV"
+
+      # Os pacotes ficam na pasta temporária do job, que morre com a máquina, com as barras normais,
+      # que o bash e o PowerShell leem.
+      - name: A pasta dos pacotes, na pasta temporária do job
+        shell: bash
+        run: echo "PACOTES=${RUNNER_TEMP//\\//}/pacotes" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.26.x'
+          cache: false
+
+      - name: O Caddy com o DNS da Cloudflare, pelo xcaddy
+        shell: bash
+        run: |
+          go install "github.com/caddyserver/xcaddy/cmd/xcaddy@${XCADDY}"
+          mkdir -p ferramentas
+          xcaddy build "${CADDY}" \
+            --with "github.com/caddy-dns/cloudflare@${CADDY_DNS_CLOUDFLARE}" \
+            --output ferramentas/caddy.exe
+          ./ferramentas/caddy.exe version
+          ./ferramentas/caddy.exe list-modules | grep -x 'dns.providers.cloudflare'
+
+      # O download das releases do GitHub às vezes responde 5xx, como o 504 do primeiro ensaio: novas
+      # tentativas, e o hash confere o que chegou.
+      - name: O WinSW, conferido pelo hash
+        shell: bash
+        run: |
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o ferramentas/WinSW.exe \
+            "https://github.com/winsw/winsw/releases/download/${WINSW}/WinSW-x64.exe"
+          echo "${WINSW_SHA256}  ferramentas/WinSW.exe" | sha256sum --check -
+
+      - name: O caddy validate nos Caddyfiles gerados dos dois modos
+        shell: bash
+        run: |
+          # O módulo da Cloudflare confere o formato do token; o valor, gerado aqui, não é usado.
+          CLOUDFLARE_API_TOKEN="$(printf '%040d' 0)"
+          export CLOUDFLARE_API_TOKEN
+          node apps/operacao/scripts/caddyfiles.ts caddyfiles
+          for arquivo in caddyfiles/*.Caddyfile; do
+            ./ferramentas/caddy.exe validate --config "$arquivo" --adapter caddyfile
+          done
+
+      - name: A web e o painel compilados
+        shell: bash
+        run: |
+          pnpm --filter @grafite/web build
+          pnpm --filter @grafite/painel build
+
+      - name: O pacote, com o .sha256
+        shell: bash
+        run: >-
+          node apps/operacao/scripts/empacotar.ts --versao "$VERSAO"
+          --saida "$PACOTES/pacote" --winsw ferramentas/WinSW.exe --caddy ferramentas/caddy.exe
+
+      - name: Um segundo pacote, de versão maior, só para a verificação da atualização
+        shell: bash
+        run: |
+          maior="$(node -e "const [a, b, c] = process.argv[1].split('.').map(Number); console.log([a, b, c + 1].join('.'))" "$VERSAO")"
+          node -e "const fs = require('fs'); const f = 'apps/api/package.json'; const p = JSON.parse(fs.readFileSync(f, 'utf8')); p.version = process.argv[1]; fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n')" "$maior"
+          node apps/operacao/scripts/empacotar.ts --versao "$maior" --saida "$PACOTES/pacote-maior" \
+            --winsw ferramentas/WinSW.exe --caddy ferramentas/caddy.exe
+          git checkout -- apps/api/package.json
+
+      # A imagem traz um Node de outra versão em C:\Program Files\nodejs, que o preparar-servidor.ps1
+      # acharia primeiro e recusaria. Sem ele, o atalho instala o Node fixado no pacote pelo instalador
+      # oficial, como num servidor novo.
+      - name: O Node da imagem desinstalado, como num servidor novo
+        run: |
+          $chaves = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+          $entradas = @(Get-ChildItem $chaves -ErrorAction SilentlyContinue |
+            Get-ItemProperty -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like 'Node.js*' })
+          foreach ($entrada in $entradas) {
+            if ($entrada.PSChildName -notmatch '^\{[0-9A-Fa-f-]+\}$') {
+              throw "O $($entrada.DisplayName) da imagem não sai pelo msiexec: $($entrada.UninstallString)"
+            }
+            Write-Output "Desinstalando o $($entrada.DisplayName) $($entrada.DisplayVersion) da imagem."
+            $processo = Start-Process msiexec.exe -ArgumentList '/x', $entrada.PSChildName, '/qn', '/norestart' -Wait -PassThru
+            if ($processo.ExitCode -ne 0 -and $processo.ExitCode -ne 3010) {
+              throw "O msiexec /x do Node saiu com $($processo.ExitCode)."
+            }
+          }
+          $pasta = Join-Path $env:ProgramFiles 'nodejs'
+          if (Test-Path -LiteralPath $pasta) { Remove-Item -LiteralPath $pasta -Recurse -Force }
+          if ($entradas.Count -eq 0) { Write-Output "A imagem não tem o Node instalado em $pasta." }
+
+      # A imagem traz o IIS, que segura a porta 80 pelo http.sys. Num servidor, o atalho o para com o
+      # sim de quem opera; aqui, ele e os outros que registram a 80 no http.sys param antes.
+      - name: As portas 80 e 443 livres, sem o IIS da imagem
+        run: |
+          foreach ($nome in 'W3SVC', 'WAS', 'MsDepSvc') {
+            if (Get-Service -Name $nome -ErrorAction SilentlyContinue) {
+              Stop-Service -Name $nome -Force
+              Set-Service -Name $nome -StartupType Disabled
+              Write-Output "Serviço $nome parado e desligado."
+            }
+          }
+          $ocupadas = @()
+          foreach ($vez in 1..10) {
+            $ocupadas = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+              Where-Object { $_.LocalPort -in 80, 443 })
+            if ($ocupadas.Count -eq 0) { break }
+            Start-Sleep -Seconds 1
+          }
+          if ($ocupadas.Count -gt 0) {
+            $ocupadas | Format-Table LocalAddress, LocalPort, OwningProcess -AutoSize | Out-String
+            throw 'As portas 80 e 443 continuam ocupadas.'
+          }
+
+      - name: A senha do postgres desta execução
+        run: |
+          $senha = -join (1..32 | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
+          Write-Output "::add-mask::$senha"
+          [IO.File]::AppendAllText($env:GITHUB_ENV, "PG_SENHA=$senha`n")
+
+      # O feed do Chocolatey às vezes responde 503: uma nova tentativa, depois de uma pausa.
+      - name: O PostgreSQL 18 da produção, pelo instalador oficial
+        run: |
+          $ErrorActionPreference = 'Continue'
+          foreach ($tentativa in 1..3) {
+            choco install postgresql18 --version 18.4.0 -y --no-progress `
+              --params "/Password:$env:PG_SENHA /Port:5432 /NoPath"
+            if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { break }
+            if ($tentativa -eq 3) { throw "O choco install saiu com $LASTEXITCODE nas três tentativas." }
+            Write-Output "O choco install saiu com ${LASTEXITCODE}: nova tentativa em 30 s."
+            Start-Sleep -Seconds 30
+          }
+          # O 3010 é "instalado, falta reiniciar", que o PostgreSQL não precisa: o shell do job sai com o
+          # código do último programa, e o passo não pode sair com ele.
+          $global:LASTEXITCODE = 0
+          Get-Service postgresql-x64-18 -ErrorAction Stop | Format-List Name, Status, StartType
+
+      - name: Os endereços da produção e do teste no hosts
+        run: |
+          $hosts = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
+          $texto = [IO.File]::ReadAllText($hosts)
+          $quebra = if ($texto.Length -gt 0 -and -not $texto.EndsWith("`n")) { "`r`n" } else { '' }
+          [IO.File]::AppendAllText($hosts, "${quebra}127.0.0.1 grafite.localhost`r`n127.0.0.1 grafite-teste.localhost`r`n", [Text.Encoding]::ASCII)
+
+      - name: As respostas da instalação
+        run: |
+          $destino = if (Test-Path 'D:\') { 'D:\Backups do Grafite' } else { 'C:\Backups do Grafite' }
+          [IO.File]::AppendAllText($env:GITHUB_ENV, "DESTINO_DO_BACKUP=$destino`n")
+          $env:DESTINO_DO_BACKUP = $destino
+          $respostas = [ordered]@{
+            raiz = 'C:\Grafite'
+            pgBin = 'C:\Program Files\PostgreSQL\18\bin'
+            senhaDoPostgres = $env:PG_SENHA
+            enderecos = @('grafite.localhost')
+            mapaDoTeste = @{ 'grafite.localhost' = 'grafite-teste.localhost' }
+            certificado = @{ modo = 'interno'; ac = 'caddy' }
+            backup = @{ destinos = @('C:\Grafite\backups', $env:DESTINO_DO_BACKUP); janela = '00:00-06:00' }
+            organizacao = @{ nome = 'Empresa de Ensaio'; pessoa = 'Ana Souza'; usuario = 'ana' }
+          } | ConvertTo-Json -Depth 5
+          [IO.File]::WriteAllText((Join-Path $PWD 'respostas.json'), $respostas, (New-Object Text.UTF8Encoding $false))
+
+      # Pelo atalho de instalação, como na release: o zip, o .sha256 e o atalho na mesma pasta, com o
+      # PostgreSQL já presente (change instalador-e-menu-da-operacao, design, decisão 7). Sem nenhum
+      # Node no caminho, nem o da preparação do job, o atalho instala o Node fixado no pacote. O log
+      # de um repositório público é de qualquer um: a senha temporária da primeira conta sai dele.
+      - name: A instalação, pelo atalho de instalação ao lado do zip
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $pasta = Join-Path $PWD 'atalho'
+          New-Item -ItemType Directory -Force $pasta | Out-Null
+          Copy-Item (Join-Path $env:PACOTES 'pacote\*') $pasta
+          $env:Path = (($env:Path -split ';') |
+            Where-Object { $_ -and -not [IO.File]::Exists($_.TrimEnd('\') + '\node.exe') }) -join ';'
+          & (Join-Path $pasta 'Instalar-Grafite.cmd') --respostas (Resolve-Path respostas.json).Path |
+            ForEach-Object { $_ -replace '(Senha tempor\S{1,3}ria: ).*', '$1<oculta>' }
+          if ($LASTEXITCODE -ne 0) { throw "A instalação saiu com $LASTEXITCODE." }
+          $node = Join-Path $env:ProgramFiles 'nodejs\node.exe'
+          if (-not (Test-Path -LiteralPath $node)) { throw "O atalho não instalou o Node em $node." }
+          Write-Output "O Node do atalho: $(& $node --version)."
+          # Os passos seguintes chamam o grafite.ps1 com o Node do servidor, o dos serviços, à frente do
+          # da preparação do job, como na produção.
+          [IO.File]::AppendAllText($env:GITHUB_PATH, "$(Split-Path -Parent $node)`n")
+
+      - name: O atalho de instalação igual ao do pacote, o do painel na raiz e na área de trabalho, e o menu pelo comando
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $dentro = Join-Path $PWD "atalho\grafite-$env:VERSAO\Instalar-Grafite.cmd"
+          $fora = Join-Path $env:PACOTES 'pacote\Instalar-Grafite.cmd'
+          if ((Get-FileHash $dentro).Hash -ne (Get-FileHash $fora).Hash) {
+            throw 'O atalho de instalação ao lado do zip não é igual ao de dentro do pacote.'
+          }
+          $atalho = Join-Path $env:PUBLIC 'Desktop\Grafite.lnk'
+          foreach ($arquivo in 'C:\Grafite\Grafite.cmd', 'C:\Grafite\grafite.ico', $atalho) {
+            if (-not (Test-Path -LiteralPath $arquivo)) { throw "Falta o $arquivo." }
+          }
+          $alvo = (New-Object -ComObject WScript.Shell).CreateShortcut($atalho).TargetPath
+          if ($alvo -ne 'C:\Grafite\Grafite.cmd') { throw "O atalho do painel aponta para $alvo." }
+          if ((Get-Content -Raw 'C:\Grafite\Grafite.cmd') -notmatch 'grafite\.ps1" painel') {
+            throw 'O Grafite.cmd da raiz não abre o painel.'
+          }
+          # O estado dos serviços pelo menu, aberto pelo grafite.ps1 menu, com as respostas pela
+          # entrada padrão: a tarefa 1 e o 0 que sai. O atalho abre o painel, conferido adiante.
+          $saida = "1`r`n0`r`n" | & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $env:GRAFITE menu 2>&1 | Out-String
+          Write-Output $saida
+          if ($saida -notmatch 'Grafite \(grafite\): rodando' -or $saida -notmatch 'Pronto: Estado dos servi') {
+            throw 'O menu não rodou o estado dos serviços.'
+          }
+
+      - name: A saúde dos dois pelo HTTPS, confiando na raiz exportada, e a organização do endereço
+        run: |
+          $ErrorActionPreference = 'Continue'
+          & $env:GRAFITE proxy raiz raiz.crt
+          if ($LASTEXITCODE -ne 0) { throw "O grafite proxy raiz saiu com $LASTEXITCODE." }
+          $ErrorActionPreference = 'Stop'
+          Import-Certificate -FilePath raiz.crt -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+          foreach ($caso in @(
+              @{ endereco = 'grafite.localhost'; ambiente = 'producao' },
+              @{ endereco = 'grafite-teste.localhost'; ambiente = 'teste' })) {
+            $saude = Invoke-RestMethod "https://$($caso.endereco)/health"
+            if ($saude.status -ne 'ok' -or $saude.ambiente -ne $caso.ambiente -or $saude.versao -ne $env:VERSAO) {
+              throw "A saúde de $($caso.endereco) não confere: $($saude | ConvertTo-Json -Compress)"
+            }
+          }
+          $sessao = Invoke-RestMethod https://grafite.localhost/api/sessao
+          if ($sessao.organizacao.nome -ne 'Empresa de Ensaio' -or -not $sessao.organizacao.operaOServidor) {
+            throw "O estado da sessão da produção não confere: $($sessao | ConvertTo-Json -Compress -Depth 4)"
+          }
+          $hsts = (Invoke-WebRequest https://grafite.localhost/health -UseBasicParsing).Headers['Strict-Transport-Security']
+          if (-not $hsts) { throw 'A produção não manda o HSTS.' }
+          if ((Invoke-WebRequest https://grafite-teste.localhost/health -UseBasicParsing).Headers['Strict-Transport-Security']) {
+            throw 'O teste manda o HSTS.'
+          }
+          $http = curl.exe --silent --output NUL --write-out '%{http_code} %{redirect_url}' http://grafite.localhost/health
+          if ($http -notmatch '^30[178] https://grafite\.localhost/health$') {
+            throw "O HTTP não redirecionou para o HTTPS: $http"
+          }
+
+      # O painel da operação (change painel-da-operacao, design, decisão 10): pelo comando, sem o
+      # navegador, que só escreve o endereço; a sessão pelo código e o estado do servidor.
+      - name: O painel pelo comando, com a sessão do código e o estado do servidor
+        run: |
+          $saida = Join-Path $env:RUNNER_TEMP 'painel.txt'
+          $erros = Join-Path $env:RUNNER_TEMP 'painel-erros.txt'
+          # O painel segura os arquivos abertos para escrever: a leitura os compartilha.
+          function LerTudo([string] $caminho) {
+            if (-not (Test-Path -LiteralPath $caminho)) { return '' }
+            $fluxo = [IO.File]::Open($caminho, 'Open', 'Read', 'ReadWrite')
+            try { return (New-Object IO.StreamReader($fluxo, [Text.Encoding]::UTF8)).ReadToEnd() }
+            finally { $fluxo.Dispose() }
+          }
+          $processo = Start-Process powershell.exe -PassThru -NoNewWindow `
+            -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $env:GRAFITE, 'painel', '--sem-navegador' `
+            -RedirectStandardOutput $saida -RedirectStandardError $erros
+          try {
+            $achado = $null
+            for ($i = 0; $i -lt 90 -and -not $achado; $i++) {
+              Start-Sleep -Seconds 1
+              $achado = [regex]::Match((LerTudo $saida), '(http://127\.0\.0\.1:\d+)/#([A-Za-z0-9_-]+)')
+              if (-not $achado.Success) { $achado = $null }
+            }
+            if (-not $achado) {
+              throw "O painel não escreveu o endereço: $(LerTudo $saida) $(LerTudo $erros)"
+            }
+            $endereco = $achado.Groups[1].Value
+            $semSessao = curl.exe --silent --output NUL --write-out '%{http_code}' "$endereco/api/estado"
+            if ($semSessao -ne '401') { throw "O painel respondeu $semSessao a um pedido sem a sessão." }
+            $sessao = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+            Invoke-RestMethod "$endereco/api/sessao" -Method Post -ContentType 'application/json' `
+              -Body (@{ codigo = $achado.Groups[2].Value } | ConvertTo-Json -Compress) -WebSession $sessao | Out-Null
+            $estado = Invoke-RestMethod "$endereco/api/estado" -WebSession $sessao
+            $app = $estado.servicos | Where-Object { $_.id -eq 'grafite' }
+            if ($estado.plataforma -ne 'windows' -or $estado.ambientes.producao.atual -ne $env:VERSAO -or $app.estado -ne 'rodando') {
+              throw "O estado do painel não confere: $($estado | ConvertTo-Json -Compress -Depth 4)"
+            }
+            Write-Output "O painel em $endereco mostra a produção rodando na $($env:VERSAO)."
+          } finally {
+            & taskkill.exe /PID $processo.Id /T /F | Out-Null
+            $global:LASTEXITCODE = 0
+          }
+
+      - name: As portas dos apps recusadas pelo IP da máquina, fora do loopback
+        run: |
+          function Atende([string] $endereco, [int] $porta) {
+            $cliente = New-Object Net.Sockets.TcpClient
+            try { return $cliente.ConnectAsync($endereco, $porta).Wait(3000) } catch { return $false }
+            finally { $cliente.Dispose() }
+          }
+          $ip = (Get-NetIPAddress -AddressFamily IPv4 |
+            Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
+            Select-Object -First 1).IPAddress
+          Write-Output "O IP da máquina: $ip"
+          foreach ($porta in 3000, 3001, 3100) {
+            if (-not (Atende '127.0.0.1' $porta)) { throw "Nada atende em 127.0.0.1:$porta." }
+            if (Atende $ip $porta) { throw "A porta $porta atende pelo IP da máquina, $ip." }
+          }
+          if (-not (Atende $ip 443)) { throw "O proxy não atende pelo IP da máquina, ${ip}:443." }
+
+      - name: A credencial do teste recusada pela instância da produção
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $linha = Select-String -Path C:\Grafite\teste\config.env -Pattern "^GRAFITE_DATABASE_URL='(.+)'$"
+          $url = [Uri] $linha.Matches[0].Groups[1].Value
+          $senha = [Uri]::UnescapeDataString($url.UserInfo.Split(':')[1])
+          Write-Output "::add-mask::$senha"
+          $env:PGPASSWORD = $senha
+          $psql = 'C:\Program Files\PostgreSQL\18\bin\psql.exe'
+          & $psql --no-psqlrc -h 127.0.0.1 -p 5432 -U grafite_app -d grafite -c 'select 1'
+          if ($LASTEXITCODE -eq 0) { throw 'A credencial do teste abriu o banco da produção.' }
+          & $psql --no-psqlrc -h 127.0.0.1 -p 5433 -U grafite_app -d grafite_teste -c 'select 1'
+          if ($LASTEXITCODE -ne 0) { throw 'A credencial do teste não abriu o banco do teste.' }
+
+      - name: O backup, o teste de restauração e a cópia da produção no teste
+        run: |
+          $ErrorActionPreference = 'Continue'
+          foreach ($comando in 'backup agora', 'backup listar', 'backup testar', 'preparar-teste --confirmar grafite_teste') {
+            & $env:GRAFITE @($comando -split ' ')
+            if ($LASTEXITCODE -ne 0) { throw "grafite $comando saiu com $LASTEXITCODE." }
+          }
+          foreach ($destino in 'C:\Grafite\backups', $env:DESTINO_DO_BACKUP) {
+            if (-not (Get-ChildItem (Join-Path $destino 'grafite-producao') -Directory)) {
+              throw "Nenhum backup em $destino."
+            }
+          }
+          $sessao = Invoke-RestMethod https://grafite-teste.localhost/api/sessao
+          if ($sessao.organizacao.nome -ne 'Empresa de Ensaio' -or $sessao.ambiente -ne 'teste') {
+            throw "O teste não tem a cópia da produção: $($sessao | ConvertTo-Json -Compress -Depth 4)"
+          }
+
+      - name: A atualização do teste e da produção com a versão maior, e a volta da produção
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $zip = (Get-ChildItem (Join-Path $env:PACOTES 'pacote-maior\*.zip')).FullName
+          $maior = [regex]::Match($zip, 'grafite-(\d+\.\d+\.\d+)-windows').Groups[1].Value
+          function Versao([string] $endereco) { (Invoke-RestMethod "https://$endereco/health").versao }
+          function Grafite { & $env:GRAFITE @args; if ($LASTEXITCODE -ne 0) { throw "grafite $args saiu com $LASTEXITCODE." } }
+          Grafite atualizar $zip --ambiente teste
+          if ((Versao 'grafite-teste.localhost') -ne $maior) { throw "O teste não foi para a $maior." }
+          Grafite atualizar $zip --ambiente producao --confirmar grafite
+          if ((Versao 'grafite.localhost') -ne $maior) { throw "A produção não foi para a $maior." }
+          Grafite voltar --ambiente producao --confirmar grafite
+          if ((Versao 'grafite.localhost') -ne $env:VERSAO) { throw "A produção não voltou à $($env:VERSAO)." }
+          Grafite servicos estado
+
+      # Só depois da instalação de teste: o zip, o .sha256 e o atalho de instalação no rascunho.
+      - name: Os arquivos do Windows no rascunho da release
+        if: needs.rascunho.outputs.id != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.rascunho.outputs.id }}
+          TAG: ${{ needs.rascunho.outputs.tag }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/releases/$ID" --jq .draft 2>/dev/null)" != true ]; then
+            echo "::error::O rascunho $ID desta execução não existe mais, porque uma falha o descartou. Rode de novo a execução inteira, e não só os jobs que falharam."
+            exit 1
+          fi
+          gh release upload "$TAG" "$PACOTES"/pacote/* --repo "$GITHUB_REPOSITORY"
+
+      - name: Os logs, o estado e os serviços, sem os segredos, quando algo falha
+        if: failure()
+        run: |
+          $ErrorActionPreference = 'Continue'
+          New-Item -ItemType Directory diagnostico | Out-Null
+          foreach ($pasta in 'producao\logs', 'teste\logs', 'caddy\logs', 'servicos', 'teste\banco\log') {
+            $origem = Join-Path C:\Grafite $pasta
+            if (Test-Path $origem) {
+              Copy-Item $origem (Join-Path diagnostico ($pasta -replace '\\', '-')) -Recurse -Exclude *.exe
+            }
+          }
+          foreach ($arquivo in 'operacao.json', 'instalacao.json', 'caddy\Caddyfile') {
+            if (Test-Path "C:\Grafite\$arquivo") { Copy-Item "C:\Grafite\$arquivo" diagnostico }
+          }
+          Get-Service grafite*, postgresql* | Format-Table Name, Status, StartType |
+            Out-File diagnostico\servicos.txt
+
+      - name: O que os serviços disseram, no próprio log, quando algo falha
+        if: failure()
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Get-CimInstance Win32_Service -Filter "Name LIKE 'grafite%'" |
+            Format-Table Name, State, ExitCode, ServiceSpecificExitCode, StartName -AutoSize | Out-String
+          # Só as portas locais e os processos: o log é público, e os endereços remotos ficam fora.
+          Write-Output '== Quem escuta nas portas 80 e 443'
+          Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 80, 443 } |
+            Format-Table LocalAddress, LocalPort, OwningProcess, @{ n = 'Processo'; e = { (Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName } } -AutoSize |
+            Out-String
+          foreach ($pasta in 'caddy\logs', 'producao\logs', 'teste\logs') {
+            foreach ($log in Get-ChildItem (Join-Path C:\Grafite $pasta) -File -ErrorAction SilentlyContinue) {
+              Write-Output "== $($log.FullName)"
+              Get-Content $log.FullName -Tail 40
+            }
+          }
+          exit 0
+
+      # O serviço do PostgreSQL do teste que não sobe deixa o log vazio: o job tenta subir a instância
+      # à mão, sem o serviço e sem o coletor de log, para a saída dizer o motivo, e a para logo depois.
+      - name: O PostgreSQL do teste, quando não sobe, iniciado à mão para dizer o motivo
+        if: failure()
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Write-Output '== Os eventos do PostgreSQL no log de Aplicativo, na última hora'
+          Get-WinEvent -LogName Application -MaxEvents 3000 -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -eq 'PostgreSQL' -and $_.TimeCreated -gt (Get-Date).AddHours(-1) } |
+            ForEach-Object { '{0:HH:mm:ss.fff} {1}' -f $_.TimeCreated, (($_.Properties | ForEach-Object { "$($_.Value)" }) -join ' | ') }
+          $dados = 'C:\Grafite\teste\banco'
+          $pgCtl = 'C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe'
+          $servico = Get-Service grafite-postgresql-teste -ErrorAction SilentlyContinue
+          if ((Test-Path $dados) -and (Test-Path $pgCtl) -and $servico -and $servico.Status -ne 'Running') {
+            Write-Output '== As permissões da pasta de dados'
+            icacls $dados
+            Write-Output '== Quem escuta na 5433'
+            Get-NetTCPConnection -State Listen -LocalPort 5433 -ErrorAction SilentlyContinue |
+              Format-Table LocalAddress, LocalPort, OwningProcess -AutoSize | Out-String
+            Write-Output '== A instância do teste iniciada pelo usuário do job, sem o serviço'
+            $saida = Join-Path $env:RUNNER_TEMP 'pg-teste-a-mao.log'
+            & $pgCtl start -D $dados -w -t 30 -l $saida -o '-c logging_collector=off'
+            Get-Content $saida -ErrorAction SilentlyContinue
+            & $pgCtl stop -D $dados -m immediate -w
+          }
+          exit 0
+
+      # Com a cota de armazenamento estourada, o upload falha sem esconder a falha do job.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        continue-on-error: true
+        with:
+          name: diagnostico-da-instalacao
+          path: diagnostico
+          retention-days: 7
+
+  # O pacote para Linux e a instalação dele num Linux (change servidor-linux-com-docker, design,
+  # decisões 6 e 13): as cinco imagens da versão, construídas pelos estágios do Dockerfile, no tar
+  # com o instalar.sh, o lançador e o runbook, e uma cópia do instalar.sh ao lado do tar, para a
+  # release (change instalar-sh-na-release). O servidor é o Docker Engine num contêiner docker:dind,
+  # com o bash e as ferramentas de um Linux; o instalar.sh de fora, com o arquivo de respostas, no
+  # modo interno, e cada promessa da spec conferida de dentro dele pelo
+  # .github/scripts/verificar-o-linux.sh. A máquina é nova e descartada no fim: o cache das camadas
+  # começa frio, e o docker build puxa as imagens base do registro (change
+  # ci-nos-executores-do-github, design, decisão 8).
+  linux:
+    name: Pacote e instalação no Linux
+    needs: [rascunho]
+    if: ${{ !cancelled() && needs.rascunho.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    env:
+      DIND: grafite-ci-dind
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar
+
+      - name: A versão, que tem de ser a da API
+        env:
+          PEDIDA: ${{ github.event_name == 'push' && github.ref_name || inputs.versao }}
+        run: |
+          api="$(node -p "require('./apps/api/package.json').version")"
+          versao="${PEDIDA#v}"
+          versao="${versao:-$api}"
+          if [ "$versao" != "$api" ]; then
+            echo "::error::A versão pedida, $versao, não é a da API, $api."
+            exit 1
+          fi
+          echo "VERSAO=$versao" >> "$GITHUB_ENV"
+
+      # Os pacotes ficam na pasta temporária do job, que morre com a máquina.
+      - name: A pasta dos pacotes, na pasta temporária do job
+        run: echo "PACOTES=$RUNNER_TEMP/pacotes" >> "$GITHUB_ENV"
+
+      - name: As cinco imagens e o pacote, com o .sha256
+        run: >-
+          node apps/operacao/scripts/empacotar-linux.ts --versao "$VERSAO"
+          --saida "$PACOTES/pacote" --construir
+
+      - name: Um segundo pacote, de versão maior, só para a verificação da atualização
+        run: |
+          maior="$(node -e "const [a, b, c] = process.argv[1].split('.').map(Number); console.log([a, b, c + 1].join('.'))" "$VERSAO")"
+          echo "MAIOR=$maior" >> "$GITHUB_ENV"
+          node -e "const fs = require('fs'); const f = 'apps/api/package.json'; const p = JSON.parse(fs.readFileSync(f, 'utf8')); p.version = process.argv[1]; fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n')" "$maior"
+          node apps/operacao/scripts/empacotar-linux.ts --versao "$maior" \
+            --saida "$PACOTES/pacote-maior" --construir
+          git checkout -- apps/api/package.json
+
+      - name: O Docker Engine de um servidor, num contêiner, com o bash e o curl
+        run: |
+          docker run --detach --privileged --name "$DIND" docker:27.5.1-dind >/dev/null
+          docker exec "$DIND" sh -c 'for i in $(seq 1 60); do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1'
+          docker exec "$DIND" apk add --no-cache bash coreutils tar curl >/dev/null
+          docker exec "$DIND" mkdir -p /pacotes /mnt/nas
+
+      - name: Os pacotes, as respostas e a verificação no servidor
+        run: |
+          docker cp "$PACOTES/pacote/." "$DIND:/pacotes/"
+          docker cp "$PACOTES/pacote-maior/." "$DIND:/pacotes/"
+          docker cp .github/scripts/verificar-o-linux.sh "$DIND:/pacotes/verificar-o-linux.sh"
+          docker exec -i "$DIND" sh -c 'cat > /pacotes/respostas.json' <<'FIM'
+          {
+            "enderecos": ["grafite.localhost"],
+            "mapaDoTeste": { "grafite.localhost": "grafite-teste.localhost" },
+            "certificado": { "modo": "interno", "ac": "caddy" },
+            "backup": { "destinos": ["/opt/grafite/backups", "/mnt/nas/grafite"], "janela": "00:00-06:00" },
+            "organizacao": { "nome": "Empresa de Ensaio", "pessoa": "Ana Souza", "usuario": "ana" }
+          }
+          FIM
+          # O roteiro de fora, o da release, igual ao de dentro do pacote.
+          docker exec "$DIND" sh -c "cd /pacotes && tar -xOf grafite-$VERSAO-linux-x64.tar instalar.sh > instalar.de-dentro.sh && cmp instalar.sh instalar.de-dentro.sh" \
+            || { echo "::error::O instalar.sh ao lado do pacote não é igual ao de dentro dele."; exit 1; }
+
+      - name: A instalação, pelo instalar.sh de fora do pacote
+        run: |
+          docker exec "$DIND" bash /pacotes/instalar.sh "/pacotes/grafite-$VERSAO-linux-x64.tar" \
+            --respostas /pacotes/respostas.json | sed 's/\(Senha temporária: \).*/\1<oculta>/'
+
+      - name: A saúde dos dois pelo HTTPS, o HSTS, a organização e a credencial do teste
+        run: docker exec "$DIND" bash /pacotes/verificar-o-linux.sh saude "$VERSAO"
+
+      - name: O painel pelo comando, com a sessão do código e o estado do servidor
+        run: docker exec "$DIND" bash /pacotes/verificar-o-linux.sh painel "$VERSAO"
+
+      - name: O backup nos dois destinos, o teste de restauração e a cópia da produção no teste
+        run: docker exec "$DIND" bash /pacotes/verificar-o-linux.sh backup
+
+      - name: A atualização do teste e da produção com a versão maior, e a volta da produção
+        run: docker exec "$DIND" bash /pacotes/verificar-o-linux.sh atualizacao "$VERSAO" "$MAIOR"
+
+      # Só depois da instalação de teste: o tar, o .sha256 e o instalar.sh no rascunho.
+      - name: Os arquivos do Linux no rascunho da release
+        if: needs.rascunho.outputs.id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.rascunho.outputs.id }}
+          TAG: ${{ needs.rascunho.outputs.tag }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/releases/$ID" --jq .draft 2>/dev/null)" != true ]; then
+            echo "::error::O rascunho $ID desta execução não existe mais, porque uma falha o descartou. Rode de novo a execução inteira, e não só os jobs que falharam."
+            exit 1
+          fi
+          gh release upload "$TAG" "$PACOTES"/pacote/* --repo "$GITHUB_REPOSITORY"
+
+      - name: Os contêineres, os logs e a instalação, sem os segredos, quando algo falha
+        if: failure()
+        run: docker exec "$DIND" bash /pacotes/verificar-o-linux.sh diagnostico || true
+
+  # A publicação, só com as duas instalações de teste aprovadas e os seis arquivos no rascunho.
+  release:
+    name: Release
+    needs: [rascunho, windows, linux]
+    if: needs.rascunho.outputs.id != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: O rascunho publicado, com os seis arquivos da versão
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.rascunho.outputs.id }}
+          VERSAO: ${{ needs.rascunho.outputs.versao }}
+        run: |
+          esperados="$(printf '%s\n' "grafite-$VERSAO-windows-x64.zip" "grafite-$VERSAO-windows-x64.zip.sha256" \
+            Instalar-Grafite.cmd "grafite-$VERSAO-linux-x64.tar" "grafite-$VERSAO-linux-x64.tar.sha256" instalar.sh | sort)"
+          no_rascunho="$(gh api "repos/$GITHUB_REPOSITORY/releases/$ID" --jq '.assets[].name' | sort)"
+          if [ "$no_rascunho" != "$esperados" ]; then
+            echo "::error::O rascunho $ID não tem os seis arquivos da versão."
+            printf 'Esperados:\n%s\nNo rascunho:\n%s\n' "$esperados" "$no_rascunho"
+            exit 1
+          fi
+          # A versão vira a mais recente; o ensaio, já marcado como pré-lançamento, não.
+          if [ "$GITHUB_EVENT_NAME" = push ]; then recente=true; else recente=false; fi
+          url="$(gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" \
+            -F draft=false -f make_latest="$recente" --jq .html_url)"
+          echo "A release saiu: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  # O rascunho de uma execução que falhou ou foi cancelada sai pelo id, nunca pela tag, que pode ser
+  # também a de uma release publicada. Uma release que já não é rascunho fica como está.
+  descartar:
+    name: Descartar o rascunho
+    needs: [rascunho, windows, linux, release]
+    if: ${{ always() && needs.rascunho.outputs.id != '' && needs.release.result != 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: O rascunho apagado pelo id
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ needs.rascunho.outputs.id }}
+        run: |
+          rascunho="$(gh api "repos/$GITHUB_REPOSITORY/releases/$ID" --jq .draft)"
+          if [ "$rascunho" != true ]; then
+            echo "::error::A release $ID não é mais um rascunho e fica como está."
+            exit 1
+          fi
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$ID"
+          echo "O rascunho $ID foi apagado. Para tentar de novo, rode a execução inteira, e não só os jobs que falharam." >> "$GITHUB_STEP_SUMMARY"

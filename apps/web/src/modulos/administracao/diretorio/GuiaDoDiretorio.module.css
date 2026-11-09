@@ -1,0 +1,82 @@
+/* O guia da primeira configuração do diretório (change guia-do-diretorio): os passos numerados, cada
+   um com o que preencher, onde achar e os comandos para copiar. */
+
+.guia {
+  display: grid;
+  gap: var(--esp-3);
+  align-content: start;
+  min-width: 0;
+}
+
+/* O carimbo do guia segue até o botão de mostrar e esconder, à direita. */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.cabecalho > :first-child {
+  flex: 1;
+}
+
+.texto {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+/* O número de cada passo vem do contador, no título: o item em grade não mostra o marcador da
+   lista, e o passo 7 cita o passo 5 pelo número. */
+.passos {
+  display: grid;
+  gap: var(--esp-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.passo {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+  counter-increment: passo;
+}
+
+.tituloDoPasso {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.tituloDoPasso::before {
+  content: counter(passo) ". ";
+}
+
+.explicacao {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.explicacao dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.explicacao dd {
+  margin: 0 0 var(--esp-2);
+}
+
+.comando {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.para {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}

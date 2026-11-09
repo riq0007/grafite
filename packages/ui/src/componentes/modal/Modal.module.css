@@ -1,0 +1,114 @@
+/* Véu: escurece a tela atrás da camada e só esmaece (movimento reduzido não o afeta). Fica acima da
+   barra e do dock da casca, e abaixo dos avisos. */
+.veu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--esp-6);
+  background-color: var(--cor-veu);
+}
+
+.veu[data-entering] {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao);
+}
+
+.veu[data-exiting] {
+  animation: aparecer var(--dur-opacidade) var(--curva-saida) reverse;
+}
+
+.janela {
+  box-sizing: border-box;
+  width: min(100%, calc(var(--esp-12) * 10));
+  max-height: 100%;
+  overflow: auto;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-janela);
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-material);
+  outline: none;
+}
+
+.janela[data-entering] {
+  animation: crescer var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--esp-4);
+  padding: var(--esp-6);
+  outline: none;
+}
+
+.titulo {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.conteudo {
+  display: grid;
+  gap: var(--esp-3);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+/* Gaveta: presa à borda direita, na altura toda; entra deslizando (some com movimento reduzido). */
+.veuDaGaveta {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.gaveta {
+  box-sizing: border-box;
+  width: min(100%, calc(var(--esp-12) * 9));
+  height: 100%;
+  overflow: auto;
+  border-left: 1px solid var(--cor-linha-forte);
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-material);
+  outline: none;
+}
+
+.gaveta[data-entering] {
+  animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.gaveta[data-exiting] {
+  animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-saida) reverse;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes entrarPelaDireita {
+  from {
+    transform: translateX(100%);
+  }
+}

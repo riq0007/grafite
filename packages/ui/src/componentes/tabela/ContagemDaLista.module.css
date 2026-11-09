@@ -1,0 +1,7 @@
+/* A contagem da lista, no texto do dado e no texto secundário, com algarismos tabulares. */
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+}

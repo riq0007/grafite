@@ -1,0 +1,29 @@
+{
+  "name": "@grafite/db",
+  "private": true,
+  "description": "Schema, migrations e isolamento por organização.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./teste": "./test/banco-de-teste.ts"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
+    "fila:gerar": "node scripts/fila.ts gerar",
+    "fila:verificar": "node scripts/fila.ts verificar"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "pg": "^8.23.0",
+    "pg-boss": "12.37.0"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^12.1.0",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
+    "testcontainers": "^12.1.0"
+  }
+}

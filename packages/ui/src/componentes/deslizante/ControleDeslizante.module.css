@@ -1,0 +1,95 @@
+/* Controle deslizante: rótulo e valor em cima, trilha embaixo. As medidas saem da altura do
+   controle, então acompanham a densidade, como o interruptor. */
+.controle {
+  --espessura-da-trilha: max(4px, calc(var(--altura-controle) * 0.18));
+  --lado-do-marcador: calc(var(--altura-controle) * 0.6);
+
+  display: grid;
+  gap: var(--esp-1);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.controle[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+.valor {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A área da trilha tem a altura do marcador, para o clique não exigir precisão. */
+.trilha {
+  position: relative;
+  height: var(--lado-do-marcador);
+  margin-inline: calc(var(--lado-do-marcador) / 2);
+  touch-action: none;
+}
+
+.trilha::before,
+.preenchido {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: var(--espessura-da-trilha);
+  translate: 0 -50%;
+  border-radius: calc(var(--espessura-da-trilha) / 2);
+}
+
+.trilha::before {
+  inset-inline: calc(var(--lado-do-marcador) / -2);
+  box-sizing: border-box;
+  border: 1px solid var(--cor-borda-controle);
+  background-color: var(--cor-superficie-2);
+}
+
+/* A trilha pintada, como a volta das matizes, mostra a escala inteira, sem o preenchimento. */
+.trilha[data-pintada]::before {
+  background-image: var(--trilha-pintada);
+}
+
+.preenchido {
+  left: calc(var(--lado-do-marcador) / -2);
+  padding-left: calc(var(--lado-do-marcador) / 2);
+  background-color: var(--cor-destaque);
+}
+
+.marcador {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  width: var(--lado-do-marcador);
+  height: var(--lado-do-marcador);
+  translate: -50% -50%;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: 50%;
+  background-color: var(--cor-superficie);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.trilha:hover .marcador {
+  border-color: var(--cor-texto-2);
+}
+
+.marcador[data-arrastando] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.marcador[data-foco-visivel] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.controle[data-disabled] .trilha:hover .marcador {
+  border-color: var(--cor-borda-controle);
+}

@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# O comando de operação do Grafite no servidor Linux (spec operacao-em-linux, "Comando de operação no
+# Linux"; change servidor-linux-com-docker, design, decisão 2), que o instalar.sh põe em
+# /usr/local/bin. Ele confere o root e o Docker, garante a rede interna e roda o comando da versão
+# da produção num contêiner descartável da imagem do comando, com o socket do Docker, a pasta da
+# instalação e os destinos do backup no mesmo caminho, e a pasta de cada arquivo ou pasta dos
+# argumentos, como o pacote de uma atualização. Nenhuma imagem é buscada fora do servidor.
+# Uso: sudo grafite <comando> [opções]   (sudo grafite --ajuda mostra os comandos)
+set -euo pipefail
+
+RAIZ="${GRAFITE_RAIZ:-/opt/grafite}"
+REDE=grafite
+FAIXA=172.30.0.0/24
+# O Docker só dá endereços da metade de cima: o IP fixo do proxy, 172.30.0.2, fica livre.
+FAIXA_DINAMICA=172.30.0.128/25
+
+falhar() {
+  printf '%s\n' "$1" >&2
+  exit 1
+}
+
+# O fuso do servidor, que os contêineres seguem.
+fuso_do_servidor() {
+  local fuso=''
+  if command -v timedatectl >/dev/null 2>&1; then
+    fuso="$(timedatectl show --property=Timezone --value 2>/dev/null || true)"
+  fi
+  if [ -z "$fuso" ] && [ -f /etc/timezone ]; then fuso="$(head -n 1 /etc/timezone)"; fi
+  if [ -z "$fuso" ] && [ -L /etc/localtime ]; then
+    fuso="$(readlink /etc/localtime | sed 's#.*/zoneinfo/##')"
+  fi
+  printf '%s' "${fuso:-Etc/UTC}"
+}
+
+# Uma porta livre do servidor para o painel, quando quem opera não deu uma.
+porta_livre() {
+  local porta tentativa
+  for tentativa in 1 2 3 4 5 6 7 8 9 10; do
+    porta=$((20000 + RANDOM % 40000))
+    if ! command -v ss >/dev/null 2>&1 || [ -z "$(ss -Hltn "sport = :$porta" 2>/dev/null)" ]; then
+      printf '%s' "$porta"
+      return 0
+    fi
+  done
+  falhar 'Nenhuma porta livre para o painel: dê uma com --porta, de 1024 a 65535.'
+}
+
+# Abre o endereço no navegador da sessão gráfica de quem chamou o sudo, como essa conta e com as
+# variáveis da sessão dela, sem esperar o navegador fechar.
+abrir_navegador() {
+  local sessao=("XDG_RUNTIME_DIR=/run/user/$SUDO_UID") variavel
+  for variavel in DISPLAY WAYLAND_DISPLAY XAUTHORITY; do
+    if [ -n "${!variavel:-}" ]; then sessao+=("$variavel=${!variavel}"); fi
+  done
+  if [ -S "/run/user/$SUDO_UID/bus" ]; then
+    sessao+=("DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$SUDO_UID/bus")
+  fi
+  if ! command -v xdg-open >/dev/null 2>&1; then
+    printf '%s\n' 'Este servidor não tem o xdg-open: abra o endereço acima no navegador da sessão.'
+    return 0
+  fi
+  sudo -u "$SUDO_USER" env "${sessao[@]}" xdg-open "$1" >/dev/null 2>&1 &
+}
+
+if [ "$(id -u)" != 0 ]; then
+  falhar "O grafite precisa do root: rode com o sudo, como sudo grafite ${1:-<comando>}."
+fi
+
+# O painel (change painel-da-operacao, design, decisão 7): a porta dada ou uma livre, publicada só
+# no 127.0.0.1 do servidor, e o navegador de quem chamou o sudo. Sem uma sessão gráfica, ele para
+# antes de chamar o Docker; o --sem-navegador, do CI, só escreve o endereço.
+painel=''
+sem_navegador=''
+porta=''
+if [ "${1:-}" = painel ]; then
+  painel=1
+  anterior=''
+  for argumento in "$@"; do
+    case "$argumento" in
+      --sem-navegador) sem_navegador=1 ;;
+      --porta=*) porta="${argumento#--porta=}" ;;
+    esac
+    if [ "$anterior" = --porta ]; then porta="$argumento"; fi
+    anterior="$argumento"
+  done
+  if [ -z "$sem_navegador" ] && {
+    [ -z "${SUDO_USER:-}" ] || [ "$SUDO_USER" = root ] || [ -z "${SUDO_UID:-}" ] ||
+      { [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; }
+  }; then
+    falhar 'O painel precisa de um servidor com interface gráfica: rode sudo grafite painel numa sessão da área de trabalho do servidor. Os comandos continuam valendo, como sudo grafite servicos estado (sudo grafite --ajuda).'
+  fi
+  if [ -n "$porta" ] && ! [[ "$porta" =~ ^[0-9]+$ ]]; then
+    falhar '--porta: use um número de 1024 a 65535.'
+  fi
+fi
+if ! command -v docker >/dev/null 2>&1; then
+  falhar 'O Docker não está instalado neste servidor: instale o Docker Engine e o plugin compose, como diz o runbook.'
+fi
+if ! docker info >/dev/null 2>&1; then
+  falhar 'O Docker deste servidor não respondeu: confira se o serviço dele está rodando (systemctl status docker).'
+fi
+
+# A versão do comando: a da produção, no .env do Compose; na instalação, a do pacote.
+versao="${GRAFITE_VERSAO_DO_COMANDO:-}"
+if [ -z "$versao" ] && [ -f "$RAIZ/.env" ]; then
+  versao="$(sed -n 's/^GRAFITE_VERSAO_PRODUCAO=//p' "$RAIZ/.env" | head -n 1)"
+fi
+if [ -z "$versao" ]; then
+  falhar "O Grafite não está instalado em $RAIZ: instale com o instalar.sh do pacote, como diz o runbook."
+fi
+
+# A rede interna, com a faixa fixa, onde o proxy tem o IP fixo.
+if ! docker network inspect "$REDE" >/dev/null 2>&1; then
+  docker network create --subnet "$FAIXA" --ip-range "$FAIXA_DINAMICA" "$REDE" >/dev/null
+fi
+
+montagens=(--volume /var/run/docker.sock:/var/run/docker.sock --volume "$RAIZ:$RAIZ")
+montadas=("$RAIZ")
+
+# Monta a pasta no mesmo caminho, se ela não estiver dentro de uma já montada.
+montar() {
+  local montada
+  for montada in "${montadas[@]}"; do
+    if [ "$1" = "$montada" ] || [[ "$1" == "$montada"/* ]]; then return 0; fi
+  done
+  montagens+=(--volume "$1:$1")
+  montadas+=("$1")
+}
+
+# Os destinos do backup da produção, que o comando confere e grava.
+if [ -f "$RAIZ/producao/config.env" ]; then
+  destinos="$(sed -n "s/^GRAFITE_BACKUP_DESTINOS='\(.*\)'\$/\1/p" "$RAIZ/producao/config.env")"
+  IFS=';' read -r -a lista <<<"$destinos"
+  for destino in "${lista[@]}"; do
+    if [ -d "$destino" ]; then montar "$destino"; fi
+  done
+fi
+
+# A pasta de cada arquivo ou pasta dos argumentos, como o pacote ou o destino da raiz da AC.
+for argumento in "$@"; do
+  if [ -d "$argumento" ]; then
+    montar "$(cd "$argumento" && pwd)"
+  elif [ -e "$argumento" ]; then
+    montar "$(cd "$(dirname "$argumento")" && pwd)"
+  fi
+done
+
+argumentos=("$@")
+publicar=()
+terminal=()
+if [ -n "$painel" ]; then
+  # O painel pergunta na página, e não no terminal: a saída dele passa pelo lançador, que lê o
+  # endereço com o código para abrir o navegador.
+  if [ -z "$porta" ]; then
+    porta="$(porta_livre)"
+    argumentos+=(--porta "$porta")
+  fi
+  publicar=(--publish "127.0.0.1:$porta:$porta")
+elif [ -t 0 ] && [ -t 1 ]; then
+  terminal=(--tty)
+fi
+
+comando=(docker run --rm --interactive ${terminal[@]+"${terminal[@]}"} --pull never
+  --network "$REDE" ${publicar[@]+"${publicar[@]}"} "${montagens[@]}" --workdir "$PWD"
+  --env "GRAFITE_RAIZ=$RAIZ" --env "GRAFITE_FUSO=$(fuso_do_servidor)"
+  "grafite/operacao:$versao" "${argumentos[@]}")
+
+if [ -z "$painel" ] || [ -n "$sem_navegador" ]; then exec "${comando[@]}"; fi
+
+set +e
+"${comando[@]}" | {
+  aberto=''
+  while IFS= read -r linha; do
+    printf '%s\n' "$linha"
+    if [ -z "$aberto" ] && [[ "$linha" =~ (http://127\.0\.0\.1:[0-9]+/#[A-Za-z0-9_-]+) ]]; then
+      abrir_navegador "${BASH_REMATCH[1]}"
+      aberto=1
+    fi
+  done
+}
+codigo="${PIPESTATUS[0]}"
+set -e
+exit "$codigo"

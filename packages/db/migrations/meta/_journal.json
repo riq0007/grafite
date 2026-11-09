@@ -1,0 +1,391 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790307060711,
+      "tag": "0000_fundacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790307077160,
+      "tag": "0001_organizacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790307078217,
+      "tag": "0002_isolar_organizacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790922736229,
+      "tag": "0003_enderecos_de_acesso",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790922852101,
+      "tag": "0004_pessoas_e_contas",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790970645057,
+      "tag": "0005_sessoes_e_credenciais",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790970768173,
+      "tag": "0006_auditoria",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790990435698,
+      "tag": "0007_locais",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790990593290,
+      "tag": "0008_pessoas_ampliadas",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790990851477,
+      "tag": "0009_perfis_grupos_e_atribuicoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790990978477,
+      "tag": "0010_administrador",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791383565750,
+      "tag": "0011_preferencias",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791383728962,
+      "tag": "0012_arquivos",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791383983588,
+      "tag": "0013_eventos",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791384200637,
+      "tag": "0014_fila",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791384510043,
+      "tag": "0015_tarefas_com_falha",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791423070327,
+      "tag": "0016_operacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791423474487,
+      "tag": "0017_papel_do_backup",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791582832536,
+      "tag": "0018_catalogo",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791590037936,
+      "tag": "0019_ativos",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791651391112,
+      "tag": "0020_visoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791687342672,
+      "tag": "0021_tipos_arquivo_e_imagem",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791688250848,
+      "tag": "0022_ficha_e_ligacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791833103048,
+      "tag": "0023_importacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791850154271,
+      "tag": "0024_coleta",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791860596224,
+      "tag": "0025_cofre",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791931861040,
+      "tag": "0026_mudancas_das_visoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791954670840,
+      "tag": "0027_impressoras_por_snmp",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791967378015,
+      "tag": "0028_alertas",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791976577913,
+      "tag": "0029_notificacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791986359261,
+      "tag": "0030_aparelhos_do_push",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791993599224,
+      "tag": "0031_indicadores_da_organizacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792041862461,
+      "tag": "0032_backups_no_mesmo_minuto",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792371412726,
+      "tag": "0033_rascunhos_de_cadastro",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792439976731,
+      "tag": "0034_tipo_de_campo_fornecedor",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792439978180,
+      "tag": "0035_fornecedores",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792450877741,
+      "tag": "0036_consumiveis",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792597435030,
+      "tag": "0037_estoque",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792635568582,
+      "tag": "0038_solicitacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792678881560,
+      "tag": "0039_ordens_de_servico",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792715477076,
+      "tag": "0040_indicadores_da_operacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793159662203,
+      "tag": "0041_backups_do_control_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793161497132,
+      "tag": "0042_operacoes_do_control_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1793162781071,
+      "tag": "0043_mapa_da_planta",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793166217566,
+      "tag": "0044_excecoes_das_regras",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793167023213,
+      "tag": "0045_indicadores_criados",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793168550178,
+      "tag": "0046_salas_de_reuniao",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793169976606,
+      "tag": "0047_paineis",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793173400314,
+      "tag": "0048_diretorio",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793175828367,
+      "tag": "0049_agentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793177540089,
+      "tag": "0050_distribuicao",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1793214960919,
+      "tag": "0051_ac_do_diretorio",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1793391600433,
+      "tag": "0052_primeiro_cartao",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793724487549,
+      "tag": "0053_cadastro_dos_agentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793802299464,
+      "tag": "0054_pendencia_do_cadastro_do_agente",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "regras_de_alerta" ADD COLUMN "excecoes" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -1,0 +1,33 @@
+/* A tela do acesso remoto (change acesso-remoto-vnc): a situação em texto e a tela da máquina, que
+   vai até o fim da área da janela. */
+
+.situacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.motivo {
+  color: var(--cor-texto-2);
+}
+
+.area {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+  background: var(--cor-fundo);
+}
+
+.maquina {
+  flex: 1;
+  min-width: 0;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}

@@ -1,0 +1,88 @@
+/* O painel da tarefa: o cabeçalho com a situação, as linhas do comando e o resultado. */
+.painel {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+}
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.cabecalho h2 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.acoes {
+  display: inline-flex;
+  gap: var(--esp-2);
+  margin-inline-start: auto;
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.linhas {
+  display: grid;
+  gap: var(--esp-1);
+  max-height: 320px;
+  margin: 0;
+  padding: var(--esp-3);
+  overflow-y: auto;
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+/* Sem linhas ainda, a área some, mas fica na página: ela anuncia as linhas que chegarem. */
+.linhas:empty {
+  padding: 0;
+  background: none;
+}
+
+.erro {
+  color: var(--cor-critico);
+}
+
+.marca {
+  font-weight: var(--peso-forte);
+}
+
+.resultado {
+  margin: 0;
+  font-weight: var(--peso-medio);
+}
+
+.recusa {
+  margin: 0;
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-atencao);
+  border-radius: var(--raio-controle);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.formulario p {
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}

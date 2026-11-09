@@ -1,0 +1,83 @@
+.caixa {
+  position: relative;
+}
+
+.lupa {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--esp-2);
+  display: flex;
+  align-items: center;
+  color: var(--cor-texto-2);
+  pointer-events: none;
+}
+
+/* Espaço da lupa: ícone de 16 px entre dois respiros. */
+.comLupa {
+  padding-inline-start: calc(var(--esp-2) * 2 + var(--esp-4));
+}
+
+/* Espaço do botão de abrir, do mesmo tamanho, do outro lado. */
+.comBotao {
+  padding-inline-end: calc(var(--esp-2) * 2 + var(--esp-4));
+}
+
+/* O botão de abrir fica dentro da caixa, à direita, na altura dela; ele não entra na tabulação. */
+.abrir {
+  position: absolute;
+  inset-block: 1px;
+  inset-inline-end: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--esp-2) * 2 + var(--esp-4));
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  cursor: default;
+}
+
+.abrir[data-hovered] {
+  color: var(--cor-texto);
+}
+
+.abrir[data-pressed] {
+  background-color: var(--cor-pressionado);
+}
+
+/* As outras opções vêm depois das sugeridas, separadas por uma linha. */
+.painel [data-sugerida] + [role="option"]:not([data-sugerida]) {
+  position: relative;
+  margin-top: calc(var(--esp-1) * 2 + 1px);
+}
+
+.painel [data-sugerida] + [role="option"]:not([data-sugerida])::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--esp-1) * -1 - 1px);
+  border-top: 1px solid var(--cor-material-linha);
+}
+
+.cabecalho {
+  display: grid;
+  padding: var(--esp-1) var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.origem {
+  font-weight: var(--peso-normal);
+}
+
+/* Fora da lista: não é uma opção, e o leitor de tela o lê no painel. */
+.rodape {
+  margin: 0;
+  padding: var(--esp-2) var(--esp-2) var(--esp-1);
+  border-top: 1px solid var(--cor-material-linha);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

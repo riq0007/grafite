@@ -1,0 +1,23 @@
+name: Preparar o ambiente
+description: Node 24, pnpm pelo corepack (versão do packageManager) e dependências travadas.
+
+# Os jobs rodam nos executores do GitHub, cada um numa máquina nova, e nada passa de um run a outro:
+# o turbo guarda o cache dele dentro do checkout, que morre com a máquina (change
+# ci-nos-executores-do-github, design, decisão 3). No Windows, o bash é o Git Bash da imagem.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+
+    - name: Ativar o pnpm do projeto
+      shell: bash
+      run: corepack enable
+
+    - name: Instalar dependências (lockfile travado)
+      shell: bash
+      run: pnpm install --frozen-lockfile
+      env:
+        # Ganchos do git não servem no CI.
+        LEFTHOOK: '0'

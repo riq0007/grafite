@@ -1,0 +1,296 @@
+/* Dock: camada sobreposta, fixa na borda escolhida. O tamanho do item vem da preferência
+   (--tamanho-item-dock). Esconder usa translate; a ampliação, só transform nos itens. */
+.dock {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  box-sizing: border-box;
+  pointer-events: auto;
+  padding: calc(var(--esp-1) * 1.5);
+  transition:
+    translate var(--dur-ocultar-dock) var(--curva-padrao),
+    opacity var(--dur-opacidade) var(--curva-padrao);
+}
+
+/* Material do F0 num fundo à parte, que se estende para cobrir os itens ampliados sem mudar o
+   layout; vira sólido com a transparência reduzida. */
+.fundo {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-dock);
+  background: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+}
+
+.dock[data-posicao="embaixo"] .fundo {
+  left: calc(var(--estender-inicio, 0px) * -1);
+  right: calc(var(--estender-fim, 0px) * -1);
+}
+
+.dock:not([data-posicao="embaixo"]) .fundo {
+  top: calc(var(--estender-inicio, 0px) * -1);
+  bottom: calc(var(--estender-fim, 0px) * -1);
+}
+
+/* Na direção em que os itens crescem, o fundo também cresce: o destaque não sai do dock. */
+.dock[data-posicao="embaixo"] .fundo {
+  top: calc(var(--estender-altura, 0px) * -1);
+}
+
+.dock[data-posicao="esquerda"] .fundo {
+  right: calc(var(--estender-altura, 0px) * -1);
+}
+
+.dock[data-posicao="direita"] .fundo {
+  left: calc(var(--estender-altura, 0px) * -1);
+}
+
+.trilho {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.trilho[data-posicao="embaixo"] {
+  inset: auto var(--esp-2) var(--esp-2);
+  justify-content: center;
+  clip-path: inset(-100vh 0);
+}
+
+.trilho:not([data-posicao="embaixo"]) {
+  inset-block: calc(var(--altura-barra-superior) + var(--esp-2)) var(--esp-2);
+  /* A ampliação pode avançar para dentro da janela, mas respeita o topo e o rodapé. */
+  clip-path: inset(0 -100vw);
+}
+
+.trilho[data-posicao="esquerda"] {
+  inset-inline-start: var(--esp-2);
+}
+
+.trilho[data-posicao="direita"] {
+  inset-inline-end: var(--esp-2);
+}
+
+.itens {
+  display: flex;
+  gap: var(--esp-1);
+  align-items: flex-end;
+}
+
+.dock:not([data-posicao="embaixo"]) .itens {
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+.dock[data-posicao="esquerda"] .itens {
+  align-items: flex-start;
+}
+
+/*
+ * A placa leve de cada item (change componentes-v3, design, decisão 6): a camada de hover em
+ * repouso e a de pressionado no hover, com o ícone no texto do tema.
+ */
+.item {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tamanho-item-dock);
+  height: var(--tamanho-item-dock);
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-item-dock);
+  background-color: var(--cor-hover);
+  color: var(--cor-texto);
+  cursor: default;
+  outline: none;
+  transition:
+    color var(--dur-rapida) var(--curva-padrao),
+    background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.item[data-hovered] {
+  background-color: var(--cor-pressionado);
+}
+
+/* O módulo atual: a borda da placa, além do ponto, sem mudar o tamanho do item. */
+.item[aria-current="page"] {
+  box-shadow: inset 0 0 0 1px var(--cor-linha-forte);
+}
+
+.item[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* Ponto do módulo atual: fora do item, do lado da borda do dock. */
+.ponto {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cor-texto-2);
+}
+
+.dock[data-posicao="embaixo"] .ponto {
+  bottom: -5px;
+  left: calc(50% - 2px);
+}
+
+.dock[data-posicao="esquerda"] .ponto {
+  left: -5px;
+  top: calc(50% - 2px);
+}
+
+.dock[data-posicao="direita"] .ponto {
+  right: -5px;
+  top: calc(50% - 2px);
+}
+
+.separador {
+  flex: none;
+  border: 0;
+  align-self: center;
+  width: 1px;
+  height: calc(var(--tamanho-item-dock) * 0.6);
+  margin: 0 calc(var(--esp-1) * 0.75);
+  background: var(--cor-material-linha);
+}
+
+.dock:not([data-posicao="embaixo"]) .separador {
+  width: calc(var(--tamanho-item-dock) * 0.6);
+  height: 1px;
+  margin: calc(var(--esp-1) * 0.75) 0;
+}
+
+/* A ampliação cresce a partir da borda do dock, por cima do conteúdo. */
+.dock[data-posicao="embaixo"] .item {
+  transform-origin: 50% 100%;
+}
+
+.dock[data-posicao="esquerda"] .item {
+  transform-origin: 0% 50%;
+}
+
+.dock[data-posicao="direita"] .item {
+  transform-origin: 100% 50%;
+}
+
+/* Ocultar automático: o dock sai pela própria borda, e a faixa na borda o traz de volta. */
+.dock[data-posicao][data-oculto] {
+  pointer-events: none;
+}
+
+.dock[data-posicao="embaixo"][data-oculto] {
+  translate: 0 calc(100% + var(--esp-2) + var(--esp-2));
+}
+
+.dock[data-posicao="esquerda"][data-oculto] {
+  translate: calc(-100% - var(--esp-2) - var(--esp-2)) 0;
+}
+
+.dock[data-posicao="direita"][data-oculto] {
+  translate: calc(100% + var(--esp-2) + var(--esp-2)) 0;
+}
+
+/* Com movimento reduzido, some sem deslocamento: fica no lugar, invisível. */
+:root[data-motion="reduzido"] .dock[data-oculto] {
+  opacity: 0;
+}
+
+:root[data-motion="reduzido"] .dock[data-posicao="embaixo"][data-oculto] {
+  translate: none;
+}
+
+:root[data-motion="reduzido"] .dock:not([data-posicao="embaixo"])[data-oculto] {
+  translate: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion]) .dock[data-oculto] {
+    opacity: 0;
+  }
+
+  :root:not([data-motion]) .dock[data-posicao="embaixo"][data-oculto] {
+    translate: none;
+  }
+
+  :root:not([data-motion]) .dock:not([data-posicao="embaixo"])[data-oculto] {
+    translate: none;
+  }
+}
+
+.faixa {
+  position: fixed;
+  z-index: 19;
+}
+
+.faixa[data-posicao="embaixo"] {
+  inset: auto 0 0;
+  height: var(--faixa-revelar-dock);
+}
+
+.faixa[data-posicao="esquerda"] {
+  inset: 0 auto 0 0;
+  width: var(--faixa-revelar-dock);
+}
+
+.faixa[data-posicao="direita"] {
+  inset: 0 0 0 auto;
+  width: var(--faixa-revelar-dock);
+}
+
+/* Item com o menu aberto: o destaque do protótipo aprovado. */
+.item[data-menu-aberto] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 15%, transparent);
+  color: var(--cor-destaque-texto);
+}
+
+/* Nome do módulo no topo do menu do dock. */
+.tituloDoMenu {
+  margin: 0;
+  padding: var(--esp-1) var(--esp-3) calc(var(--esp-1) / 2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+/*
+ * Montagem, só depois das boas-vindas (spec chegada): o dock entra pela borda dele, com mola. A
+ * transformação soma com o translate da posição e do ocultar automático.
+ */
+:global(html[data-chegada="montando"]) .dock {
+  animation: subirDeBaixo var(--dur-montagem-dock) var(--curva-mola) var(--atraso-montagem-dock)
+    backwards;
+}
+
+:global(html[data-chegada="montando"]) .dock[data-posicao="esquerda"] {
+  animation-name: entrarDaEsquerda;
+}
+
+:global(html[data-chegada="montando"]) .dock[data-posicao="direita"] {
+  animation-name: entrarDaDireita;
+}
+
+@keyframes subirDeBaixo {
+  from {
+    transform: translateY(calc(100% + var(--esp-4) * 2));
+  }
+}
+
+@keyframes entrarDaEsquerda {
+  from {
+    transform: translateX(calc(-100% - var(--esp-4) * 2));
+  }
+}
+
+@keyframes entrarDaDireita {
+  from {
+    transform: translateX(calc(100% + var(--esp-4) * 2));
+  }
+}

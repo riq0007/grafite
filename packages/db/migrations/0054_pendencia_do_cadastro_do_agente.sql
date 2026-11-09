@@ -1,0 +1,1 @@
+ALTER TABLE "agentes" ADD COLUMN "pendencia_cadastro" jsonb;

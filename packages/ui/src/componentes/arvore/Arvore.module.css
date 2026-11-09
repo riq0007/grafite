@@ -1,0 +1,95 @@
+.arvore {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  outline: none;
+}
+
+/* Cada item na altura da densidade, como as linhas da tabela. */
+.item {
+  height: var(--altura-linha);
+  border-radius: var(--raio-controle);
+  outline: none;
+  cursor: default;
+}
+
+.item[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+/* A mesma tinta da linha selecionada da tabela. */
+.item[data-selected] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+}
+
+.item[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* O recuo de cada nível é o do indicador, para os rótulos de um ramo se alinharem. */
+.conteudo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  height: 100%;
+  padding-inline: calc(var(--esp-2) + (var(--nivel) - 1) * var(--esp-5)) var(--esp-2);
+}
+
+.indicador,
+.semIndicador {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--esp-5);
+  height: var(--esp-5);
+}
+
+.indicador {
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  outline: none;
+}
+
+.indicador[data-hovered] {
+  color: var(--cor-texto);
+}
+
+.indicador[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+}
+
+/* A seta gira para baixo quando o item se expande: a mudança de estado, curta. */
+.indicador svg {
+  transition: transform var(--dur-rapida) var(--curva-padrao);
+}
+
+.item[data-expanded] .indicador svg {
+  transform: rotate(90deg);
+}
+
+.icone {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.rotulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* O item que não se escolhe fica à vista, apagado, e ainda expande. */
+.item[data-nao-escolhe] .rotulo {
+  color: var(--cor-texto-2);
+}
+
+.detalhe {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

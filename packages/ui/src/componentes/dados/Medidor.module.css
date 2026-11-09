@@ -1,0 +1,101 @@
+/* O medidor: a régua com as marcas, o nível na tinta, o cursor do limite e o número ao lado. */
+.medidor {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.linha {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.regua {
+  position: relative;
+  flex: 1;
+  min-width: 64px;
+  padding-bottom: 6px;
+}
+
+.medidor:not([data-limite]) .regua {
+  padding-bottom: 0;
+}
+
+/* A trilha é um poço: a superfície afundada com a linha fina. */
+.trilha {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: 2px;
+  background: var(--cor-superficie-afundada);
+}
+
+.medidor[data-tamanho="compacto"] .trilha {
+  height: 6px;
+}
+
+.nivel {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background: var(--tinta);
+}
+
+/* As marcas ficam por cima do nível, como os traços de uma régua. */
+.marca {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  background: var(--cor-linha-forte);
+}
+
+/* O cursor ▲ do limite, logo abaixo da trilha. */
+.limite {
+  position: absolute;
+  top: 9px;
+  width: 0;
+  height: 0;
+  border-inline: 4px solid transparent;
+  border-bottom: 5px solid var(--cor-texto);
+  translate: -4px 0;
+}
+
+.numero {
+  flex: none;
+  min-width: 4ch;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--cor-texto);
+}
+
+.medidor[data-tamanho="compacto"] .numero {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+.medidor[data-tamanho="grande"] .numero {
+  font-size: var(--texto-numeral);
+  line-height: 1;
+}
+
+.unidade {
+  margin-left: 1px;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-2);
+}
+
+.textoDoLimite {
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+}
+
+.semValor {
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

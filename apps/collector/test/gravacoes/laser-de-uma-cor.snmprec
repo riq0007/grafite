@@ -1,0 +1,15 @@
+# Gravação montada pelo Printer-MIB (RFC 3805) e pelo Host Resources MIB (RFC 2790), com valores
+# como os do parque do PMG, e não lida de uma impressora: uma laser de uma cor, com o número de
+# série, o toner medido e o cilindro. O comando gravar troca as gravações montadas pelas reais.
+# Formato do snmpsim: oid|tipo|valor, em ordem de OID.
+1.3.6.1.2.1.1.1.0|4|HP LaserJet M404dn
+1.3.6.1.2.1.25.3.5.1.2.1|4x|00
+1.3.6.1.2.1.43.5.1.1.17.1|4|VNB3K12345
+1.3.6.1.2.1.43.10.2.1.4.1.1|65|12500
+1.3.6.1.2.1.43.10.2.1.6.1.1|2|1
+1.3.6.1.2.1.43.11.1.1.6.1.1|4|Black Toner Cartridge
+1.3.6.1.2.1.43.11.1.1.6.1.2|4|Imaging Drum Unit
+1.3.6.1.2.1.43.11.1.1.8.1.1|2|1000
+1.3.6.1.2.1.43.11.1.1.8.1.2|2|30000
+1.3.6.1.2.1.43.11.1.1.9.1.1|2|80
+1.3.6.1.2.1.43.11.1.1.9.1.2|2|18000

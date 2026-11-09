@@ -1,0 +1,61 @@
+/* O diretório na Administração (change integracao-ad-ldap): os formulários na grade da parte, com
+   os campos lado a lado na tela larga, e os grupos de cada usuário numa linha. */
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: var(--esp-4);
+  align-items: start;
+}
+
+.inteiro {
+  grid-column: 1 / -1;
+}
+
+/* O certificado da AC na fonte dos códigos, como o PEM é lido. */
+.pem textarea {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+}
+
+/* A configuração com o guia ao lado na janela larga; na estreita, o guia vem antes do formulário
+   (change guia-do-diretorio). Fechado, o guia é só o título e o botão, em cima. */
+.configuracao {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.colunas {
+  display: grid;
+  gap: var(--esp-6);
+  align-items: start;
+}
+
+@container (width >= 960px) {
+  .colunas:has(> [data-aberto="true"]) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .colunas > [data-aberto="true"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+.grupos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+.busca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--esp-3);
+}
+
+.busca > :first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}

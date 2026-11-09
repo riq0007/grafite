@@ -1,0 +1,1899 @@
+{
+  "$extensions": {
+    "grafite.modos": {
+      "tema": {
+        "grafite": "Grafite",
+        "meia-noite": "Meia-noite",
+        "oled": "OLED",
+        "nevoa": "Névoa",
+        "papel": "Papel",
+        "alto-contraste": "Alto contraste"
+      },
+      "destaque": {
+        "grafite": "Grafite",
+        "azul": "Azul",
+        "verde": "Verde",
+        "laranja": "Laranja"
+      },
+      "densidade": {
+        "compacta": "Compacta",
+        "normal": "Normal",
+        "confortavel": "Confortável"
+      }
+    }
+  },
+  "cor": {
+    "fundo": {
+      "$type": "color",
+      "$value": "#0c0e10",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#0c0e10",
+            "meia-noite": "#070d1b",
+            "oled": "#000000",
+            "nevoa": "#e3e5e9",
+            "papel": "#ebe4d9",
+            "alto-contraste": "#dfdfdf"
+          }
+        },
+        "grafite.css": "--cor-fundo"
+      }
+    },
+    "superficie-afundada": {
+      "$type": "color",
+      "$value": "#101114",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#101114",
+            "meia-noite": "#0a111f",
+            "oled": "#000000",
+            "nevoa": "#ebedf1",
+            "papel": "#f3ece1",
+            "alto-contraste": "#e9e9e9"
+          }
+        },
+        "grafite.css": "--cor-superficie-afundada"
+      }
+    },
+    "superficie": {
+      "$type": "color",
+      "$value": "#15171a",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#15171a",
+            "meia-noite": "#0f1725",
+            "oled": "#0b0b0b",
+            "nevoa": "#fcfdff",
+            "papel": "#fffdfa",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-superficie"
+      }
+    },
+    "superficie-2": {
+      "$type": "color",
+      "$value": "#1f2124",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#1f2124",
+            "meia-noite": "#19212f",
+            "oled": "#161616",
+            "nevoa": "#f2f4f8",
+            "papel": "#faf3e9",
+            "alto-contraste": "#f2f2f2"
+          }
+        },
+        "grafite.css": "--cor-superficie-2"
+      }
+    },
+    "superficie-elevada": {
+      "$type": "color",
+      "$value": "#232427",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#232427",
+            "meia-noite": "#1c2433",
+            "oled": "#191919",
+            "nevoa": "#ffffff",
+            "papel": "#ffffff",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-superficie-elevada"
+      }
+    },
+    "material-solido": {
+      "$type": "color",
+      "$value": "#26282b",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#26282b",
+            "meia-noite": "#202837",
+            "oled": "#1b1b1b",
+            "nevoa": "#f9fafd",
+            "papel": "#fefaf3",
+            "alto-contraste": "#fafafa"
+          }
+        },
+        "grafite.css": "--cor-material-solido"
+      }
+    },
+    "miniatura": {
+      "$type": "color",
+      "$value": "#222326",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#222326",
+            "meia-noite": "#1b2332",
+            "oled": "#181818",
+            "nevoa": "#eff1f5",
+            "papel": "#f7f0e5",
+            "alto-contraste": "#efefef"
+          }
+        },
+        "grafite.css": "--cor-miniatura"
+      }
+    },
+    "linha": {
+      "$type": "color",
+      "$value": "rgba(233, 239, 251, 0.0925)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(233, 239, 251, 0.0925)",
+            "meia-noite": "rgba(230, 239, 255, 0.0925)",
+            "oled": "rgba(238, 238, 238, 0.105)",
+            "nevoa": "rgba(27, 34, 45, 0.10700000000000001)",
+            "papel": "rgba(46, 30, 0, 0.10700000000000001)",
+            "alto-contraste": "rgba(34, 34, 34, 0.14)"
+          }
+        },
+        "grafite.css": "--cor-linha"
+      }
+    },
+    "linha-forte": {
+      "$type": "color",
+      "$value": "rgba(233, 239, 251, 0.166)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(233, 239, 251, 0.166)",
+            "meia-noite": "rgba(230, 239, 255, 0.166)",
+            "oled": "rgba(238, 238, 238, 0.186)",
+            "nevoa": "rgba(27, 34, 45, 0.185)",
+            "papel": "rgba(46, 30, 0, 0.185)",
+            "alto-contraste": "rgba(34, 34, 34, 0.24)"
+          }
+        },
+        "grafite.css": "--cor-linha-forte"
+      }
+    },
+    "texto": {
+      "$type": "color",
+      "$value": "#eeeff1",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#eeeff1",
+            "meia-noite": "#eaeff9",
+            "oled": "#f5f5f5",
+            "nevoa": "#111213",
+            "papel": "#14120e",
+            "alto-contraste": "#030303"
+          }
+        },
+        "grafite.css": "--cor-texto"
+      }
+    },
+    "texto-2": {
+      "$type": "color",
+      "$value": "#a4a5a9",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#a4a5a9",
+            "meia-noite": "#9da6b5",
+            "oled": "#b0b0b0",
+            "nevoa": "#56575a",
+            "papel": "#5b574f",
+            "alto-contraste": "#424242"
+          }
+        },
+        "grafite.css": "--cor-texto-2"
+      }
+    },
+    "zebra": {
+      "$type": "color",
+      "$value": "rgba(233, 239, 251, 0.02565)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(233, 239, 251, 0.02565)",
+            "meia-noite": "rgba(230, 239, 255, 0.02565)",
+            "oled": "rgba(238, 238, 238, 0.029900000000000003)",
+            "nevoa": "rgba(27, 34, 45, 0.02565)",
+            "papel": "rgba(46, 30, 0, 0.02565)",
+            "alto-contraste": "rgba(34, 34, 34, 0.035)"
+          }
+        },
+        "grafite.css": "--cor-zebra"
+      }
+    },
+    "barra": {
+      "$type": "color",
+      "$value": "rgba(21, 23, 26, 0.82)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(21, 23, 26, 0.82)",
+            "meia-noite": "rgba(15, 23, 37, 0.82)",
+            "oled": "rgba(11, 11, 11, 0.82)",
+            "nevoa": "rgba(249, 250, 253, 0.84)",
+            "papel": "rgba(254, 250, 243, 0.84)",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-barra"
+      }
+    },
+    "material": {
+      "$type": "color",
+      "$value": "rgba(38, 40, 43, 0.78)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(38, 40, 43, 0.78)",
+            "meia-noite": "rgba(32, 40, 55, 0.78)",
+            "oled": "rgba(27, 27, 27, 0.78)",
+            "nevoa": "rgba(249, 250, 253, 0.82)",
+            "papel": "rgba(254, 250, 243, 0.82)",
+            "alto-contraste": "#fafafa"
+          }
+        },
+        "grafite.css": "--cor-material"
+      }
+    },
+    "material-linha": {
+      "$type": "color",
+      "$value": "rgba(233, 239, 251, 0.127)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(233, 239, 251, 0.127)",
+            "meia-noite": "rgba(230, 239, 255, 0.127)",
+            "oled": "rgba(238, 238, 238, 0.14200000000000002)",
+            "nevoa": "rgba(255, 255, 255, 0.8)",
+            "papel": "rgba(255, 255, 255, 0.8)",
+            "alto-contraste": "#030303"
+          }
+        },
+        "grafite.css": "--cor-material-linha"
+      }
+    },
+    "borda-controle": {
+      "$type": "color",
+      "$value": "#6b6d70",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#6b6d70",
+            "meia-noite": "#656d7b",
+            "oled": "#757575",
+            "nevoa": "#828386",
+            "papel": "#87837b",
+            "alto-contraste": "#717171"
+          }
+        },
+        "grafite.css": "--cor-borda-controle"
+      }
+    },
+    "veu": {
+      "$type": "color",
+      "$value": "rgba(0, 0, 0, 0.55)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(0, 0, 0, 0.55)",
+            "meia-noite": "rgba(0, 0, 0, 0.55)",
+            "oled": "rgba(0, 0, 0, 0.55)",
+            "nevoa": "rgba(0, 0, 0, 0.31)",
+            "papel": "rgba(0, 0, 0, 0.31)",
+            "alto-contraste": "rgba(0, 0, 0, 0.55)"
+          }
+        },
+        "grafite.css": "--cor-veu"
+      }
+    },
+    "hover": {
+      "$type": "color",
+      "$value": "rgba(238, 239, 241, 0.06)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(238, 239, 241, 0.06)",
+            "meia-noite": "rgba(234, 239, 249, 0.06)",
+            "oled": "rgba(245, 245, 245, 0.06)",
+            "nevoa": "rgba(17, 18, 19, 0.06)",
+            "papel": "rgba(20, 18, 14, 0.06)",
+            "alto-contraste": "rgba(3, 3, 3, 0.06)"
+          }
+        },
+        "grafite.css": "--cor-hover"
+      }
+    },
+    "pressionado": {
+      "$type": "color",
+      "$value": "rgba(238, 239, 241, 0.1)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(238, 239, 241, 0.1)",
+            "meia-noite": "rgba(234, 239, 249, 0.1)",
+            "oled": "rgba(245, 245, 245, 0.1)",
+            "nevoa": "rgba(17, 18, 19, 0.1)",
+            "papel": "rgba(20, 18, 14, 0.1)",
+            "alto-contraste": "rgba(3, 3, 3, 0.1)"
+          }
+        },
+        "grafite.css": "--cor-pressionado"
+      }
+    },
+    "cursor-ponto": {
+      "$type": "color",
+      "$value": "#eeeff1",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#eeeff1",
+            "meia-noite": "#eaeff9",
+            "oled": "#f5f5f5",
+            "nevoa": "#111213",
+            "papel": "#14120e",
+            "alto-contraste": "#030303"
+          }
+        },
+        "grafite.css": "--cor-cursor-ponto"
+      }
+    },
+    "cursor-anel": {
+      "$type": "color",
+      "$value": "rgba(238, 239, 241, 0.45)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(238, 239, 241, 0.45)",
+            "meia-noite": "rgba(234, 239, 249, 0.45)",
+            "oled": "rgba(245, 245, 245, 0.45)",
+            "nevoa": "rgba(17, 18, 19, 0.55)",
+            "papel": "rgba(20, 18, 14, 0.55)",
+            "alto-contraste": "rgba(3, 3, 3, 0.55)"
+          }
+        },
+        "grafite.css": "--cor-cursor-anel"
+      }
+    },
+    "cursor-abraco": {
+      "$type": "color",
+      "$value": "rgba(238, 239, 241, 0.1)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(238, 239, 241, 0.1)",
+            "meia-noite": "rgba(234, 239, 249, 0.1)",
+            "oled": "rgba(245, 245, 245, 0.1)",
+            "nevoa": "rgba(17, 18, 19, 0.1)",
+            "papel": "rgba(20, 18, 14, 0.1)",
+            "alto-contraste": "rgba(3, 3, 3, 0.1)"
+          }
+        },
+        "grafite.css": "--cor-cursor-abraco"
+      }
+    },
+    "ok": {
+      "$type": "color",
+      "$value": "#75d78d",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#75d78d",
+            "meia-noite": "#75d78d",
+            "oled": "#75d78d",
+            "nevoa": "#00682d",
+            "papel": "#00682d",
+            "alto-contraste": "#00622a"
+          }
+        },
+        "grafite.css": "--cor-ok"
+      }
+    },
+    "ok-fundo": {
+      "$type": "color",
+      "$value": "rgba(117, 215, 141, 0.15)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(117, 215, 141, 0.15)",
+            "meia-noite": "rgba(117, 215, 141, 0.15)",
+            "oled": "rgba(117, 215, 141, 0.15)",
+            "nevoa": "rgba(0, 104, 45, 0.15)",
+            "papel": "rgba(0, 104, 45, 0.15)",
+            "alto-contraste": "rgba(0, 98, 42, 0.15)"
+          }
+        },
+        "grafite.css": "--cor-ok-fundo"
+      }
+    },
+    "ok-borda": {
+      "$type": "color",
+      "$value": "rgba(117, 215, 141, 0.4)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(117, 215, 141, 0.4)",
+            "meia-noite": "rgba(117, 215, 141, 0.4)",
+            "oled": "rgba(117, 215, 141, 0.4)",
+            "nevoa": "rgba(0, 104, 45, 0.4)",
+            "papel": "rgba(0, 104, 45, 0.4)",
+            "alto-contraste": "rgba(0, 98, 42, 0.4)"
+          }
+        },
+        "grafite.css": "--cor-ok-borda"
+      }
+    },
+    "ok-forte": {
+      "$type": "color",
+      "$value": "#5bbd74",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#5bbd74",
+            "meia-noite": "#5bbd74",
+            "oled": "#5bbd74",
+            "nevoa": "#0a7e3a",
+            "papel": "#0a7e3a",
+            "alto-contraste": "#0a7e3a"
+          }
+        },
+        "grafite.css": "--cor-ok-forte"
+      }
+    },
+    "sobre-ok": {
+      "$type": "color",
+      "$value": "#041407",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#041407",
+            "meia-noite": "#041407",
+            "oled": "#041407",
+            "nevoa": "#ffffff",
+            "papel": "#ffffff",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-sobre-ok"
+      }
+    },
+    "atencao": {
+      "$type": "color",
+      "$value": "#f2af48",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#f2af48",
+            "meia-noite": "#f2af48",
+            "oled": "#f2af48",
+            "nevoa": "#7b5100",
+            "papel": "#7b5100",
+            "alto-contraste": "#754d00"
+          }
+        },
+        "grafite.css": "--cor-atencao"
+      }
+    },
+    "atencao-fundo": {
+      "$type": "color",
+      "$value": "rgba(242, 175, 72, 0.15)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(242, 175, 72, 0.15)",
+            "meia-noite": "rgba(242, 175, 72, 0.15)",
+            "oled": "rgba(242, 175, 72, 0.15)",
+            "nevoa": "rgba(123, 81, 0, 0.15)",
+            "papel": "rgba(123, 81, 0, 0.15)",
+            "alto-contraste": "rgba(117, 77, 0, 0.15)"
+          }
+        },
+        "grafite.css": "--cor-atencao-fundo"
+      }
+    },
+    "atencao-borda": {
+      "$type": "color",
+      "$value": "rgba(242, 175, 72, 0.4)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(242, 175, 72, 0.4)",
+            "meia-noite": "rgba(242, 175, 72, 0.4)",
+            "oled": "rgba(242, 175, 72, 0.4)",
+            "nevoa": "rgba(123, 81, 0, 0.4)",
+            "papel": "rgba(123, 81, 0, 0.4)",
+            "alto-contraste": "rgba(117, 77, 0, 0.4)"
+          }
+        },
+        "grafite.css": "--cor-atencao-borda"
+      }
+    },
+    "atencao-forte": {
+      "$type": "color",
+      "$value": "#d79628",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#d79628",
+            "meia-noite": "#d79628",
+            "oled": "#d79628",
+            "nevoa": "#8d5e00",
+            "papel": "#8d5e00",
+            "alto-contraste": "#8d5e00"
+          }
+        },
+        "grafite.css": "--cor-atencao-forte"
+      }
+    },
+    "sobre-atencao": {
+      "$type": "color",
+      "$value": "#180d00",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#180d00",
+            "meia-noite": "#180d00",
+            "oled": "#180d00",
+            "nevoa": "#ffffff",
+            "papel": "#ffffff",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-sobre-atencao"
+      }
+    },
+    "critico": {
+      "$type": "color",
+      "$value": "#ffa098",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#ffa098",
+            "meia-noite": "#ffa098",
+            "oled": "#ffa098",
+            "nevoa": "#ab2428",
+            "papel": "#ab2428",
+            "alto-contraste": "#a51e24"
+          }
+        },
+        "grafite.css": "--cor-critico"
+      }
+    },
+    "critico-fundo": {
+      "$type": "color",
+      "$value": "rgba(255, 160, 152, 0.15)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(255, 160, 152, 0.15)",
+            "meia-noite": "rgba(255, 160, 152, 0.15)",
+            "oled": "rgba(255, 160, 152, 0.15)",
+            "nevoa": "rgba(171, 36, 40, 0.15)",
+            "papel": "rgba(171, 36, 40, 0.15)",
+            "alto-contraste": "rgba(165, 30, 36, 0.15)"
+          }
+        },
+        "grafite.css": "--cor-critico-fundo"
+      }
+    },
+    "critico-borda": {
+      "$type": "color",
+      "$value": "rgba(255, 160, 152, 0.4)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(255, 160, 152, 0.4)",
+            "meia-noite": "rgba(255, 160, 152, 0.4)",
+            "oled": "rgba(255, 160, 152, 0.4)",
+            "nevoa": "rgba(171, 36, 40, 0.4)",
+            "papel": "rgba(171, 36, 40, 0.4)",
+            "alto-contraste": "rgba(165, 30, 36, 0.4)"
+          }
+        },
+        "grafite.css": "--cor-critico-borda"
+      }
+    },
+    "critico-forte": {
+      "$type": "color",
+      "$value": "#fd736d",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#fd736d",
+            "meia-noite": "#fd736d",
+            "oled": "#fd736d",
+            "nevoa": "#b63132",
+            "papel": "#b63132",
+            "alto-contraste": "#b63132"
+          }
+        },
+        "grafite.css": "--cor-critico-forte"
+      }
+    },
+    "sobre-critico": {
+      "$type": "color",
+      "$value": "#1f0706",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#1f0706",
+            "meia-noite": "#1f0706",
+            "oled": "#1f0706",
+            "nevoa": "#ffffff",
+            "papel": "#ffffff",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-sobre-critico"
+      }
+    },
+    "info": {
+      "$type": "color",
+      "$value": "#80c5ff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#80c5ff",
+            "meia-noite": "#80c5ff",
+            "oled": "#80c5ff",
+            "nevoa": "#005d95",
+            "papel": "#005d95",
+            "alto-contraste": "#00588e"
+          }
+        },
+        "grafite.css": "--cor-info"
+      }
+    },
+    "info-fundo": {
+      "$type": "color",
+      "$value": "rgba(128, 197, 255, 0.15)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(128, 197, 255, 0.15)",
+            "meia-noite": "rgba(128, 197, 255, 0.15)",
+            "oled": "rgba(128, 197, 255, 0.15)",
+            "nevoa": "rgba(0, 93, 149, 0.15)",
+            "papel": "rgba(0, 93, 149, 0.15)",
+            "alto-contraste": "rgba(0, 88, 142, 0.15)"
+          }
+        },
+        "grafite.css": "--cor-info-fundo"
+      }
+    },
+    "info-borda": {
+      "$type": "color",
+      "$value": "rgba(128, 197, 255, 0.4)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "rgba(128, 197, 255, 0.4)",
+            "meia-noite": "rgba(128, 197, 255, 0.4)",
+            "oled": "rgba(128, 197, 255, 0.4)",
+            "nevoa": "rgba(0, 93, 149, 0.4)",
+            "papel": "rgba(0, 93, 149, 0.4)",
+            "alto-contraste": "rgba(0, 88, 142, 0.4)"
+          }
+        },
+        "grafite.css": "--cor-info-borda"
+      }
+    },
+    "info-forte": {
+      "$type": "color",
+      "$value": "#5eaceb",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#5eaceb",
+            "meia-noite": "#5eaceb",
+            "oled": "#5eaceb",
+            "nevoa": "#196ea9",
+            "papel": "#196ea9",
+            "alto-contraste": "#196ea9"
+          }
+        },
+        "grafite.css": "--cor-info-forte"
+      }
+    },
+    "sobre-info": {
+      "$type": "color",
+      "$value": "#04111c",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#04111c",
+            "meia-noite": "#04111c",
+            "oled": "#04111c",
+            "nevoa": "#ffffff",
+            "papel": "#ffffff",
+            "alto-contraste": "#ffffff"
+          }
+        },
+        "grafite.css": "--cor-sobre-info"
+      }
+    },
+    "serie-1": {
+      "$type": "color",
+      "$value": "#70a6f5",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#70a6f5",
+            "meia-noite": "#70a6f5",
+            "oled": "#70a6f5",
+            "nevoa": "#4174bf",
+            "papel": "#4174bf",
+            "alto-contraste": "#4174bf"
+          }
+        },
+        "grafite.css": "--cor-serie-1"
+      }
+    },
+    "serie-2": {
+      "$type": "color",
+      "$value": "#e28d4f",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#e28d4f",
+            "meia-noite": "#e28d4f",
+            "oled": "#e28d4f",
+            "nevoa": "#ad5c15",
+            "papel": "#ad5c15",
+            "alto-contraste": "#ad5c15"
+          }
+        },
+        "grafite.css": "--cor-serie-2"
+      }
+    },
+    "serie-3": {
+      "$type": "color",
+      "$value": "#21bfa0",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#21bfa0",
+            "meia-noite": "#21bfa0",
+            "oled": "#21bfa0",
+            "nevoa": "#008871",
+            "papel": "#008871",
+            "alto-contraste": "#008871"
+          }
+        },
+        "grafite.css": "--cor-serie-3"
+      }
+    },
+    "serie-4": {
+      "$type": "color",
+      "$value": "#da83be",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#da83be",
+            "meia-noite": "#da83be",
+            "oled": "#da83be",
+            "nevoa": "#a5538c",
+            "papel": "#a5538c",
+            "alto-contraste": "#a5538c"
+          }
+        },
+        "grafite.css": "--cor-serie-4"
+      }
+    },
+    "serie-5": {
+      "$type": "color",
+      "$value": "#92b352",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#92b352",
+            "meia-noite": "#92b352",
+            "oled": "#92b352",
+            "nevoa": "#638119",
+            "papel": "#638119",
+            "alto-contraste": "#638119"
+          }
+        },
+        "grafite.css": "--cor-serie-5"
+      }
+    },
+    "serie-6": {
+      "$type": "color",
+      "$value": "#eb827b",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#eb827b",
+            "meia-noite": "#eb827b",
+            "oled": "#eb827b",
+            "nevoa": "#b4514c",
+            "papel": "#b4514c",
+            "alto-contraste": "#b4514c"
+          }
+        },
+        "grafite.css": "--cor-serie-6"
+      }
+    },
+    "serie-7": {
+      "$type": "color",
+      "$value": "#00b9cf",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#00b9cf",
+            "meia-noite": "#00b9cf",
+            "oled": "#00b9cf",
+            "nevoa": "#008394",
+            "papel": "#008394",
+            "alto-contraste": "#008394"
+          }
+        },
+        "grafite.css": "--cor-serie-7"
+      }
+    },
+    "serie-8": {
+      "$type": "color",
+      "$value": "#ca9d33",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#ca9d33",
+            "meia-noite": "#ca9d33",
+            "oled": "#ca9d33",
+            "nevoa": "#936e00",
+            "papel": "#936e00",
+            "alto-contraste": "#936e00"
+          }
+        },
+        "grafite.css": "--cor-serie-8"
+      }
+    },
+    "tinta-ciano": {
+      "$type": "color",
+      "$value": "#25c0e6",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#25c0e6",
+            "meia-noite": "#25c0e6",
+            "oled": "#25c0e6",
+            "nevoa": "#008fad",
+            "papel": "#008fad",
+            "alto-contraste": "#008fad"
+          }
+        },
+        "grafite.css": "--cor-tinta-ciano"
+      }
+    },
+    "tinta-magenta": {
+      "$type": "color",
+      "$value": "#e652a3",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#e652a3",
+            "meia-noite": "#e652a3",
+            "oled": "#e652a3",
+            "nevoa": "#bf2a82",
+            "papel": "#bf2a82",
+            "alto-contraste": "#bf2a82"
+          }
+        },
+        "grafite.css": "--cor-tinta-magenta"
+      }
+    },
+    "tinta-amarelo": {
+      "$type": "color",
+      "$value": "#f4ce23",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#f4ce23",
+            "meia-noite": "#f4ce23",
+            "oled": "#f4ce23",
+            "nevoa": "#a18600",
+            "papel": "#a18600",
+            "alto-contraste": "#9e8400"
+          }
+        },
+        "grafite.css": "--cor-tinta-amarelo"
+      }
+    },
+    "tinta-preto": {
+      "$type": "color",
+      "$value": "#868686",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#868686",
+            "meia-noite": "#868686",
+            "oled": "#868686",
+            "nevoa": "#222222",
+            "papel": "#222222",
+            "alto-contraste": "#222222"
+          }
+        },
+        "grafite.css": "--cor-tinta-preto"
+      }
+    },
+    "neutro": {
+      "$type": "color",
+      "$value": "{cor.texto-2}",
+      "$extensions": {
+        "grafite.css": "--cor-neutro"
+      }
+    },
+    "destaque": {
+      "$type": "color",
+      "$value": "{destaque.destaque-grafite}",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "{destaque.destaque-grafite}",
+            "meia-noite": "{destaque.destaque-meia-noite}",
+            "oled": "{destaque.destaque-oled}",
+            "nevoa": "{destaque.destaque-nevoa}",
+            "papel": "{destaque.destaque-papel}",
+            "alto-contraste": "{destaque.destaque-alto-contraste}"
+          }
+        },
+        "grafite.css": "--cor-destaque"
+      }
+    },
+    "destaque-texto": {
+      "$type": "color",
+      "$value": "{destaque.destaque-texto-grafite}",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "{destaque.destaque-texto-grafite}",
+            "meia-noite": "{destaque.destaque-texto-meia-noite}",
+            "oled": "{destaque.destaque-texto-oled}",
+            "nevoa": "{destaque.destaque-texto-nevoa}",
+            "papel": "{destaque.destaque-texto-papel}",
+            "alto-contraste": "{destaque.destaque-texto-alto-contraste}"
+          }
+        },
+        "grafite.css": "--cor-destaque-texto"
+      }
+    },
+    "sobre-destaque": {
+      "$type": "color",
+      "$value": "{destaque.sobre-destaque-grafite}",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "{destaque.sobre-destaque-grafite}",
+            "meia-noite": "{destaque.sobre-destaque-meia-noite}",
+            "oled": "{destaque.sobre-destaque-oled}",
+            "nevoa": "{destaque.sobre-destaque-nevoa}",
+            "papel": "{destaque.sobre-destaque-papel}",
+            "alto-contraste": "{destaque.sobre-destaque-alto-contraste}"
+          }
+        },
+        "grafite.css": "--cor-sobre-destaque"
+      }
+    },
+    "destaque-hover": {
+      "$type": "color",
+      "$value": "{destaque.destaque-hover-grafite}",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "{destaque.destaque-hover-grafite}",
+            "meia-noite": "{destaque.destaque-hover-meia-noite}",
+            "oled": "{destaque.destaque-hover-oled}",
+            "nevoa": "{destaque.destaque-hover-nevoa}",
+            "papel": "{destaque.destaque-hover-papel}",
+            "alto-contraste": "{destaque.destaque-hover-alto-contraste}"
+          }
+        },
+        "grafite.css": "--cor-destaque-hover"
+      }
+    },
+    "destaque-pressionado": {
+      "$type": "color",
+      "$value": "{destaque.destaque-pressionado-grafite}",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "{destaque.destaque-pressionado-grafite}",
+            "meia-noite": "{destaque.destaque-pressionado-meia-noite}",
+            "oled": "{destaque.destaque-pressionado-oled}",
+            "nevoa": "{destaque.destaque-pressionado-nevoa}",
+            "papel": "{destaque.destaque-pressionado-papel}",
+            "alto-contraste": "{destaque.destaque-pressionado-alto-contraste}"
+          }
+        },
+        "grafite.css": "--cor-destaque-pressionado"
+      }
+    },
+    "foco": {
+      "$type": "color",
+      "$value": "{cor.destaque}",
+      "$extensions": {
+        "grafite.css": "--cor-foco"
+      }
+    }
+  },
+  "destaque": {
+    "destaque-grafite": {
+      "$type": "color",
+      "$value": "#eeeff1",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#eeeff1",
+            "azul": "#74acff",
+            "verde": "#55c483",
+            "laranja": "#f68c36"
+          }
+        }
+      }
+    },
+    "destaque-texto-grafite": {
+      "$type": "color",
+      "$value": "#eeeff1",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#eeeff1",
+            "azul": "#8ab9ff",
+            "verde": "#63d18f",
+            "laranja": "#ff9b51"
+          }
+        }
+      }
+    },
+    "sobre-destaque-grafite": {
+      "$type": "color",
+      "$value": "#0c0e10",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#0c0e10",
+            "azul": "#0a1018",
+            "verde": "#08120c",
+            "laranja": "#160d07"
+          }
+        }
+      }
+    },
+    "destaque-hover-grafite": {
+      "$type": "color",
+      "$value": "#f0f1f2",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f0f1f2",
+            "azul": "#82b4ff",
+            "verde": "#66ca8f",
+            "laranja": "#f7984a"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-grafite": {
+      "$type": "color",
+      "$value": "#f1f2f4",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f1f2f4",
+            "azul": "#90bdff",
+            "verde": "#77d09c",
+            "laranja": "#f8a35e"
+          }
+        }
+      }
+    },
+    "destaque-meia-noite": {
+      "$type": "color",
+      "$value": "#eaeff9",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#eaeff9",
+            "azul": "#74acff",
+            "verde": "#55c483",
+            "laranja": "#f68c36"
+          }
+        }
+      }
+    },
+    "destaque-texto-meia-noite": {
+      "$type": "color",
+      "$value": "#eaeff9",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#eaeff9",
+            "azul": "#8ab9ff",
+            "verde": "#63d18f",
+            "laranja": "#ff9b51"
+          }
+        }
+      }
+    },
+    "sobre-destaque-meia-noite": {
+      "$type": "color",
+      "$value": "#070d1b",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#070d1b",
+            "azul": "#0a1018",
+            "verde": "#08120c",
+            "laranja": "#160d07"
+          }
+        }
+      }
+    },
+    "destaque-hover-meia-noite": {
+      "$type": "color",
+      "$value": "#ecf1fa",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#ecf1fa",
+            "azul": "#82b4ff",
+            "verde": "#66ca8f",
+            "laranja": "#f7984a"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-meia-noite": {
+      "$type": "color",
+      "$value": "#eef2fa",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#eef2fa",
+            "azul": "#90bdff",
+            "verde": "#77d09c",
+            "laranja": "#f8a35e"
+          }
+        }
+      }
+    },
+    "destaque-oled": {
+      "$type": "color",
+      "$value": "#f5f5f5",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f5f5f5",
+            "azul": "#74acff",
+            "verde": "#55c483",
+            "laranja": "#f68c36"
+          }
+        }
+      }
+    },
+    "destaque-texto-oled": {
+      "$type": "color",
+      "$value": "#f5f5f5",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f5f5f5",
+            "azul": "#8ab9ff",
+            "verde": "#63d18f",
+            "laranja": "#ff9b51"
+          }
+        }
+      }
+    },
+    "sobre-destaque-oled": {
+      "$type": "color",
+      "$value": "#000000",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#000000",
+            "azul": "#0a1018",
+            "verde": "#08120c",
+            "laranja": "#160d07"
+          }
+        }
+      }
+    },
+    "destaque-hover-oled": {
+      "$type": "color",
+      "$value": "#f6f6f6",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f6f6f6",
+            "azul": "#82b4ff",
+            "verde": "#66ca8f",
+            "laranja": "#f7984a"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-oled": {
+      "$type": "color",
+      "$value": "#f7f7f7",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#f7f7f7",
+            "azul": "#90bdff",
+            "verde": "#77d09c",
+            "laranja": "#f8a35e"
+          }
+        }
+      }
+    },
+    "destaque-nevoa": {
+      "$type": "color",
+      "$value": "#111213",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#111213",
+            "azul": "#1c65c8",
+            "verde": "#007e46",
+            "laranja": "#9f5100"
+          }
+        }
+      }
+    },
+    "destaque-texto-nevoa": {
+      "$type": "color",
+      "$value": "#111213",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#111213",
+            "azul": "#145ec1",
+            "verde": "#007642",
+            "laranja": "#974c00"
+          }
+        }
+      }
+    },
+    "sobre-destaque-nevoa": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#ffffff",
+            "azul": "#ffffff",
+            "verde": "#ffffff",
+            "laranja": "#ffffff"
+          }
+        }
+      }
+    },
+    "destaque-hover-nevoa": {
+      "$type": "color",
+      "$value": "#0f1011",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#0f1011",
+            "azul": "#195bb4",
+            "verde": "#00713f",
+            "laranja": "#8f4900"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-nevoa": {
+      "$type": "color",
+      "$value": "#0e0e0f",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#0e0e0f",
+            "azul": "#1651a0",
+            "verde": "#006538",
+            "laranja": "#7f4100"
+          }
+        }
+      }
+    },
+    "destaque-papel": {
+      "$type": "color",
+      "$value": "#14120e",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#14120e",
+            "azul": "#1c65c8",
+            "verde": "#007e46",
+            "laranja": "#9f5100"
+          }
+        }
+      }
+    },
+    "destaque-texto-papel": {
+      "$type": "color",
+      "$value": "#14120e",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#14120e",
+            "azul": "#145ec1",
+            "verde": "#007642",
+            "laranja": "#974c00"
+          }
+        }
+      }
+    },
+    "sobre-destaque-papel": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#ffffff",
+            "azul": "#ffffff",
+            "verde": "#ffffff",
+            "laranja": "#ffffff"
+          }
+        }
+      }
+    },
+    "destaque-hover-papel": {
+      "$type": "color",
+      "$value": "#12100d",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#12100d",
+            "azul": "#195bb4",
+            "verde": "#00713f",
+            "laranja": "#8f4900"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-papel": {
+      "$type": "color",
+      "$value": "#100e0b",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#100e0b",
+            "azul": "#1651a0",
+            "verde": "#006538",
+            "laranja": "#7f4100"
+          }
+        }
+      }
+    },
+    "destaque-alto-contraste": {
+      "$type": "color",
+      "$value": "#030303",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#030303",
+            "azul": "#1c65c8",
+            "verde": "#007e46",
+            "laranja": "#9f5100"
+          }
+        }
+      }
+    },
+    "destaque-texto-alto-contraste": {
+      "$type": "color",
+      "$value": "#030303",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#030303",
+            "azul": "#145ec1",
+            "verde": "#007240",
+            "laranja": "#974c00"
+          }
+        }
+      }
+    },
+    "sobre-destaque-alto-contraste": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#ffffff",
+            "azul": "#ffffff",
+            "verde": "#ffffff",
+            "laranja": "#ffffff"
+          }
+        }
+      }
+    },
+    "destaque-hover-alto-contraste": {
+      "$type": "color",
+      "$value": "#030303",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#030303",
+            "azul": "#195bb4",
+            "verde": "#00713f",
+            "laranja": "#8f4900"
+          }
+        }
+      }
+    },
+    "destaque-pressionado-alto-contraste": {
+      "$type": "color",
+      "$value": "#020202",
+      "$extensions": {
+        "grafite.modos": {
+          "destaque": {
+            "grafite": "#020202",
+            "azul": "#1651a0",
+            "verde": "#006538",
+            "laranja": "#7f4100"
+          }
+        }
+      }
+    }
+  },
+  "densidade": {
+    "linha": {
+      "$type": "dimension",
+      "$value": "44px",
+      "$extensions": {
+        "grafite.modos": {
+          "densidade": {
+            "compacta": "36px",
+            "normal": "44px",
+            "confortavel": "52px"
+          }
+        },
+        "grafite.css": "--altura-linha"
+      }
+    },
+    "miniatura": {
+      "$type": "dimension",
+      "$value": "30px",
+      "$extensions": {
+        "grafite.modos": {
+          "densidade": {
+            "compacta": "24px",
+            "normal": "30px",
+            "confortavel": "36px"
+          }
+        },
+        "grafite.css": "--tamanho-miniatura"
+      }
+    },
+    "controle": {
+      "$type": "dimension",
+      "$value": "36px",
+      "$extensions": {
+        "grafite.modos": {
+          "densidade": {
+            "compacta": "32px",
+            "normal": "36px",
+            "confortavel": "40px"
+          }
+        },
+        "grafite.css": "--altura-controle"
+      }
+    }
+  },
+  "raio": {
+    "base": {
+      "$type": "dimension",
+      "$value": "10px",
+      "$extensions": {
+        "grafite.css": "--raio-base"
+      }
+    },
+    "janela": {
+      "$type": "dimension",
+      "$value": "10px",
+      "$extensions": {
+        "grafite.css": "--raio-janela"
+      }
+    },
+    "controle": {
+      "$type": "dimension",
+      "$value": "5.8px",
+      "$extensions": {
+        "grafite.css": "--raio-controle"
+      }
+    },
+    "dock": {
+      "$type": "dimension",
+      "$value": "14.5px",
+      "$extensions": {
+        "grafite.css": "--raio-dock"
+      }
+    },
+    "item-dock": {
+      "$type": "dimension",
+      "$value": "8.5px",
+      "$extensions": {
+        "grafite.css": "--raio-item-dock"
+      }
+    },
+    "menu": {
+      "$type": "dimension",
+      "$value": "8.5px",
+      "$extensions": {
+        "grafite.css": "--raio-menu"
+      }
+    },
+    "miniatura": {
+      "$type": "dimension",
+      "$value": "5.8px",
+      "$extensions": {
+        "grafite.css": "--raio-miniatura"
+      }
+    },
+    "rotulo": {
+      "$type": "dimension",
+      "$value": "4.2px",
+      "$extensions": {
+        "grafite.css": "--raio-rotulo"
+      }
+    },
+    "aviso": {
+      "$type": "dimension",
+      "$value": "10px",
+      "$extensions": {
+        "grafite.css": "--raio-aviso"
+      }
+    }
+  },
+  "esp": {
+    "1": {
+      "$type": "dimension",
+      "$value": "4px",
+      "$extensions": {
+        "grafite.css": "--esp-1"
+      }
+    },
+    "2": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$extensions": {
+        "grafite.css": "--esp-2"
+      }
+    },
+    "3": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$extensions": {
+        "grafite.css": "--esp-3"
+      }
+    },
+    "4": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "grafite.css": "--esp-4"
+      }
+    },
+    "5": {
+      "$type": "dimension",
+      "$value": "20px",
+      "$extensions": {
+        "grafite.css": "--esp-5"
+      }
+    },
+    "6": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$extensions": {
+        "grafite.css": "--esp-6"
+      }
+    },
+    "8": {
+      "$type": "dimension",
+      "$value": "32px",
+      "$extensions": {
+        "grafite.css": "--esp-8"
+      }
+    },
+    "10": {
+      "$type": "dimension",
+      "$value": "40px",
+      "$extensions": {
+        "grafite.css": "--esp-10"
+      }
+    },
+    "12": {
+      "$type": "dimension",
+      "$value": "48px",
+      "$extensions": {
+        "grafite.css": "--esp-12"
+      }
+    }
+  },
+  "texto": {
+    "legenda": {
+      "$type": "dimension",
+      "$value": "11px",
+      "$extensions": {
+        "grafite.css": "--texto-legenda"
+      }
+    },
+    "rotulo": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$extensions": {
+        "grafite.css": "--texto-rotulo"
+      }
+    },
+    "dado": {
+      "$type": "dimension",
+      "$value": "13px",
+      "$extensions": {
+        "grafite.css": "--texto-dado"
+      }
+    },
+    "corpo": {
+      "$type": "dimension",
+      "$value": "14px",
+      "$extensions": {
+        "grafite.css": "--texto-corpo"
+      }
+    },
+    "subtitulo": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "grafite.css": "--texto-subtitulo"
+      }
+    },
+    "titulo": {
+      "$type": "dimension",
+      "$value": "20px",
+      "$extensions": {
+        "grafite.css": "--texto-titulo"
+      }
+    },
+    "titulo-grande": {
+      "$type": "dimension",
+      "$value": "26px",
+      "$extensions": {
+        "grafite.css": "--texto-titulo-grande"
+      }
+    },
+    "numeral": {
+      "$type": "dimension",
+      "$value": "28px",
+      "$extensions": {
+        "grafite.css": "--texto-numeral"
+      }
+    }
+  },
+  "peso": {
+    "normal": {
+      "$type": "fontWeight",
+      "$value": 400,
+      "$extensions": {
+        "grafite.css": "--peso-normal"
+      }
+    },
+    "medio": {
+      "$type": "fontWeight",
+      "$value": 500,
+      "$extensions": {
+        "grafite.css": "--peso-medio"
+      }
+    },
+    "forte": {
+      "$type": "fontWeight",
+      "$value": 600,
+      "$extensions": {
+        "grafite.css": "--peso-forte"
+      }
+    }
+  },
+  "fonte": {
+    "interface": {
+      "$type": "fontFamily",
+      "$value": "Instrument Sans",
+      "$extensions": {
+        "grafite.css": "--fonte-interface"
+      }
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": "JetBrains Mono",
+      "$extensions": {
+        "grafite.css": "--fonte-mono"
+      }
+    }
+  },
+  "entrelinha": {
+    "justa": {
+      "$type": "number",
+      "$value": 1.25,
+      "$extensions": {
+        "grafite.css": "--entrelinha-justa"
+      }
+    },
+    "normal": {
+      "$type": "number",
+      "$value": 1.4,
+      "$extensions": {
+        "grafite.css": "--entrelinha-normal"
+      }
+    }
+  },
+  "opacidade": {
+    "desabilitado": {
+      "$type": "number",
+      "$value": 0.45,
+      "$extensions": {
+        "grafite.css": "--opacidade-desabilitado"
+      }
+    }
+  },
+  "tinta": {
+    "rotulo": {
+      "$type": "number",
+      "$value": 0.15,
+      "$extensions": {
+        "grafite.css": "--tinta-rotulo"
+      }
+    },
+    "rotulo-neutro": {
+      "$type": "number",
+      "$value": 0.1,
+      "$extensions": {
+        "grafite.css": "--tinta-rotulo-neutro"
+      }
+    }
+  },
+  "casca": {
+    "altura-barra-superior": {
+      "$type": "dimension",
+      "$value": "28px",
+      "$extensions": {
+        "grafite.css": "--altura-barra-superior"
+      }
+    },
+    "tamanho-item-dock": {
+      "$type": "dimension",
+      "$value": "48px",
+      "$extensions": {
+        "grafite.css": "--tamanho-item-dock"
+      }
+    },
+    "faixa-revelar-dock": {
+      "$type": "dimension",
+      "$value": "18px",
+      "$extensions": {
+        "grafite.css": "--faixa-revelar-dock"
+      }
+    },
+    "alvo-toque": {
+      "$type": "dimension",
+      "$value": "44px",
+      "$extensions": {
+        "grafite.css": "--alvo-toque"
+      }
+    }
+  },
+  "cursor": {
+    "ponto": {
+      "$type": "dimension",
+      "$value": "6px",
+      "$extensions": {
+        "grafite.css": "--tamanho-ponto-cursor"
+      }
+    },
+    "anel": {
+      "$type": "dimension",
+      "$value": "26px",
+      "$extensions": {
+        "grafite.css": "--tamanho-anel-cursor"
+      }
+    },
+    "folga-abraco": {
+      "$type": "dimension",
+      "$value": "4px",
+      "$extensions": {
+        "grafite.css": "--folga-abraco-cursor"
+      }
+    }
+  },
+  "previa": {
+    "largura": {
+      "$type": "dimension",
+      "$value": "720px",
+      "$extensions": {
+        "grafite.css": "--largura-previa"
+      }
+    },
+    "imagem": {
+      "$type": "dimension",
+      "$value": "256px",
+      "$extensions": {
+        "grafite.css": "--tamanho-imagem-previa"
+      }
+    }
+  },
+  "material": {
+    "desfoque": {
+      "$type": "dimension",
+      "$value": "22px"
+    }
+  },
+  "sombra": {
+    "elevada": {
+      "$type": "shadow",
+      "$value": "0 1px 3px rgba(0, 0, 0, 0.5)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "0 1px 3px rgba(0, 0, 0, 0.5)",
+            "meia-noite": "0 1px 3px rgba(0, 0, 0, 0.5)",
+            "oled": "0 1px 3px rgba(0, 0, 0, 0.5)",
+            "nevoa": "0 1px 3px rgba(17, 22, 30, 0.14)",
+            "papel": "0 1px 3px rgba(32, 19, 0, 0.14)",
+            "alto-contraste": "0 1px 3px rgba(22, 22, 22, 0.14)"
+          }
+        },
+        "grafite.css": "--sombra-elevada"
+      }
+    },
+    "sobreposta": {
+      "$type": "shadow",
+      "$value": "0 14px 40px rgba(0, 0, 0, 0.5)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "0 14px 40px rgba(0, 0, 0, 0.5)",
+            "meia-noite": "0 14px 40px rgba(0, 0, 0, 0.5)",
+            "oled": "0 14px 40px rgba(0, 0, 0, 0.5)",
+            "nevoa": "0 14px 40px rgba(17, 22, 30, 0.18)",
+            "papel": "0 14px 40px rgba(32, 19, 0, 0.18)",
+            "alto-contraste": "0 14px 40px rgba(22, 22, 22, 0.18)"
+          }
+        },
+        "grafite.css": "--sombra-sobreposta"
+      }
+    }
+  },
+  "primitivos": {
+    "branco": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "preto": {
+      "$type": "color",
+      "$value": "#000000"
+    }
+  }
+}

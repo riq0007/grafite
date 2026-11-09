@@ -1,0 +1,6 @@
+/* O que acontece ao fechar a aba preenchida, na confirmação. */
+.aviso {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

@@ -1,0 +1,5 @@
+/* Na interface a marca usa só a cor do texto do tema: é o par com contraste verificado. */
+.marca {
+  flex: none;
+  color: var(--cor-texto);
+}

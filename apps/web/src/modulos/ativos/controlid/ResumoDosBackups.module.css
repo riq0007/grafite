@@ -1,0 +1,26 @@
+/* O resumo dos backups: as contagens e a tendência numa linha, e a faixa dos dias embaixo. */
+.resumo {
+  display: grid;
+  gap: var(--esp-4);
+  padding-bottom: var(--esp-4);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.contagens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-4) var(--esp-8);
+}
+
+/* O controle na tabela dos últimos dias: o nome e, embaixo, o patrimônio. */
+.nome {
+  display: block;
+  font-weight: var(--peso-medio);
+}
+
+.patrimonio {
+  display: block;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

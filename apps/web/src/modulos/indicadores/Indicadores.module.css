@@ -1,0 +1,35 @@
+/* O que as telas dos indicadores do Alertas e do Operação têm em comum (change
+   p4f-indicadores-da-operacao, design, decisão 10). */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* Sublinhado, para o link não depender só da cor. */
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Os registros de uma linha da lista, um embaixo do outro. */
+.registros {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

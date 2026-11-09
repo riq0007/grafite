@@ -1,0 +1,36 @@
+/* O link embaixo do campo: o texto no destaque, com o ícone de mais, sem a caixa de um botão. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--esp-1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-rotulo);
+  background-color: transparent;
+  color: var(--cor-destaque-texto);
+  /* O botão do navegador não herda a fonte: o link fica na da interface (ANTISLOP, seção 14). */
+  font-family: inherit;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  outline: none;
+}
+
+.link[data-hovered] {
+  text-decoration: underline;
+}
+
+.link[data-pressed] {
+  color: var(--cor-destaque-pressionado);
+}
+
+.link[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* No toque, o link é um alvo de pelo menos 44 px de altura. */
+[data-postura="tablet"] .link,
+[data-postura="celular"] .link {
+  min-height: var(--alvo-toque);
+}

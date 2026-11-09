@@ -1,0 +1,44 @@
+/*
+ * A tinta de um instrumento, pelo nome (change visualizacoes-de-dados, design, decisão 2): a cor
+ * nunca passa como valor. O padrão é a neutra, o texto secundário.
+ */
+.tintavel {
+  --tinta: var(--cor-texto-2);
+}
+
+.tintavel[data-tinta="ciano"] {
+  --tinta: var(--cor-tinta-ciano);
+}
+.tintavel[data-tinta="magenta"] {
+  --tinta: var(--cor-tinta-magenta);
+}
+.tintavel[data-tinta="amarelo"] {
+  --tinta: var(--cor-tinta-amarelo);
+}
+.tintavel[data-tinta="preto"] {
+  --tinta: var(--cor-tinta-preto);
+}
+.tintavel[data-tinta="serie-1"] {
+  --tinta: var(--cor-serie-1);
+}
+.tintavel[data-tinta="serie-2"] {
+  --tinta: var(--cor-serie-2);
+}
+.tintavel[data-tinta="serie-3"] {
+  --tinta: var(--cor-serie-3);
+}
+.tintavel[data-tinta="serie-4"] {
+  --tinta: var(--cor-serie-4);
+}
+.tintavel[data-tinta="serie-5"] {
+  --tinta: var(--cor-serie-5);
+}
+.tintavel[data-tinta="serie-6"] {
+  --tinta: var(--cor-serie-6);
+}
+.tintavel[data-tinta="serie-7"] {
+  --tinta: var(--cor-serie-7);
+}
+.tintavel[data-tinta="serie-8"] {
+  --tinta: var(--cor-serie-8);
+}

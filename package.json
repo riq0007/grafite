@@ -1,0 +1,43 @@
+{
+  "name": "grafite",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "biome check . && node scripts/verificar-cores.ts",
+    "typecheck": "turbo run typecheck && tsc -p scripts/tsconfig.json",
+    "test": "turbo run test && vitest run --dir scripts",
+    "test:integration": "turbo run test:integration",
+    "contrato:gerar": "node apps/api/scripts/contrato.ts escrever",
+    "contrato:verificar": "node apps/api/scripts/contrato.ts verificar",
+    "fila:gerar": "pnpm --filter @grafite/db fila:gerar",
+    "fila:verificar": "pnpm --filter @grafite/db fila:verificar",
+    "dev": "node scripts/dev.ts",
+    "grafite": "node --env-file-if-exists=.env apps/api/scripts/grafite.ts",
+    "tokens:gerar": "node packages/ui/src/tokens/gerar.ts escrever",
+    "tokens:verificar": "node packages/ui/src/tokens/gerar.ts verificar",
+    "tokens:contraste": "node packages/ui/src/tokens/relatorio-contraste.ts",
+    "test:e2e": "turbo run test:e2e",
+    "test:e2e:pilha": "pnpm --filter @grafite/web test:e2e:pilha",
+    "storybook": "pnpm --filter @grafite/ui storybook",
+    "test:stories": "turbo run test:stories",
+    "test:visual": "node scripts/visual.ts",
+    "marca:gerar": "node packages/ui/src/brand/gerar-marca.ts escrever",
+    "marca:verificar": "node packages/ui/src/brand/gerar-marca.ts verificar"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.5",
+    "@types/node": "^24.13.6",
+    "lefthook": "^2.1.14",
+    "secretlint": "^13.0.5",
+    "turbo": "^2.11.3",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.11",
+    "yaml": "^2.9.1"
+  }
+}

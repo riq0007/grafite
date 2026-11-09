@@ -1,0 +1,62 @@
+/* As opções de uma lista: uma linha por opção, com o campo, a situação em texto e as ações. As
+   linhas dividem as colunas da lista, e os campos ficam alinhados mesmo com "Reativar" mais largo
+   que "Inativar". */
+.editor {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+/* Como o rótulo de um campo. */
+.legenda {
+  padding: 0;
+  margin-block-end: var(--esp-1);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.lista {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linha {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: start;
+}
+
+.campo {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.situacao {
+  justify-self: start;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.linha[data-situacao="inativa"] .entrada {
+  color: var(--cor-texto-2);
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-block-size: var(--altura-controle);
+}
+
+.incluir {
+  justify-self: start;
+}

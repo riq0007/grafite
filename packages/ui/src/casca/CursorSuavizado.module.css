@@ -1,0 +1,49 @@
+/* Camada do cursor: acima de todas as outras (os popovers do React Aria usam 100000), sem eventos
+   e fora da árvore de acessibilidade. */
+.camada {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ponto,
+.anel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-opacidade) var(--curva-padrao);
+  will-change: transform;
+}
+
+.ponto[data-visivel],
+.anel[data-visivel] {
+  opacity: 1;
+}
+
+.ponto {
+  width: var(--tamanho-ponto-cursor);
+  height: var(--tamanho-ponto-cursor);
+  border-radius: 50%;
+  background-color: var(--cor-cursor-ponto);
+  box-shadow: var(--sombra-cursor);
+}
+
+.anel {
+  box-sizing: border-box;
+  width: var(--tamanho-anel-cursor);
+  height: var(--tamanho-anel-cursor);
+  border: 1.5px solid var(--cor-cursor-anel);
+  border-radius: 50%;
+  box-shadow: var(--sombra-cursor);
+}
+
+/* No abraço, o anel vira a camada de pressionado em volta do elemento, sem borda nem sombra. */
+.anel[data-abracando] {
+  border-color: transparent;
+  background-color: var(--cor-cursor-abraco);
+  box-shadow: none;
+}

@@ -1,0 +1,68 @@
+/* O resumo da linha: camada sobreposta, em material, que o ponteiro atravessa. */
+.resumo {
+  position: fixed;
+  z-index: 45;
+  box-sizing: border-box;
+  max-width: calc(100vw - 2 * var(--esp-2));
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-normal);
+  pointer-events: none;
+  transform-origin: top left;
+  /* Aparece como o menu, com leve escala a partir da linha; a escala some com movimento reduzido. */
+  animation:
+    aparecer var(--dur-menu) var(--curva-padrao),
+    crescer var(--dur-escala-menu) var(--curva-padrao);
+}
+
+.resumo[data-acima] {
+  transform-origin: bottom left;
+}
+
+.resumo[data-medindo] {
+  visibility: hidden;
+}
+
+/* O rótulo e o valor em duas colunas; com muitas, os pares se dividem em partes lado a lado. */
+.lista {
+  display: grid;
+  grid-template-columns: repeat(var(--partes-do-resumo, 1), max-content max-content);
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+}
+
+.item {
+  display: contents;
+}
+
+.rotulo {
+  color: var(--cor-texto-2);
+  white-space: nowrap;
+}
+
+/* O valor longo é cortado com reticências, e o resumo fica na largura do que mostra. */
+.valor {
+  overflow: hidden;
+  max-width: calc(var(--esp-12) * 5);
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scale(0.97);
+  }
+}

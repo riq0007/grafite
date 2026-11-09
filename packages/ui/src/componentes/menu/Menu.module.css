@@ -1,0 +1,86 @@
+.menu {
+  min-width: calc(var(--esp-12) * 4);
+  outline: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: calc(var(--altura-controle) - var(--esp-1));
+  padding: 0 var(--esp-2);
+  /* Raio concêntrico ao do painel: o de fora menos o respiro. */
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  outline: none;
+  cursor: default;
+}
+
+/* Nas posturas de toque da casca (atributo no <html>), cada item é um alvo de 44 px. */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .item {
+  min-height: var(--alvo-toque);
+}
+
+.item[data-destrutivo] {
+  color: var(--cor-critico);
+}
+
+/* Item em foco, e o item cujo submenu está aberto: o destaque, como no macOS. */
+.item:is([data-focused], [data-open]) {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.item[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.texto {
+  display: grid;
+  flex: 1;
+}
+
+/* A marca do item escolhido, numa seção que se escolhe: o espaço fica, para os nomes alinharem. */
+.marca {
+  display: inline-flex;
+  width: var(--esp-4);
+  visibility: hidden;
+}
+
+.marca[data-marcado] {
+  visibility: visible;
+}
+
+.descricao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+/* O ícone antes do nome, como o de cada tipo em "Por tipo", no tom do texto de apoio. */
+.icone {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+.item:is([data-focused], [data-open]) :is(.descricao, .icone) {
+  color: inherit;
+}
+
+.tituloDaSecao {
+  padding: var(--esp-1) var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.seta {
+  display: inline-flex;
+}
+
+.separador {
+  height: 1px;
+  margin: var(--esp-1) var(--esp-2);
+  border: 0;
+  background-color: var(--cor-linha);
+}

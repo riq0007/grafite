@@ -1,0 +1,157 @@
+/*
+ * Boas-vindas do primeiro acesso: a exceção nomeada do ANTISLOP aos 300 ms, uma vez só. Os tempos
+ * são os do Apêndice B, pelos tokens; com movimento reduzido, os de traço e de atraso vão a zero.
+ */
+.boasVindas {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  /* A animação da camada só mede o tempo até a saída: o subtítulo aparece e fica à vista. */
+  animation: permanecer
+    calc(
+      var(--atraso-subtitulo-boas-vindas) +
+      var(--dur-subtitulo-boas-vindas) +
+      var(--dur-permanencia-boas-vindas)
+    )
+    linear;
+}
+
+@keyframes permanecer {
+  to {
+    --boas-vindas-a-vista: 1;
+  }
+}
+
+.conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-2);
+  transition:
+    opacity var(--dur-saida-boas-vindas) var(--curva-saida),
+    scale var(--dur-saida-boas-vindas) var(--curva-saida);
+}
+
+.saindo .conteudo {
+  opacity: 0;
+  scale: 0.96;
+}
+
+/* Com movimento reduzido, a saída é só troca de opacidade. */
+:global([data-motion="reduzido"]) .saindo .conteudo {
+  scale: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(:root:not([data-motion])) .saindo .conteudo {
+    scale: none;
+  }
+}
+
+.ola {
+  display: block;
+  inline-size: min(calc(var(--esp-12) * 8), 80vw);
+  block-size: auto;
+  overflow: visible;
+}
+
+/* A máscara revela o "olá" da esquerda para a direita, junto com o traço. */
+.revelar {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  scale: 0 1;
+  animation: revelar var(--dur-traco-ola) var(--curva-escrita) forwards;
+}
+
+@keyframes revelar {
+  to {
+    scale: 1 1;
+  }
+}
+
+.letras,
+.acento {
+  fill: transparent;
+  stroke: currentColor;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+/* As letras ocupam a maior parte do traço, e o acento vem depois delas. */
+.letras {
+  animation:
+    escrever calc(var(--dur-traco-ola) * 0.8) var(--curva-escrita) forwards,
+    preencher var(--dur-preenchimento-ola) var(--curva-padrao) var(--atraso-preenchimento-ola)
+    forwards;
+}
+
+.acento {
+  animation:
+    escrever calc(var(--dur-traco-ola) * 0.2) var(--curva-escrita) calc(var(--dur-traco-ola) * 0.8)
+    forwards,
+    preencher var(--dur-preenchimento-ola) var(--curva-padrao) var(--atraso-preenchimento-ola)
+    forwards;
+}
+
+@keyframes escrever {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes preencher {
+  to {
+    fill: currentColor;
+    stroke-width: 0;
+  }
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  color: var(--cor-texto-2);
+  opacity: 0;
+  animation: aparecer var(--dur-subtitulo-boas-vindas) var(--curva-padrao)
+    var(--atraso-subtitulo-boas-vindas) forwards;
+}
+
+@keyframes aparecer {
+  to {
+    opacity: 1;
+  }
+}
+
+.pular {
+  position: absolute;
+  inset-block-end: var(--esp-8);
+  inset-inline: 0;
+  margin-inline: auto;
+  inline-size: max-content;
+}
+
+/* Paradas no fim da escrita, para o catálogo: sem animação e sem sair. */
+.parado {
+  animation: none;
+}
+
+.parado .revelar {
+  animation: none;
+  scale: 1 1;
+}
+
+.parado .letras,
+.parado .acento {
+  animation: none;
+  stroke-dashoffset: 0;
+  fill: currentColor;
+  stroke-width: 0;
+}
+
+.parado .titulo {
+  animation: none;
+  opacity: 1;
+}

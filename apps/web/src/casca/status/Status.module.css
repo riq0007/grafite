@@ -1,0 +1,13 @@
+/* Itens de status da barra superior: herdam o texto secundário da barra. */
+.rede {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  white-space: nowrap;
+}
+
+/* Sem conexão, o item passa ao texto principal: o ícone e a frase dizem o estado, e a cor só
+   reforça. */
+.rede[data-estado="sem-conexao"] {
+  color: var(--cor-texto);
+}

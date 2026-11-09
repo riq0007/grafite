@@ -1,0 +1,30 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Projeto: Grafite, sistema de gestão de ativos, operação e governança de TI com casca inspirada no macOS.
+  A spec mestre em docs/superpowers/specs/2026-09-24-grafite-design.md é a referência de todas as changes.
+  Cada change corresponde a um subprojeto dela (F0, F1, F2, P1...) e não a contradiz sem atualizá-la junto.
+  Regras visuais: ANTISLOP v2 (seção 7.10 da spec mestre).
+
+rules:
+  proposal:
+    - Citar o subprojeto da spec mestre que a change implementa e o que fica fora dela
+  tasks:
+    - Tarefas de no máximo 2 horas
+    - Toda tarefa com lógica começa pelo teste
+    - Toda tarefa diz como verificar o resultado (comando, teste ou tela)
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

@@ -1,0 +1,71 @@
+/*
+ * O carregamento da chegada (F1c, design, decisão 1), injetado no index.html junto da marcação de
+ * carregamento.ts. Só tokens: no app, eles chegam antes da primeira pintura.
+ */
+
+/* Fora de vista até a chegada passar de 500 ms; entra e sai por troca de opacidade. */
+#chegada {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur-media) var(--curva-padrao),
+    visibility 0s linear var(--dur-media);
+}
+
+#chegada[data-visivel] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-media) var(--curva-padrao);
+}
+
+/* Enquanto a chegada carrega, só o carregamento pode aparecer: a casca espera por baixo. */
+html[data-chegada="carregando"] #chegada ~ * {
+  visibility: hidden;
+}
+
+.chegada-conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-5);
+}
+
+.chegada-marca {
+  display: block;
+  block-size: var(--esp-8);
+  inline-size: auto;
+}
+
+.chegada-barra {
+  inline-size: calc(var(--esp-12) * 4);
+  block-size: var(--esp-1);
+  overflow: hidden;
+  border-radius: calc(var(--esp-1) / 2);
+  background-color: var(--cor-linha-forte);
+}
+
+/* A barra avança quando uma etapa termina, e nunca por tempo. */
+.chegada-preenchimento {
+  inline-size: calc(var(--progresso-da-chegada, 0) * 100%);
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--cor-texto);
+  transition: inline-size var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.chegada-etapa {
+  margin: 0;
+  min-block-size: 1lh;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-justa);
+  color: var(--cor-texto-2);
+}

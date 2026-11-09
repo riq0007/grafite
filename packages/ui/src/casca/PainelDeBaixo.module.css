@@ -1,0 +1,103 @@
+/* Painel que sobe de baixo: variante da gaveta do F0, presa à borda inferior, na largura toda.
+   Entra deslizando para cima (sem deslocamento com movimento reduzido, pelo token). */
+.veu {
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+}
+
+.painel {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 85dvh;
+  overflow: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-janela) var(--raio-janela) 0 0;
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-material);
+  outline: none;
+}
+
+.painel[data-entering] {
+  animation: subir var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.painel[data-exiting] {
+  animation: subir var(--dur-deslocamento) var(--curva-saida) reverse;
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4) var(--esp-4);
+  outline: none;
+}
+
+.titulo {
+  flex: 1;
+}
+
+.lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada item é um alvo de toque de pelo menos 44 px. */
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--alvo-toque);
+  padding: 0 var(--esp-3);
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  text-align: left;
+  cursor: default;
+  outline: none;
+}
+
+.item:is([data-hovered], [data-pressed]) {
+  background-color: var(--cor-hover);
+}
+
+.item[data-focus-visible],
+.voltar[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-height: var(--alvo-toque);
+  padding: 0 var(--esp-2);
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: transparent;
+  color: var(--cor-destaque-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  cursor: default;
+  outline: none;
+}
+
+/* Fechar também é um alvo de toque de pelo menos 44 px. */
+.fechar {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}

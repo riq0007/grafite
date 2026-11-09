@@ -1,0 +1,197 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Os jobs rodam nos executores hospedados pelo GitHub, na imagem fixada ubuntu-24.04, cada um numa
+# máquina nova, em paralelo (spec plataforma-base, "Executores do CI"; change
+# ci-nos-executores-do-github, design, decisões 1 e 2). O teste-guarda dos workflows
+# (scripts/ci/executores.test.ts) reprova um job num executor próprio ou numa imagem que não é fixa.
+defaults:
+  run:
+    shell: bash
+
+# Cada job leva de segundos a poucos minutos. O limite curto faz um travamento falhar logo, em
+# vez de consumir as 6 horas que o GitHub espera por padrão.
+jobs:
+  # Num PR só de docs/ e openspec/, a integração, as pontas a ponta e a regressão visual são
+  # puladas, com o motivo no resumo do run (change ci-paralelo, design, decisão 5). O checkout de um
+  # PR é o commit de merge, e o primeiro pai é a base: a profundidade 2 basta para a diferença.
+  mudancas:
+    name: O que o PR muda
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      codigo: ${{ steps.mudancas.outputs.codigo }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Só a documentação e as specs mudaram?
+        id: mudancas
+        run: node scripts/ci/mudancas.ts '${{ github.event_name }}'
+
+  verificacoes:
+    name: Lint, tipos, unitários e contratos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      - name: Lint e cores literais
+        run: pnpm lint
+
+      - name: Tipos
+        run: pnpm typecheck
+
+      - name: Testes unitários
+        run: pnpm test
+
+      - name: Tokens gerados em dia
+        run: pnpm tokens:verificar
+
+      - name: Contraste AA nas 24 combinações, com o relatório em dia
+        run: |
+          pnpm tokens:contraste
+          git diff --exit-code -- docs/identidade/contraste.md
+
+      - name: Cliente da API igual ao contrato
+        run: pnpm contrato:verificar
+
+      - name: Estrutura da fila igual à do pg-boss fixado
+        run: pnpm fila:verificar
+
+  integracao:
+    name: Integração com PostgreSQL real
+    needs: mudancas
+    if: needs.mudancas.outputs.codigo == 'true'
+    runs-on: ubuntu-24.04
+    # 30 min, com folga sobre os 10 a 15 min da suíte da API (change integracao-sob-carga).
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      # O banco de teste é o contêiner do Testcontainers, no Docker da máquina (change
+      # ci-nos-executores-do-github, design, decisão 4).
+      - name: Banco de teste no ar
+        run: docker info --format 'Docker {{.ServerVersion}}'
+
+      - name: Isolamento, guarda de RLS e API com o banco real (Testcontainers)
+        run: pnpm test:integration
+
+  navegador:
+    name: Catálogo e ponta a ponta
+    needs: mudancas
+    if: needs.mudancas.outputs.codigo == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      # No Ubuntu, o Chromium do Playwright pede as dependências do sistema.
+      - name: Chromium do Playwright
+        run: pnpm --filter @grafite/web exec playwright install --with-deps chromium
+
+      - name: Interação e acessibilidade do catálogo
+        run: pnpm test:stories
+
+      - name: Fumaça de ponta a ponta na web compilada
+        run: pnpm test:e2e
+
+  pilha:
+    name: Ponta a ponta da pilha
+    needs: mudancas
+    if: needs.mudancas.outputs.codigo == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      # O banco de teste é o contêiner do Testcontainers, no Docker da máquina (change
+      # ci-nos-executores-do-github, design, decisão 4).
+      - name: Banco de teste no ar
+        run: docker info --format 'Docker {{.ServerVersion}}'
+
+      - name: Chromium do Playwright
+        run: pnpm --filter @grafite/web exec playwright install --with-deps chromium
+
+      - name: PostgreSQL, comando no servidor e API servindo a web (Testcontainers)
+        run: pnpm test:e2e:pilha
+
+      - name: Guardar o log da API e as falhas
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ponta-a-ponta-da-pilha
+          path: apps/web/test-results
+          retention-days: 7
+
+  visual:
+    name: Regressão visual
+    needs: mudancas
+    if: needs.mudancas.outputs.codigo == 'true'
+    runs-on: ubuntu-24.04
+    # 30 min, com folga sobre as esperas das histórias (change integracao-sob-carga).
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      - name: Capturas no contêiner do Playwright
+        run: pnpm test:visual
+
+      - name: Guardar as diferenças
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: regressao-visual
+          path: packages/ui/visual/test-results
+          retention-days: 7
+
+  segredos:
+    name: Segredos no histórico (gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # O histórico inteiro do commit verificado, e não as outras branches do checkout: o achado de
+      # um PR não reprova o de outro. A imagem oficial, na versão fixada (change
+      # ci-nos-executores-do-github, design, decisão 5). A pasta montada é de outro usuário, e o git
+      # do contêiner só a lê com o safe.directory.
+      - name: Varredura do histórico do commit
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" --entrypoint sh ghcr.io/gitleaks/gitleaks:v8.30.1
+          -c 'git config --global --add safe.directory /repo && gitleaks git /repo --log-opts=HEAD --redact --verbose'
+
+      # Os termos privados da lista do secret, nos arquivos versionados (spec plataforma-base, "Árvore
+      # sem termos privados"). O log diz só o arquivo e o número do termo. Num PR de fork, sem o secret,
+      # o passo diz que não conferiu; no push da main, a falta dele reprova. O conferidor só usa o Node.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Termos privados
+        env:
+          GRAFITE_TERMOS_PRIVADOS: ${{ secrets.GRAFITE_TERMOS_PRIVADOS }}
+        run: node scripts/termos-privados.ts

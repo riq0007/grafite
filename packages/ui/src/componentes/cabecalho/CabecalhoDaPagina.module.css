@@ -1,0 +1,71 @@
+/*
+ * O cabeçalho da página (change cabecalhos-e-fichas, design, decisão 1): a identificação à
+ * esquerda e as ações à direita, com a linha fina embaixo, como a de uma prancha.
+ */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3) var(--esp-6);
+  padding-bottom: var(--esp-4);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.identificacao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.marca {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.textos {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+/*
+ * Com a barra das abas, o cabeçalho que só tem o título oculto não deixa faixa nem linha: as caixas
+ * dele saem, e o título continua no lugar, para o leitor de tela e o foco (change
+ * cabecalho-em-toda-tela, design, decisão 6).
+ */
+:global([data-com-barra]) .cabecalho[data-some-com-abas],
+:global([data-com-barra]) .cabecalho[data-some-com-abas] .identificacao,
+:global([data-com-barra]) .cabecalho[data-some-com-abas] .textos {
+  display: contents;
+}
+
+/* O título da janela traz a margem de quando vem sozinho; aqui, o espaço é o do cabeçalho. */
+.textos > [data-titulo-da-janela] {
+  margin: 0;
+}
+
+.linhaDoTitulo {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.detalhe {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As ações juntas, à direita, também quando quebram para a linha de baixo. */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  margin-inline-start: auto;
+}

@@ -1,0 +1,54 @@
+/* Sempre redondo, como no macOS, em três tamanhos: o da barra, o da linha e o do título da ficha. */
+.avatar {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--lado-do-avatar);
+  height: var(--lado-do-avatar);
+  overflow: hidden;
+  border: 1px solid var(--cor-linha);
+  border-radius: 50%;
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.02em;
+}
+
+/* Na barra e nos menus, no tamanho dos ícones da barra. */
+.avatar[data-tamanho="barra"] {
+  --lado-do-avatar: var(--esp-5);
+}
+
+/* Na linha das tabelas, segue a densidade, como a miniatura. */
+.avatar[data-tamanho="linha"] {
+  --lado-do-avatar: var(--tamanho-miniatura);
+}
+
+.avatar[data-tamanho="ficha"] {
+  --lado-do-avatar: var(--esp-12);
+
+  font-size: var(--texto-subtitulo);
+}
+
+/* Ícone de pessoa do avatar neutro, proporcional ao avatar em qualquer tamanho. */
+.avatar > svg {
+  width: 62%;
+  height: 62%;
+  color: var(--cor-texto-2);
+}
+
+/*
+ * Recortada no círculo, sem distorcer: a foto cobre o avatar e o que sobra fica de fora. Ela vai
+ * por cima da caixa, e não na grade: com `sizes="auto"`, o navegador dá à imagem o tamanho padrão
+ * de 300 × 150 até medi-la, e a linha da grade cresceria com ela.
+ */
+.foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

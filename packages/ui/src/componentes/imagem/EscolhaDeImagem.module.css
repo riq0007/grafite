@@ -1,0 +1,79 @@
+/* O rótulo, quando à vista, a imagem com as ações e a descrição, uma abaixo da outra. */
+.escolha {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* A área da imagem ao lado das ações; abaixo uma da outra quando não cabem. */
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A área onde se solta um arquivo: o contorno tracejado diz que ela recebe a imagem. */
+.area {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--esp-12) * 2);
+  min-height: calc(var(--esp-12) * 2);
+  padding: var(--esp-2);
+  border: 1px dashed var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  transition:
+    border-color var(--dur-rapida) var(--curva-padrao),
+    background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* Só para ver: o lugar da imagem, do tamanho da área, sem o contorno de quem recebe um arquivo. */
+.moldura {
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--esp-12) * 2);
+  min-height: calc(var(--esp-12) * 2);
+}
+
+/* Com um arquivo sobre ela, a área se destaca. */
+.area[data-drop-target] {
+  border-style: solid;
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-hover);
+}
+
+.area[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.vazio {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-1);
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.lado {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.regras {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

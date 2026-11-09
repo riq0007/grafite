@@ -1,0 +1,121 @@
+/* Acima das camadas modais (busca, gaveta e prévia): um crítico precisa ser visto sempre. */
+.regiao {
+  position: fixed;
+  z-index: 60;
+  top: calc(var(--altura-barra-superior) + var(--esp-3));
+  right: var(--esp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  width: min(calc(var(--esp-12) * 7.5), calc(100vw - var(--esp-8)));
+  outline: none;
+}
+
+.regiao[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* Entra com mola (Apêndice B); com movimento reduzido, a mola zera e só o esmaecer fica. */
+.aviso {
+  --tom: var(--cor-info);
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-material-linha);
+  border-radius: var(--raio-aviso);
+  background-color: var(--cor-material);
+  backdrop-filter: var(--filtro-material);
+  box-shadow: var(--sombra-material);
+  color: var(--cor-texto);
+  outline: none;
+  animation:
+    aparecer var(--dur-opacidade) var(--curva-padrao),
+    entrar var(--dur-mola-aviso) var(--curva-mola);
+}
+
+.aviso[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.aviso[data-situacao="sucesso"] {
+  --tom: var(--cor-ok);
+}
+
+.aviso[data-situacao="atencao"] {
+  --tom: var(--cor-atencao);
+}
+
+/* O crítico persiste: a borda na cor da situação o separa dos que vão sumir. */
+.aviso[data-situacao="critico"] {
+  --tom: var(--cor-critico);
+
+  border-color: var(--cor-critico);
+}
+
+.icone {
+  display: inline-flex;
+  color: var(--tom);
+}
+
+.corpo {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.conteudo {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.titulo {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+}
+
+.situacao {
+  display: block;
+  color: var(--tom);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.descricao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-normal);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--esp-2);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entrar {
+  from {
+    transform: translateX(calc(100% + var(--esp-4)));
+  }
+}

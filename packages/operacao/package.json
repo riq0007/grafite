@@ -1,0 +1,27 @@
+{
+  "name": "@grafite/operacao",
+  "private": true,
+  "description": "Operação do servidor: ferramentas do PostgreSQL, manifesto, backup e restauração.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run -c vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@grafite/db": "workspace:*",
+    "@grafite/domain": "workspace:*",
+    "pg": "^8.23.1",
+    "yauzl": "^3.4.0",
+    "yazl": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "@types/yauzl": "^3.4.0",
+    "@types/yazl": "^3.3.1"
+  }
+}

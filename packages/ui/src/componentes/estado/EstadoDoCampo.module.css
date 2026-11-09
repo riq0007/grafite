@@ -1,0 +1,49 @@
+/* O estado do campo, abaixo dele: a gravação em texto secundário e a trava ao lado. */
+.estado {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-3);
+  min-width: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+}
+
+.gravacao {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.travado,
+.trava {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+/* O botão da trava, discreto como um link, com o anel de foco do teclado. */
+.trava {
+  padding: 0 var(--esp-1);
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: color var(--dur-rapida) var(--curva-padrao);
+}
+
+.trava[data-hovered] {
+  color: var(--cor-texto);
+}
+
+.trava[data-selected] {
+  color: var(--cor-destaque-texto);
+}
+
+.trava[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}

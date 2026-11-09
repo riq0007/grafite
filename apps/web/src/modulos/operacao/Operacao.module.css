@@ -1,0 +1,227 @@
+/* As telas do Operação: o título com a ação principal, os filtros e a lista. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A seção com uma ação: o carimbo até a ação, à direita. */
+.cabecalhoDaSecao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.cabecalhoDaSecao > :first-child {
+  flex: 1;
+}
+
+/* Os filtros lado a lado enquanto cabem, cada um com pelo menos 192 px. */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  align-items: end;
+  gap: var(--esp-3);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.semValor {
+  color: var(--cor-texto-2);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* Sublinhado, para o link não depender só da cor. */
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Os fornecedores e os modelos: o título do grupo, os itens e a busca que inclui mais um. */
+.lista {
+  display: grid;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legenda {
+  margin: 0 0 var(--esp-1);
+  padding: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.itens {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/* O nome do item e, ao lado, o detalhe, como o tipo do modelo. */
+.nomeDoItem {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* As seções na ficha do ativo, como as solicitações e as OS, com o título do tamanho do bloco dos
+   alertas, ao lado delas. */
+.blocoDaFicha {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/*
+ * O Início do Operação (change redesenho-da-interface, design, decisão 4): as ações em blocos
+ * grandes, lado a lado enquanto cabem, e os atalhos para as listas, menores, embaixo.
+ */
+.inicio {
+  display: grid;
+  gap: var(--esp-6);
+  min-width: 0;
+}
+
+.secaoDoInicio {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.acoesDoInicio,
+.listasDoInicio {
+  display: grid;
+  gap: var(--esp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.acoesDoInicio {
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4.5), 1fr));
+}
+
+.listasDoInicio {
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  gap: var(--esp-3);
+}
+
+.acaoDoInicio,
+.listaDoInicio {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-4);
+  box-sizing: border-box;
+  height: 100%;
+  border: 1px solid var(--cor-linha);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  text-decoration: none;
+  outline: none;
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.acaoDoInicio {
+  min-height: calc(var(--esp-12) * 2.5);
+  padding: var(--esp-5);
+  border-radius: var(--raio-janela);
+}
+
+.listaDoInicio {
+  padding: var(--esp-4);
+  border-radius: var(--raio-controle);
+}
+
+.acaoDoInicio:hover {
+  border-color: var(--cor-destaque);
+  background: var(--cor-superficie-2);
+}
+
+.listaDoInicio:hover {
+  border-color: var(--cor-linha-forte);
+  background: var(--cor-superficie-2);
+}
+
+.acaoDoInicio:focus-visible,
+.listaDoInicio:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.iconeDoCartao {
+  display: inline-flex;
+  flex: none;
+  padding: var(--esp-3);
+  border-radius: var(--raio-controle);
+  background: color-mix(in srgb, var(--cor-destaque) 14%, transparent);
+  color: var(--cor-destaque-texto);
+}
+
+.listaDoInicio .iconeDoCartao {
+  padding: var(--esp-2);
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto-2);
+}
+
+.textoDoCartao {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.nomeDoCartao {
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.listaDoInicio .nomeDoCartao {
+  font-size: var(--texto-corpo);
+}
+
+.descricaoDoCartao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+.listaDoInicio .descricaoDoCartao {
+  font-size: var(--texto-dado);
+}

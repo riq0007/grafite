@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grafite</title>
+    <!-- Gerados por pnpm marca:gerar. O sizes do ICO faz o Chrome preferir o SVG. -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      // Aplica as preferências salvas antes da primeira pintura: tema, destaque, densidade, raio e o
+      // dock no lugar certo (specs design-tokens e preferencias-da-interface).
+      // Só copia atributos já calculados pelo app; nomes e valores fora do padrão são ignorados.
+      (() => {
+        try {
+          const salvos = JSON.parse(localStorage.getItem('grafite.preferencias.atributos') || '{}');
+          const permitidos = [
+            'data-theme', 'data-accent', 'data-density', 'data-motion', 'data-transparency', '--raio-base',
+            'data-dock', 'data-dock-ocultar', '--tamanho-item-dock',
+          ];
+          const raiz = document.documentElement;
+          for (const nome of permitidos) {
+            const valor = salvos[nome];
+            if (typeof valor !== 'string' || !/^[\w.-]+$/.test(valor)) continue;
+            if (nome.startsWith('--')) raiz.style.setProperty(nome, valor);
+            else raiz.setAttribute(nome, valor);
+          }
+          // As cores do tema e do destaque personalizados (change tema-personalizado): só as
+          // variáveis de cor e de sombra, com números, hexadecimal e rgb(), sem carregar nada.
+          for (const [nome, valor] of Object.entries(salvos)) {
+            if (!/^--(cor|sombra)-[a-z0-9-]+$/.test(nome) || typeof valor !== 'string') continue;
+            if (!/^[#\w\s(),.%-]+$/.test(valor) || /(url|var|expression)\(/i.test(valor)) continue;
+            raiz.style.setProperty(nome, valor);
+          }
+        } catch {
+          // Armazenamento indisponível: fica a aparência padrão de fábrica.
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="raiz"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

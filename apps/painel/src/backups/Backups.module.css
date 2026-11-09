@@ -1,0 +1,61 @@
+/* Os backups: as ações com a explicação de cada uma e a tabela de cada destino. */
+.tela {
+  display: grid;
+  gap: var(--esp-5);
+  min-width: 0;
+}
+
+.acoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--esp-4);
+}
+
+.acao {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--esp-2);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.destino {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.destino h2 {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--texto-dado);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--esp-2) var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  text-align: start;
+}
+
+.tabela thead th {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}

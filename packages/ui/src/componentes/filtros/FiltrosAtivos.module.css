@@ -1,0 +1,70 @@
+/* Uma linha de rótulos, que quebra quando falta largura, com "Limpar filtros" no fim. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* O botão de limpar tem a altura de controle e fica colado à direita, dentro do rótulo. */
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--altura-controle);
+  padding-inline-start: var(--esp-2);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  font-size: var(--texto-dado);
+}
+
+.nome {
+  color: var(--cor-texto-2);
+}
+
+.valor {
+  color: var(--cor-texto);
+  font-weight: var(--peso-medio);
+}
+
+.operador {
+  color: var(--cor-texto-2);
+}
+
+.separador {
+  color: var(--cor-texto-2);
+}
+
+/* O rótulo que abre o editor do filtro: o mesmo texto, pressionável, dentro do rótulo. */
+.editar {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  margin-inline-start: calc(var(--esp-2) * -1);
+  padding-inline: var(--esp-2) 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  outline: none;
+}
+
+.editar[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+.editar[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}

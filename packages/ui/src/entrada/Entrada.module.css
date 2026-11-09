@@ -1,0 +1,160 @@
+/*
+ * Tela de entrada (spec tela-de-entrada): o fundo do tema, a marca, o nome da organização e uma
+ * superfície sólida com o passo da vez. Fica por cima da casca (e das camadas dela) quando a sessão
+ * termina no meio do uso, e abaixo dos avisos e das boas-vindas.
+ */
+.tela {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: var(--esp-8) var(--margem-lateral);
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* Nas boas-vindas, a entrada espera por baixo, invisível (e inerte, pelo componente). */
+:global(html[data-chegada="boas-vindas"]) .tela {
+  visibility: hidden;
+}
+
+.coluna {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-4);
+  width: min(100%, 360px);
+}
+
+.organizacao {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  color: var(--cor-texto-2);
+  text-align: center;
+}
+
+/*
+ * O aviso do ambiente de teste (spec tela-de-entrada), acima do formulário: o tom de atenção
+ * tingido sobre a superfície, com o ícone, o texto e a frase.
+ */
+.ambiente {
+  display: grid;
+  gap: var(--esp-1);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--raio-controle);
+  background-color: color-mix(
+    in srgb,
+    var(--cor-atencao) var(--tinta-rotulo),
+    var(--cor-superficie)
+  );
+}
+
+.ambienteTitulo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  color: var(--cor-atencao);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.cartao {
+  display: grid;
+  gap: var(--esp-4);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--esp-6);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-janela);
+  background-color: var(--cor-superficie);
+}
+
+/*
+ * A troca entre os passos é só de opacidade (spec tela-de-entrada): depois da primeira troca, o
+ * passo novo aparece no lugar, e nada se desloca, também com o movimento reduzido.
+ */
+.cartao[data-trocou] > * {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao) backwards;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.texto {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  color: var(--cor-texto-2);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.acoes {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+/* A mensagem de recusa: em texto, com o ícone, e anunciada ao leitor de tela pelo role="alert". */
+.mensagem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  color: var(--cor-critico);
+}
+
+.aviso {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  color: var(--cor-texto);
+}
+
+/* No toque, os alvos têm pelo menos 44 px. */
+@media (pointer: coarse) {
+  .acoes :is(button) {
+    min-height: var(--alvo-toque);
+  }
+}
+
+.codigoQR {
+  justify-self: center;
+}
+
+/*
+ * A chave do app e os códigos de recuperação: fonte de dados, legível e fácil de selecionar. A
+ * chave cabe numa linha quando dá; quando não, quebra em linhas iguais, sem um grupo sozinho.
+ */
+.listaDeCodigos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-2) var(--esp-4);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  list-style: none;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-corpo);
+  user-select: all;
+}

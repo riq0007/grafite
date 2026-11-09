@@ -1,0 +1,130 @@
+/*
+ * A lista das etapas à esquerda e o painel da aberta à direita. A largura vem do contêiner, e não da
+ * janela do navegador: a janela estreita, no computador ou no celular, também ganha a faixa.
+ */
+.formulario {
+  container-type: inline-size;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-6);
+}
+
+/*
+ * A coluna acompanha a rolagem do painel longo, para a lista continuar à vista, abaixo da faixa
+ * esmaecida de cima da janela. O navegador já a prende abaixo do respiro da área que rola; o `top`
+ * só soma a parte da faixa que passa do respiro, que hoje é zero.
+ */
+.coluna {
+  position: sticky;
+  top: max(0px, var(--faixa-de-cima-da-janela, 0px) - var(--respiro-da-janela, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+}
+
+.etapa {
+  display: grid;
+  gap: var(--esp-1);
+  width: 100%;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: start;
+  cursor: default;
+  outline: none;
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.etapa:not([aria-disabled]):not([data-atual]):hover {
+  background-color: var(--cor-hover);
+}
+
+/* A atual é marcada pela forma, com a borda mais grossa no destaque, e não só pela cor. */
+.etapa[data-atual] {
+  padding: calc(var(--esp-2) - 1px) calc(var(--esp-3) - 1px);
+  border: 2px solid var(--cor-destaque);
+}
+
+.etapa[aria-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.etapa[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.nome {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.situacao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.situacao[data-tom="atencao"] {
+  color: var(--cor-atencao);
+}
+
+.rodape {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.painel {
+  min-width: 0;
+}
+
+/* No toque, cada etapa é um alvo de pelo menos 44 px de altura. */
+[data-postura="tablet"] .etapa,
+[data-postura="celular"] .etapa {
+  min-height: var(--alvo-toque);
+}
+
+/* Na janela estreita, a lista vira uma faixa que rola de lado, acima do painel. */
+@container (max-width: 40rem) {
+  .grade {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--esp-4);
+  }
+
+  .coluna {
+    position: static;
+  }
+
+  .lista {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-block-end: var(--esp-1);
+  }
+
+  .item {
+    flex: none;
+    width: 10rem;
+  }
+}

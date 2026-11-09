@@ -1,0 +1,102 @@
+/* A tela principal do painel: a tabela dos serviços na largura toda e os cartões numa grade. */
+.visao {
+  display: grid;
+  gap: var(--esp-5);
+  min-width: 0;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--texto-dado);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--esp-2) var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.tabela thead th {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+.tabela tbody th {
+  font-weight: var(--peso-medio);
+}
+
+.acoes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.semTexto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--esp-4);
+}
+
+.cartao {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+}
+
+.cartao h2 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.cartao p {
+  margin: 0;
+}
+
+.versao {
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-medio);
+}
+
+.nota {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.lista {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.avisos {
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-atencao);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+}

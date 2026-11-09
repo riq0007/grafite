@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Impressora de 64 px (imagem de exemplo)</title>
+  <rect width="64" height="64" fill="#eef1f4"/>
+  <rect x="18" y="8" width="28" height="14" fill="#ffffff" stroke="#5b6b7a" stroke-width="2"/>
+  <rect x="8" y="22" width="48" height="24" rx="4" fill="#3d5a73"/>
+  <rect x="18" y="38" width="28" height="18" fill="#ffffff" stroke="#5b6b7a" stroke-width="2"/>
+  <circle cx="48" cy="30" r="2" fill="#7fd18b"/>
+</svg>

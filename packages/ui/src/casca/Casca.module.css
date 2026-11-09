@@ -1,0 +1,175 @@
+/* Casca: barra no topo, janela no meio e o dock fixo na borda escolhida. Do lado do dock, a área
+   reserva o espaço dele (item + respiros + folga) no lugar da margem lateral, exceto com o
+   ocultar automático. A casca tem a altura da tela: a página não rola, e o conteúdo rola dentro da
+   janela (change janela-rolavel-e-campos-em-colunas). */
+.casca {
+  --espaco-do-dock: calc(var(--tamanho-item-dock) + var(--esp-1) * 3 + var(--esp-2) + var(--esp-4));
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* No tablet, a barra tem a altura de um alvo de toque. */
+.casca[data-postura="tablet"] {
+  --altura-barra-superior: var(--alvo-toque);
+}
+
+.topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.area {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  padding: var(--esp-4) var(--margem-lateral);
+}
+
+/* No celular, a área reserva a barra de abas embaixo. */
+.casca[data-postura="celular"] .area {
+  padding-bottom: calc(var(--alvo-toque) + var(--esp-2) + var(--esp-4));
+}
+
+.casca[data-dock="embaixo"]:not([data-dock-ocultar]) .area {
+  padding-bottom: var(--espaco-do-dock);
+}
+
+.casca[data-dock="esquerda"]:not([data-dock-ocultar]) .area {
+  padding-left: var(--espaco-do-dock);
+}
+
+.casca[data-dock="direita"]:not([data-dock-ocultar]) .area {
+  padding-right: var(--espaco-do-dock);
+}
+
+/*
+ * A janela é uma coluna: a barra das abas, quando há, e a área que rola, com o respiro da janela
+ * por dentro. Ela só segura a borda, o raio e a superfície, e corta o que passa das bordas.
+ */
+.janela {
+  --respiro-da-janela: var(--esp-6);
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-janela);
+  background: var(--cor-superficie);
+  outline: none;
+}
+
+/* Com o foco do teclado na área que rola, o anel fica em volta da janela, fora da máscara dela. */
+.janela:has(> [data-rolagem-da-janela]:focus-visible) {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.titulo {
+  margin: 0 0 var(--esp-4);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  outline: none;
+}
+
+/*
+ * Com a barra das abas, o título que a primeira aba já mostra sai da vista, como o texto só para o
+ * leitor de tela, e fica no topo da área que rola, onde o foco depois da navegação o encontra.
+ */
+:global([data-com-barra]) .titulo[data-ocultar-com-abas] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Fica fora da tela até receber foco: é o primeiro item do Tab. */
+.pular {
+  position: absolute;
+  top: var(--esp-2);
+  left: var(--esp-2);
+  z-index: 30;
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  translate: 0 calc(-100% - var(--esp-4));
+}
+
+.pular:focus-visible {
+  translate: 0;
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/*
+ * Montagem, só depois das boas-vindas (spec chegada): a barra desce e a janela aparece com uma
+ * escala leve. Com movimento reduzido, a barra já está no lugar e a janela só aparece.
+ */
+:global(html[data-chegada="montando"]) .topo {
+  animation: descer var(--dur-montagem-barra) var(--curva-padrao) backwards;
+}
+
+@keyframes descer {
+  from {
+    transform: translateY(-100%);
+  }
+}
+
+:global(html[data-chegada="montando"]) .janela {
+  animation: aparecerComEscala var(--dur-montagem-janela) var(--curva-padrao)
+    var(--atraso-montagem-janela) backwards;
+}
+
+@keyframes aparecerComEscala {
+  from {
+    opacity: 0;
+    scale: 0.985;
+  }
+}
+
+:global(html[data-chegada="montando"][data-motion="reduzido"]) .janela {
+  animation-name: aparecer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html[data-chegada="montando"]:not([data-motion])) .janela {
+    animation-name: aparecer;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Nas boas-vindas, a casca espera por baixo, invisível (e inerte, pelo componente). */
+:global(html[data-chegada="boas-vindas"]) .casca {
+  visibility: hidden;
+}
+
+/*
+ * Depois de uma entrada sem boas-vindas (spec chegada), a casca se desenha transparente e aparece
+ * por troca de opacidade quando a chegada fica pronta, sem nada se deslocar.
+ */
+:global(html[data-chegada="entrada"]) .casca {
+  opacity: 0;
+}
+
+:global(html[data-chegada="pronta"]) .casca {
+  transition: opacity var(--dur-opacidade) var(--curva-padrao);
+}

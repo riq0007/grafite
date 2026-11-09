@@ -1,0 +1,473 @@
+/* As telas da Administração: o título com a ação principal, os filtros e a lista. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* Os filtros lado a lado enquanto cabem, cada um com pelo menos 192 px. */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.camposDoCadastroDosAgentes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--esp-12) * 6)), 1fr));
+  max-width: calc(var(--esp-12) * 13);
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.camposDoCadastroDosAgentes > * {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.semValor {
+  color: var(--cor-texto-2);
+}
+
+.conta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.carregando {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+/* As ações de um formulário ou de uma parte da ficha, lado a lado. */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* O título da ficha da pessoa: a foto, ou as iniciais, ao lado do nome. */
+.nomeComFoto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+/* As abas da ficha: as partes uma abaixo da outra, cada uma com o seu título. */
+.partes {
+  display: grid;
+  gap: var(--esp-6);
+}
+
+.parte {
+  display: grid;
+  gap: var(--esp-3);
+  align-content: start;
+  min-width: 0;
+}
+
+/*
+ * O título de cada parte, com o desenho do carimbo de seção do @grafite/ui (change
+ * cabecalhos-e-fichas, design, decisão 3), sem trocar o elemento: ele recebe o foco quando a ação
+ * some com o botão dela, e não é um controle.
+ */
+.tituloDaParte {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.tituloDaParte::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--cor-linha-forte);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* Sublinhado, para o link não depender só da cor. */
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* As ações destrutivas, separadas das outras por uma linha (ANTISLOP §38). */
+.acoesDestrutivas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--cor-linha);
+}
+
+/* Uma leitura que falhou: o motivo e "Tentar de novo". */
+.falha {
+  display: grid;
+  gap: var(--esp-3);
+  justify-items: start;
+}
+
+/* As sessões abertas de uma conta, uma por bloco, com a linha entre elas. */
+.sessoes {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sessao {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.sessao:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.dispositivo {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* Os itens de uma parte, como os perfis da conta: o texto e, ao lado, a ação, com a linha entre eles. */
+.itens {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item,
+.permissao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2) var(--esp-4);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.item:first-child,
+.permissao:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.permissao {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.textoDoItem {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.nomeDoItem {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.detalheDoItem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* De onde vem cada permissão, uma origem por linha. */
+.origens {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As ações da pessoa ao lado do título: "Reativar" e, separadas, as destrutivas. */
+.acoesDaPessoa {
+  display: grid;
+  gap: var(--esp-2);
+  justify-items: end;
+}
+
+.gruposDeAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-5);
+}
+
+/* Uma lista dentro de um texto, como o que a anonimização apaga. */
+.listaDeTexto {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding-left: var(--esp-5);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* As áreas de permissões do perfil lado a lado enquanto cabem, cada uma com pelo menos 288 px. */
+.areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 6), 1fr));
+  align-items: start;
+  gap: var(--esp-4) var(--esp-6);
+}
+
+/* Uma permissão: a descrição e, abaixo, as marcas em texto. */
+.permissaoDoPerfil {
+  display: grid;
+  gap: 2px;
+}
+
+.marcaDaPermissao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Os locais: a árvore e, ao lado, o local escolhido, cada um com pelo menos 336 px; estreito, um
+   abaixo do outro. */
+.locais {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--esp-12) * 7)), 1fr));
+  align-items: start;
+  gap: var(--esp-6);
+}
+
+.locais > * {
+  min-width: 0;
+}
+
+/* A barra do rascunho dos padrões: quantos ajustes mudaram, "Descartar" e "Salvar padrões". */
+.rascunho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+}
+
+/* As tarefas com falha, uma por bloco, com a linha entre elas. */
+.tarefas {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarefa {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.tarefa:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.nomeDaTarefa {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* As rotinas e as falhas, cada parte com o título dela (change regras-indicadores-e-tarefas). */
+.secaoDasTarefas {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* As rotinas em cartões lado a lado, com o nome, o que fazem e quando rodam. */
+.rotinas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--esp-12) * 7)), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rotina {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.descricaoDaRotina {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+/* A tela de backup: o próximo backup e o último teste, cada um com o título da parte. */
+.parteDoBackup {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.textoDaParte {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+/* Os destinos de um backup, um por linha, com o resultado em texto. */
+.destinos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+/* Os módulos opcionais, um por linha: o interruptor com o nome e a situação, a descrição e a
+   recusa da API, junto do módulo. */
+.modulosOpcionais {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moduloOpcional {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.moduloOpcional:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.nomeDoModulo {
+  font-weight: var(--peso-forte);
+}
+
+.situacaoDoModulo {
+  color: var(--cor-texto-2);
+}
+
+/* O filtro de uma lista longa na ficha, com quantos ela mostra ao lado. */
+.filtroDaLista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-3);
+}
+
+/* Vários textos curtos numa célula, um por linha. */
+.linhasDaCelula {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.pendenciaDoAgente {
+  max-inline-size: calc(var(--esp-12) * 4);
+  color: var(--cor-texto-2);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* O efeito de uma ação, em frases, antes de confirmá-la. */
+.efeito {
+  margin: 0;
+  padding-inline-start: var(--esp-4);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+/* O nome da opção com o detalhe embaixo, como o perfil com a descrição. */
+.opcaoComDetalhe {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+/* O resultado de uma escolha, antes de confirmá-la. */
+.resultado {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+}
+
+.tituloDoResultado {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* Uma contagem nos detalhes de um registro, com o link que leva à lista dela. */
+.relacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}

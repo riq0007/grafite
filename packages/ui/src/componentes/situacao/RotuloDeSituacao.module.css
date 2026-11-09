@@ -1,0 +1,56 @@
+/*
+ * O selo de situação (change componentes-v3, design, decisão 1): uma linha só, que não quebra nem
+ * corta; se a coluna for estreita, quem rola é a área em volta. O texto na cor da situação, sobre o
+ * fundo sutil dela e com a borda dela, como um carimbo; o contraste é o que o gerador garante.
+ */
+.rotulo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: 1px calc(var(--esp-1) * 1.5);
+  border: 1px solid var(--borda-da-situacao);
+  border-radius: var(--raio-rotulo);
+  color: var(--tom-da-situacao);
+  background-color: var(--fundo-da-situacao);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rotulo[data-situacao="neutra"] {
+  --tom-da-situacao: var(--cor-neutro);
+  --fundo-da-situacao: color-mix(
+    in srgb,
+    var(--cor-neutro) var(--tinta-rotulo-neutro),
+    transparent
+  );
+  --borda-da-situacao: var(--cor-linha-forte);
+}
+
+.rotulo[data-situacao="sucesso"] {
+  --tom-da-situacao: var(--cor-ok);
+  --fundo-da-situacao: var(--cor-ok-fundo);
+  --borda-da-situacao: var(--cor-ok-borda);
+}
+
+.rotulo[data-situacao="info"] {
+  --tom-da-situacao: var(--cor-info);
+  --fundo-da-situacao: var(--cor-info-fundo);
+  --borda-da-situacao: var(--cor-info-borda);
+}
+
+.rotulo[data-situacao="atencao"] {
+  --tom-da-situacao: var(--cor-atencao);
+  --fundo-da-situacao: var(--cor-atencao-fundo);
+  --borda-da-situacao: var(--cor-atencao-borda);
+}
+
+.rotulo[data-situacao="critico"] {
+  --tom-da-situacao: var(--cor-critico);
+  --fundo-da-situacao: var(--cor-critico-fundo);
+  --borda-da-situacao: var(--cor-critico-borda);
+}

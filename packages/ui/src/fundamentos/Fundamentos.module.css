@@ -1,0 +1,285 @@
+/* Páginas de Fundamentos do catálogo (fundamentos-v3, tarefa 5.1): só tokens. */
+
+.pagina {
+  display: grid;
+  gap: var(--esp-8);
+  max-width: 1120px;
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+/* Carimbo de prancha: o rótulo da seção e a linha fina que segue. */
+.carimbo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.carimbo::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--cor-linha-forte);
+}
+
+.nota {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  color: var(--cor-texto-2);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--esp-3);
+}
+
+.amostra {
+  display: grid;
+  grid-template-rows: 56px auto;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  overflow: hidden;
+  background: var(--cor-superficie);
+}
+
+.cor {
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.legenda {
+  display: grid;
+  gap: 2px;
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.nome {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+.variavel {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+}
+
+.valor {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+  color: var(--cor-texto-2);
+}
+
+/* Elevação: as quatro superfícies lado a lado, sobre o fundo atrás da janela. */
+.planos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--esp-4);
+  padding: var(--esp-6);
+  background: var(--cor-fundo);
+  border-radius: var(--raio-janela);
+}
+
+.plano {
+  display: grid;
+  gap: var(--esp-1);
+  min-height: 112px;
+  align-content: end;
+  padding: var(--esp-4);
+  border-radius: var(--raio-janela);
+}
+
+.plano[data-plano="afundada"] {
+  background: var(--cor-superficie-afundada);
+  border: 1px solid var(--cor-linha);
+}
+
+.plano[data-plano="padrao"] {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-linha);
+}
+
+.plano[data-plano="elevada"] {
+  background: var(--cor-superficie-elevada);
+  border: 1px solid var(--cor-linha);
+  box-shadow: var(--sombra-elevada);
+}
+
+.plano[data-plano="sobreposta"] {
+  background: var(--cor-material);
+  border: 1px solid var(--cor-material-linha);
+  box-shadow: var(--sombra-sobreposta);
+  backdrop-filter: var(--filtro-material);
+}
+
+/* Situações: o texto, o selo com o fundo sutil e a borda, e o preenchimento forte. */
+.situacoes {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.situacao {
+  display: grid;
+  grid-template-columns: 160px 1fr auto auto;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: 2px var(--esp-2);
+  border: 1px solid;
+  border-radius: var(--raio-rotulo);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.forte {
+  padding: 2px var(--esp-2);
+  border-radius: var(--raio-rotulo);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.situacao[data-situacao="ok"] .texto {
+  color: var(--cor-ok);
+}
+.situacao[data-situacao="ok"] .selo {
+  color: var(--cor-ok);
+  background: var(--cor-ok-fundo);
+  border-color: var(--cor-ok-borda);
+}
+.situacao[data-situacao="ok"] .forte {
+  color: var(--cor-sobre-ok);
+  background: var(--cor-ok-forte);
+}
+.situacao[data-situacao="atencao"] .texto {
+  color: var(--cor-atencao);
+}
+.situacao[data-situacao="atencao"] .selo {
+  color: var(--cor-atencao);
+  background: var(--cor-atencao-fundo);
+  border-color: var(--cor-atencao-borda);
+}
+.situacao[data-situacao="atencao"] .forte {
+  color: var(--cor-sobre-atencao);
+  background: var(--cor-atencao-forte);
+}
+.situacao[data-situacao="critico"] .texto {
+  color: var(--cor-critico);
+}
+.situacao[data-situacao="critico"] .selo {
+  color: var(--cor-critico);
+  background: var(--cor-critico-fundo);
+  border-color: var(--cor-critico-borda);
+}
+.situacao[data-situacao="critico"] .forte {
+  color: var(--cor-sobre-critico);
+  background: var(--cor-critico-forte);
+}
+.situacao[data-situacao="info"] .texto {
+  color: var(--cor-info);
+}
+.situacao[data-situacao="info"] .selo {
+  color: var(--cor-info);
+  background: var(--cor-info-fundo);
+  border-color: var(--cor-info-borda);
+}
+.situacao[data-situacao="info"] .forte {
+  color: var(--cor-sobre-info);
+  background: var(--cor-info-forte);
+}
+
+/* Dados: as tintas como réguas de nível, com marcas a cada 25%. */
+.reguas {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.regua {
+  display: grid;
+  grid-template-columns: 96px 1fr 64px;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.trilha {
+  position: relative;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--cor-superficie-afundada);
+  border: 1px solid var(--cor-linha);
+  overflow: hidden;
+}
+
+.trilha::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(25% - 1px),
+    var(--cor-linha-forte) calc(25% - 1px),
+    var(--cor-linha-forte) 25%
+  );
+}
+
+.nivel {
+  height: 100%;
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Tipografia: a escala, com a medida de cada papel à esquerda. */
+.escala {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.linhaDaEscala {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: baseline;
+  gap: var(--esp-4);
+  padding-bottom: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.unidade {
+  margin-left: 4px;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}

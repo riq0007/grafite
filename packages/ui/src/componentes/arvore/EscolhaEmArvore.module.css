@@ -1,0 +1,108 @@
+/* O gatilho tem a caixa do campo, com o caminho à esquerda e a seta à direita, como a seleção. */
+.gatilho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  text-align: start;
+  cursor: default;
+}
+
+.gatilho[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.gatilho[data-invalid] {
+  border-color: var(--cor-critico);
+}
+
+.valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vazio {
+  color: var(--cor-texto-2);
+}
+
+.seta {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+/* O painel acompanha a largura do campo, com um mínimo para a árvore caber. */
+.painel {
+  width: max(var(--trigger-width), calc(var(--esp-12) * 6));
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--esp-2);
+  outline: none;
+}
+
+.filtro {
+  display: grid;
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-1);
+  padding-bottom: var(--esp-2);
+  border-bottom: 1px solid var(--cor-material-linha);
+}
+
+.tituloDaSecao {
+  padding: 0 var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+}
+
+/* O sugerido é uma linha da altura da densidade, com o caminho e a origem. */
+.sugerido {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-1) var(--esp-2);
+  border: 0;
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  background: none;
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  text-align: start;
+  outline: none;
+  cursor: default;
+}
+
+.sugerido[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+.sugerido[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.caminho {
+  font-weight: var(--peso-medio);
+}
+
+.origem {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A árvore e a lista rolam dentro do painel, que mantém a altura dos outros painéis. */
+.rolagem {
+  max-height: calc(var(--altura-linha) * 10);
+  overflow: auto;
+}
+
+.nadaAchado {
+  margin: 0;
+  padding: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}

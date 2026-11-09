@@ -1,0 +1,16 @@
+{
+  "_origem": "Montada pelos campos que o PMG lê das informações do sistema (src/lib/controlid-client.ts), e não lida de um controle: um iDAccess Pro, com o firmware em firmware. O comando gravar-control-id troca as gravações montadas pelas reais.",
+  "serial": "0M0400/123456",
+  "firmware": "6.12.2",
+  "product_name": "iDAccess Pro",
+  "uptime": 864000,
+  "ram_total": 268435456,
+  "ram_free": 134217728,
+  "flash_total": 536870912,
+  "flash_free": 268435456,
+  "ip": "10.0.5.77",
+  "netmask": "255.255.255.0",
+  "gateway": "10.0.5.1",
+  "mac": "00:1A:3F:12:34:56",
+  "online_mode": "standalone"
+}

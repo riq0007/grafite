@@ -1,0 +1,22 @@
+/* O botão da visão: o nome, o estado em texto e a seta do menu. */
+.gatilho {
+  max-width: calc(var(--esp-12) * 7);
+}
+
+.nome {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* "Personalizada" e "Do link" são texto, separado do nome por um ponto, e não só uma cor. */
+.estado {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-weight: var(--peso-normal);
+}
+
+.estado::before {
+  content: "· ";
+}

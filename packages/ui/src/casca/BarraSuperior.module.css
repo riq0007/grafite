@@ -1,0 +1,105 @@
+/* Barra superior: camada translúcida sobre o conteúdo que rola por baixo (F0). A largura dela é
+   a da janela, então a container query equivale ao limite de 1024 px da postura computador. */
+.barra {
+  container: barra / inline-size;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  height: var(--altura-barra-superior);
+  padding: 0 var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  background: var(--cor-barra);
+  backdrop-filter: var(--filtro-material);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}
+
+.marca {
+  display: inline-flex;
+}
+
+.inicio,
+.menusLargos,
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.inicio {
+  gap: var(--esp-3);
+}
+
+.nome,
+.nomeLargo {
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+}
+
+.menusReunidos {
+  display: none;
+}
+
+.gatilho {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--altura-barra-superior) - var(--esp-1) * 1.5);
+  padding: 0 var(--esp-2);
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  white-space: nowrap;
+  cursor: default;
+  outline: none;
+}
+
+.gatilho[data-hovered],
+.gatilho[data-pressed],
+.gatilho[aria-expanded="true"] {
+  background-color: var(--cor-hover);
+}
+
+.gatilho[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* No toque, cada menu da barra é um alvo de pelo menos 44 × 44 px. */
+[data-postura="tablet"] .gatilho,
+[data-postura="celular"] .gatilho {
+  justify-content: center;
+  min-width: var(--alvo-toque);
+  height: var(--alvo-toque);
+}
+
+/* No celular, a barra mostra o nome do módulo e só o status essencial (menu do usuário). */
+[data-postura="celular"] .marca,
+[data-postura="celular"] .status > :not([data-essencial]) {
+  display: none;
+}
+
+.status {
+  flex: none;
+  gap: var(--esp-3);
+  color: var(--cor-texto-2);
+}
+
+/* Gatilho do menu do usuário: só o avatar, no tamanho dos ícones da barra. */
+.usuario {
+  padding: 0 var(--esp-1);
+}
+
+@container barra (width < 1024px) {
+  .nomeLargo,
+  .menusLargos {
+    display: none;
+  }
+
+  .menusReunidos {
+    display: flex;
+  }
+}

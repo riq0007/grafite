@@ -1,0 +1,52 @@
+/* "O que resolver agora": a contagem no título, a falha de uma fonte e o esqueleto das linhas. */
+.contagem {
+  margin-left: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-normal);
+}
+
+.ocorrencias {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.falha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+}
+
+.textoDaFalha {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.esqueleto {
+  display: grid;
+}
+
+.linhaDoEsqueleto {
+  display: grid;
+  grid-template-columns: var(--tamanho-miniatura) 1fr 1fr;
+  align-items: center;
+  gap: var(--esp-4);
+  min-height: var(--altura-linha);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

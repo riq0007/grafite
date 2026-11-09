@@ -1,0 +1,15 @@
+# Ganchos do Git (spec plataforma-base): lint/formatação e bloqueio de segredos antes de cada commit.
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}"
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+    segredos:
+      run: pnpm exec secretlint --maskSecrets {staged_files}
+    # Os termos privados da lista local, em .grafite/termos-privados/; sem ela, diz que não conferiu.
+    termos:
+      run: node scripts/termos-privados.ts {staged_files}
+    tipos:
+      glob: "*.{ts,tsx,mts,json}"
+      run: pnpm typecheck

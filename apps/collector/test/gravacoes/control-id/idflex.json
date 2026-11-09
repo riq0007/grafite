@@ -1,0 +1,7 @@
+{
+  "_origem": "Montada pelos campos que o PMG lê das informações do sistema (src/lib/controlid-client.ts), e não lida de um controle: um iDFlex, com o firmware em version, como alguns modelos informam.",
+  "serial": "0M0300/654321",
+  "version": "5.8.1",
+  "product_name": "iDFlex",
+  "uptime": 3600
+}

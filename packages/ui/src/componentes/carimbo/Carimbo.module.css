@@ -1,0 +1,19 @@
+/* O carimbo de seção: o rótulo em legenda e maiúsculas, e a linha fina que segue até a borda. */
+.carimbo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.linha {
+  flex: 1;
+  height: 1px;
+  background: var(--cor-linha-forte);
+}

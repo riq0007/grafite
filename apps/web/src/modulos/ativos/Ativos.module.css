@@ -1,0 +1,568 @@
+/* As telas do catálogo de ativos: a lista com o cabeçalho e a ficha com o formulário, como as da
+   Administração. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.semValor {
+  color: var(--cor-texto-2);
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.acoesDaFicha {
+  display: grid;
+  gap: var(--esp-2);
+  justify-items: end;
+}
+
+/* O título da ficha: o nome e, ao lado, a situação por texto. */
+.tituloDaFicha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.parte {
+  display: grid;
+  gap: var(--esp-3);
+  align-content: start;
+  min-width: 0;
+}
+
+/*
+ * O título de cada bloco, com o desenho do carimbo de seção do @grafite/ui (change componentes-v3,
+ * design, decisão 5): a legenda em maiúsculas e a linha fina que segue até a borda, sem trocar o
+ * elemento, que continua o título de verdade.
+ */
+.tituloDaParte {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.tituloDaParte::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--cor-linha-forte);
+}
+
+.itens {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2) var(--esp-4);
+  padding: var(--esp-2) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.textoDoItem {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.nomeDoItem {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.detalheDoItem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.acoesDoItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-3);
+}
+
+.erro {
+  margin: 0;
+  color: var(--cor-critico);
+  font-size: var(--texto-dado);
+}
+
+.capacidade {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.descricaoDaCapacidade {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.link {
+  color: var(--cor-destaque-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Uma relação na ficha de outro registro: a contagem e o link para a tabela. */
+.relacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+/* A linha das relações da ficha, abaixo do título: o local, o responsável, o modelo e os ligados. */
+.relacoesDoAtivo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Os filtros lado a lado enquanto cabem, cada um com pelo menos 192 px. */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 4), 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+/* A imagem do modelo ou do ativo na ficha e no cadastro, maior que a miniatura da lista. */
+.imagemDaFicha {
+  --tamanho-miniatura: calc(var(--esp-12) * 2);
+}
+
+/* A aba Dados da ficha do ativo: a imagem no alto e o formulário. */
+.dadosDoAtivo {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* Um ativo ligado: a miniatura ao lado do nome, da situação e do resto. */
+.ativoLigado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* Um campo do ativo: a entrada e, abaixo dela, o estado com a trava. */
+.campoDoAtivo {
+  display: grid;
+  gap: var(--esp-1);
+  align-content: start;
+  min-width: 0;
+}
+
+/* O nome do ativo com o tipo embaixo, na célula da lista. */
+.nomeComTipo {
+  display: grid;
+  min-width: 0;
+}
+
+/* Um grupo da ficha do ativo: o título e os campos lado a lado enquanto cabem. */
+.grupoDoAtivo {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/*
+ * Os campos do cadastro em etapas e da ficha em cartões, lado a lado enquanto cabem, cada um com
+ * pelo menos 240 px, e a área deles com o limite dos formulários (change
+ * janela-rolavel-e-campos-em-colunas). O texto longo, as opções marcadas, o arquivo e a imagem
+ * ocupam a linha inteira.
+ */
+/* Os campos usam a largura da janela, em colunas de pelo menos 240 px (change
+   redesenho-da-interface, design, decisão 5). */
+.camposEmColunas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-12) * 5), 1fr));
+  align-items: start;
+  gap: var(--esp-4) var(--esp-5);
+  min-width: 0;
+}
+
+.camposEmColunas > [data-largura="linha"] {
+  grid-column: 1 / -1;
+}
+
+/* O patrimônio no título da ficha, na fonte dos identificadores. */
+.patrimonio {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-normal);
+}
+
+/* A tela da tabela dos ativos: o cabeçalho, a barra, a contagem e a tabela até o fim da janela. */
+.telaDaTabela {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* As linhas do esqueleto, antes de as colunas chegarem. */
+.esqueletoDaTabela {
+  display: grid;
+  gap: var(--esp-3);
+  padding-block: var(--esp-3);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A tabela virtualizada rola por dentro: a altura vem da janela, medida pela tela. */
+.areaDaTabela {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* O nome do ativo com o tipo ao lado, numa linha só: a linha da tabela virtualizada tem a altura
+   da densidade. */
+.nomeETipo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/*
+ * Na coluna estreita, o nome fica com a largura dele, até a da célula, e o tipo com o que sobra: o
+ * tipo some inteiro antes de o nome perder uma letra (change telas-no-celular, design, decisão 2).
+ */
+.nomeETipo > :first-child {
+  flex: none;
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.nomeETipo > :last-child {
+  flex: 0 1 auto;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  text-overflow: ellipsis;
+}
+
+/* As pessoas ou os modelos escolhidos num filtro, cada um com o botão de tirá-lo. */
+.escolhaDeVarios {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.escolhidas {
+  display: grid;
+  gap: var(--esp-1);
+  max-height: calc(var(--esp-12) * 4);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.escolhida {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  font-size: var(--texto-corpo);
+}
+
+/* A disponibilidade na rede: a situação, a idade da leitura e o "Desatualizado", lado a lado. */
+.disponibilidade {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+/* Os dados da coleta na ficha: o rótulo e o valor, como os dados da Administração. */
+.dadosDaColeta {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.dadosDaColeta div {
+  display: grid;
+  grid-template-columns: calc(var(--esp-12) * 4) minmax(0, 1fr);
+  gap: var(--esp-3);
+}
+
+.dadosDaColeta dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.dadosDaColeta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+@container (width < 480px) {
+  .dadosDaColeta div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+/* O painel Suprimentos: cada bloco com o título dele, e os cartuchos dos níveis. */
+.blocoDoPainel {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+/*
+ * Os suprimentos como cartuchos (change suprimentos-rostos-e-backups, design, decisão 4), na ordem
+ * da impressora, com a descrição e a idade da leitura embaixo de cada um.
+ */
+.cartuchos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4) var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suprimento {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--esp-1);
+  width: 112px;
+  text-align: center;
+}
+
+.descricaoDoSuprimento {
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+  overflow-wrap: anywhere;
+}
+
+/* O medidor compacto do menor nível, na coluna da lista, sem o número repetido. */
+.medidorNaCelula {
+  display: inline-block;
+  inline-size: 40px;
+  flex: none;
+}
+
+.listaDoPainel {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-corpo);
+}
+
+.listaDoPainel li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* Os segredos do cofre ligados ao ativo: o nome, que leva ao Cofre, e o tipo com o identificador. */
+.listaDeSegredos {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listaDeSegredos li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.detalheDoSegredo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+/* Embaixo das etapas do cadastro: a situação do rascunho e o que fazer com ele. */
+.rascunho {
+  display: grid;
+  gap: var(--esp-1);
+  justify-items: start;
+}
+
+/* O painel do cartão aberto na aba Dados da ficha: o nome, a imagem com o conteúdo ao lado e o
+   salvar embaixo (change ficha-em-cartoes). */
+.painelDoCartao {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A imagem à esquerda e o conteúdo ao lado; na janela estreita, a imagem vai para cima. */
+.cartaoLadoALado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--esp-4);
+}
+
+/* A coluna da imagem, estreita: os botões da escolha de imagem vão para baixo dela, e o conteúdo
+   cabe ao lado, como no cadastro. */
+.imagemDoCartao {
+  flex: 0 0 calc(var(--esp-12) * 4);
+  min-width: 0;
+}
+
+.conteudoDoCartao {
+  display: grid;
+  flex: 1 1 18rem;
+  gap: var(--esp-4);
+  align-content: start;
+  min-width: 0;
+}
+
+/* A Visão geral: o que os outros módulos mostram do ativo, em cartões lado a lado enquanto cabem
+   (change redesenho-da-interface, design, decisão 5). */
+.visaoGeralEmCartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--esp-12) * 7)), 1fr));
+  align-items: start;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.visaoGeralEmCartoes > * {
+  min-width: 0;
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+/* "Salvar alterações" no fim do painel, à direita, presa ao pé da janela enquanto ele rola. */
+.barraDeSalvar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-3);
+  padding: var(--esp-3) 0;
+  border-top: 1px solid var(--cor-linha);
+  background: var(--cor-superficie);
+}
+
+/*
+ * A prateleira do Início (change inicio-ajustavel, design, decisão 5): as impressoras de menor nível
+ * lado a lado, cada uma com o cartucho, o nome e a descrição, levando à ficha.
+ */
+.prateleira {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.naPrateleira {
+  display: flex;
+}
+
+.linkDaPrateleira {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--esp-1);
+  width: 144px;
+  padding: var(--esp-3) var(--esp-2);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  text-align: center;
+  text-decoration: none;
+}
+
+.linkDaPrateleira:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.linkDaPrateleira:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.nomeNaPrateleira {
+  font-weight: var(--peso-medio);
+}
