@@ -29,7 +29,7 @@
 
 ## 2. O commit único
 
-- [ ] 2.1 O commit único, numa pasta descartável fora do `D:\grafite` (decisões 1 e 5):
+- [x] 2.1 O commit único, numa pasta descartável fora do `D:\grafite` (decisões 1 e 5):
   - a árvore da `main` antiga, depois do merge da 1.5, sem o `.gitleaksignore`, por um índice temporário;
   - o commit sem pai, com o autor e o committer `riq0007 <182831779+riq0007@users.noreply.github.com>`, a mensagem em pt-BR, "Tarefa 2.1 do publicar-no-repositorio-novo." e o Co-Authored-By;
   - um repositório vazio na pasta descartável, que busca só esse commit, por uma referência temporária do repositório antigo, apagada logo depois.
