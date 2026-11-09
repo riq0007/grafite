@@ -54,7 +54,7 @@
   - cadastra o secret `GRAFITE_TERMOS_PRIVADOS` no repositório novo, pela linha em PowerShell da decisão 6.
 
   Verificar: `gh secret list --repo riq0007/grafite` mostra o secret, e o usuário confirma as duas opções da conta.
-- [ ] 3.3 O push do commit único, da pasta descartável, para a `main` e o `dev` do repositório novo (decisão 3).
+- [x] 3.3 O push do commit único, da pasta descartável, para a `main` e o `dev` do repositório novo (decisão 3).
 
   Verificar:
   - o repositório tem um commit, as duas branches e nenhuma tag;
