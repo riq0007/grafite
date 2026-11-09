@@ -49,7 +49,7 @@
   - nas Actions, só as ações do GitHub e as do dono, o token só de leitura por padrão e sem aprovar PRs.
 
   Verificar: a leitura de volta pela API mostra cada configuração, e o repositório não tem nenhum commit.
-- [ ] 3.2 O usuário (decisões 5 e 6):
+- [x] 3.2 O usuário (decisões 5 e 6):
   - liga, na conta do GitHub, "Keep my email addresses private" e "Block command line pushes that expose my email";
   - cadastra o secret `GRAFITE_TERMOS_PRIVADOS` no repositório novo, pela linha em PowerShell da decisão 6.
 
