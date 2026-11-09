@@ -63,10 +63,10 @@
 
 ## 4. O clone novo
 
-- [ ] 4.1 O clone em `D:\grafite-novo` (decisões 5, 8 e 11):
+- [x] 4.1 O clone em `D:\grafite-novo` (decisões 5, 8 e 11):
   - o `git clone` com `core.autocrlf=false` e `core.eol=lf`, e o `user.name` e o `user.email` noreply na configuração local;
   - o `.env`, a `.grafite/`, a `.superpowers/`, a `demonstracao/` e o `.claude/launch.json` local, copiados da pasta antiga;
-  - o `pnpm install`, com os ganchos do lefthook;
+  - o `pnpm install` e o `pnpm exec lefthook install`, que instala os ganchos: com a store do pnpm já cheia, o `pnpm install` não roda de novo o script do lefthook;
   - os tiques das tarefas 1.5 a 3.3, um commit por tarefa, num push só para a `main` e o `dev`.
 
   Verificar:
@@ -101,10 +101,12 @@
 - [ ] 7.1 A troca das pastas (decisão 8):
   - a linha em PowerShell, conferida antes em pastas de ensaio;
   - a memória do Claude Code atualizada com o estado;
-  - com o Claude Code, os editores, os terminais e o `pnpm dev` fechados, o usuário roda a linha e abre o Claude Code de novo no `D:\grafite`.
+  - com o Claude Code, os editores, os terminais e o `pnpm dev` fechados, o usuário roda a linha e abre o Claude Code de novo no `D:\grafite`;
+  - na sessão nova, o `pnpm exec lefthook install` dentro do `D:\grafite`, porque o gancho guarda o caminho absoluto da pasta.
 
   Verificar, na sessão nova:
   - `git remote -v` aponta o `riq0007/grafite`, e `git log` tem só os commits do repositório novo;
+  - o `.git/hooks/pre-commit` cita o `D:/grafite`, e o commit seguinte roda os ganchos;
   - o `pnpm dev` sobe com o banco do desenvolvimento de antes, com os dados que já estavam nele.
 - [ ] 7.2 O repositório antigo (decisão 10):
   - o usuário decide o webhook, as pré-releases de ensaio e o rascunho órfão;

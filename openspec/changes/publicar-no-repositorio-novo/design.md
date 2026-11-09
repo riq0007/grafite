@@ -140,7 +140,9 @@ Não há arquivo de licença. O aviso, na decisão do usuário: "Todos os direit
 - com `core.autocrlf=false` e `core.eol=lf` já no `clone`;
 - com o e-mail noreply na configuração local;
 - com os arquivos locais da pasta antiga copiados: o `.env`, a `.grafite/`, a `.superpowers/`, a `demonstracao/` e o `.claude/launch.json` local;
-- com o `pnpm install`, que instala os ganchos do lefthook.
+- com o `pnpm install` e o `pnpm exec lefthook install`. Com a store do pnpm já cheia, o `pnpm install` reaproveita o build do lefthook e não roda de novo o script que instala os ganchos no `.git` do projeto novo.
+
+O gancho guarda o caminho absoluto do lefthook, com o nome da pasta. Depois da troca, o `pnpm exec lefthook install` roda de novo dentro do `D:\grafite`.
 
 Ali rodam os tipos, os unitários e a guarda. O `pnpm dev` não roda: o projeto do compose tem o mesmo nome, e ele disputaria o banco com a pasta antiga.
 
