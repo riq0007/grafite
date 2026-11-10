@@ -300,6 +300,44 @@ test.describe('os suprimentos das impressoras', () => {
     await expect(linha(page, 'HP LaserJet M404')).toBeVisible();
     await expect(linha(page, 'Impressora do RH')).toHaveCount(0);
   });
+
+  // O valor inteiro no resumo (spec tabelas-configuraveis, "Resumo da linha"; change
+  // celulas-numa-linha, design, decisão 3).
+  test('com a coluna Suprimentos estreita, o resumo da linha traz o suprimento inteiro', async ({
+    page,
+  }) => {
+    // O relógio falso adianta a pausa de 1,5 s do resumo, como no teste dele.
+    await page.clock.install();
+    await comSuprimentos(page, { daExpedicao: 8, doRh: 45 });
+    await page.goto('/ativos?visao=fabrica&colunas=ativo.rotulo,coleta.suprimentos:64');
+    await expect(linha(page, 'HP LaserJet M404')).toContainText('8%');
+
+    const nome = linha(page, 'HP LaserJet M404').getByText('HP LaserJet M404');
+    const resumo = page.getByRole('tooltip');
+    await expect(async () => {
+      await page.mouse.move(0, 0);
+      await nome.hover();
+      await page.clock.fastForward(1_500);
+      await expect(resumo).toBeVisible({ timeout: 4_000 });
+    }).toPass({ timeout: 15_000 });
+    await expect(resumo).toContainText('Suprimentos');
+    await expect(resumo).toContainText('Black Toner Cartridge');
+    await expect(resumo).toContainText('há 3 min');
+
+    // A descrição e a idade, que a célula cortou, não terminam em reticências nem saem do resumo.
+    const resto = resumo.locator('[data-parte="resto"]');
+    expect(await resto.evaluate((parte) => parte.scrollWidth <= parte.clientWidth + 1)).toBe(true);
+    const caixa = await resumo.boundingBox();
+    const lugar = await resto.boundingBox();
+    expect(caixa).not.toBeNull();
+    expect(lugar).not.toBeNull();
+    expect((lugar?.x ?? 0) + (lugar?.width ?? 0)).toBeLessThanOrEqual(
+      (caixa?.x ?? 0) + (caixa?.width ?? 0),
+    );
+    expect((lugar?.y ?? 0) + (lugar?.height ?? 0)).toBeLessThanOrEqual(
+      (caixa?.y ?? 0) + (caixa?.height ?? 0),
+    );
+  });
 });
 
 test.describe('a saúde do Control iD', () => {

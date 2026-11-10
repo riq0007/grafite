@@ -11,13 +11,14 @@ export interface PropsDoValorComposto {
 /**
  * O valor de uma célula com mais de uma parte (spec componentes-base, "Célula numa linha só"): as
  * partes ficam lado a lado, numa linha só. Quando a coluna é estreita, o fixo fica inteiro, e o
- * resto encolhe e termina em reticências. Fora das tabelas, onde a linha pode quebrar, as telas
- * montam as partes do jeito delas.
+ * resto encolhe e termina em reticências. No resumo da linha, que mostra o valor inteiro, as mesmas
+ * partes quebram a linha (`ResumoDaLinha.module.css`). Fora das tabelas, onde a linha pode quebrar,
+ * as telas montam as partes do jeito delas.
  */
 export function ValorComposto({ fixo, children }: PropsDoValorComposto) {
   const temResto = Children.toArray(children).length > 0;
   return (
-    <span className={estilos.composto}>
+    <span className={estilos.composto} data-composto="">
       <span className={estilos.fixo} data-parte="fixo">
         {fixo}
       </span>

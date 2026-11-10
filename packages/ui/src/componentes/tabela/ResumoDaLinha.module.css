@@ -46,13 +46,34 @@
   white-space: nowrap;
 }
 
-/* O valor longo é cortado com reticências, e o resumo fica na largura do que mostra. */
+/*
+ * O valor aparece inteiro (spec tabelas-configuraveis, "Resumo da linha"): o resumo fica na largura
+ * do que mostra, e o que passa da largura máxima continua na linha de baixo, sem reticências.
+ */
 .valor {
-  overflow: hidden;
   max-width: calc(var(--esp-12) * 5);
   margin: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * O valor composto, que na célula fica numa linha só e termina em reticências (spec
+ * componentes-base, "Célula numa linha só"), aqui quebra: o texto que acompanha a situação vai
+ * para a linha de baixo quando não cabe ao lado dela.
+ */
+.valor [data-composto],
+.valor [data-parte="fixo"] {
+  flex-wrap: wrap;
+}
+
+.valor [data-parte="fixo"] {
+  flex: 0 1 auto;
+}
+
+.valor [data-parte="resto"] {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 @keyframes aparecer {

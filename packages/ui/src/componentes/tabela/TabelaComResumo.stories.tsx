@@ -458,7 +458,7 @@ const MUITAS: ItemDoResumo[] = Array.from({ length: 40 }, (_, indice) => ({
 
 /**
  * Com mais colunas do que cabem na altura da janela, o resumo se divide em partes lado a lado, e o
- * valor longo é cortado com reticências.
+ * valor mais largo que o resumo continua na linha de baixo, inteiro.
  */
 export const MuitasColunas: Historia = {
   render: () => {
@@ -478,8 +478,69 @@ export const MuitasColunas: Historia = {
     );
     await expect(aberto.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
     const longo = within(aberto).getByText(/Um valor bem mais longo/);
-    await expect(longo.scrollWidth).toBeGreaterThan(longo.clientWidth);
+    await expect(longo.scrollWidth).toBeLessThanOrEqual(longo.clientWidth);
+    await expect(longo.getBoundingClientRect().height).toBeGreaterThan(
+      within(aberto).getByText('Valor 3').getBoundingClientRect().height,
+    );
     await expect(within(aberto).getAllByText('—')).toHaveLength(6);
+  },
+};
+
+/** Dois valores compostos, como as células da coleta os desenham; o primeiro passa da largura. */
+const COMPOSTOS: ItemDoResumo[] = [
+  {
+    coluna: 'suprimentos',
+    rotulo: 'Suprimentos',
+    valor: (
+      <ValorComposto
+        fixo={
+          <>
+            <span className="mono">8%</span>
+            <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>
+          </>
+        }
+      >
+        <span>Black Toner Cartridge de alto rendimento</span>
+        <span>há 12 dias</span>
+      </ValorComposto>
+    ),
+  },
+  {
+    coluna: 'paginas',
+    rotulo: 'Total de páginas',
+    valor: <ValorComposto fixo={<span className="mono">12.500</span>}>há 12 dias</ValorComposto>,
+  },
+];
+
+/**
+ * No resumo, o valor composto aparece inteiro (spec tabelas-configuraveis, "Resumo da linha"): o
+ * texto que a célula cortaria continua na linha de baixo, sem reticências, dentro do resumo.
+ */
+export const ValorCompostoInteiro: Historia = {
+  tags: ['captura'],
+  render: () => (
+    <div style={{ width: '480px', height: '140px' }}>
+      <ResumoDaLinha itens={COMPOSTOS} posicao={{ x: 16, topo: 8, base: 8 }} />
+    </div>
+  ),
+  play: async () => {
+    const aberto = await esperarResumo();
+    await waitFor(() => expect(aberto).not.toHaveAttribute('data-medindo'));
+    const caixa = aberto.getBoundingClientRect();
+    const restos = [...aberto.querySelectorAll<HTMLElement>('[data-parte="resto"]')];
+    await expect(restos).toHaveLength(2);
+    for (const parte of [...restos, ...aberto.querySelectorAll<HTMLElement>('dd')]) {
+      await expect(parte.scrollWidth).toBeLessThanOrEqual(parte.clientWidth + 1);
+      const lugar = parte.getBoundingClientRect();
+      await expect(lugar.right).toBeLessThanOrEqual(caixa.right);
+      await expect(lugar.bottom).toBeLessThanOrEqual(caixa.bottom);
+    }
+    // O rótulo de situação fica inteiro, e o que passa da largura vai para a linha de baixo.
+    const fixo = aberto.querySelector<HTMLElement>('[data-parte="fixo"]') as HTMLElement;
+    await expect(fixo.scrollWidth).toBeLessThanOrEqual(fixo.clientWidth + 1);
+    await expect((restos[0] as HTMLElement).getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      fixo.getBoundingClientRect().bottom,
+    );
   },
 };
 

@@ -44,7 +44,11 @@ Ele é `inline-flex`, sem quebra, com a largura máxima da célula. O `fixo` nã
 
 ### 3. O conteúdo cortado no resumo
 
-O resumo da linha passa a juntar, às colunas fora da área, as colunas da linha sob o mouse em que o conteúdo é mais largo que a célula (`scrollWidth > clientWidth`, na célula e no resto do `ValorComposto`). A medida roda só quando o relógio de 1,5 s dispara, numa linha. O valor mostrado é o texto da célula, que as telas já dão ao resumo.
+O resumo da linha passa a juntar, às colunas fora da área, as colunas da linha sob o mouse em que o conteúdo é mais largo que a célula (`scrollWidth > clientWidth`, na célula e no resto do `ValorComposto`). A medida roda só quando o relógio de 1,5 s dispara, numa linha.
+
+O valor mostrado é o que as telas já dão ao resumo: um texto ou, como na tabela dos ativos, o mesmo conteúdo da célula, com o `ValorComposto`. No resumo, o valor aparece inteiro: o `ResumoDaLinha` deixa de cortar o valor longo com reticências, e o que passa da largura máxima dele continua na linha de baixo. O `ValorComposto` marca a raiz com `data-composto`, e o resumo desfaz nele a linha única da célula: o fixo fica numa linha, e o resto vai para a de baixo quando não cabe ao lado. A conferência no `pnpm dev` mostrou o motivo: com o valor cortado também no resumo, "Suprimentos" terminava em "Bla…", e não havia onde ler a descrição e a idade.
+
+- Alternativa: aumentar a largura máxima do resumo até caber o maior valor composto. Descartada: a descrição do suprimento vem da impressora e não tem tamanho certo, e o resumo largo cobre mais linhas da tabela.
 
 ### 4. As larguras de fábrica
 
