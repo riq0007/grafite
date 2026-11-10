@@ -11,9 +11,10 @@ import { paineis } from './paineis/modulo.ts';
 import { salas } from './salas/modulo.ts';
 
 /**
- * Registro de módulos, na ordem do dock. A casca monta o dock, a barra de abas e as rotas a partir
- * dele. Um módulo novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois
- * do separador do dock.
+ * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
+ * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
+ * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
+ * dock.
  */
 export const REGISTRO = [
   inicio,

@@ -532,7 +532,8 @@ As preferências que o protótipo não tinha seguem o comportamento das seções
 - linhas alternadas e miniaturas ligadas nas tabelas;
 - o fuso horário do sistema operacional;
 - a tela inicial por severidade e, dentro dela, a mais antiga primeiro;
-- a barra de rolagem "Ao rolar": o polegar aparece com o ponteiro sobre a área, enquanto ela rola e com o foco do teclado nela; a outra escolha é "Sempre visível".
+- a barra de rolagem "Ao rolar": o polegar aparece com o ponteiro sobre a área, enquanto ela rola e com o foco do teclado nela; a outra escolha é "Sempre visível";
+- todos os módulos no dock, na ordem de fábrica, com Ajustes no fim: a conta escolhe a ordem e tira módulos do dock, e a organização define a ordem de quem não escolheu.
 
 Cada organização pode definir os próprios padrões, e cada usuário muda os seus em Ajustes.
 
@@ -557,6 +558,9 @@ Cada organização pode definir os próprios padrões, e cada usuário muda os s
   - Ampliação ao passar o mouse (até +55%, curva gaussiana).
   - Ocultar automático: reaparece quando o mouse chega à borda.
   - Um ponto marca o módulo atual, e um separador isola Ajustes.
+  - A conta escolhe a ordem dos módulos e tira módulos do dock, em Ajustes › Dock. Ajustes fica sempre no fim, fora da escolha.
+  - O botão Mais, com três pontos, traz os módulos que não couberam na tela e, depois deles, os que a conta tirou do dock, com os menus de cada um. O módulo tirado continua na busca e nos endereços. Só com os tirados, o Mais fica antes do separador de Ajustes, e a ampliação continua; com os que não couberam, ele fica no último lugar, e a ampliação fica suspensa.
+  - No celular, as abas seguem a ordem escolhida, e o módulo tirado do dock fica em "Mais". O módulo que fica sempre em "Mais", como a Administração, continua lá.
 - **Menus em árvore**
   - Abrem depois de um pequeno atraso sobre o item do dock e trocam mais rápido quando outro menu já está aberto.
   - Fecham com atraso ao sair.

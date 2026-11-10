@@ -6,7 +6,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 
 1. **Pasta.** O módulo vive em `apps/web/src/modulos/<id>/`, com `rotas.tsx`, `modulo.ts` e as telas.
 2. **Rotas.** A subárvore do módulo fica presa à raiz (`getParentRoute: () => raiz`). Cada rota fica numa constante própria e só depois entra no `addChildren`. Criadas dentro do `addChildren`, as rotas filhas perdem os tipos dos endereços, e um menu com destino errado passa a compilar.
-3. **Entrada no registro.** O `modulo.ts` declara o módulo com `definirModulo`, que confere os endereços dos menus e das entradas de busca contra as rotas do próprio módulo. A entrada vai para o `REGISTRO`, antes de Ajustes, que fica sempre no fim do dock, depois do separador.
+3. **Entrada no registro.** O `modulo.ts` declara o módulo com `definirModulo`, que confere os endereços dos menus e das entradas de busca contra as rotas do próprio módulo. A entrada vai para o `REGISTRO`, antes de Ajustes, que fica sempre no fim do dock, depois do separador. A ordem do registro é a de fábrica: a conta escolhe outra e tira módulos do dock em Ajustes › Dock, e a organização define a de quem não escolheu, sem o módulo fazer nada. O módulo tirado do dock fica no botão Mais e continua na busca e nos endereços (change dock-personalizavel).
 4. **Telas.** Toda tela começa pelo `CabecalhoDaPagina`, que leva o título da janela, em todos os estados: carregando, com erro, vazia e sem acesso. O foco vai para o título depois de cada navegação, e o teste-guarda `casca/cabecalhoDasTelas.test.ts` reprova o `TituloDaJanela` solto, fora do Início (change cabecalho-em-toda-tela). Nenhum item leva a uma tela em construção: o módulo só entra no registro quando cada destino tem uma tela que funciona.
    - **Rolagem.** A tela rola dentro da janela, na área abaixo da barra das abas, que esmaece o conteúdo perto da borda e volta ao começo quando a tela muda (change janela-rolavel-e-campos-em-colunas). A tela não cria uma rolagem própria para a página. A peça presa, com `position: sticky`, usa `top: 0`, que já fica abaixo da faixa esmaecida de cima.
    - **Título com a barra das abas.** A tela cujo título a primeira aba já repete, como o cadastro do ativo, pede `<CabecalhoDaPagina titulo={…} ocultarComAbas />`: com a barra das abas, o título sai da vista e continua para o leitor de tela e para o foco.
@@ -27,7 +27,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 | `nome` | Nome do módulo no dock, na barra de abas e na barra superior |
 | `icone` | Ícone do `lucide-react`, desenhado com o traço do projeto |
 | `endereco` | Aonde levam o item do dock e a aba do celular |
-| `prioridadeNoCelular` | Ordem na barra de abas do celular: número menor vem antes, ou `'mais'` para ficar sempre em "Mais". Cabem cinco abas, ou quatro e "Mais" |
+| `prioridadeNoCelular` | Ordem na barra de abas do celular: número menor vem antes, ou `'mais'` para ficar sempre em "Mais". Cabem cinco abas, ou quatro e "Mais". Com a ordem do dock escolhida pela conta ou pela organização, as abas seguem essa ordem, e o módulo tirado do dock fica em "Mais"; o que declara `'mais'` continua lá |
 | `parteDe` | O id do módulo opcional de que este faz parte, como a Gestão de ativos do Ativos: o interruptor da organização vale para os dois (opcional; veja Módulo opcional) |
 | `rotas` | A subárvore de rotas do módulo |
 | `menu` | Menu em árvore do item do dock (opcional) |
@@ -1970,6 +1970,8 @@ As regras:
 - **Prévias:** a tabela de exemplo, o aviso de exemplo e a hora no fuso leem o alvo, e não a casca. Nos padrões, mostram o rascunho, e não as preferências de quem edita.
 - **O que é da conta:** o que não é uma preferência, como o e-mail da pessoa, os aparelhos inscritos e os testes dos canais, aparece só com o alvo na conta, pelo `useAlvoEhAConta()`. Nos padrões, a seção Notificações mostra só as escolhas do e-mail e do push.
 - **Preferência nova:** entra no modelo do `@grafite/domain`, com o padrão de fábrica, e no esquema que a API confere ao gravar, pela sessão orquestradora (regra 7 do `CLAUDE.md`).
+- **Módulos da conta:** a seção que lista os módulos que a conta vê, como a parte "Módulos do dock" da seção Dock, lê o `useModulosDaConta()` (`apps/web/src/casca/modulosDaConta.tsx`). A casca do app o preenche com o registro da conta, já com as permissões e sem os módulos que a organização desligou; fora da casca, ele vem vazio.
+- **Lista ordenada:** a preferência que guarda uma ordem com itens fora dela, como os blocos do Início (`inicio.blocos`) e os módulos do dock (`dock.modulos`), é uma lista de `{ id, visivel }`, trocada inteira. As funções do `apps/web/src/preferencias/listaOrdenada.ts` a resolvem contra o que o app registra e fazem o subir, o descer e o ocultar.
 
 ## Foto da pessoa
 
@@ -2398,9 +2400,10 @@ import { paineis } from './paineis/modulo.ts';
 import { salas } from './salas/modulo.ts';
 
 /**
- * Registro de módulos, na ordem do dock. A casca monta o dock, a barra de abas e as rotas a partir
- * dele. Um módulo novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois
- * do separador do dock.
+ * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
+ * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
+ * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
+ * dock.
  */
 export const REGISTRO = [
   inicio,
