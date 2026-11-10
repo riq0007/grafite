@@ -1,19 +1,34 @@
-import { type FormEvent, useRef, useState } from 'react';
+import { type FormEvent, useId, useRef, useState } from 'react';
 import { Botao } from '../componentes/botao/Botao.tsx';
 import { CampoDeTexto } from '../componentes/campo/CampoDeTexto.tsx';
+import { Checkbox } from '../componentes/escolhas/Checkbox.tsx';
 import estilos from './Entrada.module.css';
 import { MensagemDoPasso } from './MensagemDoPasso.tsx';
 import type { ResultadoDoPasso } from './PassoDasCredenciais.tsx';
 
 export interface PropsDoPassoDoCodigo {
-  /** Manda o código do app ou um de recuperação, como foi digitado. */
-  aoMandar: (codigo: string) => Promise<ResultadoDoPasso>;
+  /**
+   * Manda o código do app ou um de recuperação, como foi digitado, e se o navegador fica como
+   * aparelho confiável: só com o código do app e a caixa marcada.
+   */
+  aoMandar: (codigo: string, opcoes: { confiar: boolean }) => Promise<ResultadoDoPasso>;
   /** Encerra a sessão pendente e volta ao usuário e senha. */
   aoSair: () => void;
+  /**
+   * O prazo da confiança da conta, em dias (change aparelho-confiavel): maior que zero, o passo
+   * oferece "Confiar neste aparelho"; sem ele, ou com zero, não oferece.
+   */
+  diasDeConfianca?: number;
 }
 
-/** O segundo passo da entrada: o código do app autenticador ou um código de recuperação. */
-export function PassoDoCodigo({ aoMandar, aoSair }: PropsDoPassoDoCodigo) {
+const EXPLICACAO_DA_CONFIANCA =
+  'Nas próximas entradas neste navegador, só a senha. O Cofre continua pedindo o código.';
+
+/**
+ * O segundo passo da entrada: o código do app autenticador ou um código de recuperação. Com o
+ * código do app, a caixa "Confiar neste aparelho", desmarcada de início, quando a conta tem prazo.
+ */
+export function PassoDoCodigo({ aoMandar, aoSair, diasDeConfianca = 0 }: PropsDoPassoDoCodigo) {
   const [modo, definirModo] = useState<'app' | 'recuperacao'>('app');
   const [codigo, definirCodigo] = useState('');
   const [enviando, definirEnviando] = useState(false);
@@ -21,7 +36,11 @@ export function PassoDoCodigo({ aoMandar, aoSair }: PropsDoPassoDoCodigo) {
   const [tentativa, definirTentativa] = useState(0);
   const campo = useRef<HTMLInputElement>(null);
   const emEnvio = useRef(false);
+  const [confiar, definirConfiar] = useState(false);
+  const idDaExplicacao = useId();
   const doApp = modo === 'app';
+  // O código de recuperação não torna o aparelho confiável.
+  const ofereceConfianca = doApp && diasDeConfianca > 0;
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
@@ -29,7 +48,7 @@ export function PassoDoCodigo({ aoMandar, aoSair }: PropsDoPassoDoCodigo) {
     emEnvio.current = true;
     definirEnviando(true);
     try {
-      const resultado = await aoMandar(codigo);
+      const resultado = await aoMandar(codigo, { confiar: ofereceConfianca && confiar });
       if ('erro' in resultado) {
         definirErro(resultado.erro);
         definirTentativa((atual) => atual + 1);
@@ -81,6 +100,20 @@ export function PassoDoCodigo({ aoMandar, aoSair }: PropsDoPassoDoCodigo) {
             onChange={definirCodigo}
             autoFocus
           />
+        )}
+        {ofereceConfianca && (
+          <div className={estilos.confianca}>
+            <Checkbox
+              isSelected={confiar}
+              onChange={definirConfiar}
+              aria-describedby={idDaExplicacao}
+            >
+              {`Confiar neste aparelho por ${diasDeConfianca} ${diasDeConfianca === 1 ? 'dia' : 'dias'}`}
+            </Checkbox>
+            <p id={idDaExplicacao} className={estilos.ajudaDaConfianca}>
+              {EXPLICACAO_DA_CONFIANCA}
+            </p>
+          </div>
         )}
         <MensagemDoPasso texto={erro} chave={tentativa} />
         <div className={estilos.acoes}>

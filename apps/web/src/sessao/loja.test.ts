@@ -290,9 +290,26 @@ describe('entrar', () => {
 describe('o segundo passo', () => {
   beforeEach(() => comecarCom(estado(pendente('segundo-passo'))));
 
+  // Change aparelho-confiavel, design, decisão 6: o passo do código sabe o prazo da caixa.
+  it('a sessão pendente do código traz o prazo da confiança da conta', async () => {
+    await comecarCom(estado({ ...pendente('segundo-passo'), diasDeConfianca: 30 }));
+    expect(loja.ler()).toMatchObject({
+      tipo: 'pendente',
+      pendencia: 'segundo-passo',
+      diasDeConfianca: 30,
+    });
+  });
+
+  it('o código vai com o "confiar" que a tela escolheu', async () => {
+    responder(estado(SESSAO_ATIVA));
+    await loja.mandarCodigo('287082', { confiar: true });
+    expect(await ultimo()?.json()).toEqual({ codigo: '287082', confiar: true });
+  });
+
   it('o código aceito faz a sessão valer', async () => {
     responder(estado(SESSAO_ATIVA));
     expect(await loja.mandarCodigo('287082')).toEqual({ ok: true });
+    expect(await ultimo()?.clone().json()).toEqual({ codigo: '287082', confiar: false });
     expect(caminho(ultimo())).toBe('POST /api/sessao/segundo-passo');
     expect(ultimo()?.headers.get('x-grafite-csrf')).toBe('csrf-pendente');
     expect(loja.ler()).toMatchObject({ tipo: 'ativa', csrf: 'csrf-ativa' });

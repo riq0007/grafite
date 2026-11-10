@@ -65,7 +65,7 @@ test.describe('sem sessão', () => {
     const segundoPasso = page.waitForRequest('**/api/sessao/segundo-passo');
     await codigo.press('Enter');
     const pedido = await segundoPasso;
-    expect(pedido.postDataJSON()).toEqual({ codigo: '287082' });
+    expect(pedido.postDataJSON()).toEqual({ codigo: '287082', confiar: false });
     expect(pedido.headers()['x-grafite-csrf']).toBe('csrf-pendente');
 
     await expect(page.locator('html')).toHaveAttribute('data-chegada', 'pronta');
