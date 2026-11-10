@@ -346,6 +346,7 @@ Organização
    - A regra vale para os registros de negócio. As credenciais se substituem: o segredo da verificação em dois passos e os códigos de recuperação são apagados ao desativar ou ao gerar de novo, e a auditoria guarda o histórico. As sessões nunca se apagam, só se encerram.
    - A foto da pessoa também se substitui. A foto trocada ou removida deixa de ser entregue na hora e é apagada do armazenamento na manutenção diária; o registro do arquivo fica, sem o conteúdo, e a auditoria guarda a troca.
    - A anonimização (seção 9.9) apaga os dados pessoais de uma pessoa, e não o registro dela.
+   - A planta do mapa é um desenho enviado: quem cuida do mapa a substitui por outro arquivo e a exclui. A substituição mantém o nome, o local e as posições. A exclusão apaga o desenho e as posições do que estava nela, o que estava posicionado continua cadastrado, e a auditoria guarda o nome, as medidas e a quantidade de posições apagadas.
 9. **Personalização em três níveis:** organização → perfil → usuário, incluindo visões de tabela por usuário e visões compartilhadas da organização.
    - O F2c entrega a organização e o usuário, resolvidos campo a campo: o padrão de fábrica, o da organização e a escolha do usuário. O nível do perfil entra no A1, e as visões de tabela, no P1c.
    - Os padrões da organização vão para a auditoria; as preferências de cada usuário, não.
