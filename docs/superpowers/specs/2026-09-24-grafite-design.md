@@ -779,8 +779,8 @@ Em processos abstratos, fluxos 2D leem melhor. O 3D só entra onde existe espaç
    - Sessão guardada no banco, com cookie HttpOnly, Secure e SameSite=Lax. O banco guarda só o hash do token.
    - Expiração depois de 2 h sem uso e de 12 h no total. Fechar o navegador não encerra a sessão. A conexão de eventos e as atualizações que a tela faz sozinha, sem o usuário interagir, não contam como uso.
    - Bloqueio progressivo por usuário: 5 recusas seguidas bloqueiam por 1 min, e cada recusa depois de um bloqueio dobra o tempo, até 15 min. O bloqueio vale também para um usuário que não existe, e a mensagem nunca diz se o usuário existe.
-   - Passos pendentes: depois da senha, a sessão só resolve o que falta, nesta ordem: o código do segundo passo, a troca de uma senha temporária e o cadastro dos dois passos exigidos. Pendente, ela dura 10 min, e o token é trocado quando a pendência termina.
-   - Cada usuário vê e encerra as próprias sessões. Trocar a senha ou ativar os dois passos encerra as outras.
+   - Passos pendentes: depois da senha, a sessão só resolve o que falta, nesta ordem: o código do segundo passo, que o aparelho confiável dispensa, a troca de uma senha temporária e o cadastro dos dois passos exigidos. Pendente, ela dura 10 min, e o token é trocado quando a pendência termina.
+   - Cada usuário vê e encerra as próprias sessões. Trocar a senha ou ativar os dois passos encerra as outras e esquece os aparelhos confiáveis.
    - A primeira conta de cada organização nasce de um comando no servidor, com senha temporária. O mesmo comando é a recuperação de último recurso de um acesso perdido.
    - A exceção é o ambiente de desenvolvimento: a conta `admin` da organização de desenvolvimento entra com a senha fixa `admin123`, sem troca. Só o `pnpm dev` grava essa senha, numa organização que só tem endereços locais e fora da produção.
 2. **Verificação em dois passos** (código de app autenticador), obrigatória para quem administra ou acessa o cofre. Revelar ou copiar um segredo pede a confirmação pelo código do app de novo, mesmo com a sessão aberta. O código certo libera revelar e copiar por 5 minutos naquela sessão (P6); os códigos de recuperação não liberam o cofre.
@@ -788,6 +788,9 @@ Em processos abstratos, fluxos 2D leem melhor. O 3D só entra onde existe espaç
    - Dez códigos de recuperação de uso único, guardados em hash.
    - A chave de cada app fica cifrada, com uma chave que vem do ambiente.
    - A exigência vem da conta ou de qualquer perfil dela, como o Administrador. Ela vale já: uma sessão aberta pede o cadastro na requisição seguinte e mantém o prazo que tinha.
+   - Aparelho confiável (change aparelho-confiavel): no passo do código, "Confiar neste aparelho" faz as entradas seguintes daquela conta naquele navegador pedirem só a senha, até o prazo acabar. O aparelho é um segundo token, só em hash no banco, num cookie HttpOnly, Secure e SameSite=Strict que só vai às rotas da entrada, e é conferido só depois da senha certa. Ele não nasce do código de recuperação, não libera o cofre e não dispensa a troca da senha temporária nem o cadastro dos dois passos.
+   - O prazo vai de 0 a 90 dias, contados da marcação, com 30 de fábrica e 0 para pedir o código sempre. Vale o da conta; sem ele, o menor dos perfis em vigor; sem nenhum, o da organização. O prazo é lido a cada entrada, e o uso não o renova.
+   - O usuário esquece os aparelhos nos Ajustes, e a administração esquece os de outra conta. Trocar ou redefinir a senha, ativar, desativar ou remover os dois passos e inativar a conta ou a pessoa os esquecem sozinhos, e a manutenção diária apaga os marcados há mais de 90 dias.
 3. **Permissão com escopo**
    - O catálogo de permissões fica no código e cresce com cada módulo. Perfis (conjuntos de permissões), grupos (conjuntos de contas) e atribuições são dados da organização.
    - O escopo fica na atribuição: o perfil dado a uma conta ou a um grupo vale para a organização inteira ou para um ramo da árvore de locais. Uma permissão que só faz sentido na organização inteira, como consultar a auditoria, não vale num ramo.
@@ -1161,6 +1164,7 @@ As curvas são `padrao`, `saida`, `mola` e `mola-suave`, definidas em `escalas.t
 | Sessão | Termina depois de 2 h sem uso ou de 12 h desde que passou a valer; pendente, termina 10 min depois da entrada |
 | Bloqueio da entrada | 5 recusas seguidas do mesmo usuário → 1 min; cada recusa depois de um bloqueio dobra o tempo (2, 4 e 8 min), até 15 min |
 | Código do segundo passo | 6 dígitos a cada 30 s; aceita o intervalo atual e os dois vizinhos; 5 códigos errados encerram a entrada pendente |
+| Aparelho confiável | Dispensa o código por 0 a 90 dias da marcação, 30 de fábrica; até 10 por conta, o 11º tira o usado há mais tempo; apagado 90 dias depois da marcação |
 | Resumo da linha | 1,5 s parado sobre a linha |
 | Polegar da barra de rolagem | À vista por 1 s depois da última rolagem da área |
 

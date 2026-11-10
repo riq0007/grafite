@@ -25,7 +25,7 @@
 ## 5. Fechamento
 
 - [x] 5.1 Escrever o teste ponta a ponta da pilha: entrar com o código marcando o aparelho, sair, entrar só com a senha, esquecer o aparelho e entrar com o código de novo. Verificar: o `pnpm test:e2e:pilha` passa.
-- [ ] 5.2 Atualizar a spec mestre (seção 9, na entrada e nos dois passos), o runbook, na parte do acesso perdido, e o mapa. Verificar: os testes da documentação e do mapa passam.
+- [x] 5.2 Atualizar a spec mestre (seção 9, na entrada e nos dois passos), o runbook, na parte do acesso perdido, e o mapa. Verificar: os testes da documentação e do mapa passam.
 - [ ] 5.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
