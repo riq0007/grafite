@@ -21,7 +21,7 @@
 - [x] 4.1 Conferir no `pnpm dev`: subir a Operação, tirar as Salas, abrir as Salas pelo Mais e pela busca, restaurar, e repetir com o dock à esquerda e numa janela baixa. Verificar: o dock muda na hora, o Mais aparece com as Salas, e nada se sobrepõe à barra superior.
 - [x] 4.2 Gravar a referência visual da história nova do dock. Verificar: o `pnpm test:visual` passa.
 - [x] 4.3 Atualizar a spec mestre (seções 7.2 e 7.4) e o mapa. Verificar: os testes da documentação e do mapa passam.
-- [ ] 4.4 Conferir as verificações:
+- [x] 4.4 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
   - `pnpm test`;
