@@ -193,10 +193,11 @@
  * Seção Dock: os módulos do dock (change dock-personalizavel), em duas listas, a do dock e a do
  * Mais, cada módulo numa linha, com o nome à esquerda e os botões dele à direita.
  */
+/* A largura comporta o nome mais longo, "Gestão de ativos", e os três botões numa linha só. */
 .listasDeModulos {
   display: grid;
   gap: var(--esp-4);
-  max-width: calc(var(--esp-12) * 8);
+  max-width: calc(var(--esp-12) * 10);
 }
 
 /* Um texto de apoio da parte, como onde Ajustes fica e a lista sem nenhum módulo. */
