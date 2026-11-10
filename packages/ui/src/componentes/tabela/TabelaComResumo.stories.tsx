@@ -44,7 +44,10 @@ interface DefinicaoDaColuna {
   mono?: boolean;
 }
 
-/** Sete colunas: as três primeiras cabem na área de 384 px, e as quatro últimas ficam além dela. */
+/**
+ * Sete colunas: as três primeiras cabem na área de 384 px, ao lado da barra de rolagem, e as quatro
+ * últimas ficam além dela.
+ */
 const COLUNAS: DefinicaoDaColuna[] = [
   { id: 'nome', rotulo: 'Equipamento', largura: 150, valor: (ativo) => ativo.nome },
   {
@@ -130,7 +133,8 @@ function TabelaComResumo({
   return (
     <div
       style={{
-        width: '384px',
+        // Os 384 px das colunas e os 12 px da barra de rolagem da tabela, que rola para baixo.
+        width: 'calc(384px + var(--esp-3))',
         ...(virtualizada ? { height: '280px', display: 'flex', flexDirection: 'column' } : {}),
       }}
     >

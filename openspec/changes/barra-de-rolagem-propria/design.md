@@ -56,6 +56,8 @@ O `:hover` vale para todos os ancestrais do elemento sob o ponteiro. Com o ponte
 
 Sem animação: os pseudo-elementos da barra não aceitam transição de forma confiável, e a mudança é de um elemento pequeno.
 
+O Chromium só refaz o estilo das partes da barra quando o estilo do próprio elemento muda. O foco e a marca `data-rolando` mudam o elemento, mas o ponteiro sobre a área não mudava nada nela, e o polegar continuava invisível até a próxima rolagem. Por isso a base registra a propriedade `--area-sob-o-ponteiro`, não herdada, que passa a 1 no elemento sob o ponteiro: nenhuma regra a lê, e ela existe só para o estilo do elemento mudar e a regra do polegar valer na hora. Não herdada, ela não refaz o estilo dos descendentes.
+
 ### 5. A preferência
 
 `aparencia.barraDeRolagem` é `'ao-rolar'` ou `'sempre'`, com `'ao-rolar'` no padrão de fábrica e o leitor `umDe`, como a densidade. Ela vai para a raiz como `data-rolagem`, entra na lista que o `index.html` copia antes da primeira pintura e, com `sempre`, dá a cor ao polegar sem as condições da decisão 4.
@@ -66,7 +68,17 @@ Na seção Aparência, é um grupo de duas opções, com a explicação de cada 
 
 `barraDoSistemaSobreposta()` mede, na partida, uma área de teste fora da tela: se a largura dela com a barra é igual à sem a barra, o sistema sobrepõe a barra. Nesse caso a raiz ganha `data-barra-do-sistema`, nenhuma regra da barra própria vale, e a seção Aparência mostra "Neste aparelho vale a barra de rolagem do sistema.".
 
-A medida não é uma preferência e não entra na cópia do navegador: ela roda antes de a casca aparecer, quando ainda não há área que rola na tela.
+A medida não é uma preferência e não entra na cópia do navegador: ela roda antes de a casca aparecer, quando ainda não há área que rola na tela. A raiz fica marcada durante a medida, para a área de teste mostrar a barra do sistema, e não a própria, que sempre ocupa espaço.
+
+### 7. O navegador dos testes
+
+O Playwright abre o Chromium com as barras de rolagem escondidas (`--hide-scrollbars`): nenhuma barra ocupa espaço, a medida da decisão 6 dá "sobreposta", e a barra própria não vale. Os testes de ponta a ponta continuam assim, como no celular.
+
+O catálogo passa a testar com as barras à vista, sem essa opção, como no computador de quem usa: a barra própria reserva os 12 px dela, e as histórias medem a área que sobra. Três histórias do resumo da linha ganharam esses 12 px na área da tabela.
+
+O `:hover` e o `:focus-visible` do CSS só ligam com o ponteiro e o teclado de verdade, e os eventos sintéticos das histórias não os ligam. A preparação dos testes do catálogo liga os comandos do Playwright que põem o ponteiro sobre um elemento e apertam uma tecla (`src/teste/navegadorDeTeste.ts`); no catálogo aberto no navegador, quem passa o ponteiro é a pessoa.
+
+O navegador responde pela cor do polegar com o ponteiro nele, mais forte, sempre que o ponteiro está na área: a história confere que o polegar saiu do transparente, e a cor de cada caso fica com a captura e com a conferência no app.
 
 ## Risks / Trade-offs
 

@@ -3,15 +3,26 @@ import { setProjectAnnotations } from '@storybook/react-vite';
 import { configure } from 'storybook/test';
 import { beforeEach } from 'vitest';
 import { commands } from 'vitest/browser';
+import { ligarNavegadorDeTeste } from '../src/teste/navegadorDeTeste.ts';
 import * as anotacoesDoProjeto from './preview.tsx';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
     tirarPonteiroDaPagina: () => Promise<void>;
+    porPonteiroSobre: (seletor: string, ponto?: { x: number; y: number }) => Promise<void>;
+    apertarTecla: (tecla: string) => Promise<void>;
   }
 }
 
 setProjectAnnotations([anotacoesDeAcessibilidade, anotacoesDoProjeto]);
+
+// O ponteiro e o teclado de verdade, para as histórias que conferem o `:hover` e o `:focus-visible`
+// do CSS (src/teste/navegadorDeTeste.ts).
+ligarNavegadorDeTeste({
+  porPonteiroSobre: (seletor, ponto) => commands.porPonteiroSobre(seletor, ponto),
+  tirarPonteiro: () => commands.tirarPonteiroDaPagina(),
+  apertarTecla: (tecla) => commands.apertarTecla(tecla),
+});
 
 // O waitFor e os findBy das histórias esperam até 10 s, no lugar de 1 s, o padrão da Testing
 // Library: com o executor do CI carregado, a tela leva mais de 1 s para chegar ao que a história

@@ -10,3 +10,19 @@ import type { BrowserCommand } from 'vitest/node';
 export const tirarPonteiroDaPagina: BrowserCommand<[]> = async ({ page }) => {
   await page.mouse.move(-1, -1);
 };
+
+/**
+ * Põe o cursor real do navegador sobre o elemento da história, no meio dele ou no ponto dado, a
+ * partir do canto de cima à esquerda. O `:hover` do CSS só liga com o cursor de verdade: os eventos
+ * de ponteiro sintéticos das histórias não o ligam.
+ */
+export const porPonteiroSobre: BrowserCommand<
+  [seletor: string, ponto?: { x: number; y: number }]
+> = async ({ iframe }, seletor, ponto) => {
+  await iframe.locator(seletor).hover({ position: ponto });
+};
+
+/** Aperta uma tecla de verdade, como a que rola a área em foco ou a que liga o `:focus-visible`. */
+export const apertarTecla: BrowserCommand<[tecla: string]> = async ({ page }, tecla) => {
+  await page.keyboard.press(tecla);
+};

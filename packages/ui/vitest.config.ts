@@ -3,7 +3,11 @@ import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
-import { tirarPonteiroDaPagina } from './.storybook/comandos-do-navegador.ts';
+import {
+  apertarTecla,
+  porPonteiroSobre,
+  tirarPonteiroDaPagina,
+} from './.storybook/comandos-do-navegador.ts';
 
 const pasta = dirname(fileURLToPath(import.meta.url));
 
@@ -31,9 +35,12 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: playwright(),
+            // O Playwright abre o Chromium com as barras de rolagem escondidas. O catálogo testa com
+            // elas à vista, como no computador de quem usa: a barra própria reserva os 12 px dela, e
+            // as histórias medem a área que sobra (change barra-de-rolagem-propria).
+            provider: playwright({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }),
             instances: [{ browser: 'chromium' }],
-            commands: { tirarPonteiroDaPagina },
+            commands: { apertarTecla, porPonteiroSobre, tirarPonteiroDaPagina },
           },
           setupFiles: ['.storybook/vitest.setup.ts'],
           // Cada história pode esperar mais de uma vez os 10 s da Testing Library com o executor

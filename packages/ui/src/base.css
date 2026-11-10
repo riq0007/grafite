@@ -35,6 +35,98 @@ th {
   outline-offset: 2px;
 }
 
+/*
+ * A barra de rolagem própria (spec componentes-base, "Barra de rolagem própria"): a mesma em toda
+ * área que rola, fina, sem o trilho pintado e sem as setas. Fica de fora onde o sistema já sobrepõe
+ * a barra ao conteúdo, com a raiz marcada na partida (casca/barraDeRolagem.ts), e na área que a
+ * esconde de propósito, com `scrollbar-width: none`.
+ */
+html:not([data-barra-do-sistema])::-webkit-scrollbar,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar {
+  width: var(--esp-3);
+  height: var(--esp-3);
+}
+
+html:not([data-barra-do-sistema])::-webkit-scrollbar-track,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar-track,
+html:not([data-barra-do-sistema])::-webkit-scrollbar-corner,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/*
+ * O polegar tem 6 px em repouso e 8 px com o ponteiro nele: a borda transparente ocupa o resto dos
+ * 12 px da barra, e a largura da barra não muda, para nada sair do lugar. Com "Ao rolar", a
+ * preferência de fábrica, ele fica invisível até uma das condições de baixo. Sem transição: a
+ * mudança é de um elemento pequeno, e a barra não a aceita de forma confiável.
+ */
+html:not([data-barra-do-sistema])::-webkit-scrollbar-thumb,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar-thumb {
+  border: calc(var(--esp-3) / 4) solid transparent;
+  border-radius: var(--raio-menu);
+  background-color: transparent;
+  background-clip: padding-box;
+}
+
+/*
+ * O Chromium só refaz o estilo das partes da barra quando o estilo do próprio elemento muda, e o
+ * ponteiro sobre a área não muda nada nela: esta propriedade, registrada e não herdada, muda com o
+ * ponteiro só para a regra do polegar, logo abaixo, valer na hora. Nenhuma regra a lê.
+ */
+@property --area-sob-o-ponteiro {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+html:not([data-barra-do-sistema]):hover,
+html:not([data-barra-do-sistema]) :hover {
+  --area-sob-o-ponteiro: 1;
+}
+
+/*
+ * À vista: com o ponteiro sobre a área, com o foco do teclado na própria área e enquanto ela rola,
+ * com a marca do `acompanharRolagem`. O foco num item de dentro não conta: quase sempre há um na
+ * janela, e o polegar dela nunca sumiria. Com "Sempre visível", em toda área.
+ */
+html:not([data-barra-do-sistema]):hover::-webkit-scrollbar-thumb,
+html:not([data-barra-do-sistema]) :hover::-webkit-scrollbar-thumb,
+html:not([data-barra-do-sistema]) :focus-visible::-webkit-scrollbar-thumb,
+html:not([data-barra-do-sistema])[data-rolando]::-webkit-scrollbar-thumb,
+html:not([data-barra-do-sistema]) [data-rolando]::-webkit-scrollbar-thumb,
+html[data-rolagem="sempre"]:not([data-barra-do-sistema])::-webkit-scrollbar-thumb,
+html[data-rolagem="sempre"]:not([data-barra-do-sistema]) ::-webkit-scrollbar-thumb {
+  background-color: var(--cor-borda-controle);
+}
+
+/* Com o ponteiro no polegar ou arrastando-o: mais forte e mais largo. */
+html:not([data-barra-do-sistema])::-webkit-scrollbar-thumb:hover,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar-thumb:hover,
+html:not([data-barra-do-sistema])::-webkit-scrollbar-thumb:active,
+html:not([data-barra-do-sistema]) ::-webkit-scrollbar-thumb:active {
+  border-width: calc(var(--esp-3) / 6);
+  background-color: var(--cor-texto-2);
+}
+
+/*
+ * O Firefox não tem os pseudo-elementos: vale a barra fina dele, com as mesmas cores e condições.
+ * As regras não pesam na especificidade, para a área que esconde a barra continuar sem ela, e
+ * cada elemento recebe a cor dele, porque a herdada mostraria o polegar das áreas vizinhas.
+ */
+@supports not selector(::-webkit-scrollbar) {
+  :where(html:not([data-barra-do-sistema])),
+  :where(html:not([data-barra-do-sistema])) :where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  :where(html:not([data-barra-do-sistema])) :where(:hover, :focus-visible, [data-rolando]),
+  :where(html[data-rolagem="sempre"]:not([data-barra-do-sistema])),
+  :where(html[data-rolagem="sempre"]:not([data-barra-do-sistema])) :where(*) {
+    scrollbar-color: var(--cor-borda-controle) transparent;
+  }
+}
+
 /* Cursor suavizado (spec cursor-suavizado): com o ponto e o anel à vista, o cursor do sistema some.
    O atributo só existe fora dos campos de texto e de [data-cursor-nativo] (cursor.ts decide). */
 html[data-cursor-suavizado],
