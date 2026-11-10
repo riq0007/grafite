@@ -1,7 +1,7 @@
 ## 1. As preferências
 
 - [x] 1.1 Escrever primeiro os testes e depois o campo `dock.modulos` no domínio, nos esquemas da API e no contrato (design, decisão 1). Verificar: os testes do domínio passam com "Módulo repetido na lista", "Ajustes na lista" e "Preferências de antes desta lista", o teste de integração das preferências grava a lista na conta e nos padrões da organização, e o `pnpm contrato:verificar` passa.
-- [ ] 1.2 Mover as funções da ordem para `apps/web/src/preferencias/listaOrdenada.ts`, com os testes delas, e apontar o Início para lá (decisão 1). Verificar: os testes da lista e os do Início passam sem mudar o que conferem.
+- [x] 1.2 Mover as funções da ordem para `apps/web/src/preferencias/listaOrdenada.ts`, com os testes delas, e apontar o Início para lá (decisão 1). Verificar: os testes da lista e os do Início passam sem mudar o que conferem.
 
 ## 2. O dock
 

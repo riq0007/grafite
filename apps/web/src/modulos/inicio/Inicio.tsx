@@ -6,11 +6,11 @@ import { useApi } from '../../api/useApi.tsx';
 import { useAbrirBusca } from '../../busca/abrirBusca.tsx';
 import { vigiarOMinuto } from '../../casca/status/relogio.ts';
 import { useCanal } from '../../eventos/useCanal.tsx';
+import { moverItem, ocultarItem, ordenarItens } from '../../preferencias/listaOrdenada.ts';
 import { usePreferencias } from '../../preferencias/usePreferencias.tsx';
 import { useAcesso } from '../../sessao/useAcesso.ts';
 import { useServidor } from '../../sessao/useSessao.tsx';
 import { registroDaConta } from '../registroDaConta.ts';
-import { moverBloco, ocultarBloco, ordenarBlocos } from './blocos.ts';
 import estilos from './Inicio.module.css';
 import { useOcorrencias } from './useOcorrencias.ts';
 
@@ -57,7 +57,7 @@ export function Inicio() {
     ],
     [daConta],
   );
-  const { visiveis, ocultos, lista } = ordenarBlocos(registrados, preferencias.inicio.blocos);
+  const { visiveis, ocultos, lista } = ordenarItens(registrados, preferencias.inicio.blocos);
   const [personalizando, definirPersonalizando] = useState(false);
   const gravar = (blocos: typeof lista) => mudar('inicio', { blocos });
 
@@ -70,7 +70,7 @@ export function Inicio() {
           nivel="terciario"
           aria-label={`Subir ${bloco.titulo}`}
           isDisabled={indice === 0}
-          onPress={() => gravar(moverBloco(lista, bloco.id, -1))}
+          onPress={() => gravar(moverItem(lista, bloco.id, -1))}
         >
           Subir
         </Botao>
@@ -78,7 +78,7 @@ export function Inicio() {
           nivel="terciario"
           aria-label={`Descer ${bloco.titulo}`}
           isDisabled={indice === visiveis.length - 1}
-          onPress={() => gravar(moverBloco(lista, bloco.id, 1))}
+          onPress={() => gravar(moverItem(lista, bloco.id, 1))}
         >
           Descer
         </Botao>
@@ -86,7 +86,7 @@ export function Inicio() {
           <Botao
             nivel="terciario"
             aria-label={`Ocultar ${bloco.titulo}`}
-            onPress={() => gravar(ocultarBloco(lista, bloco.id, true))}
+            onPress={() => gravar(ocultarItem(lista, bloco.id, true))}
           >
             Ocultar
           </Botao>
@@ -152,7 +152,7 @@ export function Inicio() {
                 <Botao
                   nivel="terciario"
                   aria-label={`Mostrar ${bloco.titulo}`}
-                  onPress={() => gravar(ocultarBloco(lista, bloco.id, false))}
+                  onPress={() => gravar(ocultarItem(lista, bloco.id, false))}
                 >
                   Mostrar
                 </Botao>
