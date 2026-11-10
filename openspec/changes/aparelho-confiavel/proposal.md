@@ -30,6 +30,7 @@ Nenhuma.
 - `ajustes-do-sistema`: a parte "Aparelhos confiáveis" da seção Conta.
 - `administracao-de-pessoas`: os aparelhos e o prazo de uma conta pela administração.
 - `perfis-e-grupos`: o prazo da confiança no perfil.
+- `fila-de-tarefas`: a manutenção diária apaga os aparelhos confiáveis marcados há mais de 90 dias.
 
 ## Impact
 

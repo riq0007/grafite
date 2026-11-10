@@ -6,11 +6,13 @@
 // decisão 9) e só então apaga, em blocos, as leituras da coleta e as chaves dos lotes com mais de 30
 // dias, deixando o estado atual (design do P2a), os agregados com mais de 13 meses, as notificações
 // com mais de 90 dias, lidas ou não (design do P3b, decisão 12), os alertas resolvidos há mais de
-// 13 meses (design do P3d, decisão 5) e os rascunhos dos cadastros parados há mais de 30 dias
-// (change cadastro-em-etapas, decisão 10). Apagar o que já não existe não é erro, e agregar de novo
+// 13 meses (design do P3d, decisão 5), os rascunhos dos cadastros parados há mais de 30 dias
+// (change cadastro-em-etapas, decisão 10) e os aparelhos confiáveis marcados há mais de 90 dias, o
+// teto do prazo (change aparelho-confiavel, design, decisão 5). Apagar o que já não existe não é erro, e agregar de novo
 // regrava o mesmo, então rodar de novo dá o mesmo resultado. Não grava auditoria, porque a retenção
 // não é uma ação de alguém; o log diz quanto saiu, e o rascunho descartado avisa quem importou.
 import {
+  aparelhosConfiaveis,
   arquivos,
   type Banco,
   eventos,
@@ -19,6 +21,7 @@ import {
   naOrganizacao,
   rascunhosDeCadastro,
 } from '@grafite/db';
+import { PRAZO_DA_CONFIANCA } from '@grafite/domain';
 import { and, asc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { chaveDoArquivo, VARIANTES, type Variante } from '../arquivos/armazenamento.ts';
@@ -42,6 +45,8 @@ const VALIDADE_DAS_NOTIFICACOES = 90 * 24 * 60 * 60_000;
 const VALIDADE_DOS_ALERTAS_RESOLVIDOS = '13 months';
 /** Por quanto tempo o rascunho de um cadastro fica guardado sem mudar. */
 const VALIDADE_DO_RASCUNHO_DE_CADASTRO = 30 * 24 * 60 * 60_000;
+/** Por quanto tempo um aparelho confiável fica guardado: o teto do prazo, contado da marcação. */
+const VALIDADE_DOS_APARELHOS = PRAZO_DA_CONFIANCA.maximo * 24 * 60 * 60_000;
 const DIA = 24 * 60 * 60;
 const FUSO = 'America/Sao_Paulo';
 
@@ -76,6 +81,18 @@ async function apagarRascunhosDeCadastroParados(banco: Banco, orgId: string, mom
       .delete(rascunhosDeCadastro)
       .where(lt(rascunhosDeCadastro.atualizadoEm, limite))
       .returning({ id: rascunhosDeCadastro.id }),
+  );
+  return apagados.length;
+}
+
+/** Apaga os aparelhos confiáveis marcados há mais de 90 dias: nenhum prazo os alcança mais. */
+async function apagarAparelhosVencidos(banco: Banco, orgId: string, momento: Date) {
+  const limite = new Date(momento.getTime() - VALIDADE_DOS_APARELHOS);
+  const apagados = await naOrganizacao(banco, orgId, (tx) =>
+    tx
+      .delete(aparelhosConfiaveis)
+      .where(lt(aparelhosConfiaveis.criadoEm, limite))
+      .returning({ id: aparelhosConfiaveis.id }),
   );
   return apagados.length;
 }
@@ -319,6 +336,7 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
       const arquivosApagados = await apagarArquivosRemovidos(contexto, orgId, momento, sinal);
       const rascunhosDescartados = await descartarRascunhosEsquecidos(banco, orgId, momento);
       const cadastrosParados = await apagarRascunhosDeCadastroParados(banco, orgId, momento);
+      const aparelhosVencidos = await apagarAparelhosVencidos(banco, orgId, momento);
       // Os agregados antes: a leitura apagada já está no agregado da hora dela.
       const agregados = await agregarLeituras(banco, orgId, momento);
       const daColeta = await apagarLeiturasAntigas(banco, orgId, momento, sinal);
@@ -333,6 +351,7 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
           arquivos: arquivosApagados,
           rascunhos: rascunhosDescartados,
           rascunhosDeCadastro: cadastrosParados,
+          aparelhos: aparelhosVencidos,
           leituras: daColeta.leituras,
           lotes: daColeta.lotes,
           agregados,
