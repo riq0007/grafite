@@ -703,6 +703,13 @@ export {
   validarResolucaoDaOrdem,
 } from './ordens/ordens.ts';
 export {
+  EXIBICOES_DO_PAINEL,
+  EXIBICOES_DO_PAINEL_NA_TELA,
+  type ExibicaoDoPainel,
+  exibicaoDaResposta,
+  type RespostaComCabecalhos,
+} from './paineis/exibicao.ts';
+export {
   type CampoDoPainel,
   conferirPainel,
   type DadosDoPainel,
