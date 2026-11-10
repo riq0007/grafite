@@ -530,7 +530,8 @@ As preferências que o protótipo não tinha seguem o comportamento das seções
 - avisos de Atenção e de Informação ligados, com 6 s na tela;
 - linhas alternadas e miniaturas ligadas nas tabelas;
 - o fuso horário do sistema operacional;
-- a tela inicial por severidade e, dentro dela, a mais antiga primeiro.
+- a tela inicial por severidade e, dentro dela, a mais antiga primeiro;
+- a barra de rolagem "Ao rolar": o polegar aparece com o ponteiro sobre a área, enquanto ela rola e com o foco do teclado nela; a outra escolha é "Sempre visível".
 
 Cada organização pode definir os próprios padrões, e cada usuário muda os seus em Ajustes.
 
@@ -1154,6 +1155,7 @@ As curvas são `padrao`, `saida`, `mola` e `mola-suave`, definidas em `escalas.t
 | Bloqueio da entrada | 5 recusas seguidas do mesmo usuário → 1 min; cada recusa depois de um bloqueio dobra o tempo (2, 4 e 8 min), até 15 min |
 | Código do segundo passo | 6 dígitos a cada 30 s; aceita o intervalo atual e os dois vizinhos; 5 códigos errados encerram a entrada pendente |
 | Resumo da linha | 1,5 s parado sobre a linha |
+| Polegar da barra de rolagem | À vista por 1 s depois da última rolagem da área |
 
 ---
 

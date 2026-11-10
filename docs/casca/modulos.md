@@ -951,6 +951,15 @@ export function Segmento({ children, className, ...resto }: PropsDoSegmento) {
 
 Itens de menu, opções de lista, elementos desabilitados e áreas grandes, como linhas de tabela, nunca são abraçados.
 
+## Barra de rolagem
+
+A área que rola de um módulo não declara barra nenhuma: a folha base do `@grafite/ui` dá a mesma barra a toda área com `overflow` (spec componentes-base, "Barra de rolagem própria"). Ela é fina, e o polegar aparece com o ponteiro sobre a área, com o foco do teclado nela e enquanto ela rola, ou sempre, pela preferência `aparencia.barraDeRolagem`. Onde o sistema já sobrepõe a barra ao conteúdo, como no celular, vale a dele. O módulo:
+- não usa `scrollbar-width`, `scrollbar-color` nem os pseudo-elementos da barra; a exceção é `scrollbar-width: none`, na área que esconde a barra de propósito, como uma barra de abas;
+- conta com os 12 px da barra na largura da área que rola para baixo: o espaço fica reservado, e o conteúdo não muda de lugar quando o polegar aparece;
+- não marca a rolagem: a casca acompanha a de qualquer área (`data-rolando`), também a que o módulo faz pelo código.
+
+Nos testes de ponta a ponta o navegador esconde as barras, como o celular, e vale a do sistema; as histórias do catálogo rodam com as barras à vista.
+
 ## Permissões
 
 O que cada conta pode fazer vem dos perfis dela, num local e no que está dentro dele ou na organização inteira (design do F2b, decisões 2 e 4). O módulo declara as permissões dele no catálogo, mostra só o que a conta pode usar e deixa a API decidir cada registro.
