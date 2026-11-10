@@ -28,7 +28,7 @@ import { consultar } from '../../api/consultas.ts';
 import { useApi } from '../../api/useApi.tsx';
 import estilos from './Ativos.module.css';
 import { CHAVE_DOS_ATIVOS } from './consultas.ts';
-import { IdadeEDesatualizado } from './disponibilidade.tsx';
+import { IdadeEDesatualizado, LeituraNaCelula } from './disponibilidade.tsx';
 
 export type PainelDeSuprimentos = components['schemas']['SuprimentosDoAtivo'];
 type NaLista = components['schemas']['SuprimentosNaLista'];
@@ -68,21 +68,28 @@ export function SuprimentosNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <span className={estilos.medidorNaCelula}>
-        <Medidor
-          rotulo={`Menor nível: ${menor.descricao}`}
-          valor={menor.nivel}
-          tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
-          tamanho="compacto"
-          marcas={[]}
-          semNumero
-        />
-      </span>
-      <span className="mono">{`${menor.nivel}%`}</span>
+    <LeituraNaCelula
+      fixo={
+        <>
+          <span className={estilos.medidorNaCelula}>
+            <Medidor
+              rotulo={`Menor nível: ${menor.descricao}`}
+              valor={menor.nivel}
+              tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
+              tamanho="compacto"
+              marcas={[]}
+              semNumero
+            />
+          </span>
+          <span className="mono">{`${menor.nivel}%`}</span>
+        </>
+      }
+      momento={menor.momento}
+      agora={agora}
+      metrica="impressora.suprimento"
+    >
       <span>{menor.descricao}</span>
-      <IdadeEDesatualizado momento={menor.momento} agora={agora} metrica="impressora.suprimento" />
-    </span>
+    </LeituraNaCelula>
   );
 }
 
@@ -95,10 +102,12 @@ export function PaginasNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <span className="mono">{paginas(total.paginas)}</span>
-      <IdadeEDesatualizado momento={total.momento} agora={agora} metrica="impressora.contador" />
-    </span>
+    <LeituraNaCelula
+      fixo={<span className="mono">{paginas(total.paginas)}</span>}
+      momento={total.momento}
+      agora={agora}
+      metrica="impressora.contador"
+    />
   );
 }
 

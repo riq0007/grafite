@@ -9,7 +9,14 @@ import {
   ROTULOS_DAS_SITUACOES_DA_DISPONIBILIDADE,
   type SituacaoDaDisponibilidade,
 } from '@grafite/domain';
-import { idadeRelativa, RotuloDeSituacao, type Situacao, useDataHora } from '@grafite/ui';
+import {
+  idadeRelativa,
+  RotuloDeSituacao,
+  type Situacao,
+  useDataHora,
+  ValorComposto,
+} from '@grafite/ui';
+import type { ReactNode } from 'react';
 import estilos from './Ativos.module.css';
 
 export type Disponibilidade = components['schemas']['DisponibilidadeDoAtivo'];
@@ -62,10 +69,56 @@ export function IdadeEDesatualizado({
   return (
     <>
       <IdadeDaLeitura momento={momento} agora={agora} />
-      {desatualizada(new Date(momento), agora, metrica) && (
-        <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>
-      )}
+      <Desatualizado momento={momento} agora={agora} metrica={metrica} />
     </>
+  );
+}
+
+/** "Desatualizado", com a leitura velha para a métrica; senão, nada. */
+export function Desatualizado({
+  momento,
+  agora,
+  metrica,
+}: {
+  momento: string | null;
+  agora: Date;
+  metrica?: MetricaDaColeta;
+}) {
+  if (!momento || !desatualizada(new Date(momento), agora, metrica)) return null;
+  return <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>;
+}
+
+/**
+ * O valor de uma leitura na célula da tabela (spec componentes-base, "Célula numa linha só"): os
+ * rótulos na parte que não encolhe, com o "Desatualizado" ao lado, e a idade na parte que encolhe,
+ * depois do texto que a tela puser antes dela.
+ */
+export function LeituraNaCelula({
+  fixo,
+  momento,
+  agora,
+  metrica,
+  children,
+}: {
+  fixo: ReactNode;
+  momento: string | null;
+  agora: Date;
+  metrica?: MetricaDaColeta;
+  /** O texto antes da idade, como a descrição do suprimento. */
+  children?: ReactNode;
+}) {
+  return (
+    <ValorComposto
+      fixo={
+        <>
+          {fixo}
+          <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+        </>
+      }
+    >
+      {children}
+      {momento && <IdadeDaLeitura momento={momento} agora={agora} />}
+    </ValorComposto>
   );
 }
 
@@ -78,10 +131,11 @@ export function DisponibilidadeNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela disponibilidade={disponibilidade} />
-      <IdadeEDesatualizado momento={disponibilidade.momento} agora={agora} />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela disponibilidade={disponibilidade} />}
+      momento={disponibilidade.momento}
+      agora={agora}
+    />
   );
 }
 

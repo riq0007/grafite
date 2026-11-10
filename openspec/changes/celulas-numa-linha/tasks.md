@@ -6,7 +6,7 @@
 
 ## 2. As células
 
-- [ ] 2.1 Escrever primeiro os testes e depois o `ValorComposto` nas quatro células da coleta dos ativos, com o "Desatualizado" no fixo (decisão 2). Verificar: os testes passam com "Disponibilidade numa coluna estreita", "Suprimentos numa coluna estreita" e "Leitura desatualizada", e os da ficha continuam passando com a quebra.
+- [x] 2.1 Escrever primeiro os testes e depois o `ValorComposto` nas quatro células da coleta dos ativos, com o "Desatualizado" no fixo (decisão 2). Verificar: os testes passam com "Disponibilidade numa coluna estreita", "Suprimentos numa coluna estreita" e "Leitura desatualizada", e os da ficha continuam passando com a quebra.
 - [ ] 2.2 Escrever primeiro os testes e depois o `ValorComposto` na situação dos alertas e na validade do cofre. Verificar: os testes das duas tabelas passam com a célula numa linha.
 - [ ] 2.3 Escrever primeiro o teste e depois as larguras de fábrica das colunas da coleta (decisão 4). Verificar: o teste do domínio passa com as larguras novas, e o teste das visões mostra que a largura igual à de fábrica não marca a visão como personalizada.
 

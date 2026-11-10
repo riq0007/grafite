@@ -1757,10 +1757,44 @@ export function useAgora(): Date {
 }
 ```
 
-A célula da disponibilidade junta a situação, a idade e o "Desatualizado":
+A célula da disponibilidade junta a situação, a idade e o "Desatualizado". Na tabela, a linha tem sempre uma linha só (spec componentes-base, "Célula numa linha só"): a célula com mais de uma parte usa o `ValorComposto` do `@grafite/ui`, em que o fixo, com os rótulos de situação, nunca encolhe, e o resto, o texto que os acompanha, encolhe e termina em reticências. A classe que quebra a linha quando falta largura fica só para a ficha. O `LeituraNaCelula` monta isso para qualquer valor coletado, com o "Desatualizado" no fixo e a idade no resto:
 
 ```tsx
 // apps/web/src/modulos/ativos/disponibilidade.tsx (trecho)
+/**
+ * O valor de uma leitura na célula da tabela (spec componentes-base, "Célula numa linha só"): os
+ * rótulos na parte que não encolhe, com o "Desatualizado" ao lado, e a idade na parte que encolhe,
+ * depois do texto que a tela puser antes dela.
+ */
+export function LeituraNaCelula({
+  fixo,
+  momento,
+  agora,
+  metrica,
+  children,
+}: {
+  fixo: ReactNode;
+  momento: string | null;
+  agora: Date;
+  metrica?: MetricaDaColeta;
+  /** O texto antes da idade, como a descrição do suprimento. */
+  children?: ReactNode;
+}) {
+  return (
+    <ValorComposto
+      fixo={
+        <>
+          {fixo}
+          <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+        </>
+      }
+    >
+      {children}
+      {momento && <IdadeDaLeitura momento={momento} agora={agora} />}
+    </ValorComposto>
+  );
+}
+
 /** A disponibilidade na célula da tabela: a situação, a idade e o "Desatualizado". */
 export function DisponibilidadeNaCelula({
   disponibilidade,
@@ -1770,10 +1804,11 @@ export function DisponibilidadeNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela disponibilidade={disponibilidade} />
-      <IdadeEDesatualizado momento={disponibilidade.momento} agora={agora} />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela disponibilidade={disponibilidade} />}
+      momento={disponibilidade.momento}
+      agora={agora}
+    />
   );
 }
 ```
@@ -1791,10 +1826,12 @@ Uma capacidade nova que mostra uma situação, como a saúde do Control iD (spec
 /** A saúde na célula da tabela: a situação, a idade e o "Desatualizado". */
 export function ControlIdNaCelula({ saude, agora }: { saude: SaudeDoControlId; agora: Date }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela saude={saude} />
-      <IdadeEDesatualizado momento={saude.momento} agora={agora} metrica="controlid.sondagem" />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela saude={saude} />}
+      momento={saude.momento}
+      agora={agora}
+      metrica="controlid.sondagem"
+    />
   );
 }
 ```
@@ -1805,7 +1842,8 @@ Um ativo pode ter vários valores da mesma métrica, um por item, como cada supr
 
 - **Na ficha:** os itens numa tabela, na ordem do equipamento, com o nome, o valor em texto e a idade de cada um. O nível tem uma barra só ao lado, na cor de destaque: ela não diz se o valor é bom ou ruim, e um valor que o equipamento não mediu nunca vira número. Quando o equipamento deixa de responder, os itens continuam os da última resposta, com a idade deles.
 - **Na tabela:** a coluna mostra um valor só, como o menor nível medido, com o item ao lado e a idade, e filtra "de e até" pelo número. A unidade, como o "%", vai na coluna (`unidade`), no editor do filtro e no filtro ativo.
-- **A idade:** o `IdadeEDesatualizado` recebe a métrica, porque cada uma tem o intervalo dela.
+- **A idade:** o `LeituraNaCelula`, na tabela, e o `IdadeEDesatualizado`, na ficha, recebem a métrica, porque cada uma tem o intervalo dela.
+- **O corte:** na célula, o medidor e o número ficam no fixo, e o nome do item e a idade, no resto, que encolhe.
 
 ```tsx
 // apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
@@ -1818,21 +1856,28 @@ export function SuprimentosNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <span className={estilos.medidorNaCelula}>
-        <Medidor
-          rotulo={`Menor nível: ${menor.descricao}`}
-          valor={menor.nivel}
-          tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
-          tamanho="compacto"
-          marcas={[]}
-          semNumero
-        />
-      </span>
-      <span className="mono">{`${menor.nivel}%`}</span>
+    <LeituraNaCelula
+      fixo={
+        <>
+          <span className={estilos.medidorNaCelula}>
+            <Medidor
+              rotulo={`Menor nível: ${menor.descricao}`}
+              valor={menor.nivel}
+              tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
+              tamanho="compacto"
+              marcas={[]}
+              semNumero
+            />
+          </span>
+          <span className="mono">{`${menor.nivel}%`}</span>
+        </>
+      }
+      momento={menor.momento}
+      agora={agora}
+      metrica="impressora.suprimento"
+    >
       <span>{menor.descricao}</span>
-      <IdadeEDesatualizado momento={menor.momento} agora={agora} metrica="impressora.suprimento" />
-    </span>
+    </LeituraNaCelula>
   );
 }
 ```

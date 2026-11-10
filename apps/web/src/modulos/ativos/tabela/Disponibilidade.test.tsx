@@ -229,3 +229,34 @@ describe('a disponibilidade na tabela dos ativos', () => {
     expect(pedidos.length).toBe(antesDaEspera);
   });
 });
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2): na coluna estreita, os rótulos ficam inteiros, e a idade é o que encolhe.
+describe('a disponibilidade numa coluna estreita', () => {
+  it('põe a situação e o "Desatualizado" na parte fixa, e a idade na que encolhe', async () => {
+    const { servidor } = servidorComDisponibilidade(() => [
+      {
+        ...RH,
+        disponibilidade: {
+          ...(online(antes(20)) as NonNullable<Ativo['disponibilidade']>),
+          situacao: 'offline',
+          latencia: null,
+        },
+      },
+      CAMERA,
+    ]);
+    abrir(COM_A_COLUNA, servidor);
+    const [rh, camera] = await linhas();
+
+    const fixo = celula(rh, 2).querySelector('[data-parte="fixo"]') as HTMLElement;
+    expect(within(fixo).getByText('Offline')).toBeTruthy();
+    expect(within(fixo).getByText('Desatualizado')).toBeTruthy();
+    expect(celula(rh, 2).querySelector('[data-parte="resto"]')?.textContent).toBe('há 20 min');
+
+    // Sem leitura, só a situação, sem a parte da idade.
+    expect(celula(camera, 2).querySelector('[data-parte="fixo"]')?.textContent).toBe(
+      'Não verificado',
+    );
+    expect(celula(camera, 2).querySelector('[data-parte="resto"]')).toBeNull();
+  });
+});

@@ -186,3 +186,26 @@ describe('o Control iD na tabela dos ativos', () => {
     await waitFor(() => expect(pedidos.length).toBeGreaterThan(antesDaReleitura));
   });
 });
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2).
+describe('o Control iD numa coluna estreita', () => {
+  it('leitura desatualizada: os dois rótulos na parte fixa, e a idade na que encolhe', async () => {
+    const { servidor } = servidorComControlId(() => [
+      { ...RH, controlId: sondado('sem-resposta', 20) },
+      CAMERA,
+    ]);
+    abrir(COM_A_COLUNA, servidor);
+    const [rh, camera] = await linhas();
+
+    const fixo = celula(rh, 2).querySelector('[data-parte="fixo"]') as HTMLElement;
+    expect(within(fixo).getByText('Sem resposta')).toBeTruthy();
+    expect(within(fixo).getByText('Desatualizado')).toBeTruthy();
+    expect(celula(rh, 2).querySelector('[data-parte="resto"]')?.textContent).toBe('há 20 min');
+
+    expect(celula(camera, 2).querySelector('[data-parte="fixo"]')?.textContent).toBe(
+      'Não verificado',
+    );
+    expect(celula(camera, 2).querySelector('[data-parte="resto"]')).toBeNull();
+  });
+});

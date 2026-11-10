@@ -182,3 +182,51 @@ describe('os suprimentos na tabela dos ativos', () => {
     await waitFor(() => expect(pedidos.length).toBeGreaterThan(antesDaReleitura));
   });
 });
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2).
+describe('os suprimentos numa coluna estreita', () => {
+  it('põe o medidor e o nível na parte fixa, e a descrição e a idade na que encolhe', async () => {
+    const { servidor } = servidorComSuprimentos(() => [
+      { ...M404, suprimentos: suprimentos(8, 3) },
+    ]);
+    abrir(COM_AS_COLUNAS, servidor);
+    const [m404] = await linhas();
+
+    const fixo = celula(m404, 2).querySelector('[data-parte="fixo"]') as HTMLElement;
+    expect(
+      within(fixo).getByRole('meter', { name: 'Menor nível: Black Toner Cartridge' }),
+    ).toBeTruthy();
+    expect(within(fixo).getByText('8%')).toBeTruthy();
+    const resto = celula(m404, 2).querySelector('[data-parte="resto"]') as HTMLElement;
+    expect([...resto.children].map((parte) => parte.textContent)).toEqual([
+      'Black Toner Cartridge',
+      'há 3 min',
+    ]);
+  });
+
+  it('põe o total de páginas na parte fixa, e a idade na que encolhe', async () => {
+    const { servidor } = servidorComSuprimentos(() => [
+      { ...M404, suprimentos: suprimentos(8, 3) },
+    ]);
+    abrir(COM_AS_COLUNAS, servidor);
+    const [m404] = await linhas();
+
+    expect(celula(m404, 3).querySelector('[data-parte="fixo"]')?.textContent).toBe('12.500');
+    expect(celula(m404, 3).querySelector('[data-parte="resto"]')?.textContent).toBe('há 3 min');
+  });
+
+  it('a leitura velha põe o "Desatualizado" na parte fixa, ao lado do nível', async () => {
+    const { servidor } = servidorComSuprimentos(() => [
+      { ...M404, suprimentos: suprimentos(8, 45) },
+    ]);
+    abrir(COM_AS_COLUNAS, servidor);
+    const [m404] = await linhas();
+
+    const fixo = celula(m404, 2).querySelector('[data-parte="fixo"]') as HTMLElement;
+    expect(within(fixo).getByText('Desatualizado')).toBeTruthy();
+    expect(within(celula(m404, 3)).getByText('Desatualizado').closest('[data-parte]')).toBe(
+      celula(m404, 3).querySelector('[data-parte="fixo"]'),
+    );
+  });
+});

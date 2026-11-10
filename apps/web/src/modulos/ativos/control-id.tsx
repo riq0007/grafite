@@ -8,7 +8,7 @@ import { ROTULOS_DAS_SITUACOES_DO_CONTROL_ID, type SituacaoDoControlId } from '@
 import { RotuloDeSituacao, type Situacao, useDataHora } from '@grafite/ui';
 import type { ReactNode } from 'react';
 import estilos from './Ativos.module.css';
-import { IdadeDaLeitura, IdadeEDesatualizado } from './disponibilidade.tsx';
+import { IdadeDaLeitura, IdadeEDesatualizado, LeituraNaCelula } from './disponibilidade.tsx';
 
 export type SaudeDoControlId = components['schemas']['SaudeDoControlId'];
 
@@ -44,10 +44,12 @@ function SituacaoNaTela({ saude }: { saude: SaudeDoControlId }) {
 /** A saúde na célula da tabela: a situação, a idade e o "Desatualizado". */
 export function ControlIdNaCelula({ saude, agora }: { saude: SaudeDoControlId; agora: Date }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela saude={saude} />
-      <IdadeEDesatualizado momento={saude.momento} agora={agora} metrica="controlid.sondagem" />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela saude={saude} />}
+      momento={saude.momento}
+      agora={agora}
+      metrica="controlid.sondagem"
+    />
   );
 }
 
