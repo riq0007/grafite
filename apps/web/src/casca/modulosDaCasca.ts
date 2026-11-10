@@ -56,6 +56,10 @@ function paraACasca(modulo: ModuloRegistrado): ModuloDaCasca {
  *
  * O id da escolha que o registro da conta não traz fica de fora, sem sair da lista guardada. Sem a
  * escolha, vale a ordem do registro, com todos no dock.
+ *
+ * Com a escolha, a ordem das abas do celular é a dela (design, decisão 5): os módulos do dock
+ * recebem a prioridade 1, 2, 3… na ordem, Ajustes vem depois deles, e os tirados ficam em "Mais".
+ * O módulo que declara "Mais" continua lá. Sem a escolha, vale a prioridade que cada um declara.
  */
 export function modulosDaCasca(
   registro: readonly ModuloRegistrado[],
@@ -69,10 +73,23 @@ export function modulosDaCasca(
     registro.filter((modulo) => modulo.id !== MODULO_DOS_AJUSTES),
     escolha,
   );
+  const modulos = visiveis.map(paraACasca);
+  const modulosNoMais = ocultos.map(paraACasca);
+  const modulosDoFim = registro
+    .filter((modulo) => modulo.id === MODULO_DOS_AJUSTES)
+    .map(paraACasca);
+  if (escolha.length === 0) return { modulos, modulosNoMais, modulosDoFim };
+  /** A prioridade pela posição, menos para quem declara que fica sempre em "Mais". */
+  const naPosicao =
+    (posicao: number) =>
+    (modulo: ModuloDaCasca): ModuloDaCasca => ({
+      ...modulo,
+      prioridadeNoCelular: modulo.prioridadeNoCelular === 'mais' ? 'mais' : posicao,
+    });
   return {
-    modulos: visiveis.map(paraACasca),
-    modulosNoMais: ocultos.map(paraACasca),
-    modulosDoFim: registro.filter((modulo) => modulo.id === MODULO_DOS_AJUSTES).map(paraACasca),
+    modulos: modulos.map((modulo, indice) => naPosicao(indice + 1)(modulo)),
+    modulosNoMais: modulosNoMais.map((modulo) => ({ ...modulo, prioridadeNoCelular: 'mais' })),
+    modulosDoFim: modulosDoFim.map(naPosicao(modulos.length + 1)),
   };
 }
 

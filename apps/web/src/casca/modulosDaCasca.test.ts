@@ -17,6 +17,10 @@ const rotasDeAjustes = createRoute({ getParentRoute: () => raiz, path: '/ajustes
 const rotasDaOperacao = createRoute({ getParentRoute: () => raiz, path: '/operacao' });
 const rotasDasSalas = createRoute({ getParentRoute: () => raiz, path: '/salas' });
 const rotasDoCofre = createRoute({ getParentRoute: () => raiz, path: '/cofre' });
+const rotasDaAdministracao = createRoute({
+  getParentRoute: () => raiz,
+  path: '/administracao',
+});
 // Como no app, as rotas só ganham id quando um roteador monta a árvore.
 createRouter({
   routeTree: raiz.addChildren([
@@ -25,6 +29,7 @@ createRouter({
     rotasDaOperacao,
     rotasDasSalas,
     rotasDoCofre,
+    rotasDaAdministracao,
   ]),
 });
 
@@ -84,6 +89,16 @@ const cofre = definirModulo({
   endereco: '/cofre',
   prioridadeNoCelular: 5,
   rotas: rotasDoCofre,
+});
+
+// Fica sempre em "Mais" no celular, como a Administração do app.
+const administracao = definirModulo({
+  id: 'administracao',
+  nome: 'Administração',
+  icone: Box,
+  endereco: '/administracao',
+  prioridadeNoCelular: 'mais',
+  rotas: rotasDaAdministracao,
 });
 
 describe('módulos da casca', () => {
@@ -224,5 +239,52 @@ describe('a ordem dos módulos no dock', () => {
     expect(ids(modulos)).toEqual(['salas', 'exemplo', 'operacao', 'cofre']);
     expect(modulosNoMais).toEqual([]);
     expect(ids(modulosDoFim)).toEqual(['ajustes']);
+  });
+});
+
+// As abas do celular (spec posturas-da-casca, "Postura celular"; change dock-personalizavel, design,
+// decisão 5): com a escolha, a prioridade é a ordem dela.
+describe('a ordem das abas do celular', () => {
+  const noDock = (id: string) => ({ id, visivel: true });
+  const tirado = (id: string) => ({ id, visivel: false });
+  const registro = [exemplo, operacao, salas, cofre, administracao, ajustes];
+  const prioridades = (modulos: ReadonlyArray<{ id: string; prioridadeNoCelular?: unknown }>) =>
+    Object.fromEntries(modulos.map((modulo) => [modulo.id, modulo.prioridadeNoCelular]));
+
+  it('sem a escolha, vale a prioridade que cada módulo declara', () => {
+    const { modulos, modulosDoFim } = modulosDaCasca(registro, []);
+    expect(prioridades([...modulos, ...modulosDoFim])).toEqual({
+      exemplo: 2,
+      operacao: 3,
+      salas: 4,
+      cofre: 5,
+      administracao: 'mais',
+      ajustes: 9,
+    });
+  });
+
+  it('Ordem escolhida no celular: a prioridade é a ordem da lista, com Ajustes depois dela', () => {
+    const { modulos, modulosDoFim } = modulosDaCasca(registro, [
+      noDock('cofre'),
+      noDock('salas'),
+      noDock('exemplo'),
+      noDock('operacao'),
+    ]);
+    expect(prioridades(modulos)).toMatchObject({ cofre: 1, salas: 2, exemplo: 3, operacao: 4 });
+    expect(prioridades(modulosDoFim)).toEqual({ ajustes: 6 });
+  });
+
+  it('Módulo tirado do dock no celular: fica em "Mais", e não numa aba', () => {
+    const { modulos, modulosNoMais } = modulosDaCasca(registro, [
+      noDock('operacao'),
+      tirado('salas'),
+    ]);
+    expect(prioridades(modulosNoMais)).toEqual({ salas: 'mais' });
+    expect(prioridades(modulos)).toMatchObject({ operacao: 1, exemplo: 2, cofre: 3 });
+  });
+
+  it('o módulo que declara "Mais" continua em "Mais", em qualquer lugar da lista', () => {
+    const { modulos } = modulosDaCasca(registro, [noDock('administracao'), noDock('operacao')]);
+    expect(prioridades(modulos)).toMatchObject({ administracao: 'mais', operacao: 2 });
   });
 });

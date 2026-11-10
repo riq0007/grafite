@@ -81,7 +81,7 @@ export function Casca({ barra, dock, postura: posturaForcada, children }: PropsD
       {celular ? (
         <>
           <BarraDeAbas
-            modulos={[...dock.modulos, ...(dock.modulosDoFim ?? [])]}
+            modulos={modulosDoCelular(dock)}
             atual={dock.atual}
             aoAbrirModulo={dock.aoAbrirModulo}
           />
@@ -115,6 +115,16 @@ function ajustarDock(dock: PropsDoDock, postura: Postura): PropsDoDock {
 }
 
 /** Ids das folhas de uma árvore de menu (os itens que navegam). */
+/**
+ * Os módulos do celular: os do dock, os que a conta tirou dele e Ajustes. A barra de abas os
+ * ordena pela prioridade de cada um, e o tirado do dock chega com a de ficar em "Mais".
+ */
+const modulosDoCelular = (dock: PropsDoDock) => [
+  ...dock.modulos,
+  ...(dock.modulosNoMais ?? []),
+  ...(dock.modulosDoFim ?? []),
+];
+
 function folhas(itens: readonly ItemDoMenuDaCasca[]): string[] {
   return itens.flatMap((item) => (item.filhos ? folhas(item.filhos) : [item.id]));
 }
@@ -124,9 +134,7 @@ function folhas(itens: readonly ItemDoMenuDaCasca[]): string[] {
  * entram como submenus. A escolha vai a quem registrou o item (o dock ou a barra).
  */
 function arvoreDoModulo(barra: PropsDaBarraSuperior, dock: PropsDoDock) {
-  const modulo = [...dock.modulos, ...(dock.modulosDoFim ?? [])].find(
-    (candidato) => candidato.id === dock.atual,
-  );
+  const modulo = modulosDoCelular(dock).find((candidato) => candidato.id === dock.atual);
   const menus = barra.menus ?? [];
   const itens: ItemDoMenuDaCasca[] = [
     ...(modulo?.menu ?? []),

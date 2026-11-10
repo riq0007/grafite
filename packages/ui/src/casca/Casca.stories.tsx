@@ -282,6 +282,49 @@ export const CelularSemMenus: Historia = {
   },
 };
 
+/**
+ * Módulo tirado do dock no celular (change dock-personalizavel): a casca entrega à barra de abas
+ * também os módulos fora do dock, que ficam em "Mais", e a árvore de menus de um deles abre pelo
+ * nome na barra superior.
+ */
+export const CelularComModuloForaDoDock: Historia = {
+  args: {
+    postura: 'celular',
+    barra: { modulo: 'Rede', aoEscolherItem: fn() },
+    dock: {
+      ...DOCK_PADRAO,
+      modulos: MODULOS_DE_EXEMPLO.filter(({ id }) => id === 'inicio' || id === 'ativos'),
+      modulosNoMais: MODULOS_DE_EXEMPLO.filter(({ id }) => id === 'operacao' || id === 'rede').map(
+        (modulo) => ({ ...modulo, prioridadeNoCelular: 'mais' as const }),
+      ),
+      atual: 'rede',
+    },
+  },
+  play: async ({ args, canvasElement }) => {
+    const tela = within(canvasElement);
+    const abas = within(tela.getByRole('navigation', { name: 'Módulos' }));
+    const nomes = abas.getAllByRole('button').map((aba) => aba.getAttribute('aria-label'));
+    await expect(nomes).toEqual(['Início', 'Ativos', 'Ajustes', 'Mais']);
+    await expect(abas.getByRole('button', { name: 'Mais' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await userEvent.click(abas.getByRole('button', { name: 'Mais' }));
+    const mais = await within(document.body).findByRole('dialog', { name: 'Mais' });
+    // O painel entra subindo: o item fica à vista no fim da entrada.
+    await waitFor(() =>
+      expect(within(mais).getByRole('button', { name: 'Operação' })).toBeVisible(),
+    );
+    await userEvent.click(within(mais).getByRole('button', { name: 'Rede' }));
+    await expect(args.dock.aoAbrirModulo).toHaveBeenCalledWith('rede');
+
+    await userEvent.click(within(tela.getByRole('banner')).getByRole('button', { name: 'Rede' }));
+    const arvore = await within(document.body).findByRole('dialog', { name: 'Rede' });
+    await userEvent.click(within(arvore).getByRole('button', { name: 'Switches' }));
+    await expect(args.dock.aoEscolherItem).toHaveBeenCalledWith('rede', 'rede/switches');
+  },
+};
+
 /** Cadastro de exemplo: um formulário com uma linha de campos e, abaixo, uma tabela. */
 function CadastroDeExemplo() {
   return (
