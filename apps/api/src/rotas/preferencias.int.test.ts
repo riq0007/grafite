@@ -172,6 +172,41 @@ describe('PATCH /conta/preferencias', () => {
     expect(await salvas(anaId)).toEqual({ dock: { posicao: 'esquerda' }, inicio: { blocos } });
   });
 
+  // Spec preferencias-da-interface, "Blocos do Início nas preferências", com a largura e as opções
+  // (change opcoes-dos-blocos-do-inicio).
+  it('o bloco grava com a largura e as opções, e a 13ª opção, a largura desconhecida e o valor fora da forma recusam', async () => {
+    const blocos = [
+      {
+        id: 'ativos.suprimentos',
+        visivel: true,
+        largura: 'metade',
+        opcoes: { tipos: ['toner', 'fusor'], nivel: 30, limite: 6, locais: [] },
+      },
+      { id: 'gestao.backups', visivel: false },
+    ];
+    const r = await mudar(ana, { inicio: { blocos } });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda' }, inicio: { blocos } };
+    expect(r.json()).toEqual(camada);
+    const comTreze = Object.fromEntries(
+      Array.from({ length: 13 }, (_, indice) => [`opcao-${indice}`, indice]),
+    );
+    const recusas = [
+      { id: 'ativos.suprimentos', visivel: true, opcoes: comTreze },
+      { id: 'ativos.suprimentos', visivel: true, largura: 'um-terco' },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { extra: { dentro: 1 } } },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { 'Chave Errada': true } },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { longa: 'x'.repeat(81) } },
+    ];
+    for (const bloco of recusas) {
+      const recusado = await mudar(ana, { inicio: { blocos: [bloco] } });
+      expect(recusado.statusCode, JSON.stringify(bloco).slice(0, 80)).toBe(400);
+    }
+    const treze = await mudar(ana, { inicio: { blocos: [recusas[0]] } });
+    expect(JSON.stringify(treze.json().campos)).toContain('Use até 12 opções.');
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
   // Spec preferencias-da-interface, "Módulos do dock nas preferências".
   it('os módulos do dock gravam inteiros, sem o item dos Ajustes, e o módulo repetido recusa', async () => {
     const modulos = [

@@ -360,6 +360,42 @@
                     },
                     "visivel": {
                       "type": "boolean"
+                    },
+                    "largura": {
+                      "type": "string",
+                      "enum": [
+                        "inteira",
+                        "metade"
+                      ]
+                    },
+                    "opcoes": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]{1,30}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "maxItems": 50,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "maxLength": 80
+                            }
+                          }
+                        ]
+                      }
                     }
                   },
                   "required": [
@@ -930,6 +966,42 @@
                             },
                             "visivel": {
                               "type": "boolean"
+                            },
+                            "largura": {
+                              "type": "string",
+                              "enum": [
+                                "inteira",
+                                "metade"
+                              ]
+                            },
+                            "opcoes": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-z0-9-]{1,30}$"
+                              },
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 80
+                                  },
+                                  {
+                                    "maxItems": 50,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 80
+                                    }
+                                  }
+                                ]
+                              }
                             }
                           },
                           "required": [
@@ -21320,6 +21392,42 @@
                     },
                     "visivel": {
                       "type": "boolean"
+                    },
+                    "largura": {
+                      "type": "string",
+                      "enum": [
+                        "inteira",
+                        "metade"
+                      ]
+                    },
+                    "opcoes": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]{1,30}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "maxItems": 50,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "maxLength": 80
+                            }
+                          }
+                        ]
+                      }
                     }
                   },
                   "required": [
@@ -21890,6 +21998,42 @@
                             },
                             "visivel": {
                               "type": "boolean"
+                            },
+                            "largura": {
+                              "type": "string",
+                              "enum": [
+                                "inteira",
+                                "metade"
+                              ]
+                            },
+                            "opcoes": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-z0-9-]{1,30}$"
+                              },
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 80
+                                  },
+                                  {
+                                    "maxItems": 50,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 80
+                                    }
+                                  }
+                                ]
+                              }
                             }
                           },
                           "required": [

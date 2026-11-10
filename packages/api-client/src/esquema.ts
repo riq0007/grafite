@@ -29077,6 +29077,11 @@ export interface components {
                 blocos?: {
                     id: string;
                     visivel: boolean;
+                    /** @enum {string} */
+                    largura?: "inteira" | "metade";
+                    opcoes?: {
+                        [key: string]: boolean | number | string | string[];
+                    };
                 }[];
                 ordenacao?: {
                     /** @enum {string} */
@@ -29158,6 +29163,11 @@ export interface components {
                 blocos?: {
                     id: string;
                     visivel: boolean;
+                    /** @enum {string} */
+                    largura?: "inteira" | "metade";
+                    opcoes?: {
+                        [key: string]: boolean | number | string | string[];
+                    };
                 }[] | null;
                 ordenacao?: {
                     /** @enum {string} */
@@ -33284,6 +33294,11 @@ export interface components {
                 blocos?: {
                     id: string;
                     visivel: boolean;
+                    /** @enum {string} */
+                    largura?: "inteira" | "metade";
+                    opcoes?: {
+                        [key: string]: boolean | number | string | string[];
+                    };
                 }[];
                 ordenacao?: {
                     /** @enum {string} */
@@ -33365,6 +33380,11 @@ export interface components {
                 blocos?: {
                     id: string;
                     visivel: boolean;
+                    /** @enum {string} */
+                    largura?: "inteira" | "metade";
+                    opcoes?: {
+                        [key: string]: boolean | number | string | string[];
+                    };
                 }[] | null;
                 ordenacao?: {
                     /** @enum {string} */

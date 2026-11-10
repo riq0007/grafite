@@ -31,6 +31,8 @@ export const POSICOES_DO_DOCK = ['embaixo', 'esquerda', 'direita'] as const;
 export const TEMPOS_DO_AVISO = [6, 10, 20] as const;
 /** O resumo por e-mail das notificações que não foram na hora (change p3c-email-e-push). */
 export const RESUMOS_POR_EMAIL = ['desligado', 'diario'] as const;
+/** A largura de um bloco do Início: a inteira, de fábrica, ou a metade (change opcoes-dos-blocos-do-inicio). */
+export const LARGURAS_DO_BLOCO = ['inteira', 'metade'] as const;
 /** Colunas pelas quais a tela inicial ordena as ocorrências. */
 export const COLUNAS_DA_TELA_INICIAL = ['severidade', 'ha', 'ativo', 'ocorrencia'] as const;
 
@@ -48,15 +50,34 @@ export const LIMITES_DAS_PREFERENCIAS = {
   blocosDoInicio: 20,
   /** Quantos módulos a lista do dock guarda (change dock-personalizavel). */
   modulosDoDock: 40,
+  /** As opções de um bloco do Início: quantas, e o tamanho da chave, do texto e da lista. */
+  opcoesDoBloco: 12,
+  chaveDaOpcaoDoBloco: 30,
+  textoDaOpcaoDoBloco: 80,
+  listaDaOpcaoDoBloco: 50,
 } as const;
 
 export type TempoDoAviso = (typeof TEMPOS_DO_AVISO)[number];
 export type ResumoPorEmail = (typeof RESUMOS_POR_EMAIL)[number];
 
-/** Um bloco do Início na ordem da conta: o id, como "ativos.suprimentos", e se está à vista. */
+export type LarguraDoBloco = (typeof LARGURAS_DO_BLOCO)[number];
+
+/**
+ * O valor de uma opção de um bloco do Início: verdadeiro ou falso, um número, um texto ou uma
+ * lista de textos. O significado é do bloco: o domínio só confere a forma.
+ */
+export type ValorDaOpcaoDoBloco = boolean | number | string | string[];
+
+/**
+ * Um bloco do Início na ordem da conta: o id, como "ativos.suprimentos", e se está à vista. Pode
+ * trazer a largura, que sem ela é a inteira, e as opções do bloco, pela chave (change
+ * opcoes-dos-blocos-do-inicio, design, decisão 2).
+ */
 export interface BlocoDoInicioSalvo {
   id: string;
   visivel: boolean;
+  largura?: LarguraDoBloco;
+  opcoes?: Record<string, ValorDaOpcaoDoBloco>;
 }
 
 /**
@@ -294,7 +315,17 @@ const ID_DO_ITEM = /^[a-z0-9.-]{1,40}$/;
  * lista vazia vale; o que não é lista fica de fora.
  */
 const listaOrdenada =
-  (limite: number, recusados: readonly string[] = []): Leitor =>
+  (
+    limite: number,
+    {
+      recusados = [],
+      extras,
+    }: {
+      recusados?: readonly string[];
+      /** O que o item traz além do id e da visibilidade, já lido: só os campos válidos. */
+      extras?: (bruto: Bruto) => Bruto;
+    } = {},
+  ): Leitor =>
   (valor) => {
     if (!Array.isArray(valor)) return undefined;
     const lidos: Array<{ id: string; visivel: boolean }> = [];
@@ -303,12 +334,47 @@ const listaOrdenada =
       const bruto = objeto(item);
       const id = bruto?.id;
       const visivel = bruto?.visivel;
-      if (typeof id !== 'string' || !ID_DO_ITEM.test(id) || typeof visivel !== 'boolean') continue;
+      if (!bruto || typeof id !== 'string' || !ID_DO_ITEM.test(id)) continue;
+      if (typeof visivel !== 'boolean') continue;
       if (recusados.includes(id) || lidos.some((lido) => lido.id === id)) continue;
-      lidos.push({ id, visivel });
+      lidos.push({ id, visivel, ...extras?.(bruto) });
     }
     return lidos;
   };
+
+/** A chave de uma opção de bloco: letras minúsculas, números e hífen, até 30. */
+const CHAVE_DA_OPCAO = /^[a-z0-9-]{1,30}$/;
+
+const textoDaOpcao = (valor: unknown): valor is string =>
+  typeof valor === 'string' && valor.length <= LIMITES_DAS_PREFERENCIAS.textoDaOpcaoDoBloco;
+
+/** O valor de uma opção de bloco, se a forma dele confere: o que não confere fica de fora. */
+function valorDaOpcao(valor: unknown): ValorDaOpcaoDoBloco | undefined {
+  if (typeof valor === 'boolean' || textoDaOpcao(valor)) return valor;
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : undefined;
+  const lista =
+    Array.isArray(valor) && valor.length <= LIMITES_DAS_PREFERENCIAS.listaDaOpcaoDoBloco;
+  return lista && valor.every(textoDaOpcao) ? [...valor] : undefined;
+}
+
+/**
+ * A largura e as opções de um bloco do Início (change opcoes-dos-blocos-do-inicio, design, decisão
+ * 2): a largura desconhecida e a opção fora da forma saem, uma a uma, e o bloco continua. As
+ * opções são cortadas no limite, e o bloco sem nenhuma válida fica sem o campo.
+ */
+function extrasDoBloco(bruto: Bruto): Bruto {
+  const extras: Bruto = {};
+  const largura = umDe(LARGURAS_DO_BLOCO)(bruto.largura);
+  if (largura !== undefined) extras.largura = largura;
+  const opcoes: Bruto = {};
+  for (const [chave, valor] of Object.entries(objeto(bruto.opcoes) ?? {})) {
+    if (Object.keys(opcoes).length === LIMITES_DAS_PREFERENCIAS.opcoesDoBloco) break;
+    const lido = CHAVE_DA_OPCAO.test(chave) ? valorDaOpcao(valor) : undefined;
+    if (lido !== undefined) opcoes[chave] = lido;
+  }
+  if (Object.keys(opcoes).length > 0) extras.opcoes = opcoes;
+  return extras;
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -375,7 +441,9 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     tamanho: inteiroEntre(LIMITES_DAS_PREFERENCIAS.tamanhoDoDock),
     ampliar: booleano,
     ocultar: booleano,
-    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, [MODULO_DOS_AJUSTES]),
+    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, {
+      recusados: [MODULO_DOS_AJUSTES],
+    }),
   },
   cursor: {
     tipo: umDe(['suavizado', 'sistema']),
@@ -402,7 +470,10 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     fixadasPelaOrganizacao: fixadasDasTabelas,
   },
   regiao: { fuso },
-  inicio: { ordenacao, blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio) },
+  inicio: {
+    ordenacao,
+    blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio, { extras: extrasDoBloco }),
+  },
   acessibilidade: {
     movimento: umDe(['sistema', 'reduzido']),
     transparencia: umDe(['sistema', 'reduzida']),

@@ -8,6 +8,7 @@ import {
   DENSIDADES,
   DESTAQUES_DA_ESCOLHA,
   fusoReconhecido,
+  LARGURAS_DO_BLOCO,
   LIMITES_DAS_PREFERENCIAS,
   POSICOES_DO_DOCK,
   RESUMOS_POR_EMAIL,
@@ -51,22 +52,62 @@ const VisaoEscolhida = z.union([z.literal(VISAO_DE_FABRICA), z.uuid()], {
  * Uma lista ordenada de itens `{ id, visivel }`, gravada inteira, como os blocos do Início (change
  * inicio-ajustavel) e os módulos do dock (change dock-personalizavel).
  */
-const listaOrdenada = (limite: number, mensagens: { demais: string; repetido: string }) =>
+const listaOrdenada = <T extends z.ZodType<{ id: string }>>(
+  item: T,
+  limite: number,
+  mensagens: { demais: string; repetido: string },
+) =>
   z
-    .array(
-      z
-        .object({
-          id: z.string().regex(/^[a-z0-9.-]{1,40}$/, {
-            error: 'Use letras minúsculas, números, ponto e hífen.',
-          }),
-          visivel: z.boolean(),
-        })
-        .strict(),
-    )
+    .array(item)
     .max(limite, { error: mensagens.demais })
-    .refine((lista) => new Set(lista.map((item) => item.id)).size === lista.length, {
+    .refine((lista) => new Set(lista.map((doItem) => doItem.id)).size === lista.length, {
       error: mensagens.repetido,
     });
+
+/** O item de uma lista ordenada: o id e se está à vista. */
+const ItemOrdenado = z
+  .object({
+    id: z.string().regex(/^[a-z0-9.-]{1,40}$/, {
+      error: 'Use letras minúsculas, números, ponto e hífen.',
+    }),
+    visivel: z.boolean(),
+  })
+  .strict();
+
+const TextoDaOpcao = z.string().max(LIMITES_DAS_PREFERENCIAS.textoDaOpcaoDoBloco, {
+  error: 'Use até 80 caracteres.',
+});
+
+/**
+ * As opções de um bloco do Início (change opcoes-dos-blocos-do-inicio, design, decisão 2): a chave
+ * e o valor numa das quatro formas. O significado é do bloco, e a web o confere ao desenhar.
+ */
+const OpcoesDoBloco = z
+  .record(
+    z.string().regex(/^[a-z0-9-]{1,30}$/, {
+      error: 'Use letras minúsculas, números e hífen na chave da opção.',
+    }),
+    z.union(
+      [
+        z.boolean(),
+        z.number(),
+        TextoDaOpcao,
+        z.array(TextoDaOpcao).max(LIMITES_DAS_PREFERENCIAS.listaDaOpcaoDoBloco, {
+          error: 'Use até 50 itens.',
+        }),
+      ],
+      { error: 'Use verdadeiro ou falso, um número, um texto ou uma lista de textos.' },
+    ),
+  )
+  .refine((opcoes) => Object.keys(opcoes).length <= LIMITES_DAS_PREFERENCIAS.opcoesDoBloco, {
+    error: 'Use até 12 opções.',
+  });
+
+/** Um bloco do Início na lista: além do id e da visibilidade, a largura e as opções dele. */
+const BlocoDoInicio = ItemOrdenado.extend({
+  largura: z.enum(LARGURAS_DO_BLOCO, { error: 'Use inteira ou metade.' }).optional(),
+  opcoes: OpcoesDoBloco.optional(),
+}).strict();
 
 /** As entradas do tema Personalizado, gravadas inteiras (change tema-personalizado, design, decisão 1). */
 const TemaPersonalizado = z
@@ -105,7 +146,7 @@ const CAMPOS = {
      * Os módulos na ordem escolhida, com os tirados do dock, gravados inteiros (change
      * dock-personalizavel). O item dos Ajustes passa aqui e sai na leitura do domínio.
      */
-    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, {
+    modulos: listaOrdenada(ItemOrdenado, LIMITES_DAS_PREFERENCIAS.modulosDoDock, {
       demais: 'Use até 40 módulos.',
       repetido: 'Não repita o módulo.',
     }),
@@ -140,7 +181,7 @@ const CAMPOS = {
   regiao: { fuso },
   inicio: {
     /** Os blocos do Início, na ordem, com os ocultos, gravados inteiros (change inicio-ajustavel). */
-    blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio, {
+    blocos: listaOrdenada(BlocoDoInicio, LIMITES_DAS_PREFERENCIAS.blocosDoInicio, {
       demais: 'Use até 20 blocos.',
       repetido: 'Não repita o bloco.',
     }),

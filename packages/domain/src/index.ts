@@ -733,6 +733,8 @@ export {
   DESTAQUES_DA_ESCOLHA,
   type DestaquePersonalizado,
   fusoReconhecido,
+  LARGURAS_DO_BLOCO,
+  type LarguraDoBloco,
   LIMITES_DAS_PREFERENCIAS,
   lerAjustes,
   type ModuloDoDockSalvo,
@@ -751,6 +753,7 @@ export {
   type TemaPersonalizado,
   type TempoDoAviso,
   TONS,
+  type ValorDaOpcaoDoBloco,
 } from './preferencias/preferencias.ts';
 export {
   type CampoDaReserva,

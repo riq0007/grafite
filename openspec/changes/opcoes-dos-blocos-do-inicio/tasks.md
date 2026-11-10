@@ -1,6 +1,6 @@
 ## 1. As preferências
 
-- [ ] 1.1 Escrever primeiro os testes e depois a largura e as opções no item de `inicio.blocos`, no domínio, nos esquemas da API e no contrato (design, decisão 2). Verificar: os testes do domínio passam com "Opção fora da forma" e "Preferências de antes das opções", o teste de integração das preferências grava um bloco com opções e recusa o 13º com 400, e o `pnpm contrato:verificar` passa.
+- [x] 1.1 Escrever primeiro os testes e depois a largura e as opções no item de `inicio.blocos`, no domínio, nos esquemas da API e no contrato (design, decisão 2). Verificar: os testes do domínio passam com "Opção fora da forma" e "Preferências de antes das opções", o teste de integração das preferências grava um bloco com opções e recusa o 13º com 400, e o `pnpm contrato:verificar` passa.
 - [ ] 1.2 Escrever primeiro os testes e depois o `moverItem` e o `ocultarItem`, da lista ordenada das preferências, preservando a largura e as opções. Verificar: os testes da lista passam com o item movido e o item mostrado de novo com as opções dele.
 
 ## 2. O Início

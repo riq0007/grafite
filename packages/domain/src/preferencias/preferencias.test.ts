@@ -78,6 +78,10 @@ describe('opções das preferências', () => {
       fixadas: 20,
       blocosDoInicio: 20,
       modulosDoDock: 40,
+      opcoesDoBloco: 12,
+      chaveDaOpcaoDoBloco: 30,
+      textoDaOpcaoDoBloco: 80,
+      listaDaOpcaoDoBloco: 50,
     });
   });
 });
@@ -637,5 +641,85 @@ describe('os módulos do dock', () => {
     const nova = aplicarMudanca(camada, { dock: { modulos: [modulo('salas', false)] } });
     expect(nova.dock?.modulos).toEqual([modulo('salas', false)]);
     expect(aplicarMudanca(nova, { dock: { modulos: null } })).toEqual({});
+  });
+});
+
+// A largura e as opções dos blocos (spec preferencias-da-interface, "Blocos do Início nas
+// preferências"; change opcoes-dos-blocos-do-inicio, design, decisão 2).
+describe('a largura e as opções dos blocos do Início', () => {
+  const bloco = (extras: Record<string, unknown> = {}) => ({
+    id: 'ativos.suprimentos',
+    visivel: true,
+    ...extras,
+  });
+  const lidos = (blocos: unknown[]) => lerAjustes({ inicio: { blocos } }).inicio?.blocos;
+
+  it('Preferências de antes das opções: o bloco só com o id e a visibilidade continua igual', () => {
+    expect(lidos([bloco()])).toEqual([bloco()]);
+    const antes = { inicio: { blocos: [bloco(), { id: 'gestao.backups', visivel: false }] } };
+    expect(resolverPreferencias(antes).inicio.blocos).toEqual(antes.inicio.blocos);
+  });
+
+  it('guarda a largura inteira ou metade, e ignora outro valor', () => {
+    expect(lidos([bloco({ largura: 'metade' })])).toEqual([bloco({ largura: 'metade' })]);
+    expect(lidos([bloco({ largura: 'inteira' })])).toEqual([bloco({ largura: 'inteira' })]);
+    expect(lidos([bloco({ largura: 'um-terco' })])).toEqual([bloco()]);
+    expect(lidos([bloco({ largura: 2 })])).toEqual([bloco()]);
+  });
+
+  it('guarda as opções nas quatro formas de valor', () => {
+    const opcoes = { tipos: ['toner', 'fusor'], nivel: 30, compacto: true, ordem: 'nivel' };
+    expect(lidos([bloco({ opcoes })])).toEqual([bloco({ opcoes })]);
+  });
+
+  it('Opção fora da forma: sai, uma a uma, e o bloco continua com as outras', () => {
+    const opcoes = {
+      tipos: ['toner'],
+      extra: { dentro: 1 },
+      'Chave Errada': true,
+      ['c'.repeat(31)]: true,
+      longa: 'x'.repeat(81),
+      mista: ['a', 2],
+      muitos: Array.from({ length: 51 }, () => 'a'),
+      infinito: Number.POSITIVE_INFINITY,
+      nulo: null,
+    };
+    expect(lidos([bloco({ opcoes })])).toEqual([bloco({ opcoes: { tipos: ['toner'] } })]);
+  });
+
+  it('o bloco só com opções fora da forma fica sem o campo', () => {
+    expect(lidos([bloco({ opcoes: { extra: { dentro: 1 } } })])).toEqual([bloco()]);
+    expect(lidos([bloco({ opcoes: 'toner' })])).toEqual([bloco()]);
+    expect(lidos([bloco({ opcoes: {} })])).toEqual([bloco()]);
+  });
+
+  it('o texto de 80 caracteres e a lista de 50 textos cabem', () => {
+    const opcoes = { longa: 'x'.repeat(80), muitos: Array.from({ length: 50 }, () => 'a') };
+    expect(lidos([bloco({ opcoes })])).toEqual([bloco({ opcoes })]);
+  });
+
+  it('guarda até 12 opções por bloco', () => {
+    const opcoes = Object.fromEntries(
+      Array.from({ length: 14 }, (_, indice) => [`opcao-${indice}`, indice]),
+    );
+    const [lido] = lidos([bloco({ opcoes })]) ?? [];
+    expect(Object.keys(lido?.opcoes ?? {})).toHaveLength(12);
+  });
+
+  it('a mudança troca a lista inteira, com a largura e as opções de cada bloco', () => {
+    const camada = { inicio: { blocos: [bloco({ opcoes: { nivel: 30 } })] } };
+    const nova = aplicarMudanca(camada, {
+      inicio: { blocos: [bloco({ largura: 'metade', opcoes: { tipos: ['toner'] } })] },
+    });
+    expect(nova.inicio?.blocos).toEqual([
+      bloco({ largura: 'metade', opcoes: { tipos: ['toner'] } }),
+    ]);
+  });
+
+  it('os módulos do dock não guardam largura nem opções', () => {
+    const modulos = [{ id: 'operacao', visivel: true, largura: 'metade', opcoes: { a: 1 } }];
+    expect(lerAjustes({ dock: { modulos } }).dock?.modulos).toEqual([
+      { id: 'operacao', visivel: true },
+    ]);
   });
 });
