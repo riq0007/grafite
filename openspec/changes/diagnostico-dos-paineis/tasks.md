@@ -11,7 +11,7 @@
 ## 3. A tela
 
 - [x] 3.1 Escrever primeiro os testes e depois o bloco pela exibição (decisão 4). Verificar: os testes passam com "Painel que recusa ser embutido" (sem `iframe`), "Painel que pede a entrada" e "Liberado com a grade aberta".
-- [ ] 3.2 Escrever primeiro os testes e depois a coluna "Exibição" e o retorno do "Verificar agora" no Cadastro. Verificar: os testes passam com "Verificar um painel que recusa ser embutido".
+- [x] 3.2 Escrever primeiro os testes e depois a coluna "Exibição" e o retorno do "Verificar agora" no Cadastro. Verificar: os testes passam com "Verificar um painel que recusa ser embutido".
 
 ## 4. Fechamento
 

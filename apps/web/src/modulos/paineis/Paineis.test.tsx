@@ -53,6 +53,8 @@ const TRES = [
       tempoDaResposta: 5000,
       motivo: 'Sem resposta em 5 s',
     },
+    // O painel fora do ar não tem exibição.
+    exibicao: null,
   }),
   painel(3),
 ];
@@ -270,6 +272,98 @@ describe('o módulo Painéis', () => {
     const linha = (await screen.findByText('Painel 2')).closest('[role="row"]') as HTMLElement;
     fireEvent.click(within(linha).getByRole('button', { name: 'Verificar agora' }));
     expect(await screen.findByText('Painel verificado: No ar.')).toBeTruthy();
+  });
+
+  // Spec modulo-paineis, "Cadastro dos painéis" (change diagnostico-dos-paineis).
+  describe('a exibição no Cadastro', () => {
+    const SEM_VERIFICACAO = painel(1, {
+      nome: 'Linha 2',
+      endereco: 'https://grafana.empresa.local/d/linha2',
+      local: { id: '0193a0b2-0000-7000-8000-00000000000e', caminho: 'Jundiaí › Produção' },
+      verificacao: {
+        situacao: 'sem-verificacao',
+        momento: null,
+        tempoDaResposta: null,
+        motivo: null,
+      },
+      exibicao: null,
+    });
+    const verificado = (exibicao: Painel['exibicao']): Painel => ({
+      ...SEM_VERIFICACAO,
+      verificacao: {
+        situacao: 'no-ar',
+        momento: '2026-11-10T12:00:00.000Z',
+        tempoDaResposta: 40,
+        motivo: null,
+      },
+      exibicao,
+    });
+    const DE_FABRICA = verificado({
+      situacao: 'recusa',
+      motivo: 'A ferramenta manda X-Frame-Options: DENY.',
+    });
+    const linhaDe = async (nome: string) =>
+      (await screen.findByText(nome)).closest('[role="row"]') as HTMLElement;
+
+    /** O Cadastro com o painel sem verificação, que o "Verificar agora" devolve como dado. */
+    function comAVerificacao(depois: Painel) {
+      let lista = [SEM_VERIFICACAO];
+      abrir(
+        '/paineis/cadastro',
+        {
+          'GET /api/paineis': () =>
+            Response.json({ paineis: lista, permite: { administrar: true } }),
+          [`POST /api/paineis/${SEM_VERIFICACAO.id}/verificacao`]: () => {
+            lista = [depois];
+            return Response.json(depois);
+          },
+        },
+        naOrganizacao('paineis.administrar', 'paineis.ver'),
+      );
+    }
+
+    it('Verificar um painel que recusa ser embutido: o retorno diz as duas coisas, e a coluna, o motivo', async () => {
+      comAVerificacao(DE_FABRICA);
+      const linha = await linhaDe('Linha 2');
+      expect(within(linha).queryByText('Recusa ser embutido')).toBeNull();
+      fireEvent.click(within(linha).getByRole('button', { name: 'Verificar agora' }));
+      expect(
+        await screen.findByText('Painel verificado: No ar, mas recusa ser embutido.'),
+      ).toBeTruthy();
+      const selo = await screen.findByText('Recusa ser embutido');
+      const celula = selo.closest('[role="gridcell"]') as HTMLElement;
+      expect(within(celula).getByText('A ferramenta manda X-Frame-Options: DENY.')).toBeTruthy();
+      // O rótulo fica inteiro, e o motivo é o que encolhe na coluna estreita.
+      expect(selo.closest('[data-parte="fixo"]')).not.toBeNull();
+    });
+
+    it('o painel que pede a entrada: o retorno diz "No ar, mas pede a entrada."', async () => {
+      comAVerificacao(verificado({ situacao: 'pede-entrada', motivo: 'Respondeu 401.' }));
+      const linha = await linhaDe('Linha 2');
+      fireEvent.click(within(linha).getByRole('button', { name: 'Verificar agora' }));
+      expect(await screen.findByText('Painel verificado: No ar, mas pede a entrada.')).toBeTruthy();
+      expect(await screen.findByText('Pede a entrada')).toBeTruthy();
+    });
+
+    it('a lista traz o local e a exibição em texto, com o travessão no que falta', async () => {
+      abrir(
+        '/paineis/cadastro',
+        comLista([DE_FABRICA, TRES[1] as Painel, painel(3)], true),
+        naOrganizacao('paineis.administrar', 'paineis.ver'),
+      );
+      const comLocal = await linhaDe('Linha 2');
+      expect(screen.getByRole('columnheader', { name: 'Local' })).toBeTruthy();
+      expect(screen.getByRole('columnheader', { name: 'Exibição' })).toBeTruthy();
+      expect(within(comLocal).getByText('Jundiaí › Produção')).toBeTruthy();
+      expect(within(comLocal).queryByText('—')).toBeNull();
+      // O painel fora do ar, sem local: o travessão no local e na exibição.
+      const foraDoAr = await linhaDe('Painel 2');
+      expect(within(foraDoAr).getAllByText('—')).toHaveLength(2);
+      // O painel que aparece: a leitura em texto, no tom neutro, e o travessão só no local.
+      const queAparece = await linhaDe('Painel 3');
+      expect(within(queAparece).getByText('Aparece na grade')).toBeTruthy();
+      expect(within(queAparece).getAllByText('—')).toHaveLength(1);
+    });
   });
 
   it('sem a permissão, a tela diz que a conta não tem acesso aos painéis', async () => {
