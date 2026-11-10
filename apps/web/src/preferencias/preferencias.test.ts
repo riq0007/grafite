@@ -195,10 +195,21 @@ describe('atributosDaInterface', () => {
       'data-theme': 'grafite',
       'data-accent': 'grafite',
       'data-density': 'normal',
+      'data-rolagem': 'ao-rolar',
       '--raio-base': '10px',
       'data-dock': 'embaixo',
       '--tamanho-item-dock': '48px',
     });
+  });
+
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('com a barra de rolagem sempre visível, a raiz diz "sempre"', () => {
+    expect(
+      atributosDaInterface({
+        ...PADRAO_DE_FABRICA,
+        aparencia: { ...PADRAO_DE_FABRICA.aparencia, barraDeRolagem: 'sempre' },
+      }),
+    ).toMatchObject({ 'data-rolagem': 'sempre' });
   });
 
   it('marca o ocultar automático, o movimento e a transparência reduzidos', () => {

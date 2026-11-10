@@ -9,15 +9,15 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
-      // Aplica as preferências salvas antes da primeira pintura: tema, destaque, densidade, raio e o
-      // dock no lugar certo (specs design-tokens e preferencias-da-interface).
+      // Aplica as preferências salvas antes da primeira pintura: tema, destaque, densidade, raio, a
+      // barra de rolagem e o dock no lugar certo (specs design-tokens e preferencias-da-interface).
       // Só copia atributos já calculados pelo app; nomes e valores fora do padrão são ignorados.
       (() => {
         try {
           const salvos = JSON.parse(localStorage.getItem('grafite.preferencias.atributos') || '{}');
           const permitidos = [
             'data-theme', 'data-accent', 'data-density', 'data-motion', 'data-transparency', '--raio-base',
-            'data-dock', 'data-dock-ocultar', '--tamanho-item-dock',
+            'data-dock', 'data-dock-ocultar', '--tamanho-item-dock', 'data-rolagem',
           ];
           const raiz = document.documentElement;
           for (const nome of permitidos) {

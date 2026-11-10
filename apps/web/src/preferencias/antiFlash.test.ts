@@ -41,6 +41,17 @@ describe('script anti-flash', () => {
     }
   });
 
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('Sempre visível antes da primeira pintura: a raiz já diz "sempre" na reabertura', () => {
+    const atributos = atributosDaInterface({
+      ...PADRAO_DE_FABRICA,
+      aparencia: { ...PADRAO_DE_FABRICA.aparencia, barraDeRolagem: 'sempre' },
+    });
+    localStorage.setItem('grafite.preferencias.atributos', JSON.stringify(atributos));
+    new Function(scriptAntiFlash)();
+    expect(raiz().getAttribute('data-rolagem')).toBe('sempre');
+  });
+
   it('ignora nomes fora da lista e valores com caracteres inesperados', () => {
     localStorage.setItem(
       'grafite.preferencias.atributos',
