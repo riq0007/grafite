@@ -1,7 +1,7 @@
 import { Botao, Carimbo, Icone, OQueResolverAgora, TeclaDeAtalho } from '@grafite/ui';
 import { rootRouteId, useNavigate, useRouteContext } from '@tanstack/react-router';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { type ComponentType, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useApi } from '../../api/useApi.tsx';
 import { useAbrirBusca } from '../../busca/abrirBusca.tsx';
 import { vigiarOMinuto } from '../../casca/status/relogio.ts';
@@ -10,17 +10,22 @@ import { moverItem, ocultarItem, ordenarItens } from '../../preferencias/listaOr
 import { usePreferencias } from '../../preferencias/usePreferencias.tsx';
 import { useAcesso } from '../../sessao/useAcesso.ts';
 import { useServidor } from '../../sessao/useSessao.tsx';
+import { useLocaisAtivos } from '../administracao/seletores/SeletorDeLocal.tsx';
 import { registroDaConta } from '../registroDaConta.ts';
+import type { BlocoDoInicio } from '../tipos.ts';
 import estilos from './Inicio.module.css';
+import { resolverOpcoes } from './opcoes.ts';
 import { useOcorrencias } from './useOcorrencias.ts';
 
 /** O bloco do próprio Início, "O que resolver agora", que fica sempre à vista. */
 export const BLOCO_RESOLVER = 'inicio.resolver';
 
+/** Um bloco do Início na tela: "O que resolver agora", sem componente, ou o de um módulo. */
 interface BlocoNaTela {
   id: string;
   titulo: string;
-  componente?: ComponentType;
+  opcoes?: BlocoDoInicio['opcoes'];
+  componente?: BlocoDoInicio['componente'];
 }
 
 /**
@@ -30,6 +35,9 @@ interface BlocoNaTela {
  * a coluna Há anda na virada do minuto. Os blocos dos módulos vêm depois, cada um com o carimbo.
  * "Personalizar o Início" dá a cada bloco Subir, Descer e Ocultar, menos o Ocultar de "O que
  * resolver agora", e cada clique grava a lista inteira na hora (change inicio-ajustavel, decisão 3).
+ *
+ * O bloco que declara opções recebe o valor que vale de cada uma, o guardado na conta ou o de
+ * fábrica (change opcoes-dos-blocos-do-inicio, design, decisão 1).
  */
 export function Inicio() {
   const { modulos } = useRouteContext({ from: rootRouteId });
@@ -57,7 +65,27 @@ export function Inicio() {
     ],
     [daConta],
   );
-  const { visiveis, ocultos, lista } = ordenarItens(registrados, preferencias.inicio.blocos);
+  const salvos = preferencias.inicio.blocos;
+  const { visiveis, ocultos, lista } = ordenarItens(registrados, salvos);
+  // Os locais ativos tiram das opções o local que foi inativado; só são pedidos quando algum bloco
+  // tem uma opção de locais.
+  const locais = useLocaisAtivos(
+    registrados.some((bloco) => bloco.opcoes?.some((opcao) => opcao.forma === 'locais')),
+  );
+  const opcoesDosBlocos = useMemo(
+    () =>
+      new Map(
+        registrados.map((bloco) => [
+          bloco.id,
+          resolverOpcoes(
+            bloco.opcoes ?? [],
+            salvos.find((salvo) => salvo.id === bloco.id)?.opcoes,
+            locais?.ids,
+          ),
+        ]),
+      ),
+    [registrados, salvos, locais],
+  );
   const [personalizando, definirPersonalizando] = useState(false);
   const gravar = (blocos: typeof lista) => mudar('inicio', { blocos });
 
@@ -138,7 +166,7 @@ export function Inicio() {
           <section key={bloco.id} aria-labelledby={`bloco-${bloco.id}`} className={estilos.bloco}>
             <Carimbo id={`bloco-${bloco.id}`}>{bloco.titulo}</Carimbo>
             {arrumar(bloco, indice)}
-            {Componente && <Componente />}
+            {Componente && <Componente opcoes={opcoesDosBlocos.get(bloco.id) ?? {}} />}
           </section>
         );
       })}

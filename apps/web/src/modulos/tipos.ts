@@ -2,7 +2,7 @@
 // uma entrada no registro. Os destinos dos menus são endereços das rotas do próprio módulo, então
 // um menu que aponta para uma rota inexistente não compila.
 import type { Permissao, PreferenciasDaInterface, TipoDeEvento } from '@grafite/domain';
-import type { OcorrenciaAberta } from '@grafite/ui';
+import type { OcorrenciaAberta, OpcaoDoBloco, ValoresDasOpcoesDoBloco } from '@grafite/ui';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import type { AnyRoute } from '@tanstack/react-router';
 import type { LucideIcon } from 'lucide-react';
@@ -153,6 +153,16 @@ export interface FonteDeOcorrencias extends ExigePermissoes {
 }
 
 /**
+ * Uma opção que um bloco do Início declara (change opcoes-dos-blocos-do-inicio, design, decisão 1):
+ * o Início a mostra na gaveta "Opções…", guarda a escolha da conta e entrega ao bloco o valor que
+ * vale. A forma é a que a gaveta do `@grafite/ui` desenha.
+ */
+export type { OpcaoDoBloco };
+
+/** O valor que vale de cada opção de um bloco, pela chave: as escolhas e os locais, ou o número. */
+export type OpcoesResolvidas = ValoresDasOpcoesDoBloco;
+
+/**
  * Um bloco que o módulo põe no Início (change inicio-ajustavel, design, decisão 1), como os
  * suprimentos que acabam primeiro: a conta o sobe, desce e oculta, e a escolha fica nas preferências.
  */
@@ -161,7 +171,13 @@ export interface BlocoDoInicio extends ExigePermissoes {
   id: string;
   /** O título, no carimbo do bloco. */
   titulo: string;
-  componente: ComponentType;
+  /** As opções do bloco, que a conta muda em "Personalizar o Início" (opcional). */
+  opcoes?: readonly OpcaoDoBloco[];
+  /**
+   * O bloco recebe o valor que vale de cada opção que declara, já resolvido pelo Início: sempre
+   * todas as chaves, e nada a validar. Sem opções, recebe o objeto vazio.
+   */
+  componente: ComponentType<{ opcoes: OpcoesResolvidas }>;
 }
 
 /** O registro de outro módulo em cuja ficha uma relação aparece. */

@@ -1,5 +1,5 @@
 import { montarArvore } from '@grafite/domain';
-import { EscolhaEmArvore } from '@grafite/ui';
+import { EscolhaEmArvore, type ItemDaArvore } from '@grafite/ui';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import type { ClienteDaApi } from '../../../api/cliente.ts';
@@ -24,6 +24,29 @@ export function useCaminhoDoLocal(): (id: string) => string | undefined {
   const { data } = useQuery({ ...opcoesDosLocais(api), enabled: false });
   const arvore = useMemo(() => (data ? montarArvore(data.locais) : null), [data]);
   return useCallback((id) => (arvore?.local(id) ? arvore.caminho(id) : undefined), [arvore]);
+}
+
+/** Os locais ativos da organização: a árvore, como a escolha a mostra, e os ids deles. */
+export interface LocaisAtivos {
+  itens: ItemDaArvore[];
+  ids: ReadonlySet<string>;
+}
+
+/**
+ * Os locais ativos, para a tela que os confere ou os oferece fora de um campo, como as opções de
+ * um bloco do Início (change opcoes-dos-blocos-do-inicio): `undefined` enquanto não chegam. Com
+ * `ligado` falso, não pede nada.
+ */
+export function useLocaisAtivos(ligado = true): LocaisAtivos | undefined {
+  const api = useApi();
+  const { data } = useQuery({ ...opcoesDosLocais(api), enabled: ligado });
+  return useMemo(() => {
+    if (!data) return undefined;
+    return {
+      itens: itensDaArvoreDeLocais(montarArvore(data.locais), null),
+      ids: new Set(data.locais.filter(({ situacao }) => situacao === 'ativo').map(({ id }) => id)),
+    };
+  }, [data]);
 }
 
 export interface PropsDoSeletorDeLocal {

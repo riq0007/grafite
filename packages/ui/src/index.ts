@@ -413,6 +413,11 @@ export {
   ordenarOcorrencias,
   type SeveridadeDaOcorrencia,
 } from './inicio/ocorrencias.ts';
+export type {
+  OpcaoDoBloco,
+  ValorDaOpcaoDoBloco,
+  ValoresDasOpcoesDoBloco,
+} from './inicio/opcaoDoBloco.ts';
 export { criarDataHora, type DataHora } from './regiao/dataHora.ts';
 export {
   descreverFuso,

@@ -1,3 +1,4 @@
+import type { AjustesDasPreferencias } from '@grafite/domain';
 import type { OcorrenciaAberta } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -5,9 +6,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../App.tsx';
 import { criarRoteador } from '../../rotas/arvore.ts';
 import { preferenciasDaCopia } from '../../teste/preferencias.ts';
-import { sessaoAtiva } from '../../teste/sessao.ts';
+import { type ServidorDeTeste, sessaoAtiva } from '../../teste/sessao.ts';
 import { REGISTRO } from '../registro.ts';
-import type { FonteDeOcorrencias } from '../tipos.ts';
+import type { BlocoDoInicio, FonteDeOcorrencias } from '../tipos.ts';
+import { escolhasDa, numeroDa } from './opcoes.ts';
 
 afterEach(() => {
   cleanup();
@@ -216,5 +218,82 @@ describe('Início em blocos', () => {
     ).toBe(true);
     expect(screen.getByRole('button', { name: 'Descer O que resolver agora' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Ocultar O que resolver agora' })).toBeNull();
+  });
+});
+
+// As opções dos blocos (spec tela-inicial, "Opções dos blocos"; change
+// opcoes-dos-blocos-do-inicio, design, decisão 1): o Início resolve o valor de cada opção que o
+// bloco declara e o entrega ao bloco.
+describe('opções dos blocos do Início', () => {
+  /** Um bloco com um número e os locais nas opções, que escreve o que recebeu, só para o teste. */
+  const comOpcoes: BlocoDoInicio = {
+    id: 'teste.opcoes',
+    titulo: 'Bloco com opções',
+    opcoes: [
+      { chave: 'limite', rotulo: 'Itens', forma: 'numero', minimo: 3, maximo: 12, padrao: 6 },
+      { chave: 'locais', rotulo: 'Locais', forma: 'locais' },
+    ],
+    componente: ({ opcoes }) => (
+      <p>
+        {`Itens: ${numeroDa(opcoes, 'limite')} · Locais: ${escolhasDa(opcoes, 'locais').join(', ') || 'todos'}`}
+      </p>
+    ),
+  };
+  const semOpcoes: BlocoDoInicio = {
+    id: 'teste.simples',
+    titulo: 'Bloco simples',
+    componente: ({ opcoes }) => <p>{`Opções recebidas: ${Object.keys(opcoes).length}`}</p>,
+  };
+  const LOCAIS = [
+    { id: 'jundiai', paiId: null, nome: 'Jundiaí', tipo: 'unidade', situacao: 'ativo' },
+    { id: 'antigo', paiId: null, nome: 'Galpão antigo', tipo: 'unidade', situacao: 'inativo' },
+  ].map((local) => ({ ...local, permite: { editar: false } }));
+  const locais = () => Response.json({ locais: LOCAIS, permite: { cadastrarNaRaiz: false } });
+
+  function abrirComOsBlocos(
+    blocos: readonly BlocoDoInicio[],
+    preferencias: AjustesDasPreferencias = {},
+    servidor: ServidorDeTeste = { 'GET /api/locais': locais },
+  ) {
+    const modulos = REGISTRO.map((modulo) =>
+      modulo.id === 'inicio' ? { ...modulo, blocosDoInicio: blocos } : modulo,
+    );
+    const roteador = criarRoteador(createMemoryHistory({ initialEntries: ['/'] }), modulos);
+    render(<App roteador={roteador} sessao={sessaoAtiva([], servidor, preferencias)} />);
+  }
+  const guardado = (opcoes: Record<string, number | string[]>) => ({
+    inicio: { blocos: [{ id: 'teste.opcoes', visivel: true, opcoes }] },
+  });
+
+  it('sem nada guardado, o bloco recebe as opções de fábrica', async () => {
+    abrirComOsBlocos([comOpcoes]);
+    expect(await screen.findByText('Itens: 6 · Locais: todos')).toBeTruthy();
+  });
+
+  it('Opção gravada: o bloco recebe o valor guardado na conta, e as outras ficam de fábrica', async () => {
+    abrirComOsBlocos([comOpcoes], guardado({ limite: 9 }));
+    expect(await screen.findByText('Itens: 9 · Locais: todos')).toBeTruthy();
+  });
+
+  it('o valor que a opção não aceita mais dá lugar ao de fábrica', async () => {
+    abrirComOsBlocos([comOpcoes], guardado({ limite: 40, locais: ['jundiai'] }));
+    expect(await screen.findByText('Itens: 6 · Locais: jundiai')).toBeTruthy();
+  });
+
+  it('Local inativado nas opções: sem nenhum local ativo, o bloco volta a todos, e o número continua', async () => {
+    abrirComOsBlocos([comOpcoes], guardado({ limite: 9, locais: ['antigo'] }));
+    expect(await screen.findByText('Itens: 9 · Locais: todos')).toBeTruthy();
+  });
+
+  it('Um dos locais inativado: o bloco continua com os outros', async () => {
+    abrirComOsBlocos([comOpcoes], guardado({ locais: ['jundiai', 'antigo'] }));
+    expect(await screen.findByText('Itens: 6 · Locais: jundiai')).toBeTruthy();
+  });
+
+  it('Bloco sem opções: recebe as opções vazias, e os locais não são pedidos', async () => {
+    const pedidos = vi.fn(locais);
+    abrirComOsBlocos([semOpcoes], {}, { 'GET /api/locais': pedidos });
+    expect(await screen.findByText('Opções recebidas: 0')).toBeTruthy();
+    expect(pedidos).not.toHaveBeenCalled();
   });
 });
