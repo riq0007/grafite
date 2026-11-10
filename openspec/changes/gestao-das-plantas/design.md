@@ -53,6 +53,8 @@ O teste de integração prova que o papel da aplicação consegue apagar em `pla
 
 A resposta traz a planta e `posicoesFora`. A web invalida a consulta do modelo daquela planta, na sessão que trocou e nas que recebem o evento.
 
+O `GET /mapa/plantas/{id}/modelo` respondia com `max-age=3600`: o navegador devolveria o desenho antigo por até uma hora, mesmo com a consulta invalidada. Ele passa a responder `no-cache` com uma etiqueta (`ETag`) feita do momento da última mudança da planta: o navegador guarda o modelo, que é grande, confere com o servidor a cada leitura e recebe 304, sem corpo, enquanto o desenho é o mesmo.
+
 ### 4. A planta que falhou
 
 O `alterarPlanta` continua sem mudar a situação da planta que falhou, e a tela não oferece "Inativar" nela. Os caminhos dela são substituir o desenho ou excluir.

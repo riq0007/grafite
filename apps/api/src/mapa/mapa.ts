@@ -372,6 +372,88 @@ export async function alterarPlanta(
 }
 
 /**
+ * Substitui o desenho da planta (spec mapa-da-planta, "Substituição do desenho"). O arquivo é
+ * convertido antes de tocar em qualquer coisa: o recusado deixa a planta como estava. As medidas e
+ * as contagens mudam, o nome, o local e as posições ficam, e a planta que falhou passa a ativa.
+ * Devolve a planta e quantas posições ficaram fora da área do desenho novo.
+ */
+export async function substituirDesenho(
+  tx: Transacao,
+  id: string,
+  {
+    fonte,
+    conteudo,
+    armazenamento,
+    orgId,
+    requisicao,
+    momento,
+  }: {
+    fonte: string;
+    conteudo: Buffer;
+    armazenamento: Armazenamento;
+    orgId: string;
+    requisicao: FastifyRequest;
+    momento: Date;
+  },
+) {
+  const { contaId } = sessaoDa(requisicao);
+  const modelo = modeloDoArquivo(conteudo);
+  const contagens = contagensDoModelo(modelo);
+  const [antes] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
+  if (!antes) throw naoEncontrado('Planta não encontrada.');
+  const chave = chaveDoModeloDaPlanta(orgId, id);
+  const novaFonte = fonte.slice(0, 200) || 'arquivo';
+  await tx
+    .update(plantas)
+    .set({
+      largura: modelo.largura,
+      profundidade: modelo.profundidade,
+      contagens,
+      fonte: novaFonte,
+      modelo: chave,
+      atualizadaEm: momento,
+      // A planta que falhou passa a ativa; a inativa continua inativa.
+      ...(antes.situacao === 'falhou' ? { situacao: 'ativa' as const, erro: null } : {}),
+    })
+    .where(eq(plantas.id, id));
+  // As posições além da área nova ficam onde estavam: a resposta só diz quantas são.
+  const [fora] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(
+      and(
+        eq(posicoesNaPlanta.plantaId, id),
+        sql`(${posicoesNaPlanta.x} < 0 or ${posicoesNaPlanta.x} > ${modelo.largura} or ${posicoesNaPlanta.z} < 0 or ${posicoesNaPlanta.z} > ${modelo.profundidade})`,
+      ),
+    );
+  const posicoesFora = fora?.posicoes ?? 0;
+  await registrarNaAuditoria(tx, {
+    acao: 'planta.desenho-substituido',
+    ator: { tipo: 'conta', contaId },
+    alvo: { tipo: 'planta', id },
+    antes: {
+      largura: antes.largura,
+      profundidade: antes.profundidade,
+      ...((antes.contagens as Record<string, number> | null) ?? {}),
+      fonte: antes.fonte,
+    },
+    depois: {
+      largura: modelo.largura,
+      profundidade: modelo.profundidade,
+      ...contagens,
+      fonte: novaFonte,
+      posicoesFora,
+    },
+    origem: origemDa(requisicao),
+    momento,
+  });
+  // O arquivo é o último passo antes do commit: o armazenamento troca o modelo inteiro ou não troca.
+  await armazenamento.gravar(chave, Buffer.from(JSON.stringify(modelo)));
+  const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
+  return { planta: plantaLida(linha as LinhaDaPlanta, await lerArvore(tx)), posicoesFora };
+}
+
+/**
  * Exclui a planta (spec mapa-da-planta, "Exclusão da planta"): as posições saem com ela, pela chave
  * estrangeira, o que estava posicionado continua, e a auditoria guarda o nome, as medidas e quantas
  * posições foram apagadas. Devolve a chave do modelo, que a rota apaga do armazenamento depois do
@@ -417,7 +499,12 @@ export async function excluirPlanta(
 /** A planta ativa que a conta vê, ou o 404. */
 export async function plantaAtiva(tx: Transacao, id: string, leitor: LeitorDoMapa) {
   const [linha] = await tx
-    .select({ id: plantas.id, situacao: plantas.situacao, modelo: plantas.modelo })
+    .select({
+      id: plantas.id,
+      situacao: plantas.situacao,
+      modelo: plantas.modelo,
+      atualizadaEm: plantas.atualizadaEm,
+    })
     .from(plantas)
     .where(eq(plantas.id, id));
   if (!linha || (linha.situacao !== 'ativa' && !pode(leitor.acesso, 'mapa.editar'))) {

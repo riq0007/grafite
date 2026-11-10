@@ -198,3 +198,138 @@ describe('a exclusão da planta', () => {
     expect(nomes).not.toContain('Com defeito');
   });
 });
+
+describe('a substituição do desenho', () => {
+  const substituir = (planta: string, arquivo: object | Buffer, entrada: Entrada = ana()) =>
+    cliente.enviarBytes(
+      'PUT',
+      `/mapa/plantas/${planta}/modelo?fonte=novo.json`,
+      entrada,
+      Buffer.isBuffer(arquivo) ? arquivo : Buffer.from(JSON.stringify(arquivo)),
+    );
+
+  const rotulosDoModelo = async (planta: string) =>
+    (await cliente.consultar(`/mapa/plantas/${planta}/modelo`, ana())).json().rotulos as unknown[];
+
+  it('Desenho corrigido: o desenho e as contagens mudam, e o nome e as posições ficam', async () => {
+    const planta = await cadastrar('Jundiaí · Térreo');
+    await posicionar(planta, impressoras[0] as string, 10, 20);
+    await posicionar(planta, impressoras[1] as string, 30, 40);
+    const eventosAntes = await eventosDoMapa();
+    const novo = {
+      ...modeloDoPmg(),
+      labels: [
+        { text: 'WC M', x: 10.5, z: 20.25 },
+        { text: 'Copa', x: 5, z: 5 },
+      ],
+    };
+
+    const r = await substituir(planta, novo);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({
+      planta: {
+        id: planta,
+        nome: 'Jundiaí · Térreo',
+        largura: 120,
+        profundidade: 80,
+        situacao: 'ativa',
+        fonte: 'novo.json',
+        contagens: { rotulos: 2 },
+      },
+      posicoesFora: 0,
+    });
+    const posicoes = (await posicoesDa(planta)).map(({ x, z }) => `${x},${z}`).sort();
+    expect(posicoes).toEqual(['10,20', '30,40']);
+    expect(await rotulosDoModelo(planta)).toHaveLength(2);
+    // A auditoria guarda as medidas e as contagens de antes e de depois.
+    const registros = await auditoriaDaRequisicao(api, org, r);
+    expect(registros).toHaveLength(1);
+    expect(registros[0]).toMatchObject({
+      acao: 'planta.desenho-substituido',
+      alvoTipo: 'planta',
+      alvoId: planta,
+      antes: { largura: 120, profundidade: 80, rotulos: 1, fonte: 'planta.json' },
+      depois: { largura: 120, profundidade: 80, rotulos: 2, fonte: 'novo.json' },
+    });
+    expect(await eventosDoMapa()).toBe(eventosAntes + 1);
+  });
+
+  it('Arquivo recusado na substituição: a planta continua com o desenho de antes', async () => {
+    const planta = await cadastrar('Com PDF');
+    const r = await substituir(planta, Buffer.from('%PDF-1.7 binário'));
+    expect(r.statusCode).toBe(400);
+    expect(r.json().campos.arquivo).toBe('Envie o desenho em DXF ou o modelo da planta em JSON.');
+    expect(await rotulosDoModelo(planta)).toEqual([{ texto: 'WC M', x: 10.5, z: 20.25 }]);
+    expect(await auditoriaDaRequisicao(api, org, r)).toEqual([]);
+  });
+
+  it('Planta que falhou, corrigida: passa a ativa; a inativa continua inativa', async () => {
+    const falhou = await cadastrar('Anexo');
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .update(plantas)
+        .set({ situacao: 'falhou', erro: 'DXF sem linhas.' })
+        .where(eq(plantas.id, falhou)),
+    );
+    const corrigida = await substituir(falhou, modeloDoPmg(60, 40));
+    expect(corrigida.statusCode, corrigida.body).toBe(200);
+    expect(corrigida.json().planta).toMatchObject({
+      situacao: 'ativa',
+      erro: null,
+      largura: 60,
+      profundidade: 40,
+    });
+
+    const inativa = await cadastrar('Galpão fechado');
+    await cliente.enviar('PATCH', `/mapa/plantas/${inativa}`, ana(), { situacao: 'inativa' });
+    const trocada = await substituir(inativa, modeloDoPmg(60, 40));
+    expect(trocada.json().planta.situacao).toBe('inativa');
+  });
+
+  it('Posições fora do desenho novo: a resposta diz quantas são, e elas continuam', async () => {
+    const planta = await cadastrar('Encolhida');
+    await posicionar(planta, impressoras[0] as string, 100, 70);
+    await posicionar(planta, impressoras[1] as string, 30, 20);
+    const r = await substituir(planta, modeloDoPmg(60, 40));
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().posicoesFora).toBe(1);
+    expect(await posicoesDa(planta)).toHaveLength(2);
+    const registros = await auditoriaDaRequisicao(api, org, r);
+    expect(registros[0]?.depois).toMatchObject({ largura: 60, profundidade: 40, posicoesFora: 1 });
+  });
+
+  it('quem só vê o mapa não substitui, e a planta que não existe responde 404', async () => {
+    const planta = await cadastrar('Só para ver');
+    expect((await substituir(planta, modeloDoPmg(60, 40), bruno())).statusCode).toBe(403);
+    const semPlanta = await substituir('0199d3a0-0000-7000-8000-00000000dead', modeloDoPmg());
+    expect(semPlanta.statusCode).toBe(404);
+  });
+
+  // O navegador guarda o modelo, que é grande, e confere com o servidor se ele mudou: o desenho
+  // substituído chega na leitura seguinte, sem esperar a validade do que estava guardado.
+  it('o modelo relido depois da troca vem novo, e o mesmo desenho responde 304', async () => {
+    const planta = await cadastrar('Com etiqueta');
+    const primeira = await cliente.consultar(`/mapa/plantas/${planta}/modelo`, ana());
+    expect(primeira.headers['cache-control']).toBe('private, no-cache');
+    const etiqueta = String(primeira.headers.etag);
+    expect(etiqueta).toMatch(/^W\/".+"$/);
+    const mesma = await api.app.inject({
+      method: 'GET',
+      url: `/mapa/plantas/${planta}/modelo`,
+      headers: { host, cookie: ana().cookie, 'if-none-match': etiqueta },
+    });
+    expect(mesma.statusCode).toBe(304);
+    expect(mesma.body).toBe('');
+
+    api.relogio.avancar(60_000);
+    await substituir(planta, modeloDoPmg(60, 40));
+    const depois = await api.app.inject({
+      method: 'GET',
+      url: `/mapa/plantas/${planta}/modelo`,
+      headers: { host, cookie: ana().cookie, 'if-none-match': etiqueta },
+    });
+    expect(depois.statusCode).toBe(200);
+    expect(depois.json().largura).toBe(60);
+    expect(depois.headers.etag).not.toBe(etiqueta);
+  });
+});

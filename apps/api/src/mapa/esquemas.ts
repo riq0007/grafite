@@ -110,3 +110,16 @@ export const EnvioDaPlanta = z.object({
   nome: z.string().min(1, { error: 'Dê um nome à planta.' }).max(80),
   fonte: z.string().max(200).optional(),
 });
+
+/** O arquivo que substitui o desenho de uma planta: o nome dele vai na consulta, como no cadastro. */
+export const EnvioDoDesenho = z.object({
+  fonte: z.string().max(200).optional(),
+});
+
+/** A planta com o desenho novo e quantas posições ficaram fora da área dele. */
+export const SubstituicaoDoDesenho = z
+  .object({
+    planta: PlantaDoMapa,
+    posicoesFora: z.number().int().min(0),
+  })
+  .meta({ id: 'SubstituicaoDoDesenho' });

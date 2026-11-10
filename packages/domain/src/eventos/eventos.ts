@@ -249,6 +249,7 @@ export const EVENTO_DA_ACAO = {
   'planta.cadastrada': 'mapa.mudou',
   'planta.alterada': 'mapa.mudou',
   'planta.excluida': 'mapa.mudou',
+  'planta.desenho-substituido': 'mapa.mudou',
   'posicao-no-mapa.salva': 'mapa.mudou',
   'posicao-no-mapa.tirada': 'mapa.mudou',
   'acesso-remoto.aberto': null,

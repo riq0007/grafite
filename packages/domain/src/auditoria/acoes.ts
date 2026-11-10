@@ -179,6 +179,7 @@ export const ACOES_DA_AUDITORIA = {
   'planta.cadastrada': 'Planta cadastrada',
   'planta.alterada': 'Planta alterada',
   'planta.excluida': 'Planta excluída',
+  'planta.desenho-substituido': 'Desenho da planta substituído',
   'posicao-no-mapa.salva': 'Posição no mapa salva',
   'posicao-no-mapa.tirada': 'Posição no mapa tirada',
   // O acesso remoto (change acesso-remoto-vnc): o acesso aberto, sem evento
