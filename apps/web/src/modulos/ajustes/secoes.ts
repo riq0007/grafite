@@ -92,6 +92,11 @@ export const SECOES = [
         rotulo: 'Ocultar o dock automaticamente',
         palavrasChave: ['esconder'],
       },
+      {
+        foco: 'modulos-do-dock',
+        rotulo: 'Módulos do dock',
+        palavrasChave: ['ordem', 'organizar', 'tirar do dock', 'mais'],
+      },
     ] as readonly AjusteDaSecao[],
   },
   {

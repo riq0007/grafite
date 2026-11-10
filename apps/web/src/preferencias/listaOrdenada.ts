@@ -38,17 +38,41 @@ export function ordenarItens<T extends { id: string }>(
 }
 
 /**
+ * A lista inteira de quem guarda o que não está na tela, como o dock (change dock-personalizavel,
+ * design, decisão 4): os ids salvos que o registro não traz continuam nela, no lugar deles, e os
+ * registrados que faltavam entram no fim, à vista. Os ausentes só ficam enquanto cabem no limite
+ * da lista, contados depois dos registrados, que ficam todos.
+ */
+export function listaComAusentes(
+  registrados: ReadonlyArray<{ id: string }>,
+  salvos: readonly ItemDaLista[],
+  limite: number,
+): ItemDaLista[] {
+  const registrado = new Set(registrados.map((item) => item.id));
+  let vagas = Math.max(0, limite - registrados.length);
+  const lista = salvos.filter((salvo) => registrado.has(salvo.id) || vagas-- > 0);
+  for (const item of registrados) {
+    if (!lista.some((salvo) => salvo.id === item.id)) lista.push({ id: item.id, visivel: true });
+  }
+  return lista;
+}
+
+/**
  * Sobe (-1) ou desce (1) o item até o vizinho à vista, passando por cima dos ocultos: o item sai do
- * lugar dele e entra antes do vizinho de cima, ou depois do de baixo.
+ * lugar dele e entra antes do vizinho de cima, ou depois do de baixo. Com os ids da tela, passa por
+ * cima também dos itens que a lista guarda e a tela não mostra.
  */
 export function moverItem(
   lista: readonly ItemDaLista[],
   id: string,
   sentido: -1 | 1,
+  naTela?: ReadonlySet<string>,
 ): ItemDaLista[] {
+  const pula = (item: ItemDaLista | undefined) =>
+    !item?.visivel || (naTela !== undefined && !naTela.has(item.id));
   const indice = lista.findIndex((item) => item.id === id);
   let vizinho = indice + sentido;
-  while (vizinho >= 0 && vizinho < lista.length && !lista[vizinho]?.visivel) vizinho += sentido;
+  while (vizinho >= 0 && vizinho < lista.length && pula(lista[vizinho])) vizinho += sentido;
   const doVizinho = lista[vizinho];
   const movido = lista[indice];
   if (indice < 0 || !doVizinho || !movido) return [...lista];

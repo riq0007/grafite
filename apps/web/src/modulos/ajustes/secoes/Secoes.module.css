@@ -188,3 +188,56 @@
   font-size: var(--texto-rotulo);
   font-weight: var(--peso-medio);
 }
+
+/*
+ * Seção Dock: os módulos do dock (change dock-personalizavel), em duas listas, a do dock e a do
+ * Mais, cada módulo numa linha, com o nome à esquerda e os botões dele à direita.
+ */
+.listasDeModulos {
+  display: grid;
+  gap: var(--esp-4);
+  max-width: calc(var(--esp-12) * 8);
+}
+
+/* Um texto de apoio da parte, como onde Ajustes fica e a lista sem nenhum módulo. */
+.explicacao {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.listaDeModulos {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moduloDaLista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-1) var(--esp-3);
+  padding: var(--esp-1) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.moduloDaLista:first-child {
+  border-top: 0;
+}
+
+.nomeDoModulo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.acoesDoModulo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+}

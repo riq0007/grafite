@@ -48,6 +48,7 @@ import { JanelaComAbas } from './JanelaComAbas.tsx';
 import { ModuloDesligado } from './ModuloDesligado.tsx';
 import { useMenusDinamicos } from './menusDinamicos.ts';
 import { moduloAtual, modulosDaCasca } from './modulosDaCasca.ts';
+import { ContextoDosModulosDaConta } from './modulosDaConta.tsx';
 import { ItemDeRede } from './status/ItemDeRede.tsx';
 import { Relogio } from './status/Relogio.tsx';
 
@@ -250,18 +251,21 @@ export function CascaDoApp() {
               aoEscolherItem: (_modulo, destino) => irPara(destino),
             }}
           >
-            <JanelaComAbas
-              abas={abas}
-              chaveDaTela={caminho}
-              nomeReserva={atual?.nome ?? ''}
-              tela={
-                interruptor && desligados.includes(interruptor.id) ? (
-                  <ModuloDesligado nome={interruptor.nome} />
-                ) : (
-                  <Outlet />
-                )
-              }
-            />
+            {/* As telas leem os módulos que a conta vê, como a seção Dock dos Ajustes. */}
+            <ContextoDosModulosDaConta.Provider value={registro}>
+              <JanelaComAbas
+                abas={abas}
+                chaveDaTela={caminho}
+                nomeReserva={atual?.nome ?? ''}
+                tela={
+                  interruptor && desligados.includes(interruptor.id) ? (
+                    <ModuloDesligado nome={interruptor.nome} />
+                  ) : (
+                    <Outlet />
+                  )
+                }
+              />
+            </ContextoDosModulosDaConta.Provider>
           </Casca>
           <CursorSuavizado
             {...preferencias.cursor}

@@ -56,9 +56,9 @@ A `Casca` entrega os módulos de `modulosNoMais` também à barra de abas e à �
 
 ### 4. A seção Dock
 
-Abaixo dos controles de hoje, a parte "Módulos do dock", com as duas listas da spec. Cada clique grava a lista inteira, como no Início. Depois de Subir ou Descer, o foco continua no mesmo botão do mesmo módulo; quando esse botão fica desabilitado, o foco vai ao outro botão da linha.
+Abaixo dos controles de hoje, a parte "Módulos do dock", com as duas listas da spec. Cada clique grava a lista inteira, como no Início. Depois de Subir ou Descer, o foco continua no mesmo botão do mesmo módulo; quando esse botão fica desabilitado, o foco vai ao outro botão da linha. Depois de "Tirar do dock" ou de "Pôr no dock", a linha muda de lista, e o foco vai ao botão que desfaz a ação: sem isso, o foco se perderia com o botão que saiu da tela. A seção leva o foco ela mesma, depois de as listas mostrarem a mudança: o navegador tira o foco do botão que fica desabilitado e do que muda de lugar na lista.
 
-A lista usa o registro da conta de quem ajusta. Nos padrões da organização, quem administra vê os módulos dela, e a lista vale para todos; cada conta ignora o que não vê.
+A lista usa o registro da conta de quem ajusta. A casca do app, que já o calcula, entrega-o às telas por um contexto (`useModulosDaConta`), como faz com a abertura da busca; a seção não refaz a conta das permissões e dos módulos desligados. Nos padrões da organização, quem administra vê os módulos dela, e a lista vale para todos; cada conta ignora o que não vê.
 
 A lista gravada guarda o que não está na tela. O `listaComAusentes` monta a lista inteira: os ids salvos que o registro de quem ajusta não traz continuam nela, no lugar deles, enquanto couberem no limite, e os registrados que faltavam entram no fim. O `moverItem` recebe os ids da tela e passa por cima dos ausentes, como passa por cima dos tirados. Assim, o módulo sem acesso volta ao lugar dele depois de a conta mexer na ordem, e quem administra os padrões não apaga da lista um módulo que não vê. O Início continua gravando só os blocos registrados.
 

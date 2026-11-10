@@ -202,6 +202,22 @@ describe('casca do app', () => {
       );
     });
 
+    // Spec ajustes-do-sistema, "Seção Dock": Ordem pela busca.
+    it('Ordem pela busca: "Módulos do dock" abre a seção Dock, com o foco na lista "No dock"', async () => {
+      comPonteiroFino();
+      abrir('/');
+      await titulo('O que resolver agora');
+      fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Buscar' }));
+      const campo = within(await busca()).getByRole('searchbox', { name: 'Buscar' });
+      fireEvent.change(campo, { target: { value: 'ordem do dock' } });
+      const opcao = await within(await busca()).findByRole('option', { name: 'Módulos do dock' });
+      expect(opcao.textContent).toContain('Ajustes › Dock');
+      fireEvent.click(opcao);
+      await titulo('Dock');
+      const lista = await screen.findByRole('list', { name: 'No dock' });
+      await waitFor(() => expect(lista.contains(document.activeElement)).toBe(true));
+    });
+
     it('Ctrl+K abre a busca de qualquer lugar da casca', async () => {
       abrir('/');
       await titulo('O que resolver agora');
@@ -728,6 +744,15 @@ describe('a ordem do dock da conta', () => {
     const barra = within(screen.getByRole('banner'));
     await waitFor(() => expect(barra.getByRole('button', { name: 'Visualizar' })).toBeTruthy());
     expect(barra.getAllByText('Arquivo').length).toBeGreaterThan(0);
+  });
+
+  it('Subir um módulo nos Ajustes muda o dock à vista na hora, e Tirar do dock o leva ao Mais', async () => {
+    abrirComExemplos({}, { endereco: '/ajustes/dock' });
+    await titulo('Dock');
+    fireEvent.click(screen.getByRole('button', { name: 'Subir Arquivo' }));
+    expect(await nomesNoDock()).toEqual(['Início', 'Arquivo', 'Oficina', 'Ajustes']);
+    fireEvent.click(screen.getByRole('button', { name: 'Tirar Oficina do dock' }));
+    expect(await nomesNoDock()).toEqual(['Início', 'Arquivo', 'Mais', 'Ajustes']);
   });
 
   it('o dock muda sem recarregar quando a ordem chega de outra sessão da conta', async () => {

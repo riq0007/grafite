@@ -10,7 +10,9 @@ A seção SHALL ajustar também os módulos do dock (spec dock, "Ordem dos módu
 - o nome do módulo no nome acessível de cada botão, como "Subir Operação";
 - a explicação "Ajustes fica sempre no fim do dock.", com os Ajustes fora das duas listas.
 
-Cada mudança SHALL valer na hora, no dock à vista. As listas SHALL trazer só os módulos que quem ajusta vê. Nos padrões da organização, as listas SHALL definir a ordem de quem não arrumou o próprio dock.
+Cada mudança SHALL valer na hora, no dock à vista. As listas SHALL trazer só os módulos que quem ajusta vê, e o módulo que ele não vê SHALL continuar no lugar dele na lista guardada.
+
+O foco SHALL acompanhar o módulo: depois de subir ou descer, ele SHALL continuar no mesmo botão do mesmo módulo ou, quando esse botão fica desabilitado, ir ao outro botão de mover da linha; depois de tirar um módulo do dock ou de pô-lo de volta, ele SHALL ir ao botão que desfaz a ação, na outra lista. Nos padrões da organização, as listas SHALL definir a ordem de quem não arrumou o próprio dock.
 
 #### Scenario: Tamanho do dock
 - **WHEN** o usuário leva o tamanho a 36 px
@@ -26,7 +28,15 @@ Cada mudança SHALL valer na hora, no dock à vista. As listas SHALL trazer só 
 
 #### Scenario: Tirar do dock
 - **WHEN** o usuário escolhe "Tirar do dock" nas Salas
-- **THEN** as Salas passam à lista "No Mais", somem do dock e aparecem no menu Mais
+- **THEN** as Salas passam à lista "No Mais", somem do dock e aparecem no menu Mais, e o foco vai ao "Pôr no dock" das Salas
+
+#### Scenario: Primeiro da lista
+- **WHEN** o usuário escolhe "Subir Operação", com a Operação em segundo na lista "No dock"
+- **THEN** a Operação passa a ser a primeira, o "Subir Operação" fica desabilitado, e o foco vai ao "Descer Operação"
+
+#### Scenario: Módulo que quem ajusta não vê
+- **WHEN** a lista guardada traz o Cofre em segundo, quem ajusta não vê o Cofre, e ele sobe a Operação, que está em terceiro
+- **THEN** a Operação passa a ser a primeira da lista "No dock", e o Cofre continua na lista guardada, depois do módulo que era o primeiro
 
 #### Scenario: Pôr de volta no dock
 - **WHEN** o usuário escolhe "Pôr no dock" nas Salas

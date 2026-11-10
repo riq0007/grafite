@@ -41,6 +41,20 @@ describe('busca dos Ajustes', () => {
     });
   });
 
+  // Spec ajustes-do-sistema, "Seção Dock": Ordem pela busca.
+  it('Ordem pela busca: "Módulos do dock" leva à seção Dock, com o foco na lista "No dock"', () => {
+    const entrada = entradas.find((candidata) => candidata.rotulo === 'Módulos do dock');
+    expect(entrada).toMatchObject({
+      grupo: 'ajustes',
+      caminho: 'Ajustes › Dock',
+      destino: '/ajustes/dock',
+      foco: 'modulos-do-dock',
+    });
+    expect(entrada?.palavrasChave).toEqual(
+      expect.arrayContaining(['ordem', 'organizar', 'tirar do dock']),
+    );
+  });
+
   it('a Conta entra com as partes dela, cada uma com o foco na parte', () => {
     expect(entradas.find((entrada) => entrada.id === 'conta')).toMatchObject({
       rotulo: 'Conta',

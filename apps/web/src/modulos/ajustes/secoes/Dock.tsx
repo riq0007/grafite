@@ -13,6 +13,7 @@ import {
   TituloDaSecao,
   useAlvoDasPreferencias,
 } from '../../../preferencias/alvo.tsx';
+import { ModulosDoDock } from './ModulosDoDock.tsx';
 import estilos from './Secoes.module.css';
 
 const NOMES_DAS_POSICOES: Record<PosicaoDoDock, string> = {
@@ -21,7 +22,10 @@ const NOMES_DAS_POSICOES: Record<PosicaoDoDock, string> = {
   direita: 'À direita',
 };
 
-/** Seção Dock: posição, tamanho, ampliação e ocultar automático, com efeito na hora. */
+/**
+ * Seção Dock: posição, tamanho, ampliação, ocultar automático e os módulos do dock, na ordem e com
+ * os tirados dele, com efeito na hora.
+ */
 export function SecaoDock() {
   const { preferencias, mudar } = useAlvoDasPreferencias();
   const { posicao, tamanho, ampliar, ocultar } = preferencias.dock;
@@ -75,6 +79,8 @@ export function SecaoDock() {
         >
           Ocultar automaticamente
         </Interruptor>
+
+        <ModulosDoDock />
 
         <div>
           <RestaurarPadroes secao="dock" />

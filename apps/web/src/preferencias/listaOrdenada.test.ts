@@ -3,7 +3,7 @@
 // inicio-ajustavel, design, decisão 2) e os módulos do dock (change dock-personalizavel, design,
 // decisão 1).
 import { describe, expect, it } from 'vitest';
-import { moverItem, ocultarItem, ordenarItens } from './listaOrdenada.ts';
+import { listaComAusentes, moverItem, ocultarItem, ordenarItens } from './listaOrdenada.ts';
 
 const registrados = [
   { id: 'inicio.resolver' },
@@ -78,5 +78,70 @@ describe('moverItem e ocultarItem', () => {
       'gestao.backups',
       'inicio.resolver',
     ]);
+  });
+});
+
+// A lista gravada do dock guarda o módulo que quem ajusta não vê (change dock-personalizavel,
+// design, decisão 4).
+describe('listaComAusentes', () => {
+  const item = (id: string, visivel = true) => ({ id, visivel });
+  const naTela = [{ id: 'inicio' }, { id: 'ativos' }, { id: 'operacao' }];
+
+  it('o id que o registro não traz continua no lugar dele, e o registrado que faltava entra no fim', () => {
+    const salvos = [item('operacao'), item('cofre', false), item('inicio')];
+    expect(listaComAusentes(naTela, salvos, 40)).toEqual([
+      item('operacao'),
+      item('cofre', false),
+      item('inicio'),
+      item('ativos'),
+    ]);
+  });
+
+  it('sem nada salvo, é a ordem do registro, com todos à vista', () => {
+    expect(listaComAusentes(naTela, [], 40)).toEqual([
+      item('inicio'),
+      item('ativos'),
+      item('operacao'),
+    ]);
+  });
+
+  it('os ausentes que passam do limite saem, e os registrados ficam todos', () => {
+    const salvos = [item('cofre'), item('inicio'), item('salas'), item('paineis'), item('mapa')];
+    expect(listaComAusentes(naTela, salvos, 5).map(({ id }) => id)).toEqual([
+      'cofre',
+      'inicio',
+      'salas',
+      'ativos',
+      'operacao',
+    ]);
+  });
+});
+
+describe('moverItem com os ids da tela', () => {
+  const item = (id: string, visivel = true) => ({ id, visivel });
+  const naTela = new Set(['inicio', 'ativos', 'operacao']);
+  const lista = [item('inicio'), item('cofre'), item('operacao'), item('ativos')];
+
+  it('subir passa por cima do ausente, até o vizinho da tela, e o ausente continua na lista', () => {
+    expect(ids(moverItem(lista, 'operacao', -1, naTela))).toEqual([
+      'operacao',
+      'inicio',
+      'cofre',
+      'ativos',
+    ]);
+  });
+
+  it('descer passa por cima do ausente também', () => {
+    expect(ids(moverItem(lista, 'inicio', 1, naTela))).toEqual([
+      'cofre',
+      'operacao',
+      'inicio',
+      'ativos',
+    ]);
+  });
+
+  it('sem vizinho da tela daquele lado, a lista fica como está', () => {
+    const soOAusenteAcima = [item('cofre'), item('inicio'), item('ativos')];
+    expect(moverItem(soOAusenteAcima, 'inicio', -1, naTela)).toEqual(soOAusenteAcima);
   });
 });

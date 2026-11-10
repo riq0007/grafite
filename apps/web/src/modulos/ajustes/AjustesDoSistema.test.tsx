@@ -97,7 +97,16 @@ describe('Ajustes do Sistema', () => {
     noComputador();
     for (const [endereco, focos] of [
       ['/ajustes/aparencia', ['tema', 'destaque', 'cantos', 'densidade', 'barra-de-rolagem']],
-      ['/ajustes/dock', ['posicao-do-dock', 'tamanho-do-dock', 'ampliar-o-dock', 'ocultar-o-dock']],
+      [
+        '/ajustes/dock',
+        [
+          'posicao-do-dock',
+          'tamanho-do-dock',
+          'ampliar-o-dock',
+          'ocultar-o-dock',
+          'modulos-do-dock',
+        ],
+      ],
       ['/ajustes/acessibilidade', ['movimento', 'transparencia']],
     ] as const) {
       abrir(endereco);
