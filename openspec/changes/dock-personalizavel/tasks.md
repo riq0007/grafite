@@ -14,11 +14,12 @@
 
 - [x] 3.1 Escrever primeiro os testes e depois a parte "Módulos do dock" da seção Dock, com o foco depois de mover e a entrada na busca (decisão 4). Verificar: os testes passam com "Subir um módulo", "Tirar do dock", "Pôr de volta no dock", "Restaurar a ordem" e "Ordem pela busca".
 - [x] 3.2 Escrever primeiro o teste e depois conferir a mesma parte nos padrões da organização. Verificar: o teste dos Padrões passa gravando a lista na organização, e uma conta sem lista própria passa a segui-la.
+- [ ] 3.3 Escrever o ponta a ponta da ordem do dock pelos Ajustes, com a web compilada: subir até o primeiro, mover no meio da lista, tirar do dock e pôr de volta, pelo teclado. O navegador tira o foco do botão que fica desabilitado e da linha que muda de lugar, e o DOM dos testes unitários não: só o ponta a ponta confere que a seção o devolve. Verificar: o `pnpm test:e2e` passa com o foco conferido em cada passo e com a lista gravada na conta.
 
 ## 4. Fechamento
 
 - [x] 4.1 Conferir no `pnpm dev`: subir a Operação, tirar as Salas, abrir as Salas pelo Mais e pela busca, restaurar, e repetir com o dock à esquerda e numa janela baixa. Verificar: o dock muda na hora, o Mais aparece com as Salas, e nada se sobrepõe à barra superior.
-- [ ] 4.2 Gravar a referência visual da história nova do dock. Verificar: o `pnpm test:visual` passa.
+- [x] 4.2 Gravar a referência visual da história nova do dock. Verificar: o `pnpm test:visual` passa.
 - [ ] 4.3 Atualizar a spec mestre (seções 7.2 e 7.4) e o mapa. Verificar: os testes da documentação e do mapa passam.
 - [ ] 4.4 Conferir as verificações:
   - `pnpm lint`;
