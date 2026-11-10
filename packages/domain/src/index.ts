@@ -14,6 +14,19 @@ export {
   SEM_ACESSO,
 } from './acesso/acesso.ts';
 export { bloqueioDepois, mensagemDoBloqueio } from './acesso/bloqueio.ts';
+export {
+  APARELHOS_POR_CONTA,
+  aparelhoNoPrazo,
+  MENSAGENS_DA_CONFIANCA,
+  type OrigemDoPrazo,
+  PRAZO_DA_CONFIANCA,
+  type PrazoDaConfianca,
+  type PrazoDoPerfil,
+  prazoDaConfianca,
+  prazoValido,
+  textoDoPrazo,
+  textoDosDias,
+} from './acesso/confianca.ts';
 export { descreverDispositivo } from './acesso/dispositivo.ts';
 export {
   conferirCatalogo,

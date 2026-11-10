@@ -3,6 +3,7 @@
 // atribuição: a organização inteira ou o ramo de um local. A mesma resolução decide na API e
 // explica na tela de onde vem cada permissão.
 import type { ArvoreDeLocais } from '../locais/arvore.ts';
+import type { PrazoDoPerfil } from './confianca.ts';
 import {
   definicaoDa,
   fechamento,
@@ -19,6 +20,8 @@ export interface PerfilParaAcesso {
   /** Só o Administrador: todas as permissões do catálogo, inclusive as que vierem depois. */
   todasAsPermissoes: boolean;
   exigeDoisPassos: boolean;
+  /** O prazo da confiança nos aparelhos do perfil, ou `null` para seguir a organização. */
+  diasDeConfianca?: number | null;
 }
 
 export type OrigemDaAtribuicao =
@@ -60,6 +63,8 @@ export interface Acesso {
   /** Os nomes desses perfis, em ordem. */
   perfisQueExigem: readonly string[];
   origens: ReadonlyMap<Permissao, readonly OrigemDaPermissao[]>;
+  /** O prazo da confiança de cada perfil em vigor que tem um, pelo nome (change aparelho-confiavel). */
+  prazosDosPerfis: readonly PrazoDoPerfil[];
 }
 
 export const SEM_ACESSO: Acesso = {
@@ -67,6 +72,7 @@ export const SEM_ACESSO: Acesso = {
   exigeDoisPassos: false,
   perfisQueExigem: [],
   origens: new Map(),
+  prazosDosPerfis: [],
 };
 
 const TODAS = PERMISSOES.map((p) => p.chave);
@@ -93,9 +99,13 @@ export function resolverAcesso(atribuicoes: readonly AtribuicaoParaAcesso[]): Ac
   const alcances = new Map<Permissao, { organizacao: boolean; locais: Set<string> }>();
   const origens = new Map<Permissao, OrigemDaPermissao[]>();
   const perfisQueExigem = new Set<string>();
+  const prazos = new Map<string, number>();
   for (const atribuicao of atribuicoes.filter(emVigor)) {
     const { id, perfil, localId, origem } = atribuicao;
     if (perfil.exigeDoisPassos) perfisQueExigem.add(perfil.nome);
+    if (perfil.diasDeConfianca !== undefined && perfil.diasDeConfianca !== null) {
+      prazos.set(perfil.nome, perfil.diasDeConfianca);
+    }
     for (const chave of permissoesDa(atribuicao)) {
       const atual = alcances.get(chave) ?? { organizacao: false, locais: new Set<string>() };
       if (localId === null) atual.organizacao = true;
@@ -111,12 +121,15 @@ export function resolverAcesso(atribuicoes: readonly AtribuicaoParaAcesso[]): Ac
       origens.set(chave, lista);
     }
   }
-  if (alcances.size === 0 && perfisQueExigem.size === 0) return SEM_ACESSO;
+  if (alcances.size === 0 && perfisQueExigem.size === 0 && prazos.size === 0) return SEM_ACESSO;
   return {
     permissoes: alcances,
     exigeDoisPassos: perfisQueExigem.size > 0,
     perfisQueExigem: [...perfisQueExigem].sort((a, b) => a.localeCompare(b, 'pt-BR')),
     origens,
+    prazosDosPerfis: [...prazos]
+      .map(([nome, dias]) => ({ nome, dias }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
   };
 }
 

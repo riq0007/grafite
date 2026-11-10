@@ -41,6 +41,7 @@ function acessoCom(permissoes: Partial<Record<Permissao, true | string[]>>): Ace
     exigeDoisPassos: false,
     perfisQueExigem: [],
     origens: new Map(),
+    prazosDosPerfis: [],
   };
 }
 
