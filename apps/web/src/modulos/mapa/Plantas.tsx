@@ -349,8 +349,8 @@ function ExcluirPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: (
         return { ok: true };
       }}
     >
-      <p>{oQueAExclusaoApaga(planta.posicoes ?? 0)}</p>
-      <p>A exclusão não se desfaz.</p>
+      <p className={estilos.paragrafo}>{oQueAExclusaoApaga(planta.posicoes ?? 0)}</p>
+      <p className={estilos.paragrafo}>A exclusão não se desfaz.</p>
     </Confirmacao>
   );
 }

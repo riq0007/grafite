@@ -1,5 +1,6 @@
 import { Botao, CampoDeTexto, Dialogo, MensagemDoPasso, type NivelDoBotao } from '@grafite/ui';
 import { type ReactNode, useState } from 'react';
+import estilos from './Confirmacao.module.css';
 
 export interface PropsDaConfirmacao {
   /** O nome da ação, no botão que abre a confirmação, como "Inativar a conta". */
@@ -112,7 +113,7 @@ export function Confirmacao({
       {children}
       {conferir !== undefined && (
         <>
-          <p>
+          <p className={estilos.instrucao}>
             Digite <strong>{conferir}</strong> para confirmar.
           </p>
           <CampoDeTexto

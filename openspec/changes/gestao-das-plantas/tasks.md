@@ -13,7 +13,7 @@
 
 ## 3. Fechamento
 
-- [ ] 3.1 Conferir no `pnpm dev`: cadastrar uma planta, posicionar um ativo, renomear, substituir o desenho, inativar, reativar e excluir. Verificar: cada ação dá o retorno da spec, o ativo continua cadastrado depois da exclusão, e a auditoria mostra a exclusão com a contagem.
+- [x] 3.1 Conferir no `pnpm dev`: cadastrar uma planta, posicionar um ativo, renomear, substituir o desenho, inativar, reativar e excluir. Verificar: cada ação dá o retorno da spec, o ativo continua cadastrado depois da exclusão, e a auditoria mostra a exclusão com a contagem.
 - [ ] 3.2 Atualizar a spec mestre (seção 5.2, decisão 8) e o mapa dos documentos (design, decisão 6). Verificar: os testes da documentação e do mapa passam.
 - [ ] 3.3 Conferir as verificações:
   - `pnpm lint`;
