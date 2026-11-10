@@ -242,3 +242,23 @@ describe('o cofre sem acesso', () => {
     expect(lista).not.toHaveBeenCalled();
   });
 });
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2).
+describe('a validade do segredo numa coluna estreita', () => {
+  it('põe a data e os avisos do que passou na parte fixa, sem nada que quebre a linha', async () => {
+    hojeE('2026-10-12');
+    const { servidor } = servidorDoCofre([WIFI, SWITCH]);
+    abrir('/cofre', servidor, USA);
+    const [wifi, doSwitch] = await linhas();
+
+    const vencido = within(wifi as HTMLElement).getByText('Vencido');
+    const fixo = vencido.closest('[data-parte="fixo"]');
+    expect(fixo?.textContent).toBe('30/09/2026VencidoRotação atrasada');
+    expect(
+      within(doSwitch as HTMLElement)
+        .getByText('31/03/2027')
+        .closest('[data-parte]'),
+    ).toBeTruthy();
+  });
+});

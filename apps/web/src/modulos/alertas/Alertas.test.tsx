@@ -395,3 +395,30 @@ describe('lista dos alertas resolvidos', () => {
     expect(await screen.findByText('Nenhum alerta resolvido.')).toBeTruthy();
   });
 });
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2).
+describe('a situação do alerta numa coluna estreita', () => {
+  it('põe o selo na parte fixa, e quem reconheceu e o silêncio do ativo na que encolhe', async () => {
+    const reconhecido = alerta('al-reconhecido', {
+      reconhecido: { nome: 'Bruno Lima', em: antes(10) },
+      silencio: { ate: null, motivo: 'Em manutenção' },
+    });
+    const { servidor } = servidorDosAlertas([{ itens: [reconhecido, TONER] }]);
+    abrir('/alertas', servidor, VE);
+    const [daReconhecida, doToner] = await linhas();
+
+    const selo = within(daReconhecida as HTMLElement).getByText('Reconhecido');
+    expect(selo.closest('[data-parte]')?.getAttribute('data-parte')).toBe('fixo');
+    const resto = selo.closest('[role="gridcell"]')?.querySelector('[data-parte="resto"]');
+    expect([...(resto?.children ?? [])].map((parte) => parte.textContent)).toEqual([
+      'por Bruno Lima',
+      'Ativo silenciado',
+    ]);
+
+    // O alerta só aberto não tem o que acompanhe o selo.
+    const aberto = within(doToner as HTMLElement).getByText('Aberto');
+    expect(aberto.closest('[data-parte]')?.getAttribute('data-parte')).toBe('fixo');
+    expect(aberto.closest('[role="gridcell"]')?.querySelector('[data-parte="resto"]')).toBeNull();
+  });
+});

@@ -43,14 +43,7 @@
   gap: var(--esp-2);
 }
 
-/* A situação e, ao lado, o silêncio do ativo, em texto. */
-.situacao {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--esp-2);
-}
-
+/* O silêncio do ativo, em texto, ao lado da situação do alerta. */
 .silenciado {
   color: var(--cor-texto-2);
 }
