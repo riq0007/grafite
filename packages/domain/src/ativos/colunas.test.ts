@@ -456,3 +456,24 @@ describe('as colunas dos suprimentos e contadores', () => {
     expect(lista).not.toContain('coleta.paginas');
   });
 });
+
+// As larguras de fábrica das colunas da coleta (spec componentes-base, "Célula numa linha só";
+// change celulas-numa-linha, design, decisão 4): a largura que mostra o conteúdo do dia a dia sem
+// corte, medida na história "Larguras que a coleta pede" do catálogo do @grafite/ui.
+describe('as larguras de fábrica das colunas da coleta', () => {
+  const comAColeta: TipoNasColunas = {
+    ...IMPRESSORA,
+    capacidades: ['rede.disponibilidade', 'snmp.suprimentos', 'controlid.saude'],
+  };
+
+  it('cada coluna nasce com a largura que mostra a situação e a idade sem corte', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const daColeta = colunas.filter(({ chave }) => chave.startsWith('coleta.'));
+    expect(Object.fromEntries(daColeta.map(({ chave, largura }) => [chave, largura]))).toEqual({
+      'coleta.disponibilidade': 210,
+      'coleta.suprimentos': 340,
+      'coleta.paginas': 190,
+      'coleta.control-id': 280,
+    });
+  });
+});

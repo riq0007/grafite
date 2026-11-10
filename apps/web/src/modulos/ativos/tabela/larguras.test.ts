@@ -1,3 +1,4 @@
+import { colunasDosAtivos } from '@grafite/domain';
 import { describe, expect, it } from 'vitest';
 import { colunasComLarguras } from './larguras.ts';
 
@@ -37,5 +38,30 @@ describe('as larguras do redimensionamento', () => {
         PADROES,
       ),
     ).toEqual([{ chave: 'ativo.local' }, { chave: 'ip', largura: 90 }]);
+  });
+
+  // As larguras de fábrica das colunas da coleta mudaram na change celulas-numa-linha (design,
+  // decisão 4): quem nunca mexeu nelas continua sem nada guardado, e a visão não fica personalizada.
+  it('as colunas da coleta na largura de fábrica do domínio não ficam guardadas na visão', () => {
+    const daColeta = colunasDosAtivos({
+      tipos: [
+        {
+          situacao: 'ativo',
+          capacidades: ['rede.disponibilidade', 'snmp.suprimentos', 'controlid.saude'],
+          campos: [],
+        },
+      ],
+      campos: [],
+      verRestritos: false,
+    }).filter(({ chave }) => chave.startsWith('coleta.'));
+    const deFabrica = new Map(daColeta.map(({ chave, largura }) => [chave, largura]));
+    expect(daColeta).toHaveLength(4);
+    expect(
+      colunasComLarguras(
+        daColeta.map(({ chave }) => ({ chave })),
+        deFabrica,
+        deFabrica,
+      ),
+    ).toEqual(daColeta.map(({ chave }) => ({ chave })));
   });
 });

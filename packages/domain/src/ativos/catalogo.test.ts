@@ -160,8 +160,14 @@ describe('as capacidades', () => {
       configuracao: 'snmp',
     });
     expect(suprimentos?.colunas).toEqual([
-      { chave: 'coleta.suprimentos', rotulo: 'Suprimentos', tipo: 'numero', unidade: '%' },
-      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero' },
+      {
+        chave: 'coleta.suprimentos',
+        rotulo: 'Suprimentos',
+        tipo: 'numero',
+        unidade: '%',
+        largura: 340,
+      },
+      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero', largura: 190 },
     ]);
   });
 
@@ -191,6 +197,7 @@ describe('as capacidades', () => {
         chave: 'coleta.control-id',
         rotulo: 'Control iD',
         tipo: 'situacao',
+        largura: 280,
         opcoes: [
           { id: 'respondendo', rotulo: 'Respondendo' },
           { id: 'login-recusado', rotulo: 'Login recusado' },
