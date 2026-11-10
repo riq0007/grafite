@@ -634,6 +634,8 @@ Os indicadores só aparecem quando existe uma decisão ligada a eles, conforme o
 
 **Início ajustável (D1, change inicio-ajustavel):** o Início abre com a busca no topo e é feito de blocos. "O que resolver agora" é o primeiro e fica sempre à vista; os módulos registram os outros, como os suprimentos que acabam primeiro, numa prateleira de cartuchos com a estimativa, e os backups do Control iD, com os rostos e os dias sem backup. Cada conta sobe, desce e oculta os blocos em "Personalizar o Início".
 
+**Opções e largura dos blocos (change opcoes-dos-blocos-do-inicio):** o módulo declara as opções do bloco dele, e o Início as mostra numa gaveta, no modo Personalizar: cada mudança vale na hora e fica gravada na conta. O bloco dos suprimentos tem os tipos (Toner, Cilindro, Fusor e Outros), os locais, quantas impressoras e até que nível, e diz o recorte em texto, como "Toner · até 30% · Jundiaí". Cada bloco de módulo tem a largura inteira ou a metade: na janela larga do computador, dois de metade seguidos ficam lado a lado. "O que resolver agora" é sempre inteiro.
+
 **Indicadores dos alertas (P3d):** ficam na tela Indicadores do Alertas, para quem vê os alertas, calculados com os alertas que a conta vê, nos últimos 30 dias e comparados com os 30 anteriores.
 
 | Indicador | O que mede | Meta de fábrica | Decisão fora da meta |

@@ -18,7 +18,7 @@
 ## 4. Fechamento
 
 - [ ] 4.1 Conferir no `pnpm dev`: escolher só Toner, depois só Fusor, limitar a 30%, escolher um local e pôr os dois blocos de módulo lado a lado. Verificar: o bloco muda na hora, o recorte aparece em texto, e a escolha continua depois de recarregar.
-- [ ] 4.2 Atualizar o contrato de módulo (`docs/casca/modulos.md`, "Blocos no Início"), a spec mestre (seção 7.6) e o mapa. Verificar: os testes da documentação e do mapa passam.
+- [x] 4.2 Atualizar o contrato de módulo (`docs/casca/modulos.md`, "Blocos no Início"), a spec mestre (seção 7.6) e o mapa. Verificar: os testes da documentação e do mapa passam.
 - [ ] 4.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;

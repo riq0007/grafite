@@ -14,7 +14,7 @@ O bloco SHALL ter estas opções (requisito "Opções dos blocos"):
 - **Tipos de suprimento:** Toner, Cilindro, Fusor e Outros, pelo tipo que a leitura dá a cada suprimento (spec impressoras-por-snmp, "Nível dos suprimentos"); de fábrica, os quatro. Pelo menos um SHALL ficar escolhido;
 - **Locais:** os locais cujas impressoras entram, com os de dentro; de fábrica, todos os que a conta vê;
 - **Impressoras:** quantas o bloco mostra, de 3 a 12; de fábrica, 6;
-- **Nível:** só os suprimentos até o nível escolhido, de 5% a 100%; de fábrica, 100%, que não corta nada.
+- **Nível até:** só os suprimentos até o nível escolhido, de 5% a 100%, de 5 em 5; de fábrica, 100%, que não corta nada.
 
 Com os tipos escolhidos, o suprimento de menor nível de cada impressora SHALL ser o menor entre os tipos escolhidos, e a impressora sem suprimento desses tipos com o nível lido SHALL ficar de fora. Quando alguma opção difere da de fábrica, o bloco SHALL dizer o recorte em texto, abaixo do título, como "Toner · até 30% · Jundiaí". Sem nenhuma impressora no recorte, o bloco SHALL dizer "Nenhuma impressora neste recorte.".
 

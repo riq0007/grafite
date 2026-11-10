@@ -449,11 +449,78 @@ export interface BlocoDoInicio extends ExigePermissoes {
   id: string;
   /** O título, no carimbo do bloco. */
   titulo: string;
-  componente: ComponentType;
+  /** As opções do bloco, que a conta muda em "Personalizar o Início" (opcional). */
+  opcoes?: readonly OpcaoDoBloco[];
+  /**
+   * O bloco recebe o valor que vale de cada opção que declara, já resolvido pelo Início: sempre
+   * todas as chaves, e nada a validar. Sem opções, recebe o objeto vazio.
+   */
+  componente: ComponentType<{ opcoes: OpcoesResolvidas }>;
 }
 ```
 
 O Início põe o título do bloco num `Carimbo` e desenha o componente embaixo, sem mudar a casca. O bloco segue as permissões dele e some com o módulo desligado, como as ocorrências. A conta arruma o Início em "Personalizar o Início": sobe, desce e oculta cada bloco, e a ordem fica em `inicio.blocos`, nas preferências; o bloco novo entra no fim, à vista, e "O que resolver agora" fica sempre à vista. O Ativos registra "Suprimentos que acabam primeiro" (`apps/web/src/modulos/ativos/suprimentos.tsx`), e a Gestão de ativos, "Backups do Control iD" (`apps/web/src/modulos/ativos/controlid/BackupsNoInicio.tsx`). O campo do topo do Início abre a busca global pelo `useAbrirBusca` (`apps/web/src/busca/abrirBusca.tsx`).
+
+### Opções do bloco
+
+O bloco declara as opções dele em `opcoes`, e o Início faz o resto (change opcoes-dos-blocos-do-inicio): no modo Personalizar, o bloco com opções ganha "Opções…", que abre a gaveta `OpcoesDoBloco`, do `@grafite/ui`, com um controle por forma. Cada mudança vale na hora e fica gravada na conta, no item do bloco em `inicio.blocos`, e "Restaurar as opções" volta todas às de fábrica. As formas são três:
+
+| Forma | O que a conta escolhe | O bloco recebe |
+|---|---|---|
+| `escolhas` | Um ou mais valores de uma lista fixa, com o mínimo que fica escolhido | Os ids, na ordem da lista |
+| `numero` | Um número inteiro num intervalo, com o passo e a unidade | O número |
+| `locais` | Locais da árvore da organização, que valem com os de dentro | Os ids; nenhum quer dizer todos |
+
+O Ativos declara as opções do bloco dos suprimentos:
+
+```tsx
+// apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
+export const OPCOES_DOS_SUPRIMENTOS: readonly OpcaoDoBloco[] = [
+  {
+    chave: 'tipos',
+    rotulo: 'Tipos de suprimento',
+    forma: 'escolhas',
+    opcoes: TIPOS_DE_SUPRIMENTO.map((id) => ({ id, rotulo: NOMES_DOS_TIPOS[id] })),
+    padrao: TIPOS_DE_SUPRIMENTO,
+    minimo: 1,
+  },
+  { chave: 'locais', rotulo: 'Locais', forma: 'locais' },
+  { chave: 'limite', rotulo: 'Impressoras', forma: 'numero', minimo: 3, maximo: 12, padrao: 6 },
+  {
+    chave: 'nivel',
+    rotulo: 'Nível até',
+    forma: 'numero',
+    minimo: 5,
+    maximo: 100,
+    passo: 5,
+    unidade: '%',
+    padrao: 100,
+  },
+];
+```
+
+E lê o valor de cada uma pelo `escolhasDa` e pelo `numeroDa`, de `apps/web/src/modulos/inicio/opcoes.ts`:
+
+```tsx
+// apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
+export function SuprimentosQueAcabam({ opcoes }: { opcoes: OpcoesResolvidas }) {
+  const api = useApi();
+  const tipos = escolhasDa(opcoes, 'tipos');
+  const locais = escolhasDa(opcoes, 'locais');
+  const limite = numeroDa(opcoes, 'limite');
+  const nivel = numeroDa(opcoes, 'nivel');
+```
+
+As regras:
+- **O bloco não valida:** o Início entrega sempre todas as chaves declaradas, com o valor guardado na conta ou o de fábrica. O valor que a opção não aceita mais, como o número fora do intervalo, dá lugar ao de fábrica; numa escolha de vários, o valor que saiu da lista e o local que foi inativado saem, e os outros continuam.
+- **A chave:** letras minúsculas, números e hífen, até 30 caracteres. Ela vai gravada nas preferências, e o bloco que a renomeia perde a escolha de quem já a tinha feito.
+- **Até 12 opções por bloco,** e o valor guardado é um número ou uma lista de até 50 textos.
+- **O recorte em texto:** o bloco cuja opção muda o que ele mostra diz o recorte em texto quando ele difere da fábrica, como "Toner · até 30% · Jundiaí" nos suprimentos.
+- **A consulta:** os valores das opções entram na chave da consulta do bloco, para ele reler quando a conta muda uma opção.
+
+### Largura do bloco
+
+Cada bloco de módulo tem a largura "Inteira", de fábrica, ou "Metade", que a conta escolhe no modo Personalizar e fica em `inicio.blocos`. No computador, com a área a partir de 1.200 px, o Início é uma grade de duas colunas: dois blocos de metade seguidos ficam lado a lado, e o inteiro ocupa as duas. No tablet, no celular e na área estreita, todo bloco é inteiro. O bloco não precisa fazer nada: ele deve caber na metade da área, e a prateleira dos suprimentos, por exemplo, quebra em linhas.
 
 ## Notificações
 
