@@ -29032,6 +29032,10 @@ export interface components {
                 tamanho?: number;
                 ampliar?: boolean;
                 ocultar?: boolean;
+                modulos?: {
+                    id: string;
+                    visivel: boolean;
+                }[];
             };
             cursor?: {
                 /** @enum {string} */
@@ -29112,6 +29116,10 @@ export interface components {
                 tamanho?: number | null;
                 ampliar?: boolean | null;
                 ocultar?: boolean | null;
+                modulos?: {
+                    id: string;
+                    visivel: boolean;
+                }[] | null;
             } | null;
             cursor?: {
                 tipo?: ("suavizado" | "sistema") | null;
@@ -33231,6 +33239,10 @@ export interface components {
                 tamanho?: number;
                 ampliar?: boolean;
                 ocultar?: boolean;
+                modulos?: {
+                    id: string;
+                    visivel: boolean;
+                }[];
             };
             cursor?: {
                 /** @enum {string} */
@@ -33311,6 +33323,10 @@ export interface components {
                 tamanho?: number | null;
                 ampliar?: boolean | null;
                 ocultar?: boolean | null;
+                modulos?: {
+                    id: string;
+                    visivel: boolean;
+                }[] | null;
             } | null;
             cursor?: {
                 tipo?: ("suavizado" | "sistema") | null;

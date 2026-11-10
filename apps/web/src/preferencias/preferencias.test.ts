@@ -14,7 +14,7 @@ describe('lerPreferencias', () => {
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },
       },
-      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false },
+      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false, modulos: [] },
       cursor: { tipo: 'suavizado', suavizacao: 95, abracar: true },
       notificacoes: {
         atencao: true,
@@ -147,7 +147,13 @@ describe('lerPreferencias', () => {
       densidade: 'normal',
       raio: 10,
     });
-    expect(lidas.dock).toEqual({ posicao: 'esquerda', tamanho: 48, ampliar: true, ocultar: false });
+    expect(lidas.dock).toEqual({
+      posicao: 'esquerda',
+      tamanho: 48,
+      ampliar: true,
+      ocultar: false,
+      modulos: [],
+    });
   });
 
   it('prende o tamanho do dock entre 28 e 64 px e arredonda', () => {
@@ -216,7 +222,7 @@ describe('atributosDaInterface', () => {
     expect(
       atributosDaInterface({
         ...PADRAO_DE_FABRICA,
-        dock: { posicao: 'direita', tamanho: 36, ampliar: false, ocultar: true },
+        dock: { posicao: 'direita', tamanho: 36, ampliar: false, ocultar: true, modulos: [] },
         acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
       }),
     ).toMatchObject({

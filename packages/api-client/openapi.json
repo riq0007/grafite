@@ -184,6 +184,27 @@
               },
               "ocultar": {
                 "type": "boolean"
+              },
+              "modulos": {
+                "maxItems": 40,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9.-]{1,40}$"
+                    },
+                    "visivel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "visivel"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "additionalProperties": false
@@ -603,6 +624,34 @@
                     "type": [
                       "boolean",
                       "null"
+                    ]
+                  },
+                  "modulos": {
+                    "anyOf": [
+                      {
+                        "maxItems": 40,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9.-]{1,40}$"
+                            },
+                            "visivel": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "visivel"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -21095,6 +21144,27 @@
               },
               "ocultar": {
                 "type": "boolean"
+              },
+              "modulos": {
+                "maxItems": 40,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9.-]{1,40}$"
+                    },
+                    "visivel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "visivel"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "additionalProperties": false
@@ -21514,6 +21584,34 @@
                     "type": [
                       "boolean",
                       "null"
+                    ]
+                  },
+                  "modulos": {
+                    "anyOf": [
+                      {
+                        "maxItems": 40,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9.-]{1,40}$"
+                            },
+                            "visivel": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "visivel"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },

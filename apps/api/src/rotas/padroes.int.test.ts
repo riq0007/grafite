@@ -126,6 +126,25 @@ describe('PATCH /organizacao/padroes', () => {
     expect(r.json().organizacao.preferencias).toEqual({ aparencia: { tema: 'papel' } });
   });
 
+  // Spec preferencias-da-interface, "Módulos do dock nas preferências": a organização define a
+  // lista nos padrões dela, e a conta sem lista própria a recebe com a sessão.
+  it('os módulos do dock gravam nos padrões, com a lista de antes e a de depois na auditoria', async () => {
+    const modulos = [
+      { id: 'operacao', visivel: true },
+      { id: 'salas', visivel: false },
+    ];
+    const r = await mudar(ana, { dock: { modulos } });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual({ dock: { modulos } });
+    expect(await salvos()).toEqual({ dock: { modulos } });
+    const [registro] = await auditoriaDaRequisicao(api, org, r);
+    expect(registro?.antes).toEqual({ 'dock.modulos': [] });
+    expect(registro?.depois).toEqual({ 'dock.modulos': modulos });
+    const estado = (await cliente.consultar('/sessao', bruno)).json();
+    expect(estado.organizacao.preferencias).toEqual({ dock: { modulos } });
+    expect(estado.sessao.conta.preferencias).toEqual({});
+  });
+
   it('um campo inválido recusa o pedido inteiro, sem auditoria nem evento', async () => {
     const r = await mudar(ana, { dock: { tamanho: 90 }, aparencia: { tema: 'papel' } });
     expect(r.statusCode).toBe(400);

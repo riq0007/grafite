@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MODULO_DOS_AJUSTES } from '../modulos/modulos.ts';
 import {
   aplicarMudanca,
   BARRAS_DE_ROLAGEM,
@@ -40,7 +41,7 @@ describe('opções das preferências', () => {
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },
       },
-      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false },
+      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false, modulos: [] },
       cursor: { tipo: 'suavizado', suavizacao: 95, abracar: true },
       notificacoes: {
         atencao: true,
@@ -76,6 +77,7 @@ describe('opções das preferências', () => {
       percentual: { minimo: 0, maximo: 100 },
       fixadas: 20,
       blocosDoInicio: 20,
+      modulosDoDock: 40,
     });
   });
 });
@@ -257,7 +259,7 @@ describe('resolverPreferencias', () => {
   it('resolve campo a campo', () => {
     expect(
       resolverPreferencias({ dock: { posicao: 'esquerda' } }, { dock: { tamanho: 36 } }).dock,
-    ).toEqual({ posicao: 'esquerda', tamanho: 36, ampliar: true, ocultar: false });
+    ).toEqual({ posicao: 'esquerda', tamanho: 36, ampliar: true, ocultar: false, modulos: [] });
   });
 
   it('o valor inválido da conta dá lugar ao padrão da organização', () => {
@@ -554,5 +556,86 @@ describe('a barra de rolagem nas preferências', () => {
       { aparencia: { barraDeRolagem: null } },
     );
     expect(camada).toEqual({ aparencia: { tema: 'nevoa' } });
+  });
+});
+
+// Os módulos do dock (spec preferencias-da-interface, "Módulos do dock nas preferências"; change
+// dock-personalizavel, design, decisão 1).
+describe('os módulos do dock', () => {
+  const modulo = (id: string, visivel = true) => ({ id, visivel });
+
+  it('Módulo repetido na lista: vale só o primeiro, e os outros continuam na ordem salva', () => {
+    const lido = lerAjustes({
+      dock: {
+        modulos: [
+          modulo('operacao'),
+          modulo('ativos'),
+          modulo('operacao', false),
+          modulo('salas', false),
+        ],
+      },
+    });
+    expect(lido.dock?.modulos).toEqual([
+      modulo('operacao'),
+      modulo('ativos'),
+      modulo('salas', false),
+    ]);
+  });
+
+  it('Ajustes na lista: o item dos Ajustes sai, e os outros continuam', () => {
+    const camada = aplicarMudanca(
+      {},
+      { dock: { modulos: [modulo(MODULO_DOS_AJUSTES, false), modulo('operacao')] } },
+    );
+    expect(camada.dock?.modulos).toEqual([modulo('operacao')]);
+  });
+
+  it('Preferências de antes desta lista: a lista vazia, com a posição e o tamanho salvos', () => {
+    expect(resolverPreferencias({ dock: { posicao: 'esquerda', tamanho: 36 } }).dock).toEqual({
+      posicao: 'esquerda',
+      tamanho: 36,
+      ampliar: true,
+      ocultar: false,
+      modulos: [],
+    });
+  });
+
+  it('o item inválido sai, e os válidos continuam', () => {
+    const lido = lerAjustes({
+      dock: {
+        modulos: [
+          modulo('Operação'),
+          { id: 'salas', visivel: 'sim' },
+          modulo('x'.repeat(41)),
+          'ativos',
+          modulo('salas', false),
+        ],
+      },
+    });
+    expect(lido.dock?.modulos).toEqual([modulo('salas', false)]);
+  });
+
+  it('corta a lista em 40 módulos', () => {
+    const quarentaEDois = Array.from({ length: 42 }, (_, indice) => modulo(`modulo-${indice}`));
+    expect(lerAjustes({ dock: { modulos: quarentaEDois } }).dock?.modulos).toHaveLength(40);
+  });
+
+  it('a lista vazia vale, e a que não é lista fica de fora', () => {
+    expect(lerAjustes({ dock: { modulos: [] } })).toEqual({ dock: { modulos: [] } });
+    expect(lerAjustes({ dock: { modulos: 'operacao' } })).toEqual({});
+  });
+
+  it('a lista da conta vale inteira, no lugar da lista da organização', () => {
+    const organizacao = { dock: { modulos: [modulo('operacao'), modulo('salas', false)] } };
+    expect(resolverPreferencias(organizacao).dock.modulos).toEqual(organizacao.dock.modulos);
+    const conta = { dock: { modulos: [modulo('ativos')] } };
+    expect(resolverPreferencias(organizacao, conta).dock.modulos).toEqual([modulo('ativos')]);
+  });
+
+  it('a mudança troca a lista inteira, e o null a tira', () => {
+    const camada = { dock: { modulos: [modulo('operacao')] } };
+    const nova = aplicarMudanca(camada, { dock: { modulos: [modulo('salas', false)] } });
+    expect(nova.dock?.modulos).toEqual([modulo('salas', false)]);
+    expect(aplicarMudanca(nova, { dock: { modulos: null } })).toEqual({});
   });
 });

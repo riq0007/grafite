@@ -168,7 +168,9 @@ describe('tela de padrões', () => {
     fireEvent.click(botao('Salvar padrões'));
     await waitFor(() => expect(servidor.gravacoes).toHaveLength(1));
     expect(servidor.gravacoes[0]).toEqual({
-      mudancas: { dock: { posicao: null, tamanho: null, ampliar: null, ocultar: null } },
+      mudancas: {
+        dock: { posicao: null, tamanho: null, ampliar: null, ocultar: null, modulos: null },
+      },
     });
   });
 

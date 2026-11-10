@@ -47,6 +47,27 @@ const VisaoEscolhida = z.union([z.literal(VISAO_DE_FABRICA), z.uuid()], {
   error: 'Escolha uma visão.',
 });
 
+/**
+ * Uma lista ordenada de itens `{ id, visivel }`, gravada inteira, como os blocos do Início (change
+ * inicio-ajustavel) e os módulos do dock (change dock-personalizavel).
+ */
+const listaOrdenada = (limite: number, mensagens: { demais: string; repetido: string }) =>
+  z
+    .array(
+      z
+        .object({
+          id: z.string().regex(/^[a-z0-9.-]{1,40}$/, {
+            error: 'Use letras minúsculas, números, ponto e hífen.',
+          }),
+          visivel: z.boolean(),
+        })
+        .strict(),
+    )
+    .max(limite, { error: mensagens.demais })
+    .refine((lista) => new Set(lista.map((item) => item.id)).size === lista.length, {
+      error: mensagens.repetido,
+    });
+
 /** As entradas do tema Personalizado, gravadas inteiras (change tema-personalizado, design, decisão 1). */
 const TemaPersonalizado = z
   .object({
@@ -80,6 +101,14 @@ const CAMPOS = {
     tamanho: inteiroEntre(LIMITES_DAS_PREFERENCIAS.tamanhoDoDock),
     ampliar: z.boolean(),
     ocultar: z.boolean(),
+    /**
+     * Os módulos na ordem escolhida, com os tirados do dock, gravados inteiros (change
+     * dock-personalizavel). O item dos Ajustes passa aqui e sai na leitura do domínio.
+     */
+    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, {
+      demais: 'Use até 40 módulos.',
+      repetido: 'Não repita o módulo.',
+    }),
   },
   cursor: {
     tipo: z.enum(['suavizado', 'sistema']),
@@ -111,21 +140,10 @@ const CAMPOS = {
   regiao: { fuso },
   inicio: {
     /** Os blocos do Início, na ordem, com os ocultos, gravados inteiros (change inicio-ajustavel). */
-    blocos: z
-      .array(
-        z
-          .object({
-            id: z.string().regex(/^[a-z0-9.-]{1,40}$/, {
-              error: 'Use letras minúsculas, números, ponto e hífen.',
-            }),
-            visivel: z.boolean(),
-          })
-          .strict(),
-      )
-      .max(LIMITES_DAS_PREFERENCIAS.blocosDoInicio, { error: 'Use até 20 blocos.' })
-      .refine((lista) => new Set(lista.map((bloco) => bloco.id)).size === lista.length, {
-        error: 'Não repita o bloco.',
-      }),
+    blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio, {
+      demais: 'Use até 20 blocos.',
+      repetido: 'Não repita o bloco.',
+    }),
     ordenacao: z
       .object({
         coluna: z.enum(COLUNAS_DA_TELA_INICIAL),

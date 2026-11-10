@@ -172,6 +172,34 @@ describe('PATCH /conta/preferencias', () => {
     expect(await salvas(anaId)).toEqual({ dock: { posicao: 'esquerda' }, inicio: { blocos } });
   });
 
+  // Spec preferencias-da-interface, "Módulos do dock nas preferências".
+  it('os módulos do dock gravam inteiros, sem o item dos Ajustes, e o módulo repetido recusa', async () => {
+    const modulos = [
+      { id: 'operacao', visivel: true },
+      { id: 'salas', visivel: false },
+    ];
+    // Ajustes na lista: o pedido vale, e o item dos Ajustes sai dela.
+    const r = await mudar(ana, {
+      dock: { modulos: [{ id: 'ajustes', visivel: false }, ...modulos] },
+    });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda', modulos } };
+    expect(r.json()).toEqual(camada);
+    const repetido = await mudar(ana, { dock: { modulos: [...modulos, modulos[0]] } });
+    expect(repetido.statusCode).toBe(400);
+    expect(repetido.json().campos).toHaveProperty(['mudancas.dock.modulos']);
+    const muitos = Array.from({ length: 41 }, (_, indice) => ({
+      id: `modulo-${indice}`,
+      visivel: true,
+    }));
+    const demais = await mudar(ana, { dock: { modulos: muitos } });
+    expect(demais.statusCode).toBe(400);
+    expect(demais.json().campos).toMatchObject({
+      'mudancas.dock.modulos': 'Use até 40 módulos.',
+    });
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
   it('um ajuste desconhecido também recusa o pedido inteiro', async () => {
     const r = await mudar(ana, { dock: { cor: 'azul' }, aparencia: { tema: 'papel' } });
     expect(r.statusCode).toBe(400);

@@ -120,6 +120,7 @@ describe('seção Dock', () => {
       tamanho: 48,
       ampliar: true,
       ocultar: false,
+      modulos: [],
     });
     expect(salvas().aparencia.tema).toBe('papel');
     expect(posicao('Embaixo').checked).toBe(true);

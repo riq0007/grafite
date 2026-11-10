@@ -28,7 +28,7 @@ describe('script anti-flash', () => {
         densidade: 'normal',
         raio: 6,
       },
-      dock: { posicao: 'esquerda', tamanho: 36, ampliar: false, ocultar: true },
+      dock: { posicao: 'esquerda', tamanho: 36, ampliar: false, ocultar: true, modulos: [] },
       acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
     });
     localStorage.setItem('grafite.preferencias.atributos', JSON.stringify(atributos));

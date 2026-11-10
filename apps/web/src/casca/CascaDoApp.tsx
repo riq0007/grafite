@@ -228,7 +228,12 @@ export function CascaDoApp() {
               modulos,
               modulosDoFim,
               atual: atual?.id ?? null,
-              ...preferencias.dock,
+              // Campo a campo: as preferências do dock também trazem a lista dos módulos, que não é
+              // uma propriedade do dock (change dock-personalizavel).
+              posicao: preferencias.dock.posicao,
+              tamanho: preferencias.dock.tamanho,
+              ampliar: preferencias.dock.ampliar,
+              ocultar: preferencias.dock.ocultar,
               aoAbrirModulo: (id) => {
                 const modulo = registro.find((candidato) => candidato.id === id);
                 if (modulo) irPara(modulo.endereco);

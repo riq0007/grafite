@@ -298,6 +298,7 @@ describe('usePreferencias', () => {
       tamanho: 48,
       ampliar: true,
       ocultar: false,
+      modulos: [],
     });
     expect(result.current.preferencias.aparencia.tema).toBe('papel');
   });
@@ -315,6 +316,7 @@ describe('usePreferencias com a sessão', () => {
       tamanho: 36,
       ampliar: true,
       ocultar: false,
+      modulos: [],
     });
     expect(raiz().getAttribute('data-theme')).toBe('nevoa');
     expect(raiz().getAttribute('data-dock')).toBe('esquerda');
@@ -413,6 +415,7 @@ describe('usePreferencias com a sessão', () => {
       tamanho: 48,
       ampliar: true,
       ocultar: false,
+      modulos: [],
     });
     expect(result.current.preferencias.aparencia.tema).toBe('papel');
     await esperar(400);

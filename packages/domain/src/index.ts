@@ -618,6 +618,7 @@ export {
 } from './mapa/mapa.ts';
 export {
   type IdDoModuloOpcional,
+  MODULO_DOS_AJUSTES,
   MODULOS_OPCIONAIS,
   type ModuloOpcional,
   moduloOpcional,
@@ -734,6 +735,7 @@ export {
   fusoReconhecido,
   LIMITES_DAS_PREFERENCIAS,
   lerAjustes,
+  type ModuloDoDockSalvo,
   type MudancaDasPreferencias,
   type OrdenacaoDaTelaInicial,
   PADRAO_DE_FABRICA,

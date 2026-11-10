@@ -3,6 +3,7 @@
 // organização e a da conta) guarda só os campos mudados, e a que vale é resolvida campo a campo.
 // As listas de opções repetem as chaves dos tokens do @grafite/ui, e um teste da web confere que
 // continuam iguais: o domínio não depende do pacote visual.
+import { MODULO_DOS_AJUSTES } from '../modulos/modulos.ts';
 import {
   type IdDaTabelaComVisoes,
   TABELAS_COM_VISOES,
@@ -45,6 +46,8 @@ export const LIMITES_DAS_PREFERENCIAS = {
   fixadas: 20,
   /** Quantos blocos do Início a lista guarda (change inicio-ajustavel). */
   blocosDoInicio: 20,
+  /** Quantos módulos a lista do dock guarda (change dock-personalizavel). */
+  modulosDoDock: 40,
 } as const;
 
 export type TempoDoAviso = (typeof TEMPOS_DO_AVISO)[number];
@@ -52,6 +55,15 @@ export type ResumoPorEmail = (typeof RESUMOS_POR_EMAIL)[number];
 
 /** Um bloco do Início na ordem da conta: o id, como "ativos.suprimentos", e se está à vista. */
 export interface BlocoDoInicioSalvo {
+  id: string;
+  visivel: boolean;
+}
+
+/**
+ * Um módulo na ordem do dock: o id, como "operacao", e se está no dock. O que não está fica no
+ * menu Mais. A forma é a dos blocos do Início (change dock-personalizavel, design, decisão 1).
+ */
+export interface ModuloDoDockSalvo {
   id: string;
   visivel: boolean;
 }
@@ -95,6 +107,11 @@ export interface PreferenciasDaInterface {
     tamanho: number;
     ampliar: boolean;
     ocultar: boolean;
+    /**
+     * Os módulos na ordem escolhida, com os tirados do dock, trocados inteiros. A lista vazia é a
+     * ordem de fábrica, a do registro, com todos no dock. Ajustes fica fora dela, sempre no fim.
+     */
+    modulos: ModuloDoDockSalvo[];
   };
   /** Suavização em %, de 0 a 100; "abracar" é o abraço dos elementos interativos. */
   cursor: { tipo: 'suavizado' | 'sistema'; suavizacao: number; abracar: boolean };
@@ -177,7 +194,7 @@ export const PADRAO_DE_FABRICA: PreferenciasDaInterface = {
     personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
     destaquePersonalizado: { matiz: 258, intensidade: 85 },
   },
-  dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false },
+  dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false, modulos: [] },
   cursor: { tipo: 'suavizado', suavizacao: 95, abracar: true },
   notificacoes: {
     atencao: true,
@@ -265,27 +282,33 @@ const juntos =
     return lido;
   };
 
-/** O id de um bloco do Início: letras minúsculas, números, ponto e hífen, até 40. */
-const ID_DO_BLOCO = /^[a-z0-9.-]{1,40}$/;
+/**
+ * O id de um item de lista ordenada, como um bloco do Início ou um módulo do dock: letras
+ * minúsculas, números, ponto e hífen, até 40.
+ */
+const ID_DO_ITEM = /^[a-z0-9.-]{1,40}$/;
 
 /**
- * Os blocos do Início, na ordem: o item inválido e o repetido saem, um a um, e a lista é cortada no
- * limite. A lista vazia vale; o que não é lista fica de fora.
+ * Uma lista ordenada de itens `{ id, visivel }`, como os blocos do Início e os módulos do dock: o
+ * item inválido, o repetido e o de id recusado saem, um a um, e a lista é cortada no limite. A
+ * lista vazia vale; o que não é lista fica de fora.
  */
-const blocosDoInicio: Leitor = (valor) => {
-  if (!Array.isArray(valor)) return undefined;
-  const lidos: Array<{ id: string; visivel: boolean }> = [];
-  for (const item of valor) {
-    const bruto = objeto(item);
-    const id = bruto?.id;
-    const visivel = bruto?.visivel;
-    if (typeof id !== 'string' || !ID_DO_BLOCO.test(id) || typeof visivel !== 'boolean') continue;
-    if (lidos.some((lido) => lido.id === id)) continue;
-    lidos.push({ id, visivel });
-    if (lidos.length === LIMITES_DAS_PREFERENCIAS.blocosDoInicio) break;
-  }
-  return lidos;
-};
+const listaOrdenada =
+  (limite: number, recusados: readonly string[] = []): Leitor =>
+  (valor) => {
+    if (!Array.isArray(valor)) return undefined;
+    const lidos: Array<{ id: string; visivel: boolean }> = [];
+    for (const item of valor) {
+      if (lidos.length === limite) break;
+      const bruto = objeto(item);
+      const id = bruto?.id;
+      const visivel = bruto?.visivel;
+      if (typeof id !== 'string' || !ID_DO_ITEM.test(id) || typeof visivel !== 'boolean') continue;
+      if (recusados.includes(id) || lidos.some((lido) => lido.id === id)) continue;
+      lidos.push({ id, visivel });
+    }
+    return lidos;
+  };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -352,6 +375,7 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     tamanho: inteiroEntre(LIMITES_DAS_PREFERENCIAS.tamanhoDoDock),
     ampliar: booleano,
     ocultar: booleano,
+    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, [MODULO_DOS_AJUSTES]),
   },
   cursor: {
     tipo: umDe(['suavizado', 'sistema']),
@@ -378,7 +402,7 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     fixadasPelaOrganizacao: fixadasDasTabelas,
   },
   regiao: { fuso },
-  inicio: { ordenacao, blocos: blocosDoInicio },
+  inicio: { ordenacao, blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio) },
   acessibilidade: {
     movimento: umDe(['sistema', 'reduzido']),
     transparencia: umDe(['sistema', 'reduzida']),
