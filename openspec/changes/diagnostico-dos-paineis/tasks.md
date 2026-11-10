@@ -16,7 +16,7 @@
 ## 4. Fechamento
 
 - [x] 4.1 Conferir no `pnpm dev`, com dois servidores locais de teste: um em HTTPS, com um certificado só da conferência, que manda `X-Frame-Options: DENY`, e um em HTTP que redireciona para `/login`. O primeiro é HTTPS porque o painel em `http://` passa pela ponte, e os cabeçalhos dele não contam ("Painel em HTTP com o cabeçalho"). Verificar: o primeiro mostra o motivo no bloco, o segundo mostra o aviso e a página, e um painel comum continua aparecendo.
-- [ ] 4.2 Escrever o guia do que liberar no Grafana e no Zabbix em `docs/operacao/integracoes-da-rede.md`, conferindo o nome de cada ajuste na documentação da ferramenta, e atualizar o mapa (decisão 5). Verificar: os testes da documentação e do mapa passam.
+- [x] 4.2 Escrever o guia do que liberar no Grafana e no Zabbix em `docs/operacao/integracoes-da-rede.md`, conferindo o nome de cada ajuste na documentação da ferramenta, e atualizar o mapa (decisão 5). Verificar: os testes da documentação e do mapa passam.
 - [ ] 4.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
