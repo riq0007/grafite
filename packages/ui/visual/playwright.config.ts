@@ -19,6 +19,18 @@ export default defineConfig({
   // fontes, a tela parada e as duas capturas iguais seguidas passam dos 5 s (change
   // integracao-sob-carga).
   expect: { timeout: 30_000, toHaveScreenshot: { animations: 'disabled', caret: 'hide' } },
+  // O Playwright abre o Chromium com as barras de rolagem escondidas, e as capturas ficam assim,
+  // como no celular, em que a barra do sistema é sobreposta. Só a história da barra de rolagem
+  // própria é capturada com as barras à vista, como no computador (change
+  // barra-de-rolagem-propria, design, decisão 7).
+  projects: [
+    { name: 'sem-barras', grepInvert: /Barra de rolagem/ },
+    {
+      name: 'com-barras',
+      grep: /Barra de rolagem/,
+      use: { launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } },
+    },
+  ],
   webServer: {
     command: 'node servidor.mjs',
     url: 'http://127.0.0.1:6007/index.json',

@@ -76,6 +76,8 @@ O Playwright abre o Chromium com as barras de rolagem escondidas (`--hide-scroll
 
 O catálogo passa a testar com as barras à vista, sem essa opção, como no computador de quem usa: a barra própria reserva os 12 px dela, e as histórias medem a área que sobra. Três histórias do resumo da linha ganharam esses 12 px na área da tabela.
 
+A regressão visual continua com as barras escondidas: as capturas que já existiam não mudam, e a matriz da casca no celular e no tablet segue como nesses aparelhos. Só a história da barra de rolagem é capturada com as barras à vista, num projeto próprio do Playwright.
+
 O `:hover` e o `:focus-visible` do CSS só ligam com o ponteiro e o teclado de verdade, e os eventos sintéticos das histórias não os ligam. A preparação dos testes do catálogo liga os comandos do Playwright que põem o ponteiro sobre um elemento e apertam uma tecla (`src/teste/navegadorDeTeste.ts`); no catálogo aberto no navegador, quem passa o ponteiro é a pessoa.
 
 O navegador responde pela cor do polegar com o ponteiro nele, mais forte, sempre que o ponteiro está na área: a história confere que o polegar saiu do transparente, e a cor de cada caso fica com a captura e com a conferência no app.
@@ -84,7 +86,7 @@ O navegador responde pela cor do polegar com o ponteiro nele, mais forte, sempre
 
 - **[Uma versão do Chromium deixar de aceitar os pseudo-elementos]** → o caminho das propriedades padrão já existe; basta trocar a condição do `@supports`.
 - **[O polegar invisível esconde que a área rola]** → as faixas esmaecidas da janela e da tabela continuam dizendo que há mais conteúdo, e "Sempre visível" fica a um clique.
-- **[As capturas da regressão visual com barra mudam]** → regravar só as afetadas, apagando a referência antes, porque a diferença é pequena e pode passar pela tolerância.
+- **[As capturas da regressão visual não mostram a barra]** → o navegador das capturas esconde as barras, e nenhuma referência antiga muda; a barra tem a captura dela, com as barras à vista (decisão 7).
 - **[O alvo do polegar é estreito]** → a barra inteira, de 12 px, recebe o clique e o arrasto, e a rolagem pela roda, pelo teclado e pelo toque não depende dela.
 
 ## Migration Plan

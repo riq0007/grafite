@@ -17,7 +17,7 @@
 ## 4. Fechamento
 
 - [x] 4.1 Conferir no `pnpm dev`, nos temas Grafite e Papel: a janela de uma ficha longa, a tabela dos ativos, um menu longo do dock, uma gaveta e o Quick Look. Verificar: a mesma barra em todos, o polegar aparece com o ponteiro e ao rolar pelo teclado, nada muda de lugar, e "Sempre visível" vale na hora.
-- [ ] 4.2 Regravar as referências da regressão visual em que a barra aparece, apagando antes as afetadas. Verificar: o `pnpm test:visual` passa, e a diferença de cada captura regravada é só a barra.
+- [x] 4.2 Regravar as referências da regressão visual em que a barra aparece, apagando antes as afetadas. Verificar: o `pnpm test:visual` passa, e a diferença de cada captura regravada é só a barra.
 - [x] 4.3 Atualizar a spec mestre (o padrão de fábrica na seção 7.2 e o tempo de 1 s no Apêndice B) e o mapa. Verificar: os testes da documentação e do mapa passam.
 - [ ] 4.4 Conferir as verificações:
   - `pnpm lint`;
