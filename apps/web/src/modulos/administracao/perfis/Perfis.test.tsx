@@ -21,8 +21,20 @@ afterEach(() => {
 type Perfil = components['schemas']['Perfil'];
 type FichaDoPerfil = components['schemas']['FichaDoPerfil'];
 
-const ADMINISTRA = { editar: true, inativar: true, reativar: false, atribuir: true };
-const SO_VE = { editar: false, inativar: false, reativar: false, atribuir: false };
+const ADMINISTRA = {
+  editar: true,
+  inativar: true,
+  reativar: false,
+  atribuir: true,
+  mudarPrazo: true,
+};
+const SO_VE = {
+  editar: false,
+  inativar: false,
+  reativar: false,
+  atribuir: false,
+  mudarPrazo: false,
+};
 
 const perfil = (id: string, nome: string, extras: Partial<Perfil> = {}): Perfil => ({
   id,
@@ -32,6 +44,7 @@ const perfil = (id: string, nome: string, extras: Partial<Perfil> = {}): Perfil 
   todasAsPermissoes: false,
   protegido: false,
   exigeDoisPassos: false,
+  diasDeConfianca: null,
   situacao: 'ativo',
   atribuicoes: 0,
   permite: ADMINISTRA,

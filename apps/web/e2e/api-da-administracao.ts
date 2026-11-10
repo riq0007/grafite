@@ -120,7 +120,13 @@ const manutencaoQueFalhou = (id: string, falhouEm: string): TarefaComFalha => ({
   falhouEm,
 });
 
-const PERMITE_NO_PERFIL = { editar: true, inativar: true, reativar: false, atribuir: true };
+const PERMITE_NO_PERFIL = {
+  editar: true,
+  inativar: true,
+  reativar: false,
+  atribuir: true,
+  mudarPrazo: true,
+};
 
 /** Um registro da auditoria feito por Ana Souza. */
 const registro = (
@@ -183,6 +189,7 @@ function estadoInicial() {
       todasAsPermissoes: true,
       protegido: true,
       exigeDoisPassos: true,
+      diasDeConfianca: null,
       situacao: 'ativo',
       atribuicoes: 1,
       permite: { ...PERMITE_NO_PERFIL, editar: false, inativar: false },
@@ -195,6 +202,7 @@ function estadoInicial() {
       todasAsPermissoes: false,
       protegido: false,
       exigeDoisPassos: false,
+      diasDeConfianca: null,
       situacao: 'ativo',
       atribuicoes: 0,
       permite: PERMITE_NO_PERFIL,

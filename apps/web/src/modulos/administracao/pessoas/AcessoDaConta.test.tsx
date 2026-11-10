@@ -132,9 +132,10 @@ const perfil = (id: string, nome: string, extras: Partial<Perfil> = {}): Perfil 
   todasAsPermissoes: false,
   protegido: false,
   exigeDoisPassos: false,
+  diasDeConfianca: null,
   situacao: 'ativo',
   atribuicoes: 0,
-  permite: { editar: true, inativar: true, reativar: false, atribuir: true },
+  permite: { editar: true, inativar: true, reativar: false, atribuir: true, mudarPrazo: true },
   ...extras,
 });
 
@@ -342,7 +343,13 @@ describe('aba Acesso: perfis e grupos', () => {
           }),
           perfil('antigo', 'Antigo', {
             situacao: 'inativo',
-            permite: { editar: true, inativar: false, reativar: true, atribuir: false },
+            permite: {
+              editar: true,
+              inativar: false,
+              reativar: true,
+              atribuir: false,
+              mudarPrazo: true,
+            },
           }),
           perfil('tecnico', 'Técnico', { permissoes: ['pessoas.ver'] }),
         ],

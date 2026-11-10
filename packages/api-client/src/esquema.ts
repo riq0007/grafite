@@ -580,6 +580,661 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/conta/aparelhos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os aparelhos confiáveis da conta, com o prazo que vale para ela */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AparelhosDaConta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Esquecer todos os aparelhos confiáveis da conta */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conta/aparelhos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Esquecer um aparelho confiável da conta */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contas/{id}/aparelhos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os aparelhos confiáveis de outra conta, com o prazo que vale para ela */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AparelhosDaContaNaAdministracao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Esquecer todos os aparelhos confiáveis de outra conta; as sessões continuam */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contas/{id}/prazo-da-confianca": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mudar o prazo da confiança de outra conta; `null` segue os perfis e a organização */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDePrazoDaConfiancaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrazoDaConta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/politica-de-entrada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O prazo da confiança nos aparelhos da organização */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PoliticaDeEntrada"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Mudar o prazo da confiança nos aparelhos da organização */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PoliticaDeEntradaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PoliticaDeEntrada"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/conta": {
         parameters: {
             query?: never;
@@ -5369,6 +6024,102 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/perfis/{id}/prazo-da-confianca": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mudar o prazo da confiança de um perfil; `null` segue a organização */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDePrazoDoPerfilInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FichaDoPerfil"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/perfis/{id}/inativacao": {
@@ -29890,6 +30641,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -30053,6 +30805,32 @@ export interface components {
         PedidoDeSilencioInput: {
             ate: string | null;
             motivo?: string | null;
+        };
+        ContaDaFichaInput: {
+            /** Format: uuid */
+            id: string;
+            usuario: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            exigeDoisPassos: boolean;
+            /** @enum {string} */
+            doisPassos: "ativa" | "desativada";
+            senhaTemporaria: boolean;
+            entradaBloqueadaAte: string | null;
+            ultimaEntradaEm: string | null;
+            permite: {
+                editar: boolean;
+                redefinir: boolean;
+                removerDoisPassos: boolean;
+                desbloquear: boolean;
+                inativar: boolean;
+                reativar: boolean;
+                encerrarSessoes: boolean;
+            };
+        };
+        ContagemNoEscopoInput: {
+            quantos: number;
+            recortada: boolean;
         };
         ValorDoCampoInput: string | number | string[];
         EstadoDoCampoInput: {
@@ -30607,6 +31385,178 @@ export interface components {
         RascunhoGuardadoInput: {
             /** Format: date-time */
             atualizadoEm: string;
+        };
+        LocalDaPessoaInput: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+        };
+        ResumoDaContaInput: {
+            /** Format: uuid */
+            id: string;
+            usuario: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+        };
+        PermiteNaPessoaInput: {
+            editar: boolean;
+            inativar: boolean;
+            reativar: boolean;
+            anonimizar: boolean;
+            criarConta: boolean;
+            administrarConta: boolean;
+        };
+        PessoaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            email: string | null;
+            matricula: string | null;
+            telefone: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            local: components["schemas"]["LocalDaPessoaInput"] | null;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+            conta: components["schemas"]["ResumoDaContaInput"] | null;
+            permite: components["schemas"]["PermiteNaPessoaInput"];
+        };
+        ListaDePessoasInput: {
+            itens: components["schemas"]["PessoaInput"][];
+            proximo: string | null;
+            total: number;
+        };
+        FichaDaPessoaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            email: string | null;
+            matricula: string | null;
+            telefone: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            local: components["schemas"]["LocalDaPessoaInput"] | null;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+            conta: components["schemas"]["ContaDaFichaInput"] | null;
+            permite: components["schemas"]["PermiteNaPessoaInput"];
+        };
+        ResumoDaPessoaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+            local: {
+                /** Format: uuid */
+                id: string;
+                caminho: string;
+            } | null;
+            temConta: boolean;
+            ativos: components["schemas"]["ContagemNoEscopoInput"] | null;
+        };
+        PedidoDePessoaInput: {
+            nome: string;
+            email?: string | null;
+            matricula?: string | null;
+            telefone?: string | null;
+            localId?: string | null;
+        };
+        PedidoDeAlteracaoDaPessoaInput: {
+            nome?: string;
+            email?: string | null;
+            matricula?: string | null;
+            telefone?: string | null;
+            localId?: string | null;
+        };
+        PedidoDeContaInput: {
+            usuario: string;
+            /** @default false */
+            exigeDoisPassos: boolean;
+        };
+        PedidoDeAlteracaoDaContaInput: {
+            usuario?: string;
+            exigeDoisPassos?: boolean;
+        };
+        ContaComSenhaTemporariaInput: {
+            conta: components["schemas"]["ContaDaFichaInput"];
+            senhaTemporaria: string;
+        };
+        PedidoDeRedefinicaoInput: {
+            /** @default false */
+            removerDoisPassos: boolean;
+        };
+        SessaoAdministradaInput: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            ip: string | null;
+            /** Format: date-time */
+            criadaEm: string;
+            /** Format: date-time */
+            ultimoUsoEm: string;
+        };
+        SessoesEncerradasInput: {
+            encerradas: number;
+        };
+        OrigemDoPrazoInput: {
+            /** @constant */
+            tipo: "conta";
+        } | {
+            /** @constant */
+            tipo: "perfil";
+            nome: string;
+        } | {
+            /** @constant */
+            tipo: "organizacao";
+        };
+        PrazoDaConfiancaInput: {
+            dias: number;
+            origem: components["schemas"]["OrigemDoPrazoInput"];
+        };
+        AparelhoConfiavelInput: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            /** Format: date-time */
+            criadoEm: string;
+            /** Format: date-time */
+            usadoEm: string;
+            /** Format: date-time */
+            valeAte: string;
+            esteAparelho: boolean;
+        };
+        AparelhosDaContaInput: {
+            prazo: components["schemas"]["PrazoDaConfiancaInput"];
+            aparelhos: components["schemas"]["AparelhoConfiavelInput"][];
+        };
+        AparelhoNaAdministracaoInput: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            /** Format: date-time */
+            criadoEm: string;
+            /** Format: date-time */
+            usadoEm: string;
+            /** Format: date-time */
+            valeAte: string;
+            ip: string | null;
+        };
+        PrazoDaContaInput: {
+            prazo: components["schemas"]["PrazoDaConfiancaInput"];
+            diasDaConta: number | null;
+        };
+        AparelhosDaContaNaAdministracaoInput: {
+            prazo: components["schemas"]["PrazoDaConfiancaInput"];
+            diasDaConta: number | null;
+            aparelhos: components["schemas"]["AparelhoNaAdministracaoInput"][];
+        };
+        PedidoDePrazoDaConfiancaInput: {
+            dias: number | null;
+        };
+        PoliticaDeEntradaInput: {
+            diasDeConfianca: number;
         };
         LocalDoEscopoInput: {
             /** Format: uuid */
@@ -31266,152 +32216,13 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
             } | null;
             sessoesEncerradas: number;
-        };
-        ContaDaFichaInput: {
-            /** Format: uuid */
-            id: string;
-            usuario: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            exigeDoisPassos: boolean;
-            /** @enum {string} */
-            doisPassos: "ativa" | "desativada";
-            senhaTemporaria: boolean;
-            entradaBloqueadaAte: string | null;
-            ultimaEntradaEm: string | null;
-            permite: {
-                editar: boolean;
-                redefinir: boolean;
-                removerDoisPassos: boolean;
-                desbloquear: boolean;
-                inativar: boolean;
-                reativar: boolean;
-                encerrarSessoes: boolean;
-            };
-        };
-        ContagemNoEscopoInput: {
-            quantos: number;
-            recortada: boolean;
-        };
-        LocalDaPessoaInput: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-            /** @enum {string} */
-            situacao: "ativo" | "inativo";
-        };
-        ResumoDaContaInput: {
-            /** Format: uuid */
-            id: string;
-            usuario: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-        };
-        PermiteNaPessoaInput: {
-            editar: boolean;
-            inativar: boolean;
-            reativar: boolean;
-            anonimizar: boolean;
-            criarConta: boolean;
-            administrarConta: boolean;
-        };
-        PessoaInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            email: string | null;
-            matricula: string | null;
-            telefone: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            local: components["schemas"]["LocalDaPessoaInput"] | null;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
-            conta: components["schemas"]["ResumoDaContaInput"] | null;
-            permite: components["schemas"]["PermiteNaPessoaInput"];
-        };
-        ListaDePessoasInput: {
-            itens: components["schemas"]["PessoaInput"][];
-            proximo: string | null;
-            total: number;
-        };
-        FichaDaPessoaInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            email: string | null;
-            matricula: string | null;
-            telefone: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            local: components["schemas"]["LocalDaPessoaInput"] | null;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
-            conta: components["schemas"]["ContaDaFichaInput"] | null;
-            permite: components["schemas"]["PermiteNaPessoaInput"];
-        };
-        ResumoDaPessoaInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
-            local: {
-                /** Format: uuid */
-                id: string;
-                caminho: string;
-            } | null;
-            temConta: boolean;
-            ativos: components["schemas"]["ContagemNoEscopoInput"] | null;
-        };
-        PedidoDePessoaInput: {
-            nome: string;
-            email?: string | null;
-            matricula?: string | null;
-            telefone?: string | null;
-            localId?: string | null;
-        };
-        PedidoDeAlteracaoDaPessoaInput: {
-            nome?: string;
-            email?: string | null;
-            matricula?: string | null;
-            telefone?: string | null;
-            localId?: string | null;
-        };
-        PedidoDeContaInput: {
-            usuario: string;
-            /** @default false */
-            exigeDoisPassos: boolean;
-        };
-        PedidoDeAlteracaoDaContaInput: {
-            usuario?: string;
-            exigeDoisPassos?: boolean;
-        };
-        ContaComSenhaTemporariaInput: {
-            conta: components["schemas"]["ContaDaFichaInput"];
-            senhaTemporaria: string;
-        };
-        PedidoDeRedefinicaoInput: {
-            /** @default false */
-            removerDoisPassos: boolean;
-        };
-        SessaoAdministradaInput: {
-            /** Format: uuid */
-            id: string;
-            dispositivo: string;
-            ip: string | null;
-            /** Format: date-time */
-            criadaEm: string;
-            /** Format: date-time */
-            ultimoUsoEm: string;
-        };
-        SessoesEncerradasInput: {
-            encerradas: number;
         };
         DiretorioInput: {
             servidor: string;
@@ -31622,6 +32433,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -32864,6 +33676,7 @@ export interface components {
             inativar: boolean;
             reativar: boolean;
             atribuir: boolean;
+            mudarPrazo: boolean;
         };
         PerfilInput: {
             /** Format: uuid */
@@ -32874,6 +33687,7 @@ export interface components {
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
+            diasDeConfianca: number | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
             atribuicoes: number;
@@ -32916,6 +33730,7 @@ export interface components {
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
+            diasDeConfianca: number | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
             atribuicoes: number;
@@ -33129,6 +33944,7 @@ export interface components {
         };
         PedidoDeCodigoInput: {
             codigo: string;
+            confiar?: boolean;
         };
         ResultadoDoSegundoPassoInput: {
             /** @enum {string} */
@@ -33149,6 +33965,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -33275,6 +34092,9 @@ export interface components {
                 nome: string;
             }[];
             motivo: string | null;
+        };
+        PedidoDePrazoDoPerfilInput: {
+            dias: number | null;
         };
         ContasDoFiltroInput: {
             itens: components["schemas"]["ContaDoFiltroInput"][];
@@ -34129,6 +34949,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -34292,6 +35113,32 @@ export interface components {
         PedidoDeSilencio: {
             ate: string | null;
             motivo?: string | null;
+        };
+        ContaDaFicha: {
+            /** Format: uuid */
+            id: string;
+            usuario: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            exigeDoisPassos: boolean;
+            /** @enum {string} */
+            doisPassos: "ativa" | "desativada";
+            senhaTemporaria: boolean;
+            entradaBloqueadaAte: string | null;
+            ultimaEntradaEm: string | null;
+            permite: {
+                editar: boolean;
+                redefinir: boolean;
+                removerDoisPassos: boolean;
+                desbloquear: boolean;
+                inativar: boolean;
+                reativar: boolean;
+                encerrarSessoes: boolean;
+            };
+        };
+        ContagemNoEscopo: {
+            quantos: number;
+            recortada: boolean;
         };
         ValorDoCampo: string | number | string[];
         EstadoDoCampo: {
@@ -34846,6 +35693,178 @@ export interface components {
         RascunhoGuardado: {
             /** Format: date-time */
             atualizadoEm: string;
+        };
+        LocalDaPessoa: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+        };
+        ResumoDaConta: {
+            /** Format: uuid */
+            id: string;
+            usuario: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+        };
+        PermiteNaPessoa: {
+            editar: boolean;
+            inativar: boolean;
+            reativar: boolean;
+            anonimizar: boolean;
+            criarConta: boolean;
+            administrarConta: boolean;
+        };
+        Pessoa: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            email: string | null;
+            matricula: string | null;
+            telefone: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            local: components["schemas"]["LocalDaPessoa"] | null;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+            conta: components["schemas"]["ResumoDaConta"] | null;
+            permite: components["schemas"]["PermiteNaPessoa"];
+        };
+        ListaDePessoas: {
+            itens: components["schemas"]["Pessoa"][];
+            proximo: string | null;
+            total: number;
+        };
+        FichaDaPessoa: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            email: string | null;
+            matricula: string | null;
+            telefone: string | null;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            local: components["schemas"]["LocalDaPessoa"] | null;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+            conta: components["schemas"]["ContaDaFicha"] | null;
+            permite: components["schemas"]["PermiteNaPessoa"];
+        };
+        ResumoDaPessoa: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            situacao: "ativa" | "inativa" | "anonimizada";
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+            local: {
+                /** Format: uuid */
+                id: string;
+                caminho: string;
+            } | null;
+            temConta: boolean;
+            ativos: components["schemas"]["ContagemNoEscopo"] | null;
+        };
+        PedidoDePessoa: {
+            nome: string;
+            email?: string | null;
+            matricula?: string | null;
+            telefone?: string | null;
+            localId?: string | null;
+        };
+        PedidoDeAlteracaoDaPessoa: {
+            nome?: string;
+            email?: string | null;
+            matricula?: string | null;
+            telefone?: string | null;
+            localId?: string | null;
+        };
+        PedidoDeConta: {
+            usuario: string;
+            /** @default false */
+            exigeDoisPassos: boolean;
+        };
+        PedidoDeAlteracaoDaConta: {
+            usuario?: string;
+            exigeDoisPassos?: boolean;
+        };
+        ContaComSenhaTemporaria: {
+            conta: components["schemas"]["ContaDaFicha"];
+            senhaTemporaria: string;
+        };
+        PedidoDeRedefinicao: {
+            /** @default false */
+            removerDoisPassos: boolean;
+        };
+        SessaoAdministrada: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            ip: string | null;
+            /** Format: date-time */
+            criadaEm: string;
+            /** Format: date-time */
+            ultimoUsoEm: string;
+        };
+        SessoesEncerradas: {
+            encerradas: number;
+        };
+        OrigemDoPrazo: {
+            /** @constant */
+            tipo: "conta";
+        } | {
+            /** @constant */
+            tipo: "perfil";
+            nome: string;
+        } | {
+            /** @constant */
+            tipo: "organizacao";
+        };
+        PrazoDaConfianca: {
+            dias: number;
+            origem: components["schemas"]["OrigemDoPrazo"];
+        };
+        AparelhoConfiavel: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            /** Format: date-time */
+            criadoEm: string;
+            /** Format: date-time */
+            usadoEm: string;
+            /** Format: date-time */
+            valeAte: string;
+            esteAparelho: boolean;
+        };
+        AparelhosDaConta: {
+            prazo: components["schemas"]["PrazoDaConfianca"];
+            aparelhos: components["schemas"]["AparelhoConfiavel"][];
+        };
+        AparelhoNaAdministracao: {
+            /** Format: uuid */
+            id: string;
+            dispositivo: string;
+            /** Format: date-time */
+            criadoEm: string;
+            /** Format: date-time */
+            usadoEm: string;
+            /** Format: date-time */
+            valeAte: string;
+            ip: string | null;
+        };
+        PrazoDaConta: {
+            prazo: components["schemas"]["PrazoDaConfianca"];
+            diasDaConta: number | null;
+        };
+        AparelhosDaContaNaAdministracao: {
+            prazo: components["schemas"]["PrazoDaConfianca"];
+            diasDaConta: number | null;
+            aparelhos: components["schemas"]["AparelhoNaAdministracao"][];
+        };
+        PedidoDePrazoDaConfianca: {
+            dias: number | null;
+        };
+        PoliticaDeEntrada: {
+            diasDeConfianca: number;
         };
         LocalDoEscopo: {
             /** Format: uuid */
@@ -35506,152 +36525,13 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
             } | null;
             sessoesEncerradas: number;
-        };
-        ContaDaFicha: {
-            /** Format: uuid */
-            id: string;
-            usuario: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            exigeDoisPassos: boolean;
-            /** @enum {string} */
-            doisPassos: "ativa" | "desativada";
-            senhaTemporaria: boolean;
-            entradaBloqueadaAte: string | null;
-            ultimaEntradaEm: string | null;
-            permite: {
-                editar: boolean;
-                redefinir: boolean;
-                removerDoisPassos: boolean;
-                desbloquear: boolean;
-                inativar: boolean;
-                reativar: boolean;
-                encerrarSessoes: boolean;
-            };
-        };
-        ContagemNoEscopo: {
-            quantos: number;
-            recortada: boolean;
-        };
-        LocalDaPessoa: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-            /** @enum {string} */
-            situacao: "ativo" | "inativo";
-        };
-        ResumoDaConta: {
-            /** Format: uuid */
-            id: string;
-            usuario: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-        };
-        PermiteNaPessoa: {
-            editar: boolean;
-            inativar: boolean;
-            reativar: boolean;
-            anonimizar: boolean;
-            criarConta: boolean;
-            administrarConta: boolean;
-        };
-        Pessoa: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            email: string | null;
-            matricula: string | null;
-            telefone: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            local: components["schemas"]["LocalDaPessoa"] | null;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
-            conta: components["schemas"]["ResumoDaConta"] | null;
-            permite: components["schemas"]["PermiteNaPessoa"];
-        };
-        ListaDePessoas: {
-            itens: components["schemas"]["Pessoa"][];
-            proximo: string | null;
-            total: number;
-        };
-        FichaDaPessoa: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            email: string | null;
-            matricula: string | null;
-            telefone: string | null;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            local: components["schemas"]["LocalDaPessoa"] | null;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
-            conta: components["schemas"]["ContaDaFicha"] | null;
-            permite: components["schemas"]["PermiteNaPessoa"];
-        };
-        ResumoDaPessoa: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            /** @enum {string} */
-            situacao: "ativa" | "inativa" | "anonimizada";
-            foto: components["schemas"]["FotoDaPessoa"] | null;
-            local: {
-                /** Format: uuid */
-                id: string;
-                caminho: string;
-            } | null;
-            temConta: boolean;
-            ativos: components["schemas"]["ContagemNoEscopo"] | null;
-        };
-        PedidoDePessoa: {
-            nome: string;
-            email?: string | null;
-            matricula?: string | null;
-            telefone?: string | null;
-            localId?: string | null;
-        };
-        PedidoDeAlteracaoDaPessoa: {
-            nome?: string;
-            email?: string | null;
-            matricula?: string | null;
-            telefone?: string | null;
-            localId?: string | null;
-        };
-        PedidoDeConta: {
-            usuario: string;
-            /** @default false */
-            exigeDoisPassos: boolean;
-        };
-        PedidoDeAlteracaoDaConta: {
-            usuario?: string;
-            exigeDoisPassos?: boolean;
-        };
-        ContaComSenhaTemporaria: {
-            conta: components["schemas"]["ContaDaFicha"];
-            senhaTemporaria: string;
-        };
-        PedidoDeRedefinicao: {
-            /** @default false */
-            removerDoisPassos: boolean;
-        };
-        SessaoAdministrada: {
-            /** Format: uuid */
-            id: string;
-            dispositivo: string;
-            ip: string | null;
-            /** Format: date-time */
-            criadaEm: string;
-            /** Format: date-time */
-            ultimoUsoEm: string;
-        };
-        SessoesEncerradas: {
-            encerradas: number;
         };
         Diretorio: {
             servidor: string;
@@ -35862,6 +36742,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -37104,6 +37985,7 @@ export interface components {
             inativar: boolean;
             reativar: boolean;
             atribuir: boolean;
+            mudarPrazo: boolean;
         };
         Perfil: {
             /** Format: uuid */
@@ -37114,6 +37996,7 @@ export interface components {
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
+            diasDeConfianca: number | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
             atribuicoes: number;
@@ -37156,6 +38039,7 @@ export interface components {
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
+            diasDeConfianca: number | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
             atribuicoes: number;
@@ -37369,6 +38253,7 @@ export interface components {
         };
         PedidoDeCodigo: {
             codigo: string;
+            confiar?: boolean;
         };
         ResultadoDoSegundoPasso: {
             /** @enum {string} */
@@ -37389,6 +38274,7 @@ export interface components {
                     preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
                 };
                 pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
                 csrf: string;
                 /** Format: date-time */
                 expiraEm: string;
@@ -37515,6 +38401,9 @@ export interface components {
                 nome: string;
             }[];
             motivo: string | null;
+        };
+        PedidoDePrazoDoPerfil: {
+            dias: number | null;
         };
         ContasDoFiltro: {
             itens: components["schemas"]["ContaDoFiltro"][];

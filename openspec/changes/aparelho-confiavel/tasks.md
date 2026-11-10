@@ -13,7 +13,7 @@
 - [x] 3.1 Escrever primeiro os testes de integração e depois as rotas dos aparelhos da própria conta e o esquecimento sozinho nas mudanças da conta (decisão 5). Verificar: os testes passam com "Esquecer um aparelho", "Senha trocada", "Dois passos removidos pela administração" e a inativação da conta.
 - [x] 3.2 Escrever primeiro os testes de integração e depois as rotas da administração: os aparelhos de uma conta, o "Esquecer todos" e os prazos da organização, do perfil e da conta, com a auditoria. Verificar: os testes passam com "Notebook roubado", "Prazo de uma conta", "Prazo da própria conta", "Prazo da organização", "Prazo fora do intervalo" e o 403 sem a permissão.
 - [x] 3.3 Escrever primeiro o teste e depois a limpeza dos aparelhos com mais de 90 dias na manutenção diária. Verificar: o teste passa apagando só os vencidos.
-- [ ] 3.4 Gerar o contrato e o cliente. Verificar: o `pnpm contrato:verificar` passa.
+- [x] 3.4 Gerar o contrato e o cliente. Verificar: o `pnpm contrato:verificar` passa.
 
 ## 4. As telas
 
