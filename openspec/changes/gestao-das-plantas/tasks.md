@@ -7,7 +7,7 @@
 ## 2. A tela
 
 - [x] 2.1 Escrever primeiro os testes e depois a propriedade `conferir` da `Confirmacao` (decisão 1). Verificar: os testes passam com "Nome que não confere" e com o botão liberado quando o texto confere.
-- [ ] 2.2 Escrever primeiro os testes e depois o menu "Ações" da planta, com "Renomear…", "Ligar a um local…", "Inativar" e "Reativar", e as inativas e as que falharam depois das ativas (decisões 1 e 4). Verificar: os testes passam com "Renomear pela tela", "Inativar pela tela", "Planta que falhou" e "Quem só vê o mapa".
+- [x] 2.2 Escrever primeiro os testes e depois o menu "Ações" da planta, com "Renomear…", "Ligar a um local…", "Inativar" e "Reativar", e as inativas e as que falharam depois das ativas (decisões 1 e 4). Verificar: os testes passam com "Renomear pela tela", "Inativar pela tela", "Planta que falhou" e "Quem só vê o mapa".
 - [ ] 2.3 Escrever primeiro os testes e depois "Excluir…" e o estado do mapa de uma planta excluída (decisões 2 e 5). Verificar: os testes passam com "Planta enviada por engano" e "Mapa aberto em outra sessão".
 - [ ] 2.4 Escrever primeiro os testes e depois "Substituir o desenho…", com o aviso das posições fora (decisão 3). Verificar: os testes passam com "Desenho corrigido" e "Posições fora do desenho novo", e a consulta do modelo é relida.
 

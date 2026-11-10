@@ -1,7 +1,8 @@
-// As plantas do mapa (spec mapa-da-planta, "Plantas da organização"; change p7-mapa-da-planta,
-// design, decisão 6): os cartões das plantas, com as medidas e o que veio do arquivo, e a "Nova
-// planta", que envia o DXF ou o modelo do PMG. Uma planta que falhou ou foi inativada diz isso em
-// texto.
+// As plantas do mapa (spec mapa-da-planta, "Plantas da organização" e "Ações da planta na tela";
+// changes p7-mapa-da-planta, design, decisão 6, e gestao-das-plantas, design, decisões 1 e 4): os
+// cartões das plantas, com as medidas e o que veio do arquivo, a "Nova planta", que envia o DXF ou
+// o modelo do PMG, e as ações de cada planta, para quem edita o mapa. Uma planta que falhou ou foi
+// inativada diz isso em texto.
 import {
   avisar,
   Botao,
@@ -10,6 +11,8 @@ import {
   EscolhaDeArquivo,
   EstadoVazio,
   Gaveta,
+  ItemDeMenu,
+  Menu,
   RotuloDeSituacao,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,6 +21,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { pedir } from '../../api/pedir.ts';
 import { useApi } from '../../api/useApi.tsx';
+import { SeletorDeLocal } from '../administracao/seletores/SeletorDeLocal.tsx';
 import { CHAVE_DO_MAPA, type PlantaDoMapa, usePlantas } from './consultas.ts';
 import estilos from './Mapa.module.css';
 
@@ -99,12 +103,204 @@ function NovaPlanta({ aoFechar }: { aoFechar: () => void }) {
   );
 }
 
+/** O que muda numa planta pelo `PATCH`: o nome, o local ou a situação. */
+type MudancaDaPlanta = { nome?: string; local?: string | null; situacao?: 'ativa' | 'inativa' };
+
+/** Muda a planta e relê o mapa; a falha volta em texto, com o problema da API. */
+function useMudarPlanta() {
+  const api = useApi();
+  const consultas = useQueryClient();
+  return async (planta: PlantaDoMapa, mudanca: MudancaDaPlanta, acao: string) => {
+    const resultado = await pedir(
+      () => api.PATCH('/mapa/plantas/{id}', { params: { path: { id: planta.id } }, body: mudanca }),
+      acao,
+    );
+    if (!('erro' in resultado)) await consultas.invalidateQueries({ queryKey: CHAVE_DO_MAPA });
+    return resultado;
+  };
+}
+
+/** A gaveta que renomeia a planta, com o nome atual no campo. */
+function RenomearPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: () => void }) {
+  const mudar = useMudarPlanta();
+  const [nome, definirNome] = useState(planta.nome);
+  const [erro, definirErro] = useState<string | undefined>(undefined);
+  const [salvando, definirSalvando] = useState(false);
+
+  async function salvar() {
+    definirSalvando(true);
+    definirErro(undefined);
+    const resultado = await mudar(planta, { nome }, 'renomear a planta');
+    definirSalvando(false);
+    if ('erro' in resultado) {
+      definirErro(resultado.problema?.campos?.nome ?? resultado.erro);
+      return;
+    }
+    avisar({ situacao: 'sucesso', titulo: 'Planta renomeada.' });
+    aoFechar();
+  }
+
+  return (
+    <Gaveta
+      aberta
+      aoMudarAberta={(aberta) => {
+        if (!aberta) aoFechar();
+      }}
+      titulo="Renomear a planta"
+    >
+      <div className={estilos.tela}>
+        <CampoDeTexto rotulo="Nome" obrigatorio value={nome} onChange={definirNome} erro={erro} />
+        <div className={estilos.acoes}>
+          <Botao onPress={aoFechar}>Cancelar</Botao>
+          <Botao
+            nivel="primario"
+            carregando={salvando}
+            rotuloCarregando="Salvando"
+            onPress={() => void salvar()}
+          >
+            Salvar
+          </Botao>
+        </div>
+      </div>
+    </Gaveta>
+  );
+}
+
+/** A gaveta que liga a planta a um local da árvore, ou a deixa sem local. */
+function LocalDaPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: () => void }) {
+  const mudar = useMudarPlanta();
+  const [local, definirLocal] = useState<string | null>(planta.local?.id ?? null);
+  const [erro, definirErro] = useState<string | undefined>(undefined);
+  const [salvando, definirSalvando] = useState(false);
+
+  async function salvar() {
+    definirSalvando(true);
+    definirErro(undefined);
+    const resultado = await mudar(planta, { local }, 'ligar a planta ao local');
+    definirSalvando(false);
+    if ('erro' in resultado) {
+      definirErro(resultado.problema?.campos?.local ?? resultado.erro);
+      return;
+    }
+    avisar({ situacao: 'sucesso', titulo: 'Local da planta alterado.' });
+    aoFechar();
+  }
+
+  return (
+    <Gaveta
+      aberta
+      aoMudarAberta={(aberta) => {
+        if (!aberta) aoFechar();
+      }}
+      titulo="Local da planta"
+    >
+      <div className={estilos.tela}>
+        <SeletorDeLocal
+          rotulo="Local"
+          valor={local}
+          aoMudar={definirLocal}
+          erro={erro}
+          descricao={`Onde a planta ${planta.nome} fica na árvore dos locais.`}
+        />
+        <div>
+          <Botao nivel="terciario" isDisabled={local === null} onPress={() => definirLocal(null)}>
+            Deixar sem local
+          </Botao>
+        </div>
+        <div className={estilos.acoes}>
+          <Botao onPress={aoFechar}>Cancelar</Botao>
+          <Botao
+            nivel="primario"
+            carregando={salvando}
+            rotuloCarregando="Salvando"
+            onPress={() => void salvar()}
+          >
+            Salvar
+          </Botao>
+        </div>
+      </div>
+    </Gaveta>
+  );
+}
+
+/** As ações que abrem uma gaveta; as outras valem na hora. */
+type AcaoComGaveta = 'renomear' | 'local';
+
+/**
+ * O menu "Ações" de uma planta. A planta que falhou não tem a situação nem o local para mudar: os
+ * caminhos dela são renomear, substituir o desenho e excluir.
+ */
+function AcoesDaPlanta({
+  planta,
+  aoAbrir,
+}: {
+  planta: PlantaDoMapa;
+  aoAbrir: (acao: AcaoComGaveta) => void;
+}) {
+  const mudar = useMudarPlanta();
+  const rotulo = `Ações da planta ${planta.nome}`;
+
+  async function mudarSituacao(situacao: 'ativa' | 'inativa') {
+    const resultado = await mudar(
+      planta,
+      { situacao },
+      situacao === 'ativa' ? 'reativar a planta' : 'inativar a planta',
+    );
+    if ('erro' in resultado) {
+      avisar({ situacao: 'critico', titulo: resultado.erro });
+      return;
+    }
+    avisar({
+      situacao: 'sucesso',
+      titulo: situacao === 'ativa' ? 'Planta reativada.' : 'Planta inativada.',
+    });
+  }
+
+  return (
+    <Menu
+      rotulo={rotulo}
+      gatilho={
+        <Botao nivel="secundario" aria-label={rotulo}>
+          Ações
+        </Botao>
+      }
+    >
+      <ItemDeMenu id="renomear" onAction={() => aoAbrir('renomear')}>
+        Renomear…
+      </ItemDeMenu>
+      {planta.situacao !== 'falhou' && (
+        <ItemDeMenu id="local" onAction={() => aoAbrir('local')}>
+          Ligar a um local…
+        </ItemDeMenu>
+      )}
+      {planta.situacao === 'ativa' && (
+        <ItemDeMenu id="inativar" onAction={() => void mudarSituacao('inativa')}>
+          Inativar
+        </ItemDeMenu>
+      )}
+      {planta.situacao === 'inativa' && (
+        <ItemDeMenu id="reativar" onAction={() => void mudarSituacao('ativa')}>
+          Reativar
+        </ItemDeMenu>
+      )}
+    </Menu>
+  );
+}
+
+/** A ordem da tela: as ativas e, depois, as inativas e as que falharam, cada grupo pelo nome. */
+const ORDEM_DAS_SITUACOES = { ativa: 0, convertendo: 0, inativa: 1, falhou: 2 } as const;
+
 /** A tela das plantas do mapa. */
 export function Plantas() {
   const plantas = usePlantas();
   const [nova, definirNova] = useState(false);
+  const [aberta, definirAberta] = useState<{ acao: AcaoComGaveta; planta: string } | null>(null);
   const podeEditar = plantas.data?.podeEditar ?? false;
-  const lista = plantas.data?.plantas ?? [];
+  // A API devolve pelo nome; a ordenação mantém essa ordem dentro de cada grupo.
+  const lista = [...(plantas.data?.plantas ?? [])].sort(
+    (a, b) => ORDEM_DAS_SITUACOES[a.situacao] - ORDEM_DAS_SITUACOES[b.situacao],
+  );
+  const plantaAberta = aberta ? lista.find(({ id }) => id === aberta.planta) : undefined;
   return (
     <div className={estilos.tela}>
       <CabecalhoDaPagina
@@ -163,11 +359,25 @@ export function Plantas() {
                 </p>
               )}
               {planta.erro && <p className={estilos.nota}>{planta.erro}</p>}
+              {podeEditar && (
+                <div className={estilos.acoes}>
+                  <AcoesDaPlanta
+                    planta={planta}
+                    aoAbrir={(acao) => definirAberta({ acao, planta: planta.id })}
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
       {nova && <NovaPlanta aoFechar={() => definirNova(false)} />}
+      {plantaAberta && aberta?.acao === 'renomear' && (
+        <RenomearPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />
+      )}
+      {plantaAberta && aberta?.acao === 'local' && (
+        <LocalDaPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />
+      )}
     </div>
   );
 }
