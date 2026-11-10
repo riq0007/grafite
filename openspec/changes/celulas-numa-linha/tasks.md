@@ -1,6 +1,6 @@
 ## 1. A tabela
 
-- [ ] 1.1 Escrever primeiro a história "Tabela com colunas estreitas", com as células compostas em colunas de 64 px, na tabela base e na virtualizada, nas três densidades, e ver a história falhar com a classe que quebra; depois, a regra do `flex-wrap` na `Tabela` (design, decisões 1 e 5). Verificar: a história passa com toda linha na altura da densidade.
+- [x] 1.1 Escrever primeiro a história "Tabela com colunas estreitas", com as células compostas em colunas de 64 px, na tabela base e na virtualizada, nas três densidades, e ver a história falhar com a classe que quebra; depois, a regra do `flex-wrap` na `Tabela` (design, decisões 1 e 5). Verificar: a história passa com toda linha na altura da densidade.
 - [ ] 1.2 Escrever primeiro a história e os testes e depois o `ValorComposto` (decisão 2). Verificar: passam "o fixo fica inteiro" e "o resto termina em reticências", sem violação de acessibilidade, e a história mede a largura que cada coluna da coleta pede.
 - [ ] 1.3 Escrever primeiro os testes e depois o resumo da linha com o conteúdo que não coube (decisão 3). Verificar: os testes passam com "Conteúdo cortado na célula" e "Todas à vista".
 

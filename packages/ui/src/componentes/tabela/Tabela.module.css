@@ -225,6 +225,16 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+ * design, decisão 1): o `white-space` da célula segura o texto, mas não um contêiner flexível, que
+ * quebra pelo `flex-wrap`. A regra pesa mais que a classe de um módulo, como a que serve à ficha, e
+ * só tem efeito num contêiner flexível.
+ */
+.celula [class] {
+  flex-wrap: nowrap;
+}
+
 .celula[data-alinhamento="fim"] {
   text-align: end;
 }
