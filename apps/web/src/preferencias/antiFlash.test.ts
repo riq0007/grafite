@@ -1,7 +1,7 @@
 import { temaPersonalizado } from '@grafite/ui';
 import { afterEach, describe, expect, it } from 'vitest';
 import indexHtml from '../../index.html?raw';
-import { atributosDaInterface, PADRAO_DE_FABRICA } from './preferencias.ts';
+import { ATRIBUTOS_PERMITIDOS, atributosDaInterface, PADRAO_DE_FABRICA } from './preferencias.ts';
 
 /** O script inline do index.html que aplica as preferências antes da primeira pintura. */
 const scriptAntiFlash = (() => {
@@ -50,6 +50,20 @@ describe('script anti-flash', () => {
     localStorage.setItem('grafite.preferencias.atributos', JSON.stringify(atributos));
     new Function(scriptAntiFlash)();
     expect(raiz().getAttribute('data-rolagem')).toBe('sempre');
+  });
+
+  // O app aplica na raiz só os nomes da lista dele (usePreferencias.tsx): o atributo calculado que
+  // falta nela vale na primeira pintura e some quando o app carrega.
+  it('todo atributo que o app calcula está na lista dos que ele aplica, a mesma da primeira pintura', () => {
+    const atributos = atributosDaInterface({
+      ...PADRAO_DE_FABRICA,
+      dock: { ...PADRAO_DE_FABRICA.dock, ocultar: true },
+      acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
+    });
+    expect([...ATRIBUTOS_PERMITIDOS].sort()).toEqual(Object.keys(atributos).sort());
+    const lista = scriptAntiFlash.match(/const permitidos = \[([\s\S]*?)\];/)?.[1] ?? '';
+    const daPrimeiraPintura = [...lista.matchAll(/'([^']+)'/g)].map(([, nome]) => nome);
+    expect(daPrimeiraPintura.sort()).toEqual([...ATRIBUTOS_PERMITIDOS].sort());
   });
 
   it('ignora nomes fora da lista e valores com caracteres inesperados', () => {

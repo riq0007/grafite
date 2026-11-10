@@ -123,4 +123,5 @@ export const ATRIBUTOS_PERMITIDOS = [
   'data-dock',
   'data-dock-ocultar',
   '--tamanho-item-dock',
+  'data-rolagem',
 ] as const;
