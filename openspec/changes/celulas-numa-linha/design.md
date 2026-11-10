@@ -42,6 +42,8 @@ O `@grafite/ui` ganha o `ValorComposto`, para a célula com mais de uma parte:
 
 Ele é `inline-flex`, sem quebra, com a largura máxima da célula. O `fixo` não encolhe; o resto encolhe com `min-width: 0`, `overflow: hidden` e `text-overflow: ellipsis`. As quatro células da coleta, a situação dos alertas e a validade do cofre passam a usá-lo. Na célula da coleta, o "Desatualizado" vai para o `fixo`, ao lado da situação, e a idade fica no resto. A ficha continua com a classe que quebra.
 
+O respiro entre as partes é do estilo, e o texto precisa do espaço dele: o `ValorComposto` põe um espaço entre o fixo e o resto e entre as partes de cada um, dadas num fragmento ou numa lista. Dentro de um contêiner flexível o espaço não ocupa lugar; no resto, que é texto corrido para poder terminar em reticências, ele é o espaço da palavra, e a margem entre as partes cai de 8 para 4 px, para o respiro continuar o mesmo. Sem isso, o texto da célula era "Reconhecidopor Ana Souza", para o leitor de tela, a busca na página e os testes. A parte que não desenha nada não entra: a célula da leitura só inclui o "Desatualizado" quando a leitura é velha.
+
 ### 3. O conteúdo cortado no resumo
 
 O resumo da linha passa a juntar, às colunas fora da área, as colunas da linha sob o mouse em que o conteúdo é mais largo que a célula (`scrollWidth > clientWidth`, na célula e no resto do `ValorComposto`). A medida roda só quando o relógio de 1,5 s dispara, numa linha.

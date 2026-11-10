@@ -29,9 +29,12 @@
   white-space: nowrap;
 }
 
-/* As partes do resto, como a descrição e a idade, com o mesmo respiro do fixo. */
+/*
+ * As partes do resto, como a descrição e a idade, com o respiro do fixo: o espaço que as separa no
+ * texto, para o leitor de tela e a busca na página, mais a margem que completa os 8 px.
+ */
 .resto > * + * {
-  margin-inline-start: var(--esp-2);
+  margin-inline-start: var(--esp-1);
 }
 
 /* O resto de um componente que não desenhou nada, como a idade de uma leitura que não houve. */

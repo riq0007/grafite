@@ -138,7 +138,7 @@ describe('lista dos segredos', () => {
       'Validade',
     ]);
     expect(await textoDasLinhas()).toEqual([
-      'Senha do Wi-Fi visitantesWi-FiCompartilhado—Carla Dias30/09/2026VencidoRotação atrasada',
+      'Senha do Wi-Fi visitantesWi-FiCompartilhado—Carla Dias30/09/2026 Vencido Rotação atrasada',
       'Switch do CPDConta administrativaEquipamentoadmin—31/03/2027',
     ]);
     // O vencido chama a atenção com o ícone e o texto, não só pela cor.
@@ -254,7 +254,7 @@ describe('a validade do segredo numa coluna estreita', () => {
 
     const vencido = within(wifi as HTMLElement).getByText('Vencido');
     const fixo = vencido.closest('[data-parte="fixo"]');
-    expect(fixo?.textContent).toBe('30/09/2026VencidoRotação atrasada');
+    expect(fixo?.textContent).toBe('30/09/2026 Vencido Rotação atrasada');
     expect(
       within(doSwitch as HTMLElement)
         .getByText('31/03/2027')

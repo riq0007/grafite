@@ -74,6 +74,10 @@ export function IdadeEDesatualizado({
   );
 }
 
+/** Se a leitura é velha para a métrica, e a tela diz "Desatualizado". */
+const leituraVelha = (momento: string | null, agora: Date, metrica?: MetricaDaColeta) =>
+  Boolean(momento) && desatualizada(new Date(momento as string), agora, metrica);
+
 /** "Desatualizado", com a leitura velha para a métrica; senão, nada. */
 export function Desatualizado({
   momento,
@@ -84,7 +88,7 @@ export function Desatualizado({
   agora: Date;
   metrica?: MetricaDaColeta;
 }) {
-  if (!momento || !desatualizada(new Date(momento), agora, metrica)) return null;
+  if (!leituraVelha(momento, agora, metrica)) return null;
   return <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>;
 }
 
@@ -112,7 +116,9 @@ export function LeituraNaCelula({
       fixo={
         <>
           {fixo}
-          <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+          {leituraVelha(momento, agora, metrica) && (
+            <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+          )}
         </>
       }
     >

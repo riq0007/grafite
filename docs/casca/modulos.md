@@ -1785,7 +1785,9 @@ export function LeituraNaCelula({
       fixo={
         <>
           {fixo}
-          <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+          {leituraVelha(momento, agora, metrica) && (
+            <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+          )}
         </>
       }
     >

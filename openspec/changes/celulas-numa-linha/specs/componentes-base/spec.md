@@ -8,6 +8,8 @@ Na célula com mais de uma parte, como a situação com a idade da leitura, as p
 - os rótulos de situação ficam inteiros, enquanto couberem na coluna;
 - o texto que os acompanha, como "há 2 min" ou a descrição do suprimento, é o que encolhe e termina em reticências.
 
+As partes SHALL ficar separadas por um espaço no texto da célula, além do respiro à vista: o leitor de tela, a busca na página e quem copia o texto SHALL receber "Reconhecido por Ana Souza", e não as partes emendadas.
+
 A regra SHALL valer na tabela base e na que desenha só as linhas perto da área visível, em todas as densidades. Fora das tabelas, como na ficha, as mesmas partes SHALL continuar quebrando a linha quando falta largura. As colunas da coleta dos ativos SHALL nascer com, pelo menos, a largura que mostra a situação e a idade de uma leitura em dia sem corte, também quando a tabela divide a sobra entre as colunas (requisito "Tabela na largura toda").
 
 #### Scenario: Disponibilidade numa coluna estreita
@@ -21,6 +23,10 @@ A regra SHALL valer na tabela base e na que desenha só as linhas perto da área
 #### Scenario: Leitura desatualizada
 - **WHEN** a leitura do Control iD de um controle está "Sem resposta" e "Desatualizado", numa coluna com a largura de fábrica
 - **THEN** os dois rótulos e a idade ficam lado a lado, numa linha só, e o que não cabe termina cortado na borda da célula
+
+#### Scenario: Partes separadas no texto
+- **WHEN** a tabela dos alertas mostra um alerta reconhecido por Ana Souza, e o leitor de tela lê a célula da situação
+- **THEN** ele lê "Reconhecido por Ana Souza", com as partes separadas
 
 #### Scenario: Densidade compacta
 - **WHEN** a tabela dos ativos está na densidade compacta, com a coluna "Total de páginas" em 80 px

@@ -1,4 +1,4 @@
-import { Children, type ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import estilos from './ValorComposto.module.css';
 
 export interface PropsDoValorComposto {
@@ -8,6 +8,28 @@ export interface PropsDoValorComposto {
   children?: ReactNode;
 }
 
+/** As partes dadas juntas, num fragmento ou numa lista, uma a uma; a nula e a falsa saem. */
+const partesDe = (no: ReactNode): ReactNode[] =>
+  Children.toArray(no).flatMap((parte) =>
+    isValidElement<{ children?: ReactNode }>(parte) && parte.type === Fragment
+      ? partesDe(parte.props.children)
+      : [parte],
+  );
+
+/**
+ * As partes com um espaço entre elas no texto. O respiro à vista é do estilo, e o texto precisa do
+ * espaço dele: sem isso, o leitor de tela, a busca na página e quem lê o texto da célula recebem
+ * "Reconhecidopor Ana Souza".
+ */
+const comEspacos = (partes: readonly ReactNode[]) =>
+  partes.map((parte, indice) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: as partes não trocam de ordem entre os desenhos.
+    <Fragment key={indice}>
+      {indice > 0 && ' '}
+      {parte}
+    </Fragment>
+  ));
+
 /**
  * O valor de uma célula com mais de uma parte (spec componentes-base, "Célula numa linha só"): as
  * partes ficam lado a lado, numa linha só. Quando a coluna é estreita, o fixo fica inteiro, e o
@@ -16,16 +38,19 @@ export interface PropsDoValorComposto {
  * as telas montam as partes do jeito delas.
  */
 export function ValorComposto({ fixo, children }: PropsDoValorComposto) {
-  const temResto = Children.toArray(children).length > 0;
+  const resto = partesDe(children);
   return (
     <span className={estilos.composto} data-composto="">
       <span className={estilos.fixo} data-parte="fixo">
-        {fixo}
+        {comEspacos(partesDe(fixo))}
       </span>
-      {temResto && (
-        <span className={estilos.resto} data-parte="resto">
-          {children}
-        </span>
+      {resto.length > 0 && (
+        <>
+          {' '}
+          <span className={estilos.resto} data-parte="resto">
+            {comEspacos(resto)}
+          </span>
+        </>
       )}
     </span>
   );

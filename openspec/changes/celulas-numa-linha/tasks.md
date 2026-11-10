@@ -12,6 +12,7 @@
 - [x] 2.3 Escrever primeiro o teste e depois as larguras de fábrica das colunas da coleta (decisão 4). Verificar: o teste do domínio passa com as larguras novas, e o teste das visões mostra que a largura igual à de fábrica não marca a visão como personalizada.
 - [x] 2.4 Escrever primeiro a história, o teste do domínio e o ponta a ponta e depois a largura que o conteúdo pede na divisão da sobra, que a conferência da 3.2 mostrou faltar: as colunas da coleta dividiam a sobra com 212 px cada (decisão 4). Verificar: passam "Largura que o conteúdo pede", o teste do domínio com a `larguraMinima` nas quatro colunas da coleta e o ponta a ponta com a "Disponibilidade" entre dez colunas.
 - [x] 2.5 Escrever primeiro a história e depois a largura de fábrica que comporta o cabeçalho, que a conferência da 3.2 mostrou cortado em "Total de páginas" (decisão 4). Verificar: passa "Cabeçalhos na largura de fábrica", com o nome de cada coluna da coleta inteiro nas três densidades.
+- [x] 2.6 Escrever primeiro os testes e depois o espaço entre as partes do `ValorComposto` no texto, que o ponta a ponta dos alertas da 3.4 mostrou faltar ("Reconhecidopor Ana Souza"); a célula da leitura só inclui o "Desatualizado" quando a leitura é velha, para não sobrar espaço (decisão 2). Verificar: passam "separa as partes com um espaço no texto" e o ponta a ponta "a lista dos abertos mostra o alerta, e o reconhecer diz quem reconheceu".
 
 ## 3. Fechamento
 
