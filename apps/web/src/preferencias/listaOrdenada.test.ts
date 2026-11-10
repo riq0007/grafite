@@ -145,3 +145,50 @@ describe('moverItem com os ids da tela', () => {
     expect(moverItem(soOAusenteAcima, 'inicio', -1, naTela)).toEqual(soOAusenteAcima);
   });
 });
+
+// A largura e as opções de um bloco do Início acompanham o item (change
+// opcoes-dos-blocos-do-inicio, design, decisão 2).
+describe('o que o item traz além do id e da visibilidade', () => {
+  const comOpcoes = {
+    id: 'ativos.suprimentos',
+    visivel: true,
+    largura: 'metade',
+    opcoes: { tipos: ['toner'], nivel: 30 },
+  };
+  const lista = [
+    { id: 'inicio.resolver', visivel: true },
+    comOpcoes,
+    { id: 'gestao.backups', visivel: true },
+  ];
+
+  it('o item movido leva a largura e as opções', () => {
+    expect(moverItem(lista, 'ativos.suprimentos', -1)[0]).toEqual(comOpcoes);
+    expect(moverItem(lista, 'ativos.suprimentos', 1)[2]).toEqual(comOpcoes);
+  });
+
+  it('o item oculto continua com a largura e as opções', () => {
+    expect(ocultarItem(lista, 'ativos.suprimentos', true)[1]).toEqual({
+      ...comOpcoes,
+      visivel: false,
+    });
+  });
+
+  it('o item mostrado de novo volta ao fim com a largura e as opções dele', () => {
+    const oculto = ocultarItem(lista, 'ativos.suprimentos', true);
+    const mostrado = ocultarItem(oculto, 'ativos.suprimentos', false);
+    expect(ids(mostrado)).toEqual(['inicio.resolver', 'gestao.backups', 'ativos.suprimentos']);
+    expect(mostrado.at(-1)).toEqual(comOpcoes);
+  });
+
+  it('a lista que vai gravada guarda os itens salvos como vieram', () => {
+    expect(ordenarItens(registrados, lista).lista).toEqual(lista);
+    expect(listaComAusentes(registrados, lista, 20)).toEqual(lista);
+  });
+
+  it('o item que a lista não trazia volta só com o id, à vista', () => {
+    expect(ocultarItem(lista, 'salas.agenda', false).at(-1)).toEqual({
+      id: 'salas.agenda',
+      visivel: true,
+    });
+  });
+});

@@ -2,6 +2,11 @@
 // resolvida contra o que o app registra, e as mudanças, que gravam a lista inteira. Serve aos blocos
 // do Início (spec tela-inicial, "Personalizar o Início"; change inicio-ajustavel, design, decisões 2
 // e 3) e aos módulos do dock (change dock-personalizavel, design, decisão 1).
+//
+// O item pode trazer mais do que o id e a visibilidade, como a largura e as opções de um bloco do
+// Início (change opcoes-dos-blocos-do-inicio, design, decisão 2): as funções o levam como veio. O
+// item que elas criam, para o registrado que a lista não trazia, só tem o id e a visibilidade: o
+// que o tipo do item tiver a mais tem de ser opcional.
 
 /** Um item da lista salva: o id e se está à vista, como um bloco do Início ou um módulo do dock. */
 export interface ItemDaLista {
@@ -9,27 +14,30 @@ export interface ItemDaLista {
   visivel: boolean;
 }
 
-export interface ItensOrdenados<T extends { id: string }> {
+export interface ItensOrdenados<T extends { id: string }, I extends ItemDaLista = ItemDaLista> {
   visiveis: T[];
   ocultos: T[];
   /** A lista inteira, como ela vai gravada: os registrados que faltavam entram no fim, à vista. */
-  lista: ItemDaLista[];
+  lista: I[];
 }
+
+/** O item do registrado que a lista não trazia: à vista, só com o id. */
+const novoItem = <I extends ItemDaLista>(id: string) => ({ id, visivel: true }) as I;
 
 /**
  * Os itens registrados na ordem salva: os que a lista não traz entram no fim, à vista, na ordem do
  * registro, e os ids salvos que ninguém registra ficam de fora.
  */
-export function ordenarItens<T extends { id: string }>(
+export function ordenarItens<T extends { id: string }, I extends ItemDaLista = ItemDaLista>(
   registrados: readonly T[],
-  salvos: readonly ItemDaLista[],
-): ItensOrdenados<T> {
+  salvos: readonly I[],
+): ItensOrdenados<T, I> {
   const porId = new Map(registrados.map((item) => [item.id, item]));
   const lista = salvos.filter((salvo) => porId.has(salvo.id));
   for (const item of registrados) {
-    if (!lista.some((salvo) => salvo.id === item.id)) lista.push({ id: item.id, visivel: true });
+    if (!lista.some((salvo) => salvo.id === item.id)) lista.push(novoItem<I>(item.id));
   }
-  const registrado = (salvo: ItemDaLista) => porId.get(salvo.id) as T;
+  const registrado = (salvo: I) => porId.get(salvo.id) as T;
   return {
     visiveis: lista.filter((salvo) => salvo.visivel).map(registrado),
     ocultos: lista.filter((salvo) => !salvo.visivel).map(registrado),
@@ -43,16 +51,16 @@ export function ordenarItens<T extends { id: string }>(
  * registrados que faltavam entram no fim, à vista. Os ausentes só ficam enquanto cabem no limite
  * da lista, contados depois dos registrados, que ficam todos.
  */
-export function listaComAusentes(
+export function listaComAusentes<I extends ItemDaLista>(
   registrados: ReadonlyArray<{ id: string }>,
-  salvos: readonly ItemDaLista[],
+  salvos: readonly I[],
   limite: number,
-): ItemDaLista[] {
+): I[] {
   const registrado = new Set(registrados.map((item) => item.id));
   let vagas = Math.max(0, limite - registrados.length);
   const lista = salvos.filter((salvo) => registrado.has(salvo.id) || vagas-- > 0);
   for (const item of registrados) {
-    if (!lista.some((salvo) => salvo.id === item.id)) lista.push({ id: item.id, visivel: true });
+    if (!lista.some((salvo) => salvo.id === item.id)) lista.push(novoItem<I>(item.id));
   }
   return lista;
 }
@@ -62,13 +70,13 @@ export function listaComAusentes(
  * lugar dele e entra antes do vizinho de cima, ou depois do de baixo. Com os ids da tela, passa por
  * cima também dos itens que a lista guarda e a tela não mostra.
  */
-export function moverItem(
-  lista: readonly ItemDaLista[],
+export function moverItem<I extends ItemDaLista>(
+  lista: readonly I[],
   id: string,
   sentido: -1 | 1,
   naTela?: ReadonlySet<string>,
-): ItemDaLista[] {
-  const pula = (item: ItemDaLista | undefined) =>
+): I[] {
+  const pula = (item: I | undefined) =>
     !item?.visivel || (naTela !== undefined && !naTela.has(item.id));
   const indice = lista.findIndex((item) => item.id === id);
   let vizinho = indice + sentido;
@@ -82,12 +90,16 @@ export function moverItem(
   return sem;
 }
 
-/** Oculta o item no lugar dele, ou o mostra de novo, no fim. */
-export function ocultarItem(
-  lista: readonly ItemDaLista[],
+/** Oculta o item no lugar dele, ou o mostra de novo, no fim, com o que ele trazia. */
+export function ocultarItem<I extends ItemDaLista>(
+  lista: readonly I[],
   id: string,
   oculto: boolean,
-): ItemDaLista[] {
+): I[] {
   if (oculto) return lista.map((item) => (item.id === id ? { ...item, visivel: false } : item));
-  return [...lista.filter((item) => item.id !== id), { id, visivel: true }];
+  const guardado = lista.find((item) => item.id === id);
+  return [
+    ...lista.filter((item) => item.id !== id),
+    guardado ? { ...guardado, visivel: true } : novoItem<I>(id),
+  ];
 }
