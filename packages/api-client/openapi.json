@@ -18856,6 +18856,36 @@
               "tempoDaResposta",
               "motivo"
             ]
+          },
+          "exibicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aparece",
+                      "recusa",
+                      "pede-entrada"
+                    ]
+                  },
+                  "motivo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "situacao",
+                  "motivo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -18865,7 +18895,8 @@
           "local",
           "ordem",
           "situacao",
-          "verificacao"
+          "verificacao",
+          "exibicao"
         ]
       },
       "ListaDePaineisInput": {
@@ -40556,6 +40587,37 @@
               "motivo"
             ],
             "additionalProperties": false
+          },
+          "exibicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aparece",
+                      "recusa",
+                      "pede-entrada"
+                    ]
+                  },
+                  "motivo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "situacao",
+                  "motivo"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -40565,7 +40627,8 @@
           "local",
           "ordem",
           "situacao",
-          "verificacao"
+          "verificacao",
+          "exibicao"
         ],
         "additionalProperties": false
       },

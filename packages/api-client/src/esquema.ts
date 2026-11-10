@@ -32841,6 +32841,11 @@ export interface components {
                 tempoDaResposta: number | null;
                 motivo: string | null;
             };
+            exibicao: {
+                /** @enum {string} */
+                situacao: "aparece" | "recusa" | "pede-entrada";
+                motivo: string | null;
+            } | null;
         };
         ListaDePaineisInput: {
             paineis: components["schemas"]["PainelInput"][];
@@ -37076,6 +37081,11 @@ export interface components {
                 tempoDaResposta: number | null;
                 motivo: string | null;
             };
+            exibicao: {
+                /** @enum {string} */
+                situacao: "aparece" | "recusa" | "pede-entrada";
+                motivo: string | null;
+            } | null;
         };
         ListaDePaineis: {
             paineis: components["schemas"]["Painel"][];

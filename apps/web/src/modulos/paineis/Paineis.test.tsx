@@ -39,6 +39,7 @@ const painel = (numero: number, mudancas: Partial<Painel> = {}): Painel => ({
     tempoDaResposta: 40,
     motivo: null,
   },
+  exibicao: { situacao: 'aparece', motivo: null },
   ...mudancas,
 });
 

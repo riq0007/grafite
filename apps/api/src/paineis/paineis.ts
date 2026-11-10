@@ -37,6 +37,8 @@ export const painelLido = (linha: LinhaDoPainel, arvore: ArvoreDeLocais) => ({
     tempoDaResposta: linha.tempoDaResposta,
     motivo: linha.motivo,
   },
+  // A exibição que a última verificação leu do painel no ar; sem ela, `null`.
+  exibicao: linha.exibicao ? { situacao: linha.exibicao, motivo: linha.motivoDaExibicao } : null,
 });
 
 /** Quem pede o endereço: o `fetch` de verdade, ou o do teste. */

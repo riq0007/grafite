@@ -260,4 +260,36 @@ describe('a exibição pela verificação', () => {
       enderecoFinal: `${base}/salto/4`,
     });
   });
+
+  it('"Verificar agora" devolve a exibição, e a lista também', async () => {
+    const r = await cadastrar({ nome: 'Portal', endereco: `${base}/entrada` });
+    expect(r.json().exibicao).toBeNull();
+    const verificado = await cliente.enviar('POST', `/paineis/${r.json().id}/verificacao`, ana);
+    const DA_ENTRADA = { situacao: 'pede-entrada', motivo: 'Levou à página de entrada.' };
+    expect(verificado.json()).toMatchObject({
+      verificacao: { situacao: 'no-ar' },
+      exibicao: DA_ENTRADA,
+    });
+    const lista = await cliente.consultar('/paineis', davi);
+    const daLista = (nome: string) =>
+      lista.json().paineis.find((um: { nome: string }) => um.nome === nome).exibicao;
+    expect(daLista('Portal')).toEqual(DA_ENTRADA);
+    expect(daLista('Linha 3')).toEqual({ situacao: 'aparece', motivo: null });
+    // O painel fora do ar não tem exibição.
+    expect(daLista('Estoque')).toBeNull();
+  });
+
+  it('o endereço novo volta a esperar a verificação, sem a exibição do anterior', async () => {
+    const lista = await cliente.consultar('/paineis', ana);
+    const portal = lista.json().paineis.find((um: { nome: string }) => um.nome === 'Portal');
+    expect(portal.exibicao).not.toBeNull();
+    const mudado = await cliente.enviar('PATCH', `/paineis/${portal.id}`, ana, {
+      nome: 'Portal',
+      endereco: `${base}/ok`,
+    });
+    expect(mudado.json()).toMatchObject({
+      verificacao: { situacao: 'sem-verificacao' },
+      exibicao: null,
+    });
+  });
 });
