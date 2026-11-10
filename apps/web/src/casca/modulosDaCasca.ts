@@ -1,10 +1,9 @@
 // Do registro para a casca (design, decisão 2): a casca do packages/ui só conhece dados de
 // apresentação, e o app traduz para eles cada módulo registrado.
+import { MODULO_DOS_AJUSTES, type ModuloDoDockSalvo } from '@grafite/domain';
 import type { ItemDoMenuDaCasca, MenuDaBarra, ModuloDaCasca } from '@grafite/ui';
 import type { ItemDoMenuDoModulo, ModuloRegistrado } from '../modulos/tipos.ts';
-
-/** Ajustes fica sempre no fim do dock, isolado pelo separador. */
-const ID_DOS_AJUSTES = 'ajustes';
+import { ordenarItens } from '../preferencias/listaOrdenada.ts';
 
 /**
  * Itens de um menu do registro na forma da casca. Um item que navega usa o próprio destino como
@@ -48,14 +47,32 @@ function paraACasca(modulo: ModuloRegistrado): ModuloDaCasca {
   };
 }
 
-/** Os módulos do dock na ordem do registro, com Ajustes à parte, para o fim. */
-export function modulosDaCasca(registro: readonly ModuloRegistrado[]): {
+/**
+ * Os módulos da casca na ordem que vale para a conta (spec dock, "Ordem dos módulos e módulos fora
+ * do dock"; change dock-personalizavel, design, decisão 2):
+ * - `modulos`: os do dock, na ordem escolhida, e depois os que a escolha não traz, na do registro;
+ * - `modulosNoMais`: os que a conta tirou do dock, que ficam no menu Mais;
+ * - `modulosDoFim`: Ajustes, sempre no fim, isolado pelo separador e fora da escolha.
+ *
+ * O id da escolha que o registro da conta não traz fica de fora, sem sair da lista guardada. Sem a
+ * escolha, vale a ordem do registro, com todos no dock.
+ */
+export function modulosDaCasca(
+  registro: readonly ModuloRegistrado[],
+  escolha: readonly ModuloDoDockSalvo[] = [],
+): {
   modulos: ModuloDaCasca[];
+  modulosNoMais: ModuloDaCasca[];
   modulosDoFim: ModuloDaCasca[];
 } {
+  const { visiveis, ocultos } = ordenarItens(
+    registro.filter((modulo) => modulo.id !== MODULO_DOS_AJUSTES),
+    escolha,
+  );
   return {
-    modulos: registro.filter((modulo) => modulo.id !== ID_DOS_AJUSTES).map(paraACasca),
-    modulosDoFim: registro.filter((modulo) => modulo.id === ID_DOS_AJUSTES).map(paraACasca),
+    modulos: visiveis.map(paraACasca),
+    modulosNoMais: ocultos.map(paraACasca),
+    modulosDoFim: registro.filter((modulo) => modulo.id === MODULO_DOS_AJUSTES).map(paraACasca),
   };
 }
 

@@ -1,3 +1,4 @@
+import { resolverPreferencias } from '@grafite/domain';
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
 import { Box, Settings } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
@@ -13,8 +14,19 @@ const racks = createRoute({ getParentRoute: () => lista, path: 'racks' });
 const importar = createRoute({ getParentRoute: () => lista, path: 'importar' });
 const rotasDoExemplo = lista.addChildren([switches, racks, importar]);
 const rotasDeAjustes = createRoute({ getParentRoute: () => raiz, path: '/ajustes' });
+const rotasDaOperacao = createRoute({ getParentRoute: () => raiz, path: '/operacao' });
+const rotasDasSalas = createRoute({ getParentRoute: () => raiz, path: '/salas' });
+const rotasDoCofre = createRoute({ getParentRoute: () => raiz, path: '/cofre' });
 // Como no app, as rotas só ganham id quando um roteador monta a árvore.
-createRouter({ routeTree: raiz.addChildren([rotasDoExemplo, rotasDeAjustes]) });
+createRouter({
+  routeTree: raiz.addChildren([
+    rotasDoExemplo,
+    rotasDeAjustes,
+    rotasDaOperacao,
+    rotasDasSalas,
+    rotasDoCofre,
+  ]),
+});
 
 const exemplo = definirModulo({
   id: 'exemplo',
@@ -44,6 +56,34 @@ const ajustes = definirModulo({
   endereco: '/ajustes',
   prioridadeNoCelular: 9,
   rotas: rotasDeAjustes,
+});
+
+const operacao = definirModulo({
+  id: 'operacao',
+  nome: 'Operação',
+  icone: Box,
+  endereco: '/operacao',
+  prioridadeNoCelular: 3,
+  rotas: rotasDaOperacao,
+});
+
+const salas = definirModulo({
+  id: 'salas',
+  nome: 'Salas',
+  icone: Box,
+  endereco: '/salas',
+  prioridadeNoCelular: 4,
+  rotas: rotasDasSalas,
+  menu: [{ rotulo: 'Agenda', destino: '/salas' }],
+});
+
+const cofre = definirModulo({
+  id: 'cofre',
+  nome: 'Cofre',
+  icone: Box,
+  endereco: '/cofre',
+  prioridadeNoCelular: 5,
+  rotas: rotasDoCofre,
 });
 
 describe('módulos da casca', () => {
@@ -101,5 +141,88 @@ describe('módulos da casca', () => {
 
   it('não tem módulo atual num endereço que não leva a nenhum módulo', () => {
     expect(moduloAtual([exemplo, ajustes], ['__root__'])).toBeUndefined();
+  });
+});
+
+// A ordem que vale (spec dock, "Ordem dos módulos e módulos fora do dock"; change
+// dock-personalizavel, design, decisão 2).
+describe('a ordem dos módulos no dock', () => {
+  const ids = (modulos: ReadonlyArray<{ id: string }>) => modulos.map((modulo) => modulo.id);
+  const noDock = (id: string) => ({ id, visivel: true });
+  const tirado = (id: string) => ({ id, visivel: false });
+  const registro = [exemplo, operacao, salas, cofre, ajustes];
+
+  it('sem a escolha, vale a ordem do registro, com todos no dock', () => {
+    const { modulos, modulosNoMais, modulosDoFim } = modulosDaCasca(registro, []);
+    expect(ids(modulos)).toEqual(['exemplo', 'operacao', 'salas', 'cofre']);
+    expect(modulosNoMais).toEqual([]);
+    expect(ids(modulosDoFim)).toEqual(['ajustes']);
+  });
+
+  it('Ordem escolhida: os módulos seguem a lista da conta, e Ajustes continua no fim', () => {
+    const { modulos, modulosNoMais, modulosDoFim } = modulosDaCasca(registro, [
+      noDock('operacao'),
+      noDock('exemplo'),
+      noDock('cofre'),
+      noDock('salas'),
+    ]);
+    expect(ids(modulos)).toEqual(['operacao', 'exemplo', 'cofre', 'salas']);
+    expect(modulosNoMais).toEqual([]);
+    expect(ids(modulosDoFim)).toEqual(['ajustes']);
+  });
+
+  it('o módulo tirado do dock vai para o Mais, com o menu dele', () => {
+    const { modulos, modulosNoMais } = modulosDaCasca(registro, [
+      noDock('exemplo'),
+      tirado('salas'),
+      noDock('operacao'),
+      tirado('cofre'),
+    ]);
+    expect(ids(modulos)).toEqual(['exemplo', 'operacao']);
+    expect(ids(modulosNoMais)).toEqual(['salas', 'cofre']);
+    expect(modulosNoMais[0]?.menu).toEqual([{ id: '/salas', rotulo: 'Agenda' }]);
+  });
+
+  it('Módulo ligado depois: entra no dock depois dos que a conta arrumou, antes de Ajustes', () => {
+    const escolha = [noDock('operacao'), tirado('cofre'), noDock('exemplo')];
+    const { modulos, modulosNoMais, modulosDoFim } = modulosDaCasca(registro, escolha);
+    expect(ids(modulos)).toEqual(['operacao', 'exemplo', 'salas']);
+    expect(ids(modulosNoMais)).toEqual(['cofre']);
+    expect(ids(modulosDoFim)).toEqual(['ajustes']);
+  });
+
+  it('Módulo sem acesso na ordem: fica de fora, e volta ao lugar dele com o acesso de volta', () => {
+    const escolha = [noDock('exemplo'), noDock('cofre'), noDock('operacao'), noDock('salas')];
+    const semOCofre = modulosDaCasca([exemplo, operacao, salas, ajustes], escolha);
+    expect(ids(semOCofre.modulos)).toEqual(['exemplo', 'operacao', 'salas']);
+    expect(semOCofre.modulosNoMais).toEqual([]);
+    const comOCofre = modulosDaCasca(registro, escolha);
+    expect(ids(comOCofre.modulos)).toEqual(['exemplo', 'cofre', 'operacao', 'salas']);
+  });
+
+  it('Padrão da organização: a conta que nunca arrumou o dock abre com a ordem dela', () => {
+    const padroes = { dock: { modulos: [noDock('operacao'), tirado('salas')] } };
+    const daConta = resolverPreferencias(padroes, {}).dock.modulos;
+    const { modulos, modulosNoMais } = modulosDaCasca(registro, daConta);
+    expect(ids(modulos)).toEqual(['operacao', 'exemplo', 'cofre']);
+    expect(ids(modulosNoMais)).toEqual(['salas']);
+    // A conta que arrumou o dock dela fica com a lista dela, inteira.
+    const arrumada = resolverPreferencias(padroes, { dock: { modulos: [noDock('cofre')] } });
+    expect(ids(modulosDaCasca(registro, arrumada.dock.modulos).modulos)).toEqual([
+      'cofre',
+      'exemplo',
+      'operacao',
+      'salas',
+    ]);
+  });
+
+  it('Ajustes numa lista salva não sai do fim nem vai para o Mais', () => {
+    const { modulos, modulosNoMais, modulosDoFim } = modulosDaCasca(registro, [
+      tirado('ajustes'),
+      noDock('salas'),
+    ]);
+    expect(ids(modulos)).toEqual(['salas', 'exemplo', 'operacao', 'cofre']);
+    expect(modulosNoMais).toEqual([]);
+    expect(ids(modulosDoFim)).toEqual(['ajustes']);
   });
 });
