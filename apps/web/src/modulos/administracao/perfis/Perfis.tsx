@@ -12,16 +12,26 @@ import {
   RotuloDeSituacao,
   Tabela,
 } from '@grafite/ui';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { consultar } from '../../../api/consultas.ts';
+import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
+import { useAcesso } from '../../../sessao/useAcesso.ts';
 import estilos from '../Administracao.module.css';
+import {
+  MudarOPrazo,
+  textoDoPrazoCurto,
+  textoDoPrazoNaLista,
+} from '../confianca/PrazoDaConfianca.tsx';
 import { SITUACOES_DO_REGISTRO } from '../situacoes.ts';
 import { permissoesQueValem } from './permissoes.ts';
 
 type Perfil = components['schemas']['Perfil'];
+
+/** A chave do prazo da confiança da organização nas consultas. */
+export const CHAVE_DA_POLITICA = ['politica-de-entrada'] as const;
 
 const textoDasPermissoes = (perfil: Perfil) => {
   if (perfil.todasAsPermissoes) return 'Todas';
@@ -31,7 +41,8 @@ const textoDasPermissoes = (perfil: Perfil) => {
 
 /**
  * A lista de perfis (spec modulo-administracao): o nome, quantas permissões o perfil dá, a
- * exigência dos dois passos, as atribuições e a situação. A linha abre a ficha.
+ * exigência dos dois passos, o prazo da confiança nos aparelhos, as atribuições e a situação. A
+ * linha abre a ficha. Acima dela, o prazo da organização (change aparelho-confiavel).
  */
 export function Perfis() {
   const api = useApi();
@@ -41,6 +52,13 @@ export function Perfis() {
     queryFn: () => consultar(() => api.GET('/perfis'), 'carregar os perfis'),
   });
   const novoPerfil = () => void navegar({ to: '/administracao/perfis/novo' });
+  const { pode } = useAcesso();
+  const consultas = useQueryClient();
+  const politica = useQuery({
+    queryKey: CHAVE_DA_POLITICA,
+    queryFn: () =>
+      consultar(() => api.GET('/politica-de-entrada'), 'carregar o prazo da confiança'),
+  });
 
   return (
     <div className={estilos.tela}>
@@ -54,6 +72,28 @@ export function Perfis() {
           )
         }
       />
+      {politica.data && (
+        <div className={estilos.prazoDaConfianca}>
+          <p className={estilos.informacao}>
+            Confiança nos aparelhos: {textoDoPrazoCurto(politica.data.diasDeConfianca)}
+          </p>
+          {pode('acessos.administrar') && (
+            <MudarOPrazo
+              titulo="Prazo da confiança da organização"
+              valor={politica.data.diasDeConfianca}
+              salvar={async (dias) => {
+                const resultado = await pedir(
+                  () => api.PUT('/politica-de-entrada', { body: { diasDeConfianca: dias ?? 0 } }),
+                  'mudar o prazo da confiança',
+                );
+                if ('erro' in resultado) return resultado;
+                consultas.setQueryData(CHAVE_DA_POLITICA, resultado.dados);
+                return { ok: true };
+              }}
+            />
+          )}
+        </div>
+      )}
       {perfis.isPending ? (
         <p role="status" className={estilos.contagem}>
           Carregando os perfis…
@@ -78,6 +118,7 @@ export function Perfis() {
               </Coluna>
               <Coluna id="permissoes">Permissões</Coluna>
               <Coluna id="doisPassos">Dois passos</Coluna>
+              <Coluna id="confianca">Confiança</Coluna>
               <Coluna id="atribuicoes" especie="numero">
                 Atribuições
               </Coluna>
@@ -94,6 +135,7 @@ export function Perfis() {
                   <Celula>{perfil.nome}</Celula>
                   <Celula>{textoDasPermissoes(perfil)}</Celula>
                   <Celula>{perfil.exigeDoisPassos ? 'Exige' : 'Não exige'}</Celula>
+                  <Celula>{textoDoPrazoNaLista(perfil.diasDeConfianca)}</Celula>
                   <Celula>{perfil.atribuicoes.toLocaleString('pt-BR')}</Celula>
                   <Celula>
                     <RotuloDeSituacao situacao={SITUACOES_DO_REGISTRO[perfil.situacao].tipo}>

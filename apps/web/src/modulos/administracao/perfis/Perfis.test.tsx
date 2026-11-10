@@ -56,7 +56,7 @@ const ADMINISTRADOR = perfil('admin', 'Administrador', {
   protegido: true,
   exigeDoisPassos: true,
   atribuicoes: 1,
-  permite: { ...SO_VE, atribuir: true },
+  permite: { ...SO_VE, atribuir: true, mudarPrazo: true },
 });
 const TECNICO = perfil('tecnico', 'Técnico', {
   descricao: 'Atendimento nos locais',
@@ -145,11 +145,11 @@ describe('lista de perfis', () => {
       within(tabela)
         .getAllByRole('columnheader')
         .map((coluna) => coluna.textContent),
-    ).toEqual(['Nome', 'Permissões', 'Dois passos', 'Atribuições', 'Situação']);
+    ).toEqual(['Nome', 'Permissões', 'Dois passos', 'Confiança', 'Atribuições', 'Situação']);
     const [administrador, antigo, tecnico] = within(tabela).getAllByRole('row').slice(1);
-    expect(administrador?.textContent).toBe('AdministradorTodasExige1Ativo');
+    expect(administrador?.textContent).toBe('AdministradorTodasExige—1Ativo');
     expect(antigo?.textContent).toContain('Inativo');
-    expect(tecnico?.textContent).toBe('Técnico3 permissõesNão exige2Ativo');
+    expect(tecnico?.textContent).toBe('Técnico3 permissõesNão exige—2Ativo');
     fireEvent.click(within(tecnico as HTMLElement).getByText('3 permissões'));
     await waitFor(() =>
       expect(roteador.state.location.pathname).toBe('/administracao/perfis/tecnico'),
@@ -312,7 +312,9 @@ describe('ficha do perfil', () => {
       'GET /api/perfis/admin': () => Response.json(fichaDe(ADMINISTRADOR)),
     });
     expect(
-      await screen.findByText('Perfil protegido: tem todas as permissões e não muda.'),
+      await screen.findByText(
+        'Perfil protegido: tem todas as permissões, e só o prazo da confiança nos aparelhos muda.',
+      ),
     ).toBeTruthy();
     await waitFor(() => expect(campo('Nome').value).toBe('Administrador'));
     expect(campo('Nome').readOnly).toBe(true);
@@ -439,5 +441,131 @@ describe('ficha do perfil relida com outros dados', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /Técnico de campo/ })).toBeTruthy();
     expect(campo('Descrição').value).toBe('Atende nos locais');
     expect(campo('Nome').value).toBe('Técnico');
+  });
+});
+
+// Spec perfis-e-grupos, "Prazo da confiança no perfil e na organização" (change aparelho-confiavel,
+// design, decisão 6).
+describe('o prazo da confiança', () => {
+  const EFEITO =
+    'Reduzir o prazo, ou pedir o código sempre, vale já na entrada seguinte de cada conta.';
+  const politica =
+    (dias = 30) =>
+    () =>
+      Response.json({ diasDeConfianca: dias });
+
+  it('Prazo da organização: "Mudar…" passa a 7 dias, com o efeito dito antes de salvar', async () => {
+    let gravado: unknown = null;
+    abrir('/administracao/perfis', {
+      'GET /api/perfis': lista(),
+      'GET /api/politica-de-entrada': () =>
+        Response.json({ diasDeConfianca: gravado === null ? 30 : 7 }),
+      'PUT /api/politica-de-entrada': async (pedido) => {
+        gravado = await pedido.json();
+        return Response.json({ diasDeConfianca: 7 });
+      },
+    });
+    expect(await screen.findByText('Confiança nos aparelhos: 30 dias')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar…' }));
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Prazo da confiança da organização',
+    });
+    expect(within(dialogo).getByText(EFEITO)).toBeTruthy();
+    // A organização é o nível de cima: não tem o que seguir.
+    expect(within(dialogo).queryByRole('radio', { name: /Seguir/ })).toBeNull();
+    expect(
+      (within(dialogo).getByRole('radio', { name: 'Um número de dias' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+    fireEvent.change(within(dialogo).getByRole('textbox', { name: 'Dias' }), {
+      target: { value: '7' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    await vi.waitFor(() => expect(gravado).toEqual({ diasDeConfianca: 7 }));
+    expect(await screen.findByText('Confiança nos aparelhos: 7 dias')).toBeTruthy();
+    expect(avisos()).toContain('Prazo da confiança alterado.');
+  });
+
+  it('o prazo fora de 0 a 90 é recusado no campo, sem salvar', async () => {
+    abrir('/administracao/perfis', {
+      'GET /api/perfis': lista(),
+      'GET /api/politica-de-entrada': politica(),
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Mudar…' }));
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Prazo da confiança da organização',
+    });
+    fireEvent.change(within(dialogo).getByRole('textbox', { name: 'Dias' }), {
+      target: { value: '120' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    expect(await within(dialogo).findByText('Informe um prazo de 0 a 90 dias.')).toBeTruthy();
+  });
+
+  it('Quem só vê os acessos: vê o prazo da organização, sem "Mudar…"', async () => {
+    abrir(
+      '/administracao/perfis',
+      { 'GET /api/perfis': lista(false), 'GET /api/politica-de-entrada': politica() },
+      naOrganizacao('acessos.ver'),
+    );
+    expect(await screen.findByText('Confiança nos aparelhos: 30 dias')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mudar…' })).toBeNull();
+  });
+
+  it('a lista mostra o prazo de cada perfil que tem um', async () => {
+    abrir('/administracao/perfis', {
+      'GET /api/perfis': () =>
+        Response.json({
+          itens: [
+            { ...ADMINISTRADOR, diasDeConfianca: 0 },
+            { ...TECNICO, diasDeConfianca: 7 },
+            ANTIGO,
+          ],
+          permite: { cadastrar: true },
+        }),
+      'GET /api/politica-de-entrada': politica(),
+    });
+    expect(await screen.findByRole('columnheader', { name: 'Confiança' })).toBeTruthy();
+    const linhaDe = (nome: string) => screen.getByText(nome).closest('[role="row"]') as HTMLElement;
+    expect(within(linhaDe('Administrador')).getByText('Em toda entrada')).toBeTruthy();
+    expect(within(linhaDe('Técnico')).getByText('7 dias')).toBeTruthy();
+    expect(within(linhaDe('Antigo')).getByText('—')).toBeTruthy();
+  });
+
+  it('Perfil mais exigente: o Administrador, protegido, passa a pedir o código em toda entrada', async () => {
+    let gravado: unknown = null;
+    abrir('/administracao/perfis/admin', {
+      'GET /api/perfis/admin': () =>
+        Response.json(fichaDe({ ...ADMINISTRADOR, diasDeConfianca: gravado === null ? null : 0 })),
+      'PUT /api/perfis/admin/prazo-da-confianca': async (pedido) => {
+        gravado = await pedido.json();
+        return Response.json(fichaDe({ ...ADMINISTRADOR, diasDeConfianca: 0 }));
+      },
+    });
+    expect(await screen.findByText('Confiança nos aparelhos: segue a organização')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar…' }));
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Prazo da confiança do perfil Administrador',
+    });
+    expect(
+      (within(dialogo).getByRole('radio', { name: 'Seguir a organização' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+    fireEvent.click(within(dialogo).getByRole('radio', { name: 'Pedir o código em toda entrada' }));
+    expect(within(dialogo).queryByRole('textbox', { name: 'Dias' })).toBeNull();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    await vi.waitFor(() => expect(gravado).toEqual({ dias: 0 }));
+    expect(await screen.findByText('Confiança nos aparelhos: em toda entrada')).toBeTruthy();
+    expect(avisos()).toContain('Prazo da confiança alterado.');
+  });
+
+  it('sem "mudarPrazo", a ficha mostra o prazo sem "Mudar…"', async () => {
+    abrir(
+      '/administracao/perfis/tecnico',
+      { 'GET /api/perfis/tecnico': () => Response.json(fichaDe({ ...TECNICO, permite: SO_VE })) },
+      naOrganizacao('acessos.ver'),
+    );
+    expect(await screen.findByText('Confiança nos aparelhos: segue a organização')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mudar…' })).toBeNull();
   });
 });

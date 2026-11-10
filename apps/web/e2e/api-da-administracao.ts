@@ -548,6 +548,8 @@ export async function simularAdministracao(pagina: Page) {
     ['GET', /^\/contas\/([^/]+)\/sessoes$/, () => ok([])],
     ['GET', /^\/contas\/([^/]+)\/acesso$/, ([contaId = '']) => acessoDa(contaId)],
     ['GET', /^\/perfis$/, () => ok({ itens: estado.perfis, permite: { cadastrar: true } })],
+    // O prazo da confiança nos aparelhos da organização, o de fábrica (change aparelho-confiavel).
+    ['GET', /^\/politica-de-entrada$/, () => ok({ diasDeConfianca: 30 })],
     // A aba Acesso mostra os grupos ativos numa tabela; a organização simulada não tem nenhum.
     ['GET', /^\/grupos$/, () => ok({ itens: [], permite: { cadastrar: true } })],
     ['POST', /^\/atribuicoes$/, (_, __, corpo) => atribuir(corpo)],
