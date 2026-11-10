@@ -174,6 +174,73 @@ describe('tela de padrões', () => {
     });
   });
 
+  // Spec ajustes-do-sistema, "Seção Dock": nos padrões, as listas definem a ordem de quem não
+  // arrumou o próprio dock (change dock-personalizavel, design, decisão 4).
+  it('os módulos do dock nos padrões: a ordem fica no rascunho, grava na organização, e a conta sem lista própria passa a segui-la', async () => {
+    const { servidor } = await abrir('/administracao/padroes/dock');
+    const noDock = () =>
+      within(screen.getByRole('navigation', { name: 'Dock' }))
+        .getAllByRole('button')
+        .map((item) => item.getAttribute('aria-label'));
+    const naLista = () =>
+      within(screen.getByRole('list', { name: 'No dock' }))
+        .getAllByRole('listitem')
+        .map((item) => item.getAttribute('data-modulo'));
+    // Quem administra vê o Início e a Administração; Ajustes fica fora da lista.
+    expect(naLista()).toEqual(['inicio', 'administracao']);
+
+    fireEvent.click(botao('Subir Administração'));
+    expect(naLista()).toEqual(['administracao', 'inicio']);
+    expect(screen.getByText('1 ajuste mudou.')).toBeTruthy();
+    // O rascunho não muda o dock de quem edita, nem grava.
+    expect(noDock()).toEqual(['Início', 'Administração', 'Ajustes']);
+    expect(servidor.gravacoes).toEqual([]);
+
+    fireEvent.click(botao('Salvar padrões'));
+    await waitFor(() => expect(servidor.gravacoes).toHaveLength(1));
+    expect(servidor.gravacoes[0]).toEqual({
+      mudancas: {
+        dock: {
+          modulos: [
+            { id: 'administracao', visivel: true },
+            { id: 'inicio', visivel: true },
+          ],
+        },
+      },
+    });
+    // A conta de quem edita nunca arrumou o dock dela: passa a seguir a ordem da organização.
+    await waitFor(() => expect(noDock()).toEqual(['Administração', 'Início', 'Ajustes']));
+  });
+
+  it('tirar um módulo do dock nos padrões leva o módulo ao Mais de quem segue a organização', async () => {
+    const { servidor } = await abrir('/administracao/padroes/dock', {
+      padroes: { dock: { modulos: [{ id: 'cofre', visivel: true }] } },
+    });
+    fireEvent.click(botao('Tirar Administração do dock'));
+    expect(screen.getByText('1 ajuste mudou.')).toBeTruthy();
+    fireEvent.click(botao('Salvar padrões'));
+    await waitFor(() => expect(servidor.gravacoes).toHaveLength(1));
+    // O Cofre, que quem administra não vê, continua no lugar dele na lista da organização.
+    expect(servidor.gravacoes[0]).toEqual({
+      mudancas: {
+        dock: {
+          modulos: [
+            { id: 'cofre', visivel: true },
+            { id: 'inicio', visivel: true },
+            { id: 'administracao', visivel: false },
+          ],
+        },
+      },
+    });
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('navigation', { name: 'Dock' }))
+          .getAllByRole('button')
+          .map((item) => item.getAttribute('aria-label')),
+      ).toEqual(['Início', 'Mais', 'Ajustes']),
+    );
+  });
+
   it('trocar de aba não pede confirmação, e o rascunho continua', async () => {
     const { roteador } = await abrir();
     fireEvent.click(opcao('Tema', 'Névoa'));

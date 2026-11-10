@@ -13,7 +13,7 @@
 ## 3. Os Ajustes
 
 - [x] 3.1 Escrever primeiro os testes e depois a parte "Módulos do dock" da seção Dock, com o foco depois de mover e a entrada na busca (decisão 4). Verificar: os testes passam com "Subir um módulo", "Tirar do dock", "Pôr de volta no dock", "Restaurar a ordem" e "Ordem pela busca".
-- [ ] 3.2 Escrever primeiro o teste e depois conferir a mesma parte nos padrões da organização. Verificar: o teste dos Padrões passa gravando a lista na organização, e uma conta sem lista própria passa a segui-la.
+- [x] 3.2 Escrever primeiro o teste e depois conferir a mesma parte nos padrões da organização. Verificar: o teste dos Padrões passa gravando a lista na organização, e uma conta sem lista própria passa a segui-la.
 
 ## 4. Fechamento
 
