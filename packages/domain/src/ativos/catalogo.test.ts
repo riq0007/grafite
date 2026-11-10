@@ -167,7 +167,7 @@ describe('as capacidades', () => {
         unidade: '%',
         largura: 340,
       },
-      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero', largura: 190 },
+      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero', largura: 200 },
     ]);
   });
 

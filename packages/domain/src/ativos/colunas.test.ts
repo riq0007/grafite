@@ -472,7 +472,7 @@ describe('as larguras de fábrica das colunas da coleta', () => {
     expect(Object.fromEntries(daColeta.map(({ chave, largura }) => [chave, largura]))).toEqual({
       'coleta.disponibilidade': 210,
       'coleta.suprimentos': 340,
-      'coleta.paginas': 190,
+      'coleta.paginas': 200,
       'coleta.control-id': 280,
     });
   });

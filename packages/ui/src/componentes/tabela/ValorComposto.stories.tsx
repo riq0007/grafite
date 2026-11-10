@@ -106,8 +106,16 @@ const LARGURAS_DE_FABRICA = {
   disponibilidade: 210,
   controlId: 280,
   suprimentos: 340,
-  paginas: 190,
+  paginas: 200,
 } as const;
+
+/**
+ * O cabeçalho "Total de páginas", com a ordem e o menu, pede mais que o conteúdo da coluna: 196 px
+ * na densidade confortável (história "Cabeçalhos na largura de fábrica").
+ */
+const O_QUE_O_CABECALHO_PEDE: Partial<Record<keyof typeof LARGURAS_DE_FABRICA, number>> = {
+  paginas: 196,
+};
 
 const RESPIRO_DA_CELULA = 24;
 
@@ -167,15 +175,87 @@ export const LargurasQueAColetaPede: Historia = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    for (const [coluna, largura] of Object.entries(LARGURAS_DE_FABRICA)) {
+    for (const coluna of Object.keys(LARGURAS_DE_FABRICA) as (keyof typeof LARGURAS_DE_FABRICA)[]) {
+      const largura = LARGURAS_DE_FABRICA[coluna];
       const medidas = [...canvasElement.querySelectorAll<HTMLElement>(`[data-coluna="${coluna}"]`)];
       await expect(medidas).toHaveLength(DENSIDADES.length);
-      const pede =
+      const conteudo =
         Math.max(...medidas.map((medida) => Math.ceil(medida.getBoundingClientRect().width))) +
         RESPIRO_DA_CELULA;
-      // A coluna comporta o conteúdo, sem sobrar mais que 10 px: a largura acompanha a medida.
+      // A coluna comporta o conteúdo e o cabeçalho, sem sobrar mais que 10 px: a largura acompanha
+      // a maior das duas medidas.
+      const pede = Math.max(conteudo, O_QUE_O_CABECALHO_PEDE[coluna] ?? 0);
       await expect(pede).toBeLessThanOrEqual(largura);
       await expect(largura - pede).toBeLessThan(10);
+    }
+  },
+};
+
+const NOMES_DAS_COLUNAS: Record<keyof typeof LARGURAS_DE_FABRICA, string> = {
+  disponibilidade: 'Disponibilidade',
+  controlId: 'Control iD',
+  suprimentos: 'Suprimentos',
+  paginas: 'Total de páginas',
+};
+
+const COLUNAS_DA_COLETA = Object.keys(LARGURAS_DE_FABRICA) as (keyof typeof LARGURAS_DE_FABRICA)[];
+
+/** O nome da coluna no cabeçalho: o elemento de texto que termina em reticências quando não cabe. */
+const nomeNoCabecalho = (cabecalho: HTMLElement) =>
+  [...cabecalho.querySelectorAll<HTMLElement>('*')].find(
+    (parte) => parte.children.length === 0 && getComputedStyle(parte).textOverflow === 'ellipsis',
+  );
+
+/**
+ * O cabeçalho de cada coluna da coleta, com a ordem e o menu, cabe na largura de fábrica nas três
+ * densidades: o nome da coluna não termina em reticências.
+ */
+export const CabecalhosNaLarguraDeFabrica: Historia = {
+  render: () => (
+    <div style={{ display: 'grid', gap: 'var(--esp-4)', padding: 'var(--esp-4)' }}>
+      {DENSIDADES.map((densidade) => (
+        <div key={densidade} data-density={densidade}>
+          <Tabela rotulo={`Colunas da coleta, densidade ${densidade}`} redimensionavel>
+            <CabecalhoDaTabela>
+              <Coluna id="nome" principal largura={180}>
+                Ativo
+              </Coluna>
+              {COLUNAS_DA_COLETA.map((coluna) => (
+                <Coluna key={coluna} id={coluna} ordenavel largura={LARGURAS_DE_FABRICA[coluna]}>
+                  {NOMES_DAS_COLUNAS[coluna]}
+                </Coluna>
+              ))}
+            </CabecalhoDaTabela>
+            <CorpoDaTabela itens={[{ id: 'pat-00412' }]}>
+              {(ativo) => (
+                <Linha id={ativo.id}>
+                  <Celula>Impressora do RH</Celula>
+                  {COLUNAS_DA_COLETA.map((coluna) => (
+                    <Celula key={coluna}>{O_QUE_A_COLETA_MOSTRA[coluna]}</Celula>
+                  ))}
+                </Linha>
+              )}
+            </CorpoDaTabela>
+          </Tabela>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const nome of Object.values(NOMES_DAS_COLUNAS)) {
+      const cabecalhos = within(canvasElement).getAllByRole('columnheader', {
+        name: new RegExp(nome),
+      });
+      await expect(cabecalhos).toHaveLength(DENSIDADES.length);
+      for (const cabecalho of cabecalhos) {
+        const texto = nomeNoCabecalho(cabecalho) as HTMLElement;
+        await expect(texto).toBeDefined();
+        await expect(texto.scrollWidth).toBeLessThanOrEqual(texto.clientWidth);
+      }
+    }
+    // E o conteúdo de cada coluna continua inteiro, nas três densidades.
+    for (const parte of [...partesDe(canvasElement, 'fixo'), ...partesDe(canvasElement, 'resto')]) {
+      await expect(cortada(parte)).toBe(false);
     }
   },
 };

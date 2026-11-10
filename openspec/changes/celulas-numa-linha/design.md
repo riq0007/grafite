@@ -56,6 +56,8 @@ As colunas `coleta.disponibilidade`, `coleta.controlid`, `coleta.suprimentos` e 
 
 A largura de fábrica sozinha não chega à tela: desde a change redesenho-da-interface (design, decisão 2), a coluna sem largura guardada divide a sobra da área com as outras, com o mínimo de 120 px, e a conferência no `pnpm dev` mostrou as quatro colunas da coleta com 212 px cada, e "Suprimentos" cortada. Por isso a coluna passa a poder declarar a largura que o conteúdo dela pede (`larguraMinima`, no domínio e na `Coluna`): na divisão da sobra, ela não fica mais estreita que essa largura, e a tabela rola de lado quando as larguras passam da área. As colunas da coleta declaram a de fábrica. Com a largura guardada na visão, vale a guardada, até os 64 px.
 
+A largura de fábrica comporta também o cabeçalho da coluna, com o nome, a ordem e o menu: no "Total de páginas", é o cabeçalho que pede mais (196 px na densidade confortável), e a coluna fica com 200 px, e não com os 190 do conteúdo.
+
 A largura de fábrica comporta a leitura em dia. A leitura desatualizada ganha mais um rótulo, e os dois juntos passam dela (na "Disponibilidade", 215 px de rótulos em 186 px de célula): a célula corta na borda, e o resumo da linha traz o valor inteiro.
 
 - Alternativa: dar a todas as colunas a largura de fábrica como mínimo. Descartada: desfaz a divisão da sobra do redesenho nas tabelas com muitas colunas de texto, que cortam bem com reticências.
