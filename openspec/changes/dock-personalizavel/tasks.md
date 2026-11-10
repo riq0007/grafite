@@ -6,7 +6,7 @@
 ## 2. O dock
 
 - [x] 2.1 Escrever primeiro os testes e depois o `modulosDaCasca` com a lista que vale, devolvendo os módulos do dock, os do Mais e os Ajustes (decisão 2). Verificar: os testes passam com "Ordem escolhida", "Módulo ligado depois", "Módulo sem acesso na ordem" e "Padrão da organização".
-- [ ] 2.2 Escrever primeiro a história e depois a propriedade `modulosNoMais` do `Dock` (decisão 3). Verificar: as histórias passam com "Mais com os módulos tirados" e "Excedentes e tirados juntos", pelo teclado também, e as histórias de hoje continuam passando.
+- [x] 2.2 Escrever primeiro a história e depois a propriedade `modulosNoMais` do `Dock` (decisão 3). Verificar: as histórias passam com "Mais com os módulos tirados" e "Excedentes e tirados juntos", pelo teclado também, e as histórias de hoje continuam passando.
 - [ ] 2.3 Escrever primeiro os testes e depois a prioridade do celular pela lista (decisão 5). Verificar: os testes passam com "Ordem escolhida no celular" e "Módulo tirado do dock no celular".
 - [ ] 2.4 Ligar a `CascaDoApp` às três listas. Verificar: o teste da casca passa com "Módulo tirado continua na busca", e o dock muda sem recarregar quando a preferência chega de outra sessão.
 

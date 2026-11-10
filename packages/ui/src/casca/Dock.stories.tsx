@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { LayoutGrid } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { Botao } from '../componentes/botao/Botao.tsx';
 import { Dock } from './Dock.tsx';
 import { AJUSTES_DE_EXEMPLO, MODULOS_DE_EXEMPLO, TelaDeExemplo } from './exemplos.tsx';
+import type { ModuloDaCasca } from './tipos.ts';
 
 const meta: Meta<typeof Dock> = {
   title: 'Casca/Dock',
@@ -595,5 +597,163 @@ export const SeparadorAcompanhaAAmpliacao: Historia = {
       await expect(Math.abs(meioDaLinha - (caixa.top + caixa.height / 2))).toBeLessThan(2);
       await userEvent.unhover(rede);
     });
+  },
+};
+
+// Os módulos que a conta tirou do dock (spec dock, "Módulos excedentes no botão Mais"; change
+// dock-personalizavel, design, decisão 3).
+const porId = (...ids: string[]) => MODULOS_DE_EXEMPLO.filter((modulo) => ids.includes(modulo.id));
+const NO_DOCK = porId('inicio', 'ativos');
+const TIRADOS = porId('operacao', 'rede');
+const PAINEIS: ModuloDaCasca = { id: 'paineis', nome: 'Painéis', icone: LayoutGrid };
+
+const nomesDosItens = (canvas: HTMLElement) =>
+  within(within(canvas).getByRole('navigation', { name: 'Dock' }))
+    .getAllByRole('button')
+    .map((botao) => botao.getAttribute('aria-label'));
+
+const itensDoMenu = (menu: HTMLElement) =>
+  within(menu)
+    .getAllByRole('menuitem')
+    .map((item) => item.textContent);
+
+/**
+ * Mais com os módulos tirados: quando todos cabem e a conta tirou módulos do dock, o Mais fica
+ * depois dos módulos, antes do separador de Ajustes. A função só confere o dock como abriu: a
+ * captura o mostra assim.
+ */
+export const MaisComOsModulosTirados: Historia = {
+  tags: ['captura'],
+  args: { modulos: NO_DOCK, modulosNoMais: TIRADOS },
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    await expect(nomesDosItens(canvasElement)).toEqual(['Início', 'Ativos', 'Mais', 'Ajustes']);
+    const mais = tela.getByRole('button', { name: 'Mais' });
+    const separador = tela.getByRole('separator');
+    const ajustes = tela.getByRole('button', { name: 'Ajustes' });
+    await expect(
+      mais.compareDocumentPosition(separador) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      separador.compareDocumentPosition(ajustes) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
+};
+
+/** O Mais dos tirados oferece cada módulo com o menu dele, e a escolha de um item navega. */
+export const MaisDosTiradosComOsMenus: Historia = {
+  args: { modulos: NO_DOCK, modulosNoMais: TIRADOS },
+  play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Mais' }));
+    const menu = await within(document.body).findByRole('menu', { name: 'Mais' });
+    await expect(itensDoMenu(menu)).toEqual(['Operação', 'Rede']);
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Operação' }));
+    const submenu = await within(document.body).findByRole('menu', { name: 'Operação' });
+    await expect(itensDoMenu(submenu)).toEqual([
+      'Abrir Operação',
+      'Solicitações',
+      'Ordens de serviço',
+    ]);
+    await userEvent.click(within(submenu).getByRole('menuitem', { name: 'Ordens de serviço' }));
+    await expect(args.aoEscolherItem).toHaveBeenCalledWith('operacao', 'operacao/ordens');
+    await waitFor(() => expect(within(document.body).queryAllByRole('menu')).toHaveLength(0));
+  },
+};
+
+/**
+ * Pelo teclado, o Mais dos tirados fica entre os módulos e Ajustes na ordem das setas, Enter abre o
+ * menu no primeiro módulo, e a seta para a direita abre o submenu dele.
+ */
+export const MaisDosTiradosPeloTeclado: Historia = {
+  args: { modulos: NO_DOCK, modulosNoMais: TIRADOS },
+  play: async ({ args, canvasElement }) => {
+    const tela = within(canvasElement);
+    await userEvent.tab();
+    await expect(focado()).toBe(tela.getByRole('button', { name: 'Início' }));
+    await userEvent.keyboard('{End}');
+    await expect(focado()).toBe(tela.getByRole('button', { name: 'Ajustes' }));
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(focado()).toBe(tela.getByRole('button', { name: 'Mais' }));
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(focado()).toBe(tela.getByRole('button', { name: 'Ativos' }));
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.keyboard('{Enter}');
+    const menu = await within(document.body).findByRole('menu', { name: 'Mais' });
+    await waitFor(() =>
+      expect(focado()).toBe(within(menu).getByRole('menuitem', { name: 'Operação' })),
+    );
+    await userEvent.keyboard('{ArrowRight}');
+    const submenu = await within(document.body).findByRole('menu', { name: 'Operação' });
+    await waitFor(() =>
+      expect(focado()).toBe(within(submenu).getByRole('menuitem', { name: 'Abrir Operação' })),
+    );
+    await userEvent.keyboard('{Enter}');
+    await expect(args.aoAbrirModulo).toHaveBeenCalledWith('operacao');
+  },
+};
+
+/** O módulo atual está entre os tirados: o Mais o marca como atual e é a parada do Tab. */
+export const ModuloAtualNoMaisDosTirados: Historia = {
+  args: { modulos: NO_DOCK, modulosNoMais: TIRADOS, atual: 'rede' },
+  play: async ({ canvasElement }) => {
+    const mais = within(canvasElement).getByRole('button', { name: 'Mais' });
+    await expect(mais).toHaveAttribute('aria-current', 'page');
+    await userEvent.tab();
+    await expect(focado()).toBe(mais);
+  },
+};
+
+/** Com o Mais só pelos módulos tirados, a ampliação continua valendo. */
+export const AmpliacaoComOMaisDosTirados: Historia = {
+  args: { modulos: NO_DOCK, modulosNoMais: TIRADOS },
+  play: async ({ canvasElement }) => {
+    await comMovimentoNormal(async () => {
+      const ativos = within(canvasElement).getByRole('button', { name: 'Ativos' });
+      await userEvent.pointer({ target: ativos, coords: centroDe(ativos) });
+      await waitFor(() => expect(ativos.getBoundingClientRect().width).toBeGreaterThan(70));
+      await userEvent.unhover(ativos);
+      await waitFor(() => expect(ativos.getBoundingClientRect().width).toBeCloseTo(48, 0));
+    });
+  },
+};
+
+/**
+ * Excedentes e tirados juntos: no dock lateral que não comporta todos, o Mais fica no último lugar,
+ * sem o separador, e oferece os que não couberam e, depois deles, o módulo tirado.
+ */
+export const ExcedentesETiradosJuntos: Historia = {
+  args: { posicao: 'esquerda', modulosNoMais: [PAINEIS] },
+  parameters: { alturaDaTela: 240 },
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const noDock = nomesDosItens(canvasElement);
+    await expect(noDock.at(-1)).toBe('Mais');
+    await expect(noDock).not.toContain('Ajustes');
+    await expect(tela.queryByRole('separator')).toBeNull();
+    const todos = ['Início', 'Ativos', 'Operação', 'Rede', 'Ajustes'];
+    const excedentes = todos.filter((nome) => !noDock.includes(nome));
+    await userEvent.click(tela.getByRole('button', { name: 'Mais' }));
+    const menu = await within(document.body).findByRole('menu', { name: 'Mais' });
+    await expect(itensDoMenu(menu)).toEqual([...excedentes, 'Painéis']);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(document.body).queryAllByRole('menu')).toHaveLength(0));
+  },
+};
+
+/**
+ * O Mais dos tirados conta na medida do espaço: no dock lateral em que os módulos e Ajustes cabem
+ * justos, o Mais a mais não cabe, e Ajustes vai para o menu, antes do módulo tirado.
+ */
+export const MaisDosTiradosContaNoEspaco: Historia = {
+  args: { posicao: 'esquerda', modulos: porId('inicio', 'ativos'), modulosNoMais: [PAINEIS] },
+  parameters: { alturaDaTela: 240 },
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    await expect(nomesDosItens(canvasElement)).toEqual(['Início', 'Ativos', 'Mais']);
+    await userEvent.click(tela.getByRole('button', { name: 'Mais' }));
+    const menu = await within(document.body).findByRole('menu', { name: 'Mais' });
+    await expect(itensDoMenu(menu)).toEqual(['Ajustes', 'Painéis']);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(document.body).queryAllByRole('menu')).toHaveLength(0));
   },
 };

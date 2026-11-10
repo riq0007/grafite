@@ -23,6 +23,11 @@ import type { ModuloDaCasca, PosicaoDoDock } from './tipos.ts';
 
 export interface PropsDoDock {
   modulos: readonly ModuloDaCasca[];
+  /**
+   * Módulos que a conta tirou do dock: ficam no menu Mais, depois dos que não couberam (spec dock,
+   * "Módulos excedentes no botão Mais").
+   */
+  modulosNoMais?: readonly ModuloDaCasca[];
   /** Módulos isolados por um separador, no fim do dock (Ajustes). */
   modulosDoFim?: readonly ModuloDaCasca[];
   /** Id do módulo atual. */
@@ -45,12 +50,20 @@ const SETA_DO_MENU = { embaixo: 'ArrowUp', esquerda: 'ArrowRight', direita: 'Arr
 const LADO_DA_DICA = { embaixo: 'top', esquerda: 'right', direita: 'left' } as const;
 const MAIS: ModuloDaCasca = { id: '@mais', nome: 'Mais', icone: Ellipsis, menu: [] };
 
+/** Nenhum módulo tirado do dock: a mesma lista a cada desenho. */
+const NENHUM_MODULO: readonly ModuloDaCasca[] = [];
+
 /**
  * Dock da casca: um item por módulo, com o módulo atual marcado e Ajustes isolado no fim.
  * Material translúcido das camadas sobrepostas, sólido com a transparência reduzida.
+ *
+ * O botão Mais traz os módulos que não couberam e os que a conta tirou do dock. Só com os tirados,
+ * ele fica depois dos módulos, antes do separador de Ajustes, e a ampliação continua. Com módulos
+ * que não couberam, ele fica no último lugar, sem o separador, e a ampliação fica suspensa.
  */
 export function Dock({
   modulos,
+  modulosNoMais = NENHUM_MODULO,
   modulosDoFim = [],
   atual,
   posicao,
@@ -68,16 +81,24 @@ export function Dock({
   const [limite, definirLimite] = useState(Number.POSITIVE_INFINITY);
   const [maisAberto, definirMaisAberto] = useState(false);
   const todos = [...modulos, ...modulosDoFim];
-  const restantes = todos.slice(limite);
-  const temMais = restantes.length > 0;
-  const visiveis = temMais ? todos.slice(0, limite) : todos;
-  const ordem = temMais ? [...visiveis, MAIS] : visiveis;
+  const excedentes = todos.slice(limite);
+  const temExcedentes = excedentes.length > 0;
+  // O menu Mais: os que não couberam e, depois deles, os que a conta tirou do dock.
+  const noMais = [...excedentes, ...modulosNoMais];
+  const temMais = noMais.length > 0;
+  const visiveis = temExcedentes ? todos.slice(0, limite) : todos;
+  // A ordem das setas: o Mais no último lugar ou, só com os tirados, antes de Ajustes.
+  const ordem = temExcedentes
+    ? [...visiveis, MAIS]
+    : temMais
+      ? [...modulos, MAIS, ...modulosDoFim]
+      : visiveis;
   const ampliacao = useAmpliacao({
     itensRef,
     fundoRef,
     tamanho,
     posicao,
-    ativa: comAmpliacao && !temMais,
+    ativa: comAmpliacao && !temExcedentes,
   });
   const { visivel, maquina } = useOcultar(ocultar);
   const botoes = useRef(new Map<string, HTMLElement>());
@@ -92,7 +113,7 @@ export function Dock({
     ? paradaDoTab
     : (
         ordem.find((modulo) => modulo.id === atual) ??
-        (restantes.some((modulo) => modulo.id === atual) ? MAIS : ordem[0])
+        (noMais.some((modulo) => modulo.id === atual) ? MAIS : ordem[0])
       )?.id;
 
   useLayoutEffect(() => {
@@ -111,7 +132,9 @@ export function Dock({
       if (espaco === 0 || !Number.isFinite(gap)) return;
       // O separador tem 1 px, margens de 0,75 do gap e um gap adicional no eixo.
       const separador = modulosDoFim.length > 0 ? 1 + 2.5 * gap : 0;
-      const total = todos.length * (tamanho + gap) - gap + separador;
+      // O Mais dos módulos tirados ocupa um lugar mesmo quando todos cabem.
+      const lugares = todos.length + (modulosNoMais.length > 0 ? 1 : 0);
+      const total = lugares * (tamanho + gap) - gap + separador;
       definirLimite(
         total <= disponivel
           ? Number.POSITIVE_INFINITY
@@ -122,7 +145,7 @@ export function Dock({
     const observador = new ResizeObserver(medir);
     observador.observe(trilho);
     return () => observador.disconnect();
-  }, [vertical, tamanho, todos.length, modulosDoFim.length]);
+  }, [vertical, tamanho, todos.length, modulosDoFim.length, modulosNoMais.length]);
 
   useEffect(() => {
     if (!temMais) definirMaisAberto(false);
@@ -155,7 +178,7 @@ export function Dock({
     <ItemDoDock
       key={modulo.id}
       modulo={modulo}
-      atual={modulo.id === atual || (modulo === MAIS && restantes.some(({ id }) => id === atual))}
+      atual={modulo.id === atual || (modulo === MAIS && noMais.some(({ id }) => id === atual))}
       tamanho={tamanho}
       ladoDaDica={LADO_DA_DICA[posicao]}
       menuAberto={modulo === MAIS ? maisAberto : aberto === modulo.id}
@@ -205,6 +228,38 @@ export function Dock({
     if (!navRef.current?.contains(evento.relatedTarget as Node | null)) maquina.focoSaiu();
   };
 
+  const menuMais = temMais && (
+    <Menu
+      rotulo="Mais módulos"
+      gatilho={item(MAIS)}
+      posicao={LADO_DA_DICA[posicao]}
+      aoMudarAberto={(abriu) => {
+        definirMaisAberto(abriu);
+        if (abriu) menus.fecharAgora();
+      }}
+    >
+      {noMais.map((modulo) =>
+        modulo.menu?.length ? (
+          <Submenu key={modulo.id} rotulo={modulo.nome}>
+            <ItemDeMenu
+              onAction={() => aoAbrirModulo(modulo.id)}
+            >{`Abrir ${modulo.nome}`}</ItemDeMenu>
+            <Separador />
+            {itensDoMenu(modulo.menu, (id) => aoEscolherItem(modulo.id, id))}
+          </Submenu>
+        ) : (
+          <ItemDeMenu
+            key={modulo.id}
+            icone={modulo.icone}
+            onAction={() => aoAbrirModulo(modulo.id)}
+          >
+            {modulo.nome}
+          </ItemDeMenu>
+        ),
+      )}
+    </Menu>
+  );
+
   return (
     <>
       {ocultar && (
@@ -243,7 +298,8 @@ export function Dock({
             className={estilos.itens}
           >
             {visiveis.slice(0, modulos.length).map(item)}
-            {!temMais && modulosDoFim.length > 0 && (
+            {!temExcedentes && menuMais}
+            {!temExcedentes && modulosDoFim.length > 0 && (
               <hr
                 aria-orientation={vertical ? 'horizontal' : 'vertical'}
                 className={estilos.separador}
@@ -251,37 +307,7 @@ export function Dock({
               />
             )}
             {visiveis.slice(modulos.length).map(item)}
-            {temMais && (
-              <Menu
-                rotulo="Mais módulos"
-                gatilho={item(MAIS)}
-                posicao={LADO_DA_DICA[posicao]}
-                aoMudarAberto={(abriu) => {
-                  definirMaisAberto(abriu);
-                  if (abriu) menus.fecharAgora();
-                }}
-              >
-                {restantes.map((modulo) =>
-                  modulo.menu?.length ? (
-                    <Submenu key={modulo.id} rotulo={modulo.nome}>
-                      <ItemDeMenu
-                        onAction={() => aoAbrirModulo(modulo.id)}
-                      >{`Abrir ${modulo.nome}`}</ItemDeMenu>
-                      <Separador />
-                      {itensDoMenu(modulo.menu, (id) => aoEscolherItem(modulo.id, id))}
-                    </Submenu>
-                  ) : (
-                    <ItemDeMenu
-                      key={modulo.id}
-                      icone={modulo.icone}
-                      onAction={() => aoAbrirModulo(modulo.id)}
-                    >
-                      {modulo.nome}
-                    </ItemDeMenu>
-                  ),
-                )}
-              </Menu>
-            )}
+            {temExcedentes && menuMais}
           </div>
         </nav>
       </div>
