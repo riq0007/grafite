@@ -14,6 +14,7 @@ import { avaliarSenha, mensagemDoBloqueio } from '@grafite/domain';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { esquecerAparelhosDaConta } from '../acesso/aparelhos.ts';
 import { comCredenciais } from '../acesso/credenciais.ts';
 import { encerrarSessoesDaConta } from '../acesso/encerramento.ts';
 import { seguirEntrada } from '../acesso/entrada.ts';
@@ -190,6 +191,8 @@ export const rotasDaConta: FastifyPluginAsyncZod<{ banco: Banco; agora: () => Da
           .update(tentativasDeEntrada)
           .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
           .where(eq(tentativasDeEntrada.usuario, conta.usuario));
+        // A senha trocada esquece os aparelhos confiáveis (change aparelho-confiavel).
+        await esquecerAparelhosDaConta(tx, conta.id);
         await registrarNaAuditoria(tx, {
           acao: 'senha.trocada',
           ator,

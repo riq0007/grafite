@@ -4,6 +4,7 @@
 import { codigosDeRecuperacao, doisPassos, sessoes, type Transacao } from '@grafite/db';
 import { and, count, eq, isNotNull, isNull } from 'drizzle-orm';
 import { type Ator, type EventoDeAuditoria, registrarNaAuditoria } from '../auditoria.ts';
+import { esquecerAparelhosDaConta } from './aparelhos.ts';
 import { decifrarChaveDoApp } from './cifra.ts';
 import { hashDoCodigo, pareceCodigoDeRecuperacao } from './codigos.ts';
 import { conferirCodigoDoApp } from './totp.ts';
@@ -86,6 +87,8 @@ export async function fecharOCofreDaConta(tx: Transacao, contaId: string) {
 /** Apaga a chave do app e os códigos de recuperação da conta; diz se havia a verificação. */
 export async function apagarDoisPassos(tx: Transacao, contaId: string): Promise<boolean> {
   await fecharOCofreDaConta(tx, contaId);
+  // Sem os dois passos, nenhum aparelho dispensa o código (change aparelho-confiavel).
+  await esquecerAparelhosDaConta(tx, contaId);
   const removidos = await tx
     .delete(doisPassos)
     .where(eq(doisPassos.contaId, contaId))

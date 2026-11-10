@@ -54,6 +54,11 @@ beforeAll(async () => {
     'helio',
     'ines',
     'lia',
+    'nina',
+    'otto',
+    'paulo',
+    'rita',
+    'sara',
   ]) {
     const conta = await criarConta(api, org, { usuario, senha });
     contaDe[usuario] = conta.id;
@@ -61,6 +66,14 @@ beforeAll(async () => {
     chaveDe[usuario] = chaveDoApp;
     recuperacaoDe[usuario] = codigos;
   }
+  // Quem administra as contas, sem os dois passos.
+  const daAdministracao = await criarConta(api, org, { usuario: 'vera', senha });
+  contaDe.vera = daAdministracao.id;
+  const contasAdministrar = await criarPerfil(api, org, {
+    nome: 'Contas',
+    permissoes: ['contas.administrar', 'acessos.administrar'],
+  });
+  await atribuir(api, org, { perfilId: contasAdministrar, contaId: daAdministracao.id });
 });
 
 afterAll(async () => {
@@ -434,5 +447,194 @@ describe('a entrada pelo aparelho confiável', () => {
     } finally {
       await naOrganizacao(api.banco, org, (tx) => tx.delete(politicaDeEntrada));
     }
+  });
+});
+
+/** Uma leitura da sessão dada. */
+const lerComo = (url: string, entrada: Entrada) =>
+  api.app.inject({ method: 'GET', url, headers: { host, cookie: entrada.cookie } });
+
+/** Uma escrita da sessão dada, como a web faz: mesma origem e com o token CSRF. */
+const escreverComo = (
+  metodo: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  url: string,
+  entrada: Entrada,
+  payload?: object,
+) =>
+  api.app.inject({
+    method: metodo,
+    url,
+    remoteAddress: novoIp(),
+    headers: {
+      host,
+      cookie: entrada.cookie,
+      'x-grafite-csrf': entrada.csrf,
+      'sec-fetch-site': 'same-origin',
+    },
+    ...(payload ? { payload } : {}),
+  });
+
+/** A entrada de quem administra as contas, sem os dois passos. */
+async function daAdministracao(): Promise<Entrada> {
+  const { entrada } = await entrarComSenha('vera');
+  return entrada;
+}
+
+/** Entra pelo aparelho confiável, sem o código. */
+async function pelaConfianca(usuario: string, aparelho: string): Promise<Entrada> {
+  const { entrada, pendencia } = await entrarComSenha(usuario, { aparelho });
+  expect(pendencia).toBeNull();
+  return entrada;
+}
+
+/** Entra com a senha e o código, sem marcar o aparelho. */
+async function comOCodigo(usuario: string): Promise<Entrada> {
+  api.relogio.avancar(31_000);
+  const pendente = await entrarComSenha(usuario);
+  const r = await mandarCodigo(pendente.entrada, codigoDoApp(usuario));
+  return {
+    cookie: `__Host-grafite-sessao=${cookiesDa(r).get('__Host-grafite-sessao')?.valor}`,
+    csrf: r.json().sessao.csrf,
+  };
+}
+
+const registrosDe = (acao: string) =>
+  naOrganizacao(api.banco, org, (tx) =>
+    tx.select().from(auditoria).where(eq(auditoria.acao, acao)),
+  );
+
+describe('os aparelhos da própria conta', () => {
+  let doNotebook = '';
+  let doComputador = '';
+  let idDoNotebook = '';
+
+  it('Aparelhos confiáveis nos Ajustes: os dois, com o prazo, até quando valem e "Este aparelho"', async () => {
+    doNotebook = await marcar('nina');
+    doComputador = await marcar('nina');
+    const entrada = await pelaConfianca('nina', doComputador);
+    const r = await lerComo('/conta/aparelhos', entrada);
+    expect(r.statusCode).toBe(200);
+    const { prazo, aparelhos } = r.json();
+    expect(prazo).toEqual({ dias: 30, origem: { tipo: 'organizacao' } });
+    expect(aparelhos).toHaveLength(2);
+    const este = aparelhos.find((um: { esteAparelho: boolean }) => um.esteAparelho);
+    const outro = aparelhos.find((um: { esteAparelho: boolean }) => !um.esteAparelho);
+    expect(este).toMatchObject({ dispositivo: 'Chrome no Windows' });
+    expect(new Date(este.valeAte).getTime() - new Date(este.criadoEm).getTime()).toBe(30 * DIA);
+    expect(new Date(este.usadoEm).getTime()).toBe(api.relogio.agora().getTime());
+    expect(Object.keys(este).sort()).toEqual(
+      ['criadoEm', 'dispositivo', 'esteAparelho', 'id', 'usadoEm', 'valeAte'].sort(),
+    );
+    idDoNotebook = outro.id;
+  });
+
+  it('Esquecer o notebook: some da lista, a entrada seguinte por ele pede o código, e a auditoria registra', async () => {
+    const entrada = await pelaConfianca('nina', doComputador);
+    const r = await escreverComo('DELETE', `/conta/aparelhos/${idDoNotebook}`, entrada);
+    expect(r.statusCode).toBe(204);
+    const lista = await lerComo('/conta/aparelhos', entrada);
+    expect(lista.json().aparelhos.map((um: { id: string }) => um.id)).not.toContain(idDoNotebook);
+    const { pendencia } = await entrarComSenha('nina', { aparelho: doNotebook });
+    expect(pendencia).toBe('segundo-passo');
+    expect(await registrosDe('aparelho.esquecido')).toEqual([
+      expect.objectContaining({
+        atorContaId: contaDe.nina,
+        alvoTipo: 'aparelho',
+        alvoId: idDoNotebook,
+        dados: { dispositivo: 'Chrome no Windows' },
+      }),
+    ]);
+  });
+
+  it('o aparelho de outra conta não é esquecido por esta', async () => {
+    await marcar('gina');
+    const [deOutra] = await aparelhosDe('gina');
+    const entrada = await pelaConfianca('nina', doComputador);
+    const r = await escreverComo('DELETE', `/conta/aparelhos/${deOutra?.id}`, entrada);
+    expect(r.statusCode).toBe(404);
+    expect(await aparelhosDe('gina')).toHaveLength(1);
+  });
+
+  it('a lista não mostra o aparelho que passou do prazo', async () => {
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .update(contas)
+        .set({ diasDeConfianca: 1 })
+        .where(eq(contas.id, contaDe.nina as string)),
+    );
+    api.relogio.avancar(2 * DIA);
+    try {
+      expect(await aparelhosDe('nina')).toHaveLength(1);
+      const entrada = await comOCodigo('nina');
+      expect((await lerComo('/conta/aparelhos', entrada)).json().aparelhos).toEqual([]);
+    } finally {
+      await naOrganizacao(api.banco, org, (tx) =>
+        tx
+          .update(contas)
+          .set({ diasDeConfianca: null })
+          .where(eq(contas.id, contaDe.nina as string)),
+      );
+    }
+  });
+
+  it('Esquecer todos: a conta fica sem aparelhos, e a auditoria registra quantos', async () => {
+    const primeiro = await marcar('nina');
+    await marcar('nina');
+    const entrada = await pelaConfianca('nina', primeiro);
+    const r = await escreverComo('DELETE', '/conta/aparelhos', entrada);
+    expect(r.statusCode).toBe(204);
+    expect(await aparelhosDe('nina')).toEqual([]);
+    const [registro] = await registrosDe('aparelhos.esquecidos');
+    expect(registro).toMatchObject({ atorContaId: contaDe.nina, alvoTipo: 'conta' });
+    const dados = (registro?.dados ?? {}) as { quantos?: number };
+    expect(dados.quantos).toBeGreaterThanOrEqual(2);
+  });
+
+  it('Senha trocada: os dois aparelhos são esquecidos', async () => {
+    const um = await marcar('otto');
+    await marcar('otto');
+    const entrada = await pelaConfianca('otto', um);
+    const r = await escreverComo('PUT', '/conta/senha', entrada, {
+      senhaAtual: senha,
+      senhaNova: 'gaveta piano lâmpada distante',
+    });
+    expect(r.statusCode).toBe(200);
+    expect(await aparelhosDe('otto')).toEqual([]);
+  });
+
+  it('Dois passos removidos pela administração: o aparelho é esquecido', async () => {
+    const doPaulo = await marcar('paulo');
+    const r = await escreverComo(
+      'POST',
+      `/contas/${contaDe.paulo}/remocao-dos-dois-passos`,
+      await daAdministracao(),
+    );
+    expect(r.statusCode).toBe(200);
+    expect(await aparelhosDe('paulo')).toEqual([]);
+    // Sem os dois passos, a entrada não pede o código, e o cookie que não confere é apagado.
+    const { r: resposta } = await entrarComSenha('paulo', { aparelho: doPaulo });
+    expect(apagouOAparelho(resposta)).toBe(true);
+  });
+
+  it('a inativação da conta esquece os aparelhos', async () => {
+    await marcar('rita');
+    const r = await escreverComo(
+      'POST',
+      `/contas/${contaDe.rita}/inativacao`,
+      await daAdministracao(),
+    );
+    expect(r.statusCode).toBe(200);
+    expect(await aparelhosDe('rita')).toEqual([]);
+  });
+
+  it('desativar os dois passos esquece os aparelhos', async () => {
+    const daSara = await marcar('sara');
+    const entrada = await pelaConfianca('sara', daSara);
+    api.relogio.avancar(31_000);
+    const r = await escreverComo('POST', '/conta/dois-passos/desativacao', entrada, {
+      codigo: codigoDoApp('sara'),
+    });
+    expect(r.statusCode).toBe(204);
+    expect(await aparelhosDe('sara')).toEqual([]);
   });
 });

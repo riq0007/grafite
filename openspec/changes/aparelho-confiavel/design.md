@@ -60,7 +60,7 @@ Um navegador que já tinha o cookie de outra conta passa a ter o da conta que ma
 
 ### 5. Esquecer
 
-- **Pelo usuário:** `GET /conta/aparelhos`, `DELETE /conta/aparelhos/{id}` e `DELETE /conta/aparelhos`. A lista diz qual é o do navegador atual, pelo aparelho da sessão (decisão 1), e o prazo que vale para a conta.
+- **Pelo usuário:** `GET /conta/aparelhos`, `DELETE /conta/aparelhos/{id}` e `DELETE /conta/aparelhos`. A lista diz qual é o do navegador atual, pelo aparelho da sessão (decisão 1), e o prazo que vale para a conta. Ela mostra só os aparelhos dentro do prazo do momento: o vencido já não dispensa o código, e a manutenção diária o apaga. Esquecer o aparelho deste navegador apaga também o cookie dele.
 - **Pela administração:** `GET /contas/{id}/aparelhos` e `DELETE /contas/{id}/aparelhos`, com `contas.administrar`, e a mudança do prazo da conta, recusada na própria conta.
 - **Sozinho:** uma função `esquecerAparelhosDaConta`, chamada na troca e na redefinição da senha, em `apagarDoisPassos`, na ativação dos dois passos e na inativação da conta ou da pessoa, nas mesmas transações.
 - **Pela manutenção diária:** apaga os aparelhos com mais de 90 dias, o teto do prazo.

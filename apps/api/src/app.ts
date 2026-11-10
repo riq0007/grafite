@@ -52,6 +52,7 @@ import { rotasDoAcessoRemoto } from './rotas/acesso-remoto.ts';
 import { rotasDosAgentes } from './rotas/agentes.ts';
 import { instalarAgentesDoGlpi } from './rotas/agentes-glpi.ts';
 import { rotasDosAlertas } from './rotas/alertas.ts';
+import { rotasDosAparelhos } from './rotas/aparelhos.ts';
 import { rotasDaImagemDoAtivo, rotasDosArquivosDosCampos, rotasDosAtivos } from './rotas/ativos.ts';
 import { rotasDasAtribuicoes } from './rotas/atribuicoes.ts';
 import { rotasDaAuditoria } from './rotas/auditoria.ts';
@@ -345,6 +346,7 @@ export async function criarApp({
     });
     await escopo.register(rotasDoSegundoPasso, { banco, agora, chaveDoisPassos, fila });
     await escopo.register(rotasDasSessoesDaConta, { banco, agora });
+    await escopo.register(rotasDosAparelhos, { banco, agora });
     await escopo.register(rotasDaConta, { banco, agora });
     await escopo.register(rotasDosDoisPassos, { banco, agora, chaveDoisPassos });
     await escopo.register(rotasDasPreferencias, { banco, agora });

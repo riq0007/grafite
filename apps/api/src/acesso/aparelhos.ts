@@ -180,3 +180,75 @@ export async function aparelhoDaEntrada(
     .where(eq(aparelhosConfiaveis.id, aparelho.id));
   return { id: aparelho.id };
 }
+
+/** Um aparelho confiável como a lista o mostra, com até quando ele vale pelo prazo do momento. */
+export interface AparelhoListado {
+  id: string;
+  dispositivo: string;
+  ip: string | null;
+  criadoEm: Date;
+  usadoEm: Date;
+  valeAte: Date;
+  /** O aparelho pelo qual a sessão de quem pede entrou, ou que ela marcou. */
+  esteAparelho: boolean;
+}
+
+const DIA = DIA_EM_SEGUNDOS * 1000;
+
+/**
+ * Os aparelhos da conta que ainda dispensam o código, do usado por último ao mais antigo, com o
+ * prazo que vale para ela (design, decisão 5). O que passou do prazo fica de fora: a entrada por
+ * ele já pede o código, e a manutenção diária o apaga.
+ */
+export async function aparelhosDaConta(
+  tx: Transacao,
+  {
+    contaId,
+    momento,
+    acesso,
+    aparelhoDaSessao = null,
+  }: { contaId: string; momento: Date; acesso?: Acesso; aparelhoDaSessao?: string | null },
+): Promise<{ prazo: PrazoDaConfianca; aparelhos: AparelhoListado[] }> {
+  const prazo = await prazoDaConta(tx, contaId, acesso);
+  const linhas = await tx
+    .select()
+    .from(aparelhosConfiaveis)
+    .where(eq(aparelhosConfiaveis.contaId, contaId))
+    .orderBy(desc(aparelhosConfiaveis.usadoEm), desc(aparelhosConfiaveis.criadoEm));
+  const aparelhos = linhas
+    .filter((linha) =>
+      aparelhoNoPrazo({ criadoEm: linha.criadoEm, dias: prazo.dias, agora: momento }),
+    )
+    .map((linha) => ({
+      id: linha.id,
+      dispositivo: linha.dispositivo,
+      ip: linha.ip,
+      criadoEm: linha.criadoEm,
+      usadoEm: linha.usadoEm,
+      valeAte: new Date(linha.criadoEm.getTime() + prazo.dias * DIA),
+      esteAparelho: linha.id === aparelhoDaSessao,
+    }));
+  return { prazo, aparelhos };
+}
+
+/** O aparelho pelo qual a sessão entrou, ou que ela marcou (design, decisão 1). */
+export async function aparelhoDaSessao(tx: Transacao, sessaoId: string): Promise<string | null> {
+  const [linha] = await tx
+    .select({ aparelhoId: sessoes.aparelhoId })
+    .from(sessoes)
+    .where(eq(sessoes.id, sessaoId));
+  return linha?.aparelhoId ?? null;
+}
+
+/**
+ * Esquece todos os aparelhos da conta, sem uma ação a mais (spec verificacao-em-dois-passos,
+ * "Aparelhos esquecidos"): na troca e na redefinição da senha, nos dois passos ativados,
+ * desativados ou removidos e na inativação da conta. Devolve quantos saíram.
+ */
+export async function esquecerAparelhosDaConta(tx: Transacao, contaId: string): Promise<number> {
+  const apagados = await tx
+    .delete(aparelhosConfiaveis)
+    .where(eq(aparelhosConfiaveis.contaId, contaId))
+    .returning({ id: aparelhosConfiaveis.id });
+  return apagados.length;
+}

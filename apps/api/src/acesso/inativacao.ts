@@ -11,6 +11,7 @@ import {
   visaoDaConta,
 } from '../auditoria.ts';
 import { saidaDaConta } from '../eventos/pessoas.ts';
+import { esquecerAparelhosDaConta } from './aparelhos.ts';
 import { encerrarSessoesDaConta } from './encerramento.ts';
 
 export async function inativarConta(
@@ -41,6 +42,7 @@ export async function inativarConta(
     saida: await saidaDaConta(tx, contaId),
   });
   await tx.delete(inscricoesDePush).where(eq(inscricoesDePush.contaId, contaId));
+  await esquecerAparelhosDaConta(tx, contaId);
   const sessoesEncerradas = await encerrarSessoesDaConta(tx, {
     contaId,
     motivo: 'conta-inativada',
