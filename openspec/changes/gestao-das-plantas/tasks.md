@@ -2,7 +2,7 @@
 
 - [x] 1.1 Escrever primeiro os testes de integração e depois o `DELETE /mapa/plantas/{id}` (design, decisão 2). Verificar: os testes passam com "Planta enviada por engano" (as posições saem, os ativos ficam, a auditoria traz a contagem), "Exclusão sem a permissão" (403) e a planta que não existe (404), e o modelo sai do armazenamento.
 - [x] 1.2 Escrever primeiro os testes de integração e depois o `PUT /mapa/plantas/{id}/modelo` (decisões 3 e 4). Verificar: os testes passam com "Desenho corrigido", "Arquivo recusado na substituição", "Planta que falhou, corrigida" e "Posições fora do desenho novo".
-- [ ] 1.3 Gerar o contrato e o cliente. Verificar: o `pnpm contrato:verificar` passa.
+- [x] 1.3 Gerar o contrato e o cliente. Verificar: o `pnpm contrato:verificar` passa.
 
 ## 2. A tela
 
