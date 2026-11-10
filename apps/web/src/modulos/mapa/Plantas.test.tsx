@@ -113,7 +113,11 @@ function servidorDasPlantas(iniciais: PlantaDoMapa[], podeEditar = true) {
 function abrir(
   servidor: ServidorDeTeste,
   podeEditar = true,
-  { endereco = '/mapa', canal = criarCanalDeEventos() } = {},
+  {
+    endereco = '/mapa',
+    canal = criarCanalDeEventos(),
+    consultas = criarClienteDeConsultas({ esperaEntreTentativas: 0 }),
+  } = {},
 ) {
   noComputador();
   render(
@@ -123,7 +127,7 @@ function abrir(
         naOrganizacao(podeEditar ? 'mapa.editar' : 'mapa.ver', 'ativos.ver'),
         servidor,
       )}
-      consultas={criarClienteDeConsultas({ esperaEntreTentativas: 0 })}
+      consultas={consultas}
       canal={canal}
     />,
   );
@@ -363,5 +367,109 @@ describe('o mapa aberto de uma planta que saiu', () => {
     expect(await screen.findByText('Esta planta não está mais no mapa.')).toBeTruthy();
     expect(screen.queryByText('Esta planta foi excluída.')).toBeNull();
     expect(screen.getByRole('link', { name: 'Ver as plantas' })).toBeTruthy();
+  });
+});
+
+// A substituição do desenho (spec mapa-da-planta, "Substituição do desenho"; design, decisão 3).
+describe('a substituição do desenho pela tela', () => {
+  /** O servidor com a troca do desenho da planta p1: guarda o endereço e responde o que o teste der. */
+  function servidorComATroca(inicial: PlantaDoMapa, resposta: () => Response) {
+    const { servidor, estado } = servidorDasPlantas([inicial]);
+    const enviados: string[] = [];
+    servidor[`PUT /api/mapa/plantas/${inicial.id}/modelo`] = (pedido) => {
+      enviados.push(pedido.url);
+      return resposta();
+    };
+    return { servidor, estado, enviados };
+  }
+
+  async function abrirATroca(nome: string) {
+    await abrirAcoes(nome);
+    await escolher('Substituir o desenho…');
+    return screen.findByRole('dialog', { name: 'Substituir o desenho' });
+  }
+
+  function escolherArquivo(gaveta: HTMLElement, nome: string) {
+    const escolha = within(gaveta).getByRole('group', { name: 'Arquivo' });
+    fireEvent.change(escolha.querySelector('input[type="file"]') as HTMLElement, {
+      target: { files: [new File(['0\nSECTION'], nome, { type: 'application/dxf' })] },
+    });
+  }
+
+  const titulos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
+
+  it('Desenho corrigido: o arquivo vai para a mesma planta, com o retorno, e o modelo é relido', async () => {
+    const { servidor, enviados } = servidorComATroca(JUNDIAI, () =>
+      Response.json({ planta: { ...JUNDIAI, fonte: 'novo.dxf' }, posicoesFora: 0 }),
+    );
+    const consultas = criarClienteDeConsultas({ esperaEntreTentativas: 0 });
+    // O desenho que o mapa aberto tinha lido antes da troca.
+    consultas.setQueryData(['mapa', 'modelo', 'p1'], { largura: 120, profundidade: 80 });
+    abrir(servidor, true, { consultas });
+    const gaveta = await abrirATroca('Jundiai');
+    const substituir = within(gaveta).getByRole('button', {
+      name: 'Substituir',
+    }) as HTMLButtonElement;
+    expect(substituir.disabled).toBe(true);
+    escolherArquivo(gaveta, 'novo.dxf');
+    expect(await within(gaveta).findByText('novo.dxf')).toBeTruthy();
+    fireEvent.click(substituir);
+
+    await waitFor(() => expect(titulos()).toContain('Desenho da planta Jundiai substituído.'));
+    expect(titulos().some((titulo) => titulo.includes('fora do desenho novo'))).toBe(false);
+    expect(new URL(enviados[0] ?? '').searchParams.get('fonte')).toBe('novo.dxf');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Substituir o desenho' })).toBeNull(),
+    );
+    expect(consultas.getQueryState(['mapa', 'modelo', 'p1'])?.isInvalidated).toBe(true);
+  });
+
+  it('Posições fora do desenho novo: a tela avisa quantas ficaram, para reposicionar', async () => {
+    const { servidor } = servidorComATroca(JUNDIAI, () =>
+      Response.json({ planta: { ...JUNDIAI, largura: 60, profundidade: 40 }, posicoesFora: 3 }),
+    );
+    abrir(servidor);
+    const gaveta = await abrirATroca('Jundiai');
+    escolherArquivo(gaveta, 'menor.dxf');
+    fireEvent.click(within(gaveta).getByRole('button', { name: 'Substituir' }));
+    await waitFor(() =>
+      expect(titulos()).toContain(
+        '3 posições ficaram fora do desenho novo. Reposicione-as no mapa.',
+      ),
+    );
+    expect(titulos()).toContain('Desenho da planta Jundiai substituído.');
+  });
+
+  it('uma posição só fora do desenho novo: o aviso fala no singular', async () => {
+    const { servidor } = servidorComATroca(JUNDIAI, () =>
+      Response.json({ planta: JUNDIAI, posicoesFora: 1 }),
+    );
+    abrir(servidor);
+    const gaveta = await abrirATroca('Jundiai');
+    escolherArquivo(gaveta, 'menor.dxf');
+    fireEvent.click(within(gaveta).getByRole('button', { name: 'Substituir' }));
+    await waitFor(() =>
+      expect(titulos()).toContain('1 posição ficou fora do desenho novo. Reposicione-a no mapa.'),
+    );
+  });
+
+  it('Arquivo recusado na substituição: a recusa aparece na escolha do arquivo, e a gaveta continua', async () => {
+    const { servidor } = servidorComATroca(JUNDIAI, () =>
+      dadosInvalidos({ arquivo: 'Envie o desenho em DXF ou o modelo da planta em JSON.' }),
+    );
+    abrir(servidor);
+    const gaveta = await abrirATroca('Jundiai');
+    escolherArquivo(gaveta, 'planta.pdf');
+    fireEvent.click(within(gaveta).getByRole('button', { name: 'Substituir' }));
+    expect(
+      await within(gaveta).findByText('Envie o desenho em DXF ou o modelo da planta em JSON.'),
+    ).toBeTruthy();
+    expect(titulos()).not.toContain('Desenho da planta Jundiai substituído.');
+  });
+
+  it('Planta que falhou: o menu oferece renomear, substituir o desenho e excluir', async () => {
+    const { servidor } = servidorDasPlantas([ANEXO]);
+    abrir(servidor);
+    expect(await abrirAcoes('Anexo')).toEqual(['Renomear…', 'Substituir o desenho…', 'Excluir…']);
   });
 });

@@ -23,7 +23,12 @@ import { pedir } from '../../api/pedir.ts';
 import { useApi } from '../../api/useApi.tsx';
 import { Confirmacao } from '../administracao/Confirmacao.tsx';
 import { SeletorDeLocal } from '../administracao/seletores/SeletorDeLocal.tsx';
-import { CHAVE_DO_MAPA, type PlantaDoMapa, usePlantas } from './consultas.ts';
+import {
+  CHAVE_DO_MAPA,
+  type PlantaDoMapa,
+  type SubstituicaoDoDesenho,
+  usePlantas,
+} from './consultas.ts';
 import estilos from './Mapa.module.css';
 
 const SITUACOES = {
@@ -224,6 +229,92 @@ function LocalDaPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: (
   );
 }
 
+/** O aviso das posições que ficaram fora da área do desenho novo, para reposicionar. */
+const avisoDasPosicoesFora = (quantas: number) =>
+  quantas === 1
+    ? '1 posição ficou fora do desenho novo. Reposicione-a no mapa.'
+    : `${quantas.toLocaleString('pt-BR')} posições ficaram fora do desenho novo. Reposicione-as no mapa.`;
+
+/**
+ * A gaveta que substitui o desenho da planta (spec mapa-da-planta, "Substituição do desenho"): o
+ * arquivo vai para a mesma planta, e o nome, o local e as posições ficam. A recusa do arquivo
+ * aparece na escolha dele, e a planta continua como estava.
+ */
+function SubstituirDesenho({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: () => void }) {
+  const api = useApi();
+  const consultas = useQueryClient();
+  const [arquivo, definirArquivo] = useState<File | null>(null);
+  // Fora do envio, sem valor: para a escolha de arquivo, `null` é o envio sem progresso conhecido.
+  const [progresso, definirProgresso] = useState<number | undefined>(undefined);
+  const [erro, definirErro] = useState<string | null>(null);
+
+  async function enviar() {
+    if (!arquivo) return;
+    definirErro(null);
+    definirProgresso(0);
+    const resultado = await pedir(
+      () =>
+        api.enviarArquivo<SubstituicaoDoDesenho>(
+          `/mapa/plantas/${planta.id}/modelo?fonte=${encodeURIComponent(arquivo.name)}`,
+          arquivo,
+          definirProgresso,
+          'PUT',
+        ),
+      'substituir o desenho',
+    );
+    definirProgresso(undefined);
+    if ('erro' in resultado) {
+      definirErro(resultado.problema?.campos?.arquivo ?? resultado.erro);
+      return;
+    }
+    avisar({ situacao: 'sucesso', titulo: `Desenho da planta ${planta.nome} substituído.` });
+    const { posicoesFora } = resultado.dados;
+    if (posicoesFora > 0)
+      avisar({ situacao: 'atencao', titulo: avisoDasPosicoesFora(posicoesFora) });
+    // O mapa aberto passa ao desenho novo: a consulta do modelo é relida, com as outras do mapa.
+    await consultas.invalidateQueries({ queryKey: CHAVE_DO_MAPA });
+    aoFechar();
+  }
+
+  return (
+    <Gaveta
+      aberta
+      aoMudarAberta={(aberta) => {
+        if (!aberta) aoFechar();
+      }}
+      titulo="Substituir o desenho"
+    >
+      <div className={estilos.tela}>
+        <p className={estilos.nota}>
+          {`O nome, o local e as posições da planta ${planta.nome} ficam como estão.`}
+        </p>
+        <EscolhaDeArquivo
+          rotulo="Arquivo"
+          descricao="O desenho em DXF, convertido no servidor, ou o modelo da planta do PMG, em JSON."
+          formatos={['.dxf', '.json']}
+          limite={300 * 1024 * 1024}
+          progresso={progresso}
+          erro={erro}
+          aoEscolher={definirArquivo}
+        />
+        {arquivo && <p className={estilos.nota}>{arquivo.name}</p>}
+        <div className={estilos.acoes}>
+          <Botao onPress={aoFechar}>Cancelar</Botao>
+          <Botao
+            nivel="primario"
+            isDisabled={!arquivo}
+            carregando={progresso !== undefined}
+            rotuloCarregando="Enviando e convertendo"
+            onPress={() => void enviar()}
+          >
+            Substituir
+          </Botao>
+        </div>
+      </div>
+    </Gaveta>
+  );
+}
+
 /** O que a exclusão apaga, em texto, pela quantidade de posições da planta. */
 function oQueAExclusaoApaga(posicoes: number): string {
   if (posicoes === 0)
@@ -265,7 +356,7 @@ function ExcluirPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: (
 }
 
 /** As ações que abrem uma gaveta ou a confirmação; as outras valem na hora. */
-type AcaoComGaveta = 'renomear' | 'local' | 'excluir';
+type AcaoComGaveta = 'renomear' | 'local' | 'substituir' | 'excluir';
 
 /**
  * O menu "Ações" de uma planta. A planta que falhou não tem a situação nem o local para mudar: os
@@ -324,6 +415,9 @@ function AcoesDaPlanta({
           Reativar
         </ItemDeMenu>
       )}
+      <ItemDeMenu id="substituir" onAction={() => aoAbrir('substituir')}>
+        Substituir o desenho…
+      </ItemDeMenu>
       <ItemDeMenu id="excluir" destrutivo onAction={() => aoAbrir('excluir')}>
         Excluir…
       </ItemDeMenu>
@@ -421,6 +515,9 @@ export function Plantas() {
       )}
       {plantaAberta && aberta?.acao === 'local' && (
         <LocalDaPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />
+      )}
+      {plantaAberta && aberta?.acao === 'substituir' && (
+        <SubstituirDesenho planta={plantaAberta} aoFechar={() => definirAberta(null)} />
       )}
       {plantaAberta && aberta?.acao === 'excluir' && (
         <ExcluirPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />

@@ -8,6 +8,7 @@ import { useApi } from '../../api/useApi.tsx';
 
 export type PlantaDoMapa = components['schemas']['PlantaDoMapa'];
 export type ModeloDaPlanta = components['schemas']['ModeloDaPlanta'];
+export type SubstituicaoDoDesenho = components['schemas']['SubstituicaoDoDesenho'];
 export type MarcadorDoMapa = components['schemas']['MarcadorDoMapa'];
 
 /** A chave de tudo do mapa. */
