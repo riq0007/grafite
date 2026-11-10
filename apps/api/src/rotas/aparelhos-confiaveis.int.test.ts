@@ -638,3 +638,193 @@ describe('os aparelhos da própria conta', () => {
     expect(await aparelhosDe('sara')).toEqual([]);
   });
 });
+
+const PRAZO_FORA = 'Informe um prazo de 0 a 90 dias.';
+
+describe('os aparelhos e os prazos pela administração', () => {
+  let administrador = '';
+  let soVe: Entrada;
+
+  beforeAll(async () => {
+    administrador = await criarPerfil(api, org, { nome: 'Administrador', administrador: true });
+    const conta = await criarConta(api, org, { usuario: 'tais', senha });
+    contaDe.tais = conta.id;
+    const ve = await criarPerfil(api, org, {
+      nome: 'Leitura dos acessos',
+      permissoes: ['acessos.ver'],
+    });
+    await atribuir(api, org, { perfilId: ve, contaId: conta.id });
+    soVe = (await entrarComSenha('tais')).entrada;
+  });
+
+  it('Notebook roubado: esquecer todos os aparelhos de João, com quem esqueceu, e as sessões continuam', async () => {
+    const doJoao = await marcar('joao');
+    const sessaoDoJoao = await pelaConfianca('joao', doJoao);
+    const administracao = await daAdministracao();
+    const lista = await lerComo(`/contas/${contaDe.joao}/aparelhos`, administracao);
+    expect(lista.statusCode).toBe(200);
+    expect(lista.json().aparelhos[0]).toMatchObject({
+      dispositivo: 'Chrome no Windows',
+      ip: expect.any(String),
+    });
+
+    const r = await escreverComo('DELETE', `/contas/${contaDe.joao}/aparelhos`, administracao);
+    expect(r.statusCode).toBe(204);
+    expect(await aparelhosDe('joao')).toEqual([]);
+    expect(await registrosDe('aparelhos.esquecidos')).toContainEqual(
+      expect.objectContaining({
+        atorContaId: contaDe.vera,
+        alvoTipo: 'conta',
+        alvoId: contaDe.joao,
+      }),
+    );
+    // A sessão aberta de João continua, e a entrada seguinte pede o código.
+    expect((await lerComo('/sessao', sessaoDoJoao)).json().sessao).not.toBeNull();
+    expect((await entrarComSenha('joao', { aparelho: doJoao })).pendencia).toBe('segundo-passo');
+  });
+
+  it('De onde vem o prazo: a administração vê os dias, a origem e o prazo próprio da conta', async () => {
+    const r = await lerComo(`/contas/${contaDe.carla}/aparelhos`, await daAdministracao());
+    expect(r.json()).toEqual({
+      prazo: { dias: 30, origem: { tipo: 'organizacao' } },
+      diasDaConta: null,
+      aparelhos: [],
+    });
+  });
+
+  it('Prazo de uma conta: "Pedir o código em toda entrada" para Carla, com a auditoria', async () => {
+    const r = await escreverComo(
+      'PUT',
+      `/contas/${contaDe.carla}/prazo-da-confianca`,
+      await daAdministracao(),
+      { dias: 0 },
+    );
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual({ prazo: { dias: 0, origem: { tipo: 'conta' } }, diasDaConta: 0 });
+    const registro = (await registrosDe('prazo-da-confianca.alterado')).find(
+      (um) => um.alvoId === contaDe.carla,
+    );
+    expect(registro).toMatchObject({
+      atorContaId: contaDe.vera,
+      alvoTipo: 'conta',
+      antes: { dias: null },
+      depois: { dias: 0 },
+    });
+    // A entrada seguinte de Carla pede o código, sem a caixa.
+    const { pendencia, r: entrada } = await entrarComSenha('carla');
+    expect(pendencia).toBe('segundo-passo');
+    expect(entrada.json().sessao.diasDeConfianca).toBe(0);
+    // E volta a seguir o perfil ou a organização.
+    const devolvido = await escreverComo(
+      'PUT',
+      `/contas/${contaDe.carla}/prazo-da-confianca`,
+      await daAdministracao(),
+      { dias: null },
+    );
+    expect(devolvido.json()).toEqual({
+      prazo: { dias: 30, origem: { tipo: 'organizacao' } },
+      diasDaConta: null,
+    });
+  });
+
+  it('Prazo da própria conta: a administração recusa', async () => {
+    const r = await escreverComo(
+      'PUT',
+      `/contas/${contaDe.vera}/prazo-da-confianca`,
+      await daAdministracao(),
+      { dias: 0 },
+    );
+    expect(r.statusCode).toBe(409);
+    expect(r.json().detail).toBe('Use outra conta para mudar o seu prazo.');
+  });
+
+  it('Prazo da organização: de 30 para 7 dias, e quem só vê os acessos o lê', async () => {
+    const administracao = await daAdministracao();
+    expect((await lerComo('/politica-de-entrada', administracao)).json()).toEqual({
+      diasDeConfianca: 30,
+    });
+    const r = await escreverComo('PUT', '/politica-de-entrada', administracao, {
+      diasDeConfianca: 7,
+    });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual({ diasDeConfianca: 7 });
+    expect((await lerComo('/politica-de-entrada', soVe)).json()).toEqual({ diasDeConfianca: 7 });
+    const registro = (await registrosDe('prazo-da-confianca.alterado')).find(
+      (um) => um.alvoTipo === 'organizacao',
+    );
+    expect(registro).toMatchObject({
+      atorContaId: contaDe.vera,
+      antes: { dias: 30 },
+      depois: { dias: 7 },
+    });
+    await escreverComo('PUT', '/politica-de-entrada', administracao, { diasDeConfianca: 30 });
+  });
+
+  it('Prazo fora do intervalo: recusado com "Informe um prazo de 0 a 90 dias."', async () => {
+    const administracao = await daAdministracao();
+    const naOrganizacao120 = await escreverComo('PUT', '/politica-de-entrada', administracao, {
+      diasDeConfianca: 120,
+    });
+    expect(naOrganizacao120.statusCode).toBe(400);
+    expect(naOrganizacao120.json().campos).toEqual({ diasDeConfianca: PRAZO_FORA });
+    const naConta = await escreverComo(
+      'PUT',
+      `/contas/${contaDe.carla}/prazo-da-confianca`,
+      administracao,
+      { dias: 91 },
+    );
+    expect(naConta.json().campos).toEqual({ dias: PRAZO_FORA });
+    const noPerfil = await escreverComo(
+      'PUT',
+      `/perfis/${administrador}/prazo-da-confianca`,
+      administracao,
+      { dias: 1.5 },
+    );
+    expect(noPerfil.json().campos).toEqual({ dias: PRAZO_FORA });
+  });
+
+  it('Perfil mais exigente: o Administrador, protegido, passa a pedir o código em toda entrada', async () => {
+    const administracao = await daAdministracao();
+    const r = await escreverComo(
+      'PUT',
+      `/perfis/${administrador}/prazo-da-confianca`,
+      administracao,
+      { dias: 0 },
+    );
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toMatchObject({ diasDeConfianca: 0, permite: { mudarPrazo: true } });
+    expect((await lerComo(`/perfis/${administrador}`, administracao)).json().diasDeConfianca).toBe(
+      0,
+    );
+    const registro = (await registrosDe('prazo-da-confianca.alterado')).find(
+      (um) => um.alvoId === administrador,
+    );
+    expect(registro).toMatchObject({
+      alvoTipo: 'perfil',
+      antes: { dias: null },
+      depois: { dias: 0 },
+    });
+    // Gina, com o Administrador e sem prazo próprio, passa a digitar o código em toda entrada.
+    await atribuir(api, org, { perfilId: administrador, contaId: contaDe.gina as string });
+    const { r: entrada } = await entrarComSenha('gina');
+    expect(entrada.json().sessao.diasDeConfianca).toBe(0);
+  });
+
+  it('sem a permissão: 403 nos aparelhos de outra conta e nos prazos', async () => {
+    expect((await lerComo(`/contas/${contaDe.carla}/aparelhos`, soVe)).statusCode).toBe(403);
+    expect(
+      (await escreverComo('DELETE', `/contas/${contaDe.carla}/aparelhos`, soVe)).statusCode,
+    ).toBe(403);
+    expect(
+      (await escreverComo('PUT', '/politica-de-entrada', soVe, { diasDeConfianca: 7 })).statusCode,
+    ).toBe(403);
+    expect(
+      (await escreverComo('PUT', `/perfis/${administrador}/prazo-da-confianca`, soVe, { dias: 7 }))
+        .statusCode,
+    ).toBe(403);
+    expect(
+      (await escreverComo('PUT', `/contas/${contaDe.carla}/prazo-da-confianca`, soVe, { dias: 7 }))
+        .statusCode,
+    ).toBe(403);
+  });
+});

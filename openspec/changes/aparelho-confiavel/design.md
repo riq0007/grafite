@@ -61,7 +61,8 @@ Um navegador que já tinha o cookie de outra conta passa a ter o da conta que ma
 ### 5. Esquecer
 
 - **Pelo usuário:** `GET /conta/aparelhos`, `DELETE /conta/aparelhos/{id}` e `DELETE /conta/aparelhos`. A lista diz qual é o do navegador atual, pelo aparelho da sessão (decisão 1), e o prazo que vale para a conta. Ela mostra só os aparelhos dentro do prazo do momento: o vencido já não dispensa o código, e a manutenção diária o apaga. Esquecer o aparelho deste navegador apaga também o cookie dele.
-- **Pela administração:** `GET /contas/{id}/aparelhos` e `DELETE /contas/{id}/aparelhos`, com `contas.administrar`, e a mudança do prazo da conta, recusada na própria conta.
+- **Pela administração:** `GET /contas/{id}/aparelhos`, com o IP de cada aparelho e o prazo próprio da conta, `DELETE /contas/{id}/aparelhos` e `PUT /contas/{id}/prazo-da-confianca`, com `contas.administrar` no local da pessoa. A própria conta é recusada, como nas outras ações sobre a conta.
+- **Os prazos dos acessos:** `GET /politica-de-entrada`, com `acessos.ver`, e `PUT /politica-de-entrada` e `PUT /perfis/{id}/prazo-da-confianca`, com `acessos.administrar`. O prazo do perfil tem rota própria porque o Administrador é protegido e não muda pelo formulário, e a spec deixa mudar o prazo dele. A lista e a ficha dos perfis trazem o prazo de cada um.
 - **Sozinho:** uma função `esquecerAparelhosDaConta`, chamada na troca e na redefinição da senha, em `apagarDoisPassos`, na ativação dos dois passos e na inativação da conta ou da pessoa, nas mesmas transações.
 - **Pela manutenção diária:** apaga os aparelhos com mais de 90 dias, o teto do prazo.
 
@@ -71,7 +72,7 @@ Esquecer apaga a linha. A auditoria guarda a marcação, o esquecimento feito po
 
 - **A entrada:** a caixa e a explicação no passo do código, na `TelaDeEntrada` do `@grafite/ui`, com o prazo que a sessão pendente informa: no passo do código, o estado da sessão traz `diasDeConfianca`, o prazo que vale para a conta.
 - **Ajustes › Conta:** a parte "Aparelhos confiáveis", com a entrada na busca.
-- **Administração:** o prazo da organização acima da lista dos perfis, o campo do prazo no formulário do perfil e, na conta de outra pessoa, os aparelhos, o "Esquecer todos os aparelhos" e o prazo.
+- **Administração:** o prazo da organização acima da lista dos perfis, o prazo na ficha do perfil, com "Mudar…", também no Administrador, e, na conta de outra pessoa, os aparelhos, o "Esquecer todos os aparelhos" e o prazo.
 
 O campo do prazo é o mesmo nos três lugares: uma escolha entre seguir o nível de cima, pedir sempre ou um número de dias.
 
