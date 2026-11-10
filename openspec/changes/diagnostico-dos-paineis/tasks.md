@@ -1,7 +1,7 @@
 ## 1. O domínio e o banco
 
 - [x] 1.1 Escrever primeiro os testes e depois o `exibicaoDaResposta` (design, decisão 1). Verificar: os testes passam com "Grafana de fábrica", "frame-ancestors com o endereço do Grafite", "frame-ancestors sem o Grafite", "Os dois cabeçalhos", "Ferramenta no endereço do Grafite", "Página de entrada", "Painel em HTTP com o cabeçalho" e a recusa vencendo a entrada.
-- [ ] 1.2 Acrescentar as colunas `exibicao` e `motivo_da_exibicao` à tabela `paineis`, com a migration (decisão 2). Verificar: a migration aplica num banco com painéis cadastrados, o teste-guarda do RLS passa, e a conferência dos valores recusa um valor fora dos três.
+- [x] 1.2 Acrescentar as colunas `exibicao` e `motivo_da_exibicao` à tabela `paineis`, com a migration (decisão 2). Verificar: a migration aplica num banco com painéis cadastrados, o teste-guarda do RLS passa, e a conferência dos valores recusa um valor fora dos três.
 
 ## 2. A API
 

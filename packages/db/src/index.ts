@@ -35,6 +35,7 @@ export {
   distribuicoes,
   doisPassos,
   ESCOPOS_DA_REGRA_NO_BANCO,
+  EXIBICOES_DO_PAINEL_NO_BANCO,
   enderecosDeAcesso,
   errosDaImportacao,
   esquemaDaOperacao,

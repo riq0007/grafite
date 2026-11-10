@@ -3356,10 +3356,17 @@ export const participantesDasReservas = orgScoped(
 
 export const SITUACOES_DO_PAINEL_NO_BANCO = ['sem-verificacao', 'no-ar', 'fora-do-ar'] as const;
 
+/** As exibições do painel, as mesmas do domínio (`EXIBICOES_DO_PAINEL`), conferidas pelo banco. */
+export const EXIBICOES_DO_PAINEL_NO_BANCO = ['aparece', 'recusa', 'pede-entrada'] as const;
+
 /**
  * Os painéis das VMs (spec painel-de-dashboards, "Painéis cadastrados" e "Verificação dos
  * painéis"; change painel-de-dashboards, design, decisão 1): o cadastro, com o endereço e a ordem
  * na grade, e a última verificação, sem histórico.
+ *
+ * A exibição (spec painel-de-dashboards, "Exibição do painel"; change diagnostico-dos-paineis,
+ * design, decisão 2) é o que a última verificação leu da resposta do painel no ar; fica nula no
+ * painel fora do ar e no ainda não verificado.
  */
 export const paineis = orgScoped(
   'paineis',
@@ -3378,6 +3385,8 @@ export const paineis = orgScoped(
     verificadoEm: momento('verificado_em'),
     tempoDaResposta: integer('tempo_da_resposta'),
     motivo: text('motivo'),
+    exibicao: text('exibicao', { enum: EXIBICOES_DO_PAINEL_NO_BANCO }),
+    motivoDaExibicao: text('motivo_da_exibicao'),
     criadoEm: momento('criado_em').notNull().defaultNow(),
     atualizadoEm: momento('atualizado_em').notNull().defaultNow(),
   },
@@ -3399,6 +3408,11 @@ export const paineis = orgScoped(
       sql`${t.verificacao} in (${lista(SITUACOES_DO_PAINEL_NO_BANCO)})`,
     ),
     check('paineis_motivo_valido', textoAte(t.motivo, 200)),
+    check(
+      'paineis_exibicao_valida',
+      sql`${t.exibicao} is null or ${t.exibicao} in (${lista(EXIBICOES_DO_PAINEL_NO_BANCO)})`,
+    ),
+    check('paineis_motivo_da_exibicao_valido', textoAte(t.motivoDaExibicao, 200)),
   ],
 );
 
