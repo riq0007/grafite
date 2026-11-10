@@ -43,6 +43,11 @@ export const SECOES = [
         palavrasChave: ['celular perdido', 'recuperar'],
       },
       {
+        foco: 'aparelhos-confiaveis',
+        rotulo: 'Aparelhos confiáveis',
+        palavrasChave: ['aparelhos', 'confiar', 'navegador', 'lembrar', 'esquecer'],
+      },
+      {
         foco: 'sessoes',
         rotulo: 'Sessões',
         palavrasChave: ['dispositivos', 'aparelhos', 'encerrar', 'sair'],

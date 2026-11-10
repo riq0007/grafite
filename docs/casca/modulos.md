@@ -1492,6 +1492,11 @@ export type EstadoDaSessao =
       pendencia: Pendencia;
       /** Por que o passo apareceu, quando ele surge com a casca aberta. */
       mensagem?: string;
+      /**
+       * No passo do código, o prazo da confiança da conta (change aparelho-confiavel): maior que
+       * zero, a tela oferece "Confiar neste aparelho".
+       */
+      diasDeConfianca?: number;
     })
   /** Os dois passos acabaram de ser ativados na entrada: os códigos aparecem antes da casca. */
   | (DadosDaSessao & { tipo: 'pendente'; pendencia: 'guardar-codigos'; codigos: string[] })

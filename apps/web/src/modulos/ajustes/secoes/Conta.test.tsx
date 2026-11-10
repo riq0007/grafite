@@ -46,6 +46,25 @@ const NO_CELULAR = {
   atual: false,
 };
 
+/** Os aparelhos confiáveis de Ana: o computador, deste navegador, e o notebook. */
+const COMPUTADOR = {
+  id: '0199a6e0-0000-7000-8000-000000000011',
+  dispositivo: 'Chrome no Windows',
+  criadoEm: '2026-10-01T12:00:00.000Z',
+  usadoEm: '2026-10-01T13:30:00.000Z',
+  valeAte: '2026-10-31T12:00:00.000Z',
+  esteAparelho: true,
+};
+const NOTEBOOK = {
+  id: '0199a6e0-0000-7000-8000-000000000012',
+  dispositivo: 'Edge no Windows',
+  criadoEm: '2026-09-28T09:00:00.000Z',
+  usadoEm: '2026-09-30T18:45:00.000Z',
+  valeAte: '2026-10-28T09:00:00.000Z',
+  esteAparelho: false,
+};
+const PRAZO_DA_ORGANIZACAO = { dias: 30, origem: { tipo: 'organizacao' } };
+
 type Resposta = () => Response | Promise<Response>;
 
 const json = (corpo: unknown) => () => Response.json(corpo);
@@ -88,6 +107,7 @@ function abrir({
     Object.entries({
       'GET /api/conta': [conta()],
       'GET /api/conta/sessoes': [json([ESTA_SESSAO, NO_CELULAR])],
+      'GET /api/conta/aparelhos': [json({ prazo: PRAZO_DA_ORGANIZACAO, aparelhos: [] })],
       ...servidor,
     }),
   );
@@ -225,6 +245,7 @@ describe('seção Conta', () => {
       'senha',
       'dois-passos',
       'codigos-de-recuperacao',
+      'aparelhos-confiaveis',
       'sessoes',
     ]) {
       expect(document.querySelector(`[data-foco="${foco}"]`), foco).not.toBeNull();
@@ -304,7 +325,9 @@ describe('troca da senha', () => {
     preencher('Confirmar a senha nova', 'cavalo bateria grampo correto');
     trocar();
     expect(
-      await within(parte).findByText('Senha trocada. As outras sessões foram encerradas.'),
+      await within(parte).findByText(
+        'Senha trocada. As outras sessões foram encerradas e os aparelhos confiáveis, esquecidos.',
+      ),
     ).toBeTruthy();
     const troca = pedidoDe('PUT /api/conta/senha');
     expect(await troca?.json()).toEqual({
@@ -596,6 +619,102 @@ describe('sessões', () => {
       ),
     ).toBeTruthy();
     expect(within(await sessoes()).getByText('Safari no iPhone')).toBeTruthy();
+  });
+});
+
+// Spec ajustes-do-sistema, "Seção Conta" (change aparelho-confiavel, design, decisão 6).
+describe('aparelhos confiáveis', () => {
+  const parteDosAparelhos = () => screen.findByRole('region', { name: 'Aparelhos confiáveis' });
+  const comAparelhos = (aparelhos = [COMPUTADOR, NOTEBOOK], prazo = PRAZO_DA_ORGANIZACAO) => ({
+    'GET /api/conta/aparelhos': [json({ prazo, aparelhos })],
+  });
+  const itemDoAparelho = async (dispositivo: string) =>
+    (await within(await parteDosAparelhos()).findByText(dispositivo)).closest('li') as HTMLElement;
+
+  it('Aparelhos confiáveis nos Ajustes: os dois, com "Este aparelho" e o prazo em texto', async () => {
+    abrir({ servidor: comAparelhos() });
+    const parte = await parteDosAparelhos();
+    expect(
+      await within(parte).findByText(
+        'O código é pedido de novo a cada 30 dias em cada aparelho confiável.',
+      ),
+    ).toBeTruthy();
+    expect(within(parte).getByRole('list', { name: 'Aparelhos confiáveis' })).toBeTruthy();
+    const computador = await itemDoAparelho('Chrome no Windows');
+    expect(within(computador).getByText('Este aparelho')).toBeTruthy();
+    for (const rotulo of ['Confiável desde', 'Último uso', 'Vale até']) {
+      expect(within(computador).getByText(rotulo), rotulo).toBeTruthy();
+    }
+    const notebook = await itemDoAparelho('Edge no Windows');
+    expect(within(notebook).queryByText('Este aparelho')).toBeNull();
+    expect(within(notebook).getByRole('button', { name: 'Esquecer' })).toBeTruthy();
+    expect(within(parte).getByRole('button', { name: 'Esquecer todos' })).toBeTruthy();
+  });
+
+  it('Esquecer o notebook: o aparelho some da lista, com "Aparelho esquecido."', async () => {
+    abrir({
+      servidor: { ...comAparelhos(), [`DELETE /api/conta/aparelhos/${NOTEBOOK.id}`]: [vazia] },
+    });
+    const notebook = await itemDoAparelho('Edge no Windows');
+    fireEvent.click(within(notebook).getByRole('button', { name: 'Esquecer' }));
+    const parte = await parteDosAparelhos();
+    expect(await within(parte).findByText('Aparelho esquecido.')).toBeTruthy();
+    expect(within(parte).queryByText('Edge no Windows')).toBeNull();
+    expect(within(parte).getByText('Chrome no Windows')).toBeTruthy();
+    expect(
+      pedidoDe(`DELETE /api/conta/aparelhos/${NOTEBOOK.id}`)?.headers.get('x-grafite-csrf'),
+    ).toBe('csrf-de-teste');
+  });
+
+  it('"Esquecer todos" deixa a lista vazia, com "Aparelhos esquecidos."', async () => {
+    abrir({ servidor: { ...comAparelhos(), 'DELETE /api/conta/aparelhos': [vazia] } });
+    const parte = await parteDosAparelhos();
+    const todos = await within(parte).findByRole('button', { name: 'Esquecer todos' });
+    expect(todos.getAttribute('data-nivel')).toBe('destrutivo');
+    fireEvent.click(todos);
+    expect(await within(parte).findByText('Aparelhos esquecidos.')).toBeTruthy();
+    expect(within(parte).getByText('Nenhum aparelho confiável.')).toBeTruthy();
+    expect(within(parte).queryByRole('button', { name: 'Esquecer todos' })).toBeNull();
+  });
+
+  it('sem aparelhos, diz "Nenhum aparelho confiável."; com o prazo zero, que o código é pedido sempre', async () => {
+    abrir({ servidor: comAparelhos([], { dias: 0, origem: { tipo: 'organizacao' } }) });
+    const parte = await parteDosAparelhos();
+    expect(await within(parte).findByText('O código é pedido em toda entrada.')).toBeTruthy();
+    expect(within(parte).getByText('Nenhum aparelho confiável.')).toBeTruthy();
+  });
+
+  it('a falha ao esquecer aparece, e o aparelho continua na lista', async () => {
+    abrir({
+      servidor: {
+        ...comAparelhos(),
+        [`DELETE /api/conta/aparelhos/${NOTEBOOK.id}`]: [erroDoServidor],
+      },
+    });
+    const notebook = await itemDoAparelho('Edge no Windows');
+    fireEvent.click(within(notebook).getByRole('button', { name: 'Esquecer' }));
+    expect(
+      await screen.findByText(
+        'Não foi possível esquecer o aparelho. Informe à TI o código R7K2-9QXM.',
+      ),
+    ).toBeTruthy();
+    expect(within(await parteDosAparelhos()).getByText('Edge no Windows')).toBeTruthy();
+  });
+
+  it('sem a verificação em dois passos, a parte não aparece', async () => {
+    abrir({
+      servidor: {
+        'GET /api/conta': [
+          conta({
+            ...CONTA,
+            doisPassos: { ...CONTA.doisPassos, situacao: 'desativada', exigida: false },
+          }),
+        ],
+      },
+    });
+    await screen.findByRole('region', { name: 'Dados da conta' });
+    expect(screen.queryByRole('region', { name: 'Aparelhos confiáveis' })).toBeNull();
+    expect(caminhos()).not.toContain('GET /api/conta/aparelhos');
   });
 });
 

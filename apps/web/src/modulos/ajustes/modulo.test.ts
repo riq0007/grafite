@@ -66,6 +66,7 @@ describe('busca dos Ajustes', () => {
       ['Trocar senha', '/ajustes/conta', 'senha'],
       ['Verificação em dois passos', '/ajustes/conta', 'dois-passos'],
       ['Códigos de recuperação', '/ajustes/conta', 'codigos-de-recuperacao'],
+      ['Aparelhos confiáveis', '/ajustes/conta', 'aparelhos-confiaveis'],
       ['Sessões', '/ajustes/conta', 'sessoes'],
     ]);
   });

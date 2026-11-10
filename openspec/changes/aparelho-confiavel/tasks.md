@@ -18,7 +18,7 @@
 ## 4. As telas
 
 - [x] 4.1 Escrever primeiro a história e os testes e depois a caixa "Confiar neste aparelho" na tela de entrada (decisão 6). Verificar: passam "Caixa do aparelho confiável", "Prazo zero" e "Código de recuperação sem a caixa", sem violação de acessibilidade.
-- [ ] 4.2 Escrever primeiro os testes e depois a parte "Aparelhos confiáveis" da seção Conta, com a entrada na busca. Verificar: os testes passam com "Aparelhos confiáveis nos Ajustes", "Esquecer o notebook" e "Aparelhos confiáveis pela busca".
+- [x] 4.2 Escrever primeiro os testes e depois a parte "Aparelhos confiáveis" da seção Conta, com a entrada na busca. Verificar: os testes passam com "Aparelhos confiáveis nos Ajustes", "Esquecer o notebook" e "Aparelhos confiáveis pela busca".
 - [ ] 4.3 Escrever primeiro os testes e depois o prazo da organização na tela dos perfis e o campo do prazo no perfil. Verificar: os testes passam com "Prazo da organização", "Perfil mais exigente" e "Quem só vê os acessos".
 - [ ] 4.4 Escrever primeiro os testes e depois os aparelhos e o prazo na conta de outra pessoa. Verificar: os testes passam com "Notebook roubado", "Prazo de uma conta" e "De onde vem o prazo".
 

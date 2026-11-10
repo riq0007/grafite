@@ -2,7 +2,7 @@
 // a senha, a verificação em dois passos e as sessões. Ela não guarda preferências: cada ação tem o
 // seu botão, e não há "Restaurar padrões".
 import type { components } from '@grafite/api-client';
-import { avaliarSenha } from '@grafite/domain';
+import { avaliarSenha, textoDosDias } from '@grafite/domain';
 import {
   Avatar,
   avisar,
@@ -68,6 +68,7 @@ const SEM_SERVIDOR = 'Sem conexão com o servidor. A sua conta aparece quando a 
  */
 const CHAVE_DA_CONTA = ['conta'] as const;
 const CHAVE_DAS_SESSOES = ['conta', 'sessoes'] as const;
+const CHAVE_DOS_APARELHOS = ['conta', 'aparelhos'] as const;
 
 /**
  * Lê da API ao aparecer, quando a pessoa pede de novo e quando um evento invalida a consulta. Na
@@ -161,6 +162,11 @@ function ContaDaSessao() {
           aoMudar={(doisPassos) => atualizar((anterior) => ({ ...anterior, doisPassos }))}
         />
       </Parte>
+      {conta.doisPassos.situacao === 'ativa' && (
+        <Parte titulo="Aparelhos confiáveis" foco="aparelhos-confiaveis">
+          <AparelhosConfiaveis />
+        </Parte>
+      )}
       <Parte titulo="Sessões" foco="sessoes">
         <Sessoes />
       </Parte>
@@ -330,7 +336,7 @@ function TrocaDaSenha({ usuario }: { usuario: string }) {
       <MensagemDoPasso texto={falha} chave={tentativa} />
       {trocada && (
         <p role="status" className={estilos.informacao}>
-          Senha trocada. As outras sessões foram encerradas.
+          Senha trocada. As outras sessões foram encerradas e os aparelhos confiáveis, esquecidos.
         </p>
       )}
       <div>
@@ -706,6 +712,153 @@ function Sessoes() {
             }}
           >
             Encerrar as outras sessões
+          </Botao>
+        </div>
+      )}
+    </>
+  );
+}
+
+type AparelhosDaConta = components['schemas']['AparelhosDaConta'];
+
+/** O prazo que vale para a conta, em texto, como a parte o diz acima da lista. */
+const textoDoPrazoDaConta = (dias: number) =>
+  dias === 0
+    ? 'O código é pedido em toda entrada.'
+    : `O código é pedido de novo a cada ${textoDosDias(dias)} em cada aparelho confiável.`;
+
+/**
+ * Os aparelhos confiáveis da conta (spec ajustes-do-sistema, "Seção Conta"; change
+ * aparelho-confiavel, design, decisão 6): o prazo que vale, em texto, e cada aparelho com desde
+ * quando é confiável, o último uso e até quando vale, com "Este aparelho" no navegador atual,
+ * "Esquecer" em cada um e "Esquecer todos".
+ */
+function AparelhosConfiaveis() {
+  const api = useApi();
+  const { formatarHorario } = useDataHora();
+  const lerAparelhos = useCallback(
+    () => pedir(() => api.GET('/conta/aparelhos'), 'carregar os aparelhos confiáveis'),
+    [api],
+  );
+  const { leitura, tentarDeNovo, atualizar } = useLeitura(CHAVE_DOS_APARELHOS, lerAparelhos);
+  useFocoQuandoAparecer(leitura.tipo === 'pronta', 'aparelhos-confiaveis');
+  /** O aparelho que está sendo esquecido, ou "todos". */
+  const [esquecendo, definirEsquecendo] = useState<string | null>(null);
+  const [falha, definirFalha] = useState<string | null>(null);
+  const [tentativa, definirTentativa] = useState(0);
+  const [aviso, definirAviso] = useState<string | null>(null);
+  const idDoTitulo = useId();
+
+  if (leitura.tipo === 'carregando') {
+    return (
+      <p role="status" className={estilos.informacao}>
+        Carregando os aparelhos confiáveis…
+      </p>
+    );
+  }
+  if (leitura.tipo === 'erro') {
+    return (
+      <div className={estilos.falha}>
+        <p role="alert" className={estilos.informacao}>
+          {leitura.erro}
+        </p>
+        <div>
+          <Botao onPress={() => void tentarDeNovo()}>Tentar de novo</Botao>
+        </div>
+      </div>
+    );
+  }
+
+  async function esquecer(alvo: string, fazer: () => ReturnType<typeof pedir<unknown>>) {
+    definirEsquecendo(alvo);
+    definirFalha(null);
+    definirAviso(null);
+    const resultado = await fazer();
+    definirEsquecendo(null);
+    if ('erro' in resultado) {
+      definirFalha(resultado.erro);
+      definirTentativa((anterior) => anterior + 1);
+      return false;
+    }
+    return true;
+  }
+
+  const { prazo, aparelhos }: AparelhosDaConta = leitura.dados;
+  return (
+    <>
+      <p className={estilos.informacao}>{textoDoPrazoDaConta(prazo.dias)}</p>
+      {aparelhos.length === 0 ? (
+        <p className={estilos.informacao}>Nenhum aparelho confiável.</p>
+      ) : (
+        <ul aria-label="Aparelhos confiáveis" className={estilos.sessoes}>
+          {aparelhos.map((aparelho) => (
+            <li key={aparelho.id} className={estilos.sessao}>
+              <p className={estilos.cabecalhoDaSessao}>
+                <strong id={`${idDoTitulo}-${aparelho.id}`}>{aparelho.dispositivo}</strong>
+                {aparelho.esteAparelho && <span className={estilos.marca}>Este aparelho</span>}
+              </p>
+              <ListaDeDados
+                itens={[
+                  {
+                    rotulo: 'Confiável desde',
+                    valor: formatarHorario(new Date(aparelho.criadoEm)),
+                  },
+                  { rotulo: 'Último uso', valor: formatarHorario(new Date(aparelho.usadoEm)) },
+                  { rotulo: 'Vale até', valor: formatarHorario(new Date(aparelho.valeAte)) },
+                ]}
+              />
+              <div>
+                <Botao
+                  aria-describedby={`${idDoTitulo}-${aparelho.id}`}
+                  carregando={esquecendo === aparelho.id}
+                  rotuloCarregando="Esquecendo"
+                  onPress={async () => {
+                    const esqueceu = await esquecer(aparelho.id, () =>
+                      pedir(
+                        () =>
+                          api.DELETE('/conta/aparelhos/{id}', {
+                            params: { path: { id: aparelho.id } },
+                          }),
+                        'esquecer o aparelho',
+                      ),
+                    );
+                    if (!esqueceu) return;
+                    atualizar((atuais) => ({
+                      ...atuais,
+                      aparelhos: atuais.aparelhos.filter((outro) => outro.id !== aparelho.id),
+                    }));
+                    definirAviso('Aparelho esquecido.');
+                  }}
+                >
+                  Esquecer
+                </Botao>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <MensagemDoPasso texto={falha} chave={tentativa} />
+      {aviso && (
+        <p role="status" className={estilos.informacao}>
+          {aviso}
+        </p>
+      )}
+      {aparelhos.length > 0 && (
+        <div>
+          <Botao
+            nivel="destrutivo"
+            carregando={esquecendo === 'todos'}
+            rotuloCarregando="Esquecendo"
+            onPress={async () => {
+              const esqueceu = await esquecer('todos', () =>
+                pedir(() => api.DELETE('/conta/aparelhos'), 'esquecer os aparelhos'),
+              );
+              if (!esqueceu) return;
+              atualizar((atuais) => ({ ...atuais, aparelhos: [] }));
+              definirAviso('Aparelhos esquecidos.');
+            }}
+          >
+            Esquecer todos
           </Botao>
         </div>
       )}
