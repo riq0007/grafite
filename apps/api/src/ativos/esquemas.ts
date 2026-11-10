@@ -7,6 +7,7 @@ import {
   ORIGENS_DO_VALOR,
   SITUACOES_DA_DISPONIBILIDADE,
   SITUACOES_DO_CONTROL_ID,
+  TIPOS_DE_SUPRIMENTO,
   USOS_DO_ATIVO,
 } from '@grafite/domain';
 import { z } from 'zod';
@@ -161,6 +162,50 @@ export const SerieDosSuprimentos = z
     ),
   })
   .meta({ id: 'SerieDosSuprimentos' });
+
+/**
+ * O recorte das impressoras de menor nível (spec tela-inicial, "Suprimentos que acabam primeiro";
+ * change opcoes-dos-blocos-do-inicio, design, decisão 5).
+ */
+export const FiltrosDosMenoresSuprimentos = z.object({
+  /** Os tipos de suprimento, separados por vírgula; sem eles, todos. */
+  tipos: z.string().max(100, { error: 'Escolha toner, cilindro, fusor ou outro.' }).optional(),
+  /** Os locais, com os de dentro, separados por vírgula; sem eles, todos os que a conta vê. */
+  locais: z.string().max(2_000, { error: 'Escolha até 50 locais.' }).optional(),
+  /** Quantas impressoras a resposta traz. */
+  limite: z.coerce
+    .number({ error: 'Use de 3 a 12 impressoras.' })
+    .int({ error: 'Use de 3 a 12 impressoras.' })
+    .min(3, { error: 'Use de 3 a 12 impressoras.' })
+    .max(12, { error: 'Use de 3 a 12 impressoras.' })
+    .default(6),
+  /** Só os suprimentos até este nível, em %. O 100, de fábrica, não corta nada. */
+  nivel: z.coerce
+    .number({ error: 'Use de 5 a 100.' })
+    .int({ error: 'Use de 5 a 100.' })
+    .min(5, { error: 'Use de 5 a 100.' })
+    .max(100, { error: 'Use de 5 a 100.' })
+    .default(100),
+});
+
+/** As impressoras de menor nível, da menor para a maior, cada uma com o suprimento escolhido. */
+export const MenoresSuprimentos = z
+  .object({
+    itens: z.array(
+      z.object({
+        ativo: z.object({ id: z.uuid(), rotulo: z.string() }),
+        suprimento: z.object({
+          item: z.string(),
+          descricao: z.string(),
+          tipo: z.enum(TIPOS_DE_SUPRIMENTO),
+          /** O nível, em %. */
+          nivel: z.number(),
+          momento: z.string(),
+        }),
+      }),
+    ),
+  })
+  .meta({ id: 'MenoresSuprimentos' });
 
 /** Na lista, o que as colunas Suprimentos e Total de páginas mostram. */
 export const SuprimentosNaLista = z

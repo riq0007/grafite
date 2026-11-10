@@ -335,6 +335,7 @@ export {
   paginasEmPretoEBranco,
   ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
   type SeveridadeDaCondicao,
+  TIPOS_DE_SUPRIMENTO,
   type TintaDoSuprimento,
   type TipoDeSuprimento,
   tintaDoSuprimento,

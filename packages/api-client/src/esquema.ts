@@ -10287,6 +10287,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ativos/suprimentos/menores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As impressoras de menor nível: o suprimento de menor nível de cada uma, entre os tipos pedidos */
+        get: {
+            parameters: {
+                query?: {
+                    tipos?: string;
+                    locais?: string;
+                    limite?: number;
+                    nivel?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MenoresSuprimentos"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ativos/{id}/suprimentos/serie": {
         parameters: {
             query?: never;
@@ -30069,6 +30155,23 @@ export interface components {
                 }[];
             }[];
         };
+        MenoresSuprimentosInput: {
+            itens: {
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                };
+                suprimento: {
+                    item: string;
+                    descricao: string;
+                    /** @enum {string} */
+                    tipo: "toner" | "cilindro" | "fusor" | "outro";
+                    nivel: number;
+                    momento: string;
+                };
+            }[];
+        };
         SuprimentosNaListaInput: {
             menor: {
                 nivel: number;
@@ -34284,6 +34387,23 @@ export interface components {
                     momento: string;
                     percentual: number;
                 }[];
+            }[];
+        };
+        MenoresSuprimentos: {
+            itens: {
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                };
+                suprimento: {
+                    item: string;
+                    descricao: string;
+                    /** @enum {string} */
+                    tipo: "toner" | "cilindro" | "fusor" | "outro";
+                    nivel: number;
+                    momento: string;
+                };
             }[];
         };
         SuprimentosNaLista: {

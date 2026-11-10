@@ -5494,6 +5494,76 @@
           "itens"
         ]
       },
+      "MenoresSuprimentosInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ativo": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "rotulo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "rotulo"
+                  ]
+                },
+                "suprimento": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "descricao": {
+                      "type": "string"
+                    },
+                    "tipo": {
+                      "type": "string",
+                      "enum": [
+                        "toner",
+                        "cilindro",
+                        "fusor",
+                        "outro"
+                      ]
+                    },
+                    "nivel": {
+                      "type": "number"
+                    },
+                    "momento": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "descricao",
+                    "tipo",
+                    "nivel",
+                    "momento"
+                  ]
+                }
+              },
+              "required": [
+                "ativo",
+                "suprimento"
+              ]
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ]
+      },
       "SuprimentosNaListaInput": {
         "type": "object",
         "properties": {
@@ -26678,6 +26748,80 @@
                 "item",
                 "descricao",
                 "pontos"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ],
+        "additionalProperties": false
+      },
+      "MenoresSuprimentos": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ativo": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "rotulo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "rotulo"
+                  ],
+                  "additionalProperties": false
+                },
+                "suprimento": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "descricao": {
+                      "type": "string"
+                    },
+                    "tipo": {
+                      "type": "string",
+                      "enum": [
+                        "toner",
+                        "cilindro",
+                        "fusor",
+                        "outro"
+                      ]
+                    },
+                    "nivel": {
+                      "type": "number"
+                    },
+                    "momento": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "descricao",
+                    "tipo",
+                    "nivel",
+                    "momento"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "ativo",
+                "suprimento"
               ],
               "additionalProperties": false
             }
@@ -53242,6 +53386,115 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ativos/suprimentos/menores": {
+      "get": {
+        "summary": "As impressoras de menor nível: o suprimento de menor nível de cada uma, entre os tipos pedidos",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "tipos",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "locais",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 6,
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "in": "query",
+            "name": "limite",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "nivel",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenoresSuprimentos"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {

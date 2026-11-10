@@ -28,7 +28,10 @@ export function nivelDoSuprimento(capacidade: number, nivel: number): NivelDoSup
   return { tipo: 'medido', percentual: Math.round((nivel / capacidade) * 100) };
 }
 
-export type TipoDeSuprimento = 'toner' | 'cilindro' | 'fusor' | 'outro';
+/** Os tipos de suprimento, na ordem em que as telas os oferecem. */
+export const TIPOS_DE_SUPRIMENTO = ['toner', 'cilindro', 'fusor', 'outro'] as const;
+
+export type TipoDeSuprimento = (typeof TIPOS_DE_SUPRIMENTO)[number];
 
 export const ROTULOS_DOS_TIPOS_DE_SUPRIMENTO: Record<TipoDeSuprimento, string> = {
   toner: 'Toner',
