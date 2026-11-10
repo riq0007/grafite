@@ -83,6 +83,23 @@
   text-underline-offset: 2px;
 }
 
+/* O aviso do painel que pede a entrada, entre o topo do bloco e o conteúdo. */
+.avisoDoBloco {
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}
+
+/* O painel que recusa ser embutido: o motivo no lugar do conteúdo, no meio do bloco. */
+.recusa {
+  flex: 1;
+  align-content: center;
+  min-height: 0;
+  background: var(--cor-superficie);
+}
+
 /* O conteúdo do painel ocupa o resto do bloco, num fundo neutro enquanto carrega. */
 .conteudo {
   flex: 1;

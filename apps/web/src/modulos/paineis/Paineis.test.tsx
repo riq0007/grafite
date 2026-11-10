@@ -8,6 +8,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../App.tsx';
 import { criarClienteDeConsultas } from '../../api/consultas.ts';
+import { type CanalDeEventos, criarCanalDeEventos } from '../../eventos/canal.ts';
 import { criarRoteador } from '../../rotas/arvore.ts';
 import type { PermissaoDaSessao } from '../../sessao/useAcesso.ts';
 import { noCelular, noComputador } from '../../teste/postura.ts';
@@ -56,7 +57,12 @@ const TRES = [
   painel(3),
 ];
 
-function abrir(endereco: string, servidor: ServidorDeTeste, permissoes: PermissaoDaSessao[]) {
+function abrir(
+  endereco: string,
+  servidor: ServidorDeTeste,
+  permissoes: PermissaoDaSessao[],
+  canal: CanalDeEventos = criarCanalDeEventos(),
+) {
   noComputador();
   const roteador = criarRoteador(createMemoryHistory({ initialEntries: [endereco] }));
   render(
@@ -67,6 +73,7 @@ function abrir(endereco: string, servidor: ServidorDeTeste, permissoes: Permissa
         ...servidor,
       })}
       consultas={criarClienteDeConsultas({ esperaEntreTentativas: 0 })}
+      canal={canal}
     />,
   );
   return roteador;
@@ -137,6 +144,103 @@ describe('o módulo Painéis', () => {
     const grade = segundo.parentElement as HTMLElement;
     expect(grade.style.gridTemplateColumns).toBe('repeat(1, minmax(0, 1fr))');
     expect(grade.style.gridTemplateRows).toMatch(/^repeat\(3, /);
+  });
+
+  // Spec modulo-paineis, "Grade adaptativa" (change diagnostico-dos-paineis, design, decisão 4).
+  describe('o bloco pela exibição', () => {
+    const NO_GRAFANA = 'https://grafana.empresa.local/d/linha2';
+    const RECUSA = 'Este endereço recusa ser mostrado dentro de outra página.';
+    const linha2 = (exibicao: Painel['exibicao']) =>
+      painel(1, { nome: 'Linha 2', endereco: NO_GRAFANA, exibicao });
+    const QUE_RECUSA = linha2({
+      situacao: 'recusa',
+      motivo: 'A ferramenta manda X-Frame-Options: DENY.',
+    });
+
+    it('Painel que recusa ser embutido: o motivo e o que liberar, sem o quadro em branco', async () => {
+      abrir('/paineis', comLista([QUE_RECUSA, painel(2)]), naOrganizacao('paineis.ver'));
+      const bloco = await screen.findByRole('region', { name: 'Linha 2' });
+      expect(within(bloco).getByText('No ar')).toBeTruthy();
+      expect(within(bloco).getByText('Recusa ser embutido')).toBeTruthy();
+      expect(within(bloco).getByText(RECUSA)).toBeTruthy();
+      expect(
+        within(bloco).getByText(
+          'A ferramenta manda X-Frame-Options: DENY. Libere o endereço do Grafite na ferramenta, ou use “Abrir em outra aba”.',
+        ),
+      ).toBeTruthy();
+      expect(
+        within(bloco).getByRole('link', { name: 'Abrir em outra aba' }).getAttribute('href'),
+      ).toBe(NO_GRAFANA);
+      // O endereço não é carregado: o navegador só mostraria o quadro em branco.
+      expect(within(bloco).queryByTitle('Linha 2')).toBeNull();
+      expect(screen.getByTitle('Painel 2')).toBeTruthy();
+    });
+
+    it('Painel que pede a entrada: o aviso e, abaixo dele, o conteúdo', async () => {
+      const chamados = painel(1, {
+        nome: 'Chamados',
+        endereco: 'https://chamados.empresa.local',
+        exibicao: { situacao: 'pede-entrada', motivo: 'Respondeu 401.' },
+      });
+      abrir('/paineis', comLista([chamados]), naOrganizacao('paineis.ver'));
+      const bloco = await screen.findByRole('region', { name: 'Chamados' });
+      expect(within(bloco).getByText('Pede a entrada')).toBeTruthy();
+      const aviso = within(bloco).getByText(
+        'Este painel pede a entrada. Se a tela de entrada voltar depois de entrar, use “Abrir em outra aba” ou libere a visualização sem entrada na ferramenta.',
+      );
+      const quadro = within(bloco).getByTitle('Chamados');
+      expect(quadro.getAttribute('src')).toBe('https://chamados.empresa.local');
+      expect(aviso.compareDocumentPosition(quadro) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('o painel que aparece na grade e o sem exibição mostram o conteúdo, sem anunciar nada', async () => {
+      const semExibicao = painel(2, {
+        endereco: 'https://intranet.exemplo/painel',
+        exibicao: null,
+      });
+      abrir(
+        '/paineis',
+        comLista([linha2({ situacao: 'aparece', motivo: null }), semExibicao]),
+        naOrganizacao('paineis.ver'),
+      );
+      const bloco = await screen.findByRole('region', { name: 'Linha 2' });
+      expect(within(bloco).getByTitle('Linha 2').getAttribute('src')).toBe(NO_GRAFANA);
+      expect(screen.getByTitle('Painel 2').getAttribute('src')).toBe(
+        'https://intranet.exemplo/painel',
+      );
+      // "Aparece na grade" é uma leitura da resposta, e não uma prova: o bloco não a anuncia.
+      expect(screen.queryByText('Aparece na grade')).toBeNull();
+    });
+
+    it('Liberado com a grade aberta: o bloco passa a carregar o endereço, sem recarregar os outros', async () => {
+      const canal = criarCanalDeEventos();
+      let lista = [QUE_RECUSA, painel(2)];
+      abrir(
+        '/paineis',
+        {
+          'GET /api/paineis': () =>
+            Response.json({ paineis: lista, permite: { administrar: false } }),
+        },
+        naOrganizacao('paineis.ver'),
+        canal,
+      );
+      await screen.findByText(RECUSA);
+      const doOutro = screen.getByTitle('Painel 2');
+
+      lista = [linha2({ situacao: 'aparece', motivo: null }), painel(2)];
+      act(() => {
+        canal.publicar({
+          id: 'e1',
+          tipo: 'paineis.mudaram',
+          momento: '2026-11-10T12:00:00.000Z',
+          alvo: null,
+        });
+      });
+      expect((await screen.findByTitle('Linha 2')).getAttribute('src')).toBe(NO_GRAFANA);
+      expect(screen.queryByText(RECUSA)).toBeNull();
+      // O quadro do outro painel é o mesmo elemento: não foi recarregado.
+      expect(screen.getByTitle('Painel 2')).toBe(doOutro);
+    });
   });
 
   it('Pelo mapa: o endereço abre o painel expandido, e Esc volta à grade', async () => {
