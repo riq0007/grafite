@@ -42,7 +42,7 @@ A tabela `paineis` ganha `exibicao`, texto com os três valores, e `motivo_da_ex
 
 ### 3. A verificação
 
-O `verificarEndereco` passa a devolver, com o código, os dois cabeçalhos e o endereço final (`resposta.url`). O `verificarPaineis` lê os endereços de acesso da organização uma vez por rodada, calcula a exibição do painel no ar e grava as duas colunas. O evento `paineis.mudaram` sai quando muda a situação, o motivo ou a exibição.
+O `verificarEndereco` passa a devolver, com o código, os dois cabeçalhos e o endereço final. Para saber onde a resposta terminou, ele segue os redirecionamentos por conta própria, até 3, como a spec já pedia: o `fetch` seguia os 20 do padrão dele. A resposta depois do terceiro vale como a do painel, mesmo que redirecione de novo, e o prazo de 5 s é um só, do pedido com os redirecionamentos. O `verificarPaineis` lê os endereços de acesso da organização uma vez por rodada, calcula a exibição do painel no ar e grava as duas colunas. O evento `paineis.mudaram` sai quando muda a situação, o motivo ou a exibição.
 
 O "Verificar agora" devolve a exibição com a situação, e o Cadastro monta o retorno da spec.
 

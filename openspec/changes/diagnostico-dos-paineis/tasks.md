@@ -5,7 +5,7 @@
 
 ## 2. A API
 
-- [ ] 2.1 Escrever primeiro os testes de integração e depois a verificação com os cabeçalhos e o endereço final (decisão 3). Verificar: os testes passam, contra um servidor HTTP local, com "Grafana de fábrica", "Ferramenta liberada depois" (o evento sai) e "Painel fora do ar" (sem exibição), e a verificação que não muda nada não grava evento.
+- [x] 2.1 Escrever primeiro os testes de integração e depois a verificação com os cabeçalhos e o endereço final (decisão 3). Verificar: os testes passam, contra um servidor HTTP local, com "Grafana de fábrica", "Ferramenta liberada depois" (o evento sai) e "Painel fora do ar" (sem exibição), e a verificação que não muda nada não grava evento.
 - [ ] 2.2 Devolver a exibição na lista, no cadastro e no "Verificar agora", e gerar o contrato. Verificar: o `pnpm contrato:verificar` passa.
 
 ## 3. A tela
