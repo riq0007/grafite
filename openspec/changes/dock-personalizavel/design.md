@@ -68,6 +68,10 @@ O ajuste entra na busca como "Módulos do dock", com as palavras "ordem", "organ
 
 A web calcula a `prioridadeNoCelular` antes de entregar os módulos à casca: com uma lista que vale, os módulos do dock recebem 1, 2, 3… na ordem dela, os Ajustes vêm depois, e os tirados recebem `'mais'`. O módulo que já declara `'mais'` continua assim. Sem lista, nada muda. A `BarraDeAbas` não muda.
 
+No app, a Gestão de ativos, a Operação, o Mapa, as Salas, os Painéis, o Cofre e a Administração declaram `'mais'`: no celular, a ordem escolhida muda as abas entre o Início, os Ativos e os Alertas, e os outros continuam em "Mais".
+
+**Alternativa descartada:** a posição na lista levar à aba também o módulo que declara `'mais'`. A lista gravada traz sempre todos os módulos, e não só os que a conta moveu: quem trocasse dois módulos de lugar no computador mudaria as quatro abas do celular para os quatro primeiros da lista, e Ajustes sairia das abas, sem ter pedido isso.
+
 ## Risks / Trade-offs
 
 - **[A conta tira do dock um módulo e não o acha mais]** → o Mais aparece sempre que há módulo tirado, a busca continua achando, e "Restaurar padrões" devolve todos.
