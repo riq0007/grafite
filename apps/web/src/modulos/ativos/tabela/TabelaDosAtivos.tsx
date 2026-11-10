@@ -341,7 +341,8 @@ export function TabelaDosAtivos() {
     [definicao, porChave],
   );
   // Na tabela, só vale a largura que a visão guardou: a coluna sem ela divide a sobra (change
-  // redesenho-da-interface, design, decisão 2).
+  // redesenho-da-interface, design, decisão 2), sem ficar mais estreita que a largura que o conteúdo
+  // dela pede, como nas colunas da coleta (change celulas-numa-linha, design, decisão 4).
   const larguraDaVisao = useMemo(
     () => new Map((definicao?.colunas ?? []).map((daVisao) => [daVisao.chave, daVisao.largura])),
     [definicao],
@@ -759,6 +760,7 @@ export function TabelaDosAtivos() {
                   principal={coluna.principal}
                   ordenavel={coluna.ordena}
                   largura={larguraDaVisao.get(coluna.chave)}
+                  larguraMinima={coluna.larguraMinima}
                   alinhamento={coluna.alinhamento}
                   menu={{
                     aoFiltrar: filtravel(coluna) ? () => abrirOsFiltros(coluna) : undefined,

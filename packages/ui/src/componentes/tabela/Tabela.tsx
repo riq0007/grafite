@@ -789,6 +789,11 @@ export interface PropsDaColuna
   rotuloOculto?: boolean;
   /** A largura em px, na tabela redimensionável; sem ela, a coluna divide a sobra da área. */
   largura?: number;
+  /**
+   * A largura que o conteúdo da coluna pede, em px, como a da situação com a idade da leitura: na
+   * divisão da sobra, a coluna não fica mais estreita que ela. Com a largura dada, não vale.
+   */
+  larguraMinima?: number;
   /** Os números ficam à direita. A espécie número e a ações já põem à direita. */
   alinhamento?: AlinhamentoDaColuna;
   /** O que a coluna mostra; a célula segue. Sem ela, texto. */
@@ -924,6 +929,7 @@ export function Coluna({
   principal = false,
   rotuloOculto = false,
   largura,
+  larguraMinima,
   alinhamento = 'inicio',
   especie = 'texto',
   menu,
@@ -932,6 +938,9 @@ export function Coluna({
   const { emCurso } = useContext(LargurasDaTabelaContexto);
   const id = resto.id === undefined ? undefined : String(resto.id);
   const dada = (id === undefined ? undefined : emCurso?.get(id)) ?? largura;
+  // Na divisão da sobra, a coluna fica com o mínimo dela ou com a largura que o conteúdo pede; com
+  // a largura dada, quem arrasta a leva até o limite da tabela.
+  const minimaNaDivisao = Math.max(MINIMA_NA_DIVISAO, larguraMinima ?? 0);
   // As larguras só valem na tabela redimensionável; a coluna sem rótulo à vista, a da miniatura,
   // fica na largura dada.
   return (
@@ -939,7 +948,7 @@ export function Coluna({
       {...resto}
       width={dada ?? (principal ? FRACAO.principal : FRACAO.outra)}
       minWidth={
-        rotuloOculto ? largura : dada === undefined ? MINIMA_NA_DIVISAO : LIMITES_DA_LARGURA.minima
+        rotuloOculto ? largura : dada === undefined ? minimaNaDivisao : LIMITES_DA_LARGURA.minima
       }
       maxWidth={rotuloOculto ? largura : LIMITES_DA_LARGURA.maxima}
       allowsSorting={ordenavel}

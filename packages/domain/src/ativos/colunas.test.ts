@@ -476,4 +476,21 @@ describe('as larguras de fábrica das colunas da coleta', () => {
       'coleta.control-id': 280,
     });
   });
+
+  // A tabela divide a sobra entre as colunas sem largura guardada (spec componentes-base, "Tabela
+  // na largura toda"): a coluna da coleta declara a largura que o conteúdo pede, para a divisão não
+  // a deixar mais estreita.
+  it('cada coluna da coleta declara a largura de fábrica como a que o conteúdo pede', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const daColeta = colunas.filter(({ chave }) => chave.startsWith('coleta.'));
+    expect(daColeta).toHaveLength(4);
+    for (const coluna of daColeta) expect(coluna.larguraMinima).toBe(coluna.largura);
+  });
+
+  it('as outras colunas não declaram largura do conteúdo: seguem o mínimo da divisão', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const outras = colunas.filter(({ chave }) => !chave.startsWith('coleta.'));
+    expect(outras.length).toBeGreaterThan(0);
+    for (const coluna of outras) expect(coluna.larguraMinima).toBeUndefined();
+  });
 });

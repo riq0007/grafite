@@ -10,6 +10,7 @@
 - [x] 2.1 Escrever primeiro os testes e depois o `ValorComposto` nas quatro células da coleta dos ativos, com o "Desatualizado" no fixo (decisão 2). Verificar: os testes passam com "Disponibilidade numa coluna estreita", "Suprimentos numa coluna estreita" e "Leitura desatualizada", e os da ficha continuam passando com a quebra.
 - [x] 2.2 Escrever primeiro os testes e depois o `ValorComposto` na situação dos alertas e na validade do cofre. Verificar: os testes das duas tabelas passam com a célula numa linha.
 - [x] 2.3 Escrever primeiro o teste e depois as larguras de fábrica das colunas da coleta (decisão 4). Verificar: o teste do domínio passa com as larguras novas, e o teste das visões mostra que a largura igual à de fábrica não marca a visão como personalizada.
+- [x] 2.4 Escrever primeiro a história, o teste do domínio e o ponta a ponta e depois a largura que o conteúdo pede na divisão da sobra, que a conferência da 3.2 mostrou faltar: as colunas da coleta dividiam a sobra com 212 px cada (decisão 4). Verificar: passam "Largura que o conteúdo pede", o teste do domínio com a `larguraMinima` nas quatro colunas da coleta e o ponta a ponta com a "Disponibilidade" entre dez colunas.
 
 ## 3. Fechamento
 

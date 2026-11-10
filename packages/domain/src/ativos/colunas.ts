@@ -148,6 +148,7 @@ const coletada = (coluna: ColunaColetada, grupo: string): ColunaDosAtivos =>
         alinhamento: 'fim',
         mono: true,
         largura: coluna.largura,
+        larguraMinima: coluna.largura,
         origem: 'capacidade',
         campo: { tipo: 'inteiro', configuracao: {} },
         ...(coluna.unidade ? { unidade: coluna.unidade } : {}),
@@ -167,6 +168,7 @@ const daSituacao = (
   alinhamento: 'inicio',
   mono: false,
   largura: coluna.largura,
+  larguraMinima: coluna.largura,
   origem: 'capacidade',
   campo: {
     tipo: 'lista',

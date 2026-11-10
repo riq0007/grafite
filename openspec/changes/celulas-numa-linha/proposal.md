@@ -12,7 +12,8 @@ Esta change segue o subprojeto D1 · Linguagem visual v3 da spec mestre, nas tab
 - **A linha tem sempre uma linha:** o conteúdo de uma célula não quebra para baixo, na tabela base e na que desenha só as linhas visíveis. O que não cabe termina cortado.
 - **O corte na ordem certa:** na célula com a situação e um texto, o rótulo de situação fica inteiro, e o texto ao lado é o que encolhe, com reticências.
 - **O valor inteiro no resumo da linha:** a coluna cujo conteúdo não coube na célula entra no resumo da linha, com as que estão fora da tela.
-- **As larguras de fábrica:** as colunas da coleta nascem com a largura que comporta a situação e a idade.
+- **As larguras de fábrica:** as colunas da coleta nascem com, pelo menos, a largura que comporta a situação e a idade da leitura em dia, também quando a tabela divide a sobra entre as colunas.
+- **O resumo com o valor inteiro:** no resumo da linha, o valor que passa da largura continua na linha de baixo, em vez de terminar em reticências.
 - **A ficha não muda:** fora das tabelas, as mesmas partes continuam quebrando a linha.
 
 ## Capabilities
@@ -23,12 +24,12 @@ Nenhuma.
 
 ### Modified Capabilities
 
-- `componentes-base`: a célula numa linha só, com a ordem do corte.
+- `componentes-base`: a célula numa linha só, com a ordem do corte, e a coluna que não fica mais estreita que o conteúdo pede na divisão da sobra.
 - `tabelas-configuraveis`: o resumo da linha com o conteúdo que não coube na célula.
 
 ## Impact
 
-- `packages/ui/src/componentes/tabela`: a regra da célula, o componente do valor composto, o resumo da linha e as histórias.
+- `packages/ui/src/componentes/tabela`: a regra da célula, o componente do valor composto, o resumo da linha, a largura que o conteúdo da coluna pede na divisão da sobra e as histórias.
 - `apps/web/src/modulos/ativos` (disponibilidade, Control iD, suprimentos e páginas), `apps/web/src/modulos/alertas` e `apps/web/src/modulos/cofre`: as células compostas.
-- `packages/domain/src/ativos/colunas.ts`: as larguras de fábrica das colunas da coleta.
+- `packages/domain/src/ativos/colunas.ts` e `packages/domain/src/visoes/visoes.ts`: as larguras de fábrica das colunas da coleta e a largura que o conteúdo pede.
 - As referências da regressão visual das tabelas com essas células, e o mapa.

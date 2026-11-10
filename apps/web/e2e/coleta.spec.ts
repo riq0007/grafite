@@ -168,7 +168,8 @@ test.describe('a disponibilidade na rede', () => {
     });
     for (const ativo of api.ativos) {
       if (ativo.id === IDS_DOS_ATIVOS.daExpedicao) ativo.disponibilidade = leitura('online', 1);
-      if (ativo.id === IDS_DOS_ATIVOS.doRh) ativo.disponibilidade = leitura('offline', 20);
+      // As duas leituras em dia: a do ping com mais de 6 min ganharia o rótulo "Desatualizado".
+      if (ativo.id === IDS_DOS_ATIVOS.doRh) ativo.disponibilidade = leitura('offline', 2);
     }
     const altura = async (texto: string) => (await linha(page, texto).boundingBox())?.height ?? 0;
     /** A altura da célula composta da linha: uma linha de texto cabe na da tabela. */
@@ -177,11 +178,30 @@ test.describe('a disponibilidade na rede', () => {
         .locator('[data-parte="fixo"]')
         .evaluate((fixo) => fixo.parentElement?.getBoundingClientRect().height ?? 0);
 
-    // Na largura de fábrica, a situação e a idade aparecem inteiras.
-    await page.goto('/ativos?visao=fabrica&colunas=ativo.rotulo,coleta.disponibilidade');
+    // Sem largura guardada, a coluna divide a sobra com outras nove e nem assim fica mais estreita
+    // do que o conteúdo pede: a situação e a idade aparecem inteiras, e a tabela rola de lado.
+    const muitas = [
+      'ativo.rotulo',
+      'coleta.disponibilidade',
+      'ativo.tipo',
+      'ativo.modelo',
+      'ativo.situacao',
+      'ativo.local',
+      'ativo.responsavel',
+      'ativo.patrimonio',
+      'ativo.criado-em',
+      'ativo.atualizado-em',
+    ].join(',');
+    await page.goto(`/ativos?visao=fabrica&colunas=${muitas}`);
     await expect(linha(page, 'HP LaserJet M404')).toContainText('Online');
-    const idade = linha(page, 'HP LaserJet M404').locator('[data-parte="resto"]');
-    expect(await idade.evaluate((parte) => parte.scrollWidth <= parte.clientWidth)).toBe(true);
+    const cabecalho = page.getByRole('columnheader', { name: /Disponibilidade/ });
+    expect((await cabecalho.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(210);
+    // Com a folga de 1 px do arredondamento, a mesma com que o resumo decide o que foi cortado.
+    for (const texto of ['HP LaserJet M404', 'Impressora do RH']) {
+      const idade = linha(page, texto).locator('[data-parte="resto"]');
+      const sobra = await idade.evaluate((parte) => parte.scrollWidth - parte.clientWidth);
+      expect(sobra).toBeLessThanOrEqual(1);
+    }
     const deFabrica = await altura('HP LaserJet M404');
     expect(deFabrica).toBeGreaterThan(0);
 
