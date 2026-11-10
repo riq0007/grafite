@@ -2,6 +2,7 @@ import '@grafite/ui/fontes.css';
 import '@grafite/ui/tokens.css';
 import '@grafite/ui/base.css';
 import { registerSW } from 'virtual:pwa-register';
+import { ligarBarraDeRolagem } from '@grafite/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
@@ -15,6 +16,10 @@ import { registrarServiceWorker } from './pwa/versaoNova.ts';
 import { criarRoteador } from './rotas/arvore.ts';
 import { etapaDaSessao } from './sessao/etapa.ts';
 import { criarLojaDaSessao } from './sessao/loja.ts';
+
+// A barra de rolagem própria (spec componentes-base): antes de a casca aparecer, mede a barra do
+// sistema, para valer a dele onde ela é sobreposta, e passa a acompanhar a rolagem.
+ligarBarraDeRolagem(document);
 
 const raiz = document.getElementById('raiz');
 if (raiz) {

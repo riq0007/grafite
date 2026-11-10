@@ -27,7 +27,9 @@ export {
   acompanharRolagem,
   aplicarBarraDoSistema,
   barraDoSistemaSobreposta,
+  ligarBarraDeRolagem,
   TEMPO_DA_MARCA_DE_ROLAGEM,
+  valeABarraDoSistema,
 } from './casca/barraDeRolagem.ts';
 export { Casca, JanelaDeConteudo, type PropsDaCasca, TituloDaJanela } from './casca/Casca.tsx';
 export {

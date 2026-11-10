@@ -6,6 +6,7 @@ import {
   acompanharRolagem,
   aplicarBarraDoSistema,
   barraDoSistemaSobreposta,
+  ligarBarraDeRolagem,
   TEMPO_DA_MARCA_DE_ROLAGEM,
 } from './barraDeRolagem.ts';
 
@@ -152,5 +153,52 @@ describe('aplicarBarraDoSistema', () => {
     comABarraDe(17);
     expect(aplicarBarraDoSistema(document)).toBe(false);
     expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(false);
+  });
+});
+
+// A partida (design, decisões 4 e 6): a web, o painel da operação e o catálogo chamam uma função só.
+describe('ligarBarraDeRolagem', () => {
+  let desligar: () => void = () => {};
+
+  afterEach(() => {
+    desligar();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    document.documentElement.removeAttribute('data-barra-do-sistema');
+    document.body.replaceChildren();
+  });
+
+  const comABarraDe = (largura: number) => {
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(100);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(100 - largura);
+  };
+
+  it('num aparelho de barra sobreposta, marca a raiz: vale a barra do sistema', () => {
+    comABarraDe(0);
+    desligar = ligarBarraDeRolagem(document);
+    expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(true);
+  });
+
+  it('num aparelho de barra que ocupa espaço, a raiz fica sem a marca, e a rolagem é acompanhada', () => {
+    comABarraDe(17);
+    vi.useFakeTimers();
+    desligar = ligarBarraDeRolagem(document);
+    expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(false);
+    const lista = document.createElement('div');
+    document.body.append(lista);
+    lista.dispatchEvent(new Event('scroll'));
+    expect(lista.hasAttribute('data-rolando')).toBe(true);
+    vi.advanceTimersByTime(TEMPO_DA_MARCA_DE_ROLAGEM);
+    expect(lista.hasAttribute('data-rolando')).toBe(false);
+  });
+
+  it('desligada, para de acompanhar a rolagem', () => {
+    comABarraDe(17);
+    desligar = ligarBarraDeRolagem(document);
+    desligar();
+    const lista = document.createElement('div');
+    document.body.append(lista);
+    lista.dispatchEvent(new Event('scroll'));
+    expect(lista.hasAttribute('data-rolando')).toBe(false);
   });
 });

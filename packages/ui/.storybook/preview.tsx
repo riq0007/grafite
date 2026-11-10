@@ -3,10 +3,15 @@ import '../src/tokens/gerado/tokens.css';
 import '../src/base.css';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import type { ViewportMap } from 'storybook/viewport';
+import { ligarBarraDeRolagem } from '../src/casca/barraDeRolagem.ts';
 import { esvaziarOAnunciador } from '../src/teste/anunciador.ts';
 import { destaques } from '../src/tokens/destaques.ts';
 import { densidades } from '../src/tokens/escalas.ts';
 import { temas } from '../src/tokens/temas.ts';
+
+// A barra de rolagem própria (spec componentes-base), como na partida da web: mede a barra do
+// sistema, para valer a dele onde ela é sobreposta, e passa a acompanhar a rolagem.
+ligarBarraDeRolagem(document);
 
 /** Aplica tema, destaque, densidade e raio escolhidos na barra do catálogo. */
 const aparencia: Decorator = (Historia, contexto) => {

@@ -68,3 +68,17 @@ export function aplicarBarraDoSistema(documento: Document): boolean {
   documento.documentElement.toggleAttribute(BARRA_DO_SISTEMA, sobreposta);
   return sobreposta;
 }
+
+/** Se neste aparelho vale a barra de rolagem do sistema, como a partida mediu. */
+export const valeABarraDoSistema = (documento: Document): boolean =>
+  documento.documentElement.hasAttribute(BARRA_DO_SISTEMA);
+
+/**
+ * O que a barra de rolagem própria pede na partida, antes de a tela aparecer: mede a barra do
+ * sistema, marca a raiz onde vale a dele e passa a acompanhar a rolagem. A web, o painel da
+ * operação e o catálogo chamam esta função. Devolve a que para de acompanhar a rolagem.
+ */
+export function ligarBarraDeRolagem(documento: Document): () => void {
+  aplicarBarraDoSistema(documento);
+  return acompanharRolagem(documento);
+}

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type ReactNode, useLayoutEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { navegadorDeTeste } from '../teste/navegadorDeTeste.ts';
-import { acompanharRolagem, TEMPO_DA_MARCA_DE_ROLAGEM } from './barraDeRolagem.ts';
+import { TEMPO_DA_MARCA_DE_ROLAGEM } from './barraDeRolagem.ts';
 
 // A barra de rolagem própria (spec componentes-base, "Barra de rolagem própria"; change
 // barra-de-rolagem-propria, design, decisões 1 a 4 e 6): as regras ficam na `base.css` e valem em
@@ -15,7 +15,11 @@ type Historia = StoryObj;
 /** A largura da barra, em px: o `--esp-3` dos tokens. */
 const LARGURA_DA_BARRA = 12;
 
-/** Os atributos da raiz valem só enquanto a história está na tela, como as preferências do app. */
+/**
+ * Os atributos da raiz valem só enquanto a história está na tela, como as preferências do app. A
+ * marca da barra do sistema, que a partida do catálogo mede, sai durante a história, a não ser na
+ * que a pede: a barra própria aparece também no catálogo aberto num aparelho de barra sobreposta.
+ */
 function NaRaiz({
   atributos,
   children,
@@ -25,11 +29,15 @@ function NaRaiz({
 }) {
   useLayoutEffect(() => {
     const raiz = document.documentElement;
+    const nomes = [...new Set([...Object.keys(atributos), 'data-barra-do-sistema'])];
+    const antes = new Map(nomes.map((nome) => [nome, raiz.getAttribute(nome)]));
+    raiz.removeAttribute('data-barra-do-sistema');
     for (const [nome, valor] of Object.entries(atributos)) raiz.setAttribute(nome, valor);
-    const desfazer = acompanharRolagem(document);
     return () => {
-      desfazer();
-      for (const nome of Object.keys(atributos)) raiz.removeAttribute(nome);
+      for (const [nome, valor] of antes) {
+        if (valor === null) raiz.removeAttribute(nome);
+        else raiz.setAttribute(nome, valor);
+      }
     };
   }, [atributos]);
   return children;
@@ -37,6 +45,7 @@ function NaRaiz({
 
 const AO_ROLAR = { 'data-rolagem': 'ao-rolar' };
 const SEMPRE = { 'data-rolagem': 'sempre' };
+const DO_SISTEMA = { ...SEMPRE, 'data-barra-do-sistema': '' };
 
 /** Uma área com mais conteúdo do que cabe, que recebe o foco do teclado, como a janela. */
 function AreaQueRola({ nome, estilo }: { nome: string; estilo?: React.CSSProperties }) {
@@ -227,7 +236,7 @@ export const SempreVisivel: Historia = {
  */
 export const BarraDoSistema: Historia = {
   render: () => (
-    <NaRaiz atributos={{ ...SEMPRE, 'data-barra-do-sistema': '' }}>
+    <NaRaiz atributos={DO_SISTEMA}>
       <Palco>
         <AreaQueRola nome="Lista de exemplo" />
       </Palco>
