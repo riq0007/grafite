@@ -12,7 +12,7 @@
 
 ## 3. Fechamento
 
-- [ ] 3.1 Escrever o teste ponta a ponta que estreita a coluna "Disponibilidade" e confere a altura das linhas (decisão 5). Verificar: o `pnpm test:e2e` passa.
+- [x] 3.1 Escrever o teste ponta a ponta que estreita a coluna "Disponibilidade" e confere a altura das linhas (decisão 5). Verificar: o `pnpm test:e2e` passa.
 - [ ] 3.2 Conferir no `pnpm dev` a tabela dos ativos de um tipo com a coleta, a dos alertas e a do cofre, estreitando as colunas até o mínimo, nas três densidades. Verificar: nenhuma linha passa de uma linha, e o resumo traz o valor inteiro do que foi cortado.
 - [ ] 3.3 Regravar as referências da regressão visual das tabelas que mudaram e atualizar o mapa. Verificar: o `pnpm test:visual` passa, e os testes do mapa passam.
 - [ ] 3.4 Conferir as verificações:
