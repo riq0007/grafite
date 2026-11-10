@@ -28848,6 +28848,8 @@ export interface components {
                 destaque?: "grafite" | "azul" | "verde" | "laranja" | "personalizado";
                 /** @enum {string} */
                 densidade?: "compacta" | "normal" | "confortavel";
+                /** @enum {string} */
+                barraDeRolagem?: "ao-rolar" | "sempre";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -28928,6 +28930,7 @@ export interface components {
                 tema?: ("grafite" | "meia-noite" | "oled" | "nevoa" | "papel" | "alto-contraste" | "personalizado") | null;
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
+                barraDeRolagem?: ("ao-rolar" | "sempre") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */
@@ -33039,6 +33042,8 @@ export interface components {
                 destaque?: "grafite" | "azul" | "verde" | "laranja" | "personalizado";
                 /** @enum {string} */
                 densidade?: "compacta" | "normal" | "confortavel";
+                /** @enum {string} */
+                barraDeRolagem?: "ao-rolar" | "sempre";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -33119,6 +33124,7 @@ export interface components {
                 tema?: ("grafite" | "meia-noite" | "oled" | "nevoa" | "papel" | "alto-contraste" | "personalizado") | null;
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
+                barraDeRolagem?: ("ao-rolar" | "sempre") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */

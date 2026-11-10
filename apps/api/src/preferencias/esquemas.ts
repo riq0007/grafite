@@ -3,6 +3,7 @@
 // merge patch, em que `null` tira o campo ou a seção. A gravação é estrita: um campo desconhecido
 // ou um valor fora do permitido recusa o pedido inteiro, com a mensagem no campo.
 import {
+  BARRAS_DE_ROLAGEM,
   COLUNAS_DA_TELA_INICIAL,
   DENSIDADES,
   DESTAQUES_DA_ESCOLHA,
@@ -69,6 +70,7 @@ const CAMPOS = {
     tema: z.enum(TEMAS_DA_ESCOLHA),
     destaque: z.enum(DESTAQUES_DA_ESCOLHA),
     densidade: z.enum(DENSIDADES),
+    barraDeRolagem: z.enum(BARRAS_DE_ROLAGEM),
     raio: inteiroEntre(LIMITES_DAS_PREFERENCIAS.raio),
     personalizado: TemaPersonalizado,
     destaquePersonalizado: DestaquePersonalizado,

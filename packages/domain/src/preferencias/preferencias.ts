@@ -20,6 +20,11 @@ export const DESTAQUES_DA_ESCOLHA = [...DESTAQUES, 'personalizado'] as const;
 /** O tom do tema personalizado. */
 export const TONS = ['escuro', 'claro'] as const;
 export const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
+/**
+ * Quando o polegar da barra de rolagem aparece: com o ponteiro sobre a área, ao rolar e com o foco
+ * nela, ou sempre (change barra-de-rolagem-propria).
+ */
+export const BARRAS_DE_ROLAGEM = ['ao-rolar', 'sempre'] as const;
 export const POSICOES_DO_DOCK = ['embaixo', 'esquerda', 'direita'] as const;
 /** Tempo, em segundos, que um aviso de Atenção ou de Informação fica na tela. */
 export const TEMPOS_DO_AVISO = [6, 10, 20] as const;
@@ -78,6 +83,7 @@ export interface PreferenciasDaInterface {
     tema: (typeof TEMAS_DA_ESCOLHA)[number];
     destaque: (typeof DESTAQUES_DA_ESCOLHA)[number];
     densidade: (typeof DENSIDADES)[number];
+    barraDeRolagem: (typeof BARRAS_DE_ROLAGEM)[number];
     raio: number;
     /** As entradas do tema Personalizado, trocadas inteiras, como a ordem da tela inicial. */
     personalizado: TemaPersonalizado;
@@ -165,6 +171,7 @@ export const PADRAO_DE_FABRICA: PreferenciasDaInterface = {
     tema: 'grafite',
     destaque: 'grafite',
     densidade: 'normal',
+    barraDeRolagem: 'ao-rolar',
     raio: 10,
     // O personalizado começa como o Grafite, e o destaque personalizado, como o azul.
     personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
@@ -327,6 +334,7 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     tema: umDe(TEMAS_DA_ESCOLHA),
     destaque: umDe(DESTAQUES_DA_ESCOLHA),
     densidade: umDe(DENSIDADES),
+    barraDeRolagem: umDe(BARRAS_DE_ROLAGEM),
     raio: inteiroEntre(LIMITES_DAS_PREFERENCIAS.raio),
     personalizado: juntos({
       tom: umDe(TONS),

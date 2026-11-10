@@ -145,6 +145,18 @@ describe('PATCH /conta/preferencias', () => {
     expect(await salvas(anaId)).toEqual({ dock: { posicao: 'esquerda' }, aparencia });
   });
 
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('a barra de rolagem grava "sempre", e outro valor recusa, com a mensagem no campo', async () => {
+    const r = await mudar(ana, { aparencia: { barraDeRolagem: 'sempre' } });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda' }, aparencia: { barraDeRolagem: 'sempre' } };
+    expect(r.json()).toEqual(camada);
+    const grossa = await mudar(ana, { aparencia: { barraDeRolagem: 'grossa' } });
+    expect(grossa.statusCode).toBe(400);
+    expect(grossa.json().campos).toHaveProperty(['mudancas.aparencia.barraDeRolagem']);
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
   // Spec preferencias-da-interface, "Blocos do Início nas preferências".
   it('os blocos do Início gravam inteiros, e o bloco repetido recusa', async () => {
     const blocos = [

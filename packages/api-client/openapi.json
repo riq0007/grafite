@@ -94,6 +94,13 @@
                   "confortavel"
                 ]
               },
+              "barraDeRolagem": {
+                "type": "string",
+                "enum": [
+                  "ao-rolar",
+                  "sempre"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -445,6 +452,20 @@
                           "compacta",
                           "normal",
                           "confortavel"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "barraDeRolagem": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ao-rolar",
+                          "sempre"
                         ]
                       },
                       {
@@ -20954,6 +20975,13 @@
                   "confortavel"
                 ]
               },
+              "barraDeRolagem": {
+                "type": "string",
+                "enum": [
+                  "ao-rolar",
+                  "sempre"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -21305,6 +21333,20 @@
                           "compacta",
                           "normal",
                           "confortavel"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "barraDeRolagem": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ao-rolar",
+                          "sempre"
                         ]
                       },
                       {

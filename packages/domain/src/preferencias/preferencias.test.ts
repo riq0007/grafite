@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   aplicarMudanca,
+  BARRAS_DE_ROLAGEM,
   COLUNAS_DA_TELA_INICIAL,
   DENSIDADES,
   DESTAQUES,
@@ -22,6 +23,7 @@ describe('opções das preferências', () => {
     expect(TEMAS).toContain(PADRAO_DE_FABRICA.aparencia.tema);
     expect(DESTAQUES).toContain(PADRAO_DE_FABRICA.aparencia.destaque);
     expect(DENSIDADES).toContain(PADRAO_DE_FABRICA.aparencia.densidade);
+    expect(BARRAS_DE_ROLAGEM).toContain(PADRAO_DE_FABRICA.aparencia.barraDeRolagem);
     expect(POSICOES_DO_DOCK).toContain(PADRAO_DE_FABRICA.dock.posicao);
     expect(TEMPOS_DO_AVISO).toContain(PADRAO_DE_FABRICA.notificacoes.tempo);
     expect(COLUNAS_DA_TELA_INICIAL).toContain(PADRAO_DE_FABRICA.inicio.ordenacao.coluna);
@@ -33,6 +35,7 @@ describe('opções das preferências', () => {
         tema: 'grafite',
         destaque: 'grafite',
         densidade: 'normal',
+        barraDeRolagem: 'ao-rolar',
         raio: 10,
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },
@@ -500,5 +503,56 @@ describe('os blocos do Início', () => {
     const camada = { inicio: { blocos: [bloco('inicio.resolver')] } };
     const nova = aplicarMudanca(camada, { inicio: { blocos: [bloco('gestao.backups', false)] } });
     expect(nova.inicio?.blocos).toEqual([bloco('gestao.backups', false)]);
+  });
+});
+
+// A barra de rolagem (spec preferencias-da-interface, "Barra de rolagem nas preferências"; change
+// barra-de-rolagem-propria, design, decisão 5).
+describe('a barra de rolagem nas preferências', () => {
+  it('tem dois valores, e o de fábrica é "Ao rolar"', () => {
+    expect(BARRAS_DE_ROLAGEM).toEqual(['ao-rolar', 'sempre']);
+    expect(resolverPreferencias().aparencia.barraDeRolagem).toBe('ao-rolar');
+  });
+
+  it('Padrão da organização: a conta que nunca mudou o ajuste fica com o "Sempre visível" dela', () => {
+    const organizacao = { aparencia: { barraDeRolagem: 'sempre' } };
+    expect(resolverPreferencias(organizacao).aparencia.barraDeRolagem).toBe('sempre');
+    expect(
+      resolverPreferencias(organizacao, { aparencia: { barraDeRolagem: 'ao-rolar' } }).aparencia
+        .barraDeRolagem,
+    ).toBe('ao-rolar');
+  });
+
+  it('Valor desconhecido da barra: vale "Ao rolar", e o dock continua à esquerda', () => {
+    const preferencias = resolverPreferencias(
+      {},
+      { aparencia: { barraDeRolagem: 'grossa' }, dock: { posicao: 'esquerda' } },
+    );
+    expect(preferencias.aparencia.barraDeRolagem).toBe('ao-rolar');
+    expect(preferencias.dock.posicao).toBe('esquerda');
+  });
+
+  it('o valor desconhecido da conta dá lugar ao padrão da organização', () => {
+    expect(
+      resolverPreferencias(
+        { aparencia: { barraDeRolagem: 'sempre' } },
+        { aparencia: { barraDeRolagem: 'grossa' } },
+      ).aparencia.barraDeRolagem,
+    ).toBe('sempre');
+  });
+
+  it('lerAjustes guarda só os dois valores', () => {
+    expect(lerAjustes({ aparencia: { barraDeRolagem: 'sempre' } })).toEqual({
+      aparencia: { barraDeRolagem: 'sempre' },
+    });
+    expect(lerAjustes({ aparencia: { barraDeRolagem: 'grossa' } })).toEqual({});
+  });
+
+  it('a mudança para nulo tira a escolha, e volta a valer a camada de baixo', () => {
+    const camada = aplicarMudanca(
+      { aparencia: { barraDeRolagem: 'sempre', tema: 'nevoa' } },
+      { aparencia: { barraDeRolagem: null } },
+    );
+    expect(camada).toEqual({ aparencia: { tema: 'nevoa' } });
   });
 });

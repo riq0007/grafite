@@ -1,6 +1,6 @@
 ## 1. A preferência
 
-- [ ] 1.1 Escrever primeiro os testes e depois o campo `aparencia.barraDeRolagem` no domínio, nos esquemas da API e no contrato (design, decisão 5). Verificar: os testes do domínio passam com "Valor desconhecido da barra", o teste de integração das preferências grava "sempre" e recusa outro valor com 400, e o `pnpm contrato:verificar` passa.
+- [x] 1.1 Escrever primeiro os testes e depois o campo `aparencia.barraDeRolagem` no domínio, nos esquemas da API e no contrato (design, decisão 5). Verificar: os testes do domínio passam com "Valor desconhecido da barra", o teste de integração das preferências grava "sempre" e recusa outro valor com 400, e o `pnpm contrato:verificar` passa.
 - [ ] 1.2 Escrever primeiro os testes e depois o atributo `data-rolagem` em `atributosDaInterface` e na lista da primeira pintura do `index.html` (decisão 5). Verificar: os testes das preferências da web e o `antiFlash.test.ts` passam com "Sempre visível antes da primeira pintura".
 
 ## 2. A barra

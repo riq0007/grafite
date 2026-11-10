@@ -9,6 +9,7 @@ describe('lerPreferencias', () => {
         tema: 'grafite',
         destaque: 'grafite',
         densidade: 'normal',
+        barraDeRolagem: 'ao-rolar',
         raio: 10,
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },

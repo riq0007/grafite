@@ -724,6 +724,7 @@ export {
 export {
   type AjustesDasPreferencias,
   aplicarMudanca,
+  BARRAS_DE_ROLAGEM,
   type BlocoDoInicioSalvo,
   COLUNAS_DA_TELA_INICIAL,
   DENSIDADES,
