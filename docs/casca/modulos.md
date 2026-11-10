@@ -709,7 +709,7 @@ Uma tabela de registros pode ser configurável: colunas que o usuário escolhe, 
 
 **O carregamento.** Com `carregando`, a `Tabela` sem linhas desenha o esqueleto delas sob as colunas, e com as linhas de antes as mantém, com o `aria-busy` e uma linha de progresso, sem esmaecer o texto. A tela pede a consulta com `placeholderData: keepPreviousData` e passa `carregando` na primeira carga e enquanto a consulta nova não chega.
 
-**Seleção, menu, resumo e copiar.** A `Tabela` seleciona com Ctrl e Shift por `selecao` e `aoMudarSelecao`, sem tirar do clique a abertura do registro. `menuDeContexto` dá os itens para as linhas, `aoCopiar` recebe as linhas do Ctrl+C, e `linhasParaCopiar` monta o texto com tabulações. `resumoDaLinha` dá as colunas de uma linha, com o rótulo e o valor, e a tabela mostra as que estão fora da área visível quando o mouse para 1,5 s. A tela limpa a seleção quando a busca, um filtro, a ordem ou a visão mudam.
+**Seleção, menu, resumo e copiar.** A `Tabela` seleciona com Ctrl e Shift por `selecao` e `aoMudarSelecao`, sem tirar do clique a abertura do registro. `menuDeContexto` dá os itens para as linhas, `aoCopiar` recebe as linhas do Ctrl+C, e `linhasParaCopiar` monta o texto com tabulações. `resumoDaLinha` dá as colunas de uma linha, com o rótulo e o valor, e a tabela mostra as que estão fora da área visível e as que tiveram o conteúdo cortado na célula quando o mouse para 1,5 s. No resumo, o valor aparece inteiro: o que passa da largura dele continua na linha de baixo, também o `ValorComposto`. A tela limpa a seleção quando a busca, um filtro, a ordem ou a visão mudam.
 
 **A prévia paginada.** Numa lista paginada, o `usePrevia` recebe o total, a página seguinte e a seleção: a posição conta o total, a seta que passa do último carregado traz a página seguinte, com o esqueleto, e, aberta numa linha selecionada, a prévia passa só pelos selecionados. A história do catálogo faz assim:
 
@@ -1757,7 +1757,7 @@ export function useAgora(): Date {
 }
 ```
 
-A célula da disponibilidade junta a situação, a idade e o "Desatualizado". Na tabela, a linha tem sempre uma linha só (spec componentes-base, "Célula numa linha só"): a célula com mais de uma parte usa o `ValorComposto` do `@grafite/ui`, em que o fixo, com os rótulos de situação, nunca encolhe, e o resto, o texto que os acompanha, encolhe e termina em reticências. A classe que quebra a linha quando falta largura fica só para a ficha. O `LeituraNaCelula` monta isso para qualquer valor coletado, com o "Desatualizado" no fixo e a idade no resto:
+A célula da disponibilidade junta a situação, a idade e o "Desatualizado". Na tabela, a linha tem sempre uma linha só (spec componentes-base, "Célula numa linha só"): a célula com mais de uma parte usa o `ValorComposto` do `@grafite/ui`, em que o fixo, com os rótulos de situação, nunca encolhe, e o resto, o texto que os acompanha, encolhe e termina em reticências. A classe que quebra a linha quando falta largura fica só para a ficha. A coluna de um valor assim declara a largura que o conteúdo dela pede (`larguraMinima`, na coluna do domínio e na `Coluna` da tabela): sem largura guardada na visão, ela divide a sobra da área com as outras sem ficar mais estreita que isso, e a tabela rola de lado; as colunas da coleta declaram a largura de fábrica delas, que comporta a leitura em dia e o cabeçalho. O `LeituraNaCelula` monta isso para qualquer valor coletado, com o "Desatualizado" no fixo e a idade no resto:
 
 ```tsx
 // apps/web/src/modulos/ativos/disponibilidade.tsx (trecho)
