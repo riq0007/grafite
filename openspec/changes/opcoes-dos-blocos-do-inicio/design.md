@@ -36,7 +36,7 @@ export interface BlocoDoInicio extends ExigePermissoes {
 }
 ```
 
-O Início resolve as opções antes de desenhar o bloco: para cada opção declarada, o valor guardado, se a forma dele confere, ou o de fábrica. O bloco recebe sempre todas as chaves, e nunca valida nada. Na forma `escolhas`, o Início tira os valores que saíram da lista e, se sobram menos que o mínimo, usa o de fábrica. Na forma `locais`, a lista vazia quer dizer todos os locais, e o Início tira os ids que não são mais locais ativos da organização; enquanto os locais não chegam, vale o que está guardado.
+O Início resolve as opções antes de desenhar o bloco: para cada opção declarada, o valor guardado, se a forma dele confere, ou o de fábrica. O bloco recebe sempre todas as chaves, e nunca valida nada. Na forma `escolhas`, o Início tira os valores que saíram da lista e, se sobram menos que o mínimo, usa o de fábrica. Na forma `locais`, a lista vazia quer dizer todos os locais, e o Início tira os ids que não são mais locais ativos da organização; enquanto os locais não chegam, vale o que está guardado. Os locais só são pedidos quando alguma opção de locais tem um local guardado, ou com a gaveta de um bloco com essa opção aberta: o Início de quem não escolheu local nenhum não pede a árvore.
 
 **Alternativa descartada:** o bloco trazer a própria gaveta de opções. Cada bloco refaria os controles, os nomes acessíveis e a gravação.
 

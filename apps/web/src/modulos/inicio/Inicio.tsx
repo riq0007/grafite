@@ -85,10 +85,23 @@ export function Inicio() {
   );
   const salvos = preferencias.inicio.blocos;
   const { visiveis, ocultos, lista } = ordenarItens(registrados, salvos);
-  // Os locais ativos tiram das opções o local que foi inativado; só são pedidos quando algum bloco
-  // tem uma opção de locais.
+  // A gaveta das opções fica com o bloco em que abriu enquanto fecha, para a saída não piscar.
+  const [gaveta, definirGaveta] = useState<{ bloco: string; aberta: boolean } | null>(null);
+  const blocoDaGaveta = registrados.find((bloco) => bloco.id === gaveta?.bloco);
+  // Os locais ativos tiram das opções o local que foi inativado e enchem a escolha da gaveta. Só
+  // são pedidos quando alguma opção de locais tem um local guardado, ou com a gaveta de um bloco
+  // com essa opção aberta: o Início de quem não escolheu local nenhum não pede a árvore.
+  const temOpcaoDeLocais = (bloco: BlocoNaTela | undefined) =>
+    bloco?.opcoes?.some((opcao) => opcao.forma === 'locais') ?? false;
+  const comLocalGuardado = registrados.some((bloco) => {
+    const guardadas = salvos.find((salvo) => salvo.id === bloco.id)?.opcoes;
+    return bloco.opcoes?.some((opcao) => {
+      const guardado = guardadas?.[opcao.chave];
+      return opcao.forma === 'locais' && Array.isArray(guardado) && guardado.length > 0;
+    });
+  });
   const locais = useLocaisAtivos(
-    registrados.some((bloco) => bloco.opcoes?.some((opcao) => opcao.forma === 'locais')),
+    comLocalGuardado || ((gaveta?.aberta ?? false) && temOpcaoDeLocais(blocoDaGaveta)),
   );
   const opcoesDosBlocos = useMemo(
     () =>
@@ -124,9 +137,6 @@ export function Inicio() {
       }),
     );
 
-  // A gaveta das opções fica com o bloco em que abriu enquanto fecha, para a saída não piscar.
-  const [gaveta, definirGaveta] = useState<{ bloco: string; aberta: boolean } | null>(null);
-  const blocoDaGaveta = registrados.find((bloco) => bloco.id === gaveta?.bloco);
   /** Grava o valor novo de uma opção no item do bloco, só com as opções que ele declara. */
   const mudarOpcao = (bloco: BlocoNaTela, chave: string, valor: ValorDaOpcaoDoBloco) => {
     const declaradas = new Set((bloco.opcoes ?? []).map((opcao) => opcao.chave));

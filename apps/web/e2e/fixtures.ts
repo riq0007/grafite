@@ -269,31 +269,12 @@ export const test = base.extend<{
     await context.route('**/api/estoque/abaixo-do-minimo', (rota) =>
       rota.request().method() === 'GET' ? rota.fulfill({ json: { itens: [] } }) : rota.fallback(),
     );
-    // Os blocos do Início (change inicio-ajustavel): sem suprimentos lidos e sem controles com o
-    // backup ligado, de fábrica; os testes dos ativos e do Control iD respondem os deles.
-    await context.route('**/api/ativos*', (rota) => {
-      const url = new URL(rota.request().url());
-      return rota.request().method() === 'GET' &&
-        url.pathname === '/api/ativos' &&
-        url.searchParams.get('colunas') === 'coleta.suprimentos'
-        ? rota.fulfill({
-            json: {
-              itens: [],
-              proximo: null,
-              total: 0,
-              referencias: {
-                pessoas: {},
-                locais: {},
-                ativos: {},
-                fornecedores: {},
-                arquivos: {},
-                modelos: {},
-                tiposDosModelos: {},
-              },
-            },
-          })
-        : rota.fallback();
-    });
+    // Os blocos do Início (changes inicio-ajustavel e opcoes-dos-blocos-do-inicio): sem impressora
+    // com o nível lido e sem controles com o backup ligado, de fábrica; os testes dos ativos e do
+    // Control iD respondem os deles.
+    await context.route('**/api/ativos/suprimentos/menores*', (rota) =>
+      rota.request().method() === 'GET' ? rota.fulfill({ json: { itens: [] } }) : rota.fallback(),
+    );
     await context.route('**/api/controlid/backups/resumo*', (rota) =>
       rota.request().method() === 'GET'
         ? rota.fulfill({ json: { controles: [] } })

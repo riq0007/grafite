@@ -1,7 +1,7 @@
 import type { AjustesDasPreferencias } from '@grafite/domain';
 import type { OcorrenciaAberta } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../App.tsx';
 import { criarRoteador } from '../../rotas/arvore.ts';
@@ -288,6 +288,16 @@ describe('opções dos blocos do Início', () => {
   it('Um dos locais inativado: o bloco continua com os outros', async () => {
     abrirComOsBlocos([comOpcoes], guardado({ locais: ['jundiai', 'antigo'] }));
     expect(await screen.findByText('Itens: 6 · Locais: jundiai')).toBeTruthy();
+  });
+
+  it('sem nenhum local guardado, os locais não são pedidos; com a gaveta aberta, são', async () => {
+    const pedidos = vi.fn(locais);
+    abrirComOsBlocos([comOpcoes], {}, { 'GET /api/locais': pedidos });
+    await screen.findByText('Itens: 6 · Locais: todos');
+    expect(pedidos).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'Personalizar o Início' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Opções de Bloco com opções' }));
+    await waitFor(() => expect(pedidos).toHaveBeenCalled());
   });
 
   it('Bloco sem opções: recebe as opções vazias, e os locais não são pedidos', async () => {
