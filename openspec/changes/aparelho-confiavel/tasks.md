@@ -1,7 +1,7 @@
 ## 1. O domínio e o banco
 
 - [x] 1.1 Escrever primeiro os testes e depois o `prazoDaConfianca` e a validade do aparelho no domínio (design, decisão 4). Verificar: os testes passam com "Prazo de fábrica", "Uso não renova", "Prazo reduzido", "Perfil que pede sempre", "Prazo da conta" e "Perfil inativo".
-- [ ] 1.2 Criar as tabelas `aparelhos_confiaveis` e `politica_de_entrada`, as colunas do prazo na conta e no perfil e a do aparelho na sessão, com a migration (decisões 1 e 4). Verificar: a migration aplica num banco com contas, o teste-guarda do RLS passa com as duas tabelas, e o prazo fora de 0 a 90 é recusado pelo banco.
+- [x] 1.2 Criar as tabelas `aparelhos_confiaveis` e `politica_de_entrada`, as colunas do prazo na conta e no perfil e a do aparelho na sessão, com a migration (decisões 1 e 4). Verificar: a migration aplica num banco com contas, o teste-guarda do RLS passa com as duas tabelas, e o prazo fora de 0 a 90 é recusado pelo banco.
 
 ## 2. A entrada
 

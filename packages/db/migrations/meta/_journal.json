@@ -393,6 +393,13 @@
       "when": 1794334979194,
       "tag": "0055_exibicao_dos_paineis",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794346543719,
+      "tag": "0056_aparelhos_confiaveis",
+      "breakpoints": true
     }
   ]
 }
