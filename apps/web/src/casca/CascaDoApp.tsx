@@ -85,6 +85,9 @@ const ENTRADAS_DA_CASCA: readonly EntradaDeBusca[] = [
  * que a conta pode usar e sem os que a organização desligou, o dock segue as preferências, e
  * escolher um módulo ou um item de menu navega sem recarregar. O endereço de um módulo desligado
  * mostra que ele está desligado, no lugar das telas dele.
+ *
+ * A ordem do dock e os módulos tirados dele vêm das preferências (change dock-personalizavel): o
+ * tirado fica no menu Mais, e a busca, as rotas e o Início continuam lendo o registro da conta.
  */
 export function CascaDoApp() {
   const { modulos: todos } = useRouteContext({ from: rootRouteId });
@@ -105,16 +108,21 @@ export function CascaDoApp() {
   });
   // O caminho é a chave da tela da primeira aba: outra tela volta a rolagem ao começo.
   const caminho = useRouterState({ select: (estado) => estado.location.pathname });
-  // O dock com os itens de menu que vêm dos dados, como as visões fixadas.
+  // O dock com os itens de menu que vêm dos dados, como as visões fixadas, na ordem que vale para
+  // a conta: a dela, a dos padrões da organização ou a do registro.
   const doDock = useMenusDinamicos(registro, pode);
-  const { modulos, modulosDoFim } = useMemo(() => modulosDaCasca(doDock), [doDock]);
+  const escolha = preferencias.dock.modulos;
+  const { modulos, modulosNoMais, modulosDoFim } = useMemo(
+    () => modulosDaCasca(doDock, escolha),
+    [doDock, escolha],
+  );
   // O módulo do endereço sai do registro inteiro: a barra diz onde se está, mesmo sem permissão.
   const atual = moduloAtual(todos, idsDasRotas);
   // O módulo que liga e desliga o atual: ele mesmo ou, para o que é parte de outro, o dono, cujo
   // nome a tela do módulo desligado mostra (change gestao-de-ativos).
   const interruptor =
     atual && (todos.find((modulo) => modulo.id === interruptorDe(atual)) ?? atual);
-  const menusDaBarra = [...modulos, ...modulosDoFim].find(
+  const menusDaBarra = [...modulos, ...modulosNoMais, ...modulosDoFim].find(
     (modulo) => modulo.id === atual?.id,
   )?.menusDaBarra;
   useFocoNoTituloAoNavegar();
@@ -226,6 +234,7 @@ export function CascaDoApp() {
             }}
             dock={{
               modulos,
+              modulosNoMais,
               modulosDoFim,
               atual: atual?.id ?? null,
               // Campo a campo: as preferências do dock também trazem a lista dos módulos, que não é

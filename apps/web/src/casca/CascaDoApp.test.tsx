@@ -1,3 +1,4 @@
+import type { AjustesDasPreferencias } from '@grafite/domain';
 import { filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory, createRoute } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -16,6 +17,7 @@ import type { PermissaoDaSessao } from '../sessao/useAcesso.ts';
 import { chaveDasVisoes, consultaDasVisoes, type VisaoDaTabela } from '../tabelas/visoes.ts';
 import {
   CONTA_DE_EXEMPLO,
+  estadoDaSessaoAtiva,
   naOrganizacao,
   type ServidorDeTeste,
   sessaoAtiva,
@@ -631,5 +633,124 @@ describe('os itens de menu dos dados', () => {
     await titulo('O que resolver agora');
     expect(within(await dock()).queryByRole('button', { name: 'Exemplo' })).toBeNull();
     expect(pedidas).not.toHaveBeenCalled();
+  });
+});
+
+// A ordem do dock e os módulos tirados dele (spec dock, "Ordem dos módulos e módulos fora do dock";
+// change dock-personalizavel, design, decisão 2).
+describe('a ordem do dock da conta', () => {
+  const doApp = (id: string) => {
+    const modulo = REGISTRO.find((candidato) => candidato.id === id);
+    if (!modulo) throw new Error(`O módulo ${id} sumiu do registro.`);
+    return modulo;
+  };
+  // As rotas do Salas e as do Cofre, que estão na árvore, em dois módulos sem permissão nem dados,
+  // só para o teste; o Arquivo tem um menu na barra superior.
+  const oficina: ModuloRegistrado = {
+    id: 'oficina',
+    nome: 'Oficina',
+    icone: Box,
+    endereco: '/salas',
+    prioridadeNoCelular: 4,
+    rotas: doApp('salas').rotas,
+  };
+  const arquivo: ModuloRegistrado = {
+    id: 'arquivo',
+    nome: 'Arquivo',
+    icone: Box,
+    endereco: '/cofre',
+    prioridadeNoCelular: 5,
+    rotas: doApp('cofre').rotas,
+    menusDaBarra: [{ rotulo: 'Visualizar', itens: [{ rotulo: 'Tudo', destino: '/cofre' }] }],
+  };
+  const comExemplos = [doApp('inicio'), oficina, arquivo, doApp('ajustes')];
+
+  const noDock = (id: string) => ({ id, visivel: true });
+  const tirado = (id: string) => ({ id, visivel: false });
+
+  function abrirComExemplos(
+    preferencias: AjustesDasPreferencias,
+    { endereco = '/ajustes', servidor = {} as ServidorDeTeste, canal = criarCanalDeEventos() } = {},
+  ) {
+    comPonteiroFino();
+    const roteador = criarRoteador(
+      createMemoryHistory({ initialEntries: [endereco] }),
+      comExemplos,
+    );
+    render(
+      <App roteador={roteador} sessao={sessaoAtiva([], servidor, preferencias)} canal={canal} />,
+    );
+    return roteador;
+  }
+
+  const nomesNoDock = async () =>
+    within(await dock())
+      .getAllByRole('button')
+      .map((item) => item.getAttribute('aria-label'));
+
+  it('sem a escolha, o dock segue o registro, sem o Mais', async () => {
+    abrirComExemplos({});
+    expect(await nomesNoDock()).toEqual(['Início', 'Oficina', 'Arquivo', 'Ajustes']);
+  });
+
+  it('Ordem escolhida: o dock segue a lista da conta, com Ajustes no fim', async () => {
+    abrirComExemplos({ dock: { modulos: [noDock('arquivo'), noDock('inicio')] } });
+    expect(await nomesNoDock()).toEqual(['Arquivo', 'Início', 'Oficina', 'Ajustes']);
+  });
+
+  it('o módulo tirado do dock fica no Mais, antes de Ajustes, e o Mais o abre', async () => {
+    const roteador = abrirComExemplos({ dock: { modulos: [tirado('oficina')] } });
+    expect(await nomesNoDock()).toEqual(['Início', 'Arquivo', 'Mais', 'Ajustes']);
+    fireEvent.click(within(await dock()).getByRole('button', { name: 'Mais' }));
+    const menu = await screen.findByRole('menu', { name: 'Mais' });
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Oficina' }));
+    await waitFor(() => expect(roteador.state.location.pathname).toBe('/salas'));
+    // O módulo aberto pelo Mais é o atual: o Mais o marca.
+    await waitFor(async () =>
+      expect(
+        within(await dock())
+          .getByRole('button', { name: 'Mais' })
+          .getAttribute('aria-current'),
+      ).toBe('page'),
+    );
+  });
+
+  it('Módulo tirado continua na busca: a busca o oferece e o abre, e a barra traz os menus dele', async () => {
+    const roteador = abrirComExemplos({ dock: { modulos: [tirado('arquivo')] } });
+    await titulo('Aparência');
+    expect(await nomesNoDock()).not.toContain('Arquivo');
+    fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Buscar' }));
+    const busca = await screen.findByRole('dialog', { name: 'Busca' });
+    const campo = within(busca).getByRole('searchbox', { name: 'Buscar' });
+    fireEvent.change(campo, { target: { value: 'arquivo' } });
+    fireEvent.click(await within(busca).findByRole('option', { name: 'Arquivo' }));
+    await waitFor(() => expect(roteador.state.location.pathname).toBe('/cofre'));
+    const barra = within(screen.getByRole('banner'));
+    await waitFor(() => expect(barra.getByRole('button', { name: 'Visualizar' })).toBeTruthy());
+    expect(barra.getAllByText('Arquivo').length).toBeGreaterThan(0);
+  });
+
+  it('o dock muda sem recarregar quando a ordem chega de outra sessão da conta', async () => {
+    const canal = criarCanalDeEventos();
+    let daConta: AjustesDasPreferencias = {};
+    const estado = async () => {
+      const corpo = await estadoDaSessaoAtiva().json();
+      corpo.sessao.conta.preferencias = daConta;
+      return Response.json(corpo);
+    };
+    abrirComExemplos({}, { servidor: { 'GET /api/sessao': estado }, canal });
+    expect(await nomesNoDock()).toEqual(['Início', 'Oficina', 'Arquivo', 'Ajustes']);
+    // A conta arruma o dock em outro aparelho: sobe o Arquivo e tira a Oficina.
+    daConta = { dock: { modulos: [noDock('arquivo'), noDock('inicio'), tirado('oficina')] } };
+    canal.publicar({
+      id: '0199a6e0-0000-7000-8000-000000000021',
+      tipo: 'preferencias.mudaram',
+      momento: '2026-11-10T12:00:00.000Z',
+      alvo: { tipo: 'conta', id: CONTA_DE_EXEMPLO.id },
+    });
+    await waitFor(
+      async () => expect(await nomesNoDock()).toEqual(['Arquivo', 'Início', 'Mais', 'Ajustes']),
+      { timeout: 3000 },
+    );
   });
 });
