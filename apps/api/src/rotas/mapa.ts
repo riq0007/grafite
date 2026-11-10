@@ -22,6 +22,7 @@ import {
 import {
   alterarPlanta,
   cadastrarPlanta,
+  excluirPlanta,
   lerPlantas,
   marcadoresDaPlanta,
   plantaAtiva,
@@ -117,6 +118,35 @@ export const rotasDoMapa: FastifyPluginAsyncZod<{
           momento: agora(),
         }),
       ),
+  );
+
+  app.delete(
+    '/mapa/plantas/:id',
+    {
+      config: { permissao: 'mapa.editar' },
+      schema: {
+        summary:
+          'Excluir a planta, com o desenho e as posições; o que estava posicionado continua cadastrado',
+        params: ParametrosDaPlanta,
+        response: { 204: z.null(), ...PROBLEMAS_DO_MAPA },
+      },
+    },
+    async (requisicao, resposta) => {
+      const { modelo } = await naOrganizacao(banco, daOrganizacao(requisicao), (tx) =>
+        excluirPlanta(tx, requisicao.params.id, { requisicao, momento: agora() }),
+      );
+      // O arquivo sai depois do commit: a falha aqui fica no log e não desfaz a exclusão, e o
+      // arquivo sem dono não aparece em tela nenhuma (design, decisão 2).
+      if (modelo) {
+        await armazenamento.apagar(modelo).catch((erro: unknown) => {
+          requisicao.log.error(
+            { erro, chave: modelo },
+            'o modelo da planta excluída ficou no armazenamento',
+          );
+        });
+      }
+      return resposta.code(204).send(null);
+    },
   );
 
   app.get(

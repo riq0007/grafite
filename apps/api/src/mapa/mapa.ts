@@ -371,6 +371,49 @@ export async function alterarPlanta(
   return plantaLida(linha as LinhaDaPlanta, await lerArvore(tx));
 }
 
+/**
+ * Exclui a planta (spec mapa-da-planta, "Exclusão da planta"): as posições saem com ela, pela chave
+ * estrangeira, o que estava posicionado continua, e a auditoria guarda o nome, as medidas e quantas
+ * posições foram apagadas. Devolve a chave do modelo, que a rota apaga do armazenamento depois do
+ * commit.
+ */
+export async function excluirPlanta(
+  tx: Transacao,
+  id: string,
+  { requisicao, momento }: { requisicao: FastifyRequest; momento: Date },
+) {
+  const { contaId } = sessaoDa(requisicao);
+  const [antes] = await tx
+    .select({
+      nome: plantas.nome,
+      largura: plantas.largura,
+      profundidade: plantas.profundidade,
+      modelo: plantas.modelo,
+    })
+    .from(plantas)
+    .where(eq(plantas.id, id));
+  if (!antes) throw naoEncontrado('Planta não encontrada.');
+  const [contagem] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(eq(posicoesNaPlanta.plantaId, id));
+  await tx.delete(plantas).where(eq(plantas.id, id));
+  await registrarNaAuditoria(tx, {
+    acao: 'planta.excluida',
+    ator: { tipo: 'conta', contaId },
+    alvo: { tipo: 'planta', id },
+    antes: {
+      nome: antes.nome,
+      largura: antes.largura,
+      profundidade: antes.profundidade,
+      posicoes: contagem?.posicoes ?? 0,
+    },
+    origem: origemDa(requisicao),
+    momento,
+  });
+  return { modelo: antes.modelo };
+}
+
 /** A planta ativa que a conta vê, ou o 404. */
 export async function plantaAtiva(tx: Transacao, id: string, leitor: LeitorDoMapa) {
   const [linha] = await tx

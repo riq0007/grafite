@@ -248,6 +248,7 @@ export const EVENTO_DA_ACAO = {
   // O mapa da planta (P7): quem vê o mapa
   'planta.cadastrada': 'mapa.mudou',
   'planta.alterada': 'mapa.mudou',
+  'planta.excluida': 'mapa.mudou',
   'posicao-no-mapa.salva': 'mapa.mudou',
   'posicao-no-mapa.tirada': 'mapa.mudou',
   'acesso-remoto.aberto': null,
