@@ -18,7 +18,7 @@ import { CHAVE_DOS_CONSUMIVEIS_DO_MODELO } from './modelos/ConsumiveisDoModelo.t
 import { RELACOES_DOS_ATIVOS } from './relacoes.tsx';
 import { rotasDosAtivos } from './rotas.tsx';
 import { CHAVE_DO_SOFTWARE } from './software/consultas.ts';
-import { SuprimentosQueAcabam } from './suprimentos.tsx';
+import { OPCOES_DOS_SUPRIMENTOS, SuprimentosQueAcabam } from './suprimentos.tsx';
 
 /**
  * O módulo Ativos no registro (spec modulo-ativos): só para quem vê ativos, com "Todos os ativos",
@@ -50,6 +50,7 @@ export const ativos = definirModulo({
     {
       id: 'ativos.suprimentos',
       titulo: 'Suprimentos que acabam primeiro',
+      opcoes: OPCOES_DOS_SUPRIMENTOS,
       componente: SuprimentosQueAcabam,
       permissoes: ['ativos.ver'],
     },

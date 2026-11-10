@@ -13,7 +13,7 @@
 ## 3. Os suprimentos
 
 - [x] 3.1 Escrever primeiro os testes de integração e depois o `GET /ativos/suprimentos/menores` (decisão 5). Verificar: os testes passam com "Só o toner", "Só o fusor", "Até 30%", o escopo pelo local de quem pede e o 403 sem `ativos.ver`, e o `pnpm contrato:verificar` passa.
-- [ ] 3.2 Escrever primeiro os testes e depois as opções do bloco e o recorte em texto (decisões 5 e 6). Verificar: os testes passam com "Toner quase no fim", "Só o toner", "Recorte em texto" e "Nenhuma impressora neste recorte.".
+- [x] 3.2 Escrever primeiro os testes e depois as opções do bloco e o recorte em texto (decisões 5 e 6). Verificar: os testes passam com "Toner quase no fim", "Só o toner", "Recorte em texto" e "Nenhuma impressora neste recorte.".
 
 ## 4. Fechamento
 

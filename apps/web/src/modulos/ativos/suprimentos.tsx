@@ -10,11 +10,13 @@ import {
   estimarFimDoSuprimento,
   type PontoDoSuprimento,
   ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
+  TIPOS_DE_SUPRIMENTO,
+  type TipoDeSuprimento,
   tintaDoSuprimento,
-  tipoDoSuprimento,
 } from '@grafite/domain';
 import {
   Cartucho,
+  type ItemDaArvore,
   Medidor,
   NOMES_DAS_TINTAS,
   RotuloDeSituacao,
@@ -23,9 +25,12 @@ import {
 } from '@grafite/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { consultar } from '../../api/consultas.ts';
 import { useApi } from '../../api/useApi.tsx';
+import { useLocaisAtivos } from '../administracao/seletores/SeletorDeLocal.tsx';
+import { escolhasDa, numeroDa } from '../inicio/opcoes.ts';
+import type { OpcaoDoBloco, OpcoesResolvidas } from '../tipos.ts';
 import estilos from './Ativos.module.css';
 import { CHAVE_DOS_ATIVOS } from './consultas.ts';
 import { IdadeEDesatualizado, LeituraNaCelula } from './disponibilidade.tsx';
@@ -320,70 +325,131 @@ export function SuprimentosNaFicha({
   );
 }
 
-type MenorNivel = NonNullable<NaLista['menor']>;
+type MenorSuprimento = components['schemas']['MenoresSuprimentos']['itens'][number];
 
-/** Os pontos do suprimento de menor nível na série, achado pela descrição, como o domínio estima. */
-const pontosDaDescricao = (
-  serie: SerieDosSuprimentos | undefined,
-  descricao: string,
-): PontoDoSuprimento[] =>
-  (serie?.itens.find((item) => item.descricao === descricao)?.pontos ?? []).map((ponto) => ({
-    momento: new Date(ponto.momento),
-    percentual: ponto.percentual,
-  }));
+/** Os tipos nas opções do bloco e no recorte, com "Outros" no plural. */
+const NOMES_DOS_TIPOS: Record<TipoDeSuprimento, string> = {
+  ...ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
+  outro: 'Outros',
+};
 
-/** Uma impressora na prateleira: o cartucho do menor nível, o nome e a estimativa, até a ficha. */
-function SuprimentoQueAcaba({
-  id,
-  rotulo,
-  menor,
-}: {
-  id: string;
-  rotulo: string;
-  menor: MenorNivel;
-}) {
-  const serie = useSerieDosSuprimentos(id);
-  const tinta = tintaDoSuprimento(menor.descricao);
-  const estimativa = estimarFimDoSuprimento(pontosDaDescricao(serie.data, menor.descricao));
+/**
+ * As opções do bloco "Suprimentos que acabam primeiro" (spec tela-inicial; change
+ * opcoes-dos-blocos-do-inicio, design, decisão 5): os tipos que entram, os locais, quantas
+ * impressoras e até que nível. De fábrica, os quatro tipos, todos os locais, 6 impressoras e 100%,
+ * que não corta nada.
+ */
+export const OPCOES_DOS_SUPRIMENTOS: readonly OpcaoDoBloco[] = [
+  {
+    chave: 'tipos',
+    rotulo: 'Tipos de suprimento',
+    forma: 'escolhas',
+    opcoes: TIPOS_DE_SUPRIMENTO.map((id) => ({ id, rotulo: NOMES_DOS_TIPOS[id] })),
+    padrao: TIPOS_DE_SUPRIMENTO,
+    minimo: 1,
+  },
+  { chave: 'locais', rotulo: 'Locais', forma: 'locais' },
+  { chave: 'limite', rotulo: 'Impressoras', forma: 'numero', minimo: 3, maximo: 12, padrao: 6 },
+  {
+    chave: 'nivel',
+    rotulo: 'Nível até',
+    forma: 'numero',
+    minimo: 5,
+    maximo: 100,
+    passo: 5,
+    unidade: '%',
+    padrao: 100,
+  },
+];
+
+/** "Toner", "Toner e Fusor" ou "Toner, Cilindro e Fusor". */
+function emLista(nomes: readonly string[]): string {
+  if (nomes.length <= 1) return nomes.join('');
+  return `${nomes.slice(0, -1).join(', ')} e ${nomes.at(-1)}`;
+}
+
+/** O nome de cada local da árvore, pelo id. */
+function nomesDosLocais(itens: readonly ItemDaArvore[], nomes = new Map<string, string>()) {
+  for (const item of itens) {
+    nomes.set(item.id, item.rotulo);
+    nomesDosLocais(item.filhos ?? [], nomes);
+  }
+  return nomes;
+}
+
+/**
+ * O recorte em texto (design, decisão 6): só o que difere da fábrica, na ordem dos tipos, do nível
+ * e dos locais, com " · " entre eles, como "Toner · até 30% · Jundiaí". Com mais de dois locais,
+ * diz os dois primeiros e "e mais N". Enquanto os nomes dos locais não chegam, diz quantos são.
+ */
+export function textoDoRecorte(
+  { tipos, nivel, locais }: { tipos: readonly string[]; nivel: number; locais: readonly string[] },
+  nomeDoLocal: (id: string) => string | undefined,
+): string {
+  const partes: string[] = [];
+  if (tipos.length < TIPOS_DE_SUPRIMENTO.length) {
+    partes.push(emLista(tipos.map((tipo) => NOMES_DOS_TIPOS[tipo as TipoDeSuprimento] ?? tipo)));
+  }
+  if (nivel < 100) partes.push(`até ${nivel}%`);
+  if (locais.length > 0) {
+    const nomes = locais.flatMap((id) => nomeDoLocal(id) ?? []);
+    if (nomes.length < locais.length) {
+      partes.push(locais.length === 1 ? '1 local' : `${locais.length} locais`);
+    } else if (nomes.length > 2) {
+      partes.push(`${nomes.slice(0, 2).join(', ')} e mais ${nomes.length - 2}`);
+    } else {
+      partes.push(emLista(nomes));
+    }
+  }
+  return partes.join(' · ');
+}
+
+/** Uma impressora na prateleira: o cartucho do suprimento, o nome e a estimativa, até a ficha. */
+function SuprimentoQueAcaba({ ativo, suprimento }: MenorSuprimento) {
+  const serie = useSerieDosSuprimentos(ativo.id);
+  const tinta = suprimento.tipo === 'toner' ? tintaDoSuprimento(suprimento.descricao) : null;
+  const estimativa = estimarFimDoSuprimento(pontosDoItem(serie.data, suprimento.item));
   return (
     <li className={estilos.naPrateleira}>
-      <Link to="/ativos/$id" params={{ id }} className={estilos.linkDaPrateleira}>
+      <Link to="/ativos/$id" params={{ id: ativo.id }} className={estilos.linkDaPrateleira}>
         <Cartucho
-          nome={
-            tinta
-              ? NOMES_DAS_TINTAS[tinta]
-              : ROTULOS_DOS_TIPOS_DE_SUPRIMENTO[tipoDoSuprimento(menor.descricao)]
-          }
+          nome={tinta ? NOMES_DAS_TINTAS[tinta] : ROTULOS_DOS_TIPOS_DE_SUPRIMENTO[suprimento.tipo]}
           tinta={tinta}
-          nivel={{ tipo: 'medido', percentual: menor.nivel }}
+          nivel={{ tipo: 'medido', percentual: suprimento.nivel }}
           {...(estimativa && { estimativa: textoDaEstimativa(estimativa.dias) })}
         />
-        <span className={estilos.nomeNaPrateleira}>{rotulo}</span>
-        <span className={estilos.descricaoDoSuprimento}>{menor.descricao}</span>
+        <span className={estilos.nomeNaPrateleira}>{ativo.rotulo}</span>
+        <span className={estilos.descricaoDoSuprimento}>{suprimento.descricao}</span>
       </Link>
     </li>
   );
 }
 
 /**
- * O bloco "Suprimentos que acabam primeiro" do Início (spec tela-inicial; change inicio-ajustavel,
- * design, decisão 5): as 6 impressoras de menor nível, pela lista dos ativos na ordem da coluna
- * Suprimentos, numa prateleira de cartuchos. As sem nível lido, que a ordem põe no fim, ficam de fora.
+ * O bloco "Suprimentos que acabam primeiro" do Início (spec tela-inicial; changes inicio-ajustavel,
+ * design, decisão 5, e opcoes-dos-blocos-do-inicio, decisões 5 e 6): as impressoras de menor nível
+ * no recorte das opções da conta, numa prateleira de cartuchos. O servidor escolhe o suprimento de
+ * menor nível de cada impressora entre os tipos pedidos, com o escopo de quem vê. O recorte que
+ * difere da fábrica aparece em texto, antes da prateleira.
  */
-export function SuprimentosQueAcabam() {
+export function SuprimentosQueAcabam({ opcoes }: { opcoes: OpcoesResolvidas }) {
   const api = useApi();
+  const tipos = escolhasDa(opcoes, 'tipos');
+  const locais = escolhasDa(opcoes, 'locais');
+  const limite = numeroDa(opcoes, 'limite');
+  const nivel = numeroDa(opcoes, 'nivel');
   const lista = useQuery({
-    queryKey: [...CHAVE_DOS_ATIVOS, 'suprimentos-que-acabam'],
+    queryKey: [...CHAVE_DOS_ATIVOS, 'suprimentos-que-acabam', { tipos, locais, limite, nivel }],
     queryFn: () =>
       consultar(
         () =>
-          api.GET('/ativos', {
+          api.GET('/ativos/suprimentos/menores', {
             params: {
               query: {
-                ordem: COLUNA_DOS_SUPRIMENTOS,
-                direcao: 'crescente',
-                colunas: COLUNA_DOS_SUPRIMENTOS,
-                limite: 6,
+                tipos: tipos.join(','),
+                ...(locais.length > 0 && { locais: locais.join(',') }),
+                limite,
+                nivel,
               },
             },
           }),
@@ -391,32 +457,30 @@ export function SuprimentosQueAcabam() {
       ),
     refetchInterval: 60_000,
   });
-  if (lista.isPending) {
-    return (
-      <p role="status" className={estilos.informacao}>
-        Carregando os suprimentos…
-      </p>
-    );
-  }
-  if (lista.isError) {
-    return <p className={estilos.informacao}>Não foi possível carregar os suprimentos.</p>;
-  }
-  const impressoras = lista.data.itens.flatMap((ativo) =>
-    ativo.suprimentos?.menor ? [{ ...ativo, menor: ativo.suprimentos.menor }] : [],
-  );
-  if (impressoras.length === 0) {
-    return <p className={estilos.informacao}>Nenhuma impressora com o nível lido.</p>;
-  }
+  // Os nomes dos locais do recorte: só são pedidos com algum local escolhido.
+  const dosLocais = useLocaisAtivos(locais.length > 0);
+  const nomes = useMemo(() => nomesDosLocais(dosLocais?.itens ?? []), [dosLocais]);
+  const recorte = textoDoRecorte({ tipos, nivel, locais }, (id) => nomes.get(id));
   return (
-    <ul aria-label="Suprimentos que acabam primeiro" className={estilos.prateleira}>
-      {impressoras.map((impressora) => (
-        <SuprimentoQueAcaba
-          key={impressora.id}
-          id={impressora.id}
-          rotulo={impressora.rotulo}
-          menor={impressora.menor}
-        />
-      ))}
-    </ul>
+    <>
+      {recorte && <p className={estilos.recorte}>{recorte}</p>}
+      {lista.isPending ? (
+        <p role="status" className={estilos.informacao}>
+          Carregando os suprimentos…
+        </p>
+      ) : lista.isError ? (
+        <p className={estilos.informacao}>Não foi possível carregar os suprimentos.</p>
+      ) : lista.data.itens.length === 0 ? (
+        <p className={estilos.informacao}>
+          {recorte ? 'Nenhuma impressora neste recorte.' : 'Nenhuma impressora com o nível lido.'}
+        </p>
+      ) : (
+        <ul aria-label="Suprimentos que acabam primeiro" className={estilos.prateleira}>
+          {lista.data.itens.map((impressora) => (
+            <SuprimentoQueAcaba key={impressora.ativo.id} {...impressora} />
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
