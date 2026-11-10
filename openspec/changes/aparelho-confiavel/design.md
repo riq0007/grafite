@@ -39,7 +39,7 @@ Depois da senha certa, e só então, a entrada lê o cookie do aparelho:
 1. sem cookie, segue como hoje;
 2. com cookie, procura o hash entre os aparelhos daquela conta, na organização do endereço;
 3. achado e dentro do prazo (decisão 4), marca o código como resolvido, grava `usado_em` e segue para o passo seguinte, ou conclui a entrada;
-4. não achado, ou fora do prazo, apaga o cookie na resposta e pede o código.
+4. não achado, ou fora do prazo, apaga o cookie na resposta e pede o código. O aparelho fora do prazo é apagado junto: o cookie dele já não volta àquele navegador.
 
 Antes da senha certa, a resposta é a mesma com e sem o cookie: o aparelho não vira um jeito de descobrir se um usuário existe nem de pular o bloqueio progressivo.
 
@@ -47,7 +47,7 @@ Antes da senha certa, a resposta é a mesma com e sem o cookie: o aparelho não 
 
 O passo do código aceita `confiar`. Com o código do app certo, `confiar` verdadeiro e o prazo da conta maior que zero, a entrada cria o aparelho e manda o cookie, na mesma transação que conclui o passo. O código de recuperação ignora o `confiar`.
 
-Um navegador que já tinha o cookie de outra conta passa a ter o da conta que marcou por último, e o aparelho antigo daquele cookie é apagado se era da mesma conta. Com mais de 10 aparelhos, sai o de `usado_em` mais antigo.
+Um navegador que já tinha o cookie de outra conta passa a ter o da conta que marcou por último: a entrada já apagou o cookie que não conferia, e, se ele era de um aparelho vencido da mesma conta, apagou o aparelho junto (decisão 2). Com mais de 10 aparelhos, sai o de `usado_em` mais antigo.
 
 ### 4. O prazo
 

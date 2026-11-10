@@ -3,15 +3,25 @@
 // com o cookie só das rotas da entrada e só o hash no banco, e a entrada seguinte que dispensa o
 // código no mesmo navegador, conferida depois da senha certa.
 import { createHash } from 'node:crypto';
-import { aparelhosConfiaveis, auditoria, contas, naOrganizacao, sessoes } from '@grafite/db';
+import {
+  aparelhosConfiaveis,
+  auditoria,
+  contas,
+  naOrganizacao,
+  politicaDeEntrada,
+  sessoes,
+  tentativasDeEntrada,
+} from '@grafite/db';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   type ApiDeTeste,
   abrirApi,
   ativarDoisPassos,
+  atribuir,
   criarConta,
   criarOrganizacao,
+  criarPerfil,
 } from '../../test/integracao.ts';
 import { gerarCodigoTotp } from '../acesso/totp.ts';
 
@@ -33,7 +43,18 @@ const recuperacaoDe: Record<string, string[]> = {};
 beforeAll(async () => {
   api = await abrirApi();
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });
-  for (const usuario of ['bruno', 'carla', 'davi', 'eva', 'joao']) {
+  for (const usuario of [
+    'bruno',
+    'carla',
+    'davi',
+    'eva',
+    'joao',
+    'fabio',
+    'gina',
+    'helio',
+    'ines',
+    'lia',
+  ]) {
     const conta = await criarConta(api, org, { usuario, senha });
     contaDe[usuario] = conta.id;
     const { chaveDoApp, codigos } = await ativarDoisPassos(api, org, conta.id);
@@ -121,13 +142,10 @@ function mandarCodigo(
 }
 
 /** Entra com a senha e o código, marcando o aparelho, e devolve o token do cookie dele. */
-async function marcar(usuario: string, aparelhoAnterior?: string): Promise<string> {
+async function marcar(usuario: string): Promise<string> {
   api.relogio.avancar(31_000);
-  const { entrada } = await entrarComSenha(usuario, { aparelho: aparelhoAnterior });
-  const r = await mandarCodigo(entrada, codigoDoApp(usuario), {
-    confiar: true,
-    aparelho: aparelhoAnterior,
-  });
+  const { entrada } = await entrarComSenha(usuario);
+  const r = await mandarCodigo(entrada, codigoDoApp(usuario), { confiar: true });
   expect(r.statusCode).toBe(200);
   const token = cookiesDa(r).get(COOKIE_DO_APARELHO)?.valor;
   if (!token) throw new Error(`O aparelho de ${usuario} não foi marcado.`);
@@ -143,6 +161,12 @@ const aparelhosDe = (usuario: string) =>
   );
 
 const hashDe = (token: string) => createHash('sha256').update(token).digest();
+
+/** O cookie do aparelho que a resposta apaga: sem valor, no caminho da entrada. */
+const apagouOAparelho = (resposta: { headers: Record<string, unknown> }) => {
+  const cookie = cookiesDa(resposta).get(COOKIE_DO_APARELHO);
+  return cookie?.valor === '' && cookie.atributos.includes('Path=/api/sessao');
+};
 
 describe('marcar o aparelho no passo do código', () => {
   it('Confiar no aparelho: o código do app com "confiar" marca o navegador, com o cookie da entrada', async () => {
@@ -268,15 +292,147 @@ describe('marcar o aparelho no passo do código', () => {
     expect(restantes.map((um) => um.dispositivo)).toContain('Chrome no Windows');
   });
 
-  it('marcar de novo no mesmo navegador troca o aparelho da conta, sem acumular', async () => {
-    const [antes] = await aparelhosDe('bruno');
-    const tokenAntigo = await marcar('bruno');
-    expect(antes?.tokenHash.equals(hashDe(tokenAntigo))).toBe(false);
-    const depoisDaPrimeira = await aparelhosDe('bruno');
-    const tokenNovo = await marcar('bruno', tokenAntigo);
-    const depois = await aparelhosDe('bruno');
-    expect(depois).toHaveLength(depoisDaPrimeira.length);
-    expect(depois.some((um) => um.tokenHash.equals(hashDe(tokenAntigo)))).toBe(false);
+  it('o aparelho vencido sai na entrada que o recusa, e a marcação nova toma o lugar dele', async () => {
+    // João tem o prazo de 7 dias.
+    const tokenAntigo = await marcar('joao');
+    api.relogio.avancar(8 * DIA);
+    const { r, entrada } = await entrarComSenha('joao', { aparelho: tokenAntigo });
+    expect(r.json().sessao.pendencia).toBe('segundo-passo');
+    expect(apagouOAparelho(r)).toBe(true);
+    const doJoao = await aparelhosDe('joao');
+    expect(doJoao.some((um) => um.tokenHash.equals(hashDe(tokenAntigo)))).toBe(false);
+
+    api.relogio.avancar(31_000);
+    const remarcado = await mandarCodigo(entrada, codigoDoApp('joao'), { confiar: true });
+    const tokenNovo = cookiesDa(remarcado).get(COOKIE_DO_APARELHO)?.valor ?? '';
+    const depois = await aparelhosDe('joao');
+    expect(depois).toHaveLength(doJoao.length + 1);
     expect(depois.some((um) => um.tokenHash.equals(hashDe(tokenNovo)))).toBe(true);
+  });
+});
+
+describe('a entrada pelo aparelho confiável', () => {
+  let doFabio = '';
+
+  beforeAll(async () => {
+    doFabio = await marcar('fabio');
+  });
+
+  it('Entrada seguinte no mesmo navegador: 3 dias depois, a senha certa dispensa o código', async () => {
+    api.relogio.avancar(3 * DIA);
+    const { r, pendencia } = await entrarComSenha('fabio', { aparelho: doFabio });
+    expect(r.statusCode).toBe(200);
+    expect(pendencia).toBeNull();
+    expect(cookiesDa(r).get('__Host-grafite-sessao')?.valor).toBeTruthy();
+    expect(cookiesDa(r).has(COOKIE_DO_APARELHO)).toBe(false);
+    // O uso fica registrado no aparelho, e a sessão guarda por qual aparelho entrou.
+    const [aparelho] = await aparelhosDe('fabio');
+    expect(aparelho?.usadoEm).toEqual(api.relogio.agora());
+    const pelaEntrada = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select({ segundoPassoEm: sessoes.segundoPassoEm })
+        .from(sessoes)
+        .where(
+          and(
+            eq(sessoes.contaId, contaDe.fabio as string),
+            eq(sessoes.aparelhoId, aparelho?.id ?? ''),
+          ),
+        ),
+    );
+    expect(pelaEntrada.length).toBeGreaterThan(0);
+  });
+
+  it('Outro navegador: sem o cookie, a tela pede o código, com o prazo da caixa', async () => {
+    const { pendencia, r } = await entrarComSenha('fabio');
+    expect(pendencia).toBe('segundo-passo');
+    expect(r.json().sessao.diasDeConfianca).toBe(30);
+  });
+
+  it('o cookie que nenhum aparelho tem é apagado, e a tela pede o código', async () => {
+    const { pendencia, r } = await entrarComSenha('fabio', { aparelho: 'nao-existe' });
+    expect(pendencia).toBe('segundo-passo');
+    expect(apagouOAparelho(r)).toBe(true);
+  });
+
+  it('Cookie de outra conta: a tela pede o código de Gina, e o aparelho de Fábio continua', async () => {
+    const { pendencia, r } = await entrarComSenha('gina', { aparelho: doFabio });
+    expect(pendencia).toBe('segundo-passo');
+    expect(apagouOAparelho(r)).toBe(true);
+    expect(await aparelhosDe('fabio')).toHaveLength(1);
+  });
+
+  it('Senha errada com o aparelho confiável: a mesma recusa de qualquer navegador, e ela conta para o bloqueio', async () => {
+    const semCookie = await entrarComSenha('fabio', { senhaDigitada: 'senha errada aqui' });
+    const comCookie = await entrarComSenha('fabio', {
+      senhaDigitada: 'senha errada aqui',
+      aparelho: doFabio,
+    });
+    expect(comCookie.r.statusCode).toBe(401);
+    const recusa = ({ status, title, detail }: Record<string, unknown>) => ({
+      status,
+      title,
+      detail,
+    });
+    expect(recusa(comCookie.r.json())).toEqual(recusa(semCookie.r.json()));
+    expect(cookiesDa(comCookie.r).has(COOKIE_DO_APARELHO)).toBe(false);
+    const [tentativas] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select({ falhas: tentativasDeEntrada.falhasSeguidas })
+        .from(tentativasDeEntrada)
+        .where(eq(tentativasDeEntrada.usuario, 'fabio')),
+    );
+    expect(tentativas?.falhas).toBe(2);
+    // A senha certa, pelo aparelho, zera as recusas.
+    const certa = await entrarComSenha('fabio', { aparelho: doFabio });
+    expect(certa.pendencia).toBeNull();
+  });
+
+  it('Prazo de fábrica: no 31º dia depois da marcação, a entrada pede o código de novo', async () => {
+    api.relogio.avancar(28 * DIA);
+    const { pendencia, r } = await entrarComSenha('fabio', { aparelho: doFabio });
+    expect(pendencia).toBe('segundo-passo');
+    expect(apagouOAparelho(r)).toBe(true);
+  });
+
+  it('Aparelho confiável com a senha temporária: a tela não pede o código e pede a senha nova', async () => {
+    const doHelio = await marcar('helio');
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .update(contas)
+        .set({ senhaTemporaria: true })
+        .where(eq(contas.id, contaDe.helio as string)),
+    );
+    const { pendencia } = await entrarComSenha('helio', { aparelho: doHelio });
+    expect(pendencia).toBe('trocar-senha');
+  });
+
+  it('Cofre no aparelho confiável: a entrada sem o código não libera o cofre', async () => {
+    const perfil = await criarPerfil(api, org, { nome: 'Cofre', permissoes: ['cofre.usar'] });
+    await atribuir(api, org, { perfilId: perfil, contaId: contaDe.ines as string });
+    const daInes = await marcar('ines');
+    const { entrada, pendencia } = await entrarComSenha('ines', { aparelho: daInes });
+    expect(pendencia).toBeNull();
+    const liberacao = await api.app.inject({
+      method: 'GET',
+      url: '/cofre/liberacao',
+      headers: { host, cookie: entrada.cookie },
+    });
+    expect(liberacao.statusCode).toBe(200);
+    expect(liberacao.json()).toEqual({ liberadoAte: null });
+  });
+
+  it('Prazo reduzido: com a organização em 7 dias, o aparelho marcado há 10 pede o código', async () => {
+    const daLia = await marcar('lia');
+    api.relogio.avancar(10 * DIA);
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx.insert(politicaDeEntrada).values({ orgId: org, diasDeConfianca: 7 }),
+    );
+    try {
+      const { pendencia, r } = await entrarComSenha('lia', { aparelho: daLia });
+      expect(pendencia).toBe('segundo-passo');
+      expect(r.json().sessao.diasDeConfianca).toBe(7);
+    } finally {
+      await naOrganizacao(api.banco, org, (tx) => tx.delete(politicaDeEntrada));
+    }
   });
 });

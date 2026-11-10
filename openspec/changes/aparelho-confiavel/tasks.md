@@ -6,7 +6,7 @@
 ## 2. A entrada
 
 - [x] 2.1 Escrever primeiro os testes de integração e depois a marcação do aparelho no passo do código, com o cookie (decisão 3). Verificar: os testes passam com "Confiar no aparelho", "Código de recuperação", o prazo zero sem a marcação e o décimo primeiro aparelho tirando o mais antigo; o cookie sai com `HttpOnly`, `Secure`, `SameSite=Strict` e o caminho da entrada; a tabela guarda só o hash.
-- [ ] 2.2 Escrever primeiro os testes de integração e depois a entrada que dispensa o código (decisão 2). Verificar: os testes passam com "Entrada seguinte no mesmo navegador", "Outro navegador", "Cookie de outra conta", "Senha errada com o aparelho confiável" (a mesma resposta e a contagem do bloqueio), "Aparelho confiável com a senha temporária" e "Cofre no aparelho confiável".
+- [x] 2.2 Escrever primeiro os testes de integração e depois a entrada que dispensa o código (decisão 2). Verificar: os testes passam com "Entrada seguinte no mesmo navegador", "Outro navegador", "Cookie de outra conta", "Senha errada com o aparelho confiável" (a mesma resposta e a contagem do bloqueio), "Aparelho confiável com a senha temporária" e "Cofre no aparelho confiável".
 
 ## 3. Esquecer e os prazos
 

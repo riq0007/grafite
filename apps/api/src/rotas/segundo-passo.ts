@@ -13,12 +13,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { carregarAcesso, exigeDoisPassos } from '../acesso/acesso.ts';
-import {
-  gravarCookieDoAparelho,
-  lerCookieDoAparelho,
-  marcarAparelho,
-  prazoDaConta,
-} from '../acesso/aparelhos.ts';
+import { gravarCookieDoAparelho, marcarAparelho, prazoDaConta } from '../acesso/aparelhos.ts';
 import { comCredenciais } from '../acesso/credenciais.ts';
 import { conferirCodigoDaConta } from '../acesso/dois-passos.ts';
 import { concluirEntrada } from '../acesso/entrada.ts';
@@ -191,7 +186,6 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
             const marcado = await marcarAparelho(tx, {
               contaId: sessao.contaId,
               sessaoId: sessao.id,
-              tokenAnterior: lerCookieDoAparelho(requisicao),
               agente: requisicao.headers['user-agent'] ?? null,
               ip: requisicao.ip,
               momento,

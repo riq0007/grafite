@@ -15,6 +15,7 @@ import {
 import {
   type Acesso,
   APARELHOS_POR_CONTA,
+  aparelhoNoPrazo,
   descreverDispositivo,
   type PrazoDaConfianca,
   prazoDaConfianca,
@@ -84,15 +85,14 @@ export async function prazoDaConta(
 
 /**
  * Marca o navegador como aparelho confiável da conta (design, decisão 3), na transação que conclui
- * o passo do código. O aparelho anterior do mesmo navegador sai, se era da mesma conta: o navegador
- * guarda um só. Passando de 10, sai o usado há mais tempo. A sessão guarda o aparelho que marcou.
+ * o passo do código. O cookie de antes daquele navegador a entrada já apagou (decisão 2). Passando
+ * de 10, sai o usado há mais tempo. A sessão guarda o aparelho que marcou.
  */
 export async function marcarAparelho(
   tx: Transacao,
   {
     contaId,
     sessaoId,
-    tokenAnterior,
     agente,
     ip,
     momento,
@@ -100,23 +100,12 @@ export async function marcarAparelho(
   }: {
     contaId: string;
     sessaoId: string;
-    tokenAnterior: string | null;
     agente: string | null;
     ip: string | null;
     momento: Date;
     origem: EventoDeAuditoria['origem'];
   },
 ): Promise<{ id: string; token: string }> {
-  if (tokenAnterior) {
-    await tx
-      .delete(aparelhosConfiaveis)
-      .where(
-        and(
-          eq(aparelhosConfiaveis.contaId, contaId),
-          eq(aparelhosConfiaveis.tokenHash, hashDoToken(tokenAnterior)),
-        ),
-      );
-  }
   const token = randomBytes(32).toString('base64url');
   const dispositivo = descreverDispositivo(agente).slice(0, 80);
   const [criado] = await tx
@@ -153,4 +142,41 @@ export async function marcarAparelho(
     momento,
   });
   return { id: criado.id, token };
+}
+
+/**
+ * O aparelho do cookie que dispensa o código nesta entrada (design, decisão 2), só depois da senha
+ * certa: ele existe, é da conta que entra, na organização do endereço, e está dentro do prazo do
+ * momento. O uso fica registrado, sem renovar o prazo. `null`: o cookie não confere.
+ */
+export async function aparelhoDaEntrada(
+  tx: Transacao,
+  {
+    contaId,
+    token,
+    momento,
+    acesso,
+  }: { contaId: string; token: string; momento: Date; acesso: Acesso },
+): Promise<{ id: string } | null> {
+  const [aparelho] = await tx
+    .select({ id: aparelhosConfiaveis.id, criadoEm: aparelhosConfiaveis.criadoEm })
+    .from(aparelhosConfiaveis)
+    .where(
+      and(
+        eq(aparelhosConfiaveis.contaId, contaId),
+        eq(aparelhosConfiaveis.tokenHash, hashDoToken(token)),
+      ),
+    );
+  if (!aparelho) return null;
+  const { dias } = await prazoDaConta(tx, contaId, acesso);
+  if (!aparelhoNoPrazo({ criadoEm: aparelho.criadoEm, dias, agora: momento })) {
+    // O cookie vai ser apagado, e o aparelho vencido já não volta àquele navegador.
+    await tx.delete(aparelhosConfiaveis).where(eq(aparelhosConfiaveis.id, aparelho.id));
+    return null;
+  }
+  await tx
+    .update(aparelhosConfiaveis)
+    .set({ usadoEm: momento })
+    .where(eq(aparelhosConfiaveis.id, aparelho.id));
+  return { id: aparelho.id };
 }

@@ -28,6 +28,12 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { carregarAcesso, exigeDoisPassos } from '../acesso/acesso.ts';
+import {
+  apagarCookieDoAparelho,
+  aparelhoDaEntrada,
+  lerCookieDoAparelho,
+  prazoDaConta,
+} from '../acesso/aparelhos.ts';
 import { comCredenciais } from '../acesso/credenciais.ts';
 import { encerrarSessao } from '../acesso/encerramento.ts';
 import { concluirEntrada } from '../acesso/entrada.ts';
@@ -97,6 +103,11 @@ export const EstadoDaSessao = z
           preferencias: AjustesDasPreferencias.nullable(),
         }),
         pendencia: z.enum(PENDENCIAS).nullable(),
+        /**
+         * O prazo da confiança da conta, em dias, só no passo do código (change aparelho-confiavel):
+         * maior que zero, a tela oferece "Confiar neste aparelho". Nulo nos outros passos.
+         */
+        diasDeConfianca: z.number().int().min(0).max(90).nullable(),
         /** O token das escritas, no cabeçalho x-grafite-csrf. */
         csrf: z.string(),
         expiraEm: z.iso.datetime(),
@@ -146,15 +157,20 @@ export async function nomeDaOrganizacao(tx: Transacao): Promise<string> {
 export interface DadosDoEstado {
   organizacao: { nome: string; preferencias: Ajustes; modulosDesligados: string[] };
   conta: { id: string; pessoaId: string; fotoId: string | null; preferencias: Ajustes } | null;
+  /** O prazo da confiança da conta, só no passo do código (change aparelho-confiavel). */
+  diasDeConfianca?: number | null;
 }
 
 /**
  * Lê a organização com os padrões dela e, com `contaId`, a conta, a pessoa, a foto e as
  * preferências dela. As camadas passam por `lerAjustes`, então um valor salvo que deixou de valer fica de fora.
+ * No passo do código, lê também o prazo da confiança da conta, que a caixa "Confiar neste aparelho"
+ * mostra.
  */
 export async function lerDadosDoEstado(
   tx: Transacao,
   contaId: string | null,
+  pendencia: (typeof PENDENCIAS)[number] | null = null,
 ): Promise<DadosDoEstado> {
   const [organizacao] = await tx
     .select({
@@ -182,6 +198,8 @@ export async function lerDadosDoEstado(
       modulosDesligados: organizacao?.modulosDesligados ?? [],
     },
     conta: conta ? { ...conta, preferencias: lerAjustes(conta.preferencias) } : null,
+    diasDeConfianca:
+      contaId && pendencia === 'segundo-passo' ? (await prazoDaConta(tx, contaId)).dias : null,
   };
 }
 
@@ -211,6 +229,8 @@ export function estadoDaSessao(
         preferencias: conta?.preferencias ?? null,
       },
       pendencia: sessao.pendencia,
+      diasDeConfianca:
+        sessao.pendencia === 'segundo-passo' ? (dados.diasDeConfianca ?? null) : null,
       csrf: sessao.tokenCsrf,
       expiraEm: sessao.expiraEm.toISOString(),
       acesso: { permissoes: sessao.pendencia === null ? listarPermissoes(sessao.acesso) : [] },
@@ -290,7 +310,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
       const orgId = requisicao.organizacao?.id ?? '';
       const sessao = requisicao.sessao;
       const dados = await naOrganizacao(banco, orgId, (tx) =>
-        lerDadosDoEstado(tx, sessao?.contaId ?? null),
+        lerDadosDoEstado(tx, sessao?.contaId ?? null, sessao?.pendencia ?? null),
       );
       return estadoDaSessao(requisicao, dados, sessao);
     },
@@ -416,10 +436,22 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
             .where(eq(contas.id, conta.id));
         }
         const acesso = await carregarAcesso(tx, conta.id);
+        // O aparelho confiável só é conferido aqui, depois da senha certa (change
+        // aparelho-confiavel, design, decisão 2): antes dela, a resposta é a mesma com e sem o
+        // cookie. O aparelho que confere dispensa o código; o cookie que não confere é apagado.
+        const tokenDoAparelho = lerCookieDoAparelho(requisicao);
+        const aparelho = tokenDoAparelho
+          ? await aparelhoDaEntrada(tx, {
+              contaId: conta.id,
+              token: tokenDoAparelho,
+              momento,
+              acesso,
+            })
+          : null;
         const pendencia = pendenciaDa({
           conta: { ...conta, exigeDoisPassos: exigeDoisPassos(conta, acesso) },
           doisPassosAtivos: (linha?.doisPassosAtivadoEm ?? null) !== null,
-          segundoPassoEm: null,
+          segundoPassoEm: aparelho ? momento : null,
         });
         const sessao = await criarSessao(tx, {
           contaId: conta.id,
@@ -427,6 +459,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           ip: requisicao.ip,
           agente: requisicao.headers['user-agent'] ?? null,
           pendente: pendencia !== null,
+          aparelhoId: aparelho?.id ?? null,
         });
         await registrarNaAuditoria(tx, {
           acao: 'sessao.iniciada',
@@ -442,7 +475,8 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
         return {
           tipo: 'entrou',
           token: sessao.token,
-          dados: await lerDadosDoEstado(tx, conta.id),
+          apagarAparelho: tokenDoAparelho !== null && aparelho === null,
+          dados: await lerDadosDoEstado(tx, conta.id, pendencia),
           sessao: {
             usuario: conta.usuario,
             nome: linha?.nome ?? '',
@@ -479,6 +513,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
         });
       }
       if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
+      if (resultado.apagarAparelho) apagarCookieDoAparelho(resposta);
       gravarCookieDaSessao(resposta, resultado.token, resultado.sessao.expiraEm, momento);
       return estadoDaSessao(requisicao, resultado.dados, resultado.sessao);
     },
