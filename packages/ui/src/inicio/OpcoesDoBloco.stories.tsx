@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Building2, DoorOpen, MapPin } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import type { ItemDaArvore } from '../componentes/arvore/Arvore.tsx';
+import { comTelaPorTras } from '../teste/tela.tsx';
 import { OpcoesDoBloco } from './OpcoesDoBloco.tsx';
 import type { OpcaoDoBloco } from './opcaoDoBloco.ts';
 
@@ -62,6 +63,8 @@ const DE_FABRICA = {
 const meta: Meta<typeof OpcoesDoBloco> = {
   title: 'Início/Opções do bloco',
   component: OpcoesDoBloco,
+  // A gaveta vive num portal: a tela por trás dá à raiz o tamanho da janela, para a captura.
+  decorators: [comTelaPorTras],
   args: {
     bloco: 'Suprimentos que acabam primeiro',
     opcoes: OPCOES,
