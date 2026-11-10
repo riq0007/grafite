@@ -1,4 +1,8 @@
-import type { DestaquePersonalizado, TemaPersonalizado } from '@grafite/domain';
+import {
+  BARRAS_DE_ROLAGEM,
+  type DestaquePersonalizado,
+  type TemaPersonalizado,
+} from '@grafite/domain';
 import {
   ControleDeslizante,
   ControleSegmentado,
@@ -17,6 +21,7 @@ import {
   temaPersonalizado,
   temas,
   trilhaDasMatizes,
+  valeABarraDoSistema,
   variaveisDeCor,
 } from '@grafite/ui';
 import type { CSSProperties } from 'react';
@@ -40,6 +45,16 @@ const NOMES_DAS_DENSIDADES: Record<Densidade, string> = {
   normal: 'Normal',
   confortavel: 'Confortável',
 };
+
+type BarraDeRolagem = (typeof BARRAS_DE_ROLAGEM)[number];
+
+const NOMES_DAS_BARRAS_DE_ROLAGEM: Record<BarraDeRolagem, string> = {
+  'ao-rolar': 'Ao rolar',
+  sempre: 'Sempre visível',
+};
+
+const EXPLICACAO_DA_BARRA_DE_ROLAGEM =
+  'Ao rolar: aparece com o ponteiro sobre a área ou enquanto ela rola. Sempre visível: fica à vista em toda área que rola.';
 
 const IDS_DOS_TEMAS = Object.keys(temas) as IdDoTema[];
 
@@ -153,7 +168,8 @@ function ConstrutorDoDestaque({
 }
 
 /**
- * Seção Aparência: tema, destaque, cantos e densidade, com efeito na hora e sem salvar. O tema e o
+ * Seção Aparência: tema, destaque, cantos, densidade e barra de rolagem, com efeito na hora e sem
+ * salvar. O tema e o
  * destaque Personalizado abrem o construtor, e a leitura do contraste mede o que vale.
  */
 export function SecaoAparencia() {
@@ -293,6 +309,24 @@ export function SecaoAparencia() {
             </Segmento>
           ))}
         </ControleSegmentado>
+
+        <ControleSegmentado
+          rotulo="Barra de rolagem"
+          data-foco="barra-de-rolagem"
+          value={aparencia.barraDeRolagem}
+          onChange={(valor) => mudar('aparencia', { barraDeRolagem: valor as BarraDeRolagem })}
+          descricao={EXPLICACAO_DA_BARRA_DE_ROLAGEM}
+        >
+          {BARRAS_DE_ROLAGEM.map((id) => (
+            <Segmento key={id} value={id}>
+              {NOMES_DAS_BARRAS_DE_ROLAGEM[id]}
+            </Segmento>
+          ))}
+        </ControleSegmentado>
+        {/* Onde o sistema sobrepõe a barra ao conteúdo, a escolha vale nos outros aparelhos. */}
+        {valeABarraDoSistema(document) && (
+          <p className={estilos.leitura}>Neste aparelho vale a barra de rolagem do sistema.</p>
+        )}
 
         <div>
           <RestaurarPadroes secao="aparencia" />

@@ -12,7 +12,7 @@
 
 ## 3. Os Ajustes
 
-- [ ] 3.1 Escrever primeiro os testes e depois a escolha "Barra de rolagem" na seção Aparência, com as explicações, o aviso da barra do sistema, o endereço do ajuste e a entrada na busca. Verificar: os testes passam com "Escolher Sempre visível", "Barra de rolagem no celular", "Barra de rolagem pela busca" e "Restaurar padrões" voltando a "Ao rolar".
+- [x] 3.1 Escrever primeiro os testes e depois a escolha "Barra de rolagem" na seção Aparência, com as explicações, o aviso da barra do sistema, o endereço do ajuste e a entrada na busca. Verificar: os testes passam com "Escolher Sempre visível", "Barra de rolagem no celular", "Barra de rolagem pela busca" e "Restaurar padrões" voltando a "Ao rolar".
 
 ## 4. Fechamento
 

@@ -63,6 +63,11 @@ export const SECOES = [
       },
       { foco: 'cantos', rotulo: 'Cantos', palavrasChave: ['raio', 'arredondados', 'bordas'] },
       { foco: 'densidade', rotulo: 'Densidade', palavrasChave: ['compacta', 'espaçamento'] },
+      {
+        foco: 'barra-de-rolagem',
+        rotulo: 'Barra de rolagem',
+        palavrasChave: ['rolar', 'polegar', 'sempre visível', 'scroll'],
+      },
     ] as readonly AjusteDaSecao[],
   },
   {

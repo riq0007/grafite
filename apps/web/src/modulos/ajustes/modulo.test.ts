@@ -31,6 +31,16 @@ describe('busca dos Ajustes', () => {
     });
   });
 
+  // Spec ajustes-do-sistema, "Seção Aparência": Barra de rolagem pela busca.
+  it('Barra de rolagem pela busca: a entrada leva à Aparência, com o foco na escolha', () => {
+    expect(entradas.find((entrada) => entrada.rotulo === 'Barra de rolagem')).toMatchObject({
+      grupo: 'ajustes',
+      caminho: 'Ajustes › Aparência',
+      destino: '/ajustes/aparencia',
+      foco: 'barra-de-rolagem',
+    });
+  });
+
   it('a Conta entra com as partes dela, cada uma com o foco na parte', () => {
     expect(entradas.find((entrada) => entrada.id === 'conta')).toMatchObject({
       rotulo: 'Conta',
