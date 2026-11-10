@@ -397,6 +397,10 @@ export {
   TRACO_DOS_ICONES,
 } from './icones/Icone.tsx';
 export {
+  OpcoesDoBloco,
+  type PropsDasOpcoesDoBloco,
+} from './inicio/OpcoesDoBloco.tsx';
+export {
   OQueResolverAgora,
   type PropsDoOQueResolverAgora,
 } from './inicio/OQueResolverAgora.tsx';

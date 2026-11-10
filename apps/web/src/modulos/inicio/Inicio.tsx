@@ -1,4 +1,12 @@
-import { Botao, Carimbo, Icone, OQueResolverAgora, TeclaDeAtalho } from '@grafite/ui';
+import {
+  Botao,
+  Carimbo,
+  Icone,
+  OpcoesDoBloco,
+  OQueResolverAgora,
+  TeclaDeAtalho,
+  type ValorDaOpcaoDoBloco,
+} from '@grafite/ui';
 import { rootRouteId, useNavigate, useRouteContext } from '@tanstack/react-router';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -37,7 +45,9 @@ interface BlocoNaTela {
  * resolver agora", e cada clique grava a lista inteira na hora (change inicio-ajustavel, decisão 3).
  *
  * O bloco que declara opções recebe o valor que vale de cada uma, o guardado na conta ou o de
- * fábrica (change opcoes-dos-blocos-do-inicio, design, decisão 1).
+ * fábrica (change opcoes-dos-blocos-do-inicio, design, decisão 1). No modo Personalizar, ele ganha
+ * "Opções…", que abre a gaveta: cada mudança grava a lista na hora, como o Subir e o Descer, e
+ * "Restaurar as opções" tira as opções do item (decisão 3).
  */
 export function Inicio() {
   const { modulos } = useRouteContext({ from: rootRouteId });
@@ -89,6 +99,33 @@ export function Inicio() {
   const [personalizando, definirPersonalizando] = useState(false);
   const gravar = (blocos: typeof lista) => mudar('inicio', { blocos });
 
+  // A gaveta das opções fica com o bloco em que abriu enquanto fecha, para a saída não piscar.
+  const [gaveta, definirGaveta] = useState<{ bloco: string; aberta: boolean } | null>(null);
+  const blocoDaGaveta = registrados.find((bloco) => bloco.id === gaveta?.bloco);
+  /** Grava o valor novo de uma opção no item do bloco, só com as opções que ele declara. */
+  const mudarOpcao = (bloco: BlocoNaTela, chave: string, valor: ValorDaOpcaoDoBloco) => {
+    const declaradas = new Set((bloco.opcoes ?? []).map((opcao) => opcao.chave));
+    gravar(
+      lista.map((item) => {
+        if (item.id !== bloco.id) return item;
+        const guardadas = Object.fromEntries(
+          Object.entries(item.opcoes ?? {}).filter(([guardada]) => declaradas.has(guardada)),
+        );
+        const novo = typeof valor === 'number' ? valor : [...valor];
+        return { ...item, opcoes: { ...guardadas, [chave]: novo } };
+      }),
+    );
+  };
+  /** Tira as opções do item: o bloco volta às de fábrica, e a largura dele continua. */
+  const restaurarOpcoes = (bloco: BlocoNaTela) =>
+    gravar(
+      lista.map((item) => {
+        if (item.id !== bloco.id) return item;
+        const { opcoes: _opcoes, ...semOpcoes } = item;
+        return semOpcoes;
+      }),
+    );
+
   /** Subir, Descer e Ocultar de um bloco, no modo Personalizar. */
   const arrumar = (bloco: BlocoNaTela, indice: number) =>
     personalizando && (
@@ -117,6 +154,15 @@ export function Inicio() {
             onPress={() => gravar(ocultarItem(lista, bloco.id, true))}
           >
             Ocultar
+          </Botao>
+        )}
+        {bloco.opcoes && bloco.opcoes.length > 0 && (
+          <Botao
+            nivel="terciario"
+            aria-label={`Opções de ${bloco.titulo}`}
+            onPress={() => definirGaveta({ bloco: bloco.id, aberta: true })}
+          >
+            Opções…
           </Botao>
         )}
       </div>
@@ -188,6 +234,18 @@ export function Inicio() {
             ))}
           </ul>
         </section>
+      )}
+      {blocoDaGaveta && (
+        <OpcoesDoBloco
+          bloco={blocoDaGaveta.titulo}
+          opcoes={blocoDaGaveta.opcoes ?? []}
+          valores={opcoesDosBlocos.get(blocoDaGaveta.id) ?? {}}
+          locais={locais?.itens}
+          aberta={gaveta?.aberta ?? false}
+          aoMudarAberta={(aberta) => definirGaveta({ bloco: blocoDaGaveta.id, aberta })}
+          aoMudar={(chave, valor) => mudarOpcao(blocoDaGaveta, chave, valor)}
+          aoRestaurar={() => restaurarOpcoes(blocoDaGaveta)}
+        />
       )}
     </div>
   );

@@ -297,3 +297,145 @@ describe('opções dos blocos do Início', () => {
     expect(pedidos).not.toHaveBeenCalled();
   });
 });
+
+// A gaveta "Opções…" (spec tela-inicial, "Personalizar o Início" e "Opções dos blocos"; change
+// opcoes-dos-blocos-do-inicio, design, decisão 3): cada mudança vale na hora no bloco e fica gravada
+// na conta, sem botão de salvar.
+describe('a gaveta das opções no Início', () => {
+  /** Um bloco com os tipos e o nível nas opções, que escreve o que recebeu, só para o teste. */
+  const comTipos: BlocoDoInicio = {
+    id: 'teste.tipos',
+    titulo: 'Bloco com tipos',
+    opcoes: [
+      {
+        chave: 'tipos',
+        rotulo: 'Tipos de suprimento',
+        forma: 'escolhas',
+        opcoes: [
+          { id: 'toner', rotulo: 'Toner' },
+          { id: 'cilindro', rotulo: 'Cilindro' },
+          { id: 'fusor', rotulo: 'Fusor' },
+        ],
+        padrao: ['toner', 'cilindro', 'fusor'],
+        minimo: 1,
+      },
+      {
+        chave: 'nivel',
+        rotulo: 'Nível até',
+        forma: 'numero',
+        minimo: 5,
+        maximo: 100,
+        passo: 5,
+        unidade: '%',
+        padrao: 100,
+      },
+    ],
+    componente: ({ opcoes }) => (
+      <p>{`Tipos: ${escolhasDa(opcoes, 'tipos').join(', ')} · até ${numeroDa(opcoes, 'nivel')}%`}</p>
+    ),
+  };
+  const simples: BlocoDoInicio = {
+    id: 'teste.simples',
+    titulo: 'Bloco simples',
+    componente: () => <p>Conteúdo do bloco simples</p>,
+  };
+
+  function abrirComOsBlocos(
+    blocos: readonly BlocoDoInicio[],
+    preferencias: AjustesDasPreferencias = {},
+  ) {
+    const modulos = REGISTRO.map((modulo) =>
+      modulo.id === 'inicio' ? { ...modulo, blocosDoInicio: blocos } : modulo,
+    );
+    const roteador = criarRoteador(createMemoryHistory({ initialEntries: ['/'] }), modulos);
+    render(<App roteador={roteador} sessao={sessaoAtiva([], {}, preferencias)} />);
+  }
+  const personalizar = async () =>
+    fireEvent.click(await screen.findByRole('button', { name: 'Personalizar o Início' }));
+  const abrirAsOpcoes = async () => {
+    await personalizar();
+    fireEvent.click(screen.getByRole('button', { name: 'Opções de Bloco com tipos' }));
+    return within(await screen.findByRole('dialog', { name: 'Opções de Bloco com tipos' }));
+  };
+  const doBloco = () =>
+    preferenciasDaCopia().inicio.blocos.find((bloco) => bloco.id === 'teste.tipos');
+
+  it('fora do modo Personalizar, nenhum bloco mostra "Opções…"', async () => {
+    abrirComOsBlocos([comTipos]);
+    await screen.findByText('Tipos: toner, cilindro, fusor · até 100%');
+    expect(screen.queryByRole('button', { name: 'Opções de Bloco com tipos' })).toBeNull();
+  });
+
+  it('Bloco sem opções: no modo Personalizar, só o bloco que declara opções tem "Opções…"', async () => {
+    abrirComOsBlocos([comTipos, simples]);
+    await personalizar();
+    const opcoes = screen.getByRole('button', { name: 'Opções de Bloco com tipos' });
+    expect(opcoes.textContent).toBe('Opções…');
+    expect(screen.queryByRole('button', { name: 'Opções de Bloco simples' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Opções de O que resolver agora' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Subir Bloco simples' })).toBeTruthy();
+  });
+
+  it('mudar uma opção na gaveta vale na hora no bloco e fica gravada na conta', async () => {
+    abrirComOsBlocos([comTipos]);
+    const gaveta = await abrirAsOpcoes();
+    fireEvent.click(gaveta.getByRole('checkbox', { name: 'Fusor' }));
+    expect(await screen.findByText('Tipos: toner, cilindro · até 100%')).toBeTruthy();
+    expect(doBloco()).toEqual({
+      id: 'teste.tipos',
+      visivel: true,
+      opcoes: { tipos: ['toner', 'cilindro'] },
+    });
+    // A segunda mudança junta as duas opções no mesmo bloco.
+    const nivel = gaveta.getByRole('slider', { name: 'Nível até' });
+    fireEvent.keyDown(nivel, { key: 'ArrowLeft' });
+    expect(await screen.findByText('Tipos: toner, cilindro · até 95%')).toBeTruthy();
+    expect(doBloco()?.opcoes).toEqual({ tipos: ['toner', 'cilindro'], nivel: 95 });
+  });
+
+  it('a última caixa marcada fica desabilitada, com a explicação', async () => {
+    abrirComOsBlocos([comTipos], {
+      inicio: { blocos: [{ id: 'teste.tipos', visivel: true, opcoes: { tipos: ['fusor'] } }] },
+    });
+    const gaveta = await abrirAsOpcoes();
+    expect((gaveta.getByRole('checkbox', { name: 'Fusor' }) as HTMLInputElement).disabled).toBe(
+      true,
+    );
+    expect(gaveta.getByText('Pelo menos um fica escolhido.')).toBeTruthy();
+    expect((gaveta.getByRole('checkbox', { name: 'Toner' }) as HTMLInputElement).disabled).toBe(
+      false,
+    );
+  });
+
+  it('Restaurar as opções: o bloco volta às de fábrica, e o item fica sem o campo', async () => {
+    abrirComOsBlocos([comTipos], {
+      inicio: {
+        blocos: [
+          {
+            id: 'teste.tipos',
+            visivel: true,
+            largura: 'metade',
+            opcoes: { tipos: ['toner'], nivel: 30 },
+          },
+        ],
+      },
+    });
+    expect(await screen.findByText('Tipos: toner · até 30%')).toBeTruthy();
+    const gaveta = await abrirAsOpcoes();
+    fireEvent.click(gaveta.getByRole('button', { name: 'Restaurar as opções' }));
+    expect(await screen.findByText('Tipos: toner, cilindro, fusor · até 100%')).toBeTruthy();
+    // A largura do bloco não é uma opção: continua.
+    expect(doBloco()).toEqual({ id: 'teste.tipos', visivel: true, largura: 'metade' });
+  });
+
+  it('a opção que o bloco deixou de declarar sai do que vai gravado', async () => {
+    abrirComOsBlocos([comTipos], {
+      inicio: {
+        blocos: [{ id: 'teste.tipos', visivel: true, opcoes: { antiga: true, nivel: 30 } }],
+      },
+    });
+    const gaveta = await abrirAsOpcoes();
+    fireEvent.click(gaveta.getByRole('checkbox', { name: 'Cilindro' }));
+    expect(doBloco()?.opcoes).toEqual({ nivel: 30, tipos: ['toner', 'fusor'] });
+  });
+});
