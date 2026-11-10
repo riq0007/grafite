@@ -213,16 +213,16 @@ test.describe('a disponibilidade na rede', () => {
       expect(await alturaDoComposto(texto)).toBeLessThanOrEqual(deFabrica);
     }
 
-    // O que a célula cortou aparece inteiro no resumo da linha.
+    // O que a célula cortou aparece inteiro no resumo da linha. A tentativa só vale com a coluna
+    // nele: lido antes de a tabela assentar, o resumo pode trazer só outra célula cortada.
     const nome = linha(page, 'Impressora do RH').getByText('Impressora do RH');
     const resumo = page.getByRole('tooltip');
     await expect(async () => {
       await page.mouse.move(0, 0);
       await nome.hover();
       await page.clock.fastForward(1_500);
-      await expect(resumo).toBeVisible({ timeout: 4_000 });
+      await expect(resumo).toContainText('Disponibilidade', { timeout: 4_000 });
     }).toPass({ timeout: 15_000 });
-    await expect(resumo).toContainText('Disponibilidade');
     await expect(resumo).toContainText('Offline');
   });
 });
@@ -338,9 +338,8 @@ test.describe('os suprimentos das impressoras', () => {
       await page.mouse.move(0, 0);
       await nome.hover();
       await page.clock.fastForward(1_500);
-      await expect(resumo).toBeVisible({ timeout: 4_000 });
+      await expect(resumo).toContainText('Suprimentos', { timeout: 4_000 });
     }).toPass({ timeout: 15_000 });
-    await expect(resumo).toContainText('Suprimentos');
     await expect(resumo).toContainText('Black Toner Cartridge');
     await expect(resumo).toContainText('há 3 min');
 

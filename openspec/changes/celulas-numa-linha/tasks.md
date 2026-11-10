@@ -28,3 +28,4 @@
   - `openspec validate celulas-numa-linha --strict`.
 
   Verificar: os comandos passam.
+- [x] 3.5 Fazer os testes ponta a ponta do resumo da linha repetirem a tentativa até o resumo trazer a coluna que conferem: com o relógio falso, o resumo lido antes de a tabela assentar trazia só a célula cortada, e o teste falhava de vez em quando com a suíte inteira (decisão 3). Verificar: os testes dos ativos e da coleta passam quatro vezes seguidas em paralelo, e o `pnpm test:e2e` passa.
