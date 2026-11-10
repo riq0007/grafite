@@ -1,0 +1,40 @@
+/*
+ * O valor composto da célula (spec componentes-base, "Célula numa linha só"): as partes lado a lado,
+ * sem quebrar, até a largura da célula. A ficha, que pode quebrar a linha, não usa este componente.
+ */
+.composto {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--esp-2);
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+/* O que nunca encolhe: os rótulos de situação, o número, o medidor. */
+.fixo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* O texto que acompanha o fixo: é ele que encolhe e termina em reticências. */
+.resto {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* As partes do resto, como a descrição e a idade, com o mesmo respiro do fixo. */
+.resto > * + * {
+  margin-inline-start: var(--esp-2);
+}
+
+/* O resto de um componente que não desenhou nada, como a idade de uma leitura que não houve. */
+.resto:empty {
+  display: none;
+}

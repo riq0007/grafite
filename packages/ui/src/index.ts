@@ -363,6 +363,7 @@ export {
   ProvedorDaTabela,
   Tabela,
 } from './componentes/tabela/Tabela.tsx';
+export { type PropsDoValorComposto, ValorComposto } from './componentes/tabela/ValorComposto.tsx';
 export { CadastroDosDoisPassos, type PropsDoCadastro } from './entrada/CadastroDosDoisPassos.tsx';
 export { CodigosDeRecuperacao, type PropsDosCodigos } from './entrada/CodigosDeRecuperacao.tsx';
 export { EnderecoDesconhecido } from './entrada/EnderecoDesconhecido.tsx';
