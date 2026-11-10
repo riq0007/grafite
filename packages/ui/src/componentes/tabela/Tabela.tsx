@@ -43,7 +43,7 @@ import { ItemDeMenu, Menu } from '../menu/Menu.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from '../menu/MenuDeContexto.tsx';
 import { PEDIDO_DE_FOCO_DA_LINHA } from './pedidoDeFoco.ts';
 import { type ItemDoResumo, type PosicaoDoResumo, ResumoDaLinha } from './ResumoDaLinha.tsx';
-import { colunasForaDaArea, relogioDoResumo } from './resumo.ts';
+import { colunasComConteudoCortado, colunasForaDaArea, relogioDoResumo } from './resumo.ts';
 import estilos from './Tabela.module.css';
 
 /** Os limites da largura de uma coluna redimensionável, em px. */
@@ -319,15 +319,15 @@ export function Tabela({
   mostrarResumo.current = (chave) => {
     const area = rolagem.current;
     if (!area || !resumoDaLinha || contexto || !ordemDasLinhas.current.includes(chave)) return;
-    const linha = area.querySelector(`[role="row"][data-key="${CSS.escape(chave)}"]`);
+    const linha = area.querySelector<HTMLElement>(`[role="row"][data-key="${CSS.escape(chave)}"]`);
     if (!linha) return;
     const itens = resumoDaLinha(chave);
-    const fora = new Set(
-      colunasForaDaArea(
-        area,
-        itens.map((item) => item.coluna),
-      ),
-    );
+    const colunas = itens.map((item) => item.coluna);
+    // As colunas fora da área visível e as que estão à vista com o conteúdo cortado na célula.
+    const fora = new Set([
+      ...colunasForaDaArea(area, colunas),
+      ...colunasComConteudoCortado(area, linha, colunas),
+    ]);
     if (fora.size === 0) return;
     const caixa = linha.getBoundingClientRect();
     definirResumo({

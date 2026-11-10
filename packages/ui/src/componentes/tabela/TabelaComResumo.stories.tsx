@@ -15,6 +15,7 @@ import {
   ProvedorDaTabela,
   Tabela,
 } from './Tabela.tsx';
+import { ValorComposto } from './ValorComposto.tsx';
 
 const meta: Meta = { title: 'Componentes/Tabela com resumo da linha' };
 export default meta;
@@ -38,6 +39,8 @@ interface DefinicaoDaColuna {
   rotulo: string;
   largura: number;
   valor: (ativo: Ativo) => ReactNode;
+  /** O valor em texto, para o resumo, quando a célula o desenha de outro jeito. */
+  noResumo?: (ativo: Ativo) => ReactNode;
   mono?: boolean;
 }
 
@@ -93,10 +96,27 @@ const resumoDe =
       ? colunas.map((coluna) => ({
           coluna: coluna.id,
           rotulo: coluna.rotulo,
-          valor: coluna.valor(ativo),
+          valor: (coluna.noResumo ?? coluna.valor)(ativo),
         }))
       : [];
   };
+
+/**
+ * Três colunas que cabem na área de 384 px, com os suprimentos numa coluna estreita demais para o
+ * valor composto dela: a célula corta a descrição do suprimento.
+ */
+const COLUNAS_COM_O_CONTEUDO_CORTADO: DefinicaoDaColuna[] = [
+  ...COLUNAS.slice(0, 2),
+  {
+    id: 'suprimentos',
+    rotulo: 'Suprimentos',
+    largura: 110,
+    valor: () => (
+      <ValorComposto fixo={<span className="mono">8%</span>}>Black Toner Cartridge</ValorComposto>
+    ),
+    noResumo: () => '8% · Black Toner Cartridge',
+  },
+];
 
 function TabelaComResumo({
   colunas = COLUNAS,
@@ -206,6 +226,29 @@ export const TodasAVista: Historia = {
   },
 };
 
+/**
+ * Com todas as colunas na área visível e o conteúdo de uma delas cortado na célula, o resumo traz
+ * só essa coluna, com o valor inteiro (spec tabelas-configuraveis, "Resumo da linha").
+ */
+export const ConteudoCortadoNaCelula: Historia = {
+  render: () => <TabelaComResumo colunas={COLUNAS_COM_O_CONTEUDO_CORTADO} />,
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(celula(canvasElement, 'PAT-00102'));
+    const aberto = await esperarResumo();
+    await expect(pares(aberto)).toEqual([['Suprimentos', '8% · Black Toner Cartridge']]);
+  },
+};
+
+/** Na tabela que desenha só as linhas visíveis, o conteúdo cortado entra no resumo do mesmo jeito. */
+export const ConteudoCortadoNaCelulaVirtualizada: Historia = {
+  render: () => <TabelaComResumo colunas={COLUNAS_COM_O_CONTEUDO_CORTADO} virtualizada />,
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(await within(canvasElement).findByText('PAT-00102'));
+    const aberto = await esperarResumo();
+    await expect(pares(aberto)).toEqual([['Suprimentos', '8% · Black Toner Cartridge']]);
+  },
+};
+
 /** O mouse que passa pelas linhas sem parar 1,5 s em nenhuma não abre o resumo. */
 export const MouseEmMovimento: Historia = {
   render: () => <TabelaComResumo />,
@@ -227,7 +270,12 @@ export const OutraLinha: Historia = {
     await userEvent.hover(celula(canvasElement, 'PAT-00251'));
     await expect(resumo()).toBeNull();
     const novo = await esperarResumo();
-    await expect(pares(novo)[0]).toEqual(['Local', 'Portaria principal']);
+    // O resumo é o da linha nova. Nela, o rótulo "Em manutenção" não cabe na coluna de 120 px e
+    // entra no resumo também, antes das colunas além da área.
+    await expect(pares(novo).slice(0, 2)).toEqual([
+      ['Situação', 'Em manutenção'],
+      ['Local', 'Portaria principal'],
+    ]);
   },
 };
 
