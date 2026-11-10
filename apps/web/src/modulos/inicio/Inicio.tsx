@@ -1,10 +1,14 @@
+import type { LarguraDoBloco } from '@grafite/domain';
 import {
   Botao,
   Carimbo,
+  ControleSegmentado,
   Icone,
   OpcoesDoBloco,
   OQueResolverAgora,
+  Segmento,
   TeclaDeAtalho,
+  usePostura,
   type ValorDaOpcaoDoBloco,
 } from '@grafite/ui';
 import { rootRouteId, useNavigate, useRouteContext } from '@tanstack/react-router';
@@ -48,6 +52,10 @@ interface BlocoNaTela {
  * fábrica (change opcoes-dos-blocos-do-inicio, design, decisão 1). No modo Personalizar, ele ganha
  * "Opções…", que abre a gaveta: cada mudança grava a lista na hora, como o Subir e o Descer, e
  * "Restaurar as opções" tira as opções do item (decisão 3).
+ *
+ * Cada bloco de módulo tem a largura inteira ou a metade (decisão 4): no computador, com a área
+ * larga, a grade tem duas colunas, e dois blocos de metade seguidos ficam lado a lado. A ordem no
+ * documento é a da lista, e a grade não reordena. "O que resolver agora" é sempre inteiro.
  */
 export function Inicio() {
   const { modulos } = useRouteContext({ from: rootRouteId });
@@ -98,6 +106,23 @@ export function Inicio() {
   );
   const [personalizando, definirPersonalizando] = useState(false);
   const gravar = (blocos: typeof lista) => mudar('inicio', { blocos });
+
+  // A grade só tem duas colunas no computador: no tablet e no celular, todo bloco é inteiro.
+  const colunas = usePostura() === 'computador' ? 2 : 1;
+  /** A largura que vale: a guardada no item do bloco de módulo, ou a inteira. */
+  const larguraDo = (bloco: BlocoNaTela): LarguraDoBloco =>
+    bloco.id === BLOCO_RESOLVER
+      ? 'inteira'
+      : (lista.find((item) => item.id === bloco.id)?.largura ?? 'inteira');
+  /** Grava a largura no item do bloco; a inteira, que é a de fábrica, tira o campo. */
+  const mudarLargura = (bloco: BlocoNaTela, largura: LarguraDoBloco) =>
+    gravar(
+      lista.map((item) => {
+        if (item.id !== bloco.id) return item;
+        const { largura: _largura, ...semLargura } = item;
+        return largura === 'metade' ? { ...semLargura, largura } : semLargura;
+      }),
+    );
 
   // A gaveta das opções fica com o bloco em que abriu enquanto fecha, para a saída não piscar.
   const [gaveta, definirGaveta] = useState<{ bloco: string; aberta: boolean } | null>(null);
@@ -156,6 +181,20 @@ export function Inicio() {
             Ocultar
           </Botao>
         )}
+        {bloco.id !== BLOCO_RESOLVER && (
+          <span className={estilos.largura}>
+            <span aria-hidden="true">Largura</span>
+            <ControleSegmentado
+              rotulo={`Largura de ${bloco.titulo}`}
+              ocultarRotulo
+              value={larguraDo(bloco)}
+              onChange={(valor) => mudarLargura(bloco, valor as LarguraDoBloco)}
+            >
+              <Segmento value="inteira">Inteira</Segmento>
+              <Segmento value="metade">Metade</Segmento>
+            </ControleSegmentado>
+          </span>
+        )}
         {bloco.opcoes && bloco.opcoes.length > 0 && (
           <Botao
             nivel="terciario"
@@ -170,71 +209,78 @@ export function Inicio() {
 
   return (
     <div className={estilos.inicio}>
-      <div className={estilos.topo}>
-        <button type="button" className={estilos.busca} onClick={abrirBusca}>
-          <Icone icone={Search} />
-          <span className={estilos.textoDaBusca}>Buscar ativos, pessoas, locais e ações</span>
-          <TeclaDeAtalho teclas={['mod', 'K']} />
-        </button>
-        {personalizando ? (
-          <Botao nivel="primario" onPress={() => definirPersonalizando(false)}>
-            Concluir
-          </Botao>
-        ) : (
-          <Botao
-            nivel="terciario"
-            icone={SlidersHorizontal}
-            onPress={() => definirPersonalizando(true)}
-          >
-            Personalizar o Início
-          </Botao>
+      <div className={estilos.grade} data-grade-do-inicio="" data-colunas={colunas}>
+        <div className={estilos.topo}>
+          <button type="button" className={estilos.busca} onClick={abrirBusca}>
+            <Icone icone={Search} />
+            <span className={estilos.textoDaBusca}>Buscar ativos, pessoas, locais e ações</span>
+            <TeclaDeAtalho teclas={['mod', 'K']} />
+          </button>
+          {personalizando ? (
+            <Botao nivel="primario" onPress={() => definirPersonalizando(false)}>
+              Concluir
+            </Botao>
+          ) : (
+            <Botao
+              nivel="terciario"
+              icone={SlidersHorizontal}
+              onPress={() => definirPersonalizando(true)}
+            >
+              Personalizar o Início
+            </Botao>
+          )}
+        </div>
+        {visiveis.map((bloco, indice) => {
+          if (bloco.id === BLOCO_RESOLVER) {
+            return (
+              <div key={bloco.id} className={estilos.bloco} data-largura="inteira">
+                {arrumar(bloco, indice)}
+                <OQueResolverAgora
+                  fontes={fontes}
+                  ordenacao={preferencias.inicio.ordenacao}
+                  aoOrdenar={(ordenacao) => mudar('inicio', { ordenacao })}
+                  agora={agora}
+                  // Os destinos são endereços do app, conferidos pelo módulo que registrou a fonte.
+                  aoAbrir={(destino) => void navegar({ to: destino })}
+                  aoTentarDeNovo={tentarDeNovo}
+                />
+              </div>
+            );
+          }
+          const Componente = bloco.componente;
+          return (
+            <section
+              key={bloco.id}
+              aria-labelledby={`bloco-${bloco.id}`}
+              className={estilos.bloco}
+              data-largura={larguraDo(bloco)}
+            >
+              <Carimbo id={`bloco-${bloco.id}`}>{bloco.titulo}</Carimbo>
+              {arrumar(bloco, indice)}
+              {Componente && <Componente opcoes={opcoesDosBlocos.get(bloco.id) ?? {}} />}
+            </section>
+          );
+        })}
+        {personalizando && ocultos.length > 0 && (
+          <section aria-labelledby="blocos-ocultos" className={estilos.bloco}>
+            <Carimbo id="blocos-ocultos">Blocos ocultos</Carimbo>
+            <ul aria-label="Blocos ocultos" className={estilos.ocultos}>
+              {ocultos.map((bloco) => (
+                <li key={bloco.id} className={estilos.oculto}>
+                  <span>{bloco.titulo}</span>
+                  <Botao
+                    nivel="terciario"
+                    aria-label={`Mostrar ${bloco.titulo}`}
+                    onPress={() => gravar(ocultarItem(lista, bloco.id, false))}
+                  >
+                    Mostrar
+                  </Botao>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </div>
-      {visiveis.map((bloco, indice) => {
-        if (bloco.id === BLOCO_RESOLVER) {
-          return (
-            <div key={bloco.id} className={estilos.bloco}>
-              {arrumar(bloco, indice)}
-              <OQueResolverAgora
-                fontes={fontes}
-                ordenacao={preferencias.inicio.ordenacao}
-                aoOrdenar={(ordenacao) => mudar('inicio', { ordenacao })}
-                agora={agora}
-                // Os destinos são endereços do app, conferidos pelo módulo que registrou a fonte.
-                aoAbrir={(destino) => void navegar({ to: destino })}
-                aoTentarDeNovo={tentarDeNovo}
-              />
-            </div>
-          );
-        }
-        const Componente = bloco.componente;
-        return (
-          <section key={bloco.id} aria-labelledby={`bloco-${bloco.id}`} className={estilos.bloco}>
-            <Carimbo id={`bloco-${bloco.id}`}>{bloco.titulo}</Carimbo>
-            {arrumar(bloco, indice)}
-            {Componente && <Componente opcoes={opcoesDosBlocos.get(bloco.id) ?? {}} />}
-          </section>
-        );
-      })}
-      {personalizando && ocultos.length > 0 && (
-        <section aria-labelledby="blocos-ocultos" className={estilos.bloco}>
-          <Carimbo id="blocos-ocultos">Blocos ocultos</Carimbo>
-          <ul aria-label="Blocos ocultos" className={estilos.ocultos}>
-            {ocultos.map((bloco) => (
-              <li key={bloco.id} className={estilos.oculto}>
-                <span>{bloco.titulo}</span>
-                <Botao
-                  nivel="terciario"
-                  aria-label={`Mostrar ${bloco.titulo}`}
-                  onPress={() => gravar(ocultarItem(lista, bloco.id, false))}
-                >
-                  Mostrar
-                </Botao>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
       {blocoDaGaveta && (
         <OpcoesDoBloco
           bloco={blocoDaGaveta.titulo}

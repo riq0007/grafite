@@ -1,12 +1,38 @@
 /*
  * O Início em blocos (change inicio-ajustavel, design, decisões 1 e 4): a busca no topo, como um
  * campo grande, e os blocos em coluna, separados pelo espaço e pelo carimbo de cada um.
+ *
+ * A largura da área decide a grade (change opcoes-dos-blocos-do-inicio, design, decisão 4): o
+ * Início é o contêiner, e a grade, dentro dele, passa a duas colunas a partir de 1.200 px, só no
+ * computador. O bloco inteiro ocupa as duas, e o de metade, uma. A grade preenche linha a linha,
+ * na ordem do documento, e cada bloco fica com a altura do próprio conteúdo.
  */
 .inicio {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.grade {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--esp-8);
   align-content: start;
+  align-items: start;
   min-width: 0;
+}
+
+@container (width >= 1200px) {
+  .grade[data-colunas="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grade[data-colunas="2"] > * {
+    grid-column: 1 / -1;
+  }
+
+  .grade[data-colunas="2"] > [data-largura="metade"] {
+    grid-column: auto;
+  }
 }
 
 /* A busca e o Personalizar, lado a lado enquanto cabem. */
@@ -58,11 +84,22 @@
   min-width: 0;
 }
 
-/* Subir, Descer e Ocultar de cada bloco, no modo Personalizar. */
+/* Subir, Descer, Ocultar, a largura e as opções de cada bloco, no modo Personalizar. */
 .arrumar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--esp-1);
+}
+
+/* O nome "Largura" ao lado dos dois segmentos, na linha dos botões. */
+.largura {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin-inline: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
 }
 
 .ocultos {

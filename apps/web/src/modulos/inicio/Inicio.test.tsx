@@ -439,3 +439,144 @@ describe('a gaveta das opções no Início', () => {
     expect(doBloco()?.opcoes).toEqual({ nivel: 30, tipos: ['toner', 'fusor'] });
   });
 });
+
+// A largura dos blocos (spec tela-inicial, "Largura dos blocos"; change
+// opcoes-dos-blocos-do-inicio, design, decisão 4). A grade em si, lado a lado na janela larga e
+// numa coluna no celular, é conferida no ponta a ponta: aqui, o controle, o que vai gravado e as
+// marcas que o CSS lê.
+describe('a largura dos blocos do Início', () => {
+  const bloco = (id: string, titulo: string): BlocoDoInicio => ({
+    id,
+    titulo,
+    componente: () => <p>{`Conteúdo de ${titulo}`}</p>,
+  });
+  const UM = bloco('teste.um', 'Bloco um');
+  const DOIS = bloco('teste.dois', 'Bloco dois');
+
+  function abrirComOsBlocos(preferencias: AjustesDasPreferencias = {}) {
+    const modulos = REGISTRO.map((modulo) =>
+      modulo.id === 'inicio' ? { ...modulo, blocosDoInicio: [UM, DOIS] } : modulo,
+    );
+    const roteador = criarRoteador(createMemoryHistory({ initialEntries: ['/'] }), modulos);
+    render(<App roteador={roteador} sessao={sessaoAtiva([], {}, preferencias)} />);
+  }
+  const personalizar = async () =>
+    fireEvent.click(await screen.findByRole('button', { name: 'Personalizar o Início' }));
+  const largura = (titulo: string) =>
+    screen.getByRole('radiogroup', { name: `Largura de ${titulo}` });
+  const escolhida = (titulo: string) =>
+    (within(largura(titulo)).getByRole('radio', { checked: true }) as HTMLInputElement).value;
+  const secao = (titulo: string) =>
+    screen.getByRole('heading', { level: 2, name: titulo }).closest('section') as HTMLElement;
+  const salvos = () => preferenciasDaCopia().inicio.blocos;
+
+  it('no modo Personalizar, cada bloco de módulo ganha "Largura", com Inteira e Metade', async () => {
+    abrirComOsBlocos();
+    await personalizar();
+    expect(
+      within(largura('Bloco um'))
+        .getAllByRole('radio')
+        .map((radio) => radio.closest('label')?.textContent),
+    ).toEqual(['Inteira', 'Metade']);
+    expect(escolhida('Bloco um')).toBe('inteira');
+    expect(escolhida('Bloco dois')).toBe('inteira');
+  });
+
+  it('"O que resolver agora" é sempre inteiro: não tem "Largura", nem com a metade guardada', async () => {
+    abrirComOsBlocos({
+      inicio: { blocos: [{ id: 'inicio.resolver', visivel: true, largura: 'metade' }] },
+    });
+    await personalizar();
+    expect(
+      screen.queryByRole('radiogroup', { name: 'Largura de O que resolver agora' }),
+    ).toBeNull();
+    const resolver = screen.getByRole('heading', { level: 1, name: 'O que resolver agora' });
+    expect(resolver.closest('[data-largura]')?.getAttribute('data-largura')).toBe('inteira');
+  });
+
+  it('escolher Metade grava a largura no item e marca o bloco, e Inteira tira a largura', async () => {
+    abrirComOsBlocos();
+    await personalizar();
+    fireEvent.click(within(largura('Bloco um')).getByRole('radio', { name: 'Metade' }));
+    expect(secao('Bloco um').getAttribute('data-largura')).toBe('metade');
+    expect(secao('Bloco dois').getAttribute('data-largura')).toBe('inteira');
+    expect(salvos().find(({ id }) => id === 'teste.um')).toEqual({
+      id: 'teste.um',
+      visivel: true,
+      largura: 'metade',
+    });
+    fireEvent.click(within(largura('Bloco um')).getByRole('radio', { name: 'Inteira' }));
+    expect(secao('Bloco um').getAttribute('data-largura')).toBe('inteira');
+    expect(salvos().find(({ id }) => id === 'teste.um')).toEqual({ id: 'teste.um', visivel: true });
+  });
+
+  it('a largura guardada vale ao abrir, e a ordem no documento é a da lista', async () => {
+    abrirComOsBlocos({
+      inicio: {
+        blocos: [
+          { id: 'teste.dois', visivel: true, largura: 'metade' },
+          { id: 'teste.um', visivel: true, largura: 'metade' },
+          { id: 'inicio.resolver', visivel: true },
+        ],
+      },
+    });
+    await screen.findByText('Conteúdo de Bloco um');
+    expect(secao('Bloco dois').getAttribute('data-largura')).toBe('metade');
+    expect(secao('Bloco um').getAttribute('data-largura')).toBe('metade');
+    const titulos = screen.getAllByRole('heading').map((titulo) => titulo.textContent ?? '');
+    expect(titulos.indexOf('Bloco dois')).toBeLessThan(titulos.indexOf('Bloco um'));
+    expect(titulos.indexOf('Bloco um')).toBeLessThan(
+      titulos.findIndex((titulo) => titulo.startsWith('O que resolver agora')),
+    );
+  });
+
+  it('subir e ocultar o bloco levam a largura dele', async () => {
+    abrirComOsBlocos({
+      inicio: { blocos: [{ id: 'teste.dois', visivel: true, largura: 'metade' }] },
+    });
+    await personalizar();
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar Bloco dois' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar Bloco dois' }));
+    expect(salvos().find(({ id }) => id === 'teste.dois')).toEqual({
+      id: 'teste.dois',
+      visivel: true,
+      largura: 'metade',
+    });
+  });
+
+  it('a grade tem duas colunas só no computador: no tablet e no celular, uma', async () => {
+    const colunas = async () => {
+      abrirComOsBlocos();
+      await screen.findByText('Conteúdo de Bloco um');
+      const grade = document.querySelector('[data-grade-do-inicio]');
+      const lidas = grade?.getAttribute('data-colunas');
+      cleanup();
+      return lidas;
+    };
+    /** O ponteiro primário da janela de teste: fino, no computador, ou de toque, no tablet. */
+    const comPonteiro = (fino: boolean) => {
+      const original = window.matchMedia.bind(window);
+      vi.stubGlobal('matchMedia', (consulta: string) => {
+        const lista = original(consulta);
+        if (consulta === '(pointer: fine)') {
+          Object.defineProperty(lista, 'matches', { value: fino });
+        }
+        return lista;
+      });
+    };
+    try {
+      comPonteiro(true);
+      expect(await colunas()).toBe('2');
+      vi.unstubAllGlobals();
+      comPonteiro(false);
+      expect(await colunas()).toBe('1');
+      vi.unstubAllGlobals();
+      comPonteiro(true);
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+      expect(await colunas()).toBe('1');
+    } finally {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+});

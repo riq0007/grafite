@@ -7,7 +7,7 @@
 
 - [x] 2.1 Escrever primeiro os testes e depois as opções no `BlocoDoInicio` e a resolução delas no Início (decisão 1). Verificar: os testes passam com "Opção gravada", "Local inativado nas opções" e "Bloco sem opções".
 - [x] 2.2 Escrever primeiro os testes e depois a gaveta "Opções…", com as três formas e o "Restaurar as opções" (decisão 3). Verificar: os testes passam com "Restaurar as opções" e com a última caixa marcada desabilitada, sem violação de acessibilidade.
-- [ ] 2.3 Escrever primeiro os testes e depois a largura e a grade (decisão 4). Verificar: os testes passam com "Dois blocos lado a lado" e "Metade no celular", e a ordem do teclado segue a lista.
+- [x] 2.3 Escrever primeiro os testes e depois a largura e a grade (decisão 4). Verificar: os testes passam com "Dois blocos lado a lado" e "Metade no celular", e a ordem do teclado segue a lista.
 - [ ] 2.4 Gravar as referências visuais das histórias da gaveta das opções, que entrou no catálogo. Verificar: o `pnpm test:visual` passa.
 
 ## 3. Os suprimentos
