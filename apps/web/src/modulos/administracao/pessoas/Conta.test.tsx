@@ -91,6 +91,9 @@ const SESSOES: Sessao[] = [
   },
 ];
 
+/** O prazo de João: o da organização, sem prazo próprio. */
+const DA_ORGANIZACAO = { prazo: { dias: 30, origem: { tipo: 'organizacao' } }, diasDaConta: null };
+
 const problema = (status: number, codigo: string, detalhe: string, campos?: object) =>
   Response.json(
     {
@@ -120,6 +123,7 @@ function servidorDaConta(inicial: Conta | null, sessoes: Sessao[] = []) {
     'GET /api/locais': () => Response.json({ locais: [], permite: { cadastrarNaRaiz: true } }),
     'GET /api/pessoas/joao': () => Response.json(fichaDe(estado.conta, estado.extras)),
     'GET /api/contas/c-joao/sessoes': () => Response.json(estado.sessoes),
+    'GET /api/contas/c-joao/aparelhos': () => Response.json({ ...DA_ORGANIZACAO, aparelhos: [] }),
   };
   /** Uma ação da conta: guarda o corpo, muda a conta e devolve a ficha dela. */
   const acao =
@@ -608,5 +612,103 @@ describe('aba Acesso: as sessões', () => {
     falhar = false;
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     expect(await screen.findByText('Chrome no Windows')).toBeTruthy();
+  });
+});
+
+// Spec administracao-de-pessoas, "Aparelhos confiáveis pela administração" (change
+// aparelho-confiavel, design, decisão 6).
+describe('aba Acesso: os aparelhos confiáveis', () => {
+  const NOTEBOOK = {
+    id: '0199a6e0-0000-7000-8000-000000000021',
+    dispositivo: 'Edge no Windows',
+    ip: '10.0.0.40',
+    criadoEm: '2026-10-01T12:00:00.000Z',
+    usadoEm: '2026-10-05T09:00:00.000Z',
+    valeAte: '2026-10-31T12:00:00.000Z',
+  };
+
+  it('De onde vem o prazo: "30 dias, pela organização", com os aparelhos e o IP', async () => {
+    const { servidor } = servidorDaConta(contaDe());
+    servidor['GET /api/contas/c-joao/aparelhos'] = () =>
+      Response.json({ ...DA_ORGANIZACAO, aparelhos: [NOTEBOOK] });
+    abrir(servidor);
+    await abaAcesso();
+    expect(await screen.findByText('30 dias, pela organização')).toBeTruthy();
+    const lista = screen.getByRole('list', { name: 'Aparelhos confiáveis' });
+    const [notebook] = within(lista).getAllByRole('listitem');
+    expect(notebook?.textContent).toContain('Edge no Windows');
+    expect(notebook?.textContent).toContain('10.0.0.40');
+    for (const rotulo of ['Confiável desde', 'Último uso', 'Vale até']) {
+      expect(within(notebook as HTMLElement).getByText(rotulo), rotulo).toBeTruthy();
+    }
+  });
+
+  it('Notebook roubado: "Esquecer todos os aparelhos", com confirmação, e as sessões continuam', async () => {
+    const { servidor, guardar, corpos } = servidorDaConta(contaDe(), SESSOES);
+    let aparelhos = [NOTEBOOK];
+    servidor['GET /api/contas/c-joao/aparelhos'] = () =>
+      Response.json({ ...DA_ORGANIZACAO, aparelhos });
+    servidor['DELETE /api/contas/c-joao/aparelhos'] = async (pedido) => {
+      await guardar(pedido);
+      aparelhos = [];
+      return new Response(null, { status: 204 });
+    };
+    abrir(servidor);
+    await abaAcesso();
+    fireEvent.click(await screen.findByRole('button', { name: 'Esquecer todos os aparelhos' }));
+    const confirmacao = await screen.findByRole('alertdialog', {
+      name: 'Esquecer todos os aparelhos de João da Silva?',
+    });
+    expect(
+      within(confirmacao).getByText(
+        'As entradas seguintes da pessoa pedem o código em qualquer navegador. As sessões abertas continuam.',
+      ),
+    ).toBeTruthy();
+    expect(corpos['DELETE /api/contas/c-joao/aparelhos']).toBeUndefined();
+    fireEvent.click(within(confirmacao).getByRole('button', { name: 'Esquecer os aparelhos' }));
+    await waitFor(() => expect(avisos()).toContain('Aparelhos esquecidos.'));
+    expect(await screen.findByText('Nenhum aparelho confiável.')).toBeTruthy();
+    expect(botao('Esquecer todos os aparelhos')).toBeNull();
+    // As sessões abertas continuam.
+    expect(screen.getByRole('list', { name: 'Sessões abertas' })).toBeTruthy();
+  });
+
+  it('Prazo de uma conta: "Pedir o código em toda entrada", e a tela diz "Em toda entrada, pela conta"', async () => {
+    const { servidor, guardar, corpos } = servidorDaConta(contaDe());
+    let prazo: object = DA_ORGANIZACAO;
+    servidor['GET /api/contas/c-joao/aparelhos'] = () => Response.json({ ...prazo, aparelhos: [] });
+    servidor['PUT /api/contas/c-joao/prazo-da-confianca'] = async (pedido) => {
+      await guardar(pedido);
+      prazo = { prazo: { dias: 0, origem: { tipo: 'conta' } }, diasDaConta: 0 };
+      return Response.json(prazo);
+    };
+    abrir(servidor);
+    await abaAcesso();
+    expect(await screen.findByText('30 dias, pela organização')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mudar…' }));
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Prazo da confiança da conta de João da Silva',
+    });
+    expect(
+      (
+        within(dialogo).getByRole('radio', {
+          name: 'Seguir o perfil ou a organização',
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    fireEvent.click(within(dialogo).getByRole('radio', { name: 'Pedir o código em toda entrada' }));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() =>
+      expect(corpos['PUT /api/contas/c-joao/prazo-da-confianca']).toEqual([{ dias: 0 }]),
+    );
+    expect(await screen.findByText('Em toda entrada, pela conta')).toBeTruthy();
+    expect(avisos()).toContain('Prazo da confiança alterado.');
+  });
+
+  it('sem administrar a conta, a parte não aparece', async () => {
+    const { servidor } = servidorDaConta(contaDe({ permite: NADA_NA_CONTA }));
+    abrir(servidor, naOrganizacao('pessoas.ver'));
+    await abaAcesso();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Aparelhos confiáveis' })).toBeNull();
   });
 });

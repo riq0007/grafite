@@ -546,6 +546,16 @@ export async function simularAdministracao(pagina: Page) {
     ],
     ['DELETE', /^\/pessoas\/([^/]+)\/foto$/, ([pessoaId = '']) => mudarFoto(pessoaId, null)],
     ['GET', /^\/contas\/([^/]+)\/sessoes$/, () => ok([])],
+    [
+      'GET',
+      /^\/contas\/([^/]+)\/aparelhos$/,
+      () =>
+        ok({
+          prazo: { dias: 30, origem: { tipo: 'organizacao' } },
+          diasDaConta: null,
+          aparelhos: [],
+        }),
+    ],
     ['GET', /^\/contas\/([^/]+)\/acesso$/, ([contaId = '']) => acessoDa(contaId)],
     ['GET', /^\/perfis$/, () => ok({ itens: estado.perfis, permite: { cadastrar: true } })],
     // O prazo da confiança nos aparelhos da organização, o de fábrica (change aparelho-confiavel).
