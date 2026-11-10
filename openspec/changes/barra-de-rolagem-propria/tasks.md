@@ -6,7 +6,7 @@
 ## 2. A barra
 
 - [x] 2.1 Escrever primeiro os testes e depois o `acompanharRolagem` (decisão 4). Verificar: os testes passam, com o relógio simulado, com "marca a área que rola", "tira a marca 1 s depois da última rolagem" e "o documento marca a raiz".
-- [ ] 2.2 Escrever primeiro os testes e depois o `barraDoSistemaSobreposta` (decisão 6). Verificar: os testes passam com "barra de largura zero" e "barra que ocupa espaço".
+- [x] 2.2 Escrever primeiro os testes e depois o `barraDoSistemaSobreposta` (decisão 6). Verificar: os testes passam com "barra de largura zero" e "barra que ocupa espaço".
 - [ ] 2.3 Escrever primeiro a história "Barra de rolagem" do catálogo, com uma área que rola nas duas preferências, e depois as regras da `base.css`, tirando o `scrollbar-width: thin` das etapas do formulário (decisões 1 a 4). Verificar: a história passa com "Ponteiro sobre a área", "Rolagem pelo teclado" e "Sempre visível", sem violação de acessibilidade, e o `pnpm lint` passa, sem cor literal.
 - [ ] 2.4 Chamar o `acompanharRolagem` e a medida da barra do sistema na partida da web, do painel da operação e do catálogo. Verificar: o teste da partida da web passa com a raiz marcada num aparelho de barra sobreposta, e o `pnpm test:stories` continua passando.
 

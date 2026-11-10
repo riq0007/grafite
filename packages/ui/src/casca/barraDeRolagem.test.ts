@@ -2,7 +2,12 @@
 // própria"; change barra-de-rolagem-propria, design, decisão 4): a marca da área que rola, que a
 // folha de estilo lê para mostrar o polegar na rolagem pelo teclado, pelo toque e pelo próprio app.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { acompanharRolagem, TEMPO_DA_MARCA_DE_ROLAGEM } from './barraDeRolagem.ts';
+import {
+  acompanharRolagem,
+  aplicarBarraDoSistema,
+  barraDoSistemaSobreposta,
+  TEMPO_DA_MARCA_DE_ROLAGEM,
+} from './barraDeRolagem.ts';
 
 describe('acompanharRolagem', () => {
   let desfazer: () => void;
@@ -78,5 +83,74 @@ describe('acompanharRolagem', () => {
     const lista = area();
     rolar(lista);
     expect(marcada(lista)).toBe(false);
+  });
+});
+
+// A barra do sistema (design, decisão 6): onde ela já é sobreposta ao conteúdo, como no celular, no
+// tablet e no macOS com a barra automática, a barra própria não vale.
+describe('barraDoSistemaSobreposta', () => {
+  /** A largura de fora e a de dentro da área de teste, como o navegador as mede. */
+  function comAsLarguras(deFora: number, deDentro: number) {
+    const marcadaNaMedida: boolean[] = [];
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(() => {
+      marcadaNaMedida.push(document.documentElement.hasAttribute('data-barra-do-sistema'));
+      return deFora;
+    });
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(deDentro);
+    return marcadaNaMedida;
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.documentElement.removeAttribute('data-barra-do-sistema');
+    document.body.replaceChildren();
+  });
+
+  it('barra de largura zero: o sistema sobrepõe a barra', () => {
+    comAsLarguras(100, 100);
+    expect(barraDoSistemaSobreposta(document)).toBe(true);
+  });
+
+  it('barra que ocupa espaço: vale a barra própria', () => {
+    comAsLarguras(100, 83);
+    expect(barraDoSistemaSobreposta(document)).toBe(false);
+  });
+
+  it('mede com a barra do sistema: a raiz fica marcada só durante a medida', () => {
+    const marcadaNaMedida = comAsLarguras(100, 83);
+    barraDoSistemaSobreposta(document);
+    expect(marcadaNaMedida).toEqual([true]);
+    expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(false);
+  });
+
+  it('a área de teste sai do documento depois da medida', () => {
+    comAsLarguras(100, 100);
+    barraDoSistemaSobreposta(document);
+    expect(document.body.children).toHaveLength(0);
+  });
+});
+
+describe('aplicarBarraDoSistema', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.documentElement.removeAttribute('data-barra-do-sistema');
+  });
+
+  const comABarraDe = (largura: number) => {
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(100);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(100 - largura);
+  };
+
+  it('com a barra sobreposta, marca a raiz e diz que vale a do sistema', () => {
+    comABarraDe(0);
+    expect(aplicarBarraDoSistema(document)).toBe(true);
+    expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(true);
+  });
+
+  it('com a barra que ocupa espaço, a raiz fica sem a marca', () => {
+    document.documentElement.setAttribute('data-barra-do-sistema', '');
+    comABarraDe(17);
+    expect(aplicarBarraDoSistema(document)).toBe(false);
+    expect(document.documentElement.hasAttribute('data-barra-do-sistema')).toBe(false);
   });
 });

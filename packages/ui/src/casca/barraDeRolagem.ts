@@ -35,3 +35,36 @@ export function acompanharRolagem(documento: Document): () => void {
   documento.addEventListener('scroll', aoRolar, { capture: true, passive: true });
   return () => documento.removeEventListener('scroll', aoRolar, { capture: true });
 }
+
+/** A marca da raiz onde vale a barra do sistema: as regras da barra própria não a alcançam. */
+const BARRA_DO_SISTEMA = 'data-barra-do-sistema';
+
+/**
+ * Se o sistema operacional sobrepõe a barra de rolagem ao conteúdo, sem tirar largura dele, como no
+ * celular, no tablet e no macOS com a barra automática (design, decisão 6). Mede uma área de teste
+ * fora da tela: com a barra sobreposta, a largura de fora é igual à de dentro. A raiz fica marcada
+ * durante a medida, para a barra própria, que sempre ocupa espaço, não entrar na conta.
+ */
+export function barraDoSistemaSobreposta(documento: Document): boolean {
+  const raiz = documento.documentElement;
+  const jaMarcada = raiz.hasAttribute(BARRA_DO_SISTEMA);
+  raiz.setAttribute(BARRA_DO_SISTEMA, '');
+  const sonda = documento.createElement('div');
+  sonda.style.cssText =
+    'position:absolute;top:-9999px;width:100px;height:100px;overflow:scroll;visibility:hidden;';
+  (documento.body ?? raiz).append(sonda);
+  const larguraDaBarra = sonda.offsetWidth - sonda.clientWidth;
+  sonda.remove();
+  if (!jaMarcada) raiz.removeAttribute(BARRA_DO_SISTEMA);
+  return larguraDaBarra === 0;
+}
+
+/**
+ * Mede a barra do sistema e marca a raiz onde ela é sobreposta: ali vale a barra do sistema, sem o
+ * espaço reservado. Roda na partida, antes de a casca aparecer. Devolve se a do sistema vale.
+ */
+export function aplicarBarraDoSistema(documento: Document): boolean {
+  const sobreposta = barraDoSistemaSobreposta(documento);
+  documento.documentElement.toggleAttribute(BARRA_DO_SISTEMA, sobreposta);
+  return sobreposta;
+}

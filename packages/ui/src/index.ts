@@ -23,7 +23,12 @@ export {
   type PropsDaBuscaGlobal,
   type ResultadoDaBusca,
 } from './casca/BuscaGlobal.tsx';
-export { acompanharRolagem, TEMPO_DA_MARCA_DE_ROLAGEM } from './casca/barraDeRolagem.ts';
+export {
+  acompanharRolagem,
+  aplicarBarraDoSistema,
+  barraDoSistemaSobreposta,
+  TEMPO_DA_MARCA_DE_ROLAGEM,
+} from './casca/barraDeRolagem.ts';
 export { Casca, JanelaDeConteudo, type PropsDaCasca, TituloDaJanela } from './casca/Casca.tsx';
 export {
   CentralDeNotificacoes,
