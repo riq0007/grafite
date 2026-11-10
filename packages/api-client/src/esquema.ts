@@ -29554,6 +29554,7 @@ export interface components {
             profundidade: number | null;
             /** @enum {string} */
             situacao: "convertendo" | "ativa" | "falhou" | "inativa";
+            posicoes: number | null;
             erro: string | null;
             fonte: string;
             contagens: {
@@ -33752,6 +33753,7 @@ export interface components {
             profundidade: number | null;
             /** @enum {string} */
             situacao: "convertendo" | "ativa" | "falhou" | "inativa";
+            posicoes: number | null;
             erro: string | null;
             fonte: string;
             contagens: {

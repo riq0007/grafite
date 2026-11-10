@@ -17,7 +17,7 @@ import {
   Segmento,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { Maximize2, Minus, Plus } from 'lucide-react';
 import {
   type CSSProperties,
@@ -387,6 +387,25 @@ export function MapaDaPlanta() {
     avisar({ situacao: 'sucesso', titulo: `${marcador.rotulo} saiu do mapa.` });
     definirSelecionado(null);
     await consultas.invalidateQueries({ queryKey: CHAVE_DOS_MARCADORES });
+  }
+
+  // A planta que saiu da lista, por esta ou por outra sessão (spec mapa-da-planta, "Exclusão da
+  // planta"; change gestao-das-plantas, design, decisão 5). Quem edita vê todas as plantas: a que
+  // falta foi excluída. Quem só vê tem só as ativas, e a que falta pode ter sido inativada.
+  if (plantas.data && !planta) {
+    return (
+      <div className={estilos.tela}>
+        <CabecalhoDaPagina titulo="Mapa" />
+        <EstadoVazio
+          titulo={
+            plantas.data.podeEditar
+              ? 'Esta planta foi excluída.'
+              : 'Esta planta não está mais no mapa.'
+          }
+          acao={<Link to="/mapa">Ver as plantas</Link>}
+        />
+      </div>
+    );
   }
 
   if (modelo.isError) {

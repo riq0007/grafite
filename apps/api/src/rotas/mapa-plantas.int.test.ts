@@ -333,3 +333,20 @@ describe('a substituição do desenho', () => {
     expect(depois.headers.etag).not.toBe(etiqueta);
   });
 });
+
+// A confirmação da exclusão diz quantas posições saem (spec mapa-da-planta, "Exclusão da planta"):
+// a lista traz a contagem de cada planta para quem edita o mapa.
+describe('as posições de cada planta na lista', () => {
+  it('quem edita vê quantas posições a planta tem; quem só vê o mapa, não', async () => {
+    const planta = await cadastrar('Com posições');
+    await posicionar(planta, impressoras[0] as string, 10, 20);
+    await posicionar(planta, impressoras[1] as string, 30, 40);
+    const vazia = await cadastrar('Sem posições');
+    type Linha = { id: string; posicoes: number | null };
+    const daAna = (await cliente.consultar('/mapa/plantas', ana())).json().plantas as Linha[];
+    expect(daAna.find(({ id }) => id === planta)?.posicoes).toBe(2);
+    expect(daAna.find(({ id }) => id === vazia)?.posicoes).toBe(0);
+    const doBruno = (await cliente.consultar('/mapa/plantas', bruno())).json().plantas as Linha[];
+    expect(doBruno.find(({ id }) => id === planta)?.posicoes).toBeNull();
+  });
+});

@@ -62,7 +62,7 @@ Os retornos SHALL ser "Planta renomeada.", "Local da planta alterado.", "Planta 
 
 ### Requirement: Exclusão da planta
 
-Quem tem `mapa.editar` SHALL poder excluir uma planta, em qualquer situação. A confirmação SHALL dizer quantas posições serão apagadas e que a exclusão não se desfaz, e SHALL pedir o nome da planta digitado: "Excluir a planta" SHALL ficar desabilitado enquanto o nome digitado não for o da planta.
+Quem tem `mapa.editar` SHALL poder excluir uma planta, em qualquer situação. A lista das plantas SHALL dizer, a quem edita o mapa, quantas posições cada planta tem. A confirmação SHALL dizer quantas posições serão apagadas e que a exclusão não se desfaz, e SHALL pedir o nome da planta digitado: "Excluir a planta" SHALL ficar desabilitado enquanto o nome digitado não for o da planta.
 
 A exclusão SHALL:
 - apagar a planta, o desenho guardado e as posições de todos os alvos nela;
@@ -70,7 +70,10 @@ A exclusão SHALL:
 - registrar na auditoria a planta excluída, com o nome, as medidas e a quantidade de posições apagadas;
 - avisar as telas abertas pelo evento `mapa.mudou`.
 
-O retorno SHALL ser "Planta <nome> excluída.". O mapa aberto de uma planta excluída, em qualquer sessão, SHALL mostrar "Esta planta foi excluída." e o caminho para a tela das plantas. A API SHALL responder 404 à exclusão de uma planta que não existe e 403 a quem não tem `mapa.editar`.
+O retorno SHALL ser "Planta <nome> excluída.". O mapa aberto de uma planta que saiu da lista, em qualquer sessão, SHALL dar lugar a um estado vazio, com o caminho para a tela das plantas:
+- "Esta planta foi excluída.", para quem edita o mapa, que vê todas as plantas;
+- "Esta planta não está mais no mapa.", para quem só vê o mapa, porque a planta pode ter sido inativada.
+ A API SHALL responder 404 à exclusão de uma planta que não existe e 403 a quem não tem `mapa.editar`.
 
 #### Scenario: Planta enviada por engano
 - **WHEN** quem edita o mapa exclui a planta "Teste", com 12 ativos posicionados, digitando "Teste" na confirmação
@@ -81,8 +84,12 @@ O retorno SHALL ser "Planta <nome> excluída.". O mapa aberto de uma planta excl
 - **THEN** "Excluir a planta" continua desabilitado, e nada é apagado
 
 #### Scenario: Mapa aberto em outra sessão
-- **WHEN** Ana exclui a planta "Teste" enquanto Bruno está com o mapa dela aberto
+- **WHEN** Ana exclui a planta "Teste" enquanto Bruno, que também edita o mapa, está com o mapa dela aberto
 - **THEN** em até 5 s a tela de Bruno mostra "Esta planta foi excluída.", com o caminho para as plantas
+
+#### Scenario: Mapa aberto de quem só vê
+- **WHEN** a planta "Galpão antigo" é inativada ou excluída enquanto uma conta que só vê o mapa está com o mapa dela aberto
+- **THEN** a tela dela mostra "Esta planta não está mais no mapa.", com o caminho para as plantas
 
 #### Scenario: Exclusão sem a permissão
 - **WHEN** uma conta sem `mapa.editar` pede à API a exclusão de uma planta

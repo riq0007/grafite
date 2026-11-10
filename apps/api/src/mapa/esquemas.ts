@@ -10,6 +10,11 @@ export const PlantaDoMapa = z
     largura: z.number().nullable(),
     profundidade: z.number().nullable(),
     situacao: z.enum(['convertendo', 'ativa', 'falhou', 'inativa']),
+    /**
+     * Quantas posições a planta tem, de tudo o que está nela, para quem edita o mapa: a exclusão
+     * diz quantas saem. Para quem só vê o mapa, `null`.
+     */
+    posicoes: z.number().int().min(0).nullable(),
     erro: z.string().nullable(),
     fonte: z.string(),
     contagens: z

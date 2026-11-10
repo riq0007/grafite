@@ -42,6 +42,8 @@ Depois do commit, a rota apaga o modelo do armazenamento. A falha nesse passo fi
 
 O teste de integração prova que o papel da aplicação consegue apagar em `plantas`. Se faltar a concessão, entra uma migration só com ela.
 
+A confirmação precisa dizer quantas posições saem, e a tela não tinha esse número: os marcadores trazem só o que a conta alcança. A planta da lista ganha `posicoes`, a contagem de tudo o que está nela, para quem edita o mapa, e `null` para quem só vê.
+
 ### 3. A substituição do desenho
 
 `PUT /mapa/plantas/{id}/modelo`, com o arquivo e o nome dele, como o cadastro. A rota converte o arquivo antes de tocar em qualquer coisa: o arquivo recusado ou que não converte responde o erro do cadastro, e a planta fica como estava. Com o modelo convertido, numa transação:
@@ -61,7 +63,7 @@ O `alterarPlanta` continua sem mudar a situação da planta que falhou, e a tela
 
 ### 5. O mapa de uma planta excluída
 
-Com o evento, a consulta das plantas relê. O mapa aberto de uma planta que saiu da lista mostra o estado vazio "Esta planta foi excluída.", com "Ver as plantas", no lugar do canvas.
+Com o evento, a consulta das plantas relê. O mapa aberto de uma planta que saiu da lista mostra um estado vazio, com "Ver as plantas", no lugar do canvas. Quem edita vê todas as plantas, e a que falta foi excluída: "Esta planta foi excluída.". Quem só vê tem só as ativas, e a que falta pode ter sido inativada: "Esta planta não está mais no mapa.".
 
 ### 6. A exceção na spec mestre
 

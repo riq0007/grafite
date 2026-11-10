@@ -32,6 +32,7 @@ const planta = (
   largura: 120,
   profundidade: 80,
   situacao,
+  posicoes: 0,
   erro: situacao === 'falhou' ? 'O arquivo não tem linhas.' : null,
   fonte: 'planta.dxf',
   contagens: { segmentos: 3, rotulos: 2, camadas: 1, maquinas: 0 },
@@ -100,21 +101,30 @@ function servidorDasPlantas(iniciais: PlantaDoMapa[], podeEditar = true) {
       );
       return Response.json(estado.plantas.find((atual) => atual.id === id));
     };
+    servidor[`DELETE /api/mapa/plantas/${id}`] = () => {
+      pedidos.push({ rota: `DELETE ${id}`, corpo: null });
+      estado.plantas = estado.plantas.filter((atual) => atual.id !== id);
+      return new Response(null, { status: 204 });
+    };
   }
   return { servidor, estado, pedidos };
 }
 
-function abrir(servidor: ServidorDeTeste, podeEditar = true) {
+function abrir(
+  servidor: ServidorDeTeste,
+  podeEditar = true,
+  { endereco = '/mapa', canal = criarCanalDeEventos() } = {},
+) {
   noComputador();
   render(
     <App
-      roteador={criarRoteador(createMemoryHistory({ initialEntries: ['/mapa'] }))}
+      roteador={criarRoteador(createMemoryHistory({ initialEntries: [endereco] }))}
       sessao={sessaoAtiva(
         naOrganizacao(podeEditar ? 'mapa.editar' : 'mapa.ver', 'ativos.ver'),
         servidor,
       )}
       consultas={criarClienteDeConsultas({ esperaEntreTentativas: 0 })}
-      canal={criarCanalDeEventos()}
+      canal={canal}
     />,
   );
 }
@@ -237,5 +247,121 @@ describe('a tela das plantas', () => {
     await waitFor(() =>
       expect(pedidos.at(-1)).toEqual({ rota: 'PATCH p1', corpo: { local: null } }),
     );
+  });
+});
+
+// A exclusão (spec mapa-da-planta, "Exclusão da planta"; design, decisões 1, 2 e 5).
+describe('a exclusão da planta pela tela', () => {
+  const TESTE = planta('p9', 'Teste', 'ativa', { posicoes: 12 });
+
+  async function abrirAExclusao(nome: string) {
+    await abrirAcoes(nome);
+    await escolher('Excluir…');
+    return screen.findByRole('alertdialog', { name: `Excluir a planta ${nome}?` });
+  }
+  const botaoQueExclui = (dialogo: HTMLElement) =>
+    within(dialogo).getByRole('button', { name: 'Excluir a planta' }) as HTMLButtonElement;
+
+  it('Planta enviada por engano: a confirmação diz o que sai, pede o nome, e a planta sai da tela', async () => {
+    const { servidor, pedidos } = servidorDasPlantas([TESTE]);
+    abrir(servidor);
+    const dialogo = await abrirAExclusao('Teste');
+    expect(dialogo.textContent).toContain('12 posições');
+    expect(dialogo.textContent).toContain('não se desfaz');
+    expect(botaoQueExclui(dialogo).disabled).toBe(true);
+
+    fireEvent.change(within(dialogo).getByRole('textbox', { name: 'Texto da confirmação' }), {
+      target: { value: 'Teste' },
+    });
+    expect(botaoQueExclui(dialogo).disabled).toBe(false);
+    fireEvent.click(botaoQueExclui(dialogo));
+
+    expect(await screen.findByText('Planta Teste excluída.')).toBeTruthy();
+    expect(pedidos.at(-1)).toEqual({ rota: 'DELETE p9', corpo: null });
+    expect(await screen.findByText('Nenhuma planta ainda.')).toBeTruthy();
+  });
+
+  it('Nome que não confere: "Excluir a planta" continua desabilitado, e nada é apagado', async () => {
+    const { servidor, pedidos } = servidorDasPlantas([planta('p1', 'Jundiaí')]);
+    abrir(servidor);
+    const dialogo = await abrirAExclusao('Jundiaí');
+    fireEvent.change(within(dialogo).getByRole('textbox', { name: 'Texto da confirmação' }), {
+      target: { value: 'Jundiai' },
+    });
+    expect(botaoQueExclui(dialogo).disabled).toBe(true);
+    fireEvent.click(botaoQueExclui(dialogo));
+    expect(pedidos).toEqual([]);
+  });
+
+  it('a planta sem posição nenhuma diz isso, e a que falhou também se exclui', async () => {
+    const { servidor } = servidorDasPlantas([ANEXO]);
+    abrir(servidor);
+    expect(await abrirAcoes('Anexo')).toContain('Excluir…');
+    await escolher('Excluir…');
+    const dialogo = await screen.findByRole('alertdialog', { name: 'Excluir a planta Anexo?' });
+    expect(dialogo.textContent).toContain('Nada está posicionado nela.');
+  });
+});
+
+/** Um evento como a conexão o publicaria, avisando que o mapa mudou em outra sessão. */
+const mapaMudou = () => ({
+  id: `mapa-${Math.random()}`,
+  tipo: 'mapa.mudou' as const,
+  momento: '2026-11-10T12:00:00.000Z',
+  alvo: null,
+});
+
+describe('o mapa aberto de uma planta que saiu', () => {
+  /** O mapa da planta p1 no servidor do teste, com o desenho e sem marcadores. */
+  function servidorDoMapa(podeEditar: boolean) {
+    const { servidor, estado } = servidorDasPlantas([JUNDIAI], podeEditar);
+    servidor['GET /api/mapa/plantas/p1/modelo'] = () =>
+      estado.plantas.some(({ id }) => id === 'p1')
+        ? Response.json({
+            largura: 120,
+            profundidade: 80,
+            camadas: [{ nome: 'PAREDES', segmentos: [0, 0, 120, 0] }],
+            paredes: [],
+            rotulos: [],
+            maquinas: [],
+          })
+        : Response.json(
+            {
+              type: 'urn:grafite:problema:nao-encontrado',
+              title: 'Não encontrado',
+              status: 404,
+              detail: 'Planta não encontrada.',
+              codigoDeRastreio: 'R7K2-9QXM',
+            },
+            { status: 404 },
+          );
+    servidor['GET /api/mapa/plantas/p1/marcadores'] = () =>
+      Response.json({ camadas: [], posicionaveis: [], podeEditar, marcadores: [] });
+    return { servidor, estado };
+  }
+
+  it('Mapa aberto em outra sessão: quem edita vê "Esta planta foi excluída." e o caminho para as plantas', async () => {
+    const { servidor, estado } = servidorDoMapa(true);
+    const canal = criarCanalDeEventos();
+    abrir(servidor, true, { endereco: '/mapa/p1', canal });
+    expect(await screen.findByRole('heading', { level: 1, name: /Jundiai/ })).toBeTruthy();
+
+    estado.plantas = [];
+    canal.publicar(mapaMudou());
+    expect(await screen.findByText('Esta planta foi excluída.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Ver as plantas' }).getAttribute('href')).toBe('/mapa');
+  });
+
+  it('para quem só vê o mapa, a planta que saiu pode ter sido inativada: a tela não diz que foi excluída', async () => {
+    const { servidor, estado } = servidorDoMapa(false);
+    const canal = criarCanalDeEventos();
+    abrir(servidor, false, { endereco: '/mapa/p1', canal });
+    expect(await screen.findByRole('heading', { level: 1, name: /Jundiai/ })).toBeTruthy();
+
+    estado.plantas = [];
+    canal.publicar(mapaMudou());
+    expect(await screen.findByText('Esta planta não está mais no mapa.')).toBeTruthy();
+    expect(screen.queryByText('Esta planta foi excluída.')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Ver as plantas' })).toBeTruthy();
   });
 });

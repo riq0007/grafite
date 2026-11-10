@@ -234,7 +234,16 @@ type LinhaDaPlanta = { [C in keyof typeof dePlanta]: unknown } & {
   criadaEm: Date;
 };
 
-function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
+/** Quantas posições a planta tem, de todos os alvos. */
+async function posicoesDa(tx: Transacao, id: string): Promise<number> {
+  const [contagem] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(eq(posicoesNaPlanta.plantaId, id));
+  return contagem?.posicoes ?? 0;
+}
+
+function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais, posicoes: number | null) {
   const caminho = linha.localId ? arvore.caminho(linha.localId) : null;
   return {
     id: linha.id,
@@ -243,6 +252,7 @@ function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
     largura: linha.largura,
     profundidade: linha.profundidade,
     situacao: linha.situacao,
+    posicoes,
     erro: linha.erro,
     fonte: linha.fonte,
     contagens: linha.contagens
@@ -261,10 +271,24 @@ function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
 export async function lerPlantas(tx: Transacao, { acesso, arvore }: LeitorDoMapa) {
   const podeEditar = pode(acesso, 'mapa.editar');
   const linhas = await tx.select(dePlanta).from(plantas).orderBy(asc(plantas.nomeNormalizado));
+  // Quantas posições cada planta tem, só para quem edita: quem só vê não conta o que não alcança.
+  const contagens = podeEditar
+    ? await tx
+        .select({ planta: posicoesNaPlanta.plantaId, posicoes: sql<number>`count(*)::int` })
+        .from(posicoesNaPlanta)
+        .groupBy(posicoesNaPlanta.plantaId)
+    : [];
+  const posicoesDe = new Map(contagens.map(({ planta, posicoes }) => [planta, posicoes]));
   return {
     plantas: linhas
       .filter((linha) => podeEditar || linha.situacao === 'ativa')
-      .map((linha) => plantaLida(linha as LinhaDaPlanta, arvore)),
+      .map((linha) =>
+        plantaLida(
+          linha as LinhaDaPlanta,
+          arvore,
+          podeEditar ? (posicoesDe.get(linha.id) ?? 0) : null,
+        ),
+      ),
     podeEditar,
   };
 }
@@ -331,7 +355,7 @@ export async function cadastrarPlanta(
   });
   const arvore = await lerArvore(tx);
   const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, criada.id));
-  return plantaLida(linha as LinhaDaPlanta, arvore);
+  return plantaLida(linha as LinhaDaPlanta, arvore, 0);
 }
 
 /** Renomeia, liga a um local ou inativa a planta. */
@@ -368,7 +392,7 @@ export async function alterarPlanta(
     momento,
   });
   const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
-  return plantaLida(linha as LinhaDaPlanta, await lerArvore(tx));
+  return plantaLida(linha as LinhaDaPlanta, await lerArvore(tx), await posicoesDa(tx, id));
 }
 
 /**
@@ -450,7 +474,10 @@ export async function substituirDesenho(
   // O arquivo é o último passo antes do commit: o armazenamento troca o modelo inteiro ou não troca.
   await armazenamento.gravar(chave, Buffer.from(JSON.stringify(modelo)));
   const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
-  return { planta: plantaLida(linha as LinhaDaPlanta, await lerArvore(tx)), posicoesFora };
+  return {
+    planta: plantaLida(linha as LinhaDaPlanta, await lerArvore(tx), await posicoesDa(tx, id)),
+    posicoesFora,
+  };
 }
 
 /**

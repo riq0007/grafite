@@ -21,6 +21,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { pedir } from '../../api/pedir.ts';
 import { useApi } from '../../api/useApi.tsx';
+import { Confirmacao } from '../administracao/Confirmacao.tsx';
 import { SeletorDeLocal } from '../administracao/seletores/SeletorDeLocal.tsx';
 import { CHAVE_DO_MAPA, type PlantaDoMapa, usePlantas } from './consultas.ts';
 import estilos from './Mapa.module.css';
@@ -223,8 +224,48 @@ function LocalDaPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: (
   );
 }
 
-/** As ações que abrem uma gaveta; as outras valem na hora. */
-type AcaoComGaveta = 'renomear' | 'local';
+/** O que a exclusão apaga, em texto, pela quantidade de posições da planta. */
+function oQueAExclusaoApaga(posicoes: number): string {
+  if (posicoes === 0)
+    return 'A exclusão apaga a planta e o desenho dela. Nada está posicionado nela.';
+  const quantas = posicoes === 1 ? '1 posição' : `${posicoes.toLocaleString('pt-BR')} posições`;
+  return `A exclusão apaga a planta, o desenho dela e ${quantas} no mapa. O que estava posicionado continua cadastrado.`;
+}
+
+/**
+ * A confirmação da exclusão (spec mapa-da-planta, "Exclusão da planta"): diz quantas posições saem
+ * e que a exclusão não se desfaz, e pede o nome da planta digitado.
+ */
+function ExcluirPlanta({ planta, aoFechar }: { planta: PlantaDoMapa; aoFechar: () => void }) {
+  const api = useApi();
+  const consultas = useQueryClient();
+  return (
+    <Confirmacao
+      aberta
+      aoFechar={aoFechar}
+      acao="Excluir a planta"
+      titulo={`Excluir a planta ${planta.nome}?`}
+      confirmando="Excluindo"
+      conferir={planta.nome}
+      fazer={async () => {
+        const resultado = await pedir(
+          () => api.DELETE('/mapa/plantas/{id}', { params: { path: { id: planta.id } } }),
+          'excluir a planta',
+        );
+        if ('erro' in resultado) return { erro: resultado.erro };
+        avisar({ situacao: 'sucesso', titulo: `Planta ${planta.nome} excluída.` });
+        await consultas.invalidateQueries({ queryKey: CHAVE_DO_MAPA });
+        return { ok: true };
+      }}
+    >
+      <p>{oQueAExclusaoApaga(planta.posicoes ?? 0)}</p>
+      <p>A exclusão não se desfaz.</p>
+    </Confirmacao>
+  );
+}
+
+/** As ações que abrem uma gaveta ou a confirmação; as outras valem na hora. */
+type AcaoComGaveta = 'renomear' | 'local' | 'excluir';
 
 /**
  * O menu "Ações" de uma planta. A planta que falhou não tem a situação nem o local para mudar: os
@@ -283,6 +324,9 @@ function AcoesDaPlanta({
           Reativar
         </ItemDeMenu>
       )}
+      <ItemDeMenu id="excluir" destrutivo onAction={() => aoAbrir('excluir')}>
+        Excluir…
+      </ItemDeMenu>
     </Menu>
   );
 }
@@ -377,6 +421,9 @@ export function Plantas() {
       )}
       {plantaAberta && aberta?.acao === 'local' && (
         <LocalDaPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />
+      )}
+      {plantaAberta && aberta?.acao === 'excluir' && (
+        <ExcluirPlanta planta={plantaAberta} aoFechar={() => definirAberta(null)} />
       )}
     </div>
   );
