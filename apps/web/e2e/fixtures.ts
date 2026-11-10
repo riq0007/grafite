@@ -75,11 +75,17 @@ export const SEM_SESSAO = { organizacao: SESSAO.organizacao, sessao: null };
 /**
  * A chegada terminou: a primeira tela está à vista e recebe o teclado e o toque. Com a sessão
  * valendo, é a casca; sem sessão, a chegada fica na tela de entrada até a pessoa entrar.
+ *
+ * A primeira tela já está no lugar enquanto o carregamento sai por cima dela, e até sair ele fica
+ * com o toque. Um clique nessa hora é repetido pelo Playwright, que a cada repetição rola o alvo
+ * para outro canto da área (o fim, o centro e o início) e deixa a página rolada. Por isso a espera
+ * vai até o carregamento sair: tirado do documento ou fora de vista.
  */
 export async function esperarAChegada(pagina: Page) {
   await pagina
     .locator('html:is([data-chegada="pronta"], [data-chegada="entrada"])')
     .waitFor({ state: 'attached' });
+  await pagina.locator('#chegada').waitFor({ state: 'hidden' });
 }
 
 /** A página não rola na horizontal. */

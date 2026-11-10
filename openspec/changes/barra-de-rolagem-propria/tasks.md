@@ -30,3 +30,4 @@
   - `openspec validate barra-de-rolagem-propria --strict`.
 
   Verificar: os comandos passam.
+- [x] 4.5 Fazer o ponta a ponta esperar o carregamento da chegada sair antes de agir: a escolha da barra deixou a seção Aparência mais alta, e, no celular, o clique no tema dado enquanto o carregamento saía era repetido pelo Playwright, que rola o alvo a cada repetição e deixava a página dos Padrões no fim, com "Salvar padrões" fora da vista. Verificar: "os padrões cabem na tela", no celular, passa 48 vezes seguidas em paralelo, sem nenhuma repetição do clique no registro do Playwright, e o `pnpm test:e2e` passa.
