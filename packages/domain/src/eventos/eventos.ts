@@ -93,6 +93,12 @@ export const EVENTO_DA_ACAO = {
   'endereco.registrado': null,
   'endereco.removido': null,
   'acesso.redefinido': 'pessoas.mudaram',
+  // Aparelhos confiáveis (change aparelho-confiavel): a lista de cada conta é lida ao abrir; o
+  // prazo da organização, de um perfil ou de uma conta muda o que as telas dos acessos mostram.
+  'aparelho.marcado': null,
+  'aparelho.esquecido': null,
+  'aparelhos.esquecidos': null,
+  'prazo-da-confianca.alterado': 'acessos.mudaram',
   // Permissões (F2b)
   'permissao.recusada': null,
   // Locais

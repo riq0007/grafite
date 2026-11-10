@@ -25,6 +25,7 @@ const colunasDoPerfil = {
   permissoes: perfis.permissoes,
   todasAsPermissoes: perfis.todasAsPermissoes,
   exigeDoisPassos: perfis.exigeDoisPassos,
+  diasDeConfianca: perfis.diasDeConfianca,
 };
 
 export async function carregarAcesso(tx: Transacao, contaId: string): Promise<Acesso> {
