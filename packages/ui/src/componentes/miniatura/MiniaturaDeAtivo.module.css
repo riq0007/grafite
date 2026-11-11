@@ -1,6 +1,9 @@
 .miniatura {
   box-sizing: border-box;
   display: inline-grid;
+  /* Em linha com o texto, como na célula da tabela, alinha pelo meio, e não pela linha de base
+     (spec componentes-base, "Tabela base"). Num contêiner flexível ou de grade, não tem efeito. */
+  vertical-align: middle;
   flex: none;
   place-items: center;
   width: var(--tamanho-miniatura);

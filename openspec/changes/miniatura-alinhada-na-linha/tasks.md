@@ -1,6 +1,6 @@
 ## 1. O alinhamento
 
-- [ ] 1.1 Escrever primeiro a história "Com miniaturas" da tabela virtualizada e a conferência do alinhamento na "Com miniaturas" da tabela base, as duas medindo o centro da miniatura contra o centro das primeiras linhas, e ver a da virtualizada falhar com o desvio de 7 px; depois, o `vertical-align: middle` na miniatura (design, decisões 1 e 2). Verificar: as duas histórias passam no `pnpm test:stories`, com até 1 px de diferença.
+- [x] 1.1 Escrever primeiro a história "Tabela com miniaturas", na tabela base e na que desenha só as linhas visíveis, nas três densidades, medindo o centro da miniatura contra o centro de cada linha. Ver as duas falharem: na compacta, 1,8 px na base e 5,1 px na virtualizada. Depois, o `vertical-align: middle` na miniatura (design, decisões 1 e 2). Verificar: as duas histórias passam no `pnpm test:stories`, com até 1 px de diferença.
 
 ## 2. Fechamento
 

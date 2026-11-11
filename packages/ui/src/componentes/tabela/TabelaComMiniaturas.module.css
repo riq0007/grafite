@@ -1,0 +1,13 @@
+.faixas {
+  display: grid;
+  gap: var(--esp-6);
+  padding: var(--esp-4);
+  background: var(--cor-superficie);
+}
+
+/* A tabela que desenha só as linhas visíveis precisa de uma altura; nesta cabem as quatro linhas. */
+.virtualizada {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--esp-12) * 6);
+}
