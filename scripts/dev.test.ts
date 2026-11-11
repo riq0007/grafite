@@ -10,6 +10,7 @@ import {
   dockerEmExecucao,
   gerarEnvDeDesenvolvimento,
   organizacaoDeDesenvolvimento,
+  PORTAS_DO_MAILPIT,
   passosDoBanco,
   processosDoDesenvolvimento,
   SERVICOS_DO_COMPOSE,
@@ -261,7 +262,7 @@ describe('os canais de fora no desenvolvimento', () => {
       () => 'token',
       () => CHAVES,
     );
-    expect(valor(env, 'GRAFITE_SMTP_URL')).toBe('smtp://127.0.0.1:1025');
+    expect(valor(env, 'GRAFITE_SMTP_URL')).toBe('smtp://127.0.0.1:1026');
     expect(valor(env, 'GRAFITE_EMAIL_REMETENTE')).toBe('"Grafite <grafite@grafite.localhost>"');
     expect(valor(env, 'GRAFITE_ORIGEM_DOS_LINKS')).toBe('http://localhost:5173');
     expect(valor(env, 'GRAFITE_PUSH_CHAVE_PUBLICA')).toBe('PUBLICA-DO-PUSH');
@@ -292,14 +293,26 @@ describe('os canais de fora no desenvolvimento', () => {
     expect(valor(completo, 'GRAFITE_PUSH_CHAVE_PRIVADA')).toBe('');
   });
 
-  it('o compose sobe o banco e o Mailpit, com o Mailpit só no próprio computador', () => {
+  it('o .env com o Mailpit na porta de fábrica passa para a porta nova', () => {
+    const antigo = 'GRAFITE_DB_PORT=5433\nGRAFITE_SMTP_URL=smtp://127.0.0.1:1025\n';
+    const completo = completarCanaisDoDesenvolvimento(antigo, () => CHAVES);
+    expect(valor(completo, 'GRAFITE_SMTP_URL')).toBe('smtp://127.0.0.1:1026');
+    expect(completarCanaisDoDesenvolvimento(completo, () => CHAVES)).toBe(completo);
+    const doWindows = 'GRAFITE_SMTP_URL=smtp://127.0.0.1:1025\r\nGRAFITE_DB_PORT=5433\r\n';
+    expect(completarCanaisDoDesenvolvimento(doWindows, () => CHAVES)).toContain(
+      'GRAFITE_SMTP_URL=smtp://127.0.0.1:1026\r\n',
+    );
+  });
+
+  it('o compose sobe o banco e o Mailpit, só no próprio computador e fora das portas de fábrica', () => {
     expect(SERVICOS_DO_COMPOSE).toEqual(['db', 'email']);
+    expect(PORTAS_DO_MAILPIT).toEqual({ smtp: 1026, web: 8026 });
     const compose = readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), '..', 'compose.yaml'),
       'utf8',
     );
     expect(compose).toContain('image: axllent/mailpit:v1.24.1');
-    expect(compose).toContain('"127.0.0.1:1025:1025"');
-    expect(compose).toContain('"127.0.0.1:8025:8025"');
+    expect(compose).toContain('"127.0.0.1:1026:1025"');
+    expect(compose).toContain('"127.0.0.1:8026:8025"');
   });
 });

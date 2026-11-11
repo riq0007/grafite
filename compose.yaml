@@ -23,12 +23,15 @@ services:
       retries: 30
 
   # O e-mail do desenvolvimento (change p3c-email-e-push): o Mailpit guarda o que a API manda, sem
-  # entregar a ninguém, e o mostra em http://localhost:8025. Só no próprio computador.
+  # entregar a ninguém, e o mostra em http://localhost:8026. Só no próprio computador, e fora das
+  # portas de fábrica (1025 e 8025), que o Mailpit de outro projeto costuma ocupar: com uma delas
+  # ocupada, o Docker sobe o contêiner sem publicar nenhuma porta. As mesmas do PORTAS_DO_MAILPIT,
+  # no scripts/dev.ts.
   email:
     image: axllent/mailpit:v1.24.1
     ports:
-      - "127.0.0.1:1025:1025"
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1026:1025"
+      - "127.0.0.1:8026:8025"
 
 volumes:
   dados-db:

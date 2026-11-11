@@ -43,9 +43,21 @@ export function gerarChavesDoPush(): ChavesDoPush {
   return { publica, privada: d };
 }
 
+/**
+ * As portas do Mailpit no próprio computador, fora das de fábrica (1025 e 8025), que o Mailpit de
+ * outro projeto costuma ocupar. Com uma delas ocupada, o Docker sobe o contêiner sem publicar
+ * nenhuma porta, e o e-mail do desenvolvimento some sem erro. O `compose.yaml` repete as duas.
+ */
+export const PORTAS_DO_MAILPIT = { smtp: 1026, web: 8026 } as const;
+
+const SMTP_DO_MAILPIT = `smtp://127.0.0.1:${PORTAS_DO_MAILPIT.smtp}`;
+
+/** O SMTP do Mailpit que o .env levava antes das portas próprias. */
+const SMTP_DO_MAILPIT_NA_PORTA_DE_FABRICA = /^GRAFITE_SMTP_URL=smtp:\/\/127\.0\.0\.1:1025(?=\r?$)/m;
+
 /** O e-mail do Mailpit e a origem dos links da web do Vite: sem segredo, iguais em todo computador. */
 const CANAIS_SEM_SEGREDO: ReadonlyArray<[string, string]> = [
-  ['GRAFITE_SMTP_URL', 'smtp://127.0.0.1:1025'],
+  ['GRAFITE_SMTP_URL', SMTP_DO_MAILPIT],
   ['GRAFITE_EMAIL_REMETENTE', '"Grafite <grafite@grafite.localhost>"'],
   ['GRAFITE_ORIGEM_DOS_LINKS', 'http://localhost:5173'],
   ['GRAFITE_PUSH_CONTATO', 'mailto:grafite@grafite.localhost'],
@@ -118,13 +130,18 @@ export function completarEnvDeDesenvolvimento(
 /**
  * Um .env de antes do e-mail e do push ganha o Mailpit, a origem dos links e as chaves do push, sem
  * trocar o que já tem. O par das chaves é gerado uma vez, só com as duas faltando: um par novo ao
- * lado de uma chave que ficou não abriria, e a API recusaria iniciar dizendo o motivo.
+ * lado de uma chave que ficou não abriria, e a API recusaria iniciar dizendo o motivo. A exceção é
+ * o SMTP do Mailpit na porta de fábrica, que passa para a porta nova; outro SMTP, escolhido à mão,
+ * fica como está.
  */
 export function completarCanaisDoDesenvolvimento(
   conteudo: string,
   chavesDoPush: () => ChavesDoPush = gerarChavesDoPush,
 ): string {
-  let completo = conteudo;
+  let completo = conteudo.replace(
+    SMTP_DO_MAILPIT_NA_PORTA_DE_FABRICA,
+    `GRAFITE_SMTP_URL=${SMTP_DO_MAILPIT}`,
+  );
   for (const [nome, valor] of CANAIS_SEM_SEGREDO) {
     completo = completarVariavel(completo, nome, () => valor);
   }
@@ -346,7 +363,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   await esperarAApi();
   for (const processo of todos.filter(({ depoisDaApi }) => depoisDaApi)) subir(processo);
   console.log('Coletor em http://127.0.0.1:3100/health, com a faixa 127.0.0.0/8');
-  console.log('E-mails do desenvolvimento em http://localhost:8025 (o Mailpit não entrega nenhum)');
+  console.log(
+    `E-mails do desenvolvimento em http://localhost:${PORTAS_DO_MAILPIT.web} (o Mailpit não entrega nenhum)`,
+  );
 
   const encerrar = () => {
     for (const processo of processos) processo.kill();
