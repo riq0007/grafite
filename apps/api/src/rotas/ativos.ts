@@ -18,6 +18,8 @@ import {
   pode,
   podeEm,
   rotuloDoAtivo,
+  TIPOS_DE_SUPRIMENTO,
+  type TipoDeSuprimento,
 } from '@grafite/domain';
 import { and, count, desc, eq, inArray, like, lt, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
@@ -68,10 +70,12 @@ import {
   FiltrosDasContagens,
   FiltrosDeAtivos,
   FiltrosDoHistorico,
+  FiltrosDosMenoresSuprimentos,
   HistoricoDoAtivo,
   LigacaoLivre,
   LigadosDoAtivo,
   ListaDeAtivos,
+  MenoresSuprimentos,
   NomeDoArquivoEnviado,
   ParametrosDaEntregaDoArquivo,
   ParametrosDaImagemDoAtivo,
@@ -106,7 +110,11 @@ import { registrarNaAuditoria } from '../auditoria.ts';
 import { contendo } from '../busca.ts';
 import { controlIdDosAtivos } from '../coleta/control-id.ts';
 import { disponibilidadeDosAtivos } from '../coleta/disponibilidade.ts';
-import { serieDosSuprimentos, suprimentosDosAtivos } from '../coleta/suprimentos.ts';
+import {
+  menoresSuprimentos,
+  serieDosSuprimentos,
+  suprimentosDosAtivos,
+} from '../coleta/suprimentos.ts';
 import { saidaDoAtivo } from '../eventos/ativos.ts';
 import { decodificarCursor, pagina } from '../paginacao.ts';
 import { dadosInvalidos, RespostaDeProblema } from '../problemas.ts';
@@ -147,6 +155,43 @@ function condicoesDaLista(
     if (noAtivoOuNoModelo) condicoes.push(noAtivoOuNoModelo);
   }
   return condicoes;
+}
+
+/** Uma lista da consulta, separada por vírgula, sem repetir; `undefined` sem o parâmetro. */
+const listaDaConsulta = (bruto: string | undefined) =>
+  bruto === undefined
+    ? undefined
+    : [
+        ...new Set(
+          bruto
+            .split(',')
+            .map((item) => item.trim())
+            .filter((item) => item !== ''),
+        ),
+      ];
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Quantos locais o recorte dos suprimentos aceita, como a opção do bloco guarda. */
+const LIMITE_DOS_LOCAIS_DO_RECORTE = 50;
+
+/**
+ * Os tipos e os locais do recorte dos suprimentos, lidos da consulta: sem os tipos, todos; com
+ * eles, pelo menos um, e só os conhecidos. Os locais são ids, até 50.
+ */
+function lerRecorteDosSuprimentos(filtros: z.infer<typeof FiltrosDosMenoresSuprimentos>) {
+  const tipos = listaDaConsulta(filtros.tipos) ?? [...TIPOS_DE_SUPRIMENTO];
+  const conhecidos = tipos.filter((tipo): tipo is TipoDeSuprimento =>
+    (TIPOS_DE_SUPRIMENTO as readonly string[]).includes(tipo),
+  );
+  if (tipos.length === 0 || conhecidos.length !== tipos.length) {
+    throw dadosInvalidos({ tipos: 'Escolha toner, cilindro, fusor ou outro.' });
+  }
+  const locais = listaDaConsulta(filtros.locais) ?? [];
+  if (locais.length > LIMITE_DOS_LOCAIS_DO_RECORTE || !locais.every((id) => UUID.test(id))) {
+    throw dadosInvalidos({ locais: 'Escolha até 50 locais.' });
+  }
+  return { tipos: conhecidos, locais, limite: filtros.limite, nivel: filtros.nivel };
 }
 
 /** Quantas etiquetas cabem num pedido. */
@@ -509,6 +554,26 @@ export const rotasDosAtivos: FastifyPluginAsyncZod<{ banco: Banco; agora: () => 
           ligados: await quantosLigados(tx, { sessao, arvore }, id),
         };
       });
+    },
+  );
+
+  app.get(
+    '/ativos/suprimentos/menores',
+    {
+      config: { permissao: 'ativos.ver' },
+      schema: {
+        summary:
+          'As impressoras de menor nível: o suprimento de menor nível de cada uma, entre os tipos pedidos',
+        querystring: FiltrosDosMenoresSuprimentos,
+        response: { 200: MenoresSuprimentos, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    async (requisicao) => {
+      const sessao = sessaoDa(requisicao);
+      const recorte = lerRecorteDosSuprimentos(requisicao.query);
+      return naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        menoresSuprimentos(tx, { sessao, arvore: await lerArvore(tx) }, recorte),
+      );
     },
   );
 

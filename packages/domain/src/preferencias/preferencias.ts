@@ -3,6 +3,7 @@
 // organização e a da conta) guarda só os campos mudados, e a que vale é resolvida campo a campo.
 // As listas de opções repetem as chaves dos tokens do @grafite/ui, e um teste da web confere que
 // continuam iguais: o domínio não depende do pacote visual.
+import { MODULO_DOS_AJUSTES } from '../modulos/modulos.ts';
 import {
   type IdDaTabelaComVisoes,
   TABELAS_COM_VISOES,
@@ -20,11 +21,18 @@ export const DESTAQUES_DA_ESCOLHA = [...DESTAQUES, 'personalizado'] as const;
 /** O tom do tema personalizado. */
 export const TONS = ['escuro', 'claro'] as const;
 export const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
+/**
+ * Quando o polegar da barra de rolagem aparece: com o ponteiro sobre a área, ao rolar e com o foco
+ * nela, ou sempre (change barra-de-rolagem-propria).
+ */
+export const BARRAS_DE_ROLAGEM = ['ao-rolar', 'sempre'] as const;
 export const POSICOES_DO_DOCK = ['embaixo', 'esquerda', 'direita'] as const;
 /** Tempo, em segundos, que um aviso de Atenção ou de Informação fica na tela. */
 export const TEMPOS_DO_AVISO = [6, 10, 20] as const;
 /** O resumo por e-mail das notificações que não foram na hora (change p3c-email-e-push). */
 export const RESUMOS_POR_EMAIL = ['desligado', 'diario'] as const;
+/** A largura de um bloco do Início: a inteira, de fábrica, ou a metade (change opcoes-dos-blocos-do-inicio). */
+export const LARGURAS_DO_BLOCO = ['inteira', 'metade'] as const;
 /** Colunas pelas quais a tela inicial ordena as ocorrências. */
 export const COLUNAS_DA_TELA_INICIAL = ['severidade', 'ha', 'ativo', 'ocorrencia'] as const;
 
@@ -40,13 +48,43 @@ export const LIMITES_DAS_PREFERENCIAS = {
   fixadas: 20,
   /** Quantos blocos do Início a lista guarda (change inicio-ajustavel). */
   blocosDoInicio: 20,
+  /** Quantos módulos a lista do dock guarda (change dock-personalizavel). */
+  modulosDoDock: 40,
+  /** As opções de um bloco do Início: quantas, e o tamanho da chave, do texto e da lista. */
+  opcoesDoBloco: 12,
+  chaveDaOpcaoDoBloco: 30,
+  textoDaOpcaoDoBloco: 80,
+  listaDaOpcaoDoBloco: 50,
 } as const;
 
 export type TempoDoAviso = (typeof TEMPOS_DO_AVISO)[number];
 export type ResumoPorEmail = (typeof RESUMOS_POR_EMAIL)[number];
 
-/** Um bloco do Início na ordem da conta: o id, como "ativos.suprimentos", e se está à vista. */
+export type LarguraDoBloco = (typeof LARGURAS_DO_BLOCO)[number];
+
+/**
+ * O valor de uma opção de um bloco do Início: verdadeiro ou falso, um número, um texto ou uma
+ * lista de textos. O significado é do bloco: o domínio só confere a forma.
+ */
+export type ValorDaOpcaoDoBloco = boolean | number | string | string[];
+
+/**
+ * Um bloco do Início na ordem da conta: o id, como "ativos.suprimentos", e se está à vista. Pode
+ * trazer a largura, que sem ela é a inteira, e as opções do bloco, pela chave (change
+ * opcoes-dos-blocos-do-inicio, design, decisão 2).
+ */
 export interface BlocoDoInicioSalvo {
+  id: string;
+  visivel: boolean;
+  largura?: LarguraDoBloco;
+  opcoes?: Record<string, ValorDaOpcaoDoBloco>;
+}
+
+/**
+ * Um módulo na ordem do dock: o id, como "operacao", e se está no dock. O que não está fica no
+ * menu Mais. A forma é a dos blocos do Início (change dock-personalizavel, design, decisão 1).
+ */
+export interface ModuloDoDockSalvo {
   id: string;
   visivel: boolean;
 }
@@ -78,6 +116,7 @@ export interface PreferenciasDaInterface {
     tema: (typeof TEMAS_DA_ESCOLHA)[number];
     destaque: (typeof DESTAQUES_DA_ESCOLHA)[number];
     densidade: (typeof DENSIDADES)[number];
+    barraDeRolagem: (typeof BARRAS_DE_ROLAGEM)[number];
     raio: number;
     /** As entradas do tema Personalizado, trocadas inteiras, como a ordem da tela inicial. */
     personalizado: TemaPersonalizado;
@@ -89,6 +128,11 @@ export interface PreferenciasDaInterface {
     tamanho: number;
     ampliar: boolean;
     ocultar: boolean;
+    /**
+     * Os módulos na ordem escolhida, com os tirados do dock, trocados inteiros. A lista vazia é a
+     * ordem de fábrica, a do registro, com todos no dock. Ajustes fica fora dela, sempre no fim.
+     */
+    modulos: ModuloDoDockSalvo[];
   };
   /** Suavização em %, de 0 a 100; "abracar" é o abraço dos elementos interativos. */
   cursor: { tipo: 'suavizado' | 'sistema'; suavizacao: number; abracar: boolean };
@@ -165,12 +209,13 @@ export const PADRAO_DE_FABRICA: PreferenciasDaInterface = {
     tema: 'grafite',
     destaque: 'grafite',
     densidade: 'normal',
+    barraDeRolagem: 'ao-rolar',
     raio: 10,
     // O personalizado começa como o Grafite, e o destaque personalizado, como o azul.
     personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
     destaquePersonalizado: { matiz: 258, intensidade: 85 },
   },
-  dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false },
+  dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false, modulos: [] },
   cursor: { tipo: 'suavizado', suavizacao: 95, abracar: true },
   notificacoes: {
     atencao: true,
@@ -258,27 +303,78 @@ const juntos =
     return lido;
   };
 
-/** O id de um bloco do Início: letras minúsculas, números, ponto e hífen, até 40. */
-const ID_DO_BLOCO = /^[a-z0-9.-]{1,40}$/;
+/**
+ * O id de um item de lista ordenada, como um bloco do Início ou um módulo do dock: letras
+ * minúsculas, números, ponto e hífen, até 40.
+ */
+const ID_DO_ITEM = /^[a-z0-9.-]{1,40}$/;
 
 /**
- * Os blocos do Início, na ordem: o item inválido e o repetido saem, um a um, e a lista é cortada no
- * limite. A lista vazia vale; o que não é lista fica de fora.
+ * Uma lista ordenada de itens `{ id, visivel }`, como os blocos do Início e os módulos do dock: o
+ * item inválido, o repetido e o de id recusado saem, um a um, e a lista é cortada no limite. A
+ * lista vazia vale; o que não é lista fica de fora.
  */
-const blocosDoInicio: Leitor = (valor) => {
-  if (!Array.isArray(valor)) return undefined;
-  const lidos: Array<{ id: string; visivel: boolean }> = [];
-  for (const item of valor) {
-    const bruto = objeto(item);
-    const id = bruto?.id;
-    const visivel = bruto?.visivel;
-    if (typeof id !== 'string' || !ID_DO_BLOCO.test(id) || typeof visivel !== 'boolean') continue;
-    if (lidos.some((lido) => lido.id === id)) continue;
-    lidos.push({ id, visivel });
-    if (lidos.length === LIMITES_DAS_PREFERENCIAS.blocosDoInicio) break;
+const listaOrdenada =
+  (
+    limite: number,
+    {
+      recusados = [],
+      extras,
+    }: {
+      recusados?: readonly string[];
+      /** O que o item traz além do id e da visibilidade, já lido: só os campos válidos. */
+      extras?: (bruto: Bruto) => Bruto;
+    } = {},
+  ): Leitor =>
+  (valor) => {
+    if (!Array.isArray(valor)) return undefined;
+    const lidos: Array<{ id: string; visivel: boolean }> = [];
+    for (const item of valor) {
+      if (lidos.length === limite) break;
+      const bruto = objeto(item);
+      const id = bruto?.id;
+      const visivel = bruto?.visivel;
+      if (!bruto || typeof id !== 'string' || !ID_DO_ITEM.test(id)) continue;
+      if (typeof visivel !== 'boolean') continue;
+      if (recusados.includes(id) || lidos.some((lido) => lido.id === id)) continue;
+      lidos.push({ id, visivel, ...extras?.(bruto) });
+    }
+    return lidos;
+  };
+
+/** A chave de uma opção de bloco: letras minúsculas, números e hífen, até 30. */
+const CHAVE_DA_OPCAO = /^[a-z0-9-]{1,30}$/;
+
+const textoDaOpcao = (valor: unknown): valor is string =>
+  typeof valor === 'string' && valor.length <= LIMITES_DAS_PREFERENCIAS.textoDaOpcaoDoBloco;
+
+/** O valor de uma opção de bloco, se a forma dele confere: o que não confere fica de fora. */
+function valorDaOpcao(valor: unknown): ValorDaOpcaoDoBloco | undefined {
+  if (typeof valor === 'boolean' || textoDaOpcao(valor)) return valor;
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : undefined;
+  const lista =
+    Array.isArray(valor) && valor.length <= LIMITES_DAS_PREFERENCIAS.listaDaOpcaoDoBloco;
+  return lista && valor.every(textoDaOpcao) ? [...valor] : undefined;
+}
+
+/**
+ * A largura e as opções de um bloco do Início (change opcoes-dos-blocos-do-inicio, design, decisão
+ * 2): a largura desconhecida e a opção fora da forma saem, uma a uma, e o bloco continua. As
+ * opções são cortadas no limite, e o bloco sem nenhuma válida fica sem o campo.
+ */
+function extrasDoBloco(bruto: Bruto): Bruto {
+  const extras: Bruto = {};
+  const largura = umDe(LARGURAS_DO_BLOCO)(bruto.largura);
+  if (largura !== undefined) extras.largura = largura;
+  const opcoes: Bruto = {};
+  for (const [chave, valor] of Object.entries(objeto(bruto.opcoes) ?? {})) {
+    if (Object.keys(opcoes).length === LIMITES_DAS_PREFERENCIAS.opcoesDoBloco) break;
+    const lido = CHAVE_DA_OPCAO.test(chave) ? valorDaOpcao(valor) : undefined;
+    if (lido !== undefined) opcoes[chave] = lido;
   }
-  return lidos;
-};
+  if (Object.keys(opcoes).length > 0) extras.opcoes = opcoes;
+  return extras;
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -327,6 +423,7 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     tema: umDe(TEMAS_DA_ESCOLHA),
     destaque: umDe(DESTAQUES_DA_ESCOLHA),
     densidade: umDe(DENSIDADES),
+    barraDeRolagem: umDe(BARRAS_DE_ROLAGEM),
     raio: inteiroEntre(LIMITES_DAS_PREFERENCIAS.raio),
     personalizado: juntos({
       tom: umDe(TONS),
@@ -344,6 +441,9 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     tamanho: inteiroEntre(LIMITES_DAS_PREFERENCIAS.tamanhoDoDock),
     ampliar: booleano,
     ocultar: booleano,
+    modulos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.modulosDoDock, {
+      recusados: [MODULO_DOS_AJUSTES],
+    }),
   },
   cursor: {
     tipo: umDe(['suavizado', 'sistema']),
@@ -370,7 +470,10 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     fixadasPelaOrganizacao: fixadasDasTabelas,
   },
   regiao: { fuso },
-  inicio: { ordenacao, blocos: blocosDoInicio },
+  inicio: {
+    ordenacao,
+    blocos: listaOrdenada(LIMITES_DAS_PREFERENCIAS.blocosDoInicio, { extras: extrasDoBloco }),
+  },
   acessibilidade: {
     movimento: umDe(['sistema', 'reduzido']),
     transparencia: umDe(['sistema', 'reduzida']),

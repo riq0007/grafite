@@ -31,6 +31,30 @@ describe('busca dos Ajustes', () => {
     });
   });
 
+  // Spec ajustes-do-sistema, "Seção Aparência": Barra de rolagem pela busca.
+  it('Barra de rolagem pela busca: a entrada leva à Aparência, com o foco na escolha', () => {
+    expect(entradas.find((entrada) => entrada.rotulo === 'Barra de rolagem')).toMatchObject({
+      grupo: 'ajustes',
+      caminho: 'Ajustes › Aparência',
+      destino: '/ajustes/aparencia',
+      foco: 'barra-de-rolagem',
+    });
+  });
+
+  // Spec ajustes-do-sistema, "Seção Dock": Ordem pela busca.
+  it('Ordem pela busca: "Módulos do dock" leva à seção Dock, com o foco na lista "No dock"', () => {
+    const entrada = entradas.find((candidata) => candidata.rotulo === 'Módulos do dock');
+    expect(entrada).toMatchObject({
+      grupo: 'ajustes',
+      caminho: 'Ajustes › Dock',
+      destino: '/ajustes/dock',
+      foco: 'modulos-do-dock',
+    });
+    expect(entrada?.palavrasChave).toEqual(
+      expect.arrayContaining(['ordem', 'organizar', 'tirar do dock']),
+    );
+  });
+
   it('a Conta entra com as partes dela, cada uma com o foco na parte', () => {
     expect(entradas.find((entrada) => entrada.id === 'conta')).toMatchObject({
       rotulo: 'Conta',
@@ -42,6 +66,7 @@ describe('busca dos Ajustes', () => {
       ['Trocar senha', '/ajustes/conta', 'senha'],
       ['Verificação em dois passos', '/ajustes/conta', 'dois-passos'],
       ['Códigos de recuperação', '/ajustes/conta', 'codigos-de-recuperacao'],
+      ['Aparelhos confiáveis', '/ajustes/conta', 'aparelhos-confiaveis'],
       ['Sessões', '/ajustes/conta', 'sessoes'],
     ]);
   });

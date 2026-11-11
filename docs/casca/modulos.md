@@ -6,7 +6,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 
 1. **Pasta.** O módulo vive em `apps/web/src/modulos/<id>/`, com `rotas.tsx`, `modulo.ts` e as telas.
 2. **Rotas.** A subárvore do módulo fica presa à raiz (`getParentRoute: () => raiz`). Cada rota fica numa constante própria e só depois entra no `addChildren`. Criadas dentro do `addChildren`, as rotas filhas perdem os tipos dos endereços, e um menu com destino errado passa a compilar.
-3. **Entrada no registro.** O `modulo.ts` declara o módulo com `definirModulo`, que confere os endereços dos menus e das entradas de busca contra as rotas do próprio módulo. A entrada vai para o `REGISTRO`, antes de Ajustes, que fica sempre no fim do dock, depois do separador.
+3. **Entrada no registro.** O `modulo.ts` declara o módulo com `definirModulo`, que confere os endereços dos menus e das entradas de busca contra as rotas do próprio módulo. A entrada vai para o `REGISTRO`, antes de Ajustes, que fica sempre no fim do dock, depois do separador. A ordem do registro é a de fábrica: a conta escolhe outra e tira módulos do dock em Ajustes › Dock, e a organização define a de quem não escolheu, sem o módulo fazer nada. O módulo tirado do dock fica no botão Mais e continua na busca e nos endereços (change dock-personalizavel).
 4. **Telas.** Toda tela começa pelo `CabecalhoDaPagina`, que leva o título da janela, em todos os estados: carregando, com erro, vazia e sem acesso. O foco vai para o título depois de cada navegação, e o teste-guarda `casca/cabecalhoDasTelas.test.ts` reprova o `TituloDaJanela` solto, fora do Início (change cabecalho-em-toda-tela). Nenhum item leva a uma tela em construção: o módulo só entra no registro quando cada destino tem uma tela que funciona.
    - **Rolagem.** A tela rola dentro da janela, na área abaixo da barra das abas, que esmaece o conteúdo perto da borda e volta ao começo quando a tela muda (change janela-rolavel-e-campos-em-colunas). A tela não cria uma rolagem própria para a página. A peça presa, com `position: sticky`, usa `top: 0`, que já fica abaixo da faixa esmaecida de cima.
    - **Título com a barra das abas.** A tela cujo título a primeira aba já repete, como o cadastro do ativo, pede `<CabecalhoDaPagina titulo={…} ocultarComAbas />`: com a barra das abas, o título sai da vista e continua para o leitor de tela e para o foco.
@@ -27,7 +27,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 | `nome` | Nome do módulo no dock, na barra de abas e na barra superior |
 | `icone` | Ícone do `lucide-react`, desenhado com o traço do projeto |
 | `endereco` | Aonde levam o item do dock e a aba do celular |
-| `prioridadeNoCelular` | Ordem na barra de abas do celular: número menor vem antes, ou `'mais'` para ficar sempre em "Mais". Cabem cinco abas, ou quatro e "Mais" |
+| `prioridadeNoCelular` | Ordem na barra de abas do celular: número menor vem antes, ou `'mais'` para ficar sempre em "Mais". Cabem cinco abas, ou quatro e "Mais". Com a ordem do dock escolhida pela conta ou pela organização, as abas seguem essa ordem, e o módulo tirado do dock fica em "Mais"; o que declara `'mais'` continua lá |
 | `parteDe` | O id do módulo opcional de que este faz parte, como a Gestão de ativos do Ativos: o interruptor da organização vale para os dois (opcional; veja Módulo opcional) |
 | `rotas` | A subárvore de rotas do módulo |
 | `menu` | Menu em árvore do item do dock (opcional) |
@@ -449,11 +449,78 @@ export interface BlocoDoInicio extends ExigePermissoes {
   id: string;
   /** O título, no carimbo do bloco. */
   titulo: string;
-  componente: ComponentType;
+  /** As opções do bloco, que a conta muda em "Personalizar o Início" (opcional). */
+  opcoes?: readonly OpcaoDoBloco[];
+  /**
+   * O bloco recebe o valor que vale de cada opção que declara, já resolvido pelo Início: sempre
+   * todas as chaves, e nada a validar. Sem opções, recebe o objeto vazio.
+   */
+  componente: ComponentType<{ opcoes: OpcoesResolvidas }>;
 }
 ```
 
 O Início põe o título do bloco num `Carimbo` e desenha o componente embaixo, sem mudar a casca. O bloco segue as permissões dele e some com o módulo desligado, como as ocorrências. A conta arruma o Início em "Personalizar o Início": sobe, desce e oculta cada bloco, e a ordem fica em `inicio.blocos`, nas preferências; o bloco novo entra no fim, à vista, e "O que resolver agora" fica sempre à vista. O Ativos registra "Suprimentos que acabam primeiro" (`apps/web/src/modulos/ativos/suprimentos.tsx`), e a Gestão de ativos, "Backups do Control iD" (`apps/web/src/modulos/ativos/controlid/BackupsNoInicio.tsx`). O campo do topo do Início abre a busca global pelo `useAbrirBusca` (`apps/web/src/busca/abrirBusca.tsx`).
+
+### Opções do bloco
+
+O bloco declara as opções dele em `opcoes`, e o Início faz o resto (change opcoes-dos-blocos-do-inicio): no modo Personalizar, o bloco com opções ganha "Opções…", que abre a gaveta `OpcoesDoBloco`, do `@grafite/ui`, com um controle por forma. Cada mudança vale na hora e fica gravada na conta, no item do bloco em `inicio.blocos`, e "Restaurar as opções" volta todas às de fábrica. As formas são três:
+
+| Forma | O que a conta escolhe | O bloco recebe |
+|---|---|---|
+| `escolhas` | Um ou mais valores de uma lista fixa, com o mínimo que fica escolhido | Os ids, na ordem da lista |
+| `numero` | Um número inteiro num intervalo, com o passo e a unidade | O número |
+| `locais` | Locais da árvore da organização, que valem com os de dentro | Os ids; nenhum quer dizer todos |
+
+O Ativos declara as opções do bloco dos suprimentos:
+
+```tsx
+// apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
+export const OPCOES_DOS_SUPRIMENTOS: readonly OpcaoDoBloco[] = [
+  {
+    chave: 'tipos',
+    rotulo: 'Tipos de suprimento',
+    forma: 'escolhas',
+    opcoes: TIPOS_DE_SUPRIMENTO.map((id) => ({ id, rotulo: NOMES_DOS_TIPOS[id] })),
+    padrao: TIPOS_DE_SUPRIMENTO,
+    minimo: 1,
+  },
+  { chave: 'locais', rotulo: 'Locais', forma: 'locais' },
+  { chave: 'limite', rotulo: 'Impressoras', forma: 'numero', minimo: 3, maximo: 12, padrao: 6 },
+  {
+    chave: 'nivel',
+    rotulo: 'Nível até',
+    forma: 'numero',
+    minimo: 5,
+    maximo: 100,
+    passo: 5,
+    unidade: '%',
+    padrao: 100,
+  },
+];
+```
+
+E lê o valor de cada uma pelo `escolhasDa` e pelo `numeroDa`, de `apps/web/src/modulos/inicio/opcoes.ts`:
+
+```tsx
+// apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
+export function SuprimentosQueAcabam({ opcoes }: { opcoes: OpcoesResolvidas }) {
+  const api = useApi();
+  const tipos = escolhasDa(opcoes, 'tipos');
+  const locais = escolhasDa(opcoes, 'locais');
+  const limite = numeroDa(opcoes, 'limite');
+  const nivel = numeroDa(opcoes, 'nivel');
+```
+
+As regras:
+- **O bloco não valida:** o Início entrega sempre todas as chaves declaradas, com o valor guardado na conta ou o de fábrica. O valor que a opção não aceita mais, como o número fora do intervalo, dá lugar ao de fábrica; numa escolha de vários, o valor que saiu da lista e o local que foi inativado saem, e os outros continuam.
+- **A chave:** letras minúsculas, números e hífen, até 30 caracteres. Ela vai gravada nas preferências, e o bloco que a renomeia perde a escolha de quem já a tinha feito.
+- **Até 12 opções por bloco,** e o valor guardado é um número ou uma lista de até 50 textos.
+- **O recorte em texto:** o bloco cuja opção muda o que ele mostra diz o recorte em texto quando ele difere da fábrica, como "Toner · até 30% · Jundiaí" nos suprimentos.
+- **A consulta:** os valores das opções entram na chave da consulta do bloco, para ele reler quando a conta muda uma opção.
+
+### Largura do bloco
+
+Cada bloco de módulo tem a largura "Inteira", de fábrica, ou "Metade", que a conta escolhe no modo Personalizar e fica em `inicio.blocos`. No computador, com a área a partir de 1.200 px, o Início é uma grade de duas colunas: dois blocos de metade seguidos ficam lado a lado, e o inteiro ocupa as duas. No tablet, no celular e na área estreita, todo bloco é inteiro. O bloco não precisa fazer nada: ele deve caber na metade da área, e a prateleira dos suprimentos, por exemplo, quebra em linhas.
 
 ## Notificações
 
@@ -709,7 +776,7 @@ Uma tabela de registros pode ser configurável: colunas que o usuário escolhe, 
 
 **O carregamento.** Com `carregando`, a `Tabela` sem linhas desenha o esqueleto delas sob as colunas, e com as linhas de antes as mantém, com o `aria-busy` e uma linha de progresso, sem esmaecer o texto. A tela pede a consulta com `placeholderData: keepPreviousData` e passa `carregando` na primeira carga e enquanto a consulta nova não chega.
 
-**Seleção, menu, resumo e copiar.** A `Tabela` seleciona com Ctrl e Shift por `selecao` e `aoMudarSelecao`, sem tirar do clique a abertura do registro. `menuDeContexto` dá os itens para as linhas, `aoCopiar` recebe as linhas do Ctrl+C, e `linhasParaCopiar` monta o texto com tabulações. `resumoDaLinha` dá as colunas de uma linha, com o rótulo e o valor, e a tabela mostra as que estão fora da área visível quando o mouse para 1,5 s. A tela limpa a seleção quando a busca, um filtro, a ordem ou a visão mudam.
+**Seleção, menu, resumo e copiar.** A `Tabela` seleciona com Ctrl e Shift por `selecao` e `aoMudarSelecao`, sem tirar do clique a abertura do registro. `menuDeContexto` dá os itens para as linhas, `aoCopiar` recebe as linhas do Ctrl+C, e `linhasParaCopiar` monta o texto com tabulações. `resumoDaLinha` dá as colunas de uma linha, com o rótulo e o valor, e a tabela mostra as que estão fora da área visível e as que tiveram o conteúdo cortado na célula quando o mouse para 1,5 s. No resumo, o valor aparece inteiro: o que passa da largura dele continua na linha de baixo, também o `ValorComposto`. A tela limpa a seleção quando a busca, um filtro, a ordem ou a visão mudam.
 
 **A prévia paginada.** Numa lista paginada, o `usePrevia` recebe o total, a página seguinte e a seleção: a posição conta o total, a seta que passa do último carregado traz a página seguinte, com o esqueleto, e, aberta numa linha selecionada, a prévia passa só pelos selecionados. A história do catálogo faz assim:
 
@@ -950,6 +1017,15 @@ export function Segmento({ children, className, ...resto }: PropsDoSegmento) {
 ```
 
 Itens de menu, opções de lista, elementos desabilitados e áreas grandes, como linhas de tabela, nunca são abraçados.
+
+## Barra de rolagem
+
+A área que rola de um módulo não declara barra nenhuma: a folha base do `@grafite/ui` dá a mesma barra a toda área com `overflow` (spec componentes-base, "Barra de rolagem própria"). Ela é fina, e o polegar aparece com o ponteiro sobre a área, com o foco do teclado nela e enquanto ela rola, ou sempre, pela preferência `aparencia.barraDeRolagem`. Onde o sistema já sobrepõe a barra ao conteúdo, como no celular, vale a dele. O módulo:
+- não usa `scrollbar-width`, `scrollbar-color` nem os pseudo-elementos da barra; a exceção é `scrollbar-width: none`, na área que esconde a barra de propósito, como uma barra de abas;
+- conta com os 12 px da barra na largura da área que rola para baixo: o espaço fica reservado, e o conteúdo não muda de lugar quando o polegar aparece;
+- não marca a rolagem: a casca acompanha a de qualquer área (`data-rolando`), também a que o módulo faz pelo código.
+
+Nos testes de ponta a ponta o navegador esconde as barras, como o celular, e vale a do sistema; as histórias do catálogo rodam com as barras à vista.
 
 ## Permissões
 
@@ -1416,6 +1492,11 @@ export type EstadoDaSessao =
       pendencia: Pendencia;
       /** Por que o passo apareceu, quando ele surge com a casca aberta. */
       mensagem?: string;
+      /**
+       * No passo do código, o prazo da confiança da conta (change aparelho-confiavel): maior que
+       * zero, a tela oferece "Confiar neste aparelho".
+       */
+      diasDeConfianca?: number;
     })
   /** Os dois passos acabaram de ser ativados na entrada: os códigos aparecem antes da casca. */
   | (DadosDaSessao & { tipo: 'pendente'; pendencia: 'guardar-codigos'; codigos: string[] })
@@ -1757,10 +1838,46 @@ export function useAgora(): Date {
 }
 ```
 
-A célula da disponibilidade junta a situação, a idade e o "Desatualizado":
+A célula da disponibilidade junta a situação, a idade e o "Desatualizado". Na tabela, a linha tem sempre uma linha só (spec componentes-base, "Célula numa linha só"): a célula com mais de uma parte usa o `ValorComposto` do `@grafite/ui`, em que o fixo, com os rótulos de situação, nunca encolhe, e o resto, o texto que os acompanha, encolhe e termina em reticências. A classe que quebra a linha quando falta largura fica só para a ficha. A coluna de um valor assim declara a largura que o conteúdo dela pede (`larguraMinima`, na coluna do domínio e na `Coluna` da tabela): sem largura guardada na visão, ela divide a sobra da área com as outras sem ficar mais estreita que isso, e a tabela rola de lado; as colunas da coleta declaram a largura de fábrica delas, que comporta a leitura em dia e o cabeçalho. O `LeituraNaCelula` monta isso para qualquer valor coletado, com o "Desatualizado" no fixo e a idade no resto:
 
 ```tsx
 // apps/web/src/modulos/ativos/disponibilidade.tsx (trecho)
+/**
+ * O valor de uma leitura na célula da tabela (spec componentes-base, "Célula numa linha só"): os
+ * rótulos na parte que não encolhe, com o "Desatualizado" ao lado, e a idade na parte que encolhe,
+ * depois do texto que a tela puser antes dela.
+ */
+export function LeituraNaCelula({
+  fixo,
+  momento,
+  agora,
+  metrica,
+  children,
+}: {
+  fixo: ReactNode;
+  momento: string | null;
+  agora: Date;
+  metrica?: MetricaDaColeta;
+  /** O texto antes da idade, como a descrição do suprimento. */
+  children?: ReactNode;
+}) {
+  return (
+    <ValorComposto
+      fixo={
+        <>
+          {fixo}
+          {leituraVelha(momento, agora, metrica) && (
+            <Desatualizado momento={momento} agora={agora} metrica={metrica} />
+          )}
+        </>
+      }
+    >
+      {children}
+      {momento && <IdadeDaLeitura momento={momento} agora={agora} />}
+    </ValorComposto>
+  );
+}
+
 /** A disponibilidade na célula da tabela: a situação, a idade e o "Desatualizado". */
 export function DisponibilidadeNaCelula({
   disponibilidade,
@@ -1770,10 +1887,11 @@ export function DisponibilidadeNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela disponibilidade={disponibilidade} />
-      <IdadeEDesatualizado momento={disponibilidade.momento} agora={agora} />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela disponibilidade={disponibilidade} />}
+      momento={disponibilidade.momento}
+      agora={agora}
+    />
   );
 }
 ```
@@ -1791,10 +1909,12 @@ Uma capacidade nova que mostra uma situação, como a saúde do Control iD (spec
 /** A saúde na célula da tabela: a situação, a idade e o "Desatualizado". */
 export function ControlIdNaCelula({ saude, agora }: { saude: SaudeDoControlId; agora: Date }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <SituacaoNaTela saude={saude} />
-      <IdadeEDesatualizado momento={saude.momento} agora={agora} metrica="controlid.sondagem" />
-    </span>
+    <LeituraNaCelula
+      fixo={<SituacaoNaTela saude={saude} />}
+      momento={saude.momento}
+      agora={agora}
+      metrica="controlid.sondagem"
+    />
   );
 }
 ```
@@ -1805,7 +1925,8 @@ Um ativo pode ter vários valores da mesma métrica, um por item, como cada supr
 
 - **Na ficha:** os itens numa tabela, na ordem do equipamento, com o nome, o valor em texto e a idade de cada um. O nível tem uma barra só ao lado, na cor de destaque: ela não diz se o valor é bom ou ruim, e um valor que o equipamento não mediu nunca vira número. Quando o equipamento deixa de responder, os itens continuam os da última resposta, com a idade deles.
 - **Na tabela:** a coluna mostra um valor só, como o menor nível medido, com o item ao lado e a idade, e filtra "de e até" pelo número. A unidade, como o "%", vai na coluna (`unidade`), no editor do filtro e no filtro ativo.
-- **A idade:** o `IdadeEDesatualizado` recebe a métrica, porque cada uma tem o intervalo dela.
+- **A idade:** o `LeituraNaCelula`, na tabela, e o `IdadeEDesatualizado`, na ficha, recebem a métrica, porque cada uma tem o intervalo dela.
+- **O corte:** na célula, o medidor e o número ficam no fixo, e o nome do item e a idade, no resto, que encolhe.
 
 ```tsx
 // apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
@@ -1818,21 +1939,28 @@ export function SuprimentosNaCelula({
   agora: Date;
 }) {
   return (
-    <span className={estilos.disponibilidade}>
-      <span className={estilos.medidorNaCelula}>
-        <Medidor
-          rotulo={`Menor nível: ${menor.descricao}`}
-          valor={menor.nivel}
-          tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
-          tamanho="compacto"
-          marcas={[]}
-          semNumero
-        />
-      </span>
-      <span className="mono">{`${menor.nivel}%`}</span>
+    <LeituraNaCelula
+      fixo={
+        <>
+          <span className={estilos.medidorNaCelula}>
+            <Medidor
+              rotulo={`Menor nível: ${menor.descricao}`}
+              valor={menor.nivel}
+              tinta={tintaDoSuprimento(menor.descricao) ?? 'neutra'}
+              tamanho="compacto"
+              marcas={[]}
+              semNumero
+            />
+          </span>
+          <span className="mono">{`${menor.nivel}%`}</span>
+        </>
+      }
+      momento={menor.momento}
+      agora={agora}
+      metrica="impressora.suprimento"
+    >
       <span>{menor.descricao}</span>
-      <IdadeEDesatualizado momento={menor.momento} agora={agora} metrica="impressora.suprimento" />
-    </span>
+    </LeituraNaCelula>
   );
 }
 ```
@@ -1914,6 +2042,8 @@ As regras:
 - **Prévias:** a tabela de exemplo, o aviso de exemplo e a hora no fuso leem o alvo, e não a casca. Nos padrões, mostram o rascunho, e não as preferências de quem edita.
 - **O que é da conta:** o que não é uma preferência, como o e-mail da pessoa, os aparelhos inscritos e os testes dos canais, aparece só com o alvo na conta, pelo `useAlvoEhAConta()`. Nos padrões, a seção Notificações mostra só as escolhas do e-mail e do push.
 - **Preferência nova:** entra no modelo do `@grafite/domain`, com o padrão de fábrica, e no esquema que a API confere ao gravar, pela sessão orquestradora (regra 7 do `CLAUDE.md`).
+- **Módulos da conta:** a seção que lista os módulos que a conta vê, como a parte "Módulos do dock" da seção Dock, lê o `useModulosDaConta()` (`apps/web/src/casca/modulosDaConta.tsx`). A casca do app o preenche com o registro da conta, já com as permissões e sem os módulos que a organização desligou; fora da casca, ele vem vazio.
+- **Lista ordenada:** a preferência que guarda uma ordem com itens fora dela, como os blocos do Início (`inicio.blocos`) e os módulos do dock (`dock.modulos`), é uma lista de `{ id, visivel }`, trocada inteira. As funções do `apps/web/src/preferencias/listaOrdenada.ts` a resolvem contra o que o app registra e fazem o subir, o descer e o ocultar.
 
 ## Foto da pessoa
 
@@ -2173,6 +2303,11 @@ export interface AjusteDaSecao {
         rotulo: 'Ocultar o dock automaticamente',
         palavrasChave: ['esconder'],
       },
+      {
+        foco: 'modulos-do-dock',
+        rotulo: 'Módulos do dock',
+        palavrasChave: ['ordem', 'organizar', 'tirar do dock', 'mais'],
+      },
     ] as readonly AjusteDaSecao[],
   },
 ```
@@ -2337,9 +2472,10 @@ import { paineis } from './paineis/modulo.ts';
 import { salas } from './salas/modulo.ts';
 
 /**
- * Registro de módulos, na ordem do dock. A casca monta o dock, a barra de abas e as rotas a partir
- * dele. Um módulo novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois
- * do separador do dock.
+ * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
+ * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
+ * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
+ * dock.
  */
 export const REGISTRO = [
   inicio,

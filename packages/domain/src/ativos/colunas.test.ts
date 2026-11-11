@@ -456,3 +456,41 @@ describe('as colunas dos suprimentos e contadores', () => {
     expect(lista).not.toContain('coleta.paginas');
   });
 });
+
+// As larguras de fábrica das colunas da coleta (spec componentes-base, "Célula numa linha só";
+// change celulas-numa-linha, design, decisão 4): a largura que mostra o conteúdo do dia a dia sem
+// corte, medida na história "Larguras que a coleta pede" do catálogo do @grafite/ui.
+describe('as larguras de fábrica das colunas da coleta', () => {
+  const comAColeta: TipoNasColunas = {
+    ...IMPRESSORA,
+    capacidades: ['rede.disponibilidade', 'snmp.suprimentos', 'controlid.saude'],
+  };
+
+  it('cada coluna nasce com a largura que mostra a situação e a idade sem corte', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const daColeta = colunas.filter(({ chave }) => chave.startsWith('coleta.'));
+    expect(Object.fromEntries(daColeta.map(({ chave, largura }) => [chave, largura]))).toEqual({
+      'coleta.disponibilidade': 210,
+      'coleta.suprimentos': 340,
+      'coleta.paginas': 200,
+      'coleta.control-id': 280,
+    });
+  });
+
+  // A tabela divide a sobra entre as colunas sem largura guardada (spec componentes-base, "Tabela
+  // na largura toda"): a coluna da coleta declara a largura que o conteúdo pede, para a divisão não
+  // a deixar mais estreita.
+  it('cada coluna da coleta declara a largura de fábrica como a que o conteúdo pede', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const daColeta = colunas.filter(({ chave }) => chave.startsWith('coleta.'));
+    expect(daColeta).toHaveLength(4);
+    for (const coluna of daColeta) expect(coluna.larguraMinima).toBe(coluna.largura);
+  });
+
+  it('as outras colunas não declaram largura do conteúdo: seguem o mínimo da divisão', () => {
+    const colunas = colunasDosAtivos({ tipos: [comAColeta], campos: CAMPOS, verRestritos: false });
+    const outras = colunas.filter(({ chave }) => !chave.startsWith('coleta.'));
+    expect(outras.length).toBeGreaterThan(0);
+    for (const coluna of outras) expect(coluna.larguraMinima).toBeUndefined();
+  });
+});

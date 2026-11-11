@@ -62,12 +62,17 @@ export interface NovaSessao {
   agente: string | null;
   /** A sessão nasce pendente: só resolve o passo da vez, por 10 min. */
   pendente: boolean;
+  /**
+   * A entrada pelo aparelho confiável (change aparelho-confiavel): a sessão nasce com o código
+   * resolvido e guarda o aparelho.
+   */
+  aparelhoId?: string | null;
 }
 
 /** Cria a sessão na organização da transação e devolve o token, que só existe aqui e no cookie. */
 export async function criarSessao(
   tx: Transacao,
-  { contaId, momento, ip, agente, pendente }: NovaSessao,
+  { contaId, momento, ip, agente, pendente, aparelhoId = null }: NovaSessao,
 ) {
   const token = novoToken();
   const tokenCsrf = novoToken();
@@ -85,6 +90,8 @@ export async function criarSessao(
       ultimoUsoEm: momento,
       expiraEm,
       ativadaEm: pendente ? null : momento,
+      segundoPassoEm: aparelhoId ? momento : null,
+      aparelhoId,
       ip,
       agente: agente?.slice(0, 512) ?? null,
     })

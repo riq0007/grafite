@@ -96,8 +96,9 @@ function PassoDaVez({
     case 'segundo-passo':
       return (
         <PassoDoCodigo
-          aoMandar={async (codigo) => {
-            const resultado = await loja.mandarCodigo(codigo);
+          diasDeConfianca={sessao.diasDeConfianca}
+          aoMandar={async (codigo, opcoes) => {
+            const resultado = await loja.mandarCodigo(codigo, opcoes);
             if ('ok' in resultado && resultado.codigosRestantes !== undefined) {
               avisarDosRestantes(resultado.codigosRestantes);
             }

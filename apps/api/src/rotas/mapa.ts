@@ -10,6 +10,7 @@ import { BytesDoArquivo } from '../arquivos/esquemas.ts';
 import { lerArvore } from '../arvore.ts';
 import {
   EnvioDaPlanta,
+  EnvioDoDesenho,
   ListaDePlantas,
   MarcadoresDoMapa,
   ModeloDaPlanta,
@@ -18,14 +19,17 @@ import {
   PedidoDaPlanta,
   PedidoDePosicao,
   PlantaDoMapa,
+  SubstituicaoDoDesenho,
 } from '../mapa/esquemas.ts';
 import {
   alterarPlanta,
   cadastrarPlanta,
+  excluirPlanta,
   lerPlantas,
   marcadoresDaPlanta,
   plantaAtiva,
   salvarPosicao,
+  substituirDesenho,
   tirarPosicao,
 } from '../mapa/mapa.ts';
 import { naoEncontrado, RespostaDeProblema } from '../problemas.ts';
@@ -119,6 +123,35 @@ export const rotasDoMapa: FastifyPluginAsyncZod<{
       ),
   );
 
+  app.delete(
+    '/mapa/plantas/:id',
+    {
+      config: { permissao: 'mapa.editar' },
+      schema: {
+        summary:
+          'Excluir a planta, com o desenho e as posições; o que estava posicionado continua cadastrado',
+        params: ParametrosDaPlanta,
+        response: { 204: z.null(), ...PROBLEMAS_DO_MAPA },
+      },
+    },
+    async (requisicao, resposta) => {
+      const { modelo } = await naOrganizacao(banco, daOrganizacao(requisicao), (tx) =>
+        excluirPlanta(tx, requisicao.params.id, { requisicao, momento: agora() }),
+      );
+      // O arquivo sai depois do commit: a falha aqui fica no log e não desfaz a exclusão, e o
+      // arquivo sem dono não aparece em tela nenhuma (design, decisão 2).
+      if (modelo) {
+        await armazenamento.apagar(modelo).catch((erro: unknown) => {
+          requisicao.log.error(
+            { erro, chave: modelo },
+            'o modelo da planta excluída ficou no armazenamento',
+          );
+        });
+      }
+      return resposta.code(204).send(null);
+    },
+  );
+
   app.get(
     '/mapa/plantas/:id/modelo',
     {
@@ -126,7 +159,7 @@ export const rotasDoMapa: FastifyPluginAsyncZod<{
       schema: {
         summary: 'O modelo navegável da planta: as linhas por camada, os textos e as máquinas',
         params: ParametrosDaPlanta,
-        response: { 200: ModeloDaPlanta, ...PROBLEMAS_DO_MAPA },
+        response: { 200: ModeloDaPlanta, 304: z.null(), ...PROBLEMAS_DO_MAPA },
       },
     },
     async (requisicao, resposta) => {
@@ -136,11 +169,47 @@ export const rotasDoMapa: FastifyPluginAsyncZod<{
       );
       const conteudo = planta.modelo ? await armazenamento.abrir(planta.modelo) : null;
       if (!conteudo) throw naoEncontrado('O modelo da planta não foi encontrado.');
-      resposta.headers({
-        'content-type': 'application/json; charset=utf-8',
-        'cache-control': 'private, max-age=3600',
-      });
+      // O modelo é grande: o navegador o guarda e confere com o servidor, pela etiqueta, se ele
+      // mudou. O desenho substituído chega na leitura seguinte, e o mesmo desenho não viaja de novo.
+      const etiqueta = `W/"${planta.atualizadaEm.getTime().toString(36)}"`;
+      resposta.headers({ 'cache-control': 'private, no-cache', etag: etiqueta });
+      // Sem corpo: o navegador usa o modelo que já tem.
+      if (requisicao.headers['if-none-match'] === etiqueta) {
+        return resposta
+          .code(304)
+          .serializer(() => '')
+          .send(null);
+      }
+      resposta.header('content-type', 'application/json; charset=utf-8');
       return resposta.send(JSON.parse(conteudo.toString('utf8')));
+    },
+  );
+
+  app.put(
+    '/mapa/plantas/:id/modelo',
+    {
+      config: { permissao: 'mapa.editar' },
+      schema: {
+        summary:
+          'Substituir o desenho da planta por outro arquivo; o nome, o local e as posições ficam',
+        params: ParametrosDaPlanta,
+        querystring: EnvioDoDesenho,
+        body: BytesDoArquivo,
+        response: { 200: SubstituicaoDoDesenho, ...PROBLEMAS_DO_MAPA },
+      },
+    },
+    async (requisicao) => {
+      const orgId = daOrganizacao(requisicao);
+      return naOrganizacao(banco, orgId, (tx) =>
+        substituirDesenho(tx, requisicao.params.id, {
+          fonte: requisicao.query.fonte ?? 'arquivo',
+          conteudo: requisicao.body,
+          armazenamento,
+          orgId,
+          requisicao,
+          momento: agora(),
+        }),
+      );
     },
   );
 

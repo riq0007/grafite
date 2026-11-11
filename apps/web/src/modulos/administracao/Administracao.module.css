@@ -115,6 +115,20 @@
   font-size: var(--texto-corpo);
 }
 
+/* O prazo da confiança nos aparelhos e o "Mudar…" ao lado (change aparelho-confiavel). */
+.prazoDaConfianca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+/* O diálogo do prazo: a escolha, os dias e o efeito, um embaixo do outro. */
+.formularioDoPrazo {
+  display: grid;
+  gap: var(--esp-4);
+}
+
 /* Sublinhado, para o link não depender só da cor. */
 .link {
   color: var(--cor-destaque-texto);

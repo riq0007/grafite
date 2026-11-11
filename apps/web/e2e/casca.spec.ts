@@ -144,3 +144,20 @@ test('o destaque verde muda a interface inteira na hora, inclusive os Ajustes', 
     .locator('[data-parte="bolinha"]');
   await expect(bolinha).toHaveCSS('border-top-color', 'rgb(85, 196, 131)');
 });
+
+// A barra de rolagem (spec componentes-base, "Barra de rolagem própria"; change
+// barra-de-rolagem-propria, design, decisões 4, 6 e 7): o navegador destes testes esconde as
+// barras, como o celular sobrepõe a dele, e a partida mede isso antes de a casca aparecer.
+test('num aparelho de barra sobreposta, a partida marca a raiz e acompanha a rolagem', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByRole('main')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-barra-do-sistema');
+
+  // A área que rola ganha a marca, e a marca sai 1 s depois da última rolagem.
+  const principal = page.getByRole('main');
+  await principal.evaluate((area) => area.dispatchEvent(new Event('scroll')));
+  await expect(principal).toHaveAttribute('data-rolando');
+  await expect(principal).not.toHaveAttribute('data-rolando', { timeout: 4_000 });
+});

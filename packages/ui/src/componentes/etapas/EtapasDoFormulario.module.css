@@ -119,7 +119,6 @@
   .lista {
     flex-direction: row;
     overflow-x: auto;
-    scrollbar-width: thin;
     padding-block-end: var(--esp-1);
   }
 

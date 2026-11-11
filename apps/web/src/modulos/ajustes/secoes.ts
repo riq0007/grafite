@@ -43,6 +43,11 @@ export const SECOES = [
         palavrasChave: ['celular perdido', 'recuperar'],
       },
       {
+        foco: 'aparelhos-confiaveis',
+        rotulo: 'Aparelhos confiáveis',
+        palavrasChave: ['aparelhos', 'confiar', 'navegador', 'lembrar', 'esquecer'],
+      },
+      {
         foco: 'sessoes',
         rotulo: 'Sessões',
         palavrasChave: ['dispositivos', 'aparelhos', 'encerrar', 'sair'],
@@ -63,6 +68,11 @@ export const SECOES = [
       },
       { foco: 'cantos', rotulo: 'Cantos', palavrasChave: ['raio', 'arredondados', 'bordas'] },
       { foco: 'densidade', rotulo: 'Densidade', palavrasChave: ['compacta', 'espaçamento'] },
+      {
+        foco: 'barra-de-rolagem',
+        rotulo: 'Barra de rolagem',
+        palavrasChave: ['rolar', 'polegar', 'sempre visível', 'scroll'],
+      },
     ] as readonly AjusteDaSecao[],
   },
   {
@@ -86,6 +96,11 @@ export const SECOES = [
         foco: 'ocultar-o-dock',
         rotulo: 'Ocultar o dock automaticamente',
         palavrasChave: ['esconder'],
+      },
+      {
+        foco: 'modulos-do-dock',
+        rotulo: 'Módulos do dock',
+        palavrasChave: ['ordem', 'organizar', 'tirar do dock', 'mais'],
       },
     ] as readonly AjusteDaSecao[],
   },

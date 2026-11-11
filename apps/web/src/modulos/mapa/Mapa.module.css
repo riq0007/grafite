@@ -120,3 +120,8 @@
   overflow: auto;
   list-style: none;
 }
+
+/* Um parágrafo num diálogo, que já espaça os filhos: sem a margem dele. */
+.paragrafo {
+  margin: 0;
+}

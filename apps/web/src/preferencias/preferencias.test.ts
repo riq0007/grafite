@@ -9,11 +9,12 @@ describe('lerPreferencias', () => {
         tema: 'grafite',
         destaque: 'grafite',
         densidade: 'normal',
+        barraDeRolagem: 'ao-rolar',
         raio: 10,
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },
       },
-      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false },
+      dock: { posicao: 'embaixo', tamanho: 48, ampliar: true, ocultar: false, modulos: [] },
       cursor: { tipo: 'suavizado', suavizacao: 95, abracar: true },
       notificacoes: {
         atencao: true,
@@ -146,7 +147,13 @@ describe('lerPreferencias', () => {
       densidade: 'normal',
       raio: 10,
     });
-    expect(lidas.dock).toEqual({ posicao: 'esquerda', tamanho: 48, ampliar: true, ocultar: false });
+    expect(lidas.dock).toEqual({
+      posicao: 'esquerda',
+      tamanho: 48,
+      ampliar: true,
+      ocultar: false,
+      modulos: [],
+    });
   });
 
   it('prende o tamanho do dock entre 28 e 64 px e arredonda', () => {
@@ -194,17 +201,28 @@ describe('atributosDaInterface', () => {
       'data-theme': 'grafite',
       'data-accent': 'grafite',
       'data-density': 'normal',
+      'data-rolagem': 'ao-rolar',
       '--raio-base': '10px',
       'data-dock': 'embaixo',
       '--tamanho-item-dock': '48px',
     });
   });
 
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('com a barra de rolagem sempre visível, a raiz diz "sempre"', () => {
+    expect(
+      atributosDaInterface({
+        ...PADRAO_DE_FABRICA,
+        aparencia: { ...PADRAO_DE_FABRICA.aparencia, barraDeRolagem: 'sempre' },
+      }),
+    ).toMatchObject({ 'data-rolagem': 'sempre' });
+  });
+
   it('marca o ocultar automático, o movimento e a transparência reduzidos', () => {
     expect(
       atributosDaInterface({
         ...PADRAO_DE_FABRICA,
-        dock: { posicao: 'direita', tamanho: 36, ampliar: false, ocultar: true },
+        dock: { posicao: 'direita', tamanho: 36, ampliar: false, ocultar: true, modulos: [] },
         acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
       }),
     ).toMatchObject({

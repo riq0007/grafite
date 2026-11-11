@@ -3,7 +3,7 @@
 // evento só quando a situação muda e o que cada conta pode.
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { eventos, naOrganizacao } from '@grafite/db';
+import { eventos, naOrganizacao, paineis } from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -16,9 +16,12 @@ import {
   criarPerfil,
   type Entrada,
 } from '../../test/integracao.ts';
-import { verificarEndereco, verificarPaineis } from '../paineis/paineis.ts';
+import { type VerificarEndereco, verificarEndereco, verificarPaineis } from '../paineis/paineis.ts';
 
 const host = 'grafite.paineis.local';
+
+/** A ferramenta em HTTPS dos testes: o painel é cadastrado nela, e o pedido vai ao servidor local. */
+const FERRAMENTA = 'https://grafana.empresa.local';
 
 let api: ApiDeTeste;
 let org = '';
@@ -27,10 +30,32 @@ let ana: Entrada;
 let davi: Entrada;
 let servidor: Server;
 let base = '';
+/** A TI liberou o endereço do Grafite na ferramenta de `/liberavel`. */
+let liberado = false;
+/** A ferramenta de `/instavel` caiu. */
+let caiu = false;
 
 beforeAll(async () => {
   servidor = createServer((pedido, resposta) => {
-    resposta.statusCode = pedido.url === '/erro' ? 502 : 200;
+    const caminho = pedido.url ?? '/';
+    const salto = /^\/salto\/([1-4])$/.exec(caminho);
+    if (caminho === '/erro' || (caminho === '/instavel' && caiu)) resposta.statusCode = 502;
+    else if (caminho === '/privado') resposta.statusCode = 401;
+    else if (caminho === '/fabrica' || caminho === '/instavel') {
+      resposta.setHeader('X-Frame-Options', 'deny');
+    } else if (caminho === '/liberavel') {
+      if (liberado) {
+        resposta.setHeader('Content-Security-Policy', `frame-ancestors https://${host}`);
+      } else resposta.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    } else if (caminho === '/entrada') {
+      resposta.statusCode = 302;
+      resposta.setHeader('Location', '/login');
+    } else if (salto) {
+      // Quatro saltos em fila, e o último leva ao painel.
+      const numero = Number(salto[1]);
+      resposta.statusCode = 302;
+      resposta.setHeader('Location', numero < 4 ? `/salto/${numero + 1}` : '/ok');
+    }
     resposta.end('painel');
   });
   await new Promise<void>((pronto) => servidor.listen(0, '127.0.0.1', pronto));
@@ -119,5 +144,152 @@ describe('painéis pela API', () => {
     expect(lista.json().permite).toEqual({ administrar: false });
     expect(lista.json().paineis[0].nome).toBe('Produção da linha 2');
     expect((await cadastrar({ nome: 'X', endereco: `${base}/ok` }, davi)).statusCode).toBe(403);
+  });
+});
+
+// Spec painel-de-dashboards, "Exibição do painel" (change diagnostico-dos-paineis, design, decisão 3).
+describe('a exibição pela verificação', () => {
+  /** Pede à ferramenta em HTTPS pelo servidor local, e devolve o endereço final como o dela. */
+  const pelaFerramenta: VerificarEndereco = async (endereco) => {
+    const feito = await verificarEndereco(endereco.replace(FERRAMENTA, base));
+    if (!('status' in feito.resposta)) return feito;
+    const enderecoFinal = feito.resposta.enderecoFinal.replace(base, FERRAMENTA);
+    return { ...feito, resposta: { ...feito.resposta, enderecoFinal } };
+  };
+
+  const verificar = (id: string, quem: VerificarEndereco = pelaFerramenta) =>
+    verificarPaineis(api.banco, org, { agora: api.relogio.agora(), verificar: quem, ids: [id] });
+
+  const gravado = async (id: string) => {
+    const [linha] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select({
+          verificacao: paineis.verificacao,
+          exibicao: paineis.exibicao,
+          motivo: paineis.motivoDaExibicao,
+        })
+        .from(paineis)
+        .where(eq(paineis.id, id)),
+    );
+    return linha;
+  };
+
+  const eventosDosPaineis = () =>
+    naOrganizacao(api.banco, org, (tx) =>
+      tx.select().from(eventos).where(eq(eventos.tipo, 'paineis.mudaram')),
+    );
+
+  const cadastrado = async (nome: string, endereco: string): Promise<string> =>
+    (await cadastrar({ nome, endereco })).json().id;
+
+  it('Grafana de fábrica: no ar, mas recusa ser embutido, com o cabeçalho no motivo', async () => {
+    const id = await cadastrado('Linha 2', `${FERRAMENTA}/fabrica`);
+    expect(await gravado(id)).toEqual({
+      verificacao: 'sem-verificacao',
+      exibicao: null,
+      motivo: null,
+    });
+    await verificar(id);
+    expect(await gravado(id)).toEqual({
+      verificacao: 'no-ar',
+      exibicao: 'recusa',
+      motivo: 'A ferramenta manda X-Frame-Options: DENY.',
+    });
+  });
+
+  it('Ferramenta liberada depois: a exibição muda, e o evento sai só nessa hora', async () => {
+    const id = await cadastrado('Chamados', `${FERRAMENTA}/liberavel`);
+    await verificar(id);
+    expect(await gravado(id)).toMatchObject({
+      exibicao: 'recusa',
+      motivo: 'A ferramenta manda X-Frame-Options: SAMEORIGIN.',
+    });
+    await naOrganizacao(api.banco, org, (tx) => tx.delete(eventos));
+    // A verificação que não muda nada não grava evento.
+    expect(await verificar(id)).toEqual({ verificados: 1, mudaram: 0 });
+    expect(await eventosDosPaineis()).toHaveLength(0);
+
+    liberado = true;
+    expect(await verificar(id)).toEqual({ verificados: 1, mudaram: 1 });
+    expect(await gravado(id)).toEqual({ verificacao: 'no-ar', exibicao: 'aparece', motivo: null });
+    expect(await eventosDosPaineis()).toHaveLength(1);
+  });
+
+  it('Painel fora do ar: a exibição sai com a queda', async () => {
+    const id = await cadastrado('Estoque', `${FERRAMENTA}/instavel`);
+    await verificar(id);
+    expect(await gravado(id)).toMatchObject({ verificacao: 'no-ar', exibicao: 'recusa' });
+    caiu = true;
+    await verificar(id);
+    expect(await gravado(id)).toEqual({
+      verificacao: 'fora-do-ar',
+      exibicao: null,
+      motivo: null,
+    });
+  });
+
+  it('Página de entrada: o redirecionamento para a entrada e o 401 pedem a entrada', async () => {
+    const wiki = await cadastrado('Wiki', `${base}/entrada`);
+    await verificar(wiki, verificarEndereco);
+    expect(await gravado(wiki)).toEqual({
+      verificacao: 'no-ar',
+      exibicao: 'pede-entrada',
+      motivo: 'Levou à página de entrada.',
+    });
+    const privado = await cadastrado('Financeiro', `${base}/privado`);
+    await verificar(privado, verificarEndereco);
+    expect(await gravado(privado)).toMatchObject({
+      exibicao: 'pede-entrada',
+      motivo: 'Respondeu 401.',
+    });
+  });
+
+  it('Painel em HTTP com o cabeçalho: aparece, porque vai pela ponte', async () => {
+    const id = await cadastrado('Linha 3', `${base}/fabrica`);
+    await verificar(id, verificarEndereco);
+    expect(await gravado(id)).toEqual({ verificacao: 'no-ar', exibicao: 'aparece', motivo: null });
+  });
+
+  it('segue até 3 redirecionamentos, e a resposta seguinte vale como a do painel', async () => {
+    expect((await verificarEndereco(`${base}/salto/2`)).resposta).toMatchObject({
+      status: 200,
+      enderecoFinal: `${base}/ok`,
+    });
+    expect((await verificarEndereco(`${base}/salto/1`)).resposta).toMatchObject({
+      status: 302,
+      enderecoFinal: `${base}/salto/4`,
+    });
+  });
+
+  it('"Verificar agora" devolve a exibição, e a lista também', async () => {
+    const r = await cadastrar({ nome: 'Portal', endereco: `${base}/entrada` });
+    expect(r.json().exibicao).toBeNull();
+    const verificado = await cliente.enviar('POST', `/paineis/${r.json().id}/verificacao`, ana);
+    const DA_ENTRADA = { situacao: 'pede-entrada', motivo: 'Levou à página de entrada.' };
+    expect(verificado.json()).toMatchObject({
+      verificacao: { situacao: 'no-ar' },
+      exibicao: DA_ENTRADA,
+    });
+    const lista = await cliente.consultar('/paineis', davi);
+    const daLista = (nome: string) =>
+      lista.json().paineis.find((um: { nome: string }) => um.nome === nome).exibicao;
+    expect(daLista('Portal')).toEqual(DA_ENTRADA);
+    expect(daLista('Linha 3')).toEqual({ situacao: 'aparece', motivo: null });
+    // O painel fora do ar não tem exibição.
+    expect(daLista('Estoque')).toBeNull();
+  });
+
+  it('o endereço novo volta a esperar a verificação, sem a exibição do anterior', async () => {
+    const lista = await cliente.consultar('/paineis', ana);
+    const portal = lista.json().paineis.find((um: { nome: string }) => um.nome === 'Portal');
+    expect(portal.exibicao).not.toBeNull();
+    const mudado = await cliente.enviar('PATCH', `/paineis/${portal.id}`, ana, {
+      nome: 'Portal',
+      endereco: `${base}/ok`,
+    });
+    expect(mudado.json()).toMatchObject({
+      verificacao: { situacao: 'sem-verificacao' },
+      exibicao: null,
+    });
   });
 });

@@ -154,6 +154,7 @@ describe('visões auditáveis', () => {
     criadaEm: new Date('2026-10-02T12:00:00Z'),
     atualizadaEm: new Date('2026-10-02T12:00:00Z'),
     preferencias: { dock: { posicao: 'esquerda' } },
+    diasDeConfianca: null,
   };
 
   it('a visão da conta traz o que muda nela, sem o hash da senha nem as preferências', () => {

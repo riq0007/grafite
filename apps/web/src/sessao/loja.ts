@@ -60,6 +60,11 @@ export type EstadoDaSessao =
       pendencia: Pendencia;
       /** Por que o passo apareceu, quando ele surge com a casca aberta. */
       mensagem?: string;
+      /**
+       * No passo do código, o prazo da confiança da conta (change aparelho-confiavel): maior que
+       * zero, a tela oferece "Confiar neste aparelho".
+       */
+      diasDeConfianca?: number;
     })
   /** Os dois passos acabaram de ser ativados na entrada: os códigos aparecem antes da casca. */
   | (DadosDaSessao & { tipo: 'pendente'; pendencia: 'guardar-codigos'; codigos: string[] })
@@ -101,7 +106,11 @@ export interface LojaDaSessao {
   validar(): Promise<void>;
   entrar(credenciais: { usuario: string; senha: string }): Promise<{ ok: true } | Recusa>;
   /** O código do app ou de recuperação; com o de recuperação, diz quantos restam. */
-  mandarCodigo(codigo: string): Promise<{ ok: true; codigosRestantes?: number } | Recusa>;
+  /** Manda o código; com `confiar`, o navegador fica como aparelho confiável. */
+  mandarCodigo(
+    codigo: string,
+    opcoes?: { confiar: boolean },
+  ): Promise<{ ok: true; codigosRestantes?: number } | Recusa>;
   trocarSenha(senhas: {
     senhaAtual: string;
     senhaNova: string;
@@ -230,7 +239,7 @@ export function criarLojaDaSessao({
     guardarServidor(dadosDaApi);
     padroes = (preferencias ?? {}) as AjustesDasPreferencias;
     if (!sessao) return definir(semSessao(nome));
-    const { conta, pendencia, csrf, expiraEm, acesso } = sessao;
+    const { conta, pendencia, csrf, expiraEm, acesso, diasDeConfianca } = sessao;
     const dados = { organizacao: nome, conta, csrf, expiraEm, acesso };
     if (pendencia) {
       // O cadastro que surge com a casca aberta da mesma conta diz por que apareceu.
@@ -243,6 +252,8 @@ export function criarLojaDaSessao({
         pendencia,
         ...dados,
         ...(surgiu && { mensagem: MENSAGEM_DA_EXIGENCIA }),
+        ...(pendencia === 'segundo-passo' &&
+          typeof diasDeConfianca === 'number' && { diasDeConfianca }),
       });
     }
     ativa(dados);
@@ -345,9 +356,9 @@ export function criarLojaDaSessao({
       return { ok: true };
     },
 
-    async mandarCodigo(codigo) {
+    async mandarCodigo(codigo, { confiar } = { confiar: false }) {
       const pedido = await pedir(
-        () => cliente.POST('/sessao/segundo-passo', { body: { codigo } }),
+        () => cliente.POST('/sessao/segundo-passo', { body: { codigo, confiar } }),
         'entrar',
       );
       if ('recusa' in pedido) return pedido.recusa;

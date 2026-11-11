@@ -25,7 +25,9 @@ import { ENDERECO_DA_PILHA } from './subir.ts';
 
 // O caminho da primeira conta, de ponta a ponta e sem nada simulado (design do F2a, decisão 16):
 // a senha temporária, a senha nova, o cadastro dos dois passos com o código gerado da chave na
-// tela, a casca com "Esta sessão", a saída, a entrada com o código e a auditoria do caminho. Depois,
+// tela, a casca com "Esta sessão", a saída, a entrada com o código e a auditoria do caminho. Num
+// navegador à parte, ela confia no aparelho, entra de novo só com a senha e, esquecido o aparelho nos
+// Ajustes, volta a digitar o código (change aparelho-confiavel). Depois,
 // a primeira conta, administradora, dá a uma conta nova só as pessoas de um local (design do F2b,
 // decisão 17): a conta nova entra noutro navegador, troca a senha e vê só o que o perfil dá. Por
 // fim (design do F2c, decisão 20), com as duas contas abertas, a administradora troca a foto da
@@ -380,6 +382,58 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       `${acao} depois de ${acoes[posicao] ?? 'nada'} em ${acoes.join(', ')}`,
     ).toBeGreaterThan(posicao);
     posicao = achada;
+  }
+
+  // 5b. O aparelho confiável (change aparelho-confiavel), num navegador à parte, para o desta página
+  // continuar pedindo o código: a entrada com o código marca o aparelho, a seguinte pede só a
+  // senha, e o aparelho esquecido nos Ajustes faz a entrada pedir o código de novo.
+  const confiavel = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    serviceWorkers: 'block',
+    ...doEndereco(9),
+  });
+  try {
+    const noAparelho = await confiavel.newPage();
+    await noAparelho.goto('/');
+    await entrarCom(noAparelho, 'ana.souza', SENHA_NOVA);
+    const codigoNoAparelho = entrada(noAparelho).getByLabel('Código do app');
+    await expect(codigoNoAparelho).toBeVisible();
+    const caixa = entrada(noAparelho).getByRole('checkbox', {
+      name: 'Confiar neste aparelho por 30 dias',
+    });
+    await expect(caixa).not.toBeChecked();
+    await entrada(noAparelho).getByText('Confiar neste aparelho por 30 dias').click();
+    await expect(caixa).toBeChecked();
+    await expect.poll(passoAgora, { timeout: 40_000 }).toBeGreaterThanOrEqual(ultimoPassoDaAna);
+    ultimoPassoDaAna = Math.max(passoAgora(), ultimoPassoDaAna + 1);
+    await codigoNoAparelho.fill(codigoDoApp(chave, ultimoPassoDaAna));
+    await codigoNoAparelho.press('Enter');
+    const anaNoAparelho = noAparelho.getByRole('banner').getByRole('button', { name: 'Ana Souza' });
+    await expect(anaNoAparelho).toBeVisible();
+
+    // Sai e entra de novo só com a senha: a casca abre sem pedir o código.
+    await anaNoAparelho.click();
+    await noAparelho.getByRole('menuitem', { name: 'Sair' }).click();
+    await expect(titulo(noAparelho, 'Entrar')).toBeVisible();
+    await entrarCom(noAparelho, 'ana.souza', SENHA_NOVA);
+    await expect(anaNoAparelho).toBeVisible();
+    await expect(entrada(noAparelho)).toHaveCount(0);
+
+    // Esquece este aparelho nos Ajustes: a entrada seguinte pede o código de novo.
+    await anaNoAparelho.click();
+    await noAparelho.getByRole('menuitem', { name: 'Conta' }).click();
+    const aparelhos = noAparelho.getByRole('region', { name: 'Aparelhos confiáveis' });
+    const este = aparelhos.getByRole('listitem').filter({ hasText: 'Este aparelho' });
+    await expect(este).toHaveCount(1);
+    await este.getByRole('button', { name: 'Esquecer' }).click();
+    await expect(aparelhos.getByText('Aparelho esquecido.')).toBeVisible();
+    await anaNoAparelho.click();
+    await noAparelho.getByRole('menuitem', { name: 'Sair' }).click();
+    await expect(titulo(noAparelho, 'Entrar')).toBeVisible();
+    await entrarCom(noAparelho, 'ana.souza', SENHA_NOVA);
+    await expect(entrada(noAparelho).getByLabel('Código do app')).toBeVisible();
+  } finally {
+    await confiavel.close();
   }
 
   // 6. A administradora cadastra o local, o perfil só com "Ver pessoas e contas" e a pessoa, cria a

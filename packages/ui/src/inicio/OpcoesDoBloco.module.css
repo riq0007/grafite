@@ -1,0 +1,50 @@
+/*
+ * A gaveta das opções de um bloco do Início (change opcoes-dos-blocos-do-inicio, design, decisão
+ * 3): os controles em coluna, um por opção, com o espaço dos formulários.
+ */
+.opcoes {
+  display: grid;
+  gap: var(--esp-5);
+  align-content: start;
+}
+
+/* Os locais de uma opção: o nome, os escolhidos e a escolha que acrescenta mais um. */
+.locais {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.todos {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+}
+
+.escolhidos {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Um local escolhido: o caminho à esquerda e o "Tirar" à direita, com a linha entre eles. */
+.escolhido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: var(--esp-1) 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.escolhido:first-child {
+  border-top: 0;
+}
+
+.caminho {
+  min-width: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  overflow-wrap: anywhere;
+}

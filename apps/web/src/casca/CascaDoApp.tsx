@@ -48,6 +48,7 @@ import { JanelaComAbas } from './JanelaComAbas.tsx';
 import { ModuloDesligado } from './ModuloDesligado.tsx';
 import { useMenusDinamicos } from './menusDinamicos.ts';
 import { moduloAtual, modulosDaCasca } from './modulosDaCasca.ts';
+import { ContextoDosModulosDaConta } from './modulosDaConta.tsx';
 import { ItemDeRede } from './status/ItemDeRede.tsx';
 import { Relogio } from './status/Relogio.tsx';
 
@@ -85,6 +86,9 @@ const ENTRADAS_DA_CASCA: readonly EntradaDeBusca[] = [
  * que a conta pode usar e sem os que a organização desligou, o dock segue as preferências, e
  * escolher um módulo ou um item de menu navega sem recarregar. O endereço de um módulo desligado
  * mostra que ele está desligado, no lugar das telas dele.
+ *
+ * A ordem do dock e os módulos tirados dele vêm das preferências (change dock-personalizavel): o
+ * tirado fica no menu Mais, e a busca, as rotas e o Início continuam lendo o registro da conta.
  */
 export function CascaDoApp() {
   const { modulos: todos } = useRouteContext({ from: rootRouteId });
@@ -105,16 +109,21 @@ export function CascaDoApp() {
   });
   // O caminho é a chave da tela da primeira aba: outra tela volta a rolagem ao começo.
   const caminho = useRouterState({ select: (estado) => estado.location.pathname });
-  // O dock com os itens de menu que vêm dos dados, como as visões fixadas.
+  // O dock com os itens de menu que vêm dos dados, como as visões fixadas, na ordem que vale para
+  // a conta: a dela, a dos padrões da organização ou a do registro.
   const doDock = useMenusDinamicos(registro, pode);
-  const { modulos, modulosDoFim } = useMemo(() => modulosDaCasca(doDock), [doDock]);
+  const escolha = preferencias.dock.modulos;
+  const { modulos, modulosNoMais, modulosDoFim } = useMemo(
+    () => modulosDaCasca(doDock, escolha),
+    [doDock, escolha],
+  );
   // O módulo do endereço sai do registro inteiro: a barra diz onde se está, mesmo sem permissão.
   const atual = moduloAtual(todos, idsDasRotas);
   // O módulo que liga e desliga o atual: ele mesmo ou, para o que é parte de outro, o dono, cujo
   // nome a tela do módulo desligado mostra (change gestao-de-ativos).
   const interruptor =
     atual && (todos.find((modulo) => modulo.id === interruptorDe(atual)) ?? atual);
-  const menusDaBarra = [...modulos, ...modulosDoFim].find(
+  const menusDaBarra = [...modulos, ...modulosNoMais, ...modulosDoFim].find(
     (modulo) => modulo.id === atual?.id,
   )?.menusDaBarra;
   useFocoNoTituloAoNavegar();
@@ -226,9 +235,15 @@ export function CascaDoApp() {
             }}
             dock={{
               modulos,
+              modulosNoMais,
               modulosDoFim,
               atual: atual?.id ?? null,
-              ...preferencias.dock,
+              // Campo a campo: as preferências do dock também trazem a lista dos módulos, que não é
+              // uma propriedade do dock (change dock-personalizavel).
+              posicao: preferencias.dock.posicao,
+              tamanho: preferencias.dock.tamanho,
+              ampliar: preferencias.dock.ampliar,
+              ocultar: preferencias.dock.ocultar,
               aoAbrirModulo: (id) => {
                 const modulo = registro.find((candidato) => candidato.id === id);
                 if (modulo) irPara(modulo.endereco);
@@ -236,18 +251,21 @@ export function CascaDoApp() {
               aoEscolherItem: (_modulo, destino) => irPara(destino),
             }}
           >
-            <JanelaComAbas
-              abas={abas}
-              chaveDaTela={caminho}
-              nomeReserva={atual?.nome ?? ''}
-              tela={
-                interruptor && desligados.includes(interruptor.id) ? (
-                  <ModuloDesligado nome={interruptor.nome} />
-                ) : (
-                  <Outlet />
-                )
-              }
-            />
+            {/* As telas leem os módulos que a conta vê, como a seção Dock dos Ajustes. */}
+            <ContextoDosModulosDaConta.Provider value={registro}>
+              <JanelaComAbas
+                abas={abas}
+                chaveDaTela={caminho}
+                nomeReserva={atual?.nome ?? ''}
+                tela={
+                  interruptor && desligados.includes(interruptor.id) ? (
+                    <ModuloDesligado nome={interruptor.nome} />
+                  ) : (
+                    <Outlet />
+                  )
+                }
+              />
+            </ContextoDosModulosDaConta.Provider>
           </Casca>
           <CursorSuavizado
             {...preferencias.cursor}

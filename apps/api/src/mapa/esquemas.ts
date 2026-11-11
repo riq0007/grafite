@@ -10,6 +10,11 @@ export const PlantaDoMapa = z
     largura: z.number().nullable(),
     profundidade: z.number().nullable(),
     situacao: z.enum(['convertendo', 'ativa', 'falhou', 'inativa']),
+    /**
+     * Quantas posições a planta tem, de tudo o que está nela, para quem edita o mapa: a exclusão
+     * diz quantas saem. Para quem só vê o mapa, `null`.
+     */
+    posicoes: z.number().int().min(0).nullable(),
     erro: z.string().nullable(),
     fonte: z.string(),
     contagens: z
@@ -110,3 +115,16 @@ export const EnvioDaPlanta = z.object({
   nome: z.string().min(1, { error: 'Dê um nome à planta.' }).max(80),
   fonte: z.string().max(200).optional(),
 });
+
+/** O arquivo que substitui o desenho de uma planta: o nome dele vai na consulta, como no cadastro. */
+export const EnvioDoDesenho = z.object({
+  fonte: z.string().max(200).optional(),
+});
+
+/** A planta com o desenho novo e quantas posições ficaram fora da área dele. */
+export const SubstituicaoDoDesenho = z
+  .object({
+    planta: PlantaDoMapa,
+    posicoesFora: z.number().int().min(0),
+  })
+  .meta({ id: 'SubstituicaoDoDesenho' });

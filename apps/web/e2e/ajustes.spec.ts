@@ -42,6 +42,71 @@ test('o tamanho em 36 px muda o dock na hora e mostra "36 px"', async ({ page })
   await expect.poll(async () => (await item.boundingBox())?.width).toBe(36);
 });
 
+// Spec ajustes-do-sistema, "Seção Dock": os módulos do dock (change dock-personalizavel). No
+// navegador, o botão que fica desabilitado e a linha que muda de lugar perdem o foco, e a seção o
+// devolve: só aqui isso se confere, porque o DOM dos testes unitários não tira o foco de ninguém.
+test('a ordem do dock muda pelos Ajustes, o foco acompanha o módulo, e o tirado vai para o Mais', async ({
+  page,
+  servidor,
+}) => {
+  await page.goto('/ajustes/dock');
+  await expect(titulo(page, 'Dock')).toBeVisible();
+  const dock = page.getByRole('navigation', { name: 'Dock' });
+  const noDock = () =>
+    dock
+      .getByRole('button')
+      .evaluateAll((itens) => itens.map((item) => item.getAttribute('aria-label')));
+  const botao = (nome: string) => page.getByRole('button', { name: nome, exact: true });
+  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Ativos']);
+
+  // Primeiro da lista: o dock muda na hora, o Subir fica desabilitado, e o foco vai ao Descer.
+  await botao('Subir Ativos').focus();
+  await page.keyboard.press('Enter');
+  await expect(botao('Subir Ativos')).toBeDisabled();
+  await expect(botao('Descer Ativos')).toBeFocused();
+  expect((await noDock()).slice(0, 2)).toEqual(['Ativos', 'Início']);
+  await page.keyboard.press('Enter');
+  await expect(botao('Descer Ativos')).toBeFocused();
+  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Ativos']);
+
+  // No meio da lista, a linha muda de lugar, e o foco continua no mesmo botão.
+  await botao('Subir Operação').focus();
+  await page.keyboard.press('Enter');
+  await expect(botao('Subir Operação')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(botao('Subir Operação')).toBeFocused();
+  expect((await noDock()).slice(0, 4)).toEqual([
+    'Início',
+    'Ativos',
+    'Operação',
+    'Gestão de ativos',
+  ]);
+
+  // Tirar do dock: o módulo vai para o Mais, antes de Ajustes, e o foco vai ao botão que desfaz.
+  await botao('Tirar Salas do dock').focus();
+  await page.keyboard.press('Enter');
+  await expect(botao('Pôr Salas no dock')).toBeFocused();
+  await expect(dock.getByRole('button', { name: 'Salas', exact: true })).toHaveCount(0);
+  expect((await noDock()).slice(-2)).toEqual(['Mais', 'Ajustes']);
+  await dock.getByRole('button', { name: 'Mais', exact: true }).click();
+  const menu = page.getByRole('menu', { name: 'Mais', exact: true });
+  await expect(menu.getByRole('menuitem', { name: 'Salas' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+
+  // A lista inteira vai gravada na conta, com o módulo tirado.
+  await expect
+    .poll(() => servidor.preferenciasDaConta.dock?.modulos?.find(({ id }) => id === 'salas'))
+    .toEqual({ id: 'salas', visivel: false });
+
+  // Pôr de volta: o módulo volta ao fim do dock, o Mais some, e o foco vai ao "Tirar do dock".
+  await botao('Pôr Salas no dock').focus();
+  await page.keyboard.press('Enter');
+  await expect(botao('Tirar Salas do dock')).toBeFocused();
+  await expect(dock.getByRole('button', { name: 'Mais', exact: true })).toHaveCount(0);
+  expect((await noDock()).slice(-2)).toEqual(['Salas', 'Ajustes']);
+});
+
 test.describe('no celular', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 

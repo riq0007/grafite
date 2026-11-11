@@ -14,16 +14,21 @@ export default meta;
 type HistoriaDoCodigo = StoryObj<{
   aoMandar: Mock<PropsDoPassoDoCodigo['aoMandar']>;
   aoSair: Mock<() => void>;
+  diasDeConfianca?: number;
 }>;
 
 const doCodigo = {
   args: { aoMandar: fn(async () => ({ ok: true }) as const), aoSair: fn() },
-  render: ({ aoMandar, aoSair }) => (
+  render: ({ aoMandar, aoSair, diasDeConfianca }) => (
     <TelaDeEntrada organizacao="Empresa de exemplo">
-      <PassoDoCodigo aoMandar={aoMandar} aoSair={aoSair} />
+      <PassoDoCodigo aoMandar={aoMandar} aoSair={aoSair} diasDeConfianca={diasDeConfianca} />
     </TelaDeEntrada>
   ),
 } satisfies HistoriaDoCodigo;
+
+const CONFIAR = 'Confiar neste aparelho por 30 dias';
+const EXPLICACAO =
+  'Nas próximas entradas neste navegador, só a senha. O Cofre continua pedindo o código.';
 
 export const CodigoDoApp: HistoriaDoCodigo = {
   ...doCodigo,
@@ -36,7 +41,9 @@ export const CodigoDoApp: HistoriaDoCodigo = {
     await expect(campo).toHaveAttribute('inputmode', 'numeric');
     await userEvent.type(campo, '123456{Enter}');
     await expect(aoMandar).toHaveBeenCalledTimes(1);
-    await expect(aoMandar).toHaveBeenCalledWith('123456');
+    await expect(aoMandar).toHaveBeenCalledWith('123456', { confiar: false });
+    // Sem o prazo da confiança, a caixa não aparece.
+    await expect(tela.queryByRole('checkbox')).toBeNull();
   },
 };
 
@@ -49,7 +56,7 @@ export const CodigoDeRecuperacao: HistoriaDoCodigo = {
     await expect(campo).toHaveFocus();
     await expect(tela.queryByLabelText('Código do app')).toBeNull();
     await userEvent.type(campo, 'a7k2m-9qx4t{Enter}');
-    await expect(aoMandar).toHaveBeenCalledWith('a7k2m-9qx4t');
+    await expect(aoMandar).toHaveBeenCalledWith('a7k2m-9qx4t', { confiar: false });
     await userEvent.click(tela.getByRole('button', { name: 'Usar o código do app' }));
     await expect(tela.getByLabelText('Código do app')).toHaveFocus();
   },
@@ -64,6 +71,65 @@ export const CodigoRecusado: HistoriaDoCodigo = {
     await expect(await tela.findByRole('alert')).toHaveTextContent('Código incorreto.');
     await expect(tela.getByLabelText('Código do app')).toHaveValue('');
     await expect(tela.getByLabelText('Código do app')).toHaveFocus();
+  },
+};
+
+// Spec tela-de-entrada, "Passos pendentes na tela" (change aparelho-confiavel, design, decisão 6).
+export const CaixaDoAparelhoConfiavel: HistoriaDoCodigo = {
+  ...doCodigo,
+  args: { ...doCodigo.args, diasDeConfianca: 30 },
+  play: async ({ canvasElement, args: { aoMandar } }) => {
+    const tela = within(canvasElement);
+    const caixa = tela.getByRole('checkbox', { name: CONFIAR });
+    await expect(caixa).not.toBeChecked();
+    await expect(caixa).toHaveAccessibleDescription(EXPLICACAO);
+    await expect(tela.getByText(EXPLICACAO)).toBeVisible();
+    // O código continua com o foco: a caixa é escolha de quem quer.
+    await expect(tela.getByLabelText('Código do app')).toHaveFocus();
+    await userEvent.click(caixa);
+    await expect(caixa).toBeChecked();
+    await userEvent.type(tela.getByLabelText('Código do app'), '123456{Enter}');
+    await expect(aoMandar).toHaveBeenCalledWith('123456', { confiar: true });
+  },
+};
+
+export const AparelhoConfiavelPorUmDia: HistoriaDoCodigo = {
+  ...doCodigo,
+  args: { ...doCodigo.args, diasDeConfianca: 1 },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('checkbox', { name: 'Confiar neste aparelho por 1 dia' }),
+    ).toBeVisible();
+  },
+};
+
+export const PrazoZero: HistoriaDoCodigo = {
+  ...doCodigo,
+  args: { ...doCodigo.args, diasDeConfianca: 0 },
+  play: async ({ canvasElement, args: { aoMandar } }) => {
+    const tela = within(canvasElement);
+    await expect(tela.queryByRole('checkbox')).toBeNull();
+    await expect(tela.queryByText(EXPLICACAO)).toBeNull();
+    await userEvent.type(tela.getByLabelText('Código do app'), '123456{Enter}');
+    await expect(aoMandar).toHaveBeenCalledWith('123456', { confiar: false });
+  },
+};
+
+export const CodigoDeRecuperacaoSemACaixa: HistoriaDoCodigo = {
+  ...doCodigo,
+  args: { ...doCodigo.args, diasDeConfianca: 30 },
+  play: async ({ canvasElement, args: { aoMandar } }) => {
+    const tela = within(canvasElement);
+    await userEvent.click(tela.getByRole('checkbox', { name: CONFIAR }));
+    await userEvent.click(tela.getByRole('button', { name: 'Usar um código de recuperação' }));
+    await expect(tela.queryByRole('checkbox')).toBeNull();
+    await expect(tela.queryByText(EXPLICACAO)).toBeNull();
+    // A marca de antes não vai com o código de recuperação.
+    await userEvent.type(tela.getByLabelText('Código de recuperação'), 'a7k2m-9qx4t{Enter}');
+    await expect(aoMandar).toHaveBeenCalledWith('a7k2m-9qx4t', { confiar: false });
+    // De volta ao código do app, a caixa volta, como estava.
+    await userEvent.click(tela.getByRole('button', { name: 'Usar o código do app' }));
+    await expect(tela.getByRole('checkbox', { name: CONFIAR })).toBeChecked();
   },
 };
 

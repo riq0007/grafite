@@ -386,6 +386,20 @@
       "when": 1793802299464,
       "tag": "0054_pendencia_do_cadastro_do_agente",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1794334979194,
+      "tag": "0055_exibicao_dos_paineis",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794346543719,
+      "tag": "0056_aparelhos_confiaveis",
+      "breakpoints": true
     }
   ]
 }

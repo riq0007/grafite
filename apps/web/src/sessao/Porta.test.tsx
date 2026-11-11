@@ -156,7 +156,37 @@ describe('a porta', () => {
     preencher('Código do app', '287082');
     tocar('Continuar');
     expect(await titulo('O que resolver agora')).toBeTruthy();
-    expect(await corpoDe('POST /api/sessao/segundo-passo')).toEqual({ codigo: '287082' });
+    expect(await corpoDe('POST /api/sessao/segundo-passo')).toEqual({
+      codigo: '287082',
+      confiar: false,
+    });
+    // Sem o prazo da confiança na sessão, a caixa não aparece.
+    expect(screen.queryByRole('checkbox')).toBeNull();
+  });
+
+  // Spec tela-de-entrada, "Caixa do aparelho confiável" (change aparelho-confiavel).
+  it('com o prazo da conta, o passo do código oferece confiar no aparelho, e o código vai com a marca', async () => {
+    await abrir([
+      ['GET /api/sessao', estado(null)],
+      ['POST /api/sessao', estado({ ...sessao('segundo-passo'), diasDeConfianca: 30 })],
+      ['POST /api/sessao/segundo-passo', estado(sessao(null))],
+    ]);
+    await titulo('Entrar');
+    preencher('Usuário', 'ana.souza');
+    preencher('Senha', 'cavalo bateria grampo');
+    tocar('Entrar');
+    const caixa = await screen.findByRole('checkbox', {
+      name: 'Confiar neste aparelho por 30 dias',
+    });
+    expect((caixa as HTMLInputElement).checked).toBe(false);
+    fireEvent.click(caixa);
+    preencher('Código do app', '287082');
+    tocar('Continuar');
+    expect(await titulo('O que resolver agora')).toBeTruthy();
+    expect(await corpoDe('POST /api/sessao/segundo-passo')).toEqual({
+      codigo: '287082',
+      confiar: true,
+    });
   });
 
   it.each([

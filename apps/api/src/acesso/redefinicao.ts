@@ -10,6 +10,7 @@ import {
   visaoDaConta,
 } from '../auditoria.ts';
 import { saidaDaConta } from '../eventos/pessoas.ts';
+import { esquecerAparelhosDaConta } from './aparelhos.ts';
 import type { ContaComCredenciais } from './credenciais.ts';
 import { apagarDoisPassos } from './dois-passos.ts';
 import { encerrarSessoesDaConta } from './encerramento.ts';
@@ -48,6 +49,8 @@ export async function redefinirConta(
     origem,
   });
   const doisPassosRemovidos = removerDoisPassos ? await apagarDoisPassos(tx, conta.id) : false;
+  // A senha nova vale também para os aparelhos: todos pedem o código de novo.
+  await esquecerAparelhosDaConta(tx, conta.id);
   await zerarTentativas(tx, conta.usuario, momento);
   const [depois] = await tx
     .update(contas)

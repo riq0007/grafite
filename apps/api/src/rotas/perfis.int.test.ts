@@ -99,9 +99,16 @@ describe('lista e ficha', () => {
       todasAsPermissoes: true,
       permissoes: [],
       exigeDoisPassos: false,
+      diasDeConfianca: null,
       situacao: 'ativo',
       atribuicoes: 1,
-      permite: { editar: false, inativar: false, reativar: false, atribuir: false },
+      permite: {
+        editar: false,
+        inativar: false,
+        reativar: false,
+        atribuir: false,
+        mudarPrazo: false,
+      },
     });
     expect(carla.perfil(ids.tecnico ?? '')).toMatchObject({
       permissoes: ['pessoas.ver', 'locais.editar'],
@@ -115,12 +122,15 @@ describe('lista e ficha', () => {
       inativar: true,
       reativar: false,
       atribuir: true,
+      mudarPrazo: true,
     });
     expect(ana.perfil(ids.administrador ?? '')?.permite).toEqual({
       editar: false,
       inativar: false,
       reativar: false,
       atribuir: true,
+      // O prazo da confiança muda também no Administrador (change aparelho-confiavel).
+      mudarPrazo: true,
     });
   });
 

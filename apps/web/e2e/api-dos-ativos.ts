@@ -36,6 +36,7 @@ import {
   rotuloDaAcao,
   rotuloDoAtivo,
   type TipoDeCampo,
+  tipoDoSuprimento,
   type ValorDeCampo,
   VISAO_DE_FABRICA,
   type VisaoDoAtivoNaAuditoria,
@@ -1306,6 +1307,34 @@ export async function simularAtivos(
     (partes: string[], busca: URLSearchParams, corpo: Corpo, conteudo: Buffer) => Resposta,
   ][] = [
     ['GET', /^\/locais$/, () => ok({ locais, permite: { cadastrarNaRaiz: true } })],
+    // As impressoras de menor nível, do bloco dos suprimentos do Início (change
+    // opcoes-dos-blocos-do-inicio): o menor nível de cada ativo com o painel, do menor para o maior.
+    [
+      'GET',
+      /^\/ativos\/suprimentos\/menores$/,
+      () =>
+        ok({
+          itens: ativos
+            .flatMap((ativo) => {
+              const menor = ativo.painelDeSuprimentos?.menor;
+              if (!menor || ativo.situacao !== 'ativo') return [];
+              return [
+                {
+                  ativo: { id: ativo.id, rotulo: naLista(ativo).rotulo },
+                  suprimento: {
+                    item: '1',
+                    descricao: menor.descricao,
+                    tipo: tipoDoSuprimento(menor.descricao),
+                    nivel: menor.nivel,
+                    momento: menor.momento,
+                  },
+                },
+              ];
+            })
+            .sort((a, b) => a.suprimento.nivel - b.suprimento.nivel)
+            .slice(0, 6),
+        }),
+    ],
     // Os fornecedores (change p4a-fornecedores): a escolha e os ativos antes da ficha, cujo padrão
     // pega qualquer id.
     [

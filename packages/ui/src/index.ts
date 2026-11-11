@@ -23,6 +23,14 @@ export {
   type PropsDaBuscaGlobal,
   type ResultadoDaBusca,
 } from './casca/BuscaGlobal.tsx';
+export {
+  acompanharRolagem,
+  aplicarBarraDoSistema,
+  barraDoSistemaSobreposta,
+  ligarBarraDeRolagem,
+  TEMPO_DA_MARCA_DE_ROLAGEM,
+  valeABarraDoSistema,
+} from './casca/barraDeRolagem.ts';
 export { Casca, JanelaDeConteudo, type PropsDaCasca, TituloDaJanela } from './casca/Casca.tsx';
 export {
   CentralDeNotificacoes,
@@ -363,6 +371,7 @@ export {
   ProvedorDaTabela,
   Tabela,
 } from './componentes/tabela/Tabela.tsx';
+export { type PropsDoValorComposto, ValorComposto } from './componentes/tabela/ValorComposto.tsx';
 export { CadastroDosDoisPassos, type PropsDoCadastro } from './entrada/CadastroDosDoisPassos.tsx';
 export { CodigosDeRecuperacao, type PropsDosCodigos } from './entrada/CodigosDeRecuperacao.tsx';
 export { EnderecoDesconhecido } from './entrada/EnderecoDesconhecido.tsx';
@@ -388,6 +397,10 @@ export {
   TRACO_DOS_ICONES,
 } from './icones/Icone.tsx';
 export {
+  OpcoesDoBloco,
+  type PropsDasOpcoesDoBloco,
+} from './inicio/OpcoesDoBloco.tsx';
+export {
   OQueResolverAgora,
   type PropsDoOQueResolverAgora,
 } from './inicio/OQueResolverAgora.tsx';
@@ -404,6 +417,11 @@ export {
   ordenarOcorrencias,
   type SeveridadeDaOcorrencia,
 } from './inicio/ocorrencias.ts';
+export type {
+  OpcaoDoBloco,
+  ValorDaOpcaoDoBloco,
+  ValoresDasOpcoesDoBloco,
+} from './inicio/opcaoDoBloco.ts';
 export { criarDataHora, type DataHora } from './regiao/dataHora.ts';
 export {
   descreverFuso,

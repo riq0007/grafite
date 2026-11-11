@@ -1,0 +1,4 @@
+/* O diálogo já espaça os filhos: o parágrafo da instrução não soma a margem dele. */
+.instrucao {
+  margin: 0;
+}

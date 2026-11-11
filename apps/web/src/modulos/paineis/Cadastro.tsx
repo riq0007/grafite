@@ -1,7 +1,12 @@
 // O cadastro dos painéis (spec modulo-paineis, "Cadastro dos painéis"; change painel-de-dashboards):
-// a lista, ativos e inativos, com o endereço, a ordem e a verificação, "Novo painel" e a edição numa
-// gaveta, "Inativar", "Reativar" e "Verificar agora".
-import { conferirPainel, SITUACOES_DO_PAINEL_NA_TELA } from '@grafite/domain';
+// a lista, ativos e inativos, com o endereço, o local, a ordem, a verificação e a exibição (change
+// diagnostico-dos-paineis), "Novo painel" e a edição numa gaveta, "Inativar", "Reativar" e
+// "Verificar agora".
+import {
+  conferirPainel,
+  EXIBICOES_DO_PAINEL_NA_TELA,
+  SITUACOES_DO_PAINEL_NA_TELA,
+} from '@grafite/domain';
 import {
   avisar,
   Botao,
@@ -18,6 +23,7 @@ import {
   MensagemDoPasso,
   RotuloDeSituacao,
   Tabela,
+  ValorComposto,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -125,6 +131,31 @@ function FormularioDoPainel({ painel, aoFechar }: { painel: Painel | null; aoFec
   );
 }
 
+/**
+ * O retorno do "Verificar agora": a situação e, no painel no ar que não aparece na grade, a
+ * exibição também, como "No ar, mas recusa ser embutido.".
+ */
+function retornoDaVerificacao(painel: Painel): string {
+  const situacao = SITUACOES_DO_PAINEL_NA_TELA[painel.verificacao.situacao].texto;
+  const exibicao = painel.exibicao?.situacao ?? 'aparece';
+  if (painel.verificacao.situacao !== 'no-ar' || exibicao === 'aparece') {
+    return `Painel verificado: ${situacao}.`;
+  }
+  const { texto } = EXIBICOES_DO_PAINEL_NA_TELA[exibicao];
+  return `Painel verificado: ${situacao}, mas ${texto.charAt(0).toLowerCase()}${texto.slice(1)}.`;
+}
+
+/** A exibição em texto, com o motivo ao lado, ou o travessão no painel sem exibição. */
+function ExibicaoDoPainel({ exibicao }: { exibicao: Painel['exibicao'] }) {
+  if (!exibicao) return '—';
+  const { texto, tom } = EXIBICOES_DO_PAINEL_NA_TELA[exibicao.situacao];
+  return (
+    <ValorComposto fixo={<RotuloDeSituacao situacao={tom}>{texto}</RotuloDeSituacao>}>
+      {exibicao.motivo}
+    </ValorComposto>
+  );
+}
+
 export function Cadastro() {
   const api = useApi();
   const consultas = useQueryClient();
@@ -163,7 +194,7 @@ export function Cadastro() {
       situacao: 'sucesso',
       titulo:
         acao === 'verificacao'
-          ? `Painel verificado: ${SITUACOES_DO_PAINEL_NA_TELA[resultado.dados.verificacao.situacao].texto}.`
+          ? retornoDaVerificacao(resultado.dados)
           : acao === 'inativacao'
             ? 'Painel inativado.'
             : 'Painel reativado.',
@@ -201,12 +232,14 @@ export function Cadastro() {
               <Coluna id="endereco" especie="codigo">
                 Endereço
               </Coluna>
+              <Coluna id="local">Local</Coluna>
               <Coluna id="ordem" especie="numero">
                 Ordem
               </Coluna>
               <Coluna id="verificacao" especie="situacao">
                 Verificação
               </Coluna>
+              <Coluna id="exibicao">Exibição</Coluna>
               <Coluna id="situacao" especie="situacao">
                 Cadastro
               </Coluna>
@@ -229,11 +262,15 @@ export function Cadastro() {
                   <Linha id={painel.id}>
                     <Celula>{painel.nome}</Celula>
                     <Celula mono>{painel.endereco}</Celula>
+                    <Celula>{painel.local?.caminho ?? '—'}</Celula>
                     <Celula>{painel.ordem}</Celula>
                     <Celula>
                       <RotuloDeSituacao situacao={verificacao.tom}>
                         {verificacao.texto}
                       </RotuloDeSituacao>
+                    </Celula>
+                    <Celula>
+                      <ExibicaoDoPainel exibicao={painel.exibicao} />
                     </Celula>
                     <Celula>
                       <RotuloDeSituacao situacao={SITUACOES_DO_REGISTRO[painel.situacao].tipo}>

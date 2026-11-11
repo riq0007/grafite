@@ -43,7 +43,7 @@ import { ItemDeMenu, Menu } from '../menu/Menu.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from '../menu/MenuDeContexto.tsx';
 import { PEDIDO_DE_FOCO_DA_LINHA } from './pedidoDeFoco.ts';
 import { type ItemDoResumo, type PosicaoDoResumo, ResumoDaLinha } from './ResumoDaLinha.tsx';
-import { colunasForaDaArea, relogioDoResumo } from './resumo.ts';
+import { colunasComConteudoCortado, colunasForaDaArea, relogioDoResumo } from './resumo.ts';
 import estilos from './Tabela.module.css';
 
 /** Os limites da largura de uma coluna redimensionável, em px. */
@@ -319,15 +319,15 @@ export function Tabela({
   mostrarResumo.current = (chave) => {
     const area = rolagem.current;
     if (!area || !resumoDaLinha || contexto || !ordemDasLinhas.current.includes(chave)) return;
-    const linha = area.querySelector(`[role="row"][data-key="${CSS.escape(chave)}"]`);
+    const linha = area.querySelector<HTMLElement>(`[role="row"][data-key="${CSS.escape(chave)}"]`);
     if (!linha) return;
     const itens = resumoDaLinha(chave);
-    const fora = new Set(
-      colunasForaDaArea(
-        area,
-        itens.map((item) => item.coluna),
-      ),
-    );
+    const colunas = itens.map((item) => item.coluna);
+    // As colunas fora da área visível e as que estão à vista com o conteúdo cortado na célula.
+    const fora = new Set([
+      ...colunasForaDaArea(area, colunas),
+      ...colunasComConteudoCortado(area, linha, colunas),
+    ]);
     if (fora.size === 0) return;
     const caixa = linha.getBoundingClientRect();
     definirResumo({
@@ -789,6 +789,11 @@ export interface PropsDaColuna
   rotuloOculto?: boolean;
   /** A largura em px, na tabela redimensionável; sem ela, a coluna divide a sobra da área. */
   largura?: number;
+  /**
+   * A largura que o conteúdo da coluna pede, em px, como a da situação com a idade da leitura: na
+   * divisão da sobra, a coluna não fica mais estreita que ela. Com a largura dada, não vale.
+   */
+  larguraMinima?: number;
   /** Os números ficam à direita. A espécie número e a ações já põem à direita. */
   alinhamento?: AlinhamentoDaColuna;
   /** O que a coluna mostra; a célula segue. Sem ela, texto. */
@@ -924,6 +929,7 @@ export function Coluna({
   principal = false,
   rotuloOculto = false,
   largura,
+  larguraMinima,
   alinhamento = 'inicio',
   especie = 'texto',
   menu,
@@ -932,6 +938,9 @@ export function Coluna({
   const { emCurso } = useContext(LargurasDaTabelaContexto);
   const id = resto.id === undefined ? undefined : String(resto.id);
   const dada = (id === undefined ? undefined : emCurso?.get(id)) ?? largura;
+  // Na divisão da sobra, a coluna fica com o mínimo dela ou com a largura que o conteúdo pede; com
+  // a largura dada, quem arrasta a leva até o limite da tabela.
+  const minimaNaDivisao = Math.max(MINIMA_NA_DIVISAO, larguraMinima ?? 0);
   // As larguras só valem na tabela redimensionável; a coluna sem rótulo à vista, a da miniatura,
   // fica na largura dada.
   return (
@@ -939,7 +948,7 @@ export function Coluna({
       {...resto}
       width={dada ?? (principal ? FRACAO.principal : FRACAO.outra)}
       minWidth={
-        rotuloOculto ? largura : dada === undefined ? MINIMA_NA_DIVISAO : LIMITES_DA_LARGURA.minima
+        rotuloOculto ? largura : dada === undefined ? minimaNaDivisao : LIMITES_DA_LARGURA.minima
       }
       maxWidth={rotuloOculto ? largura : LIMITES_DA_LARGURA.maxima}
       allowsSorting={ordenavel}

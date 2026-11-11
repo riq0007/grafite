@@ -94,6 +94,13 @@
                   "confortavel"
                 ]
               },
+              "barraDeRolagem": {
+                "type": "string",
+                "enum": [
+                  "ao-rolar",
+                  "sempre"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -177,6 +184,27 @@
               },
               "ocultar": {
                 "type": "boolean"
+              },
+              "modulos": {
+                "maxItems": 40,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9.-]{1,40}$"
+                    },
+                    "visivel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "visivel"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "additionalProperties": false
@@ -332,6 +360,42 @@
                     },
                     "visivel": {
                       "type": "boolean"
+                    },
+                    "largura": {
+                      "type": "string",
+                      "enum": [
+                        "inteira",
+                        "metade"
+                      ]
+                    },
+                    "opcoes": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]{1,30}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "maxItems": 50,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "maxLength": 80
+                            }
+                          }
+                        ]
+                      }
                     }
                   },
                   "required": [
@@ -445,6 +509,20 @@
                           "compacta",
                           "normal",
                           "confortavel"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "barraDeRolagem": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ao-rolar",
+                          "sempre"
                         ]
                       },
                       {
@@ -582,6 +660,34 @@
                     "type": [
                       "boolean",
                       "null"
+                    ]
+                  },
+                  "modulos": {
+                    "anyOf": [
+                      {
+                        "maxItems": 40,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9.-]{1,40}$"
+                            },
+                            "visivel": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "visivel"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -860,6 +966,42 @@
                             },
                             "visivel": {
                               "type": "boolean"
+                            },
+                            "largura": {
+                              "type": "string",
+                              "enum": [
+                                "inteira",
+                                "metade"
+                              ]
+                            },
+                            "opcoes": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-z0-9-]{1,30}$"
+                              },
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 80
+                                  },
+                                  {
+                                    "maxItems": 50,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 80
+                                    }
+                                  }
+                                ]
+                              }
                             }
                           },
                           "required": [
@@ -2886,6 +3028,18 @@
               "inativa"
             ]
           },
+          "posicoes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "erro": {
             "type": [
               "string",
@@ -2944,6 +3098,7 @@
           "largura",
           "profundidade",
           "situacao",
+          "posicoes",
           "erro",
           "fonte",
           "contagens",
@@ -3291,6 +3446,23 @@
             ]
           }
         }
+      },
+      "SubstituicaoDoDesenhoInput": {
+        "type": "object",
+        "properties": {
+          "planta": {
+            "$ref": "#/components/schemas/PlantaDoMapaInput"
+          },
+          "posicoesFora": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "planta",
+          "posicoesFora"
+        ]
       },
       "RespostaDeSaudeInput": {
         "type": "object",
@@ -3947,6 +4119,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -3962,6 +4146,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -4791,6 +4976,130 @@
           "ate"
         ]
       },
+      "ContaDaFichaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "usuario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "exigeDoisPassos": {
+            "type": "boolean"
+          },
+          "doisPassos": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "desativada"
+            ]
+          },
+          "senhaTemporaria": {
+            "type": "boolean"
+          },
+          "entradaBloqueadaAte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ultimaEntradaEm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "editar": {
+                "type": "boolean"
+              },
+              "redefinir": {
+                "type": "boolean"
+              },
+              "removerDoisPassos": {
+                "type": "boolean"
+              },
+              "desbloquear": {
+                "type": "boolean"
+              },
+              "inativar": {
+                "type": "boolean"
+              },
+              "reativar": {
+                "type": "boolean"
+              },
+              "encerrarSessoes": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "editar",
+              "redefinir",
+              "removerDoisPassos",
+              "desbloquear",
+              "inativar",
+              "reativar",
+              "encerrarSessoes"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "usuario",
+          "situacao",
+          "exigeDoisPassos",
+          "doisPassos",
+          "senhaTemporaria",
+          "entradaBloqueadaAte",
+          "ultimaEntradaEm",
+          "permite"
+        ]
+      },
+      "ContagemNoEscopoInput": {
+        "type": "object",
+        "properties": {
+          "quantos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "recortada": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "quantos",
+          "recortada"
+        ]
+      },
       "ValorDoCampoInput": {
         "anyOf": [
           {
@@ -5314,6 +5623,76 @@
                 "item",
                 "descricao",
                 "pontos"
+              ]
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ]
+      },
+      "MenoresSuprimentosInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ativo": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "rotulo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "rotulo"
+                  ]
+                },
+                "suprimento": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "descricao": {
+                      "type": "string"
+                    },
+                    "tipo": {
+                      "type": "string",
+                      "enum": [
+                        "toner",
+                        "cilindro",
+                        "fusor",
+                        "outro"
+                      ]
+                    },
+                    "nivel": {
+                      "type": "number"
+                    },
+                    "momento": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "descricao",
+                    "tipo",
+                    "nivel",
+                    "momento"
+                  ]
+                }
+              },
+              "required": [
+                "ativo",
+                "suprimento"
               ]
             }
           }
@@ -7503,6 +7882,789 @@
         },
         "required": [
           "atualizadoEm"
+        ]
+      },
+      "LocalDaPessoaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "caminho",
+          "situacao"
+        ]
+      },
+      "ResumoDaContaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "usuario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "usuario",
+          "situacao"
+        ]
+      },
+      "PermiteNaPessoaInput": {
+        "type": "object",
+        "properties": {
+          "editar": {
+            "type": "boolean"
+          },
+          "inativar": {
+            "type": "boolean"
+          },
+          "reativar": {
+            "type": "boolean"
+          },
+          "anonimizar": {
+            "type": "boolean"
+          },
+          "criarConta": {
+            "type": "boolean"
+          },
+          "administrarConta": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "editar",
+          "inativar",
+          "reativar",
+          "anonimizar",
+          "criarConta",
+          "administrarConta"
+        ]
+      },
+      "PessoaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumoDaContaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "$ref": "#/components/schemas/PermiteNaPessoaInput"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "matricula",
+          "telefone",
+          "situacao",
+          "local",
+          "foto",
+          "conta",
+          "permite"
+        ]
+      },
+      "ListaDePessoasInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PessoaInput"
+            }
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "itens",
+          "proximo",
+          "total"
+        ]
+      },
+      "FichaDaPessoaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDaFichaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "$ref": "#/components/schemas/PermiteNaPessoaInput"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "matricula",
+          "telefone",
+          "situacao",
+          "local",
+          "foto",
+          "conta",
+          "permite"
+        ]
+      },
+      "ResumoDaPessoaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "caminho": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "caminho"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "temConta": {
+            "type": "boolean"
+          },
+          "ativos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContagemNoEscopoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "situacao",
+          "foto",
+          "local",
+          "temConta",
+          "ativos"
+        ]
+      },
+      "PedidoDePessoaInput": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "localId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nome"
+        ]
+      },
+      "PedidoDeAlteracaoDaPessoaInput": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "localId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeContaInput": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "exigeDoisPassos": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "usuario"
+        ]
+      },
+      "PedidoDeAlteracaoDaContaInput": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "exigeDoisPassos": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ContaComSenhaTemporariaInput": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "$ref": "#/components/schemas/ContaDaFichaInput"
+          },
+          "senhaTemporaria": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conta",
+          "senhaTemporaria"
+        ]
+      },
+      "PedidoDeRedefinicaoInput": {
+        "type": "object",
+        "properties": {
+          "removerDoisPassos": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      },
+      "SessaoAdministradaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "ultimoUsoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "ip",
+          "criadaEm",
+          "ultimoUsoEm"
+        ]
+      },
+      "SessoesEncerradasInput": {
+        "type": "object",
+        "properties": {
+          "encerradas": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "encerradas"
+        ]
+      },
+      "OrigemDoPrazoInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "conta"
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "perfil"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tipo",
+              "nome"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "organizacao"
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          }
+        ]
+      },
+      "PrazoDaConfiancaInput": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "origem": {
+            "$ref": "#/components/schemas/OrigemDoPrazoInput"
+          }
+        },
+        "required": [
+          "dias",
+          "origem"
+        ]
+      },
+      "AparelhoConfiavelInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "usadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valeAte": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "esteAparelho": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "criadoEm",
+          "usadoEm",
+          "valeAte",
+          "esteAparelho"
+        ]
+      },
+      "AparelhosDaContaInput": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfiancaInput"
+          },
+          "aparelhos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AparelhoConfiavelInput"
+            }
+          }
+        },
+        "required": [
+          "prazo",
+          "aparelhos"
+        ]
+      },
+      "AparelhoNaAdministracaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "usadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valeAte": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "criadoEm",
+          "usadoEm",
+          "valeAte",
+          "ip"
+        ]
+      },
+      "PrazoDaContaInput": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfiancaInput"
+          },
+          "diasDaConta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "prazo",
+          "diasDaConta"
+        ]
+      },
+      "AparelhosDaContaNaAdministracaoInput": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfiancaInput"
+          },
+          "diasDaConta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "aparelhos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AparelhoNaAdministracaoInput"
+            }
+          }
+        },
+        "required": [
+          "prazo",
+          "diasDaConta",
+          "aparelhos"
+        ]
+      },
+      "PedidoDePrazoDaConfiancaInput": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dias"
+        ]
+      },
+      "PoliticaDeEntradaInput": {
+        "type": "object",
+        "properties": {
+          "diasDeConfianca": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          }
+        },
+        "required": [
+          "diasDeConfianca"
         ]
       },
       "LocalDoEscopoInput": {
@@ -10796,6 +11958,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -10811,6 +11985,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -10832,665 +12007,6 @@
           "organizacao",
           "sessao",
           "sessoesEncerradas"
-        ]
-      },
-      "ContaDaFichaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "usuario": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "exigeDoisPassos": {
-            "type": "boolean"
-          },
-          "doisPassos": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "desativada"
-            ]
-          },
-          "senhaTemporaria": {
-            "type": "boolean"
-          },
-          "entradaBloqueadaAte": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "ultimaEntradaEm": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "editar": {
-                "type": "boolean"
-              },
-              "redefinir": {
-                "type": "boolean"
-              },
-              "removerDoisPassos": {
-                "type": "boolean"
-              },
-              "desbloquear": {
-                "type": "boolean"
-              },
-              "inativar": {
-                "type": "boolean"
-              },
-              "reativar": {
-                "type": "boolean"
-              },
-              "encerrarSessoes": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "editar",
-              "redefinir",
-              "removerDoisPassos",
-              "desbloquear",
-              "inativar",
-              "reativar",
-              "encerrarSessoes"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "usuario",
-          "situacao",
-          "exigeDoisPassos",
-          "doisPassos",
-          "senhaTemporaria",
-          "entradaBloqueadaAte",
-          "ultimaEntradaEm",
-          "permite"
-        ]
-      },
-      "ContagemNoEscopoInput": {
-        "type": "object",
-        "properties": {
-          "quantos": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "recortada": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "quantos",
-          "recortada"
-        ]
-      },
-      "LocalDaPessoaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativo",
-              "inativo"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "caminho",
-          "situacao"
-        ]
-      },
-      "ResumoDaContaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "usuario": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "usuario",
-          "situacao"
-        ]
-      },
-      "PermiteNaPessoaInput": {
-        "type": "object",
-        "properties": {
-          "editar": {
-            "type": "boolean"
-          },
-          "inativar": {
-            "type": "boolean"
-          },
-          "reativar": {
-            "type": "boolean"
-          },
-          "anonimizar": {
-            "type": "boolean"
-          },
-          "criarConta": {
-            "type": "boolean"
-          },
-          "administrarConta": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "editar",
-          "inativar",
-          "reativar",
-          "anonimizar",
-          "criarConta",
-          "administrarConta"
-        ]
-      },
-      "PessoaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "conta": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResumoDaContaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "$ref": "#/components/schemas/PermiteNaPessoaInput"
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "email",
-          "matricula",
-          "telefone",
-          "situacao",
-          "local",
-          "foto",
-          "conta",
-          "permite"
-        ]
-      },
-      "ListaDePessoasInput": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PessoaInput"
-            }
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "itens",
-          "proximo",
-          "total"
-        ]
-      },
-      "FichaDaPessoaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "conta": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContaDaFichaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "$ref": "#/components/schemas/PermiteNaPessoaInput"
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "email",
-          "matricula",
-          "telefone",
-          "situacao",
-          "local",
-          "foto",
-          "conta",
-          "permite"
-        ]
-      },
-      "ResumoDaPessoaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "caminho": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "caminho"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "temConta": {
-            "type": "boolean"
-          },
-          "ativos": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContagemNoEscopoInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "situacao",
-          "foto",
-          "local",
-          "temConta",
-          "ativos"
-        ]
-      },
-      "PedidoDePessoaInput": {
-        "type": "object",
-        "properties": {
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "localId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "nome"
-        ]
-      },
-      "PedidoDeAlteracaoDaPessoaInput": {
-        "type": "object",
-        "properties": {
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "localId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeContaInput": {
-        "type": "object",
-        "properties": {
-          "usuario": {
-            "type": "string"
-          },
-          "exigeDoisPassos": {
-            "default": false,
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "usuario"
-        ]
-      },
-      "PedidoDeAlteracaoDaContaInput": {
-        "type": "object",
-        "properties": {
-          "usuario": {
-            "type": "string"
-          },
-          "exigeDoisPassos": {
-            "type": "boolean"
-          }
-        }
-      },
-      "ContaComSenhaTemporariaInput": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "$ref": "#/components/schemas/ContaDaFichaInput"
-          },
-          "senhaTemporaria": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "conta",
-          "senhaTemporaria"
-        ]
-      },
-      "PedidoDeRedefinicaoInput": {
-        "type": "object",
-        "properties": {
-          "removerDoisPassos": {
-            "default": false,
-            "type": "boolean"
-          }
-        }
-      },
-      "SessaoAdministradaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "dispositivo": {
-            "type": "string"
-          },
-          "ip": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "criadaEm": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-          },
-          "ultimoUsoEm": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-          }
-        },
-        "required": [
-          "id",
-          "dispositivo",
-          "ip",
-          "criadaEm",
-          "ultimoUsoEm"
-        ]
-      },
-      "SessoesEncerradasInput": {
-        "type": "object",
-        "properties": {
-          "encerradas": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "encerradas"
         ]
       },
       "DiretorioInput": {
@@ -12414,6 +12930,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -12429,6 +12957,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -18614,6 +19143,36 @@
               "tempoDaResposta",
               "motivo"
             ]
+          },
+          "exibicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aparece",
+                      "recusa",
+                      "pede-entrada"
+                    ]
+                  },
+                  "motivo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "situacao",
+                  "motivo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -18623,7 +19182,8 @@
           "local",
           "ordem",
           "situacao",
-          "verificacao"
+          "verificacao",
+          "exibicao"
         ]
       },
       "ListaDePaineisInput": {
@@ -18693,13 +19253,17 @@
           },
           "atribuir": {
             "type": "boolean"
+          },
+          "mudarPrazo": {
+            "type": "boolean"
           }
         },
         "required": [
           "editar",
           "inativar",
           "reativar",
-          "atribuir"
+          "atribuir",
+          "mudarPrazo"
         ]
       },
       "PerfilInput": {
@@ -18782,6 +19346,18 @@
           "exigeDoisPassos": {
             "type": "boolean"
           },
+          "diasDeConfianca": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "situacao": {
             "type": "string",
             "enum": [
@@ -18806,6 +19382,7 @@
           "todasAsPermissoes",
           "protegido",
           "exigeDoisPassos",
+          "diasDeConfianca",
           "situacao",
           "atribuicoes",
           "permite"
@@ -19017,6 +19594,18 @@
           "exigeDoisPassos": {
             "type": "boolean"
           },
+          "diasDeConfianca": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "situacao": {
             "type": "string",
             "enum": [
@@ -19047,6 +19636,7 @@
           "todasAsPermissoes",
           "protegido",
           "exigeDoisPassos",
+          "diasDeConfianca",
           "situacao",
           "atribuicoes",
           "permite",
@@ -19965,6 +20555,9 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 32
+          },
+          "confiar": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -20091,6 +20684,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -20106,6 +20711,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -20690,6 +21296,26 @@
           "motivo"
         ]
       },
+      "PedidoDePrazoDoPerfilInput": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dias"
+        ]
+      },
       "ContasDoFiltroInput": {
         "type": "object",
         "properties": {
@@ -20954,6 +21580,13 @@
                   "confortavel"
                 ]
               },
+              "barraDeRolagem": {
+                "type": "string",
+                "enum": [
+                  "ao-rolar",
+                  "sempre"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -21037,6 +21670,27 @@
               },
               "ocultar": {
                 "type": "boolean"
+              },
+              "modulos": {
+                "maxItems": 40,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9.-]{1,40}$"
+                    },
+                    "visivel": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "visivel"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "additionalProperties": false
@@ -21192,6 +21846,42 @@
                     },
                     "visivel": {
                       "type": "boolean"
+                    },
+                    "largura": {
+                      "type": "string",
+                      "enum": [
+                        "inteira",
+                        "metade"
+                      ]
+                    },
+                    "opcoes": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]{1,30}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "maxItems": 50,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "maxLength": 80
+                            }
+                          }
+                        ]
+                      }
                     }
                   },
                   "required": [
@@ -21305,6 +21995,20 @@
                           "compacta",
                           "normal",
                           "confortavel"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "barraDeRolagem": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ao-rolar",
+                          "sempre"
                         ]
                       },
                       {
@@ -21442,6 +22146,34 @@
                     "type": [
                       "boolean",
                       "null"
+                    ]
+                  },
+                  "modulos": {
+                    "anyOf": [
+                      {
+                        "maxItems": 40,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9.-]{1,40}$"
+                            },
+                            "visivel": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "visivel"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -21720,6 +22452,42 @@
                             },
                             "visivel": {
                               "type": "boolean"
+                            },
+                            "largura": {
+                              "type": "string",
+                              "enum": [
+                                "inteira",
+                                "metade"
+                              ]
+                            },
+                            "opcoes": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-z0-9-]{1,30}$"
+                              },
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 80
+                                  },
+                                  {
+                                    "maxItems": 50,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 80
+                                    }
+                                  }
+                                ]
+                              }
                             }
                           },
                           "required": [
@@ -23812,6 +24580,18 @@
               "inativa"
             ]
           },
+          "posicoes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "erro": {
             "type": [
               "string",
@@ -23871,6 +24651,7 @@
           "largura",
           "profundidade",
           "situacao",
+          "posicoes",
           "erro",
           "fonte",
           "contagens",
@@ -24233,6 +25014,24 @@
             ]
           }
         },
+        "additionalProperties": false
+      },
+      "SubstituicaoDoDesenho": {
+        "type": "object",
+        "properties": {
+          "planta": {
+            "$ref": "#/components/schemas/PlantaDoMapa"
+          },
+          "posicoesFora": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "planta",
+          "posicoesFora"
+        ],
         "additionalProperties": false
       },
       "RespostaDeSaude": {
@@ -24914,6 +25713,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -24929,6 +25740,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -25791,6 +26603,133 @@
         ],
         "additionalProperties": false
       },
+      "ContaDaFicha": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "usuario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "exigeDoisPassos": {
+            "type": "boolean"
+          },
+          "doisPassos": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "desativada"
+            ]
+          },
+          "senhaTemporaria": {
+            "type": "boolean"
+          },
+          "entradaBloqueadaAte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ultimaEntradaEm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "editar": {
+                "type": "boolean"
+              },
+              "redefinir": {
+                "type": "boolean"
+              },
+              "removerDoisPassos": {
+                "type": "boolean"
+              },
+              "desbloquear": {
+                "type": "boolean"
+              },
+              "inativar": {
+                "type": "boolean"
+              },
+              "reativar": {
+                "type": "boolean"
+              },
+              "encerrarSessoes": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "editar",
+              "redefinir",
+              "removerDoisPassos",
+              "desbloquear",
+              "inativar",
+              "reativar",
+              "encerrarSessoes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "usuario",
+          "situacao",
+          "exigeDoisPassos",
+          "doisPassos",
+          "senhaTemporaria",
+          "entradaBloqueadaAte",
+          "ultimaEntradaEm",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
+      "ContagemNoEscopo": {
+        "type": "object",
+        "properties": {
+          "quantos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "recortada": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "quantos",
+          "recortada"
+        ],
+        "additionalProperties": false
+      },
       "ValorDoCampo": {
         "anyOf": [
           {
@@ -26333,6 +27272,80 @@
                 "item",
                 "descricao",
                 "pontos"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ],
+        "additionalProperties": false
+      },
+      "MenoresSuprimentos": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ativo": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "rotulo": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "rotulo"
+                  ],
+                  "additionalProperties": false
+                },
+                "suprimento": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string"
+                    },
+                    "descricao": {
+                      "type": "string"
+                    },
+                    "tipo": {
+                      "type": "string",
+                      "enum": [
+                        "toner",
+                        "cilindro",
+                        "fusor",
+                        "outro"
+                      ]
+                    },
+                    "nivel": {
+                      "type": "number"
+                    },
+                    "momento": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "descricao",
+                    "tipo",
+                    "nivel",
+                    "momento"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "ativo",
+                "suprimento"
               ],
               "additionalProperties": false
             }
@@ -28588,6 +29601,820 @@
         },
         "required": [
           "atualizadoEm"
+        ],
+        "additionalProperties": false
+      },
+      "LocalDaPessoa": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "caminho",
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDaConta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "usuario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "usuario",
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "PermiteNaPessoa": {
+        "type": "object",
+        "properties": {
+          "editar": {
+            "type": "boolean"
+          },
+          "inativar": {
+            "type": "boolean"
+          },
+          "reativar": {
+            "type": "boolean"
+          },
+          "anonimizar": {
+            "type": "boolean"
+          },
+          "criarConta": {
+            "type": "boolean"
+          },
+          "administrarConta": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "editar",
+          "inativar",
+          "reativar",
+          "anonimizar",
+          "criarConta",
+          "administrarConta"
+        ],
+        "additionalProperties": false
+      },
+      "Pessoa": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumoDaConta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "$ref": "#/components/schemas/PermiteNaPessoa"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "matricula",
+          "telefone",
+          "situacao",
+          "local",
+          "foto",
+          "conta",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDePessoas": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Pessoa"
+            }
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "itens",
+          "proximo",
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "FichaDaPessoa": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDaFicha"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "permite": {
+            "$ref": "#/components/schemas/PermiteNaPessoa"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "matricula",
+          "telefone",
+          "situacao",
+          "local",
+          "foto",
+          "conta",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDaPessoa": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativa",
+              "inativa",
+              "anonimizada"
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "caminho": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "caminho"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "temConta": {
+            "type": "boolean"
+          },
+          "ativos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContagemNoEscopo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "situacao",
+          "foto",
+          "local",
+          "temConta",
+          "ativos"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDePessoa": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "localId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nome"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeAlteracaoDaPessoa": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "matricula": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "telefone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "localId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeConta": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "exigeDoisPassos": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "usuario",
+          "exigeDoisPassos"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeAlteracaoDaConta": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "exigeDoisPassos": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContaComSenhaTemporaria": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "$ref": "#/components/schemas/ContaDaFicha"
+          },
+          "senhaTemporaria": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conta",
+          "senhaTemporaria"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeRedefinicao": {
+        "type": "object",
+        "properties": {
+          "removerDoisPassos": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "removerDoisPassos"
+        ],
+        "additionalProperties": false
+      },
+      "SessaoAdministrada": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "ultimoUsoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "ip",
+          "criadaEm",
+          "ultimoUsoEm"
+        ],
+        "additionalProperties": false
+      },
+      "SessoesEncerradas": {
+        "type": "object",
+        "properties": {
+          "encerradas": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "encerradas"
+        ],
+        "additionalProperties": false
+      },
+      "OrigemDoPrazo": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "conta"
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "perfil"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tipo",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "organizacao"
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PrazoDaConfianca": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "origem": {
+            "$ref": "#/components/schemas/OrigemDoPrazo"
+          }
+        },
+        "required": [
+          "dias",
+          "origem"
+        ],
+        "additionalProperties": false
+      },
+      "AparelhoConfiavel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "usadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valeAte": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "esteAparelho": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "criadoEm",
+          "usadoEm",
+          "valeAte",
+          "esteAparelho"
+        ],
+        "additionalProperties": false
+      },
+      "AparelhosDaConta": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfianca"
+          },
+          "aparelhos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AparelhoConfiavel"
+            }
+          }
+        },
+        "required": [
+          "prazo",
+          "aparelhos"
+        ],
+        "additionalProperties": false
+      },
+      "AparelhoNaAdministracao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dispositivo": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "usadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valeAte": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "dispositivo",
+          "criadoEm",
+          "usadoEm",
+          "valeAte",
+          "ip"
+        ],
+        "additionalProperties": false
+      },
+      "PrazoDaConta": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfianca"
+          },
+          "diasDaConta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "prazo",
+          "diasDaConta"
+        ],
+        "additionalProperties": false
+      },
+      "AparelhosDaContaNaAdministracao": {
+        "type": "object",
+        "properties": {
+          "prazo": {
+            "$ref": "#/components/schemas/PrazoDaConfianca"
+          },
+          "diasDaConta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "aparelhos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AparelhoNaAdministracao"
+            }
+          }
+        },
+        "required": [
+          "prazo",
+          "diasDaConta",
+          "aparelhos"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDePrazoDaConfianca": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dias"
+        ],
+        "additionalProperties": false
+      },
+      "PoliticaDeEntrada": {
+        "type": "object",
+        "properties": {
+          "diasDeConfianca": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          }
+        },
+        "required": [
+          "diasDeConfianca"
         ],
         "additionalProperties": false
       },
@@ -31974,6 +33801,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -31989,6 +33828,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -32011,688 +33851,6 @@
           "organizacao",
           "sessao",
           "sessoesEncerradas"
-        ],
-        "additionalProperties": false
-      },
-      "ContaDaFicha": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "usuario": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "exigeDoisPassos": {
-            "type": "boolean"
-          },
-          "doisPassos": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "desativada"
-            ]
-          },
-          "senhaTemporaria": {
-            "type": "boolean"
-          },
-          "entradaBloqueadaAte": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "ultimaEntradaEm": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "editar": {
-                "type": "boolean"
-              },
-              "redefinir": {
-                "type": "boolean"
-              },
-              "removerDoisPassos": {
-                "type": "boolean"
-              },
-              "desbloquear": {
-                "type": "boolean"
-              },
-              "inativar": {
-                "type": "boolean"
-              },
-              "reativar": {
-                "type": "boolean"
-              },
-              "encerrarSessoes": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "editar",
-              "redefinir",
-              "removerDoisPassos",
-              "desbloquear",
-              "inativar",
-              "reativar",
-              "encerrarSessoes"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "id",
-          "usuario",
-          "situacao",
-          "exigeDoisPassos",
-          "doisPassos",
-          "senhaTemporaria",
-          "entradaBloqueadaAte",
-          "ultimaEntradaEm",
-          "permite"
-        ],
-        "additionalProperties": false
-      },
-      "ContagemNoEscopo": {
-        "type": "object",
-        "properties": {
-          "quantos": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "recortada": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "quantos",
-          "recortada"
-        ],
-        "additionalProperties": false
-      },
-      "LocalDaPessoa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativo",
-              "inativo"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "caminho",
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "ResumoDaConta": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "usuario": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "usuario",
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "PermiteNaPessoa": {
-        "type": "object",
-        "properties": {
-          "editar": {
-            "type": "boolean"
-          },
-          "inativar": {
-            "type": "boolean"
-          },
-          "reativar": {
-            "type": "boolean"
-          },
-          "anonimizar": {
-            "type": "boolean"
-          },
-          "criarConta": {
-            "type": "boolean"
-          },
-          "administrarConta": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "editar",
-          "inativar",
-          "reativar",
-          "anonimizar",
-          "criarConta",
-          "administrarConta"
-        ],
-        "additionalProperties": false
-      },
-      "Pessoa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "conta": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResumoDaConta"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "$ref": "#/components/schemas/PermiteNaPessoa"
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "email",
-          "matricula",
-          "telefone",
-          "situacao",
-          "local",
-          "foto",
-          "conta",
-          "permite"
-        ],
-        "additionalProperties": false
-      },
-      "ListaDePessoas": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Pessoa"
-            }
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "itens",
-          "proximo",
-          "total"
-        ],
-        "additionalProperties": false
-      },
-      "FichaDaPessoa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "conta": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContaDaFicha"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "permite": {
-            "$ref": "#/components/schemas/PermiteNaPessoa"
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "email",
-          "matricula",
-          "telefone",
-          "situacao",
-          "local",
-          "foto",
-          "conta",
-          "permite"
-        ],
-        "additionalProperties": false
-      },
-      "ResumoDaPessoa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "ativa",
-              "inativa",
-              "anonimizada"
-            ]
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "caminho": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "caminho"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "temConta": {
-            "type": "boolean"
-          },
-          "ativos": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContagemNoEscopo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "situacao",
-          "foto",
-          "local",
-          "temConta",
-          "ativos"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDePessoa": {
-        "type": "object",
-        "properties": {
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "localId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "nome"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDeAlteracaoDaPessoa": {
-        "type": "object",
-        "properties": {
-          "nome": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "matricula": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "telefone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "localId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeConta": {
-        "type": "object",
-        "properties": {
-          "usuario": {
-            "type": "string"
-          },
-          "exigeDoisPassos": {
-            "default": false,
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "usuario",
-          "exigeDoisPassos"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDeAlteracaoDaConta": {
-        "type": "object",
-        "properties": {
-          "usuario": {
-            "type": "string"
-          },
-          "exigeDoisPassos": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ContaComSenhaTemporaria": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "$ref": "#/components/schemas/ContaDaFicha"
-          },
-          "senhaTemporaria": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "conta",
-          "senhaTemporaria"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDeRedefinicao": {
-        "type": "object",
-        "properties": {
-          "removerDoisPassos": {
-            "default": false,
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "removerDoisPassos"
-        ],
-        "additionalProperties": false
-      },
-      "SessaoAdministrada": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "dispositivo": {
-            "type": "string"
-          },
-          "ip": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "criadaEm": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-          },
-          "ultimoUsoEm": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-          }
-        },
-        "required": [
-          "id",
-          "dispositivo",
-          "ip",
-          "criadaEm",
-          "ultimoUsoEm"
-        ],
-        "additionalProperties": false
-      },
-      "SessoesEncerradas": {
-        "type": "object",
-        "properties": {
-          "encerradas": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "encerradas"
         ],
         "additionalProperties": false
       },
@@ -33655,6 +34813,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -33670,6 +34840,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -40067,6 +41238,37 @@
               "motivo"
             ],
             "additionalProperties": false
+          },
+          "exibicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aparece",
+                      "recusa",
+                      "pede-entrada"
+                    ]
+                  },
+                  "motivo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "situacao",
+                  "motivo"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -40076,7 +41278,8 @@
           "local",
           "ordem",
           "situacao",
-          "verificacao"
+          "verificacao",
+          "exibicao"
         ],
         "additionalProperties": false
       },
@@ -40150,13 +41353,17 @@
           },
           "atribuir": {
             "type": "boolean"
+          },
+          "mudarPrazo": {
+            "type": "boolean"
           }
         },
         "required": [
           "editar",
           "inativar",
           "reativar",
-          "atribuir"
+          "atribuir",
+          "mudarPrazo"
         ],
         "additionalProperties": false
       },
@@ -40240,6 +41447,18 @@
           "exigeDoisPassos": {
             "type": "boolean"
           },
+          "diasDeConfianca": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "situacao": {
             "type": "string",
             "enum": [
@@ -40264,6 +41483,7 @@
           "todasAsPermissoes",
           "protegido",
           "exigeDoisPassos",
+          "diasDeConfianca",
           "situacao",
           "atribuicoes",
           "permite"
@@ -40480,6 +41700,18 @@
           "exigeDoisPassos": {
             "type": "boolean"
           },
+          "diasDeConfianca": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "situacao": {
             "type": "string",
             "enum": [
@@ -40510,6 +41742,7 @@
           "todasAsPermissoes",
           "protegido",
           "exigeDoisPassos",
+          "diasDeConfianca",
           "situacao",
           "atribuicoes",
           "permite",
@@ -41468,6 +42701,9 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 32
+          },
+          "confiar": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -41597,6 +42833,18 @@
                       }
                     ]
                   },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "csrf": {
                     "type": "string"
                   },
@@ -41612,6 +42860,7 @@
                 "required": [
                   "conta",
                   "pendencia",
+                  "diasDeConfianca",
                   "csrf",
                   "expiraEm",
                   "acesso"
@@ -42218,6 +43467,27 @@
         "required": [
           "logins",
           "motivo"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDePrazoDoPerfil": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dias"
         ],
         "additionalProperties": false
       },
@@ -42907,6 +44177,633 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conta/aparelhos": {
+      "get": {
+        "summary": "Os aparelhos confiáveis da conta, com o prazo que vale para ela",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AparelhosDaConta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Esquecer todos os aparelhos confiáveis da conta",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conta/aparelhos/{id}": {
+      "delete": {
+        "summary": "Esquecer um aparelho confiável da conta",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contas/{id}/aparelhos": {
+      "get": {
+        "summary": "Os aparelhos confiáveis de outra conta, com o prazo que vale para ela",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AparelhosDaContaNaAdministracao"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Esquecer todos os aparelhos confiáveis de outra conta; as sessões continuam",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contas/{id}/prazo-da-confianca": {
+      "put": {
+        "summary": "Mudar o prazo da confiança de outra conta; `null` segue os perfis e a organização",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDePrazoDaConfiancaInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrazoDaConta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/politica-de-entrada": {
+      "get": {
+        "summary": "O prazo da confiança nos aparelhos da organização",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaDeEntrada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Mudar o prazo da confiança nos aparelhos da organização",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoliticaDeEntradaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaDeEntrada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "Default Response",
             "content": {
               "application/json": {
@@ -47641,6 +49538,105 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PedidoDeAlteracaoDoPerfilInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDoPerfil"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/perfis/{id}/prazo-da-confianca": {
+      "put": {
+        "summary": "Mudar o prazo da confiança de um perfil; `null` segue a organização",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDePrazoDoPerfilInput"
               }
             }
           }
@@ -52897,6 +54893,115 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ativos/suprimentos/menores": {
+      "get": {
+        "summary": "As impressoras de menor nível: o suprimento de menor nível de cada uma, entre os tipos pedidos",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "tipos",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "in": "query",
+            "name": "locais",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 6,
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "in": "query",
+            "name": "limite",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "nivel",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenoresSuprimentos"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {
@@ -68005,6 +70110,86 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Excluir a planta, com o desenho e as posições; o que estava posicionado continua cadastrado",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapa/plantas/{id}/modelo": {
@@ -68029,6 +70214,116 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModeloDaPlanta"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Substituir o desenho da planta por outro arquivo; o nome, o local e as posições ficam",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "fonte",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubstituicaoDoDesenho"
                 }
               }
             }

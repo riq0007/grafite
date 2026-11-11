@@ -1,8 +1,14 @@
 // A grade dos painéis (spec modulo-paineis, "Grade adaptativa" e "Expandir o painel"; change
 // painel-de-dashboards, design, decisões 3, 4 e 5): os painéis ativos numa grade que ocupa a área da
 // janela, com a forma do domínio, cada um com o nome, a situação, "Expandir" e "Abrir em outra aba".
-// O expandido vem do endereço, que o mapa usa, e Esc volta à grade.
-import { formaDaGrade, SITUACOES_DO_PAINEL_NA_TELA } from '@grafite/domain';
+// O expandido vem do endereço, que o mapa usa, e Esc volta à grade. O bloco segue a exibição do
+// painel (change diagnostico-dos-paineis, design, decisão 4): o que recusa ser embutido diz o motivo
+// no lugar do quadro em branco, e o que pede a entrada avisa acima do conteúdo.
+import {
+  EXIBICOES_DO_PAINEL_NA_TELA,
+  formaDaGrade,
+  SITUACOES_DO_PAINEL_NA_TELA,
+} from '@grafite/domain';
 import {
   Botao,
   CabecalhoDaPagina,
@@ -34,6 +40,9 @@ function BlocoDoPainel({
   const { formatarDataEHora } = useDataHora();
   const situacao = SITUACOES_DO_PAINEL_NA_TELA[painel.verificacao.situacao];
   const pelaPonte = painel.endereco.startsWith('http:');
+  // "Aparece na grade" é uma leitura da resposta, e não uma prova: o bloco só anuncia as outras.
+  const exibicao = painel.exibicao?.situacao ?? 'aparece';
+  const anunciada = exibicao === 'aparece' ? null : EXIBICOES_DO_PAINEL_NA_TELA[exibicao];
   return (
     <section
       className={estilos.bloco}
@@ -43,6 +52,9 @@ function BlocoDoPainel({
       <header className={estilos.topoDoBloco}>
         <h2 className={estilos.nomeDoPainel}>{painel.nome}</h2>
         <RotuloDeSituacao situacao={situacao.tom}>{situacao.texto}</RotuloDeSituacao>
+        {anunciada && (
+          <RotuloDeSituacao situacao={anunciada.tom}>{anunciada.texto}</RotuloDeSituacao>
+        )}
         {painel.verificacao.momento && (
           <span className={estilos.nota}>
             {formatarDataEHora(new Date(painel.verificacao.momento))}
@@ -63,18 +75,38 @@ function BlocoDoPainel({
           </a>
         </span>
       </header>
-      <iframe
-        className={estilos.conteudo}
-        title={painel.nome}
-        src={pelaPonte ? `/api/paineis/${painel.id}/exibicao` : painel.endereco}
-        sandbox={
-          pelaPonte
-            ? 'allow-scripts allow-forms allow-popups'
-            : 'allow-scripts allow-same-origin allow-forms allow-popups'
-        }
-        referrerPolicy="no-referrer"
-        loading="lazy"
-      />
+      {exibicao === 'pede-entrada' && (
+        <p className={estilos.avisoDoBloco}>
+          Este painel pede a entrada. Se a tela de entrada voltar depois de entrar, use “Abrir em
+          outra aba” ou libere a visualização sem entrada na ferramenta.
+        </p>
+      )}
+      {exibicao === 'recusa' ? (
+        // O endereço não é carregado: o navegador mostraria só o quadro em branco.
+        <EstadoVazio
+          className={estilos.recusa}
+          titulo="Este endereço recusa ser mostrado dentro de outra página."
+          descricao={[
+            painel.exibicao?.motivo,
+            'Libere o endereço do Grafite na ferramenta, ou use “Abrir em outra aba”.',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        />
+      ) : (
+        <iframe
+          className={estilos.conteudo}
+          title={painel.nome}
+          src={pelaPonte ? `/api/paineis/${painel.id}/exibicao` : painel.endereco}
+          sandbox={
+            pelaPonte
+              ? 'allow-scripts allow-forms allow-popups'
+              : 'allow-scripts allow-same-origin allow-forms allow-popups'
+          }
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      )}
     </section>
   );
 }

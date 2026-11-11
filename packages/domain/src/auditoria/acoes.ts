@@ -20,6 +20,11 @@ export const ACOES_DA_AUDITORIA = {
   'endereco.registrado': 'Endereço registrado',
   'endereco.removido': 'Endereço removido',
   'acesso.redefinido': 'Acesso redefinido',
+  // Aparelhos confiáveis (change aparelho-confiavel)
+  'aparelho.marcado': 'Aparelho confiável marcado',
+  'aparelho.esquecido': 'Aparelho confiável esquecido',
+  'aparelhos.esquecidos': 'Aparelhos confiáveis esquecidos',
+  'prazo-da-confianca.alterado': 'Prazo da confiança alterado',
   // Permissões (F2b)
   'permissao.recusada': 'Permissão recusada',
   // Locais
@@ -178,6 +183,8 @@ export const ACOES_DA_AUDITORIA = {
   // O mapa da planta (P7)
   'planta.cadastrada': 'Planta cadastrada',
   'planta.alterada': 'Planta alterada',
+  'planta.excluida': 'Planta excluída',
+  'planta.desenho-substituido': 'Desenho da planta substituído',
   'posicao-no-mapa.salva': 'Posição no mapa salva',
   'posicao-no-mapa.tirada': 'Posição no mapa tirada',
   // O acesso remoto (change acesso-remoto-vnc): o acesso aberto, sem evento

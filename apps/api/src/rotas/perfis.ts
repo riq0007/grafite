@@ -38,6 +38,7 @@ import {
   ProblemaDaApi,
   RespostaDeProblema,
 } from '../problemas.ts';
+import { DiasDeConfianca } from './aparelhos.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 const CHAVES = PERMISSOES.map((permissao) => permissao.chave) as [Permissao, ...Permissao[]];
@@ -49,6 +50,8 @@ const PermiteNoPerfil = z
     reativar: z.boolean(),
     /** Atribuir o perfil a uma conta ou a um grupo. */
     atribuir: z.boolean(),
+    /** Mudar o prazo da confiança nos aparelhos, também no Administrador. */
+    mudarPrazo: z.boolean(),
   })
   .meta({ id: 'PermiteNoPerfil' });
 
@@ -63,6 +66,11 @@ const Perfil = z
     todasAsPermissoes: z.boolean(),
     protegido: z.boolean(),
     exigeDoisPassos: z.boolean(),
+    /**
+     * O prazo da confiança nos aparelhos de quem tem o perfil (change aparelho-confiavel), ou
+     * `null` para seguir a organização.
+     */
+    diasDeConfianca: z.number().int().min(0).max(90).nullable(),
     situacao: z.enum(['ativo', 'inativo']),
     /** Quantas atribuições em vigor ele tem. */
     atribuicoes: z.number().int().min(0),
@@ -173,6 +181,7 @@ function permiteNoPerfil(acesso: Acesso, perfil: LinhaDoPerfil) {
     inativar: administra && !perfil.protegido && ativo,
     reativar: administra && !ativo,
     atribuir: administra && ativo,
+    mudarPrazo: administra,
   };
 }
 
@@ -185,6 +194,7 @@ function perfilDaResposta(perfil: LinhaDoPerfil, emVigor: number, acesso: Acesso
     todasAsPermissoes: perfil.todasAsPermissoes,
     protegido: perfil.protegido,
     exigeDoisPassos: perfil.exigeDoisPassos,
+    diasDeConfianca: perfil.diasDeConfianca,
     situacao: perfil.situacao,
     atribuicoes: emVigor,
     permite: permiteNoPerfil(acesso, perfil),
@@ -426,6 +436,46 @@ export const rotasDosPerfis: FastifyPluginAsyncZod<{ banco: Banco; agora: () => 
           alvo: { tipo: 'perfil', id: antes.id },
           antes: visaoDoPerfil(antes),
           depois: visaoDoPerfil(depois),
+          origem: origemDa(requisicao),
+          momento,
+        });
+        return ficha(tx, depois, acesso);
+      });
+    },
+  );
+
+  // O prazo da confiança do perfil (change aparelho-confiavel, design, decisão 5): rota própria,
+  // porque o Administrador é protegido e não muda pelo formulário, e o prazo dele muda.
+  app.put(
+    '/perfis/:id/prazo-da-confianca',
+    {
+      config: { permissao: 'acessos.administrar' },
+      schema: {
+        summary: 'Mudar o prazo da confiança de um perfil; `null` segue a organização',
+        params: ParametrosDoPerfil,
+        body: z.object({ dias: DiasDeConfianca.nullable() }).meta({ id: 'PedidoDePrazoDoPerfil' }),
+        response: RESPOSTAS_DO_PERFIL,
+      },
+    },
+    async (requisicao) => {
+      const { acesso, contaId } = sessaoDa(requisicao);
+      const { dias } = requisicao.body;
+      const momento = agora();
+      return naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
+        const antes = await lerPerfil(tx, requisicao.params.id);
+        if (antes.diasDeConfianca === dias) return ficha(tx, antes, acesso);
+        const [depois] = await tx
+          .update(perfis)
+          .set({ diasDeConfianca: dias, atualizadoEm: momento })
+          .where(eq(perfis.id, antes.id))
+          .returning();
+        if (!depois) throw new Error('O prazo do perfil não foi alterado.');
+        await registrarNaAuditoria(tx, {
+          acao: 'prazo-da-confianca.alterado',
+          ator: { tipo: 'conta', contaId },
+          alvo: { tipo: 'perfil', id: antes.id },
+          antes: { dias: antes.diasDeConfianca },
+          depois: { dias },
           origem: origemDa(requisicao),
           momento,
         });

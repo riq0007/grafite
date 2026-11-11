@@ -83,3 +83,38 @@ export function colunasForaDaArea(rolagem: HTMLElement, chaves: readonly string[
     return caixa.left < esquerda - 1 || caixa.right > direita + 1;
   });
 }
+
+/** O elemento recorta o que passa dele, e o conteúdo pede mais largura do que ele tem. */
+const cortado = (elemento: HTMLElement) =>
+  elemento.scrollWidth > elemento.clientWidth + 1 &&
+  RECORTA.has(getComputedStyle(elemento).overflowX);
+
+/**
+ * As colunas dadas cujo conteúdo não coube na célula da linha, na ordem dada: a célula, ou uma
+ * parte dela, como o resto do valor composto, recorta o conteúdo e pede mais largura do que tem. A
+ * célula casa com a coluna pelo índice da coluna, quando as células o trazem, como na tabela
+ * virtualizada, que só desenha as colunas perto da área visível; na tabela que desenha tudo, só o
+ * cabeçalho traz o índice, e vale a posição. A coluna sem cabeçalho ou sem célula desenhados fica
+ * de fora: quem a traz é o `colunasForaDaArea`.
+ */
+export function colunasComConteudoCortado(
+  rolagem: HTMLElement,
+  linha: HTMLElement,
+  chaves: readonly string[],
+): string[] {
+  const cabecalhos = [...rolagem.querySelectorAll<HTMLElement>('[role="columnheader"]')];
+  const celulas = [...linha.querySelectorAll<HTMLElement>('[role="gridcell"], [role="rowheader"]')];
+  const celulasComIndice = celulas.some((celula) => celula.hasAttribute('aria-colindex'));
+  return chaves.filter((chave) => {
+    const posicao = cabecalhos.findIndex((cabecalho) => cabecalho.dataset.key === chave);
+    const cabecalho = cabecalhos[posicao];
+    if (!cabecalho) return false;
+    const indice = cabecalho.getAttribute('aria-colindex');
+    const celula =
+      celulasComIndice && indice !== null
+        ? celulas.find((uma) => uma.getAttribute('aria-colindex') === indice)
+        : celulas[posicao];
+    if (!celula) return false;
+    return [celula, ...celula.querySelectorAll<HTMLElement>('*')].some(cortado);
+  });
+}

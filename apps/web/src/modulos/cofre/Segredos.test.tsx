@@ -138,7 +138,7 @@ describe('lista dos segredos', () => {
       'Validade',
     ]);
     expect(await textoDasLinhas()).toEqual([
-      'Senha do Wi-Fi visitantesWi-FiCompartilhado—Carla Dias30/09/2026VencidoRotação atrasada',
+      'Senha do Wi-Fi visitantesWi-FiCompartilhado—Carla Dias30/09/2026 Vencido Rotação atrasada',
       'Switch do CPDConta administrativaEquipamentoadmin—31/03/2027',
     ]);
     // O vencido chama a atenção com o ícone e o texto, não só pela cor.
@@ -240,5 +240,25 @@ describe('o cofre sem acesso', () => {
     abrir('/cofre', servidor, naOrganizacao('ativos.ver'));
     expect(await screen.findByText('Você não tem acesso ao Cofre.')).toBeTruthy();
     expect(lista).not.toHaveBeenCalled();
+  });
+});
+
+// A célula numa linha só (spec componentes-base, "Célula numa linha só"; change celulas-numa-linha,
+// design, decisão 2).
+describe('a validade do segredo numa coluna estreita', () => {
+  it('põe a data e os avisos do que passou na parte fixa, sem nada que quebre a linha', async () => {
+    hojeE('2026-10-12');
+    const { servidor } = servidorDoCofre([WIFI, SWITCH]);
+    abrir('/cofre', servidor, USA);
+    const [wifi, doSwitch] = await linhas();
+
+    const vencido = within(wifi as HTMLElement).getByText('Vencido');
+    const fixo = vencido.closest('[data-parte="fixo"]');
+    expect(fixo?.textContent).toBe('30/09/2026 Vencido Rotação atrasada');
+    expect(
+      within(doSwitch as HTMLElement)
+        .getByText('31/03/2027')
+        .closest('[data-parte]'),
+    ).toBeTruthy();
   });
 });

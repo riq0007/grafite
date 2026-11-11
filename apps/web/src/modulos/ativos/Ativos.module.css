@@ -566,3 +566,10 @@
 .nomeNaPrateleira {
   font-weight: var(--peso-medio);
 }
+
+/* O recorte do bloco dos suprimentos em texto, como "Toner · até 30% · Jundiaí", antes da prateleira. */
+.recorte {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

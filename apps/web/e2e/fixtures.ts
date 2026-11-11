@@ -75,11 +75,17 @@ export const SEM_SESSAO = { organizacao: SESSAO.organizacao, sessao: null };
 /**
  * A chegada terminou: a primeira tela está à vista e recebe o teclado e o toque. Com a sessão
  * valendo, é a casca; sem sessão, a chegada fica na tela de entrada até a pessoa entrar.
+ *
+ * A primeira tela já está no lugar enquanto o carregamento sai por cima dela, e até sair ele fica
+ * com o toque. Um clique nessa hora é repetido pelo Playwright, que a cada repetição rola o alvo
+ * para outro canto da área (o fim, o centro e o início) e deixa a página rolada. Por isso a espera
+ * vai até o carregamento sair: tirado do documento ou fora de vista.
  */
 export async function esperarAChegada(pagina: Page) {
   await pagina
     .locator('html:is([data-chegada="pronta"], [data-chegada="entrada"])')
     .waitFor({ state: 'attached' });
+  await pagina.locator('#chegada').waitFor({ state: 'hidden' });
 }
 
 /** A página não rola na horizontal. */
@@ -269,31 +275,12 @@ export const test = base.extend<{
     await context.route('**/api/estoque/abaixo-do-minimo', (rota) =>
       rota.request().method() === 'GET' ? rota.fulfill({ json: { itens: [] } }) : rota.fallback(),
     );
-    // Os blocos do Início (change inicio-ajustavel): sem suprimentos lidos e sem controles com o
-    // backup ligado, de fábrica; os testes dos ativos e do Control iD respondem os deles.
-    await context.route('**/api/ativos*', (rota) => {
-      const url = new URL(rota.request().url());
-      return rota.request().method() === 'GET' &&
-        url.pathname === '/api/ativos' &&
-        url.searchParams.get('colunas') === 'coleta.suprimentos'
-        ? rota.fulfill({
-            json: {
-              itens: [],
-              proximo: null,
-              total: 0,
-              referencias: {
-                pessoas: {},
-                locais: {},
-                ativos: {},
-                fornecedores: {},
-                arquivos: {},
-                modelos: {},
-                tiposDosModelos: {},
-              },
-            },
-          })
-        : rota.fallback();
-    });
+    // Os blocos do Início (changes inicio-ajustavel e opcoes-dos-blocos-do-inicio): sem impressora
+    // com o nível lido e sem controles com o backup ligado, de fábrica; os testes dos ativos e do
+    // Control iD respondem os deles.
+    await context.route('**/api/ativos/suprimentos/menores*', (rota) =>
+      rota.request().method() === 'GET' ? rota.fulfill({ json: { itens: [] } }) : rota.fallback(),
+    );
     await context.route('**/api/controlid/backups/resumo*', (rota) =>
       rota.request().method() === 'GET'
         ? rota.fulfill({ json: { controles: [] } })

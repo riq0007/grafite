@@ -72,6 +72,8 @@ export type ColunaColetada =
       tipo: 'situacao';
       /** As situações que a coluna mostra e que o filtro "é qualquer de" escolhe. */
       opcoes: readonly { id: string; rotulo: string }[];
+      /** A largura de fábrica, em px: a que mostra a situação e a idade da leitura sem corte. */
+      largura: number;
     }
   | {
       chave: string;
@@ -79,6 +81,8 @@ export type ColunaColetada =
       tipo: 'numero';
       /** O sufixo do número, como "%"; sem ele, só o número. */
       unidade?: string;
+      /** A largura de fábrica, em px: a que mostra o número, o item e a idade sem corte. */
+      largura: number;
     };
 
 export interface Capacidade {
@@ -147,6 +151,7 @@ export const CAPACIDADES: readonly Capacidade[] = [
         chave: 'coleta.disponibilidade',
         rotulo: 'Disponibilidade',
         tipo: 'situacao',
+        largura: 210,
         opcoes: SITUACOES_DA_DISPONIBILIDADE.map((situacao) => ({
           id: situacao,
           rotulo: ROTULOS_DAS_SITUACOES_DA_DISPONIBILIDADE[situacao],
@@ -162,8 +167,14 @@ export const CAPACIDADES: readonly Capacidade[] = [
     campos: [],
     configuracao: 'snmp',
     colunas: [
-      { chave: 'coleta.suprimentos', rotulo: 'Suprimentos', tipo: 'numero', unidade: '%' },
-      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero' },
+      {
+        chave: 'coleta.suprimentos',
+        rotulo: 'Suprimentos',
+        tipo: 'numero',
+        unidade: '%',
+        largura: 340,
+      },
+      { chave: 'coleta.paginas', rotulo: 'Total de páginas', tipo: 'numero', largura: 200 },
     ],
   },
   {
@@ -177,6 +188,7 @@ export const CAPACIDADES: readonly Capacidade[] = [
         chave: 'coleta.control-id',
         rotulo: 'Control iD',
         tipo: 'situacao',
+        largura: 280,
         opcoes: SITUACOES_DO_CONTROL_ID.map((situacao) => ({
           id: situacao,
           rotulo: ROTULOS_DAS_SITUACOES_DO_CONTROL_ID[situacao],

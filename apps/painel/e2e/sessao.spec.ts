@@ -9,6 +9,9 @@ test('Painel pelo atalho: o endereço com o código abre a sessão e mostra o es
 }) => {
   await painel.abrir();
   await expect(page.getByRole('heading', { name: 'Painel da operação' })).toBeVisible();
+  // O navegador destes testes esconde as barras de rolagem, como o celular sobrepõe a dele: a
+  // partida mede isso, e vale a barra do sistema (spec componentes-base, "Barra de rolagem própria").
+  await expect(page.locator('html')).toHaveAttribute('data-barra-do-sistema');
   await expect(linhaDoServico(page, 'Grafite')).toContainText('Rodando');
   await expect(page.getByRole('region', { name: 'Certificado' })).toContainText('Vence em 75 dias');
   // O código sai do endereço, e a sessão fica no cookie: a página recarregada continua aberta.

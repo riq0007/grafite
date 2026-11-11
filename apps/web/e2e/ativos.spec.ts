@@ -528,16 +528,17 @@ test.describe('quem trabalha na tabela dos ativos', () => {
     );
     // O mouse para sobre o nome, à vista inteiro: o hover do Playwright rolaria a tabela até uma
     // célula cortada, e a rolagem cancela a espera, como deve. Se um ajuste ainda cancelar, o mouse
-    // sai e para de novo (change testes-sob-carga, decisão 6).
+    // sai e para de novo (change testes-sob-carga, decisão 6). O resumo também traz a coluna cujo
+    // conteúdo a célula cortou (change celulas-numa-linha): lido antes de a tabela assentar, ele
+    // aparece só com o nome cortado, sem o IP, e a tentativa só vale com o IP nele.
     const nome = linha(page, 'PAT-00412').getByText('HP LaserJet M404');
     const resumo = page.getByRole('tooltip');
     await expect(async () => {
       await page.mouse.move(0, 0);
       await nome.hover();
       await page.clock.fastForward(1_500);
-      await expect(resumo).toBeVisible({ timeout: 4_000 });
+      await expect(resumo).toContainText('IP', { timeout: 4_000 });
     }).toPass({ timeout: 15_000 });
-    await expect(resumo).toContainText('IP');
     await expect(resumo).toContainText('10.0.0.5');
     await expect(resumo).not.toContainText('PAT-00412');
   });

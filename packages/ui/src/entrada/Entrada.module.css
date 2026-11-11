@@ -111,6 +111,20 @@
   gap: var(--esp-2);
 }
 
+/* A caixa "Confiar neste aparelho" e o que ela faz, logo abaixo, alinhado ao texto da caixa. */
+.confianca {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.ajudaDaConfianca {
+  margin: 0;
+  padding-inline-start: calc(var(--esp-4) + var(--esp-2));
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-normal);
+  color: var(--cor-texto-2);
+}
+
 /* A mensagem de recusa: em texto, com o ícone, e anunciada ao leitor de tela pelo role="alert". */
 .mensagem {
   display: flex;

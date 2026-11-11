@@ -2,9 +2,8 @@
 // quando ela passou, "Vencido" e "Rotação atrasada" em texto, com o ícone de atenção, pelo dia de
 // hoje no fuso escolhido. O dia vira com o relógio da casca, sem recarregar.
 import { mostrarData, situacaoDaValidade } from '@grafite/domain';
-import { RotuloDeSituacao, useDataHora } from '@grafite/ui';
+import { RotuloDeSituacao, useDataHora, ValorComposto } from '@grafite/ui';
 import { useAgora } from '../../casca/status/useAgora.ts';
-import estilos from './Cofre.module.css';
 
 /** O dia de hoje no fuso, como "2026-10-12". */
 export function hojeNoFuso(fuso: string, agora: Date): string {
@@ -21,7 +20,10 @@ export function useSituacaoDaValidade(datas: {
   return situacaoDaValidade(datas, hojeNoFuso(fuso, agora));
 }
 
-/** A validade na lista: a data, ou um travessão, e os avisos do que passou. */
+/**
+ * A validade na lista: a data, ou um travessão, e os avisos do que passou, lado a lado, sem quebrar
+ * a linha da tabela (spec componentes-base, "Célula numa linha só").
+ */
 export function ValidadeDoSegredo({
   validade,
   proximaRotacao,
@@ -31,10 +33,16 @@ export function ValidadeDoSegredo({
 }) {
   const { vencido, rotacaoAtrasada } = useSituacaoDaValidade({ validade, proximaRotacao });
   return (
-    <span className={estilos.validade}>
-      {validade ? mostrarData(validade) : '—'}
-      {vencido && <RotuloDeSituacao situacao="atencao">Vencido</RotuloDeSituacao>}
-      {rotacaoAtrasada && <RotuloDeSituacao situacao="atencao">Rotação atrasada</RotuloDeSituacao>}
-    </span>
+    <ValorComposto
+      fixo={
+        <>
+          {validade ? mostrarData(validade) : '—'}
+          {vencido && <RotuloDeSituacao situacao="atencao">Vencido</RotuloDeSituacao>}
+          {rotacaoAtrasada && (
+            <RotuloDeSituacao situacao="atencao">Rotação atrasada</RotuloDeSituacao>
+          )}
+        </>
+      }
+    />
   );
 }

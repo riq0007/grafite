@@ -25,6 +25,7 @@ import {
   type Situacao,
   Tabela,
   useDataHora,
+  ValorComposto,
 } from '@grafite/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
@@ -170,19 +171,13 @@ function SituacaoDoAlerta({ alerta }: { alerta: AlertaNaLista }) {
     : alerta.reconhecido
       ? ['Reconhecido', 'info', `por ${alerta.reconhecido.nome}`]
       : ['Aberto', 'atencao', null];
+  // Na célula, o selo fica inteiro, e quem reconheceu, até quando e o silêncio são o que encolhe
+  // (spec componentes-base, "Célula numa linha só").
   return (
-    <span className={estilos.situacao}>
-      <span>
-        <RotuloDeSituacao situacao={situacao}>{selo}</RotuloDeSituacao>
-        {detalhe && (
-          <>
-            {' '}
-            <span className={estilos.detalheDaSituacao}>{detalhe}</span>
-          </>
-        )}
-      </span>
+    <ValorComposto fixo={<RotuloDeSituacao situacao={situacao}>{selo}</RotuloDeSituacao>}>
+      {detalhe && <span className={estilos.detalheDaSituacao}>{detalhe}</span>}
       {alerta.silencio && <span className={estilos.silenciado}>Ativo silenciado</span>}
-    </span>
+    </ValorComposto>
   );
 }
 

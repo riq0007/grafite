@@ -1,5 +1,6 @@
-import { Botao, Dialogo, MensagemDoPasso, type NivelDoBotao } from '@grafite/ui';
+import { Botao, CampoDeTexto, Dialogo, MensagemDoPasso, type NivelDoBotao } from '@grafite/ui';
 import { type ReactNode, useState } from 'react';
+import estilos from './Confirmacao.module.css';
 
 export interface PropsDaConfirmacao {
   /** O nome da ação, no botão que abre a confirmação, como "Inativar a conta". */
@@ -24,6 +25,18 @@ export interface PropsDaConfirmacao {
    * comum; a destrutiva, num alerta, pelo botão destrutivo.
    */
   destrutiva?: boolean;
+  /**
+   * O texto que precisa ser digitado para liberar o botão que confirma, como o nome da planta que
+   * vai ser excluída. É para a ação que apaga muito de uma vez e não se desfaz. Os espaços das
+   * pontas não contam.
+   */
+  conferir?: string;
+  /**
+   * Aberta por fora, como por um item de menu: a confirmação não desenha o botão que a abre, e
+   * `aoFechar` avisa quando ela fecha, por qualquer caminho.
+   */
+  aberta?: boolean;
+  aoFechar?: () => void;
 }
 
 /**
@@ -41,30 +54,42 @@ export function Confirmacao({
   fazer,
   nivelDoGatilho = 'destrutivo',
   destrutiva = true,
+  conferir,
+  aberta,
+  aoFechar,
 }: PropsDaConfirmacao) {
-  const [aberto, definirAberto] = useState(false);
+  const [abertaPorDentro, definirAberta] = useState(false);
   const [falha, definirFalha] = useState<string | null>(null);
   const [tentativa, definirTentativa] = useState(0);
   const [enviando, definirEnviando] = useState(false);
+  const [digitado, definirDigitado] = useState('');
+  const abertaPorFora = aberta !== undefined;
+  const confere = conferir === undefined || digitado.trim() === conferir.trim();
   return (
     <Dialogo
       alerta={destrutiva}
       titulo={titulo}
       gatilho={
-        <Botao nivel={nivelDoGatilho} aria-label={nomeDoGatilho}>
-          {acao}
-        </Botao>
+        abertaPorFora ? undefined : (
+          <Botao nivel={nivelDoGatilho} aria-label={nomeDoGatilho}>
+            {acao}
+          </Botao>
+        )
       }
-      aberto={aberto}
+      aberto={abertaPorFora ? aberta : abertaPorDentro}
       aoMudarAberto={(abrir) => {
-        definirAberto(abrir);
+        definirAberta(abrir);
         definirFalha(null);
+        // Reaberta, a confirmação pede o texto de novo.
+        definirDigitado('');
+        if (!abrir) aoFechar?.();
       }}
       acoes={(fechar) => (
         <>
           <Botao onPress={fechar}>Cancelar</Botao>
           <Botao
             nivel={destrutiva ? 'destrutivo' : 'primario'}
+            isDisabled={!confere}
             carregando={enviando}
             rotuloCarregando={confirmando}
             onPress={async () => {
@@ -86,6 +111,19 @@ export function Confirmacao({
       )}
     >
       {children}
+      {conferir !== undefined && (
+        <>
+          <p className={estilos.instrucao}>
+            Digite <strong>{conferir}</strong> para confirmar.
+          </p>
+          <CampoDeTexto
+            rotulo="Texto da confirmação"
+            autoComplete="off"
+            value={digitado}
+            onChange={definirDigitado}
+          />
+        </>
+      )}
       <MensagemDoPasso texto={falha} chave={tentativa} />
     </Dialogo>
   );

@@ -13,6 +13,7 @@ import {
 import { eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { esquecerAparelhosDaConta } from '../acesso/aparelhos.ts';
 import { cifrarChaveDoApp, decifrarChaveDoApp } from '../acesso/cifra.ts';
 import { gerarCodigosDeRecuperacao, hashDoCodigo } from '../acesso/codigos.ts';
 import { conferirCodigoDaConta, fecharOCofreDaConta } from '../acesso/dois-passos.ts';
@@ -209,6 +210,8 @@ export const rotasDosDoisPassos: FastifyPluginAsyncZod<DependenciasDosDoisPassos
             criadoEm: momento,
           })),
         );
+        // Um app novo: os aparelhos marcados com o anterior pedem o código de novo.
+        await esquecerAparelhosDaConta(tx, sessao.contaId);
         // Quem confirma acabou de provar o aparelho: a sessão vale como se tivesse dado o código.
         await tx.update(sessoes).set({ segundoPassoEm: momento }).where(eq(sessoes.id, sessao.id));
         await tx.update(contas).set({ atualizadaEm: momento }).where(eq(contas.id, sessao.contaId));
@@ -327,6 +330,7 @@ export const rotasDosDoisPassos: FastifyPluginAsyncZod<DependenciasDosDoisPassos
           .delete(codigosDeRecuperacao)
           .where(eq(codigosDeRecuperacao.contaId, sessao.contaId));
         await fecharOCofreDaConta(tx, sessao.contaId);
+        await esquecerAparelhosDaConta(tx, sessao.contaId);
         await registrarNaAuditoria(tx, {
           acao: 'dois-passos.desativados',
           ator,

@@ -217,10 +217,18 @@ export const pessoas = orgScoped(
 );
 
 /**
+ * O prazo da confiança nos aparelhos, de 0 a 90 dias, o mesmo do domínio (`PRAZO_DA_CONFIANCA`):
+ * nulo onde a coluna aceita seguir o nível de cima (change aparelho-confiavel, design, decisão 4).
+ */
+const diasDeConfiancaValidos = (coluna: unknown) =>
+  sql`${coluna} is null or ${coluna} between 0 and 90`;
+
+/**
  * Conta de acesso de uma pessoa: no máximo uma por pessoa, com o usuário único na organização e
  * guardado normalizado (minúsculas, de 3 a 64 caracteres, começando por letra ou número). A senha
  * nasce temporária, e só o hash dela fica aqui. A conta anonimizada fica sem usuário, que volta a
- * ficar livre, e sem senha (spec administracao-de-pessoas).
+ * ficar livre, e sem senha (spec administracao-de-pessoas). O prazo da confiança nos aparelhos é o
+ * da própria conta, ou nulo para seguir os perfis e a organização (change aparelho-confiavel).
  */
 export const contas = orgScoped(
   'contas',
@@ -246,9 +254,11 @@ export const contas = orgScoped(
     atualizadaEm: momento('atualizada_em').notNull().defaultNow(),
     /** As escolhas da conta, por cima dos padrões da organização. */
     preferencias: preferencias(),
+    diasDeConfianca: integer('dias_de_confianca'),
   },
   (t) => [
     preferenciasValidas('contas_preferencias_validas', t.preferencias),
+    check('contas_dias_de_confianca_valido', diasDeConfiancaValidos(t.diasDeConfianca)),
     foreignKey({
       name: 'contas_pessoa_fk',
       columns: [t.orgId, t.pessoaId],
@@ -360,6 +370,12 @@ export const sessoes = orgScoped(
     agente: text('agente'),
     /** Até quando o código do app liberou revelar e copiar os segredos nesta sessão (P6). */
     cofreLiberadoAte: momento('cofre_liberado_ate'),
+    /**
+     * O aparelho confiável pelo qual a sessão entrou, ou que ela marcou (change aparelho-confiavel,
+     * design, decisão 1): o cookie do aparelho não vai às rotas da conta, e é por aqui que a lista
+     * diz qual é o deste navegador. Sem chave estrangeira: o aparelho esquecido só deixa de casar.
+     */
+    aparelhoId: uuid('aparelho_id'),
   },
   (t) => [
     foreignKey({
@@ -374,6 +390,58 @@ export const sessoes = orgScoped(
     ),
     check('sessoes_tentativas_de_codigo', sql`${t.tentativasDeCodigo} >= 0`),
     check('sessoes_agente_curto', sql`length(${t.agente}) <= 512`),
+  ],
+);
+
+/**
+ * Os aparelhos confiáveis (spec verificacao-em-dois-passos, "Aparelho confiável"; change
+ * aparelho-confiavel, design, decisão 1): o navegador em que a conta marcou "Confiar neste
+ * aparelho", que dispensa o código do app nas entradas seguintes, dentro do prazo. Só o hash do
+ * token fica aqui, como o da sessão; o token só existe no cookie. O prazo conta de `criado_em`, e
+ * `usado_em` só ordena quem sai quando a conta passa de 10 aparelhos.
+ */
+export const aparelhosConfiaveis = orgScoped(
+  'aparelhos_confiaveis',
+  {
+    contaId: uuid('conta_id').notNull(),
+    tokenHash: bytea('token_hash').notNull().unique('aparelhos_confiaveis_token_hash_unico'),
+    /** O dispositivo, como "Chrome no Windows". */
+    dispositivo: text('dispositivo').notNull(),
+    ip: inet('ip'),
+    criadoEm: momento('criado_em').notNull().defaultNow(),
+    usadoEm: momento('usado_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'aparelhos_confiaveis_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    index('aparelhos_confiaveis_conta_idx').on(t.orgId, t.contaId),
+    check(
+      'aparelhos_confiaveis_dispositivo_valido',
+      sql`length(trim(${t.dispositivo})) between 1 and 80`,
+    ),
+  ],
+);
+
+/**
+ * A política de entrada da organização (spec verificacao-em-dois-passos, "Prazo da confiança";
+ * change aparelho-confiavel, design, decisão 4): uma linha por organização, com o prazo da
+ * confiança nos aparelhos. Sem a linha, valem os 30 dias de fábrica.
+ */
+export const politicaDeEntrada = orgScoped(
+  'politica_de_entrada',
+  {
+    diasDeConfianca: integer('dias_de_confianca').notNull().default(30),
+    atualizadaEm: momento('atualizada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('politica_de_entrada_uma_por_organizacao').on(t.orgId),
+    check(
+      'politica_de_entrada_dias_de_confianca_valido',
+      diasDeConfiancaValidos(t.diasDeConfianca),
+    ),
   ],
 );
 
@@ -462,9 +530,12 @@ export const perfis = orgScoped(
     situacao: situacaoDoCadastro(),
     criadoEm: momento('criado_em').notNull().defaultNow(),
     atualizadoEm: momento('atualizado_em').notNull().defaultNow(),
+    /** O prazo da confiança nos aparelhos do perfil, ou nulo para seguir a organização. */
+    diasDeConfianca: integer('dias_de_confianca'),
   },
   (t) => [
     unique('perfis_nome_unico').on(t.orgId, t.nomeNormalizado),
+    check('perfis_dias_de_confianca_valido', diasDeConfiancaValidos(t.diasDeConfianca)),
     check('perfis_nome_valido', sql`length(trim(${t.nome})) between 1 and 80`),
     check('perfis_descricao_curta', sql`length(${t.descricao}) <= 500`),
     check('perfis_situacao_valida', sql`${t.situacao} in ('ativo', 'inativo')`),
@@ -3356,10 +3427,17 @@ export const participantesDasReservas = orgScoped(
 
 export const SITUACOES_DO_PAINEL_NO_BANCO = ['sem-verificacao', 'no-ar', 'fora-do-ar'] as const;
 
+/** As exibições do painel, as mesmas do domínio (`EXIBICOES_DO_PAINEL`), conferidas pelo banco. */
+export const EXIBICOES_DO_PAINEL_NO_BANCO = ['aparece', 'recusa', 'pede-entrada'] as const;
+
 /**
  * Os painéis das VMs (spec painel-de-dashboards, "Painéis cadastrados" e "Verificação dos
  * painéis"; change painel-de-dashboards, design, decisão 1): o cadastro, com o endereço e a ordem
  * na grade, e a última verificação, sem histórico.
+ *
+ * A exibição (spec painel-de-dashboards, "Exibição do painel"; change diagnostico-dos-paineis,
+ * design, decisão 2) é o que a última verificação leu da resposta do painel no ar; fica nula no
+ * painel fora do ar e no ainda não verificado.
  */
 export const paineis = orgScoped(
   'paineis',
@@ -3378,6 +3456,8 @@ export const paineis = orgScoped(
     verificadoEm: momento('verificado_em'),
     tempoDaResposta: integer('tempo_da_resposta'),
     motivo: text('motivo'),
+    exibicao: text('exibicao', { enum: EXIBICOES_DO_PAINEL_NO_BANCO }),
+    motivoDaExibicao: text('motivo_da_exibicao'),
     criadoEm: momento('criado_em').notNull().defaultNow(),
     atualizadoEm: momento('atualizado_em').notNull().defaultNow(),
   },
@@ -3399,6 +3479,11 @@ export const paineis = orgScoped(
       sql`${t.verificacao} in (${lista(SITUACOES_DO_PAINEL_NO_BANCO)})`,
     ),
     check('paineis_motivo_valido', textoAte(t.motivo, 200)),
+    check(
+      'paineis_exibicao_valida',
+      sql`${t.exibicao} is null or ${t.exibicao} in (${lista(EXIBICOES_DO_PAINEL_NO_BANCO)})`,
+    ),
+    check('paineis_motivo_da_exibicao_valido', textoAte(t.motivoDaExibicao, 200)),
   ],
 );
 

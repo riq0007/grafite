@@ -101,6 +101,7 @@ export function atributosDaInterface(p: PreferenciasDaInterface): Record<string,
     'data-theme': tema === 'personalizado' ? TEMA_DE_BAIXO[personalizado.tom] : tema,
     'data-accent': destaque === 'personalizado' ? 'grafite' : destaque,
     'data-density': p.aparencia.densidade,
+    'data-rolagem': p.aparencia.barraDeRolagem,
     '--raio-base': `${p.aparencia.raio}px`,
     'data-dock': p.dock.posicao,
     '--tamanho-item-dock': `${p.dock.tamanho}px`,
@@ -122,4 +123,5 @@ export const ATRIBUTOS_PERMITIDOS = [
   'data-dock',
   'data-dock-ocultar',
   '--tamanho-item-dock',
+  'data-rolagem',
 ] as const;

@@ -145,6 +145,18 @@ describe('PATCH /conta/preferencias', () => {
     expect(await salvas(anaId)).toEqual({ dock: { posicao: 'esquerda' }, aparencia });
   });
 
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('a barra de rolagem grava "sempre", e outro valor recusa, com a mensagem no campo', async () => {
+    const r = await mudar(ana, { aparencia: { barraDeRolagem: 'sempre' } });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda' }, aparencia: { barraDeRolagem: 'sempre' } };
+    expect(r.json()).toEqual(camada);
+    const grossa = await mudar(ana, { aparencia: { barraDeRolagem: 'grossa' } });
+    expect(grossa.statusCode).toBe(400);
+    expect(grossa.json().campos).toHaveProperty(['mudancas.aparencia.barraDeRolagem']);
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
   // Spec preferencias-da-interface, "Blocos do Início nas preferências".
   it('os blocos do Início gravam inteiros, e o bloco repetido recusa', async () => {
     const blocos = [
@@ -158,6 +170,69 @@ describe('PATCH /conta/preferencias', () => {
     expect(repetido.statusCode).toBe(400);
     expect(repetido.json().campos).toHaveProperty(['mudancas.inicio.blocos']);
     expect(await salvas(anaId)).toEqual({ dock: { posicao: 'esquerda' }, inicio: { blocos } });
+  });
+
+  // Spec preferencias-da-interface, "Blocos do Início nas preferências", com a largura e as opções
+  // (change opcoes-dos-blocos-do-inicio).
+  it('o bloco grava com a largura e as opções, e a 13ª opção, a largura desconhecida e o valor fora da forma recusam', async () => {
+    const blocos = [
+      {
+        id: 'ativos.suprimentos',
+        visivel: true,
+        largura: 'metade',
+        opcoes: { tipos: ['toner', 'fusor'], nivel: 30, limite: 6, locais: [] },
+      },
+      { id: 'gestao.backups', visivel: false },
+    ];
+    const r = await mudar(ana, { inicio: { blocos } });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda' }, inicio: { blocos } };
+    expect(r.json()).toEqual(camada);
+    const comTreze = Object.fromEntries(
+      Array.from({ length: 13 }, (_, indice) => [`opcao-${indice}`, indice]),
+    );
+    const recusas = [
+      { id: 'ativos.suprimentos', visivel: true, opcoes: comTreze },
+      { id: 'ativos.suprimentos', visivel: true, largura: 'um-terco' },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { extra: { dentro: 1 } } },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { 'Chave Errada': true } },
+      { id: 'ativos.suprimentos', visivel: true, opcoes: { longa: 'x'.repeat(81) } },
+    ];
+    for (const bloco of recusas) {
+      const recusado = await mudar(ana, { inicio: { blocos: [bloco] } });
+      expect(recusado.statusCode, JSON.stringify(bloco).slice(0, 80)).toBe(400);
+    }
+    const treze = await mudar(ana, { inicio: { blocos: [recusas[0]] } });
+    expect(JSON.stringify(treze.json().campos)).toContain('Use até 12 opções.');
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
+  // Spec preferencias-da-interface, "Módulos do dock nas preferências".
+  it('os módulos do dock gravam inteiros, sem o item dos Ajustes, e o módulo repetido recusa', async () => {
+    const modulos = [
+      { id: 'operacao', visivel: true },
+      { id: 'salas', visivel: false },
+    ];
+    // Ajustes na lista: o pedido vale, e o item dos Ajustes sai dela.
+    const r = await mudar(ana, {
+      dock: { modulos: [{ id: 'ajustes', visivel: false }, ...modulos] },
+    });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda', modulos } };
+    expect(r.json()).toEqual(camada);
+    const repetido = await mudar(ana, { dock: { modulos: [...modulos, modulos[0]] } });
+    expect(repetido.statusCode).toBe(400);
+    expect(repetido.json().campos).toHaveProperty(['mudancas.dock.modulos']);
+    const muitos = Array.from({ length: 41 }, (_, indice) => ({
+      id: `modulo-${indice}`,
+      visivel: true,
+    }));
+    const demais = await mudar(ana, { dock: { modulos: muitos } });
+    expect(demais.statusCode).toBe(400);
+    expect(demais.json().campos).toMatchObject({
+      'mudancas.dock.modulos': 'Use até 40 módulos.',
+    });
+    expect(await salvas(anaId)).toEqual(camada);
   });
 
   it('um ajuste desconhecido também recusa o pedido inteiro', async () => {

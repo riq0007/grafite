@@ -234,7 +234,16 @@ type LinhaDaPlanta = { [C in keyof typeof dePlanta]: unknown } & {
   criadaEm: Date;
 };
 
-function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
+/** Quantas posições a planta tem, de todos os alvos. */
+async function posicoesDa(tx: Transacao, id: string): Promise<number> {
+  const [contagem] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(eq(posicoesNaPlanta.plantaId, id));
+  return contagem?.posicoes ?? 0;
+}
+
+function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais, posicoes: number | null) {
   const caminho = linha.localId ? arvore.caminho(linha.localId) : null;
   return {
     id: linha.id,
@@ -243,6 +252,7 @@ function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
     largura: linha.largura,
     profundidade: linha.profundidade,
     situacao: linha.situacao,
+    posicoes,
     erro: linha.erro,
     fonte: linha.fonte,
     contagens: linha.contagens
@@ -261,10 +271,24 @@ function plantaLida(linha: LinhaDaPlanta, arvore: ArvoreDeLocais) {
 export async function lerPlantas(tx: Transacao, { acesso, arvore }: LeitorDoMapa) {
   const podeEditar = pode(acesso, 'mapa.editar');
   const linhas = await tx.select(dePlanta).from(plantas).orderBy(asc(plantas.nomeNormalizado));
+  // Quantas posições cada planta tem, só para quem edita: quem só vê não conta o que não alcança.
+  const contagens = podeEditar
+    ? await tx
+        .select({ planta: posicoesNaPlanta.plantaId, posicoes: sql<number>`count(*)::int` })
+        .from(posicoesNaPlanta)
+        .groupBy(posicoesNaPlanta.plantaId)
+    : [];
+  const posicoesDe = new Map(contagens.map(({ planta, posicoes }) => [planta, posicoes]));
   return {
     plantas: linhas
       .filter((linha) => podeEditar || linha.situacao === 'ativa')
-      .map((linha) => plantaLida(linha as LinhaDaPlanta, arvore)),
+      .map((linha) =>
+        plantaLida(
+          linha as LinhaDaPlanta,
+          arvore,
+          podeEditar ? (posicoesDe.get(linha.id) ?? 0) : null,
+        ),
+      ),
     podeEditar,
   };
 }
@@ -331,7 +355,7 @@ export async function cadastrarPlanta(
   });
   const arvore = await lerArvore(tx);
   const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, criada.id));
-  return plantaLida(linha as LinhaDaPlanta, arvore);
+  return plantaLida(linha as LinhaDaPlanta, arvore, 0);
 }
 
 /** Renomeia, liga a um local ou inativa a planta. */
@@ -368,13 +392,146 @@ export async function alterarPlanta(
     momento,
   });
   const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
-  return plantaLida(linha as LinhaDaPlanta, await lerArvore(tx));
+  return plantaLida(linha as LinhaDaPlanta, await lerArvore(tx), await posicoesDa(tx, id));
+}
+
+/**
+ * Substitui o desenho da planta (spec mapa-da-planta, "Substituição do desenho"). O arquivo é
+ * convertido antes de tocar em qualquer coisa: o recusado deixa a planta como estava. As medidas e
+ * as contagens mudam, o nome, o local e as posições ficam, e a planta que falhou passa a ativa.
+ * Devolve a planta e quantas posições ficaram fora da área do desenho novo.
+ */
+export async function substituirDesenho(
+  tx: Transacao,
+  id: string,
+  {
+    fonte,
+    conteudo,
+    armazenamento,
+    orgId,
+    requisicao,
+    momento,
+  }: {
+    fonte: string;
+    conteudo: Buffer;
+    armazenamento: Armazenamento;
+    orgId: string;
+    requisicao: FastifyRequest;
+    momento: Date;
+  },
+) {
+  const { contaId } = sessaoDa(requisicao);
+  const modelo = modeloDoArquivo(conteudo);
+  const contagens = contagensDoModelo(modelo);
+  const [antes] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
+  if (!antes) throw naoEncontrado('Planta não encontrada.');
+  const chave = chaveDoModeloDaPlanta(orgId, id);
+  const novaFonte = fonte.slice(0, 200) || 'arquivo';
+  await tx
+    .update(plantas)
+    .set({
+      largura: modelo.largura,
+      profundidade: modelo.profundidade,
+      contagens,
+      fonte: novaFonte,
+      modelo: chave,
+      atualizadaEm: momento,
+      // A planta que falhou passa a ativa; a inativa continua inativa.
+      ...(antes.situacao === 'falhou' ? { situacao: 'ativa' as const, erro: null } : {}),
+    })
+    .where(eq(plantas.id, id));
+  // As posições além da área nova ficam onde estavam: a resposta só diz quantas são.
+  const [fora] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(
+      and(
+        eq(posicoesNaPlanta.plantaId, id),
+        sql`(${posicoesNaPlanta.x} < 0 or ${posicoesNaPlanta.x} > ${modelo.largura} or ${posicoesNaPlanta.z} < 0 or ${posicoesNaPlanta.z} > ${modelo.profundidade})`,
+      ),
+    );
+  const posicoesFora = fora?.posicoes ?? 0;
+  await registrarNaAuditoria(tx, {
+    acao: 'planta.desenho-substituido',
+    ator: { tipo: 'conta', contaId },
+    alvo: { tipo: 'planta', id },
+    antes: {
+      largura: antes.largura,
+      profundidade: antes.profundidade,
+      ...((antes.contagens as Record<string, number> | null) ?? {}),
+      fonte: antes.fonte,
+    },
+    depois: {
+      largura: modelo.largura,
+      profundidade: modelo.profundidade,
+      ...contagens,
+      fonte: novaFonte,
+      posicoesFora,
+    },
+    origem: origemDa(requisicao),
+    momento,
+  });
+  // O arquivo é o último passo antes do commit: o armazenamento troca o modelo inteiro ou não troca.
+  await armazenamento.gravar(chave, Buffer.from(JSON.stringify(modelo)));
+  const [linha] = await tx.select(dePlanta).from(plantas).where(eq(plantas.id, id));
+  return {
+    planta: plantaLida(linha as LinhaDaPlanta, await lerArvore(tx), await posicoesDa(tx, id)),
+    posicoesFora,
+  };
+}
+
+/**
+ * Exclui a planta (spec mapa-da-planta, "Exclusão da planta"): as posições saem com ela, pela chave
+ * estrangeira, o que estava posicionado continua, e a auditoria guarda o nome, as medidas e quantas
+ * posições foram apagadas. Devolve a chave do modelo, que a rota apaga do armazenamento depois do
+ * commit.
+ */
+export async function excluirPlanta(
+  tx: Transacao,
+  id: string,
+  { requisicao, momento }: { requisicao: FastifyRequest; momento: Date },
+) {
+  const { contaId } = sessaoDa(requisicao);
+  const [antes] = await tx
+    .select({
+      nome: plantas.nome,
+      largura: plantas.largura,
+      profundidade: plantas.profundidade,
+      modelo: plantas.modelo,
+    })
+    .from(plantas)
+    .where(eq(plantas.id, id));
+  if (!antes) throw naoEncontrado('Planta não encontrada.');
+  const [contagem] = await tx
+    .select({ posicoes: sql<number>`count(*)::int` })
+    .from(posicoesNaPlanta)
+    .where(eq(posicoesNaPlanta.plantaId, id));
+  await tx.delete(plantas).where(eq(plantas.id, id));
+  await registrarNaAuditoria(tx, {
+    acao: 'planta.excluida',
+    ator: { tipo: 'conta', contaId },
+    alvo: { tipo: 'planta', id },
+    antes: {
+      nome: antes.nome,
+      largura: antes.largura,
+      profundidade: antes.profundidade,
+      posicoes: contagem?.posicoes ?? 0,
+    },
+    origem: origemDa(requisicao),
+    momento,
+  });
+  return { modelo: antes.modelo };
 }
 
 /** A planta ativa que a conta vê, ou o 404. */
 export async function plantaAtiva(tx: Transacao, id: string, leitor: LeitorDoMapa) {
   const [linha] = await tx
-    .select({ id: plantas.id, situacao: plantas.situacao, modelo: plantas.modelo })
+    .select({
+      id: plantas.id,
+      situacao: plantas.situacao,
+      modelo: plantas.modelo,
+      atualizadaEm: plantas.atualizadaEm,
+    })
     .from(plantas)
     .where(eq(plantas.id, id));
   if (!linha || (linha.situacao !== 'ativa' && !pode(leitor.acesso, 'mapa.editar'))) {

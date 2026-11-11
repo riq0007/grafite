@@ -2,6 +2,12 @@
 // liga e desliga os que usa. Um módulo opcional começa ligado; o Início, a Administração e os
 // Ajustes não são opcionais.
 
+/**
+ * O id do módulo Ajustes no registro da web. Ele fica sempre no fim do dock, fora da ordem que a
+ * conta escolhe (change dock-personalizavel).
+ */
+export const MODULO_DOS_AJUSTES = 'ajustes';
+
 export interface ModuloOpcional {
   /** O id do módulo no registro da web, como `ativos`. */
   id: string;

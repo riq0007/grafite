@@ -1,7 +1,7 @@
 import { temaPersonalizado } from '@grafite/ui';
 import { afterEach, describe, expect, it } from 'vitest';
 import indexHtml from '../../index.html?raw';
-import { atributosDaInterface, PADRAO_DE_FABRICA } from './preferencias.ts';
+import { ATRIBUTOS_PERMITIDOS, atributosDaInterface, PADRAO_DE_FABRICA } from './preferencias.ts';
 
 /** O script inline do index.html que aplica as preferências antes da primeira pintura. */
 const scriptAntiFlash = (() => {
@@ -28,7 +28,7 @@ describe('script anti-flash', () => {
         densidade: 'normal',
         raio: 6,
       },
-      dock: { posicao: 'esquerda', tamanho: 36, ampliar: false, ocultar: true },
+      dock: { posicao: 'esquerda', tamanho: 36, ampliar: false, ocultar: true, modulos: [] },
       acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
     });
     localStorage.setItem('grafite.preferencias.atributos', JSON.stringify(atributos));
@@ -39,6 +39,31 @@ describe('script anti-flash', () => {
         : raiz().getAttribute(nome);
       expect(aplicado, nome).toBe(valor);
     }
+  });
+
+  // Spec preferencias-da-interface, "Barra de rolagem nas preferências".
+  it('Sempre visível antes da primeira pintura: a raiz já diz "sempre" na reabertura', () => {
+    const atributos = atributosDaInterface({
+      ...PADRAO_DE_FABRICA,
+      aparencia: { ...PADRAO_DE_FABRICA.aparencia, barraDeRolagem: 'sempre' },
+    });
+    localStorage.setItem('grafite.preferencias.atributos', JSON.stringify(atributos));
+    new Function(scriptAntiFlash)();
+    expect(raiz().getAttribute('data-rolagem')).toBe('sempre');
+  });
+
+  // O app aplica na raiz só os nomes da lista dele (usePreferencias.tsx): o atributo calculado que
+  // falta nela vale na primeira pintura e some quando o app carrega.
+  it('todo atributo que o app calcula está na lista dos que ele aplica, a mesma da primeira pintura', () => {
+    const atributos = atributosDaInterface({
+      ...PADRAO_DE_FABRICA,
+      dock: { ...PADRAO_DE_FABRICA.dock, ocultar: true },
+      acessibilidade: { movimento: 'reduzido', transparencia: 'reduzida' },
+    });
+    expect([...ATRIBUTOS_PERMITIDOS].sort()).toEqual(Object.keys(atributos).sort());
+    const lista = scriptAntiFlash.match(/const permitidos = \[([\s\S]*?)\];/)?.[1] ?? '';
+    const daPrimeiraPintura = [...lista.matchAll(/'([^']+)'/g)].map(([, nome]) => nome);
+    expect(daPrimeiraPintura.sort()).toEqual([...ATRIBUTOS_PERMITIDOS].sort());
   });
 
   it('ignora nomes fora da lista e valores com caracteres inesperados', () => {

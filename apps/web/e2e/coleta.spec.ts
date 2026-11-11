@@ -143,6 +143,88 @@ test.describe('a disponibilidade na rede', () => {
     await expect(linha(page, 'Impressora do RH')).toBeVisible();
     await expect(linha(page, 'HP LaserJet M404')).toHaveCount(0);
   });
+
+  // A célula numa linha só (spec componentes-base, "Célula numa linha só"; change
+  // celulas-numa-linha, design, decisão 5).
+  test('a coluna estreita não aumenta a linha, e o resumo traz o valor inteiro', async ({
+    page,
+  }) => {
+    // O relógio falso adianta a pausa de 1,5 s do resumo, como no teste dele.
+    await page.clock.install();
+    const api = await simularAtivos(page);
+    const impressora = api.catalogo.tipos.find(({ id }) => id === IDS_DO_CATALOGO.impressora);
+    Object.assign(impressora ?? {}, {
+      capacidades: ['rede.disponibilidade'],
+      configuracaoDasCapacidades: { 'rede.disponibilidade': { campoDoIp: IDS_DOS_ATIVOS.ip } },
+    });
+    const agora = Date.now();
+    const leitura = (situacao: 'online' | 'offline', minutos: number) => ({
+      situacao,
+      momento: new Date(agora - minutos * 60_000).toISOString(),
+      desde: new Date(agora - 60 * 60_000).toISOString(),
+      motivo: null,
+      latencia: situacao === 'online' ? { valor: 3, inconsistente: false } : null,
+      coletor: 'Coletor de Jundiaí',
+    });
+    for (const ativo of api.ativos) {
+      if (ativo.id === IDS_DOS_ATIVOS.daExpedicao) ativo.disponibilidade = leitura('online', 1);
+      // As duas leituras em dia: a do ping com mais de 6 min ganharia o rótulo "Desatualizado".
+      if (ativo.id === IDS_DOS_ATIVOS.doRh) ativo.disponibilidade = leitura('offline', 2);
+    }
+    const altura = async (texto: string) => (await linha(page, texto).boundingBox())?.height ?? 0;
+    /** A altura da célula composta da linha: uma linha de texto cabe na da tabela. */
+    const alturaDoComposto = (texto: string) =>
+      linha(page, texto)
+        .locator('[data-parte="fixo"]')
+        .evaluate((fixo) => fixo.parentElement?.getBoundingClientRect().height ?? 0);
+
+    // Sem largura guardada, a coluna divide a sobra com outras nove e nem assim fica mais estreita
+    // do que o conteúdo pede: a situação e a idade aparecem inteiras, e a tabela rola de lado.
+    const muitas = [
+      'ativo.rotulo',
+      'coleta.disponibilidade',
+      'ativo.tipo',
+      'ativo.modelo',
+      'ativo.situacao',
+      'ativo.local',
+      'ativo.responsavel',
+      'ativo.patrimonio',
+      'ativo.criado-em',
+      'ativo.atualizado-em',
+    ].join(',');
+    await page.goto(`/ativos?visao=fabrica&colunas=${muitas}`);
+    await expect(linha(page, 'HP LaserJet M404')).toContainText('Online');
+    const cabecalho = page.getByRole('columnheader', { name: /Disponibilidade/ });
+    expect((await cabecalho.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(210);
+    // Com a folga de 1 px do arredondamento, a mesma com que o resumo decide o que foi cortado.
+    for (const texto of ['HP LaserJet M404', 'Impressora do RH']) {
+      const idade = linha(page, texto).locator('[data-parte="resto"]');
+      const sobra = await idade.evaluate((parte) => parte.scrollWidth - parte.clientWidth);
+      expect(sobra).toBeLessThanOrEqual(1);
+    }
+    const deFabrica = await altura('HP LaserJet M404');
+    expect(deFabrica).toBeGreaterThan(0);
+
+    // Com a coluna em 64 px, a menor largura, nenhuma linha cresce nem quebra em duas.
+    await page.goto('/ativos?visao=fabrica&colunas=ativo.rotulo,coleta.disponibilidade:64');
+    await expect(linha(page, 'Impressora do RH')).toContainText('Offline');
+    for (const texto of ['HP LaserJet M404', 'Impressora do RH']) {
+      expect(await altura(texto)).toBe(deFabrica);
+      expect(await alturaDoComposto(texto)).toBeLessThanOrEqual(deFabrica);
+    }
+
+    // O que a célula cortou aparece inteiro no resumo da linha. A tentativa só vale com a coluna
+    // nele: lido antes de a tabela assentar, o resumo pode trazer só outra célula cortada.
+    const nome = linha(page, 'Impressora do RH').getByText('Impressora do RH');
+    const resumo = page.getByRole('tooltip');
+    await expect(async () => {
+      await page.mouse.move(0, 0);
+      await nome.hover();
+      await page.clock.fastForward(1_500);
+      await expect(resumo).toContainText('Disponibilidade', { timeout: 4_000 });
+    }).toPass({ timeout: 15_000 });
+    await expect(resumo).toContainText('Offline');
+  });
 });
 
 test.describe('os suprimentos das impressoras', () => {
@@ -237,6 +319,43 @@ test.describe('os suprimentos das impressoras', () => {
     await expect(page.getByRole('group', { name: 'Filtros ativos' })).toContainText('até 20%');
     await expect(linha(page, 'HP LaserJet M404')).toBeVisible();
     await expect(linha(page, 'Impressora do RH')).toHaveCount(0);
+  });
+
+  // O valor inteiro no resumo (spec tabelas-configuraveis, "Resumo da linha"; change
+  // celulas-numa-linha, design, decisão 3).
+  test('com a coluna Suprimentos estreita, o resumo da linha traz o suprimento inteiro', async ({
+    page,
+  }) => {
+    // O relógio falso adianta a pausa de 1,5 s do resumo, como no teste dele.
+    await page.clock.install();
+    await comSuprimentos(page, { daExpedicao: 8, doRh: 45 });
+    await page.goto('/ativos?visao=fabrica&colunas=ativo.rotulo,coleta.suprimentos:64');
+    await expect(linha(page, 'HP LaserJet M404')).toContainText('8%');
+
+    const nome = linha(page, 'HP LaserJet M404').getByText('HP LaserJet M404');
+    const resumo = page.getByRole('tooltip');
+    await expect(async () => {
+      await page.mouse.move(0, 0);
+      await nome.hover();
+      await page.clock.fastForward(1_500);
+      await expect(resumo).toContainText('Suprimentos', { timeout: 4_000 });
+    }).toPass({ timeout: 15_000 });
+    await expect(resumo).toContainText('Black Toner Cartridge');
+    await expect(resumo).toContainText('há 3 min');
+
+    // A descrição e a idade, que a célula cortou, não terminam em reticências nem saem do resumo.
+    const resto = resumo.locator('[data-parte="resto"]');
+    expect(await resto.evaluate((parte) => parte.scrollWidth <= parte.clientWidth + 1)).toBe(true);
+    const caixa = await resumo.boundingBox();
+    const lugar = await resto.boundingBox();
+    expect(caixa).not.toBeNull();
+    expect(lugar).not.toBeNull();
+    expect((lugar?.x ?? 0) + (lugar?.width ?? 0)).toBeLessThanOrEqual(
+      (caixa?.x ?? 0) + (caixa?.width ?? 0),
+    );
+    expect((lugar?.y ?? 0) + (lugar?.height ?? 0)).toBeLessThanOrEqual(
+      (caixa?.y ?? 0) + (caixa?.height ?? 0),
+    );
   });
 });
 

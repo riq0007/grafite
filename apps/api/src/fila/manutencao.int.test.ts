@@ -7,8 +7,10 @@
 // meses (change p3d-indicadores, design, decisão 5) e os rascunhos dos cadastros parados há mais
 // de 30 dias (change cadastro-em-etapas, design, decisão 10). Nada de auditoria, sessão ou outro
 // registro de negócio sai, e rodar de novo dá o mesmo resultado.
+import { createHash } from 'node:crypto';
 import {
   alertas,
+  aparelhosConfiaveis,
   arquivos,
   ativos,
   auditoria,
@@ -437,6 +439,32 @@ describe('a manutenção diária', () => {
     expect(await restantes()).toEqual([{ contaId: bia }]);
     await manter();
     expect(await restantes()).toEqual([{ contaId: bia }]);
+  });
+
+  // Change aparelho-confiavel, design, decisão 5: o aparelho vale no máximo 90 dias, o teto do
+  // prazo, contados da marcação, e o uso não renova.
+  it('apaga os aparelhos confiáveis marcados há mais de 90 dias e deixa os mais novos', async () => {
+    const agora = api.relogio.agora().getTime();
+    const DIA = 24 * HORA;
+    const marcar = (dispositivo: string, dias: number) =>
+      naOrganizacao(api.banco, org, (tx) =>
+        tx.insert(aparelhosConfiaveis).values({
+          orgId: org,
+          contaId: anaId,
+          tokenHash: createHash('sha256').update(dispositivo).digest(),
+          dispositivo,
+          criadoEm: new Date(agora - dias * DIA),
+          usadoEm: new Date(agora - DIA),
+        }),
+      );
+    await marcar('Chrome no Windows', 91);
+    await marcar('Edge no Windows', 89);
+    const restantes = () =>
+      naOrganizacao(api.banco, org, (tx) =>
+        tx.select({ dispositivo: aparelhosConfiaveis.dispositivo }).from(aparelhosConfiaveis),
+      );
+    await manter();
+    expect(await restantes()).toEqual([{ dispositivo: 'Edge no Windows' }]);
   });
 
   it('a segunda execução não dá erro e não muda nada', async () => {

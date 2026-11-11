@@ -1,4 +1,4 @@
-import { TIPOS_DE_EVENTO, type TipoDeEvento } from '@grafite/domain';
+import { MODULO_DOS_AJUSTES, TIPOS_DE_EVENTO, type TipoDeEvento } from '@grafite/domain';
 import { createMemoryHistory, createRoute } from '@tanstack/react-router';
 import { Box } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
@@ -161,6 +161,10 @@ describe('registro de módulos', () => {
 
   it('deixa Ajustes por último, depois dos outros módulos', () => {
     expect(REGISTRO.at(-1)?.id).toBe('ajustes');
+  });
+
+  it('o id de Ajustes é o que o domínio deixa fora da ordem do dock', () => {
+    expect(REGISTRO.at(-1)?.id).toBe(MODULO_DOS_AJUSTES);
   });
 
   it('põe os módulos de negócio antes da Administração, e Ajustes no fim', () => {

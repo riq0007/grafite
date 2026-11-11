@@ -13,6 +13,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { carregarAcesso, exigeDoisPassos } from '../acesso/acesso.ts';
+import { gravarCookieDoAparelho, marcarAparelho, prazoDaConta } from '../acesso/aparelhos.ts';
 import { comCredenciais } from '../acesso/credenciais.ts';
 import { conferirCodigoDaConta } from '../acesso/dois-passos.ts';
 import { concluirEntrada } from '../acesso/entrada.ts';
@@ -42,6 +43,11 @@ const PedidoDeCodigo = z
       .trim()
       .min(1, { error: 'Informe o código.' })
       .max(32, { error: 'Use até 32 caracteres.' }),
+    /**
+     * Marcar este navegador como aparelho confiável (change aparelho-confiavel): só com o código
+     * do app e o prazo da conta maior que zero; o código de recuperação não marca.
+     */
+    confiar: z.boolean().optional(),
   })
   .meta({ id: 'PedidoDeCodigo' });
 
@@ -172,6 +178,22 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
           .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
           .where(eq(tentativasDeEntrada.usuario, conta.usuario));
         const acesso = await carregarAcesso(tx, sessao.contaId);
+        // O aparelho confiável só nasce do código do app, com o prazo da conta maior que zero.
+        let aparelho: { token: string; dias: number } | null = null;
+        if (requisicao.body.confiar && codigosRestantes === undefined) {
+          const prazo = await prazoDaConta(tx, sessao.contaId, acesso);
+          if (prazo.dias > 0) {
+            const marcado = await marcarAparelho(tx, {
+              contaId: sessao.contaId,
+              sessaoId: sessao.id,
+              agente: requisicao.headers['user-agent'] ?? null,
+              ip: requisicao.ip,
+              momento,
+              origem,
+            });
+            aparelho = { token: marcado.token, dias: prazo.dias };
+          }
+        }
         const pendencia = pendenciaDa({
           conta: { ...conta, exigeDoisPassos: exigeDoisPassos(conta, acesso) },
           doisPassosAtivos: true,
@@ -186,6 +208,7 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
             token: null,
             sessao: { ...base, tokenCsrf: sessao.tokenCsrf, expiraEm: sessao.expiraEm },
             codigosRestantes,
+            aparelho,
           } as const;
         }
         const ativa = await ativarSessao(tx, sessao.id, momento);
@@ -201,6 +224,7 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
           token: ativa.token,
           sessao: { ...base, tokenCsrf: ativa.tokenCsrf, expiraEm: ativa.expiraEm },
           codigosRestantes,
+          aparelho,
         } as const;
       });
 
@@ -223,6 +247,9 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
       }
       if (resultado.token) {
         gravarCookieDaSessao(resposta, resultado.token, resultado.sessao.expiraEm, momento);
+      }
+      if (resultado.aparelho) {
+        gravarCookieDoAparelho(resposta, resultado.aparelho.token, resultado.aparelho.dias);
       }
       return {
         ...estadoDaSessao(requisicao, resultado.dados, resultado.sessao),

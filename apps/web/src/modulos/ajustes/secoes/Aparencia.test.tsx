@@ -84,6 +84,58 @@ describe('seção Aparência', () => {
     expect(raiz().getAttribute('data-density')).toBe('confortavel');
   });
 
+  // Spec ajustes-do-sistema, "Seção Aparência" (change barra-de-rolagem-propria, design, decisão 5).
+  it('a barra de rolagem abre em "Ao rolar", com a explicação de cada opção', () => {
+    abrir();
+    const barra = grupo('Barra de rolagem');
+    expect(within(barra).getByRole('radio', { name: 'Ao rolar' })).toHaveProperty('checked', true);
+    // As duas frases ficam na descrição do grupo, que o leitor de tela lê com ele.
+    const descricao = screen.getByText(/Ao rolar: aparece com o ponteiro sobre a área/);
+    expect(descricao.textContent).toBe(
+      'Ao rolar: aparece com o ponteiro sobre a área ou enquanto ela rola. Sempre visível: fica à vista em toda área que rola.',
+    );
+    expect(barra.getAttribute('aria-describedby')).toContain(descricao.id);
+    expect(screen.queryByText('Neste aparelho vale a barra de rolagem do sistema.')).toBeNull();
+  });
+
+  it('Escolher Sempre visível: vale na hora, sem botão de salvar, e fica gravado', () => {
+    abrir();
+    fireEvent.click(
+      within(grupo('Barra de rolagem')).getByRole('radio', { name: 'Sempre visível' }),
+    );
+    expect(raiz().getAttribute('data-rolagem')).toBe('sempre');
+    expect(salvas().aparencia.barraDeRolagem).toBe('sempre');
+  });
+
+  it('Barra de rolagem no celular: a seção diz que vale a do sistema, e a escolha continua gravada', () => {
+    raiz().setAttribute('data-barra-do-sistema', '');
+    abrir();
+    expect(screen.getByText('Neste aparelho vale a barra de rolagem do sistema.')).toBeTruthy();
+    fireEvent.click(
+      within(grupo('Barra de rolagem')).getByRole('radio', { name: 'Sempre visível' }),
+    );
+    expect(salvas().aparencia.barraDeRolagem).toBe('sempre');
+  });
+
+  it('Restaurar padrões volta a barra de rolagem a "Ao rolar"', () => {
+    localStorage.setItem(
+      'grafite.preferencias',
+      JSON.stringify({ versao: 1, aparencia: { barraDeRolagem: 'sempre' } }),
+    );
+    abrir();
+    const barra = () => grupo('Barra de rolagem');
+    expect(within(barra()).getByRole('radio', { name: 'Sempre visível' })).toHaveProperty(
+      'checked',
+      true,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar padrões' }));
+    expect(within(barra()).getByRole('radio', { name: 'Ao rolar' })).toHaveProperty(
+      'checked',
+      true,
+    );
+    expect(raiz().getAttribute('data-rolagem')).toBe('ao-rolar');
+  });
+
   it('os cantos mudam o raio base, com o valor e a unidade à vista', () => {
     abrir();
     const cantos = screen.getByRole('slider', { name: 'Cantos' });

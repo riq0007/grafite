@@ -120,7 +120,13 @@ const manutencaoQueFalhou = (id: string, falhouEm: string): TarefaComFalha => ({
   falhouEm,
 });
 
-const PERMITE_NO_PERFIL = { editar: true, inativar: true, reativar: false, atribuir: true };
+const PERMITE_NO_PERFIL = {
+  editar: true,
+  inativar: true,
+  reativar: false,
+  atribuir: true,
+  mudarPrazo: true,
+};
 
 /** Um registro da auditoria feito por Ana Souza. */
 const registro = (
@@ -183,6 +189,7 @@ function estadoInicial() {
       todasAsPermissoes: true,
       protegido: true,
       exigeDoisPassos: true,
+      diasDeConfianca: null,
       situacao: 'ativo',
       atribuicoes: 1,
       permite: { ...PERMITE_NO_PERFIL, editar: false, inativar: false },
@@ -195,6 +202,7 @@ function estadoInicial() {
       todasAsPermissoes: false,
       protegido: false,
       exigeDoisPassos: false,
+      diasDeConfianca: null,
       situacao: 'ativo',
       atribuicoes: 0,
       permite: PERMITE_NO_PERFIL,
@@ -538,8 +546,20 @@ export async function simularAdministracao(pagina: Page) {
     ],
     ['DELETE', /^\/pessoas\/([^/]+)\/foto$/, ([pessoaId = '']) => mudarFoto(pessoaId, null)],
     ['GET', /^\/contas\/([^/]+)\/sessoes$/, () => ok([])],
+    [
+      'GET',
+      /^\/contas\/([^/]+)\/aparelhos$/,
+      () =>
+        ok({
+          prazo: { dias: 30, origem: { tipo: 'organizacao' } },
+          diasDaConta: null,
+          aparelhos: [],
+        }),
+    ],
     ['GET', /^\/contas\/([^/]+)\/acesso$/, ([contaId = '']) => acessoDa(contaId)],
     ['GET', /^\/perfis$/, () => ok({ itens: estado.perfis, permite: { cadastrar: true } })],
+    // O prazo da confiança nos aparelhos da organização, o de fábrica (change aparelho-confiavel).
+    ['GET', /^\/politica-de-entrada$/, () => ok({ diasDeConfianca: 30 })],
     // A aba Acesso mostra os grupos ativos numa tabela; a organização simulada não tem nenhum.
     ['GET', /^\/grupos$/, () => ok({ itens: [], permite: { cadastrar: true } })],
     ['POST', /^\/atribuicoes$/, (_, __, corpo) => atribuir(corpo)],

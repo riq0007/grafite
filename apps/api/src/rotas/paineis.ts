@@ -4,6 +4,7 @@
 // o evento `paineis.mudaram`; a verificação, não.
 import {
   type Banco,
+  EXIBICOES_DO_PAINEL_NO_BANCO,
   locais,
   naOrganizacao,
   paineis,
@@ -44,6 +45,16 @@ const Painel = z
       tempoDaResposta: z.number().int().nullable(),
       motivo: z.string().nullable(),
     }),
+    /**
+     * Se o navegador consegue mostrar o painel dentro do Grafite, pela última resposta: uma
+     * leitura, e não uma prova. Nula no painel fora do ar e no ainda não verificado.
+     */
+    exibicao: z
+      .object({
+        situacao: z.enum(EXIBICOES_DO_PAINEL_NO_BANCO),
+        motivo: z.string().nullable(),
+      })
+      .nullable(),
   })
   .meta({ id: 'Painel' });
 
@@ -136,9 +147,15 @@ export const rotasDosPaineis: FastifyPluginAsyncZod<{
         localId: dados.localId,
         ordem: dados.ordem,
         atualizadoEm: momento,
-        // O endereço novo volta a esperar a verificação.
+        // O endereço novo volta a esperar a verificação, sem a exibição que era do anterior.
         ...(antes && antes.endereco !== dados.endereco
-          ? { verificacao: 'sem-verificacao' as const, motivo: null, verificadoEm: null }
+          ? {
+              verificacao: 'sem-verificacao' as const,
+              motivo: null,
+              verificadoEm: null,
+              exibicao: null,
+              motivoDaExibicao: null,
+            }
           : {}),
       };
       let linha: typeof paineis.$inferSelect | undefined;

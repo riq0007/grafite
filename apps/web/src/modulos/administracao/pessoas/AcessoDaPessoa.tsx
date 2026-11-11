@@ -4,14 +4,15 @@ import { useAcesso } from '../../../sessao/useAcesso.ts';
 import estilos from '../Administracao.module.css';
 import { Parte, useFocoNoTitulo } from '../Parte.tsx';
 import { AcessoDaConta } from './AcessoDaConta.tsx';
+import { AparelhosDaConta } from './AparelhosDaConta.tsx';
 import { type AplicarNaConta, ContaDaPessoa, CriarConta, SemConta } from './ContaDaPessoa.tsx';
 import { chaveDaFicha, type Ficha } from './ficha.ts';
 import { chaveDasSessoes, SessoesDaConta } from './SessoesDaConta.tsx';
 
 /**
  * A aba Acesso da ficha (spec modulo-administracao): a conta da pessoa, com as ações que a API
- * permite, as sessões abertas dela, para quem administra a conta, e os perfis, os grupos e o que
- * ela pode fazer, para quem vê os acessos.
+ * permite, as sessões abertas e os aparelhos confiáveis dela, para quem administra a conta, e os
+ * perfis, os grupos e o que ela pode fazer, para quem vê os acessos.
  */
 export function AcessoDaPessoa({ pessoa }: { pessoa: Ficha }) {
   const consultas = useQueryClient();
@@ -68,6 +69,9 @@ export function AcessoDaPessoa({ pessoa }: { pessoa: Ficha }) {
         )}
       </Parte>
       {conta && pessoa.permite.administrarConta && <SessoesDaConta pessoa={pessoa} conta={conta} />}
+      {conta && pessoa.permite.administrarConta && (
+        <AparelhosDaConta pessoa={pessoa} conta={conta} />
+      )}
       {conta && pode('acessos.ver') && <AcessoDaConta pessoa={pessoa} conta={conta} />}
     </div>
   );

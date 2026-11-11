@@ -113,6 +113,11 @@ export interface ColunaDaTabela {
   mono: boolean;
   /** A largura padrão, em pixels. */
   largura: number;
+  /**
+   * A largura que o conteúdo da coluna pede, em pixels, como a da situação com a idade da leitura:
+   * sem largura guardada na visão, a tabela não deixa a coluna mais estreita que ela.
+   */
+  larguraMinima?: number;
   /** A coluna de um campo restrito. */
   restrita?: boolean;
 }

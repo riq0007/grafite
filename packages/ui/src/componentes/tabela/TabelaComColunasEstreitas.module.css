@@ -1,0 +1,24 @@
+/*
+ * O contêiner de uma célula composta como os módulos o escrevem para a ficha: as partes lado a lado,
+ * quebrando a linha quando falta largura. Dentro da tabela, ele não pode quebrar (spec
+ * componentes-base, "Célula numa linha só").
+ */
+.queQuebra {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+.faixas {
+  display: grid;
+  gap: var(--esp-6);
+  padding: var(--esp-4);
+  background: var(--cor-superficie);
+}
+
+.virtualizada {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--esp-12) * 5);
+}

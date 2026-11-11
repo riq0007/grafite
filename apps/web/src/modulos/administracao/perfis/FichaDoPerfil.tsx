@@ -17,6 +17,7 @@ import { focarDestino } from '../../../casca/foco.ts';
 import estilos from '../Administracao.module.css';
 import { VerNaAuditoria } from '../auditoria/VerNaAuditoria.tsx';
 import { Confirmacao } from '../Confirmacao.tsx';
+import { MudarOPrazo, textoDoPrazoCurto } from '../confianca/PrazoDaConfianca.tsx';
 import { Parte, useFocoPerdido } from '../Parte.tsx';
 import { recusaDe } from '../recusa.ts';
 import { SITUACOES_DO_REGISTRO } from '../situacoes.ts';
@@ -94,8 +95,35 @@ export function FichaDoPerfil() {
         acoes={<AcoesDoPerfil perfil={perfil} aplicar={aplicar} />}
       />
       {perfil.protegido && (
-        <p className={estilos.informacao}>Perfil protegido: tem todas as permissões e não muda.</p>
+        <p className={estilos.informacao}>
+          Perfil protegido: tem todas as permissões, e só o prazo da confiança nos aparelhos muda.
+        </p>
       )}
+      <div className={estilos.prazoDaConfianca}>
+        <p className={estilos.informacao}>
+          Confiança nos aparelhos: {textoDoPrazoCurto(perfil.diasDeConfianca)}
+        </p>
+        {perfil.permite.mudarPrazo && (
+          <MudarOPrazo
+            titulo={`Prazo da confiança do perfil ${perfil.nome}`}
+            valor={perfil.diasDeConfianca}
+            seguir="Seguir a organização"
+            salvar={async (dias) => {
+              const resultado = await pedir(
+                () =>
+                  api.PUT('/perfis/{id}/prazo-da-confianca', {
+                    params: { path: { id: perfil.id } },
+                    body: { dias },
+                  }),
+                'mudar o prazo da confiança',
+              );
+              if ('erro' in resultado) return resultado;
+              aplicar(resultado.dados);
+              return { ok: true };
+            }}
+          />
+        )}
+      </div>
       <FormularioDoPerfil
         key={perfil.id}
         inicial={dadosDoPerfil(perfil)}

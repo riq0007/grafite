@@ -41,6 +41,9 @@ const parte = (pagina: Page, nome: string) => pagina.getByRole('region', { name:
 async function simularAConta(pagina: Page) {
   await pagina.route('**/api/conta', (rota) => rota.fulfill({ json: CONTA }));
   await pagina.route('**/api/conta/sessoes', (rota) => rota.fulfill({ json: SESSOES }));
+  await pagina.route('**/api/conta/aparelhos', (rota) =>
+    rota.fulfill({ json: { prazo: { dias: 30, origem: { tipo: 'organizacao' } }, aparelhos: [] } }),
+  );
 }
 
 test.beforeEach(({ page }) => simularAConta(page));
@@ -56,6 +59,9 @@ test('a seção Conta mostra os dados, a verificação em dois passos e as sess�
   ).toBeVisible();
   await expect(
     parte(page, 'Verificação em dois passos').getByText('Restam 10 códigos de recuperação.'),
+  ).toBeVisible();
+  await expect(
+    parte(page, 'Aparelhos confiáveis').getByText('Nenhum aparelho confiável.'),
   ).toBeVisible();
   await expect(parte(page, 'Sessões').getByText('Esta sessão')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Restaurar padrões' })).toHaveCount(0);

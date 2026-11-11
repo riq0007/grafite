@@ -5,8 +5,17 @@
 // menor nível e o total de páginas, que as colunas mostram. No banco, as subconsultas no estado atual
 // servem ao filtro "de e até" e à ordem das colunas. O ativo inativo e o de tipo sem a capacidade não
 // têm o painel. Sem o relógio: a tela diz se a leitura está desatualizada.
-import { ativos, coletores, estadoDosAtivos, type Transacao, tiposDeAtivo } from '@grafite/db';
 import {
+  ativos,
+  coletores,
+  estadoDosAtivos,
+  modelos,
+  type Transacao,
+  tiposDeAtivo,
+} from '@grafite/db';
+import {
+  type ArvoreDeLocais,
+  alcance,
   CONDICOES_DA_IMPRESSORA,
   contadoresDaImpressora,
   deslocado,
@@ -14,12 +23,19 @@ import {
   escolhaDeColetor,
   FUSO_DO_BACKUP,
   paginasEmPretoEBranco,
+  rotuloDoAtivo,
   situacaoDaDisponibilidade,
+  type TipoDeSuprimento,
   tipoDoSuprimento,
 } from '@grafite/domain';
-import { and, eq, inArray, like, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, like, lte, or, type SQL, sql } from 'drizzle-orm';
 import type { z } from 'zod';
-import type { SerieDosSuprimentos, SuprimentosDoAtivo } from '../ativos/esquemas.ts';
+import type { SessaoDaRequisicao } from '../acesso/sessoes.ts';
+import type {
+  MenoresSuprimentos,
+  SerieDosSuprimentos,
+  SuprimentosDoAtivo,
+} from '../ativos/esquemas.ts';
 import { coletoresAtivos } from './alvos.ts';
 import type { AtivoComDisponibilidade } from './disponibilidade.ts';
 
@@ -322,5 +338,117 @@ export async function serieDosSuprimentos(
           percentual: Number(linha.percentual),
         })),
       })),
+  };
+}
+
+/** O recorte das impressoras de menor nível, como o bloco do Início o pede. */
+export interface RecorteDosSuprimentos {
+  tipos: readonly TipoDeSuprimento[];
+  /** Os locais pedidos, que valem com os de dentro; sem nenhum, todos os que a conta vê. */
+  locais: readonly string[];
+  limite: number;
+  /** Só os suprimentos até este nível, em %. */
+  nivel: number;
+}
+
+/**
+ * As impressoras de menor nível (change opcoes-dos-blocos-do-inicio, design, decisão 5): do estado
+ * atual, os suprimentos válidos e medidos dos ativos ativos que a conta vê, com o escopo pelo local,
+ * nos locais pedidos e nos de dentro, até o nível pedido. Cada um ganha o tipo pela descrição, como
+ * na ficha e na regra de alerta; ficam os dos tipos pedidos, e de cada impressora, o de menor nível.
+ * A resposta traz as primeiras do limite, da menor para a maior.
+ *
+ * O tipo não está no banco: a leitura traz os suprimentos do recorte e escolhe em memória. São
+ * poucas linhas por impressora.
+ */
+export async function menoresSuprimentos(
+  tx: Transacao,
+  { sessao, arvore }: { sessao: SessaoDaRequisicao; arvore: ArvoreDeLocais },
+  recorte: RecorteDosSuprimentos,
+): Promise<z.infer<typeof MenoresSuprimentos>> {
+  const condicoes: SQL[] = [
+    eq(ativos.situacao, 'ativo'),
+    tipoComSuprimentos,
+    eq(estadoDosAtivos.metrica, 'impressora.suprimento'),
+    eq(estadoDosAtivos.situacao, 'valida'),
+    isNotNull(estadoDosAtivos.valorNumero),
+    lte(estadoDosAtivos.valorNumero, recorte.nivel),
+  ];
+  const alcanceDoVer = alcance(sessao.acesso, 'ativos.ver', arvore);
+  if (alcanceDoVer !== 'organizacao') {
+    // O ativo sem local só entra pela organização inteira, como na lista dos ativos.
+    condicoes.push(
+      alcanceDoVer && alcanceDoVer.size > 0
+        ? inArray(ativos.localId, [...alcanceDoVer])
+        : sql`false`,
+    );
+  }
+  if (recorte.locais.length > 0) {
+    const ramos = [...new Set(recorte.locais.flatMap((local) => [...arvore.ramo(local)]))];
+    condicoes.push(ramos.length > 0 ? inArray(ativos.localId, ramos) : sql`false`);
+  }
+  const lidos = await tx
+    .select({
+      ativoId: ativos.id,
+      nome: ativos.nome,
+      tipo: tiposDeAtivo.nome,
+      fabricante: modelos.fabricante,
+      modelo: modelos.nome,
+      item: estadoDosAtivos.item,
+      nivel: estadoDosAtivos.valorNumero,
+      detalhes: estadoDosAtivos.detalhes,
+      momento: estadoDosAtivos.momento,
+    })
+    .from(estadoDosAtivos)
+    .innerJoin(ativos, eq(ativos.id, estadoDosAtivos.ativoId))
+    .innerJoin(tiposDeAtivo, eq(tiposDeAtivo.id, ativos.tipoId))
+    .leftJoin(modelos, eq(modelos.id, ativos.modeloId))
+    .where(and(...condicoes));
+
+  const pedidos = new Set<TipoDeSuprimento>(recorte.tipos);
+  type Item = z.infer<typeof MenoresSuprimentos>['itens'][number];
+  const menorDeCada = new Map<string, Item>();
+  for (const lido of lidos) {
+    if (lido.nivel === null) continue;
+    const descricao = String(lido.detalhes?.descricao ?? '');
+    const tipo = tipoDoSuprimento(descricao);
+    if (!pedidos.has(tipo)) continue;
+    const atual = menorDeCada.get(lido.ativoId)?.suprimento;
+    // No empate, o primeiro na ordem da impressora.
+    const menor =
+      !atual ||
+      lido.nivel < atual.nivel ||
+      (lido.nivel === atual.nivel && Number(lido.item) < Number(atual.item));
+    if (!menor) continue;
+    menorDeCada.set(lido.ativoId, {
+      ativo: {
+        id: lido.ativoId,
+        rotulo: rotuloDoAtivo({
+          nome: lido.nome,
+          modelo:
+            lido.fabricante !== null && lido.modelo !== null
+              ? { fabricante: lido.fabricante, nome: lido.modelo }
+              : null,
+          tipo: { nome: lido.tipo },
+        }),
+      },
+      suprimento: {
+        item: lido.item,
+        descricao,
+        tipo,
+        nivel: lido.nivel,
+        momento: iso(lido.momento),
+      },
+    });
+  }
+  const ordemAlfabetica = new Intl.Collator('pt-BR');
+  return {
+    itens: [...menorDeCada.values()]
+      .sort(
+        (a, b) =>
+          a.suprimento.nivel - b.suprimento.nivel ||
+          ordemAlfabetica.compare(a.ativo.rotulo, b.ativo.rotulo),
+      )
+      .slice(0, recorte.limite),
   };
 }

@@ -14,6 +14,19 @@ export {
   SEM_ACESSO,
 } from './acesso/acesso.ts';
 export { bloqueioDepois, mensagemDoBloqueio } from './acesso/bloqueio.ts';
+export {
+  APARELHOS_POR_CONTA,
+  aparelhoNoPrazo,
+  MENSAGENS_DA_CONFIANCA,
+  type OrigemDoPrazo,
+  PRAZO_DA_CONFIANCA,
+  type PrazoDaConfianca,
+  type PrazoDoPerfil,
+  prazoDaConfianca,
+  prazoValido,
+  textoDoPrazo,
+  textoDosDias,
+} from './acesso/confianca.ts';
 export { descreverDispositivo } from './acesso/dispositivo.ts';
 export {
   conferirCatalogo,
@@ -335,6 +348,7 @@ export {
   paginasEmPretoEBranco,
   ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
   type SeveridadeDaCondicao,
+  TIPOS_DE_SUPRIMENTO,
   type TintaDoSuprimento,
   type TipoDeSuprimento,
   tintaDoSuprimento,
@@ -618,6 +632,7 @@ export {
 } from './mapa/mapa.ts';
 export {
   type IdDoModuloOpcional,
+  MODULO_DOS_AJUSTES,
   MODULOS_OPCIONAIS,
   type ModuloOpcional,
   moduloOpcional,
@@ -701,6 +716,13 @@ export {
   validarResolucaoDaOrdem,
 } from './ordens/ordens.ts';
 export {
+  EXIBICOES_DO_PAINEL,
+  EXIBICOES_DO_PAINEL_NA_TELA,
+  type ExibicaoDoPainel,
+  exibicaoDaResposta,
+  type RespostaComCabecalhos,
+} from './paineis/exibicao.ts';
+export {
   type CampoDoPainel,
   conferirPainel,
   type DadosDoPainel,
@@ -724,6 +746,7 @@ export {
 export {
   type AjustesDasPreferencias,
   aplicarMudanca,
+  BARRAS_DE_ROLAGEM,
   type BlocoDoInicioSalvo,
   COLUNAS_DA_TELA_INICIAL,
   DENSIDADES,
@@ -731,8 +754,11 @@ export {
   DESTAQUES_DA_ESCOLHA,
   type DestaquePersonalizado,
   fusoReconhecido,
+  LARGURAS_DO_BLOCO,
+  type LarguraDoBloco,
   LIMITES_DAS_PREFERENCIAS,
   lerAjustes,
+  type ModuloDoDockSalvo,
   type MudancaDasPreferencias,
   type OrdenacaoDaTelaInicial,
   PADRAO_DE_FABRICA,
@@ -748,6 +774,7 @@ export {
   type TemaPersonalizado,
   type TempoDoAviso,
   TONS,
+  type ValorDaOpcaoDoBloco,
 } from './preferencias/preferencias.ts';
 export {
   type CampoDaReserva,

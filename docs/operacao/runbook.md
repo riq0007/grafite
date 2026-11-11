@@ -543,6 +543,8 @@ C:\Grafite\grafite.ps1 conta --ajuda
 
 A senha temporária aparece uma vez só, na saída do comando. No painel, criar uma conta e redefinir um acesso ficam em **Configurações**, e a senha temporária aparece uma vez, no andamento.
 
+A redefinição esquece também os aparelhos confiáveis da conta, os navegadores em que a pessoa marcou "Confiar neste aparelho": com os dois passos mantidos, a entrada seguinte pede o código em qualquer navegador. Para tirar só os aparelhos de um notebook perdido ou roubado, sem trocar a senha, use no app **Administração › Pessoas**, na aba Acesso da pessoa, "Esquecer todos os aparelhos"; as sessões abertas continuam, e "Encerrar todas as sessões" as encerra. O prazo em que um aparelho dispensa o código, de 0 a 90 dias, 30 de fábrica, muda em **Administração › Perfis**, o da organização e o de cada perfil, e na aba Acesso da pessoa, o da conta; com 0, o código é pedido em toda entrada.
+
 ### Endereços
 
 Cada endereço da produção tem o do teste correspondente, e os dois apontam para este servidor no DNS da empresa. Para acrescentar ou tirar um, use o comando, ou **Configurações › Endereços**, no painel:
