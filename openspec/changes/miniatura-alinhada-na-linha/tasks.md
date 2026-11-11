@@ -4,7 +4,7 @@
 
 ## 2. Fechamento
 
-- [ ] 2.1 Regravar as referências da regressão visual das histórias com miniatura que mudaram, apagando antes as que mudam pouco, e conferir as capturas novas (design, riscos). Verificar: o `pnpm test:visual` passa, e as capturas novas mostram a miniatura no meio da linha.
+- [x] 2.1 Regravar as referências da regressão visual das histórias com miniatura que mudaram, apagando antes as que mudam pouco, e conferir as capturas novas (design, riscos). Mudaram 48, em quatro grupos: a Tabela, a Tabela configurável, o "O que resolver agora" do Início e a página-matriz. As imagens de diferença mostram só a miniatura no lugar novo, e nenhuma mudança ficou abaixo da tolerância. Verificar: o `pnpm test:visual` passa, com as 779 capturas, e as capturas novas mostram a miniatura no meio da linha.
 - [ ] 2.2 Conferir no `pnpm dev` a tabela dos ativos nas três densidades, e a ficha e os ligados de um ativo. Verificar: a miniatura fica no meio da linha, a até 1 px, e a ficha e os ligados não mudam.
 - [ ] 2.3 Conferir as verificações:
   - `pnpm lint`;
