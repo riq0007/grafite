@@ -182,11 +182,13 @@ export const LargurasQueAColetaPede: Historia = {
       const conteudo =
         Math.max(...medidas.map((medida) => Math.ceil(medida.getBoundingClientRect().width))) +
         RESPIRO_DA_CELULA;
-      // A coluna comporta o conteúdo e o cabeçalho, sem sobrar mais que 10 px: a largura acompanha
-      // a maior das duas medidas.
+      // A coluna comporta o conteúdo e o cabeçalho, e a largura acompanha a maior das duas medidas,
+      // sem sobrar mais que 20 px. A mesma fonte mede alguns pixels a menos no Linux: no Windows, em
+      // que as larguras foram medidas, sobram até 9 px; no Linux do CI, até 14, na "Disponibilidade"
+      // e nos "Suprimentos".
       const pede = Math.max(conteudo, O_QUE_O_CABECALHO_PEDE[coluna] ?? 0);
       await expect(pede).toBeLessThanOrEqual(largura);
-      await expect(largura - pede).toBeLessThan(10);
+      await expect(largura - pede).toBeLessThan(20);
     }
   },
 };
