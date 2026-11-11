@@ -12,7 +12,8 @@
     "./fontes.css": "./src/fontes.css",
     "./base.css": "./src/base.css",
     "./carregamento": "./src/chegada/carregamento.ts",
-    "./carregamento.css": "./src/chegada/carregamento.css"
+    "./carregamento.css": "./src/chegada/carregamento.css",
+    "./teste/soltarOAnunciador": "./src/teste/soltarOAnunciador.ts"
   },
   "scripts": {
     "lint": "biome check .",

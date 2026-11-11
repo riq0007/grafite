@@ -1,8 +1,13 @@
 // Nenhum teste da web fala com a rede: antes de cada teste, o fetch responde como um servidor no
 // ar. Um teste que precisa de outra resposta troca o stub ou injeta o próprio fetch. As boas-vindas
 // do primeiro acesso já nascem vistas.
+import { soltarOAnunciador } from '@grafite/ui/teste/soltarOAnunciador';
 import { configure } from '@testing-library/react';
-import { beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+
+// Depois de cada teste, e depois da limpeza do próprio arquivo, o anunciador do React Aria sai do
+// documento: o anúncio que ainda espera os 100 ms dele não dispara depois de o ambiente sair.
+afterEach(() => soltarOAnunciador());
 
 // O findBy e o waitFor esperam até 10 s pela tela, no lugar de 1 s: com as três instâncias do
 // executor rodando juntas, a tela leva mais de 1 s para aparecer. A espera acaba quando o que o
