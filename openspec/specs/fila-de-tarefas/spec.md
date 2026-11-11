@@ -67,7 +67,8 @@ A manutenção SHALL rodar uma vez por dia em cada organização, às 03:30 no h
 - apagar os agregados por hora com mais de 13 meses;
 - apagar as notificações com mais de 90 dias, lidas ou não (spec notificacoes);
 - apagar os alertas resolvidos há mais de 13 meses (spec alertas);
-- apagar os rascunhos do cadastro do ativo parados há mais de 30 dias (spec cadastro-de-ativos).
+- apagar os rascunhos do cadastro do ativo parados há mais de 30 dias (spec cadastro-de-ativos);
+- apagar os aparelhos confiáveis marcados há mais de 90 dias, o teto do prazo da confiança, mesmo os usados há pouco (spec verificacao-em-dois-passos).
 
 Rodar a manutenção duas vezes SHALL ter o mesmo efeito que rodar uma vez. Se o servidor estava desligado na hora marcada, a manutenção SHALL rodar uma vez quando ele voltar. Ela SHALL NOT apagar registros de auditoria, sessões nem nenhum outro registro de negócio além dos alertas resolvidos há mais de 13 meses: a importação descartada continua na lista de quem importou, e o estado atual de cada ativo continua, mesmo com as leituras dele apagadas.
 
@@ -106,6 +107,10 @@ Rodar a manutenção duas vezes SHALL ter o mesmo efeito que rodar uma vez. Se o
 #### Scenario: Rascunho do cadastro esquecido
 - **WHEN** a manutenção diária roda, e o rascunho do cadastro de uma conta não muda há 31 dias, e o de outra, há 29
 - **THEN** o rascunho de 31 dias é apagado, e o de 29 fica
+
+#### Scenario: Aparelho confiável marcado há mais de 90 dias
+- **WHEN** a manutenção diária roda, e uma conta tem um aparelho marcado há 91 dias e usado ontem, e outro marcado há 89
+- **THEN** o de 91 dias é apagado, e o de 89 fica
 
 ### Requirement: Encerramento sem perder tarefas
 

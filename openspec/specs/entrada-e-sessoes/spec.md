@@ -104,7 +104,7 @@ Fechar o navegador ou o app SHALL NOT encerrar a sessão dentro desses prazos. U
 ### Requirement: Passos pendentes da sessão
 
 Depois da senha certa, a sessão SHALL ficar pendente até o usuário resolver, nesta ordem, o que a conta pede:
-1. o código do segundo passo, se a conta tem a verificação em dois passos ativa;
+1. o código do segundo passo, se a conta tem a verificação em dois passos ativa e a entrada não vem de um aparelho confiável dentro do prazo (spec verificacao-em-dois-passos, "Aparelho confiável");
 2. a troca da senha, se a senha é temporária;
 3. o cadastro dos dois passos, se a conta os exige e ainda não os tem.
 
@@ -135,6 +135,10 @@ Uma sessão que já vale e passa a ter o cadastro dos dois passos pendente, porq
 #### Scenario: Exigência nova numa sessão que vale
 - **WHEN** uma sessão aberta há 3 horas passa a ter o cadastro dos dois passos pendente, e o usuário o conclui
 - **THEN** a sessão volta a valer, com o mesmo fim que tinha antes da exigência
+
+#### Scenario: Aparelho confiável com a senha temporária
+- **WHEN** a senha de Bruno é temporária, e ele entra por um aparelho confiável dentro do prazo
+- **THEN** a tela não pede o código e pede a senha nova, antes de a casca abrir
 
 ### Requirement: Saída
 
