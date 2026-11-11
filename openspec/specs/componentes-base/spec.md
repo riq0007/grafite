@@ -159,7 +159,7 @@ Um aviso persistente, crítico ou de outra severidade, SHALL NOT sair da tela po
 A tabela base SHALL ter:
 - cabeçalho fixo durante a rolagem;
 - linhas demarcadas e, se o usuário não as desligou, alternadas;
-- miniatura opcional no início da linha, que sai de todas as tabelas quando o usuário desliga as miniaturas;
+- miniatura opcional no início da linha, centralizada na altura da linha e alinhada ao texto das outras células, que sai de todas as tabelas quando o usuário desliga as miniaturas;
 - indicação visual da ordenação aplicada;
 - estado vazio padronizado;
 - a linha em foco marcada, com as setas movendo o foco entre as linhas.
@@ -183,6 +183,10 @@ Quando a lista é paginada, a tabela SHALL terminar com "Carregar mais", enquant
 #### Scenario: Miniaturas desligadas
 - **WHEN** o usuário desligou as miniaturas e abre uma tela com uma tabela que tem miniaturas
 - **THEN** a tabela aparece sem a coluna da miniatura, com as demais colunas iguais
+
+#### Scenario: Miniatura no meio da linha
+- **WHEN** a tabela mostra a miniatura no início das linhas, seja a tabela base ou a que desenha só as linhas perto da área visível
+- **THEN** o centro da miniatura fica no centro da linha, com até 1 px de diferença, na mesma altura do texto das outras células
 
 #### Scenario: Carregar mais
 - **WHEN** a tabela mostra 50 de 120 pessoas e o usuário escolhe "Carregar mais"
