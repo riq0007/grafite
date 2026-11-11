@@ -1,7 +1,7 @@
 import * as anotacoesDeAcessibilidade from '@storybook/addon-a11y/preview';
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { configure } from 'storybook/test';
-import { beforeEach } from 'vitest';
+import { beforeAll, beforeEach } from 'vitest';
 import { commands } from 'vitest/browser';
 import { ligarNavegadorDeTeste } from '../src/teste/navegadorDeTeste.ts';
 import * as anotacoesDoProjeto from './preview.tsx';
@@ -35,6 +35,18 @@ configure({ asyncUtilTimeout: 10_000 });
 const global = globalThis as { process?: { env: Record<string, string | undefined> } };
 global.process ??= { env: {} };
 global.process.env.VIRT_ON = '1';
+
+// As histórias medem o texto com a fonte da interface, como a aplicação: as faces declaradas no
+// fontes.css carregam antes das histórias de cada arquivo. O `document.fonts.ready` sozinho não
+// basta: ele termina na hora quando o texto ainda não foi desenhado, e a medida sai com a fonte de
+// reserva, mais estreita, como no CI do PR riq0007/grafite#1. A leitura da caixa antes força o
+// estilo, que cria as faces das folhas já carregadas.
+beforeAll(async () => {
+  document.body.getBoundingClientRect();
+  const faces = [...document.fonts];
+  if (faces.length === 0) throw new Error('O catálogo não achou as fontes do fontes.css.');
+  await Promise.all(faces.map((face) => face.load()));
+});
 
 // As histórias simulam o ponteiro; o cursor real do navegador não pode estar sobre elas
 // (ver .storybook/comandos-do-navegador.ts). E a janela da história começa com o foco, como a de
