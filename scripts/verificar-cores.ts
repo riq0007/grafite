@@ -158,6 +158,8 @@ const DIRETORIOS_IGNORADOS = new Set([
   'test-results',
   'docs',
   'openspec',
+  // Os dados locais de cada máquina (arquivos, listas privadas, rascunhos), que o Git não leva.
+  '.grafite',
 ]);
 const CAMINHOS_IGNORADOS = ['packages/ui/src/tokens'];
 const TIPO_POR_EXTENSAO: Record<string, TipoDeArquivo> = {

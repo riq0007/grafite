@@ -94,6 +94,16 @@ describe('verificarRepositorio', () => {
     ]);
   });
 
+  it('ignora a .grafite, a pasta dos dados locais que o Git não leva', async () => {
+    raiz = mkdtempSync(join(tmpdir(), 'grafite-cores-'));
+    arquivo('.grafite/propostas/mockups/m01.css', '.a { color: #000; }\n');
+    arquivo('.grafite/propostas/galeria/montar.mjs', "const fundo = '#111';\n");
+    arquivo('apps/web/src/x.tsx', "export const c = '#123456';\n");
+    expect(await verificarRepositorio(raiz)).toEqual([
+      { arquivo: 'apps/web/src/x.tsx', linha: 1, coluna: 19, trecho: '#123456' },
+    ]);
+  });
+
   it('o nome de cor numa string só conta no código das telas: a cor de um consumível é dado', async () => {
     raiz = mkdtempSync(join(tmpdir(), 'grafite-cores-'));
     arquivo('packages/domain/src/consumiveis.ts', "export const CORES = ['preto', 'magenta'];\n");
