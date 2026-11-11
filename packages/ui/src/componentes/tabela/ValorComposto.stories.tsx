@@ -175,6 +175,9 @@ export const LargurasQueAColetaPede: Historia = {
     </div>
   ),
   play: async ({ canvasElement }) => {
+    // A medida vale com a fonte da interface: antes de ela carregar, a de reserva, mais estreita,
+    // sobra na coluna e cabe em qualquer cabeçalho, e o CI mediu assim.
+    await document.fonts.ready;
     for (const coluna of Object.keys(LARGURAS_DE_FABRICA) as (keyof typeof LARGURAS_DE_FABRICA)[]) {
       const largura = LARGURAS_DE_FABRICA[coluna];
       const medidas = [...canvasElement.querySelectorAll<HTMLElement>(`[data-coluna="${coluna}"]`)];
@@ -242,6 +245,9 @@ export const CabecalhosNaLarguraDeFabrica: Historia = {
     </div>
   ),
   play: async ({ canvasElement }) => {
+    // A medida vale com a fonte da interface: antes de ela carregar, a de reserva, mais estreita,
+    // sobra na coluna e cabe em qualquer cabeçalho, e o CI mediu assim.
+    await document.fonts.ready;
     for (const nome of Object.values(NOMES_DAS_COLUNAS)) {
       const cabecalhos = within(canvasElement).getAllByRole('columnheader', {
         name: new RegExp(nome),

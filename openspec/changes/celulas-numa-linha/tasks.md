@@ -29,3 +29,4 @@
 
   Verificar: os comandos passam.
 - [x] 3.5 Fazer os testes ponta a ponta do resumo da linha repetirem a tentativa até o resumo trazer a coluna que conferem: com o relógio falso, o resumo lido antes de a tabela assentar trazia só a célula cortada, e o teste falhava de vez em quando com a suíte inteira (decisão 3). Verificar: os testes dos ativos e da coleta passam quatro vezes seguidas em paralelo, e o `pnpm test:e2e` passa.
+- [x] 3.6 Fazer as histórias "Larguras que a coleta pede" e "Cabeçalhos na largura de fábrica" esperarem a fonte da interface carregar antes de medir: no CI, a primeira mediu com a fonte de reserva, mais estreita, e reprovou com 14 px de folga, e a segunda passaria com o cabeçalho cortado. Verificar: a primeira passa rodando sozinha, em que antes reprovava com 19 px de folga, e o `pnpm test:stories` passa.
