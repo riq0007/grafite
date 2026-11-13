@@ -99,9 +99,9 @@
 ## 7. A troca da pasta e o repositório antigo
 
 - [ ] 7.1 A troca das pastas (decisão 8):
-  - a linha em PowerShell, conferida antes em pastas de ensaio;
+  - o roteiro da troca, conferido antes em pastas de ensaio e armado pela sessão do Claude;
   - a memória do Claude Code atualizada com o estado;
-  - com o Claude Code, os editores, os terminais e o `pnpm dev` fechados, o usuário roda a linha e abre o Claude Code de novo no `D:\grafite`;
+  - o usuário fecha o app do Claude, os editores e o `pnpm dev`; o roteiro troca as pastas, avisa numa janela, e o usuário abre o Claude de novo no `D:\grafite`;
   - na sessão nova, o `pnpm exec lefthook install` dentro do `D:\grafite`, porque o gancho guarda o caminho absoluto da pasta.
 
   Verificar, na sessão nova:
