@@ -21,7 +21,7 @@ Sistema de gestão de ativos, operação e governança de TI com casca inspirada
 6. **Isolamento por organização é do banco.**
    - Toda tabela de negócio é criada com `orgScoped()` e tem RLS ativo e forçado. O teste-guarda reprova tabela sem RLS.
    - A aplicação conecta com o papel `grafite_app`, nunca com o dono das tabelas.
-7. **Uma sessão só, sem subagentes.** A mesma sessão escreve as specs e as changes, muda os componentes compartilhados (`packages/ui`, `packages/domain`, `packages/db` e o contrato da API) e implementa as tarefas, em sequência. Nenhuma pesquisa nem tarefa vai para um subagente. Como o trabalho anda: `docs/agentes.md`.
+7. **Uma sessão escreve, sem subagentes.** A mesma sessão escreve as specs e as changes, muda os componentes compartilhados (`packages/ui`, `packages/domain`, `packages/db` e o contrato da API) e implementa as tarefas, em sequência. Nenhuma pesquisa nem tarefa vai para um subagente. Uma segunda sessão, só de leitura, pode revisar o plano da change e o diff de cada tarefa antes do commit, e devolve os pontos à sessão que escreve. Como o trabalho anda: `docs/agentes.md`.
 8. **Um commit por tarefa.** Ao concluir uma tarefa de uma change (testes verdes e a verificação dela feita), commitar na hora, com a mensagem no padrão `tipo(escopo): assunto` e "Tarefa X.Y do <change>." no corpo. A change inteira não fica acumulada no índice para ser dividida no fim.
 
 ## Estrutura

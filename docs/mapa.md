@@ -344,6 +344,7 @@ As arquivadas, em `openspec/changes/archive/`, na ordem em que foram arquivadas;
 | Visão | As colunas, a ordem e os filtros de uma tabela, salvos pela conta ou pela organização | `visoes-de-tabela` |
 | Tabela configurável | A tabela de registros com colunas escolhidas, filtros pelas colunas, seleção, menu de contexto e resumo da linha | `tabelas-configuraveis` |
 | Sessão de trabalho | A sessão única que escreve as specs e as changes, muda os componentes compartilhados e implementa as tarefas, sem subagentes | `docs/agentes.md` |
+| Sessão revisora | A segunda sessão, só de leitura, que revisa o plano da change e o diff de cada tarefa antes do commit e devolve os pontos à sessão de trabalho | `docs/agentes.md` |
 | Ambiente | Desenvolvimento, teste ou produção, dito na configuração | `operacao-servicos`; spec mestre, seção 12.2 |
 | Serviço | Cada processo do servidor: no Windows, um serviço instalado pelo WinSW; no Linux, um contêiner do Docker, que o Compose sobe | `operacao-servicos`, `operacao-em-linux`, `docs/operacao/runbook.md` |
 | Pacote da versão | O pacote de cada versão, com o hash publicado junto: o zip para Windows, com a web compilada e as dependências, e o tar para Linux, com as imagens dos contêineres | `operacao-servicos`, `operacao-em-linux`, `docs/operacao/runbook.md` |
