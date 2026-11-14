@@ -209,6 +209,12 @@ describe('gerarCss', () => {
     expect(raiz['--tinta-rotulo-neutro']).toBe('10%');
   });
 
+  it('o fundo sutil da atenção do Papel sai da cor da situação em 0,7, a 26%', () => {
+    expect(bloco(css, '[data-theme="papel"]')['--cor-atencao-fundo']).toBe(
+      'rgba(208, 144, 30, 0.26)',
+    );
+  });
+
   it('cada tema traz o véu que escurece a tela atrás de diálogos e gavetas', () => {
     expect(bloco(css, '[data-theme="grafite"]')['--cor-veu']).toBe('rgba(0, 0, 0, 0.55)');
     expect(bloco(css, '[data-theme="nevoa"]')['--cor-veu']).toBe(temas.nevoa.cores.veu);

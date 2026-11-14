@@ -3,7 +3,7 @@
 // Fundos translúcidos (material, barra, tintas) são medidos já compostos.
 import { comAlfa, compor, contraste } from './contraste.ts';
 import { destaqueDoTema, destaques } from './destaques.ts';
-import { TINTA_DO_ROTULO } from './escalas.ts';
+import { TINTA_DO_ROTULO_NEUTRO } from './escalas.ts';
 import { camadasDeEstado, coresDoCursor, temas } from './temas.ts';
 
 export type Cores = Record<string, string>;
@@ -235,17 +235,18 @@ export const PARES: Par[] = [
     fundo: (c) => c.superficie2 ?? '',
     minimo: COMPONENTE,
   },
+  // O rótulo fica sobre o fundo gerado da situação, com a tinta dela (change ajustes-dos-tokens).
   ...Object.entries(NOMES_DAS_SITUACOES).flatMap(([id, nome]): Par[] => [
     {
       uso: `rótulo ${nome} sobre a superfície tingida`,
       frente: (c) => c[id] ?? '',
-      fundo: (c) => sobre(comAlfa(c[id] ?? '', TINTA_DO_ROTULO.situacao), c.superficie ?? ''),
+      fundo: (c) => sobre(c[`${id}Fundo`] ?? '', c.superficie ?? ''),
       minimo: TEXTO,
     },
     {
       uso: `rótulo ${nome} sobre a superfície 2 tingida`,
       frente: (c) => c[id] ?? '',
-      fundo: (c) => sobre(comAlfa(c[id] ?? '', TINTA_DO_ROTULO.situacao), c.superficie2 ?? ''),
+      fundo: (c) => sobre(c[`${id}Fundo`] ?? '', c.superficie2 ?? ''),
       minimo: TEXTO,
     },
     {
@@ -259,13 +260,13 @@ export const PARES: Par[] = [
   {
     uso: 'rótulo neutro sobre a superfície tingida',
     frente: (c) => c.texto2 ?? '',
-    fundo: (c) => sobre(comAlfa(c.texto2 ?? '', TINTA_DO_ROTULO.neutra), c.superficie ?? ''),
+    fundo: (c) => sobre(comAlfa(c.texto2 ?? '', TINTA_DO_ROTULO_NEUTRO), c.superficie ?? ''),
     minimo: TEXTO,
   },
   {
     uso: 'rótulo neutro sobre a superfície 2 tingida',
     frente: (c) => c.texto2 ?? '',
-    fundo: (c) => sobre(comAlfa(c.texto2 ?? '', TINTA_DO_ROTULO.neutra), c.superficie2 ?? ''),
+    fundo: (c) => sobre(comAlfa(c.texto2 ?? '', TINTA_DO_ROTULO_NEUTRO), c.superficie2 ?? ''),
     minimo: TEXTO,
   },
 ];
@@ -290,7 +291,10 @@ export function coresDaCombinacao(
 ): Cores {
   const tema = temas[idTema];
   const situacoes = Object.fromEntries(
-    Object.entries(tema.situacoes).map(([id, situacao]) => [id, situacao.cor]),
+    Object.entries(tema.situacoes).flatMap(([id, situacao]) => [
+      [id, situacao.cor],
+      [`${id}Fundo`, situacao.fundo],
+    ]),
   );
   return {
     ...tema.cores,

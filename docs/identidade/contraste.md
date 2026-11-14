@@ -48,17 +48,17 @@ Entre as 24 combinações. Texto exige 4,5:1, e o texto secundário sobre a afun
 | anel do cursor contra a superfície | 3,00:1 | 4,04:1 | meia-noite / grafite |
 | anel do cursor contra a superfície 2 | 3,00:1 | 3,95:1 | grafite / grafite |
 | borda de controle contra a superfície 2 | 3,00:1 | 3,09:1 | meia-noite / grafite |
-| rótulo de sucesso sobre a superfície tingida | 4,50:1 | 5,42:1 | nevoa / grafite |
-| rótulo de sucesso sobre a superfície 2 tingida | 4,50:1 | 5,02:1 | papel / grafite |
+| rótulo de sucesso sobre a superfície tingida | 4,50:1 | 5,72:1 | nevoa / grafite |
+| rótulo de sucesso sobre a superfície 2 tingida | 4,50:1 | 5,33:1 | papel / grafite |
 | texto de sucesso sobre o material (aviso e menu) | 4,50:1 | 6,43:1 | nevoa / grafite |
-| rótulo de atenção sobre a superfície tingida | 4,50:1 | 5,44:1 | nevoa / grafite |
-| rótulo de atenção sobre a superfície 2 tingida | 4,50:1 | 5,08:1 | nevoa / grafite |
+| rótulo de atenção sobre a superfície tingida | 4,50:1 | 5,41:1 | papel / grafite |
+| rótulo de atenção sobre a superfície 2 tingida | 4,50:1 | 5,05:1 | papel / grafite |
 | texto de atenção sobre o material (aviso e menu) | 4,50:1 | 6,43:1 | nevoa / grafite |
-| rótulo crítico sobre a superfície tingida | 4,50:1 | 5,31:1 | nevoa / grafite |
-| rótulo crítico sobre a superfície 2 tingida | 4,50:1 | 4,94:1 | nevoa / grafite |
+| rótulo crítico sobre a superfície tingida | 4,50:1 | 5,44:1 | papel / grafite |
+| rótulo crítico sobre a superfície 2 tingida | 4,50:1 | 5,07:1 | papel / grafite |
 | texto crítico sobre o material (aviso e menu) | 4,50:1 | 6,44:1 | nevoa / grafite |
-| rótulo de informação sobre a superfície tingida | 4,50:1 | 5,43:1 | nevoa / grafite |
-| rótulo de informação sobre a superfície 2 tingida | 4,50:1 | 5,03:1 | papel / grafite |
+| rótulo de informação sobre a superfície tingida | 4,50:1 | 5,41:1 | nevoa / grafite |
+| rótulo de informação sobre a superfície 2 tingida | 4,50:1 | 5,07:1 | meia-noite / grafite |
 | texto de informação sobre o material (aviso e menu) | 4,50:1 | 6,47:1 | nevoa / grafite |
 | rótulo neutro sobre a superfície tingida | 4,50:1 | 6,24:1 | grafite / grafite |
 | rótulo neutro sobre a superfície 2 tingida | 4,50:1 | 5,53:1 | grafite / grafite |

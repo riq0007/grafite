@@ -2,8 +2,13 @@
 // (matiz e croma dos neutros) e do contraste, em OKLCH. Cada papel tem uma luminosidade-alvo, e a
 // do texto e a da borda se movem, para longe dos fundos, até o mínimo da WCAG 2.2 AA.
 import { comAlfa, compor, contraste } from './contraste.ts';
-import { TINTA_DO_ROTULO } from './escalas.ts';
-import { type Oklch, oklchParaHex, paraOklch } from './oklch.ts';
+import {
+  DISTANCIA_DOS_NEUTROS,
+  FONTE_DA_TINTA,
+  TINTA_DA_SITUACAO,
+  TINTA_DO_ROTULO_NEUTRO,
+} from './escalas.ts';
+import { distancia, distanciaNoCroma, type Oklch, oklchParaHex, paraOklch } from './oklch.ts';
 import {
   type CoresDoDestaque,
   type CoresDoTema,
@@ -264,7 +269,7 @@ export type IdDaSituacao = 'ok' | 'atencao' | 'critico' | 'info';
 export interface CoresDaSituacaoGerada {
   /** Texto e ícone, com 4,5:1 sobre as superfícies e sobre o próprio fundo. */
   cor: string;
-  /** Fundo sutil do rótulo e das faixas. */
+  /** Fundo sutil do rótulo e das faixas: a cor da situação na tinta que o separa dos neutros. */
   fundo: string;
   /** Contorno do rótulo. */
   borda: string;
@@ -296,14 +301,43 @@ export function gerarSituacoes(tema: TemaGerado): Record<IdDaSituacao, CoresDaSi
     compor(pressionado, cores.superficie2),
     compor(pressionado, cores.fundo),
   ];
+  // Os neutros ao lado de um bloco de situação (change ajustes-dos-tokens, design, decisão 2).
+  const rotuloNeutro = comAlfa(cores.texto2, TINTA_DO_ROTULO_NEUTRO);
+  const neutros = [
+    cores.fundo,
+    cores.superficieAfundada,
+    cores.superficie,
+    cores.superficie2,
+    compor(rotuloNeutro, cores.superficie),
+    compor(rotuloNeutro, cores.superficie2),
+  ];
+  const minimoNoTotal = DISTANCIA_DOS_NEUTROS.total[tema.tom];
+  /** Se o fundo, composto sobre a superfície e sobre a superfície 2, fica longe de cada neutro. */
+  const longeDosNeutros = (fundo: string) =>
+    superficies.every((base) => {
+      const composto = compor(fundo, base);
+      return neutros.every(
+        (neutro) =>
+          distanciaNoCroma(composto, neutro) >= DISTANCIA_DOS_NEUTROS.croma &&
+          distancia(composto, neutro) >= minimoNoTotal,
+      );
+    });
+  /** O fundo sutil: a fonte na menor tinta, de ponto em ponto, longe dos neutros (decisão 3). */
+  const fundoSutil = (fonte: string) => {
+    const de = Math.round(TINTA_DA_SITUACAO.de * 100);
+    const ate = Math.round(TINTA_DA_SITUACAO.ate * 100);
+    for (let ponto = de; ponto < ate; ponto++) {
+      const fundo = comAlfa(fonte, ponto / 100);
+      if (longeDosNeutros(fundo)) return fundo;
+    }
+    return comAlfa(fonte, ate / 100);
+  };
   const gerar = ({ matiz, croma }: { matiz: number; croma: number }): CoresDaSituacaoGerada => {
+    // O fundo não depende da cor do texto: ele vem primeiro, e o texto é achado contra ele.
+    const fundo = fundoSutil(oklchParaHex({ l: FONTE_DA_TINTA[tema.tom], c: croma, h: matiz }));
     const cor = ajustarLuminosidade(
       { l: escuro ? 0.8 : 0.5, c: croma, h: matiz },
-      (hex) =>
-        passaContra(fundosFixos, TEXTO)(hex) &&
-        superficies.every(
-          (base) => contraste(hex, compor(comAlfa(hex, TINTA_DO_ROTULO.situacao), base)) >= TEXTO,
-        ),
+      passaContra([...fundosFixos, ...superficies.map((base) => compor(fundo, base))], TEXTO),
       sentido,
     );
     const sobre = escuro ? oklchParaHex({ l: 0.17, c: croma * 0.25, h: matiz }) : '#ffffff';
@@ -314,7 +348,7 @@ export function gerarSituacoes(tema: TemaGerado): Record<IdDaSituacao, CoresDaSi
     );
     return {
       cor,
-      fundo: comAlfa(cor, TINTA_DO_ROTULO.situacao),
+      fundo,
       borda: comAlfa(cor, BORDA_DA_SITUACAO),
       forte,
       sobre,

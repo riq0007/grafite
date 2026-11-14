@@ -42,7 +42,7 @@
   Ver falharem, porque as funções não existem. Depois, escrever as duas no `oklch.ts` (design, decisão 2).
 
   Verificar: o `pnpm --filter @grafite/ui test` passa. Feito em 14/11: os quatro falharam porque as funções não existiam. O comentário das duas diz que elas recebem o hexadecimal de seis dígitos, com o translúcido já composto pelo `compor`, porque o `rgba()` daria NaN calado na busca da 3.2.
-- [ ] 3.2 Escrever primeiro os testes da tinta:
+- [x] 3.2 Escrever primeiro os testes da tinta:
   - **no `gerador-dados.test.ts`:**
     - **a varredura de 433 entradas** passa a ser a mesma do `gerador.test.ts`, num módulo comum dos testes (`varredura.ts`), no lugar das 97 de hoje;
     - **em cada entrada e situação:**
@@ -72,6 +72,8 @@
   - o `pnpm --filter @grafite/ui test` e o `pnpm tokens:verificar` passam;
   - o `docs/identidade/contraste.md` mostra os pares dos rótulos aprovados, medidos sobre o fundo gerado;
   - nos temas escuros de fábrica, só o `--cor-info-fundo` do Grafite e da Meia-noite muda no `gerado/`, e a `--tinta-rotulo` continua com 15%.
+
+  Feito em 14/11: os testes reprovaram primeiro 368 casos, as entradas claras da varredura pela fonte e as escuras pela distância a 15%. A varredura comum ficou em `packages/ui/src/teste/varredura.ts`, com os utilitários de teste do pacote. O cenário da base na matiz do crítico ganhou um teste próprio: nenhuma tinta até 30% leva o crítico a 0,02 no croma, e ele fica no teto. O menor rótulo do relatório tem 5,05:1.
 - [ ] 3.3 Escrever primeiro os testes do fundo pelo token:
   - **no `gerar.test.ts`:** a `--tinta-rotulo` fora da raiz e do DTCG, e a `--tinta-rotulo-neutro` ainda neles. O primeiro falha, porque o `gerar.ts` ainda emite a variável;
   - **nas histórias, no tema Papel:** o `NoAmbienteDeTeste` do `TelaDeEntrada.stories.tsx` e o `AmbienteDeTeste` do `ItensDaBarra.stories.tsx` conferem que o fundo calculado do aviso e do item vem do `--cor-atencao-fundo`. Eles falham, porque o CSS ainda mistura a cor do texto com a `--tinta-rotulo`.

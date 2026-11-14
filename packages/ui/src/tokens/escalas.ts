@@ -62,10 +62,31 @@ export const margemLateral = 'clamp(16px, 16px + 1vw, 40px)';
 export const LARGURA_MAXIMA_DE_FORMULARIO = 960;
 
 /**
- * Intensidade do fundo tingido do rótulo de situação. O neutro é mais leve: com 15%, o texto
- * secundário cai abaixo de 4,5:1 sobre a superfície 2 do Meia-noite.
+ * A tinta do fundo sutil de cada situação: a menor, de ponto em ponto, de 15% a 30%, que leva o
+ * fundo à `DISTANCIA_DOS_NEUTROS`. Sem nenhuma, fica a de 30% (change ajustes-dos-tokens, design,
+ * decisão 3).
  */
-export const TINTA_DO_ROTULO = { situacao: 0.15, neutra: 0.1 } as const;
+export const TINTA_DA_SITUACAO = { de: 0.15, ate: 0.3 } as const;
+
+/**
+ * A luminosidade da fonte da tinta: a cor da situação, com o croma e a matiz dela, em 0,7 nos
+ * temas claros e 0,8 nos escuros. Nos escuros, é a cor do texto das situações dos temas de fábrica.
+ */
+export const FONTE_DA_TINTA = { claro: 0.7, escuro: 0.8 } as const;
+
+/**
+ * A distância do fundo sutil, composto sobre a superfície e a superfície 2, a cada neutro ao lado
+ * dele: 0,02 no plano do croma do OKLab, a menor diferença que se nota, e 0,03 no OKLab inteiro,
+ * só nos temas claros, para o tom não ser trocado pela luminosidade. Nos escuros, o 0 tira esse
+ * piso (decisão 2).
+ */
+export const DISTANCIA_DOS_NEUTROS = { croma: 0.02, total: { claro: 0.03, escuro: 0 } } as const;
+
+/**
+ * O fundo do rótulo neutro: o texto secundário a 10%. Com 15%, o texto secundário cai abaixo de
+ * 4,5:1 sobre a superfície 2 do Meia-noite.
+ */
+export const TINTA_DO_ROTULO_NEUTRO = 0.1;
 
 /** Controle desabilitado: fica visível, mas recua (a WCAG isenta o desabilitado de contraste). */
 export const OPACIDADE_DESABILITADO = 0.45;

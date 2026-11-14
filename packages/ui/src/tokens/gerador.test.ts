@@ -1,29 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { nomeDaEntrada, varredura } from '../teste/varredura.ts';
 import { comAlfa, compor, contraste, luminancia } from './contraste.ts';
-import { type EntradaDoTema, gerarTema } from './gerador.ts';
+import { gerarTema } from './gerador.ts';
 import { camadasDeEstado, OPACIDADE_DO_ANEL, type Tom } from './papeis.ts';
 
-/** Todas as entradas da varredura: matizes de 15 em 15, três cromas e três contrastes por tom. */
-function varredura(): EntradaDoTema[] {
-  const entradas: EntradaDoTema[] = [];
-  for (const tom of ['escuro', 'claro'] as Tom[]) {
-    for (let matiz = 0; matiz < 360; matiz += 15) {
-      for (const croma of [0, 0.03, 0.06]) {
-        for (const nivel of [0, 45, 100]) {
-          entradas.push({ tom, base: { matiz, croma }, contraste: nivel });
-        }
-      }
-    }
-  }
-  entradas.push({ tom: 'escuro', base: { matiz: 0, croma: 0 }, contraste: 70, oled: true });
-  return entradas;
-}
-
-const nome = (e: EntradaDoTema) =>
-  `${e.tom} ${e.base.matiz}/${e.base.croma} contraste ${e.contraste}${e.oled ? ' oled' : ''}`;
-
 describe('gerarTema: mínimos garantidos', () => {
-  it.each(varredura().map((e) => [nome(e), e] as const))('%s', (_nome, entrada) => {
+  it.each(varredura().map((e) => [nomeDaEntrada(e), e] as const))('%s', (_nome, entrada) => {
     const { cores } = gerarTema(entrada);
     const { pressionado } = camadasDeEstado(cores);
     const fundosDoTexto = [

@@ -32,7 +32,8 @@ import {
   OPACIDADE_DESABILITADO,
   previa,
   RAIO_BASE_PADRAO,
-  TINTA_DO_ROTULO,
+  TINTA_DA_SITUACAO,
+  TINTA_DO_ROTULO_NEUTRO,
   tipografia,
 } from './escalas.ts';
 import { primitivos } from './primitivos.ts';
@@ -98,8 +99,10 @@ function escalasFixas(): Declaracoes {
     ['--largura-formulario', `${LARGURA_MAXIMA_DE_FORMULARIO}px`],
     ['--raio-base', `${RAIO_BASE_PADRAO}px`],
     ['--opacidade-desabilitado', String(OPACIDADE_DESABILITADO)],
-    ['--tinta-rotulo', `${Math.round(TINTA_DO_ROTULO.situacao * 100)}%`],
-    ['--tinta-rotulo-neutro', `${Math.round(TINTA_DO_ROTULO.neutra * 100)}%`],
+    // O aviso do ambiente e o item da barra ainda leem a `--tinta-rotulo`, com o mínimo da tinta
+    // das situações (change ajustes-dos-tokens, design, decisão 4).
+    ['--tinta-rotulo', `${Math.round(TINTA_DA_SITUACAO.de * 100)}%`],
+    ['--tinta-rotulo-neutro', `${Math.round(TINTA_DO_ROTULO_NEUTRO * 100)}%`],
     ...raios,
     ...Object.entries(movimento.duracoes).map(([nome, ms]): [string, string] => [
       `--dur-${kebab(nome)}`,
@@ -448,8 +451,8 @@ export function gerarDtcg() {
       desabilitado: token('number', OPACIDADE_DESABILITADO, '--opacidade-desabilitado'),
     },
     tinta: {
-      rotulo: token('number', TINTA_DO_ROTULO.situacao, '--tinta-rotulo'),
-      'rotulo-neutro': token('number', TINTA_DO_ROTULO.neutra, '--tinta-rotulo-neutro'),
+      rotulo: token('number', TINTA_DA_SITUACAO.de, '--tinta-rotulo'),
+      'rotulo-neutro': token('number', TINTA_DO_ROTULO_NEUTRO, '--tinta-rotulo-neutro'),
     },
     casca: {
       'altura-barra-superior': token(
