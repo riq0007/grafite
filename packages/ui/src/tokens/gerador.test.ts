@@ -44,6 +44,10 @@ describe('gerarTema: mínimos garantidos', () => {
       expect(contraste(cores.texto2, fundo), `texto 2 sobre ${fundo}`).toBeGreaterThanOrEqual(4.5);
     }
     expect(contraste(cores.texto, cores.superficie2)).toBeGreaterThanOrEqual(7);
+    expect(
+      contraste(cores.texto2, cores.superficieAfundada),
+      'texto 2 sobre a afundada, onde fica o texto de exemplo dos campos',
+    ).toBeGreaterThanOrEqual(7);
     const neutro = comAlfa(cores.texto2, 0.1);
     for (const base of [cores.superficie, cores.superficie2]) {
       expect(contraste(cores.texto2, compor(neutro, base))).toBeGreaterThanOrEqual(4.5);

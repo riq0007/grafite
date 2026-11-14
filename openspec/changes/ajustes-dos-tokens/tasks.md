@@ -15,7 +15,7 @@
 
 ## 2. O texto secundário sobre a afundada
 
-- [ ] 2.1 Escrever primeiro os testes:
+- [x] 2.1 Escrever primeiro os testes:
   - na varredura do `gerador.test.ts`: o texto secundário com 7:1 sobre a afundada;
   - no `contraste-pares.ts`: os pares "texto sobre a superfície afundada", de 4,5:1, e "texto secundário sobre a superfície afundada", de 7:1;
   - no `temas.test.ts`: o texto secundário dos seis temas de fábrica.
@@ -28,6 +28,8 @@
   - o `pnpm --filter @grafite/ui test` e o `pnpm tokens:verificar` passam;
   - o secundário da Névoa é `#4d4f52`, e o do Papel, `#534e47`. Os outros quatro temas não mudam;
   - o `docs/identidade/contraste.md` mostra os dois pares novos nas 24 combinações, todos aprovados.
+
+  Feito em 14/11: os três falharam pela Névoa (6,16:1), pelo Papel (6,12:1) e por 216 entradas da varredura, as escuras no contraste 0 e as claras no 0 e no 45. O par tem o próprio mínimo, o `TEXTO_DE_EXEMPLO` do `contraste-pares.ts`, para a verificação não ler o mínimo do gerador que ela confere.
 
 ## 3. As situações longe dos neutros
 

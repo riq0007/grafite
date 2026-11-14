@@ -5,26 +5,28 @@ Gerado por `pnpm tokens:contraste` (`packages/ui/src/tokens/relatorio-contraste.
 | | |
 |---|---|
 | Combinações | 6 temas × 4 destaques = 24 |
-| Pares de uso | 45 |
-| Medições | 1080 |
+| Pares de uso | 47 |
+| Medições | 1128 |
 | Reprovadas | 0 |
 
 ## Menor razão de cada uso
 
-Entre as 24 combinações. Texto exige 4,5:1; componentes e bordas exigem 3:1.
+Entre as 24 combinações. Texto exige 4,5:1, e o texto secundário sobre a afundada, onde fica o texto de exemplo dos campos, 7:1; componentes e bordas exigem 3:1.
 
 | Uso | Mínimo | Menor razão | Onde |
 |---|---|---|---|
 | texto sobre o fundo | 4,50:1 | 14,81:1 | papel / grafite |
 | texto sobre a superfície | 4,50:1 | 15,57:1 | meia-noite / grafite |
 | texto sobre a superfície 2 | 4,50:1 | 14,01:1 | meia-noite / grafite |
-| texto secundário sobre o fundo | 4,50:1 | 5,69:1 | papel / grafite |
-| texto secundário sobre a superfície | 4,50:1 | 7,08:1 | papel / grafite |
-| texto secundário sobre a superfície 2 | 4,50:1 | 6,52:1 | papel / grafite |
+| texto sobre a superfície afundada | 4,50:1 | 15,94:1 | papel / grafite |
+| texto secundário sobre o fundo | 4,50:1 | 6,51:1 | nevoa / grafite |
+| texto secundário sobre a superfície afundada | 7,00:1 | 7,01:1 | nevoa / grafite |
+| texto secundário sobre a superfície | 4,50:1 | 7,29:1 | grafite / grafite |
+| texto secundário sobre a superfície 2 | 4,50:1 | 6,55:1 | grafite / grafite |
 | texto sobre o material | 4,50:1 | 13,80:1 | meia-noite / grafite |
 | texto secundário sobre o material | 4,50:1 | 6,47:1 | grafite / grafite |
 | texto sobre a barra superior | 4,50:1 | 15,83:1 | meia-noite / grafite |
-| texto secundário sobre a barra superior | 4,50:1 | 6,68:1 | papel / grafite |
+| texto secundário sobre a barra superior | 4,50:1 | 7,43:1 | grafite / grafite |
 | texto sobre linha alternada | 4,50:1 | 14,65:1 | meia-noite / grafite |
 | texto do destaque sobre o fundo | 4,50:1 | 4,52:1 | alto-contraste / verde |
 | texto do destaque sobre a superfície | 4,50:1 | 5,62:1 | nevoa / verde |
@@ -58,7 +60,7 @@ Entre as 24 combinações. Texto exige 4,5:1; componentes e bordas exigem 3:1.
 | rótulo de informação sobre a superfície tingida | 4,50:1 | 5,43:1 | nevoa / grafite |
 | rótulo de informação sobre a superfície 2 tingida | 4,50:1 | 5,03:1 | papel / grafite |
 | texto de informação sobre o material (aviso e menu) | 4,50:1 | 6,47:1 | nevoa / grafite |
-| rótulo neutro sobre a superfície tingida | 4,50:1 | 6,10:1 | papel / grafite |
+| rótulo neutro sobre a superfície tingida | 4,50:1 | 6,24:1 | grafite / grafite |
 | rótulo neutro sobre a superfície 2 tingida | 4,50:1 | 5,53:1 | grafite / grafite |
 
 ## Como o contraste é garantido

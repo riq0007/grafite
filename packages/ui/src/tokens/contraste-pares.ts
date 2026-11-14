@@ -24,6 +24,8 @@ export interface Resultado {
 }
 
 const TEXTO = 4.5;
+/** O texto de exemplo dos campos, o secundário sobre a afundada: o nível AAA. */
+const TEXTO_DE_EXEMPLO = 7;
 const COMPONENTE = 3;
 
 const sobre = (camada: string, base: string): Fundo => ({ camada, sobre: base });
@@ -55,10 +57,23 @@ export const PARES: Par[] = [
     minimo: TEXTO,
   },
   {
+    uso: 'texto sobre a superfície afundada',
+    frente: (c) => c.texto ?? '',
+    fundo: (c) => c.superficieAfundada ?? '',
+    minimo: TEXTO,
+  },
+  {
     uso: 'texto secundário sobre o fundo',
     frente: (c) => c.texto2 ?? '',
     fundo: (c) => c.fundo ?? '',
     minimo: TEXTO,
+  },
+  {
+    // O texto de exemplo dos campos fica na afundada (change ajustes-dos-tokens, design, decisão 1).
+    uso: 'texto secundário sobre a superfície afundada',
+    frente: (c) => c.texto2 ?? '',
+    fundo: (c) => c.superficieAfundada ?? '',
+    minimo: TEXTO_DE_EXEMPLO,
   },
   {
     uso: 'texto secundário sobre a superfície',

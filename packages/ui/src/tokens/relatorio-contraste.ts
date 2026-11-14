@@ -30,7 +30,7 @@ export function relatorioDeContraste(): { markdown: string; reprovadas: number }
     '',
     '## Menor razão de cada uso',
     '',
-    'Entre as 24 combinações. Texto exige 4,5:1; componentes e bordas exigem 3:1.',
+    'Entre as 24 combinações. Texto exige 4,5:1, e o texto secundário sobre a afundada, onde fica o texto de exemplo dos campos, 7:1; componentes e bordas exigem 3:1.',
     '',
     '| Uso | Mínimo | Menor razão | Onde |',
     '|---|---|---|---|',

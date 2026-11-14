@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paraHex } from './contraste.ts';
+import { contraste, paraHex } from './contraste.ts';
 import { temas } from './temas.ts';
 
 describe('temas', () => {
@@ -18,6 +18,25 @@ describe('temas', () => {
     const conjuntos = Object.values(temas).map((t) => Object.keys(t.cores).sort().join(','));
     expect(new Set(conjuntos).size).toBe(1);
     expect(conjuntos[0]?.split(',').length).toBeGreaterThanOrEqual(13);
+  });
+
+  it('o texto secundário tem 7:1 sobre a afundada, e só a Névoa e o Papel mudam com o piso', () => {
+    expect(
+      Object.fromEntries(Object.entries(temas).map(([id, tema]) => [id, tema.cores.texto2])),
+    ).toEqual({
+      grafite: '#a4a5a9',
+      'meia-noite': '#9da6b5',
+      oled: '#b0b0b0',
+      nevoa: '#4d4f52',
+      papel: '#534e47',
+      'alto-contraste': '#424242',
+    });
+    for (const [id, tema] of Object.entries(temas)) {
+      expect(
+        contraste(tema.cores.texto2, tema.cores.superficieAfundada),
+        id,
+      ).toBeGreaterThanOrEqual(7);
+    }
   });
 
   it('todo valor de cor é uma cor válida', () => {

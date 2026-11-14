@@ -40,6 +40,11 @@ export interface TemaGerado {
 
 const TEXTO = 4.5;
 const TEXTO_PRINCIPAL = 7;
+/**
+ * O texto secundário sobre a afundada, onde fica o texto de exemplo dos campos: o nível AAA, acima
+ * dos 4,5:1 dos outros fundos (change ajustes-dos-tokens, design, decisão 1).
+ */
+const SECUNDARIO_NA_AFUNDADA = 7;
 const COMPONENTE = 3;
 
 const entre = (de: number, ate: number, fracao: number) => de + (ate - de) * fracao;
@@ -157,6 +162,7 @@ export function gerarTema(entrada: EntradaDoTema): TemaGerado {
     neutro(escuro ? entre(0.66, 0.8, k) : entre(0.52, 0.38, k), 0.8),
     (hex) =>
       passaContra(fundosDeTexto(texto), TEXTO)(hex) &&
+      contraste(hex, superficies.superficieAfundada) >= SECUNDARIO_NA_AFUNDADA &&
       [superficies.superficie, superficies.superficie2].every(
         (base) => contraste(hex, compor(comAlfa(hex, 0.1), base)) >= TEXTO,
       ),
