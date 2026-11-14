@@ -92,7 +92,7 @@
 
 ## 4. As quantidades na Instrument Sans
 
-- [ ] 4.1 A tabela. Escrever primeiro, na `TabelaComEspecies`, a história que confere a fonte: o número na fonte da interface, com algarismos tabulares, e o código na mono.
+- [x] 4.1 A tabela. Escrever primeiro, na `TabelaComEspecies`, a história que confere a fonte: o número na fonte da interface, com algarismos tabulares, e o código na mono.
 
   Ver falhar. Depois (design, decisões 5 e 6):
   - o CSS da espécie número;
@@ -101,6 +101,8 @@
   - as amostras de número das histórias das tabelas: `ValorComposto.stories.tsx` (:23, :147 e :155), `TabelaComResumo.stories.tsx` (:118, :502 e :515), `TabelaComColunasEstreitas.stories.tsx` (:62) e `TabelaConfiguravel.stories.tsx` (:109).
 
   Verificar: o `pnpm test:stories` passa.
+
+  Feito em 14/11: as duas histórias que conferem a fonte, a `EspeciesDasColunas` e a `NumerosADireita`, reprovaram primeiro pelo número em JetBrains Mono. O `.conteudoNumero` herda a fonte da célula, para a `mono` dada na célula seguir valendo sobre a espécie. As amostras usam a classe `numero` do `base.css`, e o `fonteDoToken` das histórias ficou em `packages/ui/src/teste/fonteDoToken.ts`.
 - [ ] 4.2 Os dados. Escrever primeiro as histórias que conferem a fonte:
   - uma contagem de "99,1%" em que a vírgula tem menos da metade da largura de um algarismo;
   - o número do medidor, do cartucho, da tendência e do controle deslizante na fonte da interface.
@@ -128,7 +130,10 @@
 
 ## 5. Fechamento
 
-- [ ] 5.1 Regravar as referências da regressão visual que mudaram. Antes, apagar as das histórias nos temas claros e as do Grafite e da Meia-noite que mostram a situação de informação (design, riscos).
+- [ ] 5.1 Regravar as referências da regressão visual que mudaram. Antes, apagar (design, riscos):
+  - as das histórias nos temas claros;
+  - as do Grafite e da Meia-noite que mostram a situação de informação;
+  - nos temas escuros, as das histórias com números que a 4.1 e a 4.2 levaram à Instrument Sans.
 
   Conferir as imagens de diferença:
   - nos temas claros, o texto secundário e o fundo das situações;

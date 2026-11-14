@@ -59,7 +59,7 @@ function TabelaEstreita({ virtualizada }: { virtualizada: boolean }) {
               </Celula>
               <Celula>
                 <span className={estilos.queQuebra} data-composto>
-                  <span className="mono">8%</span>
+                  <span className="numero">8%</span>
                   <span>Black Toner Cartridge</span>
                 </span>
               </Celula>

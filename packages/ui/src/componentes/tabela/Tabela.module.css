@@ -245,13 +245,12 @@
 }
 
 /*
- * As espécies da coluna (change tabelas-consistentes, design, decisão 2). O número fica à direita e
- * na mono, o código na mono, a data numa linha, e as ações à direita, lado a lado, sem quebrar a
- * linha.
+ * As espécies da coluna (change tabelas-consistentes, design, decisão 2). O número fica à direita,
+ * na fonte da interface, com os algarismos tabulares (change ajustes-dos-tokens, design, decisão 5),
+ * o código na mono, a data numa linha, e as ações à direita, lado a lado, sem quebrar a linha.
  */
 .conteudoNumero {
   display: block;
-  font-family: var(--fonte-mono);
   font-variant-numeric: tabular-nums;
   text-align: end;
 }

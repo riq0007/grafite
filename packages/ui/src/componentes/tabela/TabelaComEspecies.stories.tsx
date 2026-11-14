@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
+import { fonteDoToken } from '../../teste/fonteDoToken.ts';
 import { Botao } from '../botao/Botao.tsx';
 import { RotuloDeSituacao } from '../situacao/RotuloDeSituacao.tsx';
 import {
@@ -90,19 +91,9 @@ function TabelaDoEstoque() {
   );
 }
 
-/** A fonte mono como o navegador a calcula, para comparar com a da célula. */
-const fonteMono = (canvas: HTMLElement) => {
-  const amostra = document.createElement('span');
-  amostra.style.fontFamily = 'var(--fonte-mono)';
-  canvas.append(amostra);
-  const fonte = getComputedStyle(amostra).fontFamily;
-  amostra.remove();
-  return fonte;
-};
-
 /**
- * O número à direita e na mono, no cabeçalho e no valor, sem a célula repetir; o código na mono; e
- * as ações lado a lado, numa linha da altura das outras.
+ * O número à direita, no cabeçalho e no valor, sem a célula repetir, e na fonte da interface, com os
+ * algarismos tabulares; o código na mono; e as ações lado a lado, numa linha da altura das outras.
  */
 export const EspeciesDasColunas: Historia = {
   // Com a interação, ela também entra na regressão visual, como a referência das espécies.
@@ -117,28 +108,33 @@ export const EspeciesDasColunas: Historia = {
       .filter((r) => within(r).queryAllByRole('gridcell').length > 0) as [HTMLElement];
     const celulas = [...linha.children] as HTMLElement[];
     const celulaDe = (nome: string) => celulas[indice(nome)] as HTMLElement;
-    const mono = fonteMono(canvasElement);
-    /** O texto da célula: onde ele termina e a fonte em que está. */
+    const mono = fonteDoToken('--fonte-mono');
+    const daInterface = fonteDoToken('--fonte-interface');
+    /** O texto da célula: onde ele termina, a fonte em que está e o desenho dos algarismos. */
     const texto = (celula: HTMLElement) => {
       const no = document.createTreeWalker(celula, NodeFilter.SHOW_TEXT).nextNode() as Text;
       const trecho = document.createRange();
       trecho.selectNodeContents(no);
+      const estilo = getComputedStyle(no.parentElement as HTMLElement);
       return {
         direita: trecho.getBoundingClientRect().right,
-        fonte: getComputedStyle(no.parentElement as HTMLElement).fontFamily,
+        fonte: estilo.fontFamily,
+        algarismos: estilo.fontVariantNumeric,
       };
     };
     const direitaDoConteudo = (celula: HTMLElement) =>
       celula.getBoundingClientRect().right -
       Number.parseFloat(getComputedStyle(celula).paddingRight);
 
-    // Número alinhado: o cabeçalho e o valor à direita, e o valor na mono.
+    // Número alinhado: o cabeçalho e o valor à direita, e o valor na fonte da interface, com os
+    // algarismos tabulares (change ajustes-dos-tokens, design, decisão 5).
     await expect(getComputedStyle(cabecalhos[indice('Saldo')] as HTMLElement).textAlign).toBe(
       'end',
     );
     const saldo = celulaDe('Saldo');
     await expect(Math.abs(texto(saldo).direita - direitaDoConteudo(saldo))).toBeLessThanOrEqual(1);
-    await expect(texto(saldo).fonte).toBe(mono);
+    await expect(texto(saldo).fonte).toBe(daInterface);
+    await expect(texto(saldo).algarismos).toBe('tabular-nums');
     await expect(texto(celulaDe('Código')).fonte).toBe(mono);
     await expect(texto(celulaDe('Consumível')).fonte).not.toBe(mono);
 

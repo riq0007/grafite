@@ -20,7 +20,7 @@ const offline = (
 );
 
 const toner = (
-  <ValorComposto fixo={<span className="mono">8%</span>}>Black Toner Cartridge</ValorComposto>
+  <ValorComposto fixo={<span className="numero">8%</span>}>Black Toner Cartridge</ValorComposto>
 );
 
 /** Uma linha de impressora, com a disponibilidade e os suprimentos nas larguras dadas. */
@@ -144,7 +144,7 @@ const O_QUE_A_COLETA_MOSTRA: Record<keyof typeof LARGURAS_DE_FABRICA, ReactNode>
       fixo={
         <>
           {medidor}
-          <span className="mono">100%</span>
+          <span className="numero">100%</span>
         </>
       }
     >
@@ -152,7 +152,7 @@ const O_QUE_A_COLETA_MOSTRA: Record<keyof typeof LARGURAS_DE_FABRICA, ReactNode>
       {idade}
     </ValorComposto>
   ),
-  paginas: <ValorComposto fixo={<span className="mono">1.234.567</span>}>{idade}</ValorComposto>,
+  paginas: <ValorComposto fixo={<span className="numero">1.234.567</span>}>{idade}</ValorComposto>,
 };
 
 /** A largura que cada coluna da coleta pede, medida sem coluna nenhuma em volta. */

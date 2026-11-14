@@ -238,7 +238,7 @@ A classe `numero` já existe no `base.css`, com os algarismos tabulares, e herda
 
 ## Risks / Trade-offs
 
-- **[O secundário dos temas claros e a informação do Grafite mudam pouco, e a regressão visual pode não reprovar a captura]** → Antes do `--atualizar`, apagar as referências das histórias nos temas claros e as do Grafite e da Meia-noite que mostram a situação de informação. O `--atualizar` só regrava a captura que reprova, e a informação do Grafite vai só de 15% para 17%.
+- **[O secundário dos temas claros e a informação do Grafite mudam pouco, e a regressão visual pode não reprovar a captura]** → Antes do `--atualizar`, apagar as referências das histórias nos temas claros e as do Grafite e da Meia-noite que mostram a situação de informação. O `--atualizar` só regrava a captura que reprova, e a informação do Grafite vai só de 15% para 17%. Nos temas escuros, a troca da fonte de um número curto, como o "2" do saldo na tabela das espécies, também pode ficar abaixo da tolerância: as referências das histórias com números que mudaram de fonte saem antes, em todos os temas.
 - **[O piso do secundário muda o efeito do controle de contraste no tema personalizado]** → O controle é do usuário (spec ajustes-do-sistema).
   - No claro, o alvo do secundário é L 0,52 − 0,14k, e o piso, L ≈ 0,434 − 0,014k. Do contraste 0 até perto de 68, o secundário fica no piso: o controle muda o texto principal, as bordas e o resto, mas não ele. Antes, ele ia de L 0,52 a 0,43 nessa faixa.
   - No escuro, abaixo de uns 29, o secundário clareia. No contraste 0, ele passa de 5,9:1 para 7:1 sobre a afundada, de L 0,66 para uns 0,70.

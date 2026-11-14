@@ -106,9 +106,7 @@ function TabelaRedimensionavel({ aoFiltrar, aoRedimensionar }: Espioes) {
             {visivel('patrimonio') ? <Celula mono>{ativo.patrimonio}</Celula> : null}
             {visivel('local') ? <Celula>{ativo.local}</Celula> : null}
             {visivel('valor') ? (
-              <Celula mono alinhamento="fim">
-                {`R$ ${VALORES[ativo.id] ?? ''}`}
-              </Celula>
+              <Celula alinhamento="fim">{`R$ ${VALORES[ativo.id] ?? ''}`}</Celula>
             ) : null}
           </Linha>
         )}
@@ -264,14 +262,17 @@ export const RedimensionarPeloTeclado: Historia = {
   },
 };
 
-/** Os números à direita, com algarismos tabulares, e os identificadores na fonte mono. */
+/**
+ * Os números à direita, na fonte da interface, com algarismos tabulares, e os identificadores na
+ * fonte mono.
+ */
 export const NumerosADireita: Historia = {
   render: () => <TabelaRedimensionavel />,
   play: async ({ canvasElement }) => {
     const valor = within(canvasElement).getByRole('gridcell', { name: 'R$ 1.500,00' });
     await expect(getComputedStyle(valor).textAlign).toBe('end');
     await expect(getComputedStyle(valor).fontVariantNumeric).toContain('tabular-nums');
-    await expect(getComputedStyle(valor).fontFamily).toContain('JetBrains Mono');
+    await expect(getComputedStyle(valor).fontFamily).toContain('Instrument Sans');
     await expect(getComputedStyle(cabecalho(canvasElement, 'Valor de compra')).textAlign).toBe(
       'end',
     );

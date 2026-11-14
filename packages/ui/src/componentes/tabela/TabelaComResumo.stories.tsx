@@ -115,7 +115,7 @@ const COLUNAS_COM_O_CONTEUDO_CORTADO: DefinicaoDaColuna[] = [
     rotulo: 'Suprimentos',
     largura: 110,
     valor: () => (
-      <ValorComposto fixo={<span className="mono">8%</span>}>Black Toner Cartridge</ValorComposto>
+      <ValorComposto fixo={<span className="numero">8%</span>}>Black Toner Cartridge</ValorComposto>
     ),
     noResumo: () => '8% · Black Toner Cartridge',
   },
@@ -499,7 +499,7 @@ const COMPOSTOS: ItemDoResumo[] = [
       <ValorComposto
         fixo={
           <>
-            <span className="mono">8%</span>
+            <span className="numero">8%</span>
             <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>
           </>
         }
@@ -512,7 +512,7 @@ const COMPOSTOS: ItemDoResumo[] = [
   {
     coluna: 'paginas',
     rotulo: 'Total de páginas',
-    valor: <ValorComposto fixo={<span className="mono">12.500</span>}>há 12 dias</ValorComposto>,
+    valor: <ValorComposto fixo={<span className="numero">12.500</span>}>há 12 dias</ValorComposto>,
   },
 ];
 

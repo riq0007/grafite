@@ -761,8 +761,9 @@ export type AlinhamentoDaColuna = 'inicio' | 'fim';
 
 /**
  * O que a coluna mostra (change tabelas-consistentes, design, decisões 1 e 2): o número fica à
- * direita e na mono, o código na mono, a data numa linha, e as ações à direita, lado a lado. A
- * célula segue a espécie da coluna dela, sem repetir.
+ * direita, na fonte da interface, com os algarismos tabulares (change ajustes-dos-tokens, design,
+ * decisão 5), o código na mono, a data numa linha, e as ações à direita, lado a lado. A célula
+ * segue a espécie da coluna dela, sem repetir.
  */
 export type EspecieDaColuna = 'texto' | 'numero' | 'codigo' | 'data' | 'situacao' | 'acoes';
 
@@ -1082,7 +1083,10 @@ export interface PropsDaCelula {
   children: ReactNode;
   /** Os números ficam à direita, como a coluna deles. */
   alinhamento?: AlinhamentoDaColuna;
-  /** Os identificadores e os números na fonte mono, com algarismos tabulares. */
+  /**
+   * Os identificadores e os horários na fonte mono, com algarismos tabulares. A quantidade fica na
+   * fonte da interface, na espécie número.
+   */
   mono?: boolean;
 }
 
