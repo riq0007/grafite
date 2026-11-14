@@ -98,7 +98,7 @@
 
 ## 7. A troca da pasta e o repositório antigo
 
-- [ ] 7.1 A troca das pastas (decisão 8):
+- [x] 7.1 A troca das pastas (decisão 8):
   - o roteiro da troca, conferido antes em pastas de ensaio e armado pela sessão do Claude;
   - a memória do Claude Code atualizada com o estado;
   - o usuário fecha o app do Claude, os editores e o `pnpm dev`; o roteiro troca as pastas, avisa numa janela, e o usuário abre o Claude de novo no `D:\grafite`;
