@@ -64,7 +64,7 @@ export const textoDosSuprimentos = (suprimentos: NaLista | null | undefined) =>
 export const textoDasPaginas = (suprimentos: NaLista | null | undefined) =>
   suprimentos?.total ? paginas(suprimentos.total.paginas) : null;
 
-/** O menor nível na célula: o medidor compacto na tinta, o número em mono, o suprimento e a idade. */
+/** O menor nível na célula: o medidor compacto na tinta, o número, o suprimento e a idade. */
 export function SuprimentosNaCelula({
   menor,
   agora,
@@ -86,7 +86,7 @@ export function SuprimentosNaCelula({
               semNumero
             />
           </span>
-          <span className="mono">{`${menor.nivel}%`}</span>
+          <span className="numero">{`${menor.nivel}%`}</span>
         </>
       }
       momento={menor.momento}
@@ -98,7 +98,7 @@ export function SuprimentosNaCelula({
   );
 }
 
-/** O total de páginas na célula, em mono, com a idade da leitura. */
+/** O total de páginas na célula, com a idade da leitura. */
 export function PaginasNaCelula({
   total,
   agora,
@@ -108,7 +108,7 @@ export function PaginasNaCelula({
 }) {
   return (
     <LeituraNaCelula
-      fixo={<span className="mono">{paginas(total.paginas)}</span>}
+      fixo={<span className="numero">{paginas(total.paginas)}</span>}
       momento={total.momento}
       agora={agora}
       metrica="impressora.contador"
@@ -273,7 +273,7 @@ export function SuprimentosNaFicha({
                     <dt>{contador.rotulo}</dt>
                     <dd className={estilos.disponibilidade}>
                       {contador.paginas !== null && (
-                        <span className="mono">{paginas(contador.paginas)}</span>
+                        <span className="numero">{paginas(contador.paginas)}</span>
                       )}
                       {contador.inconsistente && (
                         <RotuloDeSituacao situacao="atencao">Inconsistente</RotuloDeSituacao>
@@ -284,7 +284,7 @@ export function SuprimentosNaFicha({
                 {painel.paginasEmPretoEBranco !== null && (
                   <div>
                     <dt>Páginas em preto e branco</dt>
-                    <dd className="mono">{paginas(painel.paginasEmPretoEBranco)}</dd>
+                    <dd className="numero">{paginas(painel.paginasEmPretoEBranco)}</dd>
                   </div>
                 )}
               </dl>

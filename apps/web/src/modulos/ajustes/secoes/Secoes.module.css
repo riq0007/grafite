@@ -103,11 +103,13 @@
   background-color: var(--cor-superficie-afundada);
 }
 
-/* A leitura do contraste, em números, como a TI mede: "Texto 15,2:1 · Secundário 7,9:1". */
+/*
+ * A leitura do contraste, em números, como a TI mede: "Texto 15,2:1 · Secundário 7,9:1". Na fonte
+ * da interface, com os algarismos tabulares.
+ */
 .leitura {
   margin: 0;
   color: var(--cor-texto-2);
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-variant-numeric: tabular-nums;
 }

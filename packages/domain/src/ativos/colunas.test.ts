@@ -158,15 +158,20 @@ describe('as colunas da tabela dos ativos', () => {
     expect(daChave(colunas, 'ativo.fornecedor').mono).toBe(false);
     expect(daChave(colunas, 'ativo.valor-de-compra')).toMatchObject({
       alinhamento: 'fim',
-      mono: true,
+      especie: 'numero',
+      mono: false,
       filtro: 'numero',
     });
     expect(daChave(colunas, 'ativo.vida-util')).toMatchObject({
       alinhamento: 'fim',
+      especie: 'numero',
+      mono: false,
       filtro: 'numero',
     });
     expect(daChave(colunas, 'ativo.garantia')).toMatchObject({
       alinhamento: 'inicio',
+      especie: 'data',
+      mono: false,
       filtro: 'data',
     });
   });
@@ -435,7 +440,8 @@ describe('as colunas dos suprimentos e contadores', () => {
       ordena: true,
       filtro: 'numero',
       alinhamento: 'fim',
-      mono: true,
+      especie: 'numero',
+      mono: false,
       podeFicarVazia: true,
       unidade: '%',
       campo: { tipo: 'inteiro', configuracao: {} },
@@ -492,5 +498,53 @@ describe('as larguras de fábrica das colunas da coleta', () => {
     const outras = colunas.filter(({ chave }) => !chave.startsWith('coleta.'));
     expect(outras.length).toBeGreaterThan(0);
     for (const coluna of outras) expect(coluna.larguraMinima).toBeUndefined();
+  });
+});
+
+// A fonte de cada coluna (change ajustes-dos-tokens, design, decisão 6): a quantidade e a data na
+// fonte da interface, na espécie que lhes dá os algarismos tabulares; os identificadores e o
+// momento, que tem a hora, na mono.
+describe('a espécie e a fonte das colunas', () => {
+  const DOS_TIPOS = {
+    inteiro: '0199a6e0-0000-7000-8000-0000000001f1',
+    decimal: '0199a6e0-0000-7000-8000-0000000001f2',
+    moeda: '0199a6e0-0000-7000-8000-0000000001f3',
+    data: '0199a6e0-0000-7000-8000-0000000001f4',
+    ip: '0199a6e0-0000-7000-8000-0000000001f5',
+    mac: '0199a6e0-0000-7000-8000-0000000001f6',
+  } as const satisfies Partial<Record<TipoDeCampo, string>>;
+  const campos = (Object.entries(DOS_TIPOS) as Array<[TipoDeCampo, string]>).map(([tipo, id]) =>
+    campo(id, `Campo ${tipo}`, tipo),
+  );
+  const comTodos: TipoNasColunas = {
+    situacao: 'ativo',
+    capacidades: ['snmp.suprimentos'],
+    campos: Object.values(DOS_TIPOS).map((campoId) => ({ campoId, obrigatorio: false })),
+  };
+  const colunas = colunasDosAtivos({ tipos: [comTodos], campos, verRestritos: false });
+
+  it('o inteiro, o decimal, a moeda e o número coletado na espécie número, sem a mono', () => {
+    const numeros = [DOS_TIPOS.inteiro, DOS_TIPOS.decimal, DOS_TIPOS.moeda];
+    for (const chave of [...numeros, 'coleta.suprimentos', 'coleta.paginas']) {
+      expect(daChave(colunas, chave)).toMatchObject({
+        especie: 'numero',
+        alinhamento: 'fim',
+        mono: false,
+      });
+    }
+  });
+
+  it('a data na espécie data, sem a mono', () => {
+    for (const chave of [DOS_TIPOS.data, 'ativo.data-de-compra', 'ativo.garantia']) {
+      expect(daChave(colunas, chave)).toMatchObject({ especie: 'data', mono: false });
+    }
+  });
+
+  it('o IP, o MAC e o momento na mono, sem espécie', () => {
+    for (const chave of [DOS_TIPOS.ip, DOS_TIPOS.mac, 'ativo.criado-em', 'ativo.atualizado-em']) {
+      const coluna = daChave(colunas, chave);
+      expect(coluna.mono).toBe(true);
+      expect(coluna.especie).toBeUndefined();
+    }
   });
 });

@@ -762,6 +762,7 @@ export function TabelaDosAtivos() {
                   largura={larguraDaVisao.get(coluna.chave)}
                   larguraMinima={coluna.larguraMinima}
                   alinhamento={coluna.alinhamento}
+                  especie={coluna.especie}
                   menu={{
                     aoFiltrar: filtravel(coluna) ? () => abrirOsFiltros(coluna) : undefined,
                     aoOcultar: () =>

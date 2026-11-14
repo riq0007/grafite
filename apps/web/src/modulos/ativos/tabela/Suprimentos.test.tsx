@@ -1,6 +1,7 @@
 // As colunas Suprimentos e Total de páginas na tabela dos ativos (spec cadastro-de-ativos, "Colunas
 // da tabela dos ativos" e "Ordenação e filtros dos ativos"; change p2b-impressoras-por-snmp, design,
-// decisões 8 e 10): o número em fonte mono, a descrição do suprimento ao lado e a idade, como a
+// decisões 8 e 10): o número na fonte da interface, com os algarismos tabulares (change
+// ajustes-dos-tokens, design, decisão 6), a descrição do suprimento ao lado e a idade, como a
 // disponibilidade, e o filtro "de e até" em percentual e em páginas.
 import { filaDeAvisos } from '@grafite/ui';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -96,7 +97,8 @@ describe('os suprimentos na tabela dos ativos', () => {
     const [m404, rh, nobreak] = await linhas();
 
     const nivel = within(celula(m404, 2));
-    expect(nivel.getByText('8%').classList.contains('mono')).toBe(true);
+    expect(nivel.getByText('8%').classList.contains('numero')).toBe(true);
+    expect(nivel.getByText('8%').classList.contains('mono')).toBe(false);
     expect(nivel.getByText('Black Toner Cartridge')).toBeTruthy();
     // O medidor compacto do menor nível, na tinta do suprimento (change suprimentos-rostos-e-backups).
     const medidor = nivel.getByRole('meter', { name: 'Menor nível: Black Toner Cartridge' });
@@ -105,7 +107,8 @@ describe('os suprimentos na tabela dos ativos', () => {
     expect(nivel.getByText('há 3 min')).toBeTruthy();
     expect(nivel.queryByText('Desatualizado')).toBeNull();
     const total = within(celula(m404, 3));
-    expect(total.getByText('12.500').classList.contains('mono')).toBe(true);
+    expect(total.getByText('12.500').classList.contains('numero')).toBe(true);
+    expect(total.getByText('12.500').classList.contains('mono')).toBe(false);
     expect(total.getByText('há 3 min')).toBeTruthy();
 
     expect(celula(rh, 2).textContent).toBe('—');

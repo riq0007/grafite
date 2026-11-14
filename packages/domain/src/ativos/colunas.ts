@@ -45,10 +45,13 @@ export interface TipoNasColunas {
   campos: readonly CampoDoTipo[];
 }
 
-/** Como cada tipo de campo vira coluna: o filtro, se ordena, o alinhamento, a fonte e a largura. */
+/**
+ * Como cada tipo de campo vira coluna: o filtro, se ordena, o alinhamento, a espécie, a fonte e a
+ * largura. O número e a data ficam na fonte da interface, com a espécie, e o IP e o MAC, na mono.
+ */
 const POR_TIPO: Record<
   TipoDeCampo,
-  Pick<ColunaDaTabela, 'filtro' | 'ordena' | 'alinhamento' | 'mono' | 'largura'>
+  Pick<ColunaDaTabela, 'filtro' | 'ordena' | 'alinhamento' | 'especie' | 'mono' | 'largura'>
 > = {
   texto: { filtro: 'texto', ordena: true, alinhamento: 'inicio', mono: false, largura: 180 },
   'texto-longo': {
@@ -62,10 +65,38 @@ const POR_TIPO: Record<
   url: { filtro: 'texto', ordena: true, alinhamento: 'inicio', mono: false, largura: 220 },
   ip: { filtro: 'texto', ordena: true, alinhamento: 'inicio', mono: true, largura: 140 },
   mac: { filtro: 'texto', ordena: true, alinhamento: 'inicio', mono: true, largura: 150 },
-  inteiro: { filtro: 'numero', ordena: true, alinhamento: 'fim', mono: true, largura: 120 },
-  decimal: { filtro: 'numero', ordena: true, alinhamento: 'fim', mono: true, largura: 120 },
-  moeda: { filtro: 'numero', ordena: true, alinhamento: 'fim', mono: true, largura: 140 },
-  data: { filtro: 'data', ordena: true, alinhamento: 'inicio', mono: true, largura: 120 },
+  inteiro: {
+    filtro: 'numero',
+    ordena: true,
+    alinhamento: 'fim',
+    especie: 'numero',
+    mono: false,
+    largura: 120,
+  },
+  decimal: {
+    filtro: 'numero',
+    ordena: true,
+    alinhamento: 'fim',
+    especie: 'numero',
+    mono: false,
+    largura: 120,
+  },
+  moeda: {
+    filtro: 'numero',
+    ordena: true,
+    alinhamento: 'fim',
+    especie: 'numero',
+    mono: false,
+    largura: 140,
+  },
+  data: {
+    filtro: 'data',
+    ordena: true,
+    alinhamento: 'inicio',
+    especie: 'data',
+    mono: false,
+    largura: 120,
+  },
   lista: { filtro: 'escolha', ordena: true, alinhamento: 'inicio', mono: false, largura: 150 },
   'lista-multipla': {
     filtro: 'escolha',
@@ -146,7 +177,8 @@ const coletada = (coluna: ColunaColetada, grupo: string): ColunaDosAtivos =>
         filtro: 'numero',
         podeFicarVazia: true,
         alinhamento: 'fim',
-        mono: true,
+        especie: 'numero',
+        mono: false,
         largura: coluna.largura,
         larguraMinima: coluna.largura,
         origem: 'capacidade',

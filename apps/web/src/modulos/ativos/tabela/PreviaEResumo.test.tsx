@@ -1,7 +1,18 @@
 import { filaDeAvisos } from '@grafite/ui';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { abrir, ativo, IP, linhas, lista, M404, RH, servidorDeAtivos, tabela } from './teste.tsx';
+import {
+  abrir,
+  ativo,
+  CUSTO,
+  IP,
+  linhas,
+  lista,
+  M404,
+  RH,
+  servidorDeAtivos,
+  tabela,
+} from './teste.tsx';
 
 afterEach(() => {
   cleanup();
@@ -52,6 +63,22 @@ describe('a prévia do ativo na tabela', () => {
     ]);
     fireEvent.keyDown(aberta, { key: 'Enter' });
     await waitFor(() => expect(roteador.state.location.pathname).toBe('/ativos/a1'));
+  });
+
+  // A prévia segue a fonte da coluna (change ajustes-dos-tokens, design, decisão 6): o número na
+  // fonte da interface, e o identificador na mono.
+  it('na prévia, o número sai da mono, como na coluna, e o IP fica nela', async () => {
+    abrir(`/ativos?visao=fabrica&colunas=ativo.rotulo,${IP},${CUSTO}`, servidorDeAtivos().servidor);
+    await tabela();
+    const m404 = await linhaDe('HP LaserJet M404');
+    m404.focus();
+    fireEvent.keyDown(m404, { key: ' ' });
+    const aberta = await previa('HP LaserJet M404');
+    const valor = (rotulo: string) =>
+      within(aberta).getByText(rotulo, { selector: 'dt' }).nextElementSibling as HTMLElement;
+    expect(valor('Custo').textContent).toBe('R$ 1.500,50');
+    expect(valor('Custo').classList.contains('mono')).toBe(false);
+    expect(valor('IP').classList.contains('mono')).toBe(true);
   });
 
   it('a imagem do ativo vale no lugar da do modelo, e sem ela a do modelo', async () => {

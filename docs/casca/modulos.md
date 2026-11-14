@@ -1930,7 +1930,7 @@ Um ativo pode ter vários valores da mesma métrica, um por item, como cada supr
 
 ```tsx
 // apps/web/src/modulos/ativos/suprimentos.tsx (trecho)
-/** O menor nível na célula: o medidor compacto na tinta, o número em mono, o suprimento e a idade. */
+/** O menor nível na célula: o medidor compacto na tinta, o número, o suprimento e a idade. */
 export function SuprimentosNaCelula({
   menor,
   agora,
@@ -1952,7 +1952,7 @@ export function SuprimentosNaCelula({
               semNumero
             />
           </span>
-          <span className="mono">{`${menor.nivel}%`}</span>
+          <span className="numero">{`${menor.nivel}%`}</span>
         </>
       }
       momento={menor.momento}

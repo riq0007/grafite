@@ -181,7 +181,7 @@ export function DisponibilidadeNaFicha({
           <div>
             <dt>Latência</dt>
             <dd className={estilos.disponibilidade}>
-              <span className="mono">{`${latencia.valor.toLocaleString('pt-BR')} ms`}</span>
+              <span className="numero">{`${latencia.valor.toLocaleString('pt-BR')} ms`}</span>
               {latencia.inconsistente && (
                 <RotuloDeSituacao situacao="atencao">Inconsistente</RotuloDeSituacao>
               )}

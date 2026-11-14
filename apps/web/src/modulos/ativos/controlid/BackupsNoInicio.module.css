@@ -43,9 +43,9 @@
   white-space: nowrap;
 }
 
+/* A contagem dos rostos, na fonte da interface, com os algarismos tabulares. */
 .rostos {
   color: var(--cor-texto-2);
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-variant-numeric: tabular-nums;
 }

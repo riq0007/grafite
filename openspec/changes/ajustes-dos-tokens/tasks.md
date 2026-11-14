@@ -112,23 +112,28 @@
   Verificar: o `pnpm test:stories` passa.
 
   Feito em 14/11: as três histórias reprovaram primeiro pelo número em JetBrains Mono: a nova dos dados, a `Porcentagem` do controle deslizante e a `ComOcorrencias` do "O que resolver agora". As contagens das situações dos Fundamentos também foram para a fonte da interface, e a decisão 6 as cita. A reserva `4ch` do número do medidor cabe o "100%" nos três tamanhos, porque o `ch` da Instrument Sans mede 0,671 em, e a história `ReservaDoNumeroDoMedidor` a guarda.
-- [ ] 4.3 Os módulos. Escrever primeiro os testes:
+- [x] 4.3 Os módulos. Escrever primeiro os testes:
   - **no `colunas.test.ts` do domínio:**
     - o inteiro, o decimal, a moeda e o número coletado com a espécie número e sem a mono. A linha 438, que espera `mono: true` nos suprimentos, passa a esperar a espécie número;
     - a data com a espécie data e sem a mono;
     - o IP, o MAC e o momento ("Cadastrado em" e "Atualizado em") com a mono;
   - **no `TabelaDosAtivos.test.tsx`:** a célula de número sem o `data-mono` e na espécie número, e a de data na espécie data;
-  - **no `Suprimentos.test.tsx` e no `Disponibilidade.test.tsx`:** o nível, as páginas e a latência com a classe `numero`.
+  - **no `Suprimentos.test.tsx`:** o nível e as páginas da célula com a classe `numero`;
+  - **no `FichaDoAtivo.test.tsx`:** a latência e as páginas dos contadores com a classe `numero`. A latência só aparece na ficha: o `Disponibilidade.test.tsx` é o da coluna da tabela, que não a mostra;
+  - **na prévia:** no `PreviaEResumo.test.tsx`, o Custo sem a `mono` e o IP com ela; na história `Pronta` da prévia (`QuickLook.stories.tsx`), um valor de compra na fonte da interface, com os algarismos tabulares.
 
   Ver falharem. Depois (design, decisão 6):
   - a espécie, opcional, na `ColunaDaTabela` do domínio (`visoes.ts:101-123`) e no `Pick` do `colunas.ts:51`. Os literais que montam a coluna sem ela ficam como estão;
   - a espécie no `colunas.ts` (linhas 65 a 68 e 149);
   - a `TabelaDosAtivos` passando a espécie à `<Coluna>`;
+  - os algarismos tabulares no valor dos campos da prévia (`QuickLook.module.css`), porque a prévia do ativo segue a `mono` da coluna;
   - os suprimentos e a latência, e o trecho dos suprimentos no contrato de módulo (`docs/casca/modulos.md:1933` e `:1955`);
   - a leitura do contraste em Ajustes e os rostos dos backups do Control iD;
   - a varredura dos usos da `--fonte-mono` e da classe `mono` que sobraram, conferindo que neles só ficam identificadores, horários e código.
 
   Verificar: o `pnpm test` e o `pnpm typecheck` passam, e a lista dos usos da mono que ficaram vai na mensagem à revisora.
+
+  Feito em 14/11: os testes reprovaram primeiro pela espécie que faltava nas colunas de número e de data, pelo `data-mono` do Custo, pela classe `mono` no nível, nas páginas e na latência e pelo valor da prévia sem os algarismos tabulares. O teste da prévia na web reprova com a moeda de volta na mono. Os contadores de páginas da ficha também foram para a classe `numero`, porque são as páginas do `suprimentos.tsx`. Na varredura, a mono ficou só nos horários, nos identificadores (o número da ordem e da solicitação entre eles), no código, nos logs e nos nomes do painel da operação.
 
 ## 5. Fechamento
 

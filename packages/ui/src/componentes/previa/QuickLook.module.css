@@ -128,10 +128,15 @@
   font-size: var(--texto-dado);
 }
 
+/*
+ * O valor de um campo, com os algarismos tabulares, como a célula da tabela: o número e a data ficam
+ * na fonte da interface, e o identificador, na mono.
+ */
 .valor {
   margin: 0;
   color: var(--cor-texto);
   font-size: var(--texto-corpo);
+  font-variant-numeric: tabular-nums;
 }
 
 .acoes {

@@ -41,8 +41,18 @@ const previa = () => corpo().findByRole('dialog', { name: 'Prévia: HP LaserJet 
 /** A prévia aberta sobre a tela, para a captura de referência. */
 export const Aberta: Historia = { decorators: [comTelaPorTras] };
 
-/** A prévia de um registro: título, tipo, imagem, campos principais, ações e a posição na lista. */
+/**
+ * A prévia de um registro: título, tipo, imagem, campos principais, ações e a posição na lista. O
+ * identificador fica na mono, e o número, na fonte da interface com os algarismos tabulares, como
+ * na tabela (change ajustes-dos-tokens, design, decisão 6).
+ */
 export const Pronta: Historia = {
+  args: {
+    campos: [
+      ...(meta.args?.campos ?? []),
+      { rotulo: 'Valor de compra (exemplo)', valor: 'R$ 1.500,50' },
+    ],
+  },
   play: async () => {
     const dialogo = await previa();
     const tela = within(dialogo);
@@ -58,6 +68,9 @@ export const Pronta: Historia = {
     await expect(getComputedStyle(tela.getByText('Almoxarifado · Jundiaí')).fontFamily).not.toMatch(
       /JetBrains Mono/,
     );
+    const valorDeCompra = getComputedStyle(tela.getByText('R$ 1.500,50'));
+    await expect(valorDeCompra.fontFamily).not.toMatch(/JetBrains Mono/);
+    await expect(valorDeCompra.fontVariantNumeric).toBe('tabular-nums');
     await expect(tela.getByRole('button', { name: 'Abrir' })).toBeInTheDocument();
     await expect(dialogo.querySelector('[data-origem="generica"]')).not.toBeNull();
   },

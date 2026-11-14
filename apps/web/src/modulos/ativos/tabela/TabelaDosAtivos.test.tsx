@@ -78,6 +78,36 @@ describe('a tabela dos ativos', () => {
     expect(pedidos[0]?.get('colunas')).toBe(`ativo.rotulo,${IP},${DONO},${CUSTO},${SENHA}`);
   });
 
+  // A fonte de cada coluna (change ajustes-dos-tokens, design, decisão 6): o número e a data na fonte
+  // da interface, pela espécie da coluna, que lhes dá os algarismos tabulares; o identificador na mono.
+  it('o número e a data nas espécies da tabela, sem a mono, e o patrimônio na mono', async () => {
+    const comCompra = {
+      ...M404,
+      valores: { ...M404.valores, 'ativo.data-de-compra': '2024-03-12' },
+    };
+    abrir(
+      `/ativos?visao=fabrica&colunas=ativo.rotulo,ativo.patrimonio,${CUSTO},ativo.data-de-compra`,
+      servidorDeAtivos(() => lista([comCompra, RH])).servidor,
+    );
+    expect(await cabecalhos()).toEqual([
+      'Imagem',
+      'Ativo',
+      'Patrimônio',
+      'Custo',
+      'Data de compra',
+    ]);
+    const [m404] = await linhas();
+    expect(celula(m404, 2).getAttribute('data-mono')).toBe('');
+    const custo = celula(m404, 3);
+    expect(custo.textContent).toBe('R$ 1.500,50');
+    expect(custo.getAttribute('data-mono')).toBeNull();
+    expect(custo.querySelector('[data-especie]')?.getAttribute('data-especie')).toBe('numero');
+    const compra = celula(m404, 4);
+    expect(compra.textContent).toBe('12/03/2024');
+    expect(compra.getAttribute('data-mono')).toBeNull();
+    expect(compra.querySelector('[data-especie]')?.getAttribute('data-especie')).toBe('data');
+  });
+
   it('o arquivo aparece pelo nome, e a imagem, pela miniatura do tamanho da linha', async () => {
     abrir(
       `/ativos?visao=fabrica&colunas=ativo.rotulo,${NOTA},${FOTO}`,

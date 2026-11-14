@@ -1466,7 +1466,11 @@ describe('a disponibilidade na ficha', () => {
     ).toBe('sucesso');
     expect(naParte.getByText(/^Online desde \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toBeTruthy();
     expect(naParte.getByText('há 1 min')).toBeTruthy();
-    expect(naParte.getByText('3 ms')).toBeTruthy();
+    // A latência é uma quantidade: a fonte da interface, com os algarismos tabulares (change
+    // ajustes-dos-tokens, design, decisão 6).
+    const latencia = naParte.getByText('3 ms');
+    expect(latencia.classList.contains('numero')).toBe(true);
+    expect(latencia.classList.contains('mono')).toBe(false);
     expect(naParte.getByText('Coletor de Jundiaí')).toBeTruthy();
     expect(naParte.queryByText('Desatualizado')).toBeNull();
     expect(resumo('Disponibilidade na rede')).toBe('Online');
@@ -1658,6 +1662,14 @@ describe('os suprimentos na ficha', () => {
     expect(contadores.getByText('Páginas em preto e branco').nextElementSibling?.textContent).toBe(
       '12.500',
     );
+    // As páginas são quantidades: a fonte da interface, com os algarismos tabulares (change
+    // ajustes-dos-tokens, design, decisão 6).
+    const numerosDosContadores = contadores.getAllByText('12.500');
+    expect(numerosDosContadores).toHaveLength(2);
+    for (const numero of numerosDosContadores) {
+      expect(numero.classList.contains('numero')).toBe(true);
+      expect(numero.classList.contains('mono')).toBe(false);
+    }
     expect(bloco(regiao, 'Condições').getByText('Nenhuma condição informada.')).toBeTruthy();
     expect(naParte.queryByText('Desatualizado')).toBeNull();
     expect(resumo('Suprimentos e contadores')).toBe('8% · Black Toner Cartridge');

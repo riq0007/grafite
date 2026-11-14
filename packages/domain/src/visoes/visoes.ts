@@ -110,6 +110,12 @@ export interface ColunaDaTabela {
   /** Se a coluna pode ficar sem valor, com os filtros "Está vazio" e "Está preenchido". */
   podeFicarVazia: boolean;
   alinhamento: 'inicio' | 'fim';
+  /**
+   * O que a coluna mostra, quando não é texto: o número ou a data, na fonte da interface, com os
+   * algarismos tabulares. Sem ela, texto.
+   */
+  especie?: 'numero' | 'data';
+  /** A fonte mono, para os identificadores e o momento com a hora. */
   mono: boolean;
   /** A largura padrão, em pixels. */
   largura: number;

@@ -212,7 +212,8 @@ A mono fica com o que se lê caractere por caractere:
 | Contrato de módulo (`docs/casca/modulos.md`) | a espécie `numero` (:758) e o trecho dos suprimentos (:1933 e :1955) | a fonte da interface com algarismos tabulares, e a classe `numero` no trecho, como no `suprimentos.tsx` |
 | Colunas dos ativos (`colunas.ts`) | o inteiro, o decimal e a moeda (linhas 65 a 67) e o número coletado (linha 149), que faz as colunas dos suprimentos e do total de páginas | a espécie número, sem a mono |
 | Colunas dos ativos (`colunas.ts`) | a data (linha 68) | a espécie data, sem a mono. O momento, "Cadastrado em" e "Atualizado em" (linhas 279 e 280), fica na mono, porque tem a hora |
-| Suprimentos (`suprimentos.tsx`) | o nível e as páginas | a classe `numero` no lugar da `mono` |
+| Prévia do ativo (`PreviaDoAtivo.tsx:63`, no `QuickLook`) | o número e a data, que seguem a `mono` da coluna | a fonte da interface. O valor de todo campo da prévia ganha os algarismos tabulares (`QuickLook.module.css`), como a célula da tabela |
+| Suprimentos (`suprimentos.tsx`) | o nível e as páginas, na célula e nos contadores da ficha | a classe `numero` no lugar da `mono` |
 | Disponibilidade (`disponibilidade.tsx`) | a latência | a classe `numero` no lugar da `mono` |
 | Ajustes, Aparência | a leitura do contraste ("Texto 15,2:1") | Instrument Sans tabular |
 | Backups do Control iD no Início | os rostos | Instrument Sans tabular |
