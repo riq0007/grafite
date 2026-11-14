@@ -127,6 +127,10 @@ describe('a disponibilidade na tabela dos ativos', () => {
     expect(idade.closest('[title]')?.getAttribute('title')).toMatch(
       /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/,
     );
+    // Na fonte da interface, como nos mockups (change ajustes-dos-tokens, design, decisão 6, "A
+    // idade da leitura").
+    expect(idade.classList.contains('numero')).toBe(true);
+    expect(idade.classList.contains('mono')).toBe(false);
   });
 
   it('filtra por "é qualquer de" entre as situações, com quantos ativos cada uma traz', async () => {

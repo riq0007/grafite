@@ -500,7 +500,7 @@ Não existe mudança sem auditoria nem evento perdido.
 
 ### 7.1 Direção visual: A · Grafite
 
-- **Tipografia:** Instrument Sans na interface e JetBrains Mono no que se lê caractere por caractere: os identificadores (IDs, IPs, patrimônios, séries e códigos), os horários, com ou sem a data, e o código. As quantidades (contagens, medidas, percentuais, moeda e os números das tabelas e dos indicadores) e as datas sem hora ficam na Instrument Sans, com algarismos tabulares (change ajustes-dos-tokens). As duas fontes têm licença livre (OFL).
+- **Tipografia:** Instrument Sans na interface e JetBrains Mono no que se lê caractere por caractere: os identificadores (IDs, IPs, patrimônios, séries e códigos), os horários, com ou sem a data, e o código. As quantidades (contagens, medidas, percentuais, moeda e os números das tabelas e dos indicadores), as datas sem hora e a idade da leitura de um valor coletado ficam na Instrument Sans, com algarismos tabulares (change ajustes-dos-tokens). As duas fontes têm licença livre (OFL).
 - **Materiais:**
   - vidro fosco (desfoque + saturação + tinta + borda de 1 px) **só em camadas sobrepostas**: dock, menus, avisos e busca;
   - tabelas e formulários sempre com superfície sólida.

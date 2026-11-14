@@ -34,6 +34,7 @@ Esta change segue o subprojeto D1 · Linguagem visual v3 da spec mestre, nos tok
 - **As quantidades na Instrument Sans:** o numeral e todo número que é quantidade passam da JetBrains Mono para a Instrument Sans, com os algarismos tabulares.
   - Quantidade é contagem, medida, percentual, moeda e os números das tabelas.
   - A data sem hora fica na fonte da interface, com os algarismos tabulares. Na tabela dos ativos, ela sai da mono, como já é nas outras tabelas.
+  - A idade da leitura de um valor coletado, como "há 16 d", também sai da mono, como nos mockups da rodada 3.
   - A mono fica com os identificadores, os horários e o código.
 - **A spec mestre e o ANTISLOP:** passam a dizer as três regras.
   - Na spec mestre: a tipografia (7.1 e A.7), os papéis do tema (A.1) e as situações (A.3).
@@ -50,7 +51,7 @@ Nenhuma.
 - `design-tokens`: muda em três pontos.
   - O contraste verificado ganha o 7:1 do texto secundário sobre a afundada.
   - As situações ganham a fonte da tinta, a tinta de cada situação e a distância dos neutros no plano do croma e, nos temas claros, no OKLab inteiro.
-  - A tipografia põe o numeral e as quantidades na Instrument Sans, com algarismos tabulares, e diz a fonte da data.
+  - A tipografia põe o numeral e as quantidades na Instrument Sans, com algarismos tabulares, e diz a fonte da data e da idade da leitura.
 - `componentes-base`: a espécie número da tabela passa para a fonte da interface, com algarismos tabulares.
 - `cadastro-de-ativos`: os números e as datas da tabela dos ativos saem da mono. Os identificadores e o momento, com a hora, ficam nela.
 
@@ -64,8 +65,8 @@ Nenhuma.
 - **`packages/ui/src`:**
   - o CSS da contagem, do medidor, do cartucho, da tendência, do controle deslizante, da espécie número da tabela e da contagem do "O que resolver agora";
   - o CSS do aviso do ambiente no campo de entrada, do item da barra e da página Fundamentos;
-  - as histórias que conferem a fonte e as amostras de número das histórias das tabelas.
+  - as histórias que conferem a fonte e as amostras de número e de idade das histórias das tabelas.
 - **`packages/domain/src/ativos/colunas.ts`:** a espécie das colunas de inteiro, decimal, moeda, número coletado e data, sem a mono.
-- **`apps/web`:** a espécie das colunas na tabela dos ativos, os números dos suprimentos, a latência da disponibilidade, a leitura do contraste em Ajustes e os rostos dos backups do Control iD.
+- **`apps/web`:** a espécie das colunas na tabela dos ativos, os números dos suprimentos, a idade da leitura, a latência da disponibilidade, a leitura do contraste em Ajustes e os rostos dos backups do Control iD.
 - **A documentação:** `docs/superpowers/specs/2026-09-24-grafite-design.md` e `docs/ANTISLOP.md`.
 - **A regressão visual:** as referências dos temas claros, da informação do Grafite e da Meia-noite, e das telas com números.

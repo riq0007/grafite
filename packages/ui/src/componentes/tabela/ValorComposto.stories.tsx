@@ -15,7 +15,7 @@ type Historia = StoryObj;
 
 const offline = (
   <ValorComposto fixo={<RotuloDeSituacao situacao="critico">Offline</RotuloDeSituacao>}>
-    <time className="mono">há 12 min</time>
+    <time className="numero">há 12 min</time>
   </ValorComposto>
 );
 
@@ -122,7 +122,7 @@ const RESPIRO_DA_CELULA = 24;
 /** A largura de fábrica vale nas três densidades. */
 const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
 
-const idade = <time className="mono">há 59 min</time>;
+const idade = <time className="numero">há 59 min</time>;
 
 /** O lugar do medidor compacto da coluna dos suprimentos, que tem 40 px. */
 const medidor = <span style={{ display: 'inline-block', inlineSize: '40px' }} />;
@@ -183,12 +183,13 @@ export const LargurasQueAColetaPede: Historia = {
         Math.max(...medidas.map((medida) => Math.ceil(medida.getBoundingClientRect().width))) +
         RESPIRO_DA_CELULA;
       // A coluna comporta o conteúdo e o cabeçalho, e a largura acompanha a maior das duas medidas,
-      // sem sobrar mais que 20 px. A mesma fonte mede alguns pixels a menos no Linux: no Windows, em
-      // que as larguras foram medidas, sobram até 9 px; no Linux do CI, até 14, na "Disponibilidade"
-      // e nos "Suprimentos".
+      // sem sobrar 30 px ou mais. A idade foi para a fonte da interface (change ajustes-dos-tokens)
+      // e estreitou o conteúdo, e as larguras de fábrica ficaram: a spec pede ao menos 210 px na
+      // "Disponibilidade". A mesma fonte mede alguns pixels a menos no Linux: no Windows sobram até
+      // 22 px, na "Disponibilidade"; no Linux do CI, até 25, na "Disponibilidade" e nos "Suprimentos".
       const pede = Math.max(conteudo, O_QUE_O_CABECALHO_PEDE[coluna] ?? 0);
       await expect(pede).toBeLessThanOrEqual(largura);
-      await expect(largura - pede).toBeLessThan(20);
+      await expect(largura - pede).toBeLessThan(30);
     }
   },
 };

@@ -48,7 +48,7 @@ O que se lê na tabela:
 
 **Non-Goals:**
 - mudar a afundada, a matiz e o croma das situações, a borda ou o preenchimento forte;
-- tirar da mono os horários: a regra tira as quantidades e as datas sem hora;
+- tirar da mono os horários: a regra tira as quantidades, as datas sem hora e a idade da leitura;
 - mudar os mockups aprovados da rodada 3.
 
 ## Decisions
@@ -215,6 +215,7 @@ A mono fica com o que se lê caractere por caractere:
 | Prévia do ativo (`PreviaDoAtivo.tsx:63`, no `QuickLook`) | o número e a data, que seguem a `mono` da coluna | a fonte da interface. O valor de todo campo da prévia ganha os algarismos tabulares (`QuickLook.module.css`), como a célula da tabela |
 | Suprimentos (`suprimentos.tsx`) | o nível e as páginas, na célula e nos contadores da ficha | a classe `numero` no lugar da `mono` |
 | Disponibilidade (`disponibilidade.tsx`) | a latência | a classe `numero` no lugar da `mono` |
+| Idade da leitura (`IdadeDaLeitura`, em `disponibilidade.tsx`) | a idade da última leitura, como "há 16 d", na disponibilidade, nos suprimentos e no Control iD, na tabela e na ficha | a classe `numero` no lugar da `mono`. Vale o mesmo para as amostras da idade nas histórias das tabelas (`ValorComposto.stories.tsx`, :18 e :125, e `TabelaComColunasEstreitas.stories.tsx`, :56 e :151) e para o contrato de módulo (`docs/casca/modulos.md:1819`) |
 | Ajustes, Aparência | a leitura do contraste ("Texto 15,2:1") | Instrument Sans tabular |
 | Backups do Control iD no Início | os rostos | Instrument Sans tabular |
 
@@ -229,8 +230,26 @@ Cuidados:
   - No `colunas.ts` do domínio, o `Pick` da linha 51 ganha a `especie`;
 - **a célula composta dos suprimentos** passa a ficar dentro do `.conteudoNumero`, que é `display: block` (`Tabela.module.css:252-257`), numa tabela que corta com reticências (:223-226). A tarefa 5.2 confere a coluna estreita.
 
+A idade da leitura entrou nesta decisão em 14/11, na conferência da 5.2, porque o usuário pediu que ela ficasse igual aos mockups. Nos mockups da rodada 3, a idade da leitura de um valor coletado sai sempre na fonte da interface:
+- "toner 8%, lido há 13 d", em r3-03, m11;
+- "Desatualizada · há 13 d", "Lido há 13 dias" e "leitura há 13 dias", em r3-03 e r3-04.
+
+Na fonte da interface, a idade fica mais estreita. Na história "Larguras Que A Coleta Pede", a sobra das larguras de fábrica muda assim:
+- no Windows, sobe de até 9 px para até 22 px;
+- no Linux, sobe de até 14 px para até 25 px.
+
+As larguras ficam como estão, porque a spec pede ao menos 210 px na Disponibilidade, e o limite da sobra sobe de 20 para 30 px. A dos Suprimentos, que a spec não prende, volta a ser medida no ajuste do medidor, a change seguinte, que põe o medidor de verdade na história.
+
+Nesta change, as outras idades no `<time className="mono">` ficam como estão:
+- a do alerta, na tabela e na ficha;
+- a das solicitações e a das ordens, na ficha do ativo;
+- a do "O que resolver agora".
+
+O motivo é que a tela de cada uma é refeita pela change do mockup dela, e é essa change que decide a fonte. Os mockups quase sempre põem essas idades na fonte da interface, como o "Alerta aberto · há 5 min" da ficha (r3-04) e as idades dos chamados (r3-16). A exceção é a lista de reservas (r3-13), que põe na mono a idade de uma coluna de tabela.
+
 Ficam na mono:
-- os horários: o `<time className="mono">`, o relógio da barra e a grade das salas;
+- os horários: o `<time className="mono">` com a hora, como o momento do alerta no histórico e o horário da notificação, o relógio da barra e a grade das salas;
+- as outras idades, no `<time className="mono">`, até a change da tela de cada uma;
 - os identificadores e o código, como na decisão 5;
 - as classes `mono` do painel da operação, que mostram nomes, destinos e endereços;
 - a etapa do carregamento.

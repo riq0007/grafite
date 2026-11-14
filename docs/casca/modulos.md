@@ -1816,7 +1816,7 @@ O evento é gravado na transação da mudança: se ela for desfeita, o evento ta
 
 ## Valores coletados
 
-Um valor que o coletor lê, como a disponibilidade de um ativo na rede, aparece com a situação em texto, com o ícone, nunca só pela cor, e com a idade da última leitura, como "há 2 min", com o momento exato ao parar o mouse. A leitura mais antiga que 3 intervalos da métrica ganha "Desatualizado" ao lado, sem trocar a situação mostrada (specs leituras-e-estado e disponibilidade-de-rede, do P2a).
+Um valor que o coletor lê, como a disponibilidade de um ativo na rede, aparece com a situação em texto, com o ícone, nunca só pela cor, e com a idade da última leitura, como "há 2 min", com o momento exato ao parar o mouse. A idade fica na fonte da interface, com os algarismos tabulares, como as quantidades: o `IdadeDaLeitura` a põe na classe `numero`. A leitura mais antiga que 3 intervalos da métrica ganha "Desatualizado" ao lado, sem trocar a situação mostrada (specs leituras-e-estado e disponibilidade-de-rede, do P2a).
 
 - **A idade anda sozinha:** o `useAgora()` dá o momento de agora, que anda na virada do minuto, como o relógio da barra. Numa tabela, ponha-o nas `dependencias` do `CorpoDaTabela`: as linhas ficam guardadas, e sem isso a idade não anda.
 - **Os dados são relidos:** a consulta que mostra valores coletados relê a cada minuto com a aba visível (`refetchInterval: 60_000`; o TanStack Query não relê com a aba escondida), só quando a tela mostra um valor coletado, como a tabela com a coluna Disponibilidade. O evento da mudança, como o `disponibilidade.mudou`, relê a lista e a ficha na hora. Assim, a idade fica no máximo 1 minuto atrás da última leitura.

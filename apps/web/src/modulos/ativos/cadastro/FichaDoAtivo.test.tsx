@@ -1465,7 +1465,11 @@ describe('a disponibilidade na ficha', () => {
       naParte.getByText('Online').closest('[data-situacao]')?.getAttribute('data-situacao'),
     ).toBe('sucesso');
     expect(naParte.getByText(/^Online desde \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toBeTruthy();
-    expect(naParte.getByText('há 1 min')).toBeTruthy();
+    // A idade da leitura, na fonte da interface, como nos mockups (change ajustes-dos-tokens,
+    // design, decisão 6, "A idade da leitura").
+    const idadeDaLeitura = naParte.getByText('há 1 min');
+    expect(idadeDaLeitura.classList.contains('numero')).toBe(true);
+    expect(idadeDaLeitura.classList.contains('mono')).toBe(false);
     // A latência é uma quantidade: a fonte da interface, com os algarismos tabulares (change
     // ajustes-dos-tokens, design, decisão 6).
     const latencia = naParte.getByText('3 ms');

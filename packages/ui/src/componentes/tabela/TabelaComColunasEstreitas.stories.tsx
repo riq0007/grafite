@@ -53,7 +53,7 @@ function TabelaEstreita({ virtualizada }: { virtualizada: boolean }) {
               <Celula>
                 <span className={estilos.queQuebra} data-composto>
                   <RotuloDeSituacao situacao="critico">Offline</RotuloDeSituacao>
-                  <time className="mono">há 12 min</time>
+                  <time className="numero">há 12 min</time>
                   <RotuloDeSituacao situacao="atencao">Desatualizado</RotuloDeSituacao>
                 </span>
               </Celula>
@@ -148,7 +148,7 @@ function TabelaNaDivisao() {
                 <ValorComposto
                   fixo={<RotuloDeSituacao situacao="critico">Offline</RotuloDeSituacao>}
                 >
-                  <time className="mono">há 12 min</time>
+                  <time className="numero">há 12 min</time>
                 </ValorComposto>
               </Celula>
             </Linha>

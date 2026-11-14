@@ -135,6 +135,38 @@
 
   Feito em 14/11: os testes reprovaram primeiro pela espécie que faltava nas colunas de número e de data, pelo `data-mono` do Custo, pela classe `mono` no nível, nas páginas e na latência e pelo valor da prévia sem os algarismos tabulares. O teste da prévia na web reprova com a moeda de volta na mono. Os contadores de páginas da ficha também foram para a classe `numero`, porque são as páginas do `suprimentos.tsx`. Na varredura, a mono ficou só nos horários, nos identificadores (o número da ordem e da solicitação entre eles), no código, nos logs e nos nomes do painel da operação.
 
+- [x] 4.4 A idade da leitura, pedida pelo usuário na 5.2 (design, decisão 6, "A idade da leitura"). Antes do código, pôr a regra na spec mestre e no ANTISLOP. Escrever primeiro os testes:
+  - **no `Suprimentos.test.tsx`:** a idade da célula do nível e a da célula das páginas com a classe `numero` e sem a `mono`;
+  - **no `Disponibilidade.test.tsx`:** a idade da coluna, no teste do momento exato, com a classe `numero` e sem a `mono`;
+  - **no `FichaDoAtivo.test.tsx`:** a idade da disponibilidade na ficha, com a classe `numero` e sem a `mono`.
+
+  Ver falharem. Depois:
+  - o `IdadeDaLeitura` (`disponibilidade.tsx:52`) com a classe `numero` no lugar da `mono`;
+  - a idade das amostras das histórias das tabelas (`ValorComposto.stories.tsx`, :18 e :125, e `TabelaComColunasEstreitas.stories.tsx`, :56 e :151);
+  - na história "Larguras Que A Coleta Pede", o limite e o comentário da sobra, com as medidas novas. A idade na fonte da interface estreita o conteúdo, e as larguras de fábrica ficam, porque a spec pede ao menos 210 px na Disponibilidade;
+  - a idade na fonte da interface no contrato de módulo (`docs/casca/modulos.md:1819`);
+  - as referências da regressão visual que mudam, pelo método da 5.1: a detecção com o `threshold: 0` só no config local, e o `--atualizar` só nas capturas que mudaram;
+  - na nota da 5.2, a idade na fonte da interface desde esta tarefa.
+
+  Verificar:
+  - o `pnpm test`, o `pnpm test:stories`, o `pnpm typecheck` e a regressão visual passam;
+  - no `pnpm dev`, a fonte calculada da idade, na célula dos suprimentos e na ficha da impressora, é a Instrument Sans, com os algarismos tabulares, na captura da 5.2 refeita.
+
+  Feito em 14/11:
+  - **os testes:** os três reprovaram primeiro, porque a idade tinha a `mono` e não a `numero`;
+  - **as histórias:** com a idade na fonte da interface, a "Larguras Que A Coleta Pede" reprovou, com 22 px de sobra para um limite de 20.
+    - A sobra foi medida no catálogo compilado, pelo roteiro `.grafite/revisao/medir-larguras-da-coleta.mjs`.
+    - No Windows, ela é de 22 px na Disponibilidade, 17 no Control iD e 17 nos Suprimentos.
+    - No Linux do contêiner do Playwright, ela é de 25, 19 e 25.
+    - As Páginas seguem o cabeçalho, com 4.
+    - O limite passou a 30 px, e as larguras ficaram;
+  - **a regressão visual:** nenhuma referência mudou.
+    - O `IdadeDaLeitura` é da web, fora do catálogo.
+    - Das histórias com a amostra da idade, só a "Valor composto › Na Coluna Estreita" é capturada, e nela a idade fica cortada pelas reticências.
+    - A detecção com o `threshold: 0` só reprovou o que não é da tarefa: as histórias instáveis do hover, 21 pixels de antisserrilhado e as capturas que o servidor do catálogo, sem memória no contêiner, não chegou a servir.
+    - A verificação com o config do repositório passou nas 779;
+  - **no `pnpm dev`, pelo roteiro `.grafite/revisao/conferir-4.4.mjs`:** a idade está na Instrument Sans, com os algarismos tabulares, nas duas células da tabela ("há 16 d") e nas três idades do cartão dos suprimentos da ficha da impressora ("há 1 min" e "há 16 d").
+
 ## 5. Fechamento
 
 - [x] 5.1 Regravar as referências da regressão visual que mudaram (design, riscos):
@@ -174,7 +206,7 @@
   - **o secundário sobre o campo, no texto de exemplo da busca:**
     - Papel 7,02:1, Névoa 7,01:1, Alto contraste 8,28:1, Grafite 7,67:1 e Meia-noite 7,69:1;
     - no Personalizado com o contraste 0, 7,07:1 no claro e 7,05:1 no escuro;
-  - **as fontes:** o valor de compra, a data de compra, o total de páginas e o nível dos suprimentos estão na Instrument Sans, com os algarismos tabulares. A idade da leitura, o `<time>` ao lado do nível, está na mono, como os horários na spec;
+  - **as fontes:** o valor de compra, a data de compra, o total de páginas e o nível dos suprimentos estão na Instrument Sans, com os algarismos tabulares. A idade da leitura, o `<time>` ao lado do nível, estava na mono, como os horários na spec. O usuário a pediu igual aos mockups, e ela foi para a fonte da interface na 4.4;
   - **a coluna dos suprimentos:** na largura mínima, de 340 px, o resto termina em reticências, numa linha só;
   - **os rótulos:**
     - o "Em manutenção" fica ao lado do "Em estoque", e o "Em uso" e o "Inativo" saem na tabela nos sete temas;

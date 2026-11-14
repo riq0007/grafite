@@ -43,13 +43,16 @@ function SituacaoNaTela({ disponibilidade }: { disponibilidade: Disponibilidade 
   );
 }
 
-/** A idade da leitura, como "há 2 min", com o momento exato ao parar o mouse. */
+/**
+ * A idade da leitura, como "há 2 min", com o momento exato ao parar o mouse. Fica na fonte da
+ * interface, com os algarismos tabulares, como nos mockups (spec design-tokens).
+ */
 export function IdadeDaLeitura({ momento, agora }: { momento: string; agora: Date }) {
   const { formatarDataEHora } = useDataHora();
   const data = new Date(momento);
   const idade = idadeRelativa(data, agora);
   return (
-    <time className="mono" dateTime={momento} title={formatarDataEHora(data)}>
+    <time className="numero" dateTime={momento} title={formatarDataEHora(data)}>
       {idade === 'agora' ? 'agora' : `há ${idade}`}
     </time>
   );

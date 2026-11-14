@@ -104,12 +104,16 @@ describe('os suprimentos na tabela dos ativos', () => {
     const medidor = nivel.getByRole('meter', { name: 'Menor nível: Black Toner Cartridge' });
     expect(medidor.getAttribute('aria-valuetext')).toBe('8%');
     expect(medidor.closest('[data-tinta]')?.getAttribute('data-tinta')).toBe('preto');
-    expect(nivel.getByText('há 3 min')).toBeTruthy();
+    // A idade da leitura, na fonte da interface, como nos mockups (change ajustes-dos-tokens,
+    // design, decisão 6, "A idade da leitura").
+    expect(nivel.getByText('há 3 min').classList.contains('numero')).toBe(true);
+    expect(nivel.getByText('há 3 min').classList.contains('mono')).toBe(false);
     expect(nivel.queryByText('Desatualizado')).toBeNull();
     const total = within(celula(m404, 3));
     expect(total.getByText('12.500').classList.contains('numero')).toBe(true);
     expect(total.getByText('12.500').classList.contains('mono')).toBe(false);
-    expect(total.getByText('há 3 min')).toBeTruthy();
+    expect(total.getByText('há 3 min').classList.contains('numero')).toBe(true);
+    expect(total.getByText('há 3 min').classList.contains('mono')).toBe(false);
 
     expect(celula(rh, 2).textContent).toBe('—');
     expect(celula(rh, 3).textContent).toBe('—');

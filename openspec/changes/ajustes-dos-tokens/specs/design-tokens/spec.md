@@ -88,7 +88,7 @@ A interface SHALL usar Instrument Sans e JetBrains Mono, servidas pela própria 
 | Título grande | 26 px |
 | Numeral, o número de instrumento | 28 px, na Instrument Sans, com algarismos tabulares |
 
-As quantidades SHALL usar a Instrument Sans com algarismos tabulares, com ou sem vírgula: as contagens, as medidas, os percentuais, os valores em moeda e os números das tabelas, dos medidores e dos indicadores. As datas sem hora SHALL usar a fonte da interface com algarismos tabulares. Os identificadores (patrimônio, série, IP, MAC e códigos), os horários, com ou sem a data, e o código SHALL usar a fonte monoespaçada.
+As quantidades SHALL usar a Instrument Sans com algarismos tabulares, com ou sem vírgula: as contagens, as medidas, os percentuais, os valores em moeda e os números das tabelas, dos medidores e dos indicadores. As datas sem hora e a idade da leitura de um valor coletado, como "há 2 min", SHALL usar a fonte da interface com algarismos tabulares. Os identificadores (patrimônio, série, IP, MAC e códigos), os horários, com ou sem a data, e o código SHALL usar a fonte monoespaçada.
 
 #### Scenario: Servidor sem internet
 - **WHEN** a aplicação roda num servidor sem acesso à internet
@@ -113,3 +113,7 @@ As quantidades SHALL usar a Instrument Sans com algarismos tabulares, com ou sem
 #### Scenario: Data e horário
 - **WHEN** uma tela mostra a data de compra "12/03/2024" e a última coleta "14/11/2026 14:30"
 - **THEN** a data usa a fonte da interface com algarismos tabulares, e a última coleta, com a hora, usa a fonte monoespaçada
+
+#### Scenario: Idade da leitura
+- **WHEN** a célula dos suprimentos mostra o nível "8%" e a idade da leitura "há 16 d"
+- **THEN** os dois usam a fonte da interface com algarismos tabulares
