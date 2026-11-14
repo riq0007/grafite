@@ -137,17 +137,19 @@
 
 ## 5. Fechamento
 
-- [ ] 5.1 Regravar as referências da regressão visual que mudaram. Antes, apagar (design, riscos):
-  - as das histórias nos temas claros;
-  - as do Grafite e da Meia-noite que mostram a situação de informação;
-  - nos temas escuros, as das histórias com números que a 4.1 e a 4.2 levaram à Instrument Sans.
+- [x] 5.1 Regravar as referências da regressão visual que mudaram (design, riscos):
+  - **a detecção:** uma rodada do `pnpm test:visual` com o `threshold: 0` no `toHaveScreenshot`, só no `playwright.config.ts` local e desfeito depois. Ela reprova qualquer pixel diferente e deixa a imagem de diferença de cada captura que mudou;
+  - **conferir as imagens de diferença:**
+    - nos temas claros, o texto secundário e o fundo das situações;
+    - no Grafite, o fundo da informação. Nos outros temas escuros, nenhuma captura a mostra: as histórias saem só no Grafite e na Névoa, e a página-matriz, a única captura dos outros temas, não tem o rótulo dela;
+    - em todos os temas, os números na Instrument Sans;
+    - e nenhuma mudança fora dessas;
+  - **regravar:** o `--atualizar` com o mesmo `threshold: 0`, que regrava só as capturas da detecção;
+  - **a informação na matriz:** a página-matriz ganha o rótulo de informação, "Em trânsito", ao lado das outras situações, e as 18 capturas dela são regravadas. A da Meia-noite mostra a informação nova, e daqui para a frente a regressão cobre a informação nos seis temas.
 
-  Conferir as imagens de diferença:
-  - nos temas claros, o texto secundário e o fundo das situações;
-  - no Grafite e na Meia-noite, o fundo da informação;
-  - em todos os temas, os números na Instrument Sans.
+  Verificar: com o `playwright.config.ts` de volta ao do repositório, o `pnpm test:visual` passa.
 
-  Verificar: o `pnpm test:visual` passa.
+  Feito em 14/11: a detecção reprovou 394 das 779 capturas. Na Névoa (311), o secundário e os fundos das situações; no Grafite (71, com a matriz), os números na Instrument Sans e o fundo da informação; nas matrizes, as situações e o secundário nos temas claros e o valor do controle deslizante nos escuros. Duas histórias com play são instáveis: o `visual.spec.ts` não espera o play acabar, e o `userEvent.click` do fim dele deixa o hover no que clica, então a captura sai antes ou depois do clique. A "Linha da visão › Do Link" do Grafite, em 1366 e 2560, tem o botão com e sem o fundo e passa na tolerância padrão: as duas referências dela ficaram as do repositório. A "Opções do bloco › Última Caixa Marcada" do Grafite, em 1920 e 2560, tem a caixa do Toner com a borda de repouso na gravação e a do hover na verificação, e reprovou nela: as duas referências ficaram as capturas da verificação, depois do clique, como a de 1366. Foram regravadas 392. Com o `playwright.config.ts` de volta ao do repositório, a verificação seguinte passou nas 779 capturas. Na revisão, a página-matriz ganhou o rótulo "Em trânsito", da informação: o `--atualizar` regravou só as 18 capturas dela, com a mesma altura, e a verificação seguinte passou nas 779.
 - [ ] 5.2 Conferir no `pnpm dev`, com a conta de revisão:
   - **no Papel e na Névoa:**
     - o texto de exemplo de um campo;

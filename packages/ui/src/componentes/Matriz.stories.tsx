@@ -116,6 +116,7 @@ export const Matriz: StoryObj = {
       <Secao titulo="Situações e progresso">
         <div style={linha}>
           <RotuloDeSituacao situacao="sucesso">Em uso</RotuloDeSituacao>
+          <RotuloDeSituacao situacao="info">Em trânsito</RotuloDeSituacao>
           <RotuloDeSituacao situacao="atencao">Em manutenção</RotuloDeSituacao>
           <RotuloDeSituacao situacao="critico">Sem sinal</RotuloDeSituacao>
           <RotuloDeSituacao situacao="neutra">Em estoque</RotuloDeSituacao>
