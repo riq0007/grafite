@@ -150,7 +150,7 @@
   Verificar: com o `playwright.config.ts` de volta ao do repositório, o `pnpm test:visual` passa.
 
   Feito em 14/11: a detecção reprovou 394 das 779 capturas. Na Névoa (311), o secundário e os fundos das situações; no Grafite (71, com a matriz), os números na Instrument Sans e o fundo da informação; nas matrizes, as situações e o secundário nos temas claros e o valor do controle deslizante nos escuros. Duas histórias com play são instáveis: o `visual.spec.ts` não espera o play acabar, e o `userEvent.click` do fim dele deixa o hover no que clica, então a captura sai antes ou depois do clique. A "Linha da visão › Do Link" do Grafite, em 1366 e 2560, tem o botão com e sem o fundo e passa na tolerância padrão: as duas referências dela ficaram as do repositório. A "Opções do bloco › Última Caixa Marcada" do Grafite, em 1920 e 2560, tem a caixa do Toner com a borda de repouso na gravação e a do hover na verificação, e reprovou nela: as duas referências ficaram as capturas da verificação, depois do clique, como a de 1366. Foram regravadas 392. Com o `playwright.config.ts` de volta ao do repositório, a verificação seguinte passou nas 779 capturas. Na revisão, a página-matriz ganhou o rótulo "Em trânsito", da informação: o `--atualizar` regravou só as 18 capturas dela, com a mesma altura, e a verificação seguinte passou nas 779.
-- [ ] 5.2 Conferir no `pnpm dev`, com a conta de revisão:
+- [x] 5.2 Conferir no `pnpm dev`, com a conta de revisão:
   - **no Papel e na Névoa:**
     - o texto de exemplo de um campo;
     - um rótulo de atenção ao lado de um rótulo neutro;
@@ -166,6 +166,27 @@
   - a fonte calculada (`getComputedStyle`) de uma célula dos suprimentos e da coluna de número é a Instrument Sans, com os algarismos tabulares, e a da data também;
   - a coluna estreita dos suprimentos termina em reticências, sem quebrar a célula;
   - as capturas das telas.
+
+  Feito em 14/11, pelo roteiro `.grafite/revisao/conferir-ajustes-dos-tokens.mjs`:
+  - **o método:**
+    - o tema muda pelas preferências da conta de revisão, e o roteiro devolve o original no fim;
+    - o ativo em manutenção e em estoque, a data e o valor de compra e o ambiente de teste, que o banco de desenvolvimento não tem, vêm de respostas simuladas da API, só no navegador da conferência;
+  - **o secundário sobre o campo, no texto de exemplo da busca:**
+    - Papel 7,02:1, Névoa 7,01:1, Alto contraste 8,28:1, Grafite 7,67:1 e Meia-noite 7,69:1;
+    - no Personalizado com o contraste 0, 7,07:1 no claro e 7,05:1 no escuro;
+  - **as fontes:** o valor de compra, a data de compra, o total de páginas e o nível dos suprimentos estão na Instrument Sans, com os algarismos tabulares. A idade da leitura, o `<time>` ao lado do nível, está na mono, como os horários na spec;
+  - **a coluna dos suprimentos:** na largura mínima, de 340 px, o resto termina em reticências, numa linha só;
+  - **os rótulos:**
+    - o "Em manutenção" fica ao lado do "Em estoque", e o "Em uso" e o "Inativo" saem na tabela nos sete temas;
+    - no Alto contraste, o crítico e a informação ficam com a página-matriz da 5.1, porque a tabela não os tem;
+  - **o aviso do ambiente:**
+    - no campo de entrada, fica a 0,030 do fundo da janela no croma do OKLab no Papel, a 0,035 na Névoa e a 0,031 no Alto contraste;
+    - o texto dele tem 4,5:1 ou mais;
+    - o item da barra sai no fundo da atenção;
+  - **o indicador:** a contagem "8,1 h" do tempo até reconhecer o Crítico está na Instrument Sans;
+  - **no Grafite e na Meia-noite:** no tema, só o `--cor-info-fundo` muda, de 15% para 17% e 24%, e a página serve o valor novo. A `--tinta-rotulo` saiu da raiz na 3.3.
+
+  Fora desta change: na coluna dos suprimentos, o medidor compacto cobre o número do menor nível. A régua do medidor tem 64 px de mínimo, dentro da caixa de 40 px da célula, desde antes da change.
 - [ ] 5.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
