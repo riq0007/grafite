@@ -33,7 +33,7 @@
 
 ## 3. As situações longe dos neutros
 
-- [ ] 3.1 Escrever primeiro os testes da `distancia` e da `distanciaNoCroma`, no `oklch.test.ts`:
+- [x] 3.1 Escrever primeiro os testes da `distancia` e da `distanciaNoCroma`, no `oklch.test.ts`:
   - 0 entre uma cor e ela mesma, nas duas;
   - entre o preto e o branco, perto de 1 na `distancia` e 0 na `distanciaNoCroma`;
   - 0 entre dois cinzas de luminosidades diferentes na `distanciaNoCroma`, porque só o croma conta;
@@ -41,7 +41,7 @@
 
   Ver falharem, porque as funções não existem. Depois, escrever as duas no `oklch.ts` (design, decisão 2).
 
-  Verificar: o `pnpm --filter @grafite/ui test` passa.
+  Verificar: o `pnpm --filter @grafite/ui test` passa. Feito em 14/11: os quatro falharam porque as funções não existiam. O comentário das duas diz que elas recebem o hexadecimal de seis dígitos, com o translúcido já composto pelo `compor`, porque o `rgba()` daria NaN calado na busca da 3.2.
 - [ ] 3.2 Escrever primeiro os testes da tinta:
   - **no `gerador-dados.test.ts`:**
     - **a varredura de 433 entradas** passa a ser a mesma do `gerador.test.ts`, num módulo comum dos testes (`varredura.ts`), no lugar das 97 de hoje;

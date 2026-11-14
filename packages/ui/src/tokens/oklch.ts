@@ -67,7 +67,8 @@ export function oklchParaHex(cor: Oklch): string {
   return `#${paraRgbLinear(noGamute(cor)).map(doisDigitos).join('')}`;
 }
 
-export function paraOklch(hex: string): Oklch {
+/** A cor em OKLab: a luminosidade e os dois eixos do plano do croma. */
+function paraOklab(hex: string): { l: number; a: number; b: number } {
   const texto = hex.replace('#', '');
   const canal = (inicio: number) =>
     decodificar(Number.parseInt(texto.slice(inicio, inicio + 2), 16) / 255);
@@ -77,9 +78,35 @@ export function paraOklch(hex: string): Oklch {
   const l1 = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m1 = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
   const s1 = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-  const l = 0.2104542553 * l1 + 0.793617785 * m1 - 0.0040720468 * s1;
-  const a = 1.9779984951 * l1 - 2.428592205 * m1 + 0.4505937099 * s1;
-  const bb = 0.0259040371 * l1 + 0.7827717662 * m1 - 0.808675766 * s1;
-  const h = (Math.atan2(bb, a) * 180) / Math.PI;
-  return { l, c: Math.hypot(a, bb), h: h < 0 ? h + 360 : h };
+  return {
+    l: 0.2104542553 * l1 + 0.793617785 * m1 - 0.0040720468 * s1,
+    a: 1.9779984951 * l1 - 2.428592205 * m1 + 0.4505937099 * s1,
+    b: 0.0259040371 * l1 + 0.7827717662 * m1 - 0.808675766 * s1,
+  };
+}
+
+export function paraOklch(hex: string): Oklch {
+  const { l, a, b } = paraOklab(hex);
+  const h = (Math.atan2(b, a) * 180) / Math.PI;
+  return { l, c: Math.hypot(a, b), h: h < 0 ? h + 360 : h };
+}
+
+/**
+ * A distância euclidiana entre duas cores no OKLab inteiro, com a luminosidade e o croma. Recebe o
+ * hexadecimal de seis dígitos; o translúcido entra já composto, pelo `compor`.
+ */
+export function distancia(x: string, y: string): number {
+  const p = paraOklab(x);
+  const q = paraOklab(y);
+  return Math.hypot(p.l - q.l, p.a - q.a, p.b - q.b);
+}
+
+/**
+ * A distância no plano do croma do OKLab, só com o a e o b: o tom, sem a luminosidade. Recebe o
+ * hexadecimal de seis dígitos; o translúcido entra já composto, pelo `compor`.
+ */
+export function distanciaNoCroma(x: string, y: string): number {
+  const p = paraOklab(x);
+  const q = paraOklab(y);
+  return Math.hypot(p.a - q.a, p.b - q.b);
 }

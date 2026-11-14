@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { dentroDoGamute, oklchParaHex, paraOklch } from './oklch.ts';
+import { dentroDoGamute, distancia, distanciaNoCroma, oklchParaHex, paraOklch } from './oklch.ts';
+
+describe('distancia e distanciaNoCroma', () => {
+  it('são 0 entre uma cor e ela mesma', () => {
+    expect(distancia('#d0901e', '#d0901e')).toBe(0);
+    expect(distanciaNoCroma('#d0901e', '#d0901e')).toBe(0);
+  });
+
+  it('entre o preto e o branco, a distância é a luminosidade inteira, e no croma, nenhuma', () => {
+    expect(distancia('#000000', '#ffffff')).toBeCloseTo(1, 3);
+    expect(distanciaNoCroma('#000000', '#ffffff')).toBeCloseTo(0, 3);
+  });
+
+  it('no croma, dois cinzas de luminosidades diferentes ficam a 0', () => {
+    expect(distanciaNoCroma('#333333', '#cccccc')).toBeCloseTo(0, 3);
+    expect(distancia('#333333', '#cccccc')).toBeGreaterThan(0.4);
+  });
+
+  it('duas matizes opostas na mesma luminosidade ficam a duas vezes o croma, nas duas', () => {
+    const rosa = oklchParaHex({ l: 0.7, c: 0.1, h: 0 });
+    const verde = oklchParaHex({ l: 0.7, c: 0.1, h: 180 });
+    expect(distanciaNoCroma(rosa, verde)).toBeCloseTo(0.2, 2);
+    expect(distancia(rosa, verde)).toBeCloseTo(0.2, 2);
+  });
+});
 
 describe('oklchParaHex', () => {
   it('o branco e o preto', () => {
