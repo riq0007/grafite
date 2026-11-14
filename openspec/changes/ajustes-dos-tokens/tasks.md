@@ -1,6 +1,6 @@
 ## 1. A spec mestre e o ANTISLOP
 
-- [ ] 1.1 Antes do código, pôr as três regras na spec mestre e no ANTISLOP (design, decisões 1 a 6).
+- [x] 1.1 Antes do código, pôr as três regras na spec mestre e no ANTISLOP (design, decisões 1 a 6).
   - Na spec mestre:
     - a tipografia da 7.1, com a data sem hora na fonte da interface e os horários na mono;
     - o mínimo do `texto-2` no A.1: 7:1 sobre a `superficie-afundada`;
@@ -11,7 +11,7 @@
     - a tipografia: a mono só nos identificadores, nos horários e no código, e o numeral, as quantidades e as datas sem hora na Instrument Sans;
     - a linha da afundada na tabela da elevação: o texto secundário com 7:1 sobre ela.
 
-  Verificar: o `git grep -n -e "números de tabela" -e "em JetBrains Mono" -e "a cor a 15%" -e "sutil\*\*, a 15%"` nos dois arquivos não acha nada.
+  Verificar: o `git grep -n -e "números de tabela" -e "em JetBrains Mono" -e "a cor a 15%" -e "sutil\*\*, a 15%"` nos dois arquivos não acha nada. Feito em 14/11: o `git grep` não acha nada, e a borda ficou dita como a cor do texto a 40%, porque o fundo passa a sair de outra cor.
 
 ## 2. O texto secundário sobre a afundada
 
@@ -91,6 +91,7 @@
   Ver falhar. Depois (design, decisões 5 e 6):
   - o CSS da espécie número;
   - os comentários do `Tabela.tsx` (:764 e :1085), do `Tabela.module.css` (:248-250) e do `TabelaConfiguravel.stories.tsx` (:267);
+  - a espécie `numero` no contrato de módulo (`docs/casca/modulos.md:758`);
   - as amostras de número das histórias das tabelas: `ValorComposto.stories.tsx` (:23, :147 e :155), `TabelaComResumo.stories.tsx` (:118, :502 e :515), `TabelaComColunasEstreitas.stories.tsx` (:62) e `TabelaConfiguravel.stories.tsx` (:109).
 
   Verificar: o `pnpm test:stories` passa.
@@ -113,7 +114,7 @@
   - a espécie, opcional, na `ColunaDaTabela` do domínio (`visoes.ts:101-123`) e no `Pick` do `colunas.ts:51`. Os literais que montam a coluna sem ela ficam como estão;
   - a espécie no `colunas.ts` (linhas 65 a 68 e 149);
   - a `TabelaDosAtivos` passando a espécie à `<Coluna>`;
-  - os suprimentos e a latência;
+  - os suprimentos e a latência, e o trecho dos suprimentos no contrato de módulo (`docs/casca/modulos.md:1933` e `:1955`);
   - a leitura do contraste em Ajustes e os rostos dos backups do Control iD;
   - a varredura dos usos da `--fonte-mono` e da classe `mono` que sobraram, conferindo que neles só ficam identificadores, horários e código.
 

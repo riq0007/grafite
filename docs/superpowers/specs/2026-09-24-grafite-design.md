@@ -500,7 +500,7 @@ Não existe mudança sem auditoria nem evento perdido.
 
 ### 7.1 Direção visual: A · Grafite
 
-- **Tipografia:** Instrument Sans na interface e JetBrains Mono em IDs, IPs, patrimônios, horários e números de tabela. Números de KPI usam algarismos tabulares. As duas fontes têm licença livre (OFL).
+- **Tipografia:** Instrument Sans na interface e JetBrains Mono no que se lê caractere por caractere: os identificadores (IDs, IPs, patrimônios, séries e códigos), os horários, com ou sem a data, e o código. As quantidades (contagens, medidas, percentuais, moeda e os números das tabelas e dos indicadores) e as datas sem hora ficam na Instrument Sans, com algarismos tabulares (change ajustes-dos-tokens). As duas fontes têm licença livre (OFL).
 - **Materiais:**
   - vidro fosco (desfoque + saturação + tinta + borda de 1 px) **só em camadas sobrepostas**: dock, menus, avisos e busca;
   - tabelas e formulários sempre com superfície sólida.
@@ -1045,7 +1045,7 @@ Os papéis de cada tema:
 | `superficie-elevada` | blocos sobre o conteúdo, com a `sombra-elevada` | — |
 | `material-solido` e `material` | a superfície sobreposta, sólida e translúcida, com a `sombra-sobreposta` | — |
 | `texto` | o texto principal | 7:1 sobre a `superficie-2` |
-| `texto-2` | o texto secundário | 4,5:1 sobre a `superficie-2` com a camada de pressionado |
+| `texto-2` | o texto secundário | 4,5:1 sobre a `superficie-2` com a camada de pressionado, e 7:1 sobre a `superficie-afundada`, onde fica o texto de exemplo dos campos |
 | `borda-controle` | a borda de campos, checkbox e interruptor | 3:1 sobre a `superficie-2` |
 | `linha` e `linha-forte` | as linhas finas | — |
 | `zebra`, `miniatura`, `veu` e `barra` | a linha alternada, o fundo da miniatura, o véu dos diálogos e a barra superior | — |
@@ -1081,10 +1081,13 @@ Cada destaque sai da matiz e do croma e é gerado para cada tema:
 
 - **As quatro cores de cada situação**, geradas por tema:
   - `{situação}`: o texto e o ícone, com 4,5:1 sobre a `superficie-2` e sobre o próprio fundo;
-  - `{situação}-fundo`: a cor a 15%;
-  - `{situação}-borda`: a cor a 40%;
+  - `{situação}-fundo`: o fundo sutil, separado dos neutros pelo tom (change ajustes-dos-tokens):
+    - a cor da situação na luminosidade 0,7 nos temas claros e 0,8 nos escuros, com o croma e a matiz dela;
+    - na menor tinta inteira, de 15% a 30%, que o leva a pelo menos 0,02 dos neutros no plano do croma do OKLab e, nos temas claros, também a pelo menos 0,03 deles no OKLab inteiro. Sem nenhuma, a tinta é de 30%;
+    - os neutros: o `fundo`, a `superficie-afundada`, a `superficie`, a `superficie-2` e o fundo do rótulo neutro sobre a `superficie` e sobre a `superficie-2`, contra o fundo sutil composto sobre a `superficie` e sobre a `superficie-2`;
+  - `{situação}-borda`: o `{situação}`, a cor do texto, a 40%;
   - `{situação}-forte` e `sobre-{situação}`: o preenchimento e o texto sobre ele, com 4,5:1.
-- **Neutra:** `neutro` usa o `texto-2`.
+- **Neutra:** `neutro` usa o `texto-2`, e o fundo do rótulo neutro é o `texto-2` a 10%.
 - **Séries de dados:** `serie-1` a `serie-8`, com as matizes 258, 55, 175, 340, 125, 25, 210 e 85, de luminosidade parecida e com 3:1 contra a `superficie`.
 - **Tintas dos suprimentos:**
   - `tinta-ciano` (matiz 220), `tinta-magenta` (350) e `tinta-amarelo` (95);
@@ -1135,7 +1138,7 @@ As curvas são `padrao`, `saida`, `mola` e `mola-suave`, definidas em `escalas.t
 ### A.7 Outros
 
 - **Espaços:** 4, 8, 12, 16, 20, 24, 32, 40 e 48 px (`esp-1` a `esp-12`).
-- **Tipografia:** Instrument Sans e JetBrains Mono, auto-hospedadas. Tamanhos de 11 a 28 px (legenda, rótulo, dado, corpo, subtítulo, título, título grande e o numeral, em JetBrains Mono), pesos 400, 500 e 600.
+- **Tipografia:** Instrument Sans e JetBrains Mono, auto-hospedadas. Tamanhos de 11 a 28 px (legenda, rótulo, dado, corpo, subtítulo, título, título grande e o numeral, na Instrument Sans com algarismos tabulares), pesos 400, 500 e 600.
 - **Opacidade do desabilitado:** 0,45. A WCAG isenta controles desabilitados de contraste.
 
 ---

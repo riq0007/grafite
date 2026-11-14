@@ -492,11 +492,15 @@ Cores podem acompanhar o status, mas não devem substituí-lo.
 
 Cada situação (ok, atenção, crítico, informação e neutro) tem quatro cores geradas por tema:
 - **o texto e o ícone**, com 4,5:1;
-- **o fundo sutil**, a 15%;
-- **a borda**, a 40%;
+- **o fundo sutil**, nas quatro situações, na cor da situação, com a menor tinta, de 15% a 30%, que o separa dos neutros pelo tom: a pelo menos 0,02 deles no plano do croma do OKLab e, nos temas claros, a pelo menos 0,03 no OKLab inteiro;
+- **a borda**, na cor do texto, a 40%;
 - **o preenchimento**, com o texto sobre ele.
 
+O neutro usa o texto secundário, com o fundo a 10%.
+
 O rótulo de situação é um selo: o texto em maiúsculas, o ícone próprio de cada situação, o fundo sutil e a borda. O preenchimento forte fica para o que precisa chamar a atenção de longe, como a contagem de críticos.
+
+Um bloco de situação ao lado de um bloco neutro se distingue pelo tom, e não só por ser mais escuro, e o texto e a borda seguem dizendo a situação. Nos temas claros, o fundo sutil sai de uma cor média da situação, que colore a superfície sem só escurecê-la; nos escuros, da cor clara, perto da do texto. Quando o tom não basta, como num tema personalizado com a base perto da matiz da situação, a borda e o texto dizem a situação.
 
 ---
 
@@ -529,7 +533,8 @@ ERP deve priorizar legibilidade e densidade.
 No Grafite (v2):
 
 - **Instrument Sans** na interface;
-- **JetBrains Mono** em identificadores (patrimônio, série, IP, MAC), horários e números de tabela;
+- **JetBrains Mono** só no que se lê caractere por caractere: os identificadores (patrimônio, série, IP, MAC e códigos), os horários, com ou sem a data, e o código, como o log e o comando (v3);
+- **as quantidades** (contagens, medidas, percentuais, moeda e os números das tabelas, dos medidores e dos indicadores), com ou sem vírgula, e as datas sem hora na Instrument Sans, com algarismos tabulares (v3);
 - algarismos tabulares em qualquer número que se compara em coluna;
 - fontes servidas pelo próprio sistema.
 
@@ -537,10 +542,12 @@ Dois papéis entram na escala (v3):
 
 | Papel | Medida | Para quê |
 |---|---|---|
-| **Numeral** | 28 px, em JetBrains Mono, com o peso forte e algarismos tabulares | o número de instrumento: o nível de um medidor, a contagem de um indicador |
+| **Numeral** | 28 px, na Instrument Sans, com o peso forte e algarismos tabulares | o número de instrumento: o nível de um medidor, a contagem de um indicador |
 | **Legenda** | 11 px, em texto secundário | as marcas das escalas e as notas dos gráficos; é o menor texto da interface |
 
 A unidade vem sempre junto do número, em texto secundário, como em "38 %" ou "412 rostos".
+
+Na Instrument Sans, a vírgula tem menos da metade da largura de um algarismo, e o "99,1%" se lê inteiro. Na mono, ela ocupa uma casa, e o número parece aberto em três pedaços.
 
 ---
 
@@ -593,7 +600,7 @@ A elevação tem quatro superfícies. Cada uma tem a sua sombra, com uma camada 
 
 | Superfície | Para quê | Sombra |
 |---|---|---|
-| Afundada | poços, como a trilha de um medidor, a faixa de filtros e o campo de busca | nenhuma |
+| Afundada | poços, como a trilha de um medidor, a faixa de filtros e o campo de busca. O texto secundário tem 7:1 sobre ela, para o texto de exemplo dos campos | nenhuma |
 | Padrão | o conteúdo da janela | nenhuma |
 | Elevada | blocos sobre o conteúdo, como os do Início e as fichas | curta |
 | Sobreposta | menus, popovers, avisos, diálogos e a busca | a do material |
