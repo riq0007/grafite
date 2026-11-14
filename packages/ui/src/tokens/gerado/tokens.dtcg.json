@@ -1760,13 +1760,6 @@
     }
   },
   "tinta": {
-    "rotulo": {
-      "$type": "number",
-      "$value": 0.15,
-      "$extensions": {
-        "grafite.css": "--tinta-rotulo"
-      }
-    },
     "rotulo-neutro": {
       "$type": "number",
       "$value": 0.1,

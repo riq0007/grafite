@@ -203,10 +203,13 @@ describe('gerarCss', () => {
     expect(bloco(css, ':root')['--sombra-cursor']).toBe('0 1px 3px rgba(0, 0, 0, 0.35)');
   });
 
-  it('o fundo tingido do rótulo de situação tem intensidade própria, mais leve no neutro', () => {
+  it('a raiz traz só a tinta do rótulo neutro: a das situações fica no fundo de cada uma', () => {
     const raiz = bloco(css, ':root');
-    expect(raiz['--tinta-rotulo']).toBe('15%');
+    expect(raiz['--tinta-rotulo']).toBeUndefined();
     expect(raiz['--tinta-rotulo-neutro']).toBe('10%');
+    expect(Object.keys(gerarDtcg().tinta)).toEqual(['rotulo-neutro']);
+    expect(gerarVariaveis()).not.toContain('--tinta-rotulo');
+    expect(gerarVariaveis()).toContain('--tinta-rotulo-neutro');
   });
 
   it('o fundo sutil da atenção do Papel sai da cor da situação em 0,7, a 26%', () => {

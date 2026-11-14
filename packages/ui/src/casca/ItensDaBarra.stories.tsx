@@ -1,5 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { corDoToken } from '../teste/corDoToken.ts';
 import { BuscaGlobal } from './BuscaGlobal.tsx';
 import { AvisoDoAmbienteDeTeste, BotaoDeBusca, SinoDeNotificacoes } from './ItensDaBarra.tsx';
 
@@ -160,6 +161,9 @@ export const SinoNoTablet: StoryObj<typeof SinoDeNotificacoes> = {
  * depender da cor, entre os itens que continuam à vista no celular.
  */
 export const AmbienteDeTeste: StoryObj<typeof AvisoDoAmbienteDeTeste> = {
+  // No Papel, o fundo da atenção não é a cor do texto dela a 15%: a história confere que o item
+  // usa o fundo do tema (change ajustes-dos-tokens, design, decisão 4).
+  globals: { tema: 'papel' },
   render: () => <AvisoDoAmbienteDeTeste />,
   play: async ({ canvasElement }) => {
     const aviso = within(canvasElement).getByText('Ambiente de teste');
@@ -167,6 +171,9 @@ export const AmbienteDeTeste: StoryObj<typeof AvisoDoAmbienteDeTeste> = {
     const item = aviso.closest('[data-essencial]');
     await expect(item).not.toBeNull();
     await expect(item?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    await expect(getComputedStyle(item as HTMLElement).backgroundColor).toBe(
+      corDoToken('--cor-atencao-fundo'),
+    );
   },
 };
 

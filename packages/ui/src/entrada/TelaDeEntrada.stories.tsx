@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, fn, type Mock, userEvent, waitFor, within } from 'storybook/test';
+import { corDoToken } from '../teste/corDoToken.ts';
 import { comTelaPorTras } from '../teste/tela.tsx';
 import { EnderecoDesconhecido } from './EnderecoDesconhecido.tsx';
 import {
@@ -51,6 +52,9 @@ export const Credenciais: Historia = {
 
 /** No ambiente de teste, o aviso vem acima do formulário: o ícone, o texto e a frase. */
 export const NoAmbienteDeTeste: Historia = {
+  // No Papel, o fundo da atenção não é a cor do texto dela a 15%: a história confere que o aviso
+  // usa o fundo do tema (change ajustes-dos-tokens, design, decisão 4).
+  globals: { tema: 'papel' },
   decorators: [comTelaPorTras],
   render: function Render() {
     return (
@@ -73,6 +77,11 @@ export const NoAmbienteDeTeste: Historia = {
       aviso.compareDocumentPosition(usuario) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect(usuario).toHaveFocus();
+    // O fundo do aviso é o da atenção, composto sobre a superfície.
+    const fundo = corDoToken('--cor-atencao-fundo');
+    const caixa = getComputedStyle(aviso.parentElement as HTMLElement);
+    await expect(caixa.backgroundImage).toBe(`linear-gradient(${fundo}, ${fundo})`);
+    await expect(caixa.backgroundColor).toBe(corDoToken('--cor-superficie'));
   },
 };
 

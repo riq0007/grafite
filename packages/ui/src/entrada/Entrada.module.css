@@ -36,8 +36,9 @@
 }
 
 /*
- * O aviso do ambiente de teste (spec tela-de-entrada), acima do formulário: o tom de atenção
- * tingido sobre a superfície, com o ícone, o texto e a frase.
+ * O aviso do ambiente de teste (spec tela-de-entrada), acima do formulário: o fundo da atenção
+ * composto sobre a superfície, que deixa o aviso opaco sobre o fundo da janela (change
+ * ajustes-dos-tokens, design, decisão 4), com o ícone, o texto e a frase.
  */
 .ambiente {
   display: grid;
@@ -46,11 +47,8 @@
   box-sizing: border-box;
   padding: var(--esp-3) var(--esp-4);
   border-radius: var(--raio-controle);
-  background-color: color-mix(
-    in srgb,
-    var(--cor-atencao) var(--tinta-rotulo),
-    var(--cor-superficie)
-  );
+  background-color: var(--cor-superficie);
+  background-image: linear-gradient(var(--cor-atencao-fundo), var(--cor-atencao-fundo));
 }
 
 .ambienteTitulo {

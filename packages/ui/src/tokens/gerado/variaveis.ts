@@ -29,7 +29,6 @@ export const variaveis = [
   '--largura-formulario',
   '--raio-base',
   '--opacidade-desabilitado',
-  '--tinta-rotulo',
   '--tinta-rotulo-neutro',
   '--raio-janela',
   '--raio-controle',

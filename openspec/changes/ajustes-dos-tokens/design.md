@@ -162,10 +162,10 @@ Alternativas consideradas:
 A tinta passa a ser de cada situação, em cada tema. Por isso, saem a `--tinta-rotulo` da raiz e o token `rotulo` do DTCG.
 
 Os dois usos da variável passam ao token do tema, com a mesma conta da mistura de hoje no sRGB:
-- **o aviso do ambiente** (`Entrada.module.css`), que compunha a atenção sobre a superfície, passa a `linear-gradient(var(--cor-atencao-fundo), var(--cor-atencao-fundo)), var(--cor-superficie)`;
+- **o aviso do ambiente** (`Entrada.module.css`), que compunha a atenção sobre a superfície, passa a `background-color: var(--cor-superficie)` e `background-image: linear-gradient(var(--cor-atencao-fundo), var(--cor-atencao-fundo))`, nas propriedades longas, porque a imagem calculada do atalho `background:` traz o `none` da última camada, e a história do aviso compara a imagem com o gradiente;
 - **o item da barra** (`ItensDaBarra.module.css`), que compunha sobre o transparente, passa a `var(--cor-atencao-fundo)`.
 
-Os pares do contraste dos rótulos (`contraste-pares.ts:223-235`) passam a ler o fundo gerado de cada situação, e não a constante.
+Os pares do contraste dos rótulos (no `PARES` do `contraste-pares.ts`) passam a ler o fundo gerado de cada situação, e não a constante.
 
 A `TINTA_DO_ROTULO` do `escalas.ts` dá lugar às constantes da regra:
 - a `TINTA_DA_SITUACAO`, de 15% a 30%, para a busca;

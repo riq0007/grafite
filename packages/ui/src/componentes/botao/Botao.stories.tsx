@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Download, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { corDoToken } from '../../teste/corDoToken.ts';
 import { Botao } from './Botao.tsx';
 
 const meta: Meta<typeof Botao> = {
@@ -22,19 +23,6 @@ type Historia = StoryObj<typeof Botao>;
 const linha = { display: 'flex', gap: 'var(--esp-2)', alignItems: 'center' } as const;
 
 export const Padrao: Historia = {};
-
-/**
- * Cor computada de um token, para comparar com o estilo aplicado. Mexe no DOM: calcule
- * antes do waitFor, nunca dentro dele (o waitFor reage a mutações e entraria em laço).
- */
-function corDoToken(token: string): string {
-  const amostra = document.createElement('span');
-  amostra.style.backgroundColor = `var(${token})`;
-  document.body.append(amostra);
-  const cor = getComputedStyle(amostra).backgroundColor;
-  amostra.remove();
-  return cor;
-}
 
 /** Hover e pressionado usam os tokens de estado (o contraste deles é verificado). */
 export const HoverEPressionado: Historia = {

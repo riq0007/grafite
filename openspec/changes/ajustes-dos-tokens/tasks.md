@@ -56,7 +56,7 @@
       - a cor do texto das situações igual à de hoje;
       - nos temas escuros, os fundos de 15% iguais aos de hoje;
       - o fundo sutil composto sobre a superfície elevada a 0,02 ou mais dela e da superfície 2 no plano do croma, e o texto com 4,5:1 sobre ele (design, decisão 2);
-  - **no `contraste-pares.test.ts`:** os pares dos rótulos (`contraste-pares.ts:223-235`) medidos sobre o fundo gerado de cada situação, e não sobre a constante;
+  - **no `contraste-pares.test.ts`:** os pares dos rótulos (no `PARES` do `contraste-pares.ts`) medidos sobre o fundo gerado de cada situação, e não sobre a constante;
   - **no `gerar.test.ts`:** o `--cor-atencao-fundo` do Papel com a fonte em 0,7 a 26%, `rgba(208, 144, 30, 0.26)`.
 
   Ver falharem pela atenção do Papel (0,004), pela informação da Meia-noite (0,013) e pelo fundo, que ainda é a cor do texto a 15%.
@@ -74,7 +74,7 @@
   - nos temas escuros de fábrica, só o `--cor-info-fundo` do Grafite e da Meia-noite muda no `gerado/`, e a `--tinta-rotulo` continua com 15%.
 
   Feito em 14/11: os testes reprovaram primeiro 368 casos, as entradas claras da varredura pela fonte e as escuras pela distância a 15%. A varredura comum ficou em `packages/ui/src/teste/varredura.ts`, com os utilitários de teste do pacote. O cenário da base na matiz do crítico ganhou um teste próprio: nenhuma tinta até 30% leva o crítico a 0,02 no croma, e ele fica no teto. O menor rótulo do relatório tem 5,05:1.
-- [ ] 3.3 Escrever primeiro os testes do fundo pelo token:
+- [x] 3.3 Escrever primeiro os testes do fundo pelo token:
   - **no `gerar.test.ts`:** a `--tinta-rotulo` fora da raiz e do DTCG, e a `--tinta-rotulo-neutro` ainda neles. O primeiro falha, porque o `gerar.ts` ainda emite a variável;
   - **nas histórias, no tema Papel:** o `NoAmbienteDeTeste` do `TelaDeEntrada.stories.tsx` e o `AmbienteDeTeste` do `ItensDaBarra.stories.tsx` conferem que o fundo calculado do aviso e do item vem do `--cor-atencao-fundo`. Eles falham, porque o CSS ainda mistura a cor do texto com a `--tinta-rotulo`.
 
@@ -87,6 +87,8 @@
   - o `pnpm --filter @grafite/ui test`, o `pnpm tokens:verificar` e o `pnpm test:stories` passam;
   - o `git grep -n "var(--tinta-rotulo)"` não acha nada;
   - no Storybook, no tema Papel, o aviso do ambiente e o item da barra têm o mesmo fundo do rótulo de atenção, e o aviso se distingue do fundo da janela.
+
+  Feito em 14/11: os testes reprovaram primeiro pela `--tinta-rotulo` ainda na raiz, pelo item da barra com a cor do texto a 15% e pelo aviso sem a imagem de fundo. O aviso do ambiente usa as duas propriedades longas (design, decisão 4). O `corDoToken` das histórias ficou em `packages/ui/src/teste/corDoToken.ts`, e o Dock, o Botão, a tela de entrada e os itens da barra o importam. O `git grep` só acha a própria linha desta verificação.
 
 ## 4. As quantidades na Instrument Sans
 

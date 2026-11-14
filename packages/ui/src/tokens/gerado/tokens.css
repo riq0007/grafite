@@ -29,7 +29,6 @@
   --largura-formulario: 960px;
   --raio-base: 10px;
   --opacidade-desabilitado: 0.45;
-  --tinta-rotulo: 15%;
   --tinta-rotulo-neutro: 10%;
   --raio-janela: calc(var(--raio-base) * 1);
   --raio-controle: min(calc(var(--raio-base) * 0.58), calc(var(--altura-controle) / 2 - 1px));

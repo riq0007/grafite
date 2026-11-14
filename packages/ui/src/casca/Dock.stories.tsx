@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { LayoutGrid } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { Botao } from '../componentes/botao/Botao.tsx';
+import { corDoToken } from '../teste/corDoToken.ts';
 import { Dock } from './Dock.tsx';
 import { AJUSTES_DE_EXEMPLO, MODULOS_DE_EXEMPLO, TelaDeExemplo } from './exemplos.tsx';
 import type { ModuloDaCasca } from './tipos.ts';
@@ -125,16 +126,6 @@ export const SeparadorAntesDeAjustes: Historia = {
     ).toBeTruthy();
   },
 };
-
-/** Cor computada de um token, para comparar com o estilo aplicado. */
-function corDoToken(token: string): string {
-  const amostra = document.createElement('span');
-  amostra.style.backgroundColor = `var(${token})`;
-  document.body.append(amostra);
-  const cor = getComputedStyle(amostra).backgroundColor;
-  amostra.remove();
-  return cor;
-}
 
 /**
  * Com a transparência reduzida, o dock fica com a superfície sólida, sem desfoque. O desfoque do

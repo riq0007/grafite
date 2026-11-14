@@ -30,8 +30,8 @@
 }
 
 /*
- * O aviso do ambiente de teste: o tom de atenção tingido, como o rótulo de situação, com o ícone e
- * o texto, numa linha só.
+ * O aviso do ambiente de teste: o fundo da atenção, o mesmo do rótulo de situação, com o ícone e o
+ * texto, numa linha só.
  */
 .ambiente {
   display: inline-flex;
@@ -41,7 +41,7 @@
   padding: calc(var(--esp-1) / 2) var(--esp-2);
   border-radius: var(--raio-rotulo);
   color: var(--cor-atencao);
-  background-color: color-mix(in srgb, var(--cor-atencao) var(--tinta-rotulo), transparent);
+  background-color: var(--cor-atencao-fundo);
   font-size: var(--texto-rotulo);
   font-weight: var(--peso-forte);
   line-height: var(--entrelinha-justa);
