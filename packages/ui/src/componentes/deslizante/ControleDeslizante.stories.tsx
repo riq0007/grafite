@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
+import { fonteDoToken } from '../../teste/fonteDoToken.ts';
 import { lapisDoContraste, trilhaDasMatizes } from '../../tokens/personalizado.ts';
 import { ControleDeslizante } from './ControleDeslizante.tsx';
 
@@ -86,7 +87,10 @@ export const PeloTeclado: Historia = {
   },
 };
 
-/** O porcentual segue a escrita do pt-BR: "95%", sem espaço. */
+/**
+ * O porcentual segue a escrita do pt-BR: "95%", sem espaço, na fonte da interface, com os algarismos
+ * tabulares (change ajustes-dos-tokens, design, decisão 6).
+ */
 export const Porcentagem: Historia = {
   render: () => (
     <div style={coluna}>
@@ -102,7 +106,10 @@ export const Porcentagem: Historia = {
   play: async ({ canvasElement }) => {
     const controle = within(canvasElement).getByRole('slider', { name: 'Suavização' });
     await expect(controle).toHaveAttribute('aria-valuetext', '95%');
-    await expect(within(canvasElement).getByText('95%')).toBeInTheDocument();
+    const valor = within(canvasElement).getByText('95%');
+    await expect(valor).toBeInTheDocument();
+    await expect(getComputedStyle(valor).fontFamily).toBe(fonteDoToken('--fonte-interface'));
+    await expect(getComputedStyle(valor).fontVariantNumeric).toBe('tabular-nums');
   },
 };
 

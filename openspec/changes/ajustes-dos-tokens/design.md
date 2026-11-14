@@ -206,7 +206,7 @@ A mono fica com o que se lê caractere por caractere:
 | Controle deslizante | o valor | Instrument Sans tabular |
 | Tabela, espécie número | o valor | Instrument Sans tabular |
 | "O que resolver agora" | a contagem do título | Instrument Sans tabular |
-| Página Fundamentos | a amostra do numeral e os níveis das tintas | Instrument Sans tabular |
+| Página Fundamentos | a amostra do numeral, os níveis das tintas e as contagens das situações | Instrument Sans tabular |
 | Histórias das tabelas | as amostras das células dos suprimentos: `ValorComposto.stories.tsx` (:23, :147 e :155), `TabelaComResumo.stories.tsx` (:118, :502 e :515), `TabelaComColunasEstreitas.stories.tsx` (:62) e `TabelaConfiguravel.stories.tsx` (:109) | sem a mono |
 | Comentários | os que dizem que o número fica na mono: `Tabela.tsx` (:764 e :1085), `Tabela.module.css` (:248-250) e `TabelaConfiguravel.stories.tsx` (:267) | a fonte da interface |
 | Contrato de módulo (`docs/casca/modulos.md`) | a espécie `numero` (:758) e o trecho dos suprimentos (:1933 e :1955) | a fonte da interface com algarismos tabulares, e a classe `numero` no trecho, como no `suprimentos.tsx` |

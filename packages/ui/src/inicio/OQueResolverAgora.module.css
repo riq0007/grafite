@@ -2,9 +2,9 @@
 .contagem {
   margin-left: var(--esp-2);
   color: var(--cor-texto-2);
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-weight: var(--peso-normal);
+  font-variant-numeric: tabular-nums;
 }
 
 .ocorrencias {

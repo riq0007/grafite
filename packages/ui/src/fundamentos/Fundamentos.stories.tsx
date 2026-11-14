@@ -198,7 +198,7 @@ export const Dados: Historia = {
                   }
                 />
               </div>
-              <span className={estilos.numero}>{nivel} %</span>
+              <span className={estilos.numero}>{nivel}%</span>
             </div>
           ))}
         </div>
@@ -235,7 +235,7 @@ export const Tipografia: Historia = {
           <div className={estilos.linhaDaEscala}>
             <span className={estilos.variavel}>Numeral · --texto-numeral</span>
             <span
-              className={estilos.mono}
+              className={estilos.numeral}
               style={{ fontSize: 'var(--texto-numeral)', fontWeight: 'var(--peso-forte)' }}
             >
               38<span className={estilos.unidade}>%</span>

@@ -2,6 +2,8 @@
 // são de exemplo, como diz cada história.
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { CSSProperties, ReactNode } from 'react';
+import { expect, within } from 'storybook/test';
+import { fonteDoToken } from '../../teste/fonteDoToken.ts';
 import { type IdDaTinta, NOMES_DAS_TINTAS } from '../../tokens/gerador.ts';
 import { Cartucho } from './Cartucho.tsx';
 import { Contagem } from './Contagem.tsx';
@@ -192,4 +194,106 @@ export const ContagemDeExemplo: Historia = {
       <Contagem rotulo="Páginas" valor={12500} variacao={{ valor: 0, desde: 'ontem' }} />
     </div>
   ),
+};
+
+/**
+ * Os números dos instrumentos na fonte da interface, com os algarismos tabulares (change
+ * ajustes-dos-tokens, design, decisões 5 e 6). Na contagem de "99,1%", a vírgula tem menos da
+ * metade da largura de um algarismo; a placa do cartucho, com a letra da tinta, segue na mono.
+ * Exemplos.
+ */
+export const NumerosNaFonteDaInterface: Historia = {
+  name: 'Números na fonte da interface',
+  render: () => (
+    <div style={coluna}>
+      <Contagem rotulo="Disponibilidade" valor={99.1} unidade="%" />
+      <Contagem rotulo="Rostos" valor={398} unidade="rostos" capacidade={3000} />
+      <Medidor rotulo="Toner preto" valor={38} tinta="preto" />
+      <div style={linha}>
+        <Cartucho nome="Ciano" tinta="ciano" nivel={{ tipo: 'medido', percentual: 62 }} />
+      </div>
+      <Tendencia
+        rotulo="Rostos"
+        pontos={rostos}
+        unidade="rostos"
+        periodo="30 dias"
+        tinta="serie-1"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await document.fonts.ready;
+    const daInterface = fonteDoToken('--fonte-interface');
+    const mono = fonteDoToken('--fonte-mono');
+    /** O nó de texto que é só o número dado. */
+    const numero = (texto: string): Text => {
+      const andar = document.createTreeWalker(canvasElement, NodeFilter.SHOW_TEXT);
+      for (let no = andar.nextNode(); no; no = andar.nextNode()) {
+        if (no.textContent === texto) return no as Text;
+      }
+      throw new Error(`O número "${texto}" não está na história.`);
+    };
+    const estiloDe = (no: Text) => getComputedStyle(no.parentElement as HTMLElement);
+    /** A largura do caractere na posição dada do nó de texto. */
+    const larguraDe = (no: Text, posicao: number) => {
+      const trecho = document.createRange();
+      trecho.setStart(no, posicao);
+      trecho.setEnd(no, posicao + 1);
+      return trecho.getBoundingClientRect().width;
+    };
+
+    // Percentual com vírgula: o "99,1" da contagem, com a vírgula mais estreita que meio algarismo.
+    const contagem = numero('99,1');
+    await expect(estiloDe(contagem).fontFamily).toBe(daInterface);
+    await expect(estiloDe(contagem).fontVariantNumeric).toBe('tabular-nums');
+    await expect(larguraDe(contagem, 2)).toBeLessThan(larguraDe(contagem, 0) / 2);
+
+    // A capacidade da contagem, o número do medidor, o nível do cartucho e o último valor da
+    // tendência.
+    for (const texto of ['de 3.000', '38', '62%', '412']) {
+      await expect(estiloDe(numero(texto)).fontFamily).toBe(daInterface);
+      await expect(estiloDe(numero(texto)).fontVariantNumeric).toBe('tabular-nums');
+    }
+
+    // A placa do cartucho, com a letra da tinta, segue na mono.
+    const placa = canvasElement.querySelector<HTMLElement>('[data-parte="placa"]');
+    await expect(placa).not.toBeNull();
+    await expect(getComputedStyle(placa as HTMLElement).fontFamily).toBe(mono);
+  },
+};
+
+const TAMANHOS_DO_MEDIDOR = ['compacto', 'normal', 'grande'] as const;
+
+/**
+ * A reserva do número do medidor (`min-width: 4ch`) cabe o "100%" na fonte da interface, nos três
+ * tamanhos: a régua do 100% tem a largura da do 38%, e as réguas empilhadas acabam juntas. O `ch`
+ * da Instrument Sans mede o "0" sem os algarismos tabulares, mais largo que eles. Exemplos.
+ */
+export const ReservaDoNumeroDoMedidor: Historia = {
+  name: 'Reserva do número do medidor',
+  render: () => (
+    <div style={coluna}>
+      {TAMANHOS_DO_MEDIDOR.flatMap((tamanho) =>
+        [100, 38].map((valor) => (
+          <Medidor
+            key={`${tamanho}-${valor}`}
+            rotulo={`Toner a ${valor}%, ${tamanho}`}
+            valor={valor}
+            tinta="preto"
+            tamanho={tamanho}
+          />
+        )),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await document.fonts.ready;
+    const regua = (valor: number, tamanho: string) =>
+      within(canvasElement)
+        .getByRole('meter', { name: `Toner a ${valor}%, ${tamanho}` })
+        .getBoundingClientRect().width;
+    for (const tamanho of TAMANHOS_DO_MEDIDOR) {
+      await expect(regua(100, tamanho)).toBeCloseTo(regua(38, tamanho), 1);
+    }
+  },
 };

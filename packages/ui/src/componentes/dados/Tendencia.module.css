@@ -1,4 +1,7 @@
-/* A tendência: a linha curta na tinta, o último valor em mono e o período ao lado. */
+/*
+ * A tendência: a linha curta na tinta, o último valor na fonte da interface, com os algarismos
+ * tabulares, e o período ao lado.
+ */
 .tendencia {
   display: inline-flex;
   align-items: center;
@@ -31,7 +34,6 @@
 }
 
 .valor {
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-weight: var(--peso-forte);
   font-variant-numeric: tabular-nums;

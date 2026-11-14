@@ -1,4 +1,8 @@
-/* A contagem: o rótulo, o número de instrumento, a capacidade e a variação, de cima para baixo. */
+/*
+ * A contagem: o rótulo, o número de instrumento, a capacidade e a variação, de cima para baixo. O
+ * número e a capacidade ficam na fonte da interface, com os algarismos tabulares (change
+ * ajustes-dos-tokens, design, decisão 5).
+ */
 .contagem {
   display: grid;
   gap: var(--esp-1);
@@ -21,7 +25,6 @@
 }
 
 .numero {
-  font-family: var(--fonte-mono);
   font-size: var(--texto-numeral);
   font-weight: var(--peso-forte);
   font-variant-numeric: tabular-nums;
@@ -35,7 +38,6 @@
 }
 
 .capacidade {
-  font-family: var(--fonte-mono);
   font-variant-numeric: tabular-nums;
 }
 

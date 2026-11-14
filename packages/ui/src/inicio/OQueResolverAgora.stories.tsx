@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { fonteDoToken } from '../teste/fonteDoToken.ts';
 import { OQueResolverAgora, type PropsDoOQueResolverAgora } from './OQueResolverAgora.tsx';
 import type {
   FonteDeOcorrenciasNaTela,
@@ -106,12 +107,16 @@ const textosDaColuna = (tela: HTMLElement, coluna: number) =>
 
 /**
  * As ocorrências abertas dos módulos, na ordem de fábrica: a severidade e, dentro dela, a mais
- * antiga primeiro. O título diz quantas estão abertas.
+ * antiga primeiro. O título diz quantas estão abertas, na fonte da interface, com os algarismos
+ * tabulares.
  */
 export const ComOcorrencias: Historia = {
   tags: ['captura'],
   play: async ({ canvasElement }) => {
     await expect(titulo(canvasElement)).toHaveTextContent('O que resolver agora 4 abertas');
+    const contagem = within(titulo(canvasElement)).getByText('4 abertas');
+    await expect(getComputedStyle(contagem).fontFamily).toBe(fonteDoToken('--fonte-interface'));
+    await expect(getComputedStyle(contagem).fontVariantNumeric).toBe('tabular-nums');
     const colunas = within(canvasElement)
       .getAllByRole('columnheader')
       .map((coluna) => coluna.textContent);

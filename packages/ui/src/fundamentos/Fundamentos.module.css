@@ -157,7 +157,6 @@
 .forte {
   padding: 2px var(--esp-2);
   border-radius: var(--raio-rotulo);
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-weight: var(--peso-forte);
   font-variant-numeric: tabular-nums;
@@ -252,7 +251,6 @@
 }
 
 .numero {
-  font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -273,8 +271,8 @@
   border-bottom: 1px solid var(--cor-linha);
 }
 
-.mono {
-  font-family: var(--fonte-mono);
+/* O numeral na fonte da interface, com os algarismos tabulares (change ajustes-dos-tokens). */
+.numeral {
   font-variant-numeric: tabular-nums;
 }
 

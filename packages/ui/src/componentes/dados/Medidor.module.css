@@ -65,7 +65,6 @@
 .numero {
   flex: none;
   min-width: 4ch;
-  font-family: var(--fonte-mono);
   font-size: var(--texto-subtitulo);
   font-weight: var(--peso-forte);
   font-variant-numeric: tabular-nums;

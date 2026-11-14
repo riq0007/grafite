@@ -66,8 +66,8 @@
   text-align: center;
 }
 
+/* O nível na fonte da interface, com os algarismos tabulares; a letra da placa fica na mono. */
 .numero {
-  font-family: var(--fonte-mono);
   font-size: var(--texto-subtitulo);
   font-weight: var(--peso-forte);
   font-variant-numeric: tabular-nums;

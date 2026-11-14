@@ -103,13 +103,15 @@
   Verificar: o `pnpm test:stories` passa.
 
   Feito em 14/11: as duas histórias que conferem a fonte, a `EspeciesDasColunas` e a `NumerosADireita`, reprovaram primeiro pelo número em JetBrains Mono. O `.conteudoNumero` herda a fonte da célula, para a `mono` dada na célula seguir valendo sobre a espécie. As amostras usam a classe `numero` do `base.css`, e o `fonteDoToken` das histórias ficou em `packages/ui/src/teste/fonteDoToken.ts`.
-- [ ] 4.2 Os dados. Escrever primeiro as histórias que conferem a fonte:
+- [x] 4.2 Os dados. Escrever primeiro as histórias que conferem a fonte:
   - uma contagem de "99,1%" em que a vírgula tem menos da metade da largura de um algarismo;
   - o número do medidor, do cartucho, da tendência e do controle deslizante na fonte da interface.
 
   Ver falharem. Depois, o CSS da contagem, do medidor, do cartucho, da tendência, do controle deslizante, da contagem do "O que resolver agora" e da página Fundamentos (design, decisões 5 e 6).
 
   Verificar: o `pnpm test:stories` passa.
+
+  Feito em 14/11: as três histórias reprovaram primeiro pelo número em JetBrains Mono: a nova dos dados, a `Porcentagem` do controle deslizante e a `ComOcorrencias` do "O que resolver agora". As contagens das situações dos Fundamentos também foram para a fonte da interface, e a decisão 6 as cita. A reserva `4ch` do número do medidor cabe o "100%" nos três tamanhos, porque o `ch` da Instrument Sans mede 0,671 em, e a história `ReservaDoNumeroDoMedidor` a guarda.
 - [ ] 4.3 Os módulos. Escrever primeiro os testes:
   - **no `colunas.test.ts` do domínio:**
     - o inteiro, o decimal, a moeda e o número coletado com a espécie número e sem a mono. A linha 438, que espera `mono: true` nos suprimentos, passa a esperar a espécie número;
