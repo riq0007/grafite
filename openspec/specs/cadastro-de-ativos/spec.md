@@ -280,8 +280,8 @@ A tabela dos ativos SHALL oferecer as colunas:
 
 Cada coluna SHALL mostrar o valor como a ficha o mostra:
 - a pessoa, o local e o ativo pelo nome atual, e um ativo que a conta não pode ver como "Ativo fora do seu acesso";
-- os identificadores (patrimônio, série, hostname, IP e MAC) e os números na fonte monoespaçada, com os números alinhados à direita e com algarismos tabulares;
-- as datas em dd/mm/aaaa, e "Cadastrado em" e "Atualizado em" com a hora, no fuso escolhido;
+- os identificadores (patrimônio, série, hostname, IP e MAC) na fonte monoespaçada, e os números (inteiro, decimal e moeda) na fonte da interface, alinhados à direita e com algarismos tabulares;
+- as datas em dd/mm/aaaa, na fonte da interface e com algarismos tabulares, e "Cadastrado em" e "Atualizado em" com a hora, na fonte monoespaçada, no fuso escolhido;
 - o arquivo pelo nome, e a imagem pela miniatura, no tamanho da miniatura da linha;
 - a disponibilidade pela situação, com o ícone e o texto, e a idade da última leitura, com "Desatualizado" quando for o caso (spec leituras-e-estado). Num ativo de um tipo sem a capacidade, ou inativo, a coluna fica vazia;
 - Suprimentos pelo menor nível medido entre os suprimentos da impressora, em percentual, com o suprimento ao lado, e Total de páginas pelo último total lido, cada um com a idade da leitura e "Desatualizado" quando for o caso. Sem nível medido nem total, ou num ativo de um tipo sem a capacidade, ou inativo, a coluna fica vazia;
@@ -316,6 +316,14 @@ A coluna de um campo restrito SHALL ser oferecida só a quem tem `ativos.restrit
 #### Scenario: Coluna dos suprimentos
 - **WHEN** a PAT-00412 tem o toner a 8% e o cilindro a 60%, e o usuário mostra a coluna "Suprimentos"
 - **THEN** a linha da PAT-00412 mostra "8%" com o toner ao lado e a idade da leitura
+
+#### Scenario: Número e identificador na mesma linha
+- **WHEN** a tabela mostra a coluna Patrimônio e a coluna de um campo decimal com o valor 15,5
+- **THEN** o 15,5 fica à direita, na fonte da interface, com algarismos tabulares, e o patrimônio fica na fonte monoespaçada
+
+#### Scenario: Data e momento na mesma linha
+- **WHEN** a tabela mostra a coluna de um campo de data com o valor 12/03/2024 e a coluna "Atualizado em" com 14/11/2026 14:30
+- **THEN** a data fica na fonte da interface, com algarismos tabulares, e o "Atualizado em", com a hora, fica na fonte monoespaçada
 
 ### Requirement: Ordenação e filtros dos ativos
 
