@@ -14,8 +14,8 @@ rules:
     - Citar o subprojeto da spec mestre que a change implementa e o que fica fora dela
   tasks:
     - Tarefas de no máximo 2 horas
-    - Toda tarefa com lógica começa pelo teste
-    - Toda tarefa diz como verificar o resultado (comando, teste ou tela)
+    - Toda tarefa com lógica que não aparece na tela começa pelo teste; visual, CSS e texto ficam sem teste novo (regra 2 do CLAUDE.md)
+    - Toda tarefa diz como verificar o resultado: os testes dos arquivos mexidos, o lint e o typecheck, ou a tela que o usuário confere; a bateria inteira fica para o fim da change
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
