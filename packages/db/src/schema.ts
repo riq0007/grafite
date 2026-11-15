@@ -3555,9 +3555,18 @@ export const cadastroDosAgentes = orgScoped(
   {
     tipoId: uuid('tipo_id'),
     localId: uuid('local_id'),
+    /**
+     * Os dias sem falar com o servidor depois dos quais o agente fica "Sem contato" (change
+     * software-por-pacote, design, decisão 9): duas voltas do contato diário, de fábrica.
+     */
+    diasSemContato: integer('dias_sem_contato').notNull().default(2),
   },
   (t) => [
     unique('cadastro_dos_agentes_organizacao_unica').on(t.orgId),
+    check(
+      'cadastro_dos_agentes_dias_sem_contato_valido',
+      sql`${t.diasSemContato} between 1 and 30`,
+    ),
     foreignKey({
       name: 'cadastro_dos_agentes_tipo_fk',
       columns: [t.orgId, t.tipoId],
@@ -3620,6 +3629,11 @@ export const agentes = orgScoped(
     primeiroContato: momento('primeiro_contato').notNull().defaultNow(),
     ultimoContato: momento('ultimo_contato').notNull().defaultNow(),
     ultimoInventario: momento('ultimo_inventario'),
+    /**
+     * Até quando o agente deve voltar: o último contato mais o `expiration` dado nele (change
+     * software-por-pacote, design, decisão 8).
+     */
+    voltaAte: momento('volta_ate'),
     pendenciaCadastro: jsonb('pendencia_cadastro').$type<{
       motivo: (typeof MOTIVOS_DA_PENDENCIA_DO_AGENTE)[number];
       campos: string[];
@@ -3638,12 +3652,18 @@ export const agentes = orgScoped(
   ],
 );
 
-/** Os softwares instalados no ativo, do último inventário completo do agente. */
+/**
+ * Os softwares instalados no ativo, do último inventário completo do agente, com o nome normalizado,
+ * que casa com o nome no inventário do pacote, e o "do sistema", que não se distribui (change
+ * software-por-pacote, design, decisões 1 e 13).
+ */
 export const softwaresDosAtivos = orgScoped(
   'softwares_dos_ativos',
   {
     ativoId: uuid('ativo_id').notNull(),
     nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    doSistema: boolean('do_sistema').notNull().default(false),
     versao: text('versao'),
     editor: text('editor'),
     instaladoEm: date('instalado_em', { mode: 'string' }),
@@ -3757,15 +3777,36 @@ export const partesDosPacotes = orgScoped(
   ],
 );
 
-/** A distribuição de um pacote às máquinas, com quem criou. */
+/** Quando a distribuição pode seguir: agora, na janela da noite ou a partir de um dia e hora. */
+export const QUANDOS_DA_DISTRIBUICAO = ['agora', 'noite', 'dia'] as const;
+
+/**
+ * A distribuição de um pacote às máquinas, com quem criou, o quando, o momento do dia marcado, o fuso
+ * de quem enviou e o "para quem" (change software-por-pacote, design, decisões 7 e 10). As de antes
+ * da change são de agora, sem o fuso e sem o "para quem".
+ */
 export const distribuicoes = orgScoped(
   'distribuicoes',
   {
     pacoteId: uuid('pacote_id').notNull(),
     criadaPor: uuid('criada_por').notNull(),
     criadaEm: momento('criada_em').notNull().defaultNow(),
+    quando: text('quando', { enum: QUANDOS_DA_DISTRIBUICAO }).notNull().default('agora'),
+    aPartirDe: momento('a_partir_de'),
+    fuso: text('fuso'),
+    paraQuem: text('para_quem'),
   },
   (t) => [
+    check('distribuicoes_quando_valido', sql`${t.quando} in (${lista(QUANDOS_DA_DISTRIBUICAO)})`),
+    check(
+      'distribuicoes_a_partir_de_valido',
+      sql`(${t.quando} = 'dia') = (${t.aPartirDe} is not null)`,
+    ),
+    check(
+      'distribuicoes_fuso_valido',
+      sql`(${t.quando} = 'agora' or ${t.fuso} is not null) and ${textoAte(t.fuso, 64)}`,
+    ),
+    check('distribuicoes_para_quem_valido', textoAte(t.paraQuem, 200)),
     foreignKey({
       name: 'distribuicoes_pacote_fk',
       columns: [t.orgId, t.pacoteId],
@@ -3785,9 +3826,14 @@ export const SITUACOES_DA_MAQUINA_NA_DISTRIBUICAO = [
   'em-andamento',
   'concluida',
   'falhou',
+  'tirada',
 ] as const;
 
-/** Cada máquina da distribuição: o ativo e o agente, a situação, a etapa e o log do agente. */
+/**
+ * Cada máquina da distribuição: o ativo e o agente, a situação, a etapa e o log do agente, o código
+ * de saída da instalação e o último chamado pela porta do agente, com a resposta (change
+ * software-por-pacote, design, decisões 6, 8a e 11). O código é do tamanho do DWORD do Windows.
+ */
 export const maquinasDasDistribuicoes = orgScoped(
   'maquinas_das_distribuicoes',
   {
@@ -3802,8 +3848,15 @@ export const maquinasDasDistribuicoes = orgScoped(
     enviadaEm: momento('enviada_em'),
     atualizadaEm: momento('atualizada_em'),
     terminadaEm: momento('terminada_em'),
+    codigoDeSaida: bigint('codigo_de_saida', { mode: 'number' }),
+    chamadaEm: momento('chamada_em'),
+    chamadaRespondeu: boolean('chamada_respondeu'),
   },
   (t) => [
+    check(
+      'maquinas_das_distribuicoes_chamada_valida',
+      sql`(${t.chamadaEm} is null) = (${t.chamadaRespondeu} is null)`,
+    ),
     foreignKey({
       name: 'maquinas_das_distribuicoes_distribuicao_fk',
       columns: [t.orgId, t.distribuicaoId],

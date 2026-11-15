@@ -12521,7 +12521,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {
@@ -12681,7 +12682,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {
@@ -34390,7 +34392,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {
@@ -34555,7 +34558,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {

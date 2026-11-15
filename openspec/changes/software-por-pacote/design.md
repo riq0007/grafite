@@ -187,6 +187,8 @@ O "Para quem":
 - o local mais fundo que contém todas;
 - "N locais", quando não há esse local.
 
+A distribuição de antes desta change fica sem o "Para quem", e a tela mostra quantas máquinas ela tem ("12 máquinas").
+
 ### 11. Tentar de novo e tirar da fila
 
 - **Tentar de novo:** a máquina que falhou volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>". Ela também é acordada, pela decisão 8a.

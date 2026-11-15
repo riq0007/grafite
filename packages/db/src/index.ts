@@ -95,6 +95,7 @@ export {
   plantas,
   politicaDeEntrada,
   posicoesNaPlanta,
+  QUANDOS_DA_DISTRIBUICAO,
   RESPOSTAS_DO_CONVITE_NO_BANCO,
   rascunhosDeCadastro,
   regrasDeAlerta,

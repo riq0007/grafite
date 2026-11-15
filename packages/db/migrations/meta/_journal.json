@@ -407,6 +407,13 @@
       "when": 1794708928217,
       "tag": "0057_categorias_de_software",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794709326975,
+      "tag": "0058_inventario_distribuicao_e_agente",
+      "breakpoints": true
     }
   ]
 }

@@ -90,6 +90,7 @@ export const SITUACOES_DA_MAQUINA_NO_BANCO = [
   'em-andamento',
   'concluida',
   'falhou',
+  'tirada',
 ] as const;
 export type SituacaoDaMaquina = (typeof SITUACOES_DA_MAQUINA_NO_BANCO)[number];
 
@@ -102,6 +103,7 @@ export const SITUACOES_DA_MAQUINA: Record<
   'em-andamento': { texto: 'Em andamento', tipo: 'info' },
   concluida: { texto: 'Concluída', tipo: 'sucesso' },
   falhou: { texto: 'Falhou', tipo: 'critico' },
+  tirada: { texto: 'Tirada da fila', tipo: 'neutra' },
 };
 
 /** As etapas do Deploy do agente em pt-BR, pelo `currentStep`. */

@@ -32350,7 +32350,7 @@ export interface components {
             };
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";
@@ -32385,7 +32385,7 @@ export interface components {
             };
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";
@@ -36659,7 +36659,7 @@ export interface components {
             };
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";
@@ -36694,7 +36694,7 @@ export interface components {
             };
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";

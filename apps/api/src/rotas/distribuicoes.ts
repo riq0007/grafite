@@ -24,6 +24,7 @@ import {
   podeEm,
   progressoDaDistribuicao,
   SITUACOES_DA_MAQUINA,
+  SITUACOES_DA_MAQUINA_NO_BANCO,
 } from '@grafite/domain';
 import { and, desc, eq, inArray, like, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -51,7 +52,7 @@ export const acordarPeloHttp: AcordarAgente = async (ip) => {
 };
 
 const SituacaoNaTela = z.object({
-  chave: z.enum(['aguardando', 'em-andamento', 'concluida', 'falhou']),
+  chave: z.enum(SITUACOES_DA_MAQUINA_NO_BANCO),
   texto: z.string(),
   tipo: z.enum(['neutra', 'info', 'sucesso', 'critico']),
 });
