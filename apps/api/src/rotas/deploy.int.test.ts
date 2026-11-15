@@ -83,6 +83,7 @@ beforeAll(async () => {
         orgId: org,
         nome: '7-Zip 23.01',
         nomeNormalizado: normalizarTexto('7-Zip 23.01'),
+        nomeNoInventarioNormalizado: normalizarTexto('7-Zip 23.01'),
         comando: 'msiexec /i "7z2301-x64.msi" /qn',
       })
       .returning({ id: pacotesDeSoftware.id });

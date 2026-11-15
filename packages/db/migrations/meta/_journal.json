@@ -400,6 +400,13 @@
       "when": 1794346543719,
       "tag": "0056_aparelhos_confiaveis",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794708928217,
+      "tag": "0057_categorias_de_software",
+      "breakpoints": true
     }
   ]
 }

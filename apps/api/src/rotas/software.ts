@@ -152,6 +152,7 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
       const valores = {
         ...dados,
         nomeNormalizado: normalizarTexto(dados.nome),
+        nomeNoInventarioNormalizado: normalizarTexto(dados.nome),
         atualizadoEm: momento,
       };
       let linha: LinhaDoPacote | undefined;

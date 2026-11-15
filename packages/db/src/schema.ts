@@ -3661,8 +3661,30 @@ export const softwaresDosAtivos = orgScoped(
 );
 
 /**
- * A base de software (spec distribuicao-de-software; change distribuicao-de-software): o pacote com
- * o comando, os códigos de sucesso e o arquivo, guardado em partes no armazenamento.
+ * As categorias da base de software (spec distribuicao-de-software, "Categorias da base"; change
+ * software-por-pacote, design, decisão 3): a TI cria, renomeia, ordena e remove as dela, e cada
+ * organização começa com as 7 de fábrica. A categoria com pacotes não sai, pela chave do pacote.
+ */
+export const categoriasDeSoftware = orgScoped(
+  'categorias_de_software',
+  {
+    nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    ordem: integer('ordem').notNull(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('categorias_de_software_nome_unico').on(t.orgId, t.nomeNormalizado),
+    check('categorias_de_software_nome_valido', sql`length(trim(${t.nome})) between 1 and 40`),
+  ],
+);
+
+/**
+ * A base de software (spec distribuicao-de-software; changes distribuicao-de-software e
+ * software-por-pacote): o pacote com o comando, os códigos de sucesso e o arquivo, guardado em partes
+ * no armazenamento, com quem o guardou e quando; a categoria, que pode faltar; e o nome no
+ * inventário, que liga o pacote aos programas do inventário pelo normalizado, gravado com o nome
+ * quando o nome no inventário fica vazio.
  */
 export const pacotesDeSoftware = orgScoped(
   'pacotes_de_software',
@@ -3676,13 +3698,29 @@ export const pacotesDeSoftware = orgScoped(
     nomeDoArquivo: text('nome_do_arquivo'),
     tamanhoDoArquivo: bigint('tamanho_do_arquivo', { mode: 'number' }),
     sha512DoArquivo: text('sha512_do_arquivo'),
+    arquivoGuardadoEm: momento('arquivo_guardado_em'),
+    arquivoGuardadoPor: uuid('arquivo_guardado_por'),
+    categoriaId: uuid('categoria_id'),
+    nomeNoInventario: text('nome_no_inventario'),
+    nomeNoInventarioNormalizado: text('nome_no_inventario_normalizado').notNull(),
     situacao: situacaoDoCadastro(),
     criadoEm: momento('criado_em').notNull().defaultNow(),
     atualizadoEm: momento('atualizado_em').notNull().defaultNow(),
   },
   (t) => [
+    foreignKey({
+      name: 'pacotes_de_software_categoria_fk',
+      columns: [t.orgId, t.categoriaId],
+      foreignColumns: [categoriasDeSoftware.orgId, categoriasDeSoftware.id],
+    }),
+    foreignKey({
+      name: 'pacotes_de_software_guardado_por_fk',
+      columns: [t.orgId, t.arquivoGuardadoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
     unique('pacotes_de_software_nome_unico').on(t.orgId, t.nomeNormalizado),
     check('pacotes_de_software_nome_valido', sql`length(trim(${t.nome})) between 1 and 120`),
+    check('pacotes_de_software_nome_no_inventario_valido', textoAte(t.nomeNoInventario, 120)),
     check('pacotes_de_software_comando_valido', sql`length(trim(${t.comando})) between 1 and 2000`),
     check('pacotes_de_software_versao_valida', textoAte(t.versao, 60)),
     check('pacotes_de_software_descricao_valida', textoAte(t.descricao, 2000)),

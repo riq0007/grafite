@@ -103,6 +103,7 @@ beforeAll(async () => {
         orgId: org,
         nome: '7-Zip 23.01',
         nomeNormalizado: normalizarTexto('7-Zip 23.01'),
+        nomeNoInventarioNormalizado: normalizarTexto('7-Zip 23.01'),
         versao: '23.01',
         comando: 'msiexec /i "7z.msi" /qn',
       })
@@ -114,6 +115,7 @@ beforeAll(async () => {
         orgId: org,
         nome: 'Antigo',
         nomeNormalizado: 'antigo',
+        nomeNoInventarioNormalizado: 'antigo',
         comando: 'x',
         situacao: 'inativo',
       })

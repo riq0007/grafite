@@ -27,6 +27,7 @@ export {
   cadastroDosAgentes,
   campos,
   camposDoTipo,
+  categoriasDeSoftware,
   codigosDeRecuperacao,
   coletores,
   consumiveis,
