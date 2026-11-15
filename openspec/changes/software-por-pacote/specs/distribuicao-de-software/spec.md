@@ -43,7 +43,7 @@ A criação SHALL classificar cada máquina frente ao pacote ("Pacote frente ao 
 - a que já aguarda o mesmo pacote, ou o instala, noutra distribuição SHALL ser pulada, com esse motivo;
 - as outras SHALL entrar em "Aguardando o agente", inclusive as sem contato (spec inventario-pelo-agente, "Agente sem contato").
 
-As puladas SHALL NOT entrar na distribuição.
+As puladas SHALL NOT entrar na distribuição. Duas criações do mesmo pacote ao mesmo tempo SHALL ser conferidas uma depois da outra, e a segunda SHALL ver as máquinas da primeira.
 
 As máquinas achadas por uma visão, pela busca ou pela lista colada, fora dos locais em que a conta pode distribuir, SHALL ficar de fora sem aviso, e as da lista colada SHALL aparecer como não achadas.
 
@@ -71,8 +71,12 @@ A criação SHALL ir para a auditoria, com o pacote, as máquinas, quantas foram
 - **THEN** a distribuição fica com 13 máquinas, e a auditoria registra as 5 puladas
 
 #### Scenario: Máquina que já aguarda o pacote
-- **WHEN** a técnica distribuiu o Google Chrome 131 ao Financeiro na janela da noite, com 12 máquinas aguardando, e às 15:00 distribui o Chrome 131 de novo ao Financeiro, agora
-- **THEN** as 12 ficam de fora da nova, e a auditoria registra as 12 puladas por já aguardarem o pacote
+- **WHEN** a técnica distribuiu às 09:02 o Google Chrome 131 ao Financeiro na janela da noite, com 12 máquinas aguardando, e às 15:00 distribui o Chrome 131 de novo ao Financeiro, agora
+- **THEN** as 12 ficam de fora da nova, o Conferir as mostra em "Seguem na outra distribuição", com "na janela da noite, enviada às 09:02" e o caminho até ela, e a auditoria registra as 12 puladas por já aguardarem o pacote
+
+#### Scenario: Duas criações ao mesmo tempo
+- **WHEN** duas técnicas distribuem o 7-Zip à PC-FIN-17 no mesmo instante
+- **THEN** uma distribuição fica com a PC-FIN-17, e a outra é recusada com "Todas as máquinas escolhidas já aguardam este pacote."
 
 ### Requirement: Deploy pelo agente do GLPI
 
@@ -281,7 +285,7 @@ A distribuição SHALL seguir num destes momentos:
 - **Na janela da noite:** o pedido só segue das 22:00 às 06:00, toda noite, até a máquina instalar ou sair da fila;
 - **Escolher o dia:** o pedido só segue a partir do dia e da hora marcados, de amanhã até daqui a um ano, com 22:00 de fábrica.
 
-As horas SHALL valer no fuso de quem envia, guardado na distribuição e escrito no resumo. O dia marcado SHALL chegar à API como o instante ISO 8601 com o fuso ("2026-11-19T22:00:00-03:00" ou com o "Z"); o texto sem o fuso SHALL ser recusado.
+As horas SHALL valer no fuso de quem envia, guardado na distribuição e escrito no resumo. O dia marcado SHALL chegar à API como o instante ISO 8601 com o fuso ("2026-11-19T22:00:00-03:00" ou com o "Z"); o texto sem o fuso SHALL ser recusado com "Escolha o dia e a hora." no campo do dia.
 
 #### Scenario: Driver na janela da noite
 - **WHEN** a técnica envia o Driver HP na janela da noite às 09:40
@@ -317,7 +321,7 @@ A distribuição SHALL ser criada num assistente de quatro passos, Pacote, Máqu
 
 O passo Máquinas SHALL juntar as máquinas escolhidas em quatro abas:
 - **Por local:** a árvore dos locais com as caixas de marcar e, em cada local, quantas máquinas têm o agente em dia e quantas estão sem contato;
-- **Por visão:** as visões da tabela do Ativos, as da organização e as da conta, cada uma com as máquinas com o agente que ela filtra; a visão que deixou de valer, com a definição ou um filtro que a tabela não aceita mais, SHALL ficar fora da aba;
+- **Por visão:** as visões da tabela do Ativos, as da organização e as da conta, cada uma com as máquinas com o agente que ela filtra; a visão que deixou de valer, com a definição ou um filtro que a tabela não aceita mais, SHALL aparecer desabilitada, com "Deixou de valer · refaça os filtros no Ativos";
 - **Por busca:** pelo nome, pelo patrimônio, pelo hostname ou pela pessoa;
 - **Colar lista:** nomes, patrimônios ou hostnames, um por linha ou separados por vírgula, até 2.000 ("Cole até 2.000 máquinas de uma vez."), dizendo os que não foram achados.
 
@@ -327,10 +331,10 @@ O passo Quando SHALL ter os três momentos em cartões de rádio, com "INDICADO 
 
 O passo Conferir SHALL ter três grupos, com o número grande e as máquinas em chips:
 - as que vão instalar, divididas em "Atualizam da <versão> · N", uma por versão de hoje, e "Instalam pela primeira vez · N";
-- as puladas, "Nada muda nelas", e, quando houver, as que já aguardam este pacote, "Seguem na outra distribuição";
+- as puladas, "Nada muda nelas", e, quando houver, as que já aguardam este pacote, "Seguem na outra distribuição", com cada outra distribuição, o quando e a hora do envio dela ("na janela da noite, enviada às 09:02") e o caminho até ela;
 - as da fila, "Instala quando voltar", que podem ser tiradas da lista ali.
 
-Ao lado, o envio (para quem, quando e quem envia), "Depois de enviar", com o que acontece em seguida, e "Enviar".
+Ao lado, o envio (para quem, quando e quem envia), "Depois de enviar", com o que acontece em seguida, e "Enviar". Quando todas as máquinas já aguardam este pacote, a recusa SHALL ter o mesmo caminho até a outra distribuição.
 
 Vindo da matriz, o assistente SHALL abrir no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do local Financeiro"), a trilha e "Voltar à matriz".
 
@@ -344,12 +348,12 @@ Vindo da matriz, o assistente SHALL abrir no passo Quando, com o pacote e as má
 
 #### Scenario: Visão que deixou de valer
 - **WHEN** a conta tem a visão "Notebooks antigos", guardada com um filtro que a tabela do Ativos não aceita mais, e a técnica abre o passo Máquinas
-- **THEN** a aba "Por visão" mostra as outras visões, e a prévia que manda a "Notebooks antigos" pelo id é recusada com "A visão Notebooks antigos deixou de valer. Refaça os filtros dela na tabela do Ativos."
+- **THEN** a aba "Por visão" mostra a "Notebooks antigos" desabilitada, com "Deixou de valer · refaça os filtros no Ativos", e as outras visões como sempre, e a prévia que manda a "Notebooks antigos" pelo id é recusada com "A visão Notebooks antigos deixou de valer. Refaça os filtros dela na tabela do Ativos."
 
 ### Requirement: Tentar de novo e tirar da fila
 
 Quem tem `software.distribuir` no local da máquina SHALL:
-- **Tentar de novo** a máquina que falhou, com o pacote ativo: ela volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>"; com o pacote inativo, o pedido SHALL ser recusado com "O pacote está inativo.";
+- **Tentar de novo** a máquina que falhou, com o pacote ativo: ela volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>"; com o pacote inativo, o pedido SHALL ser recusado com "O pacote está inativo."; com a máquina que já aguarda ou instala o mesmo pacote noutra distribuição, o pedido SHALL ser recusado com "A máquina já aguarda este pacote noutra distribuição.", e a tela SHALL mostrar, no lugar do botão, o caminho até a outra distribuição;
 - **Tirar da fila** a máquina que aguarda, também a de um pacote inativo: ela passa a "Tirada da fila", com o momento, e SHALL NOT receber mais o pedido.
 
 O progresso SHALL contar as tiradas à parte, como "14 de 18 concluídas, 1 tirada da fila".
@@ -357,6 +361,10 @@ O progresso SHALL contar as tiradas à parte, como "14 de 18 concluídas, 1 tira
 #### Scenario: Máquina que falhou de novo na fila
 - **WHEN** a técnica escolhe "Tentar de novo" na PC-FIN-17, que falhou com o 1603
 - **THEN** ela volta a "Aguardando o agente", e o agente dela é acordado
+
+#### Scenario: Máquina que já aguarda o pacote noutra distribuição
+- **WHEN** a PC-FIN-17 falhou o Google Chrome 131 na distribuição da manhã e já aguarda o Chrome 131 noutra, na janela da noite
+- **THEN** a distribuição da manhã mostra na PC-FIN-17 o caminho até a da noite, no lugar do "Tentar de novo", e o pedido de tentar de novo é recusado com "A máquina já aguarda este pacote noutra distribuição."
 
 ### Requirement: Matriz do software
 

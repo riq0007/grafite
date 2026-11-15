@@ -130,7 +130,7 @@ O `getJobs` entrega só as máquinas que aguardam e podem seguir, na ordem de cr
 
 O "Escolher o dia" aceita de amanhã até daqui a um ano (o m08 diz "a partir de quinta, 12/11"), com 22:00 de fábrica. O fuso que não existe no `Intl` do servidor é recusado com 400.
 
-O dia chega como o instante ISO 8601 com o fuso, o `z.iso.datetime({ offset: true })` na rota, e o `conferirQuando` confere a mesma forma antes do `new Date`: o texto sem o fuso viraria a hora do servidor, e o `Date` aceita formas que o Node inventa. O teto de um ano é pelo calendário do fuso de quem envia ("Escolha um dia até daqui a um ano."); o calendário da tela não passa dele.
+O dia chega como o instante ISO 8601 com o fuso. O esquema da rota leva a mensagem, `z.iso.datetime({ offset: true, error: MENSAGENS_DO_QUANDO.diaFaltando })`, e o texto malformado volta no 400 da validação, com "Escolha o dia e a hora." no campo `aPartirDe`, como os outros campos que o esquema recusa. O `conferirQuando` confere a mesma forma antes do `new Date`, para quem o chama fora da rota: o texto sem o fuso viraria a hora do servidor, e o `Date` aceita formas que o Node inventa. O teto de um ano é pelo calendário do fuso de quem envia ("Escolha um dia até daqui a um ano."); o calendário da tela não passa dele.
 
 ### 8. O agente volta na hora certa
 
@@ -177,9 +177,11 @@ A API resolve a união numa rota de prévia, `POST /software/distribuicoes/previ
 - **na fila:** sem contato;
 - **vai instalar:** com o agente em contato e sem a versão-alvo, com a versão de hoje ou nenhuma.
 
-A conta ganha o `jaAguardam`. O "Até agora" mostra "JÁ AGUARDAM ESTE PACOTE · PULADAS" só quando houver, e o Conferir põe essas máquinas num grupo próprio, "Seguem na outra distribuição". A criação sem nenhuma que entra recusa pelo motivo: "Todas as máquinas escolhidas já têm a versão <versão>.", "Todas as máquinas escolhidas já aguardam este pacote." ou, com os dois, "Todas as máquinas escolhidas já têm a versão <versão> ou já aguardam este pacote.". A auditoria guarda as `puladas` pela versão e as `jaAguardavam` à parte.
+A conta ganha o `jaAguardam`. O "Até agora" mostra "JÁ AGUARDAM ESTE PACOTE · PULADAS" só quando houver, e o Conferir põe essas máquinas num grupo próprio, "Seguem na outra distribuição". Na prévia, cada máquina que já aguarda traz a `outra`: o id, o `criadaEm` e o quando da distribuição em que ela aguarda. O grupo diz cada outra distribuição, com o quando e a hora do envio ("na janela da noite, enviada às 09:02") e o caminho até ela, onde o "Tirar da fila" deixa mandar de novo: quem manda "agora" o que já mandou para a noite precisa saber onde as máquinas ficaram. A criação sem nenhuma que entra recusa pelo motivo: "Todas as máquinas escolhidas já têm a versão <versão>.", "Todas as máquinas escolhidas já aguardam este pacote." ou, com os dois, "Todas as máquinas escolhidas já têm a versão <versão> ou já aguardam este pacote.". Na tela, a recusa por já aguardarem ganha o mesmo caminho, pelos dados da prévia. A auditoria guarda as `puladas` pela versão e as `jaAguardavam` à parte.
 
-A visão que deixou de valer, com a definição que o `lerDefinicaoDaVisao` não lê mais ou com um filtro que o `condicoesDosFiltros` recusa, fica fora dos alvos, em silêncio, para não derrubar o passo Máquinas inteiro com um 500. A prévia e a criação que a mandam pelo id recusam com 400 em `visoes`: "A visão <nome> deixou de valer. Refaça os filtros dela na tabela do Ativos."
+A conferência da fila e a gravação correm sob a trava do pacote: a criação e o "Tentar de novo" (decisão 11) esperam o `travar(tx, 'pacote:<id>')` (`travas.ts`, o `pg_advisory_xact_lock` na organização da transação) antes de ler quem já aguarda. Duas criações do mesmo pacote no mesmo instante passam uma de cada vez, e a segunda vê as máquinas da primeira.
+
+A visão que deixou de valer, com a definição que o `lerDefinicaoDaVisao` não lê mais ou com um filtro que o `condicoesDosFiltros` recusa, não derruba o passo Máquinas inteiro com um 500. O `GET /software/distribuicoes/alvos` a devolve com o `deixouDeValer` e sem a contagem, e a aba "Por visão" a mostra desabilitada, com "Deixou de valer · refaça os filtros no Ativos": a técnica sabe que a visão existe no Ativos, e o sumiço sem texto vira "cadê a minha visão?". A captura pega só a recusa da definição e dos filtros, e o erro do banco continua 500. A prévia e a criação que a mandam pelo id recusam com 400 em `visoes`: "A visão <nome> deixou de valer. Refaça os filtros dela na tabela do Ativos."
 
 A permissão na prévia e na criação, que refaz a conta pela mesma regra:
 - a visão, a busca e a lista colada rodam com o escopo do `ativos.ver`; as máquinas fora dos locais com o `software.distribuir` ficam de fora em silêncio, e as da lista colada aparecem como "não achadas", para não dizer que existem;
@@ -203,7 +205,11 @@ A distribuição de antes desta change fica sem o "Para quem", e a tela mostra q
 
 ### 11. Tentar de novo e tirar da fila
 
-- **Tentar de novo:** a máquina que falhou volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>". Ela também é acordada, pela decisão 8a. Com o pacote inativo, a rota recusa com 409 e o `pacoteInativo` (decisão 17).
+- **Tentar de novo:** a máquina que falhou volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>". Ela também é acordada, pela decisão 8a. A rota recusa com 409:
+  - com o pacote inativo, pelo `pacoteInativo` (decisão 17);
+  - com a máquina que já aguarda ou instala o mesmo pacote noutra distribuição, com "A máquina já aguarda este pacote noutra distribuição.", pela regra do "já aguarda" da decisão 10 e sob a mesma trava. Sem isso, a máquina que falhou na distribuição A e entrou na B voltaria a aguardar nas duas e instalaria duas vezes.
+
+  A máquina da distribuição traz a `aguardaNoutra` (o id, o `criadaEm` e o quando da outra), e a tela troca o "Tentar de novo" pelo caminho até ela. Na ficha, o mandado que falhou fica sem o "Tentar de novo" quando outro mandado do mesmo pacote aguarda ou instala.
 - **Tirar da fila:** a máquina que aguarda passa à situação nova `tirada` ("Tirada da fila"), com o fim marcado.
 
 As duas vão para a auditoria e publicam `software.mudou`. O progresso conta as tiradas à parte ("1 tirada da fila").
@@ -253,7 +259,7 @@ A tabela mostra as 10 primeiras linhas e "Mostrar os outros N". "Instalar outro 
 
 O "Exportar" da distribuição e o da matriz gravam no navegador um CSV com o que a tela mostra, como a tabela do Ativos já faz.
 
-A célula que começa por "=", "+", "-" ou "@", e também por tabulação ou retorno de carro, que a planilha também lê como fórmula, ganha o apóstrofo. O BOM vai escrito como `﻿` no fonte, e não como o caractere invisível, que uma edição pode perder sem ninguém ver.
+A célula que começa por "=", "+", "-" ou "@", e também por tabulação ou retorno de carro, que a planilha também lê como fórmula, ganha o apóstrofo. O BOM sai do código U+FEFF escrito no fonte, pelo `String.fromCharCode(0xfeff)`, e não do caractere invisível, que uma edição pode perder ou pôr sem ninguém ver.
 
 ### 15. A pessoa da máquina
 
@@ -267,12 +273,12 @@ Decisão do usuário de 15/11/2026, "Só as do alcance": a distribuição mostra
 - a lista e a distribuição aberta: o progresso, a régua, as seções e o CSV;
 - as distribuições da ficha do pacote e a última da base.
 
-O resumo ganha o `foraDoAlcance`, as máquinas da distribuição fora desses locais, e a distribuição aberta diz "N máquinas em locais fora do seu alcance" quando há alguma. A distribuição sem nenhuma máquina no alcance fica fora da lista, e abri-la dá 404, como a que não existe: ela não tem o que mostrar, e o 404 não diz que ela existe. A condição vai no SQL, por um `exists` das máquinas no alcance, para o limite das 100 mais novas valer depois dela. O "Para quem" continua o gravado na criação, de todas as máquinas.
+O resumo ganha o `foraDoAlcance`, as máquinas da distribuição fora desses locais, e a distribuição aberta diz "N máquinas em locais fora do seu alcance" quando há alguma. A distribuição sem nenhuma máquina no alcance fica fora da lista, e abri-la dá 404, como a que não existe: ela não tem o que mostrar, e o 404 não diz que ela existe. A condição vai no SQL, por um `exists` das máquinas no alcance, para o limite das 100 mais novas valer depois dela. O "Para quem" continua o gravado na criação, de todas as máquinas, e a distribuição de antes desta change, sem ele, mostra o total das máquinas dela, também as de fora do alcance.
 
 ### 17. O pacote inativado segura a fila
 
 Decisão do usuário de 15/11/2026, "Segurar até reativar": a TI inativa um pacote com defeito, e a fila dele não pode instalá-lo dias depois, na janela da noite ou na volta da máquina sem contato.
-- O `getJobs` (`jobsDoAgente`), o `expiration` do CONTACT (`expirationDoAgente`) e os chamados (`maquinasParaChamar`) só olham as máquinas que aguardam um pacote ativo. As máquinas do pacote inativo continuam em "Aguardando o agente", sem mudar nada no banco: a reativação retoma a entrega sozinha, no próximo contato em que o pedido pode seguir, e a `software.acordar-agendados` chama os agentes em até 15 minutos.
+- O `getJobs` (`jobsDoAgente`), o `expiration` do CONTACT (`expirationDoAgente`) e os chamados (`maquinasParaChamar`) só olham as máquinas que aguardam um pacote ativo. As máquinas do pacote inativo continuam em "Aguardando o agente", sem mudar nada no banco: a reativação retoma a entrega sozinha, no próximo contato em que o pedido pode seguir, e a `software.acordar-agendados` chama os agentes no ciclo seguinte, a cada 15 minutos, fora os chamados há menos de 2 horas (decisão 8a), que o contato do próprio agente pega.
 - O "Tentar de novo" recusa com 409 e o `pacoteInativo` ("O pacote está inativo."); o "Tirar da fila" continua.
 - O resumo da distribuição e os mandados da ficha trazem a situação do pacote. A distribuição aberta avisa que as máquinas ficam na fila até o pacote ser reativado, troca o "quando segue" de cada uma por "Pacote inativado" e não oferece o "Tentar de novo"; na ficha, o mandado que aguarda ganha o rótulo "PACOTE INATIVADO", e o que falhou fica sem o "Tentar de novo".
 
