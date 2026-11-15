@@ -392,12 +392,17 @@
   list-style: none;
 }
 
+/*
+ * A coluna do cartucho tem ao menos 112 px e cresce até caber o "Desatualizado" (change
+ * ajuste-do-medidor, design, decisão 2). A descrição quebra nos 112 px, e só o rótulo alarga a
+ * coluna.
+ */
 .suprimento {
   display: grid;
   justify-items: center;
   align-content: start;
   gap: var(--esp-1);
-  width: 112px;
+  min-inline-size: 112px;
   text-align: center;
 }
 
@@ -405,6 +410,17 @@
   font-size: var(--texto-legenda);
   color: var(--cor-texto-2);
   overflow-wrap: anywhere;
+}
+
+.suprimento .descricaoDoSuprimento {
+  max-inline-size: 112px;
+}
+
+/* A idade da leitura e o "Desatualizado" embaixo do cartucho, um embaixo do outro e centrados. */
+.idadeDoSuprimento {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-1);
 }
 
 /* O medidor compacto do menor nível, na coluna da lista, sem o número repetido. */

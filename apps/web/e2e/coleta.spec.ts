@@ -228,8 +228,16 @@ test.describe('a disponibilidade na rede', () => {
 });
 
 test.describe('os suprimentos das impressoras', () => {
-  /** A impressora com os suprimentos ligados, e o painel dado em cada ativo. */
-  async function comSuprimentos(page: Page, niveis: { daExpedicao: number; doRh: number }) {
+  /**
+   * A impressora com os suprimentos ligados, e o painel dado em cada ativo. A resposta do SNMP e o
+   * resto do painel são de 3 minutos atrás; as leituras dos suprimentos, nos itens e no menor,
+   * também, a não ser que o teste dê o momento delas.
+   */
+  async function comSuprimentos(
+    page: Page,
+    niveis: { daExpedicao: number; doRh: number },
+    { suprimentosLidosEm }: { suprimentosLidosEm?: string } = {},
+  ) {
     const api = await simularAtivos(page);
     const impressora = api.catalogo.tipos.find(({ id }) => id === IDS_DO_CATALOGO.impressora);
     Object.assign(impressora ?? {}, {
@@ -239,6 +247,7 @@ test.describe('os suprimentos das impressoras', () => {
       },
     });
     const momento = new Date(Date.now() - 3 * 60_000).toISOString();
+    const dosSuprimentos = suprimentosLidosEm ?? momento;
     const painel = (nivel: number, paginas: number) => ({
       motivo: null,
       resposta: {
@@ -253,14 +262,14 @@ test.describe('os suprimentos das impressoras', () => {
           descricao: 'Black Toner Cartridge',
           tipo: 'toner' as const,
           nivel: { tipo: 'medido' as const, percentual: nivel },
-          momento,
+          momento: dosSuprimentos,
         },
         {
           item: '2',
           descricao: 'Imaging Drum Unit',
           tipo: 'cilindro' as const,
           nivel: { tipo: 'medido' as const, percentual: 60 },
-          momento,
+          momento: dosSuprimentos,
         },
       ],
       contadores: [
@@ -272,7 +281,7 @@ test.describe('os suprimentos das impressoras', () => {
       menor: {
         nivel: Math.min(nivel, 60),
         descricao: nivel < 60 ? 'Black Toner Cartridge' : 'Imaging Drum Unit',
-        momento,
+        momento: dosSuprimentos,
       },
       total: { paginas, momento },
     });
@@ -300,6 +309,53 @@ test.describe('os suprimentos das impressoras', () => {
     await expect(niveis.getByTitle('Cilindro · Imaging Drum Unit')).toContainText('60%');
     await expect(painel.getByText('12.500').first()).toBeVisible();
     await expect(painel.getByText('Nenhuma condição informada.')).toBeVisible();
+  });
+
+  // Os cartuchos com a leitura velha (spec impressoras-por-snmp, "Painel Suprimentos"; change
+  // ajuste-do-medidor, design, decisões 2 e 3): a descrição, a idade e o "Desatualizado" ficam
+  // embaixo de cada cartucho, centrados e dentro da coluna dele.
+  test('com a leitura velha, cada "Desatualizado" fica embaixo do seu cartucho', async ({
+    page,
+  }) => {
+    const ha16Dias = new Date(Date.now() - 16 * 24 * 60 * 60_000).toISOString();
+    await comSuprimentos(page, { daExpedicao: 8, doRh: 45 }, { suprimentosLidosEm: ha16Dias });
+    await page.goto(`/ativos/${IDS_DOS_ATIVOS.daExpedicao}`);
+    await abrirCartao(page, 'Suprimentos e contadores');
+    const niveis = page
+      .getByRole('region', { name: 'Suprimentos' })
+      .getByRole('list', { name: 'Níveis dos suprimentos' });
+    const colunas = niveis.getByRole('listitem');
+    await expect(colunas).toHaveCount(2);
+
+    const caixas: { x: number; y: number; width: number; height: number }[] = [];
+    for (const [indice, descricao] of ['Black Toner Cartridge', 'Imaging Drum Unit'].entries()) {
+      const coluna = colunas.nth(indice);
+      await expect(coluna.getByText(descricao, { exact: true })).toBeVisible();
+      const idade = coluna.getByText('há 16 d', { exact: true });
+      const rotulo = coluna.getByText('Desatualizado', { exact: true });
+      await expect(idade).toBeVisible();
+      await expect(rotulo).toBeVisible();
+      const daColuna = await coluna.boundingBox();
+      const daIdade = await idade.boundingBox();
+      const doRotulo = await rotulo.boundingBox();
+      if (!daColuna || !daIdade || !doRotulo) {
+        throw new Error(`A coluna de ${descricao}, a idade ou o rótulo não estão à vista.`);
+      }
+      // O rótulo cabe na coluna, embaixo da idade, e os dois ficam no centro dela.
+      expect(doRotulo.x).toBeGreaterThanOrEqual(daColuna.x);
+      expect(doRotulo.x + doRotulo.width).toBeLessThanOrEqual(daColuna.x + daColuna.width);
+      expect(doRotulo.y).toBeGreaterThanOrEqual(daIdade.y + daIdade.height);
+      const centro = daColuna.x + daColuna.width / 2;
+      expect(Math.abs(daIdade.x + daIdade.width / 2 - centro)).toBeLessThan(1);
+      expect(Math.abs(doRotulo.x + doRotulo.width / 2 - centro)).toBeLessThan(1);
+      caixas.push(daColuna);
+    }
+
+    // As duas colunas ficam lado a lado, sem encostar uma na outra.
+    const [doToner, doCilindro] = caixas;
+    if (!doToner || !doCilindro) throw new Error('Faltam as colunas dos dois cartuchos.');
+    expect(Math.abs(doToner.y - doCilindro.y)).toBeLessThan(1);
+    expect(doToner.x + doToner.width).toBeLessThan(doCilindro.x);
   });
 
   // O medidor antes do número (spec impressoras-por-snmp, "Medidor na coluna dos suprimentos";

@@ -38,7 +38,7 @@
 
 ## 2. Os cartuchos na ficha
 
-- [ ] 2.1 Escrever primeiro, no `coleta.spec.ts`, o teste dos cartuchos com a leitura velha (design, decisões 2 e 3):
+- [x] 2.1 Escrever primeiro, no `coleta.spec.ts`, o teste dos cartuchos com a leitura velha (design, decisões 2 e 3):
   - o `comSuprimentos` passa a receber o momento da leitura dos suprimentos, nos itens e no menor, com os 3 minutos de hoje como padrão. A resposta do SNMP e o resto do painel ficam com os 3 minutos;
   - com as leituras dos suprimentos de 16 dias atrás, embaixo de cada cartucho aparecem a descrição, "há 16 d" e "Desatualizado";
   - na lista "Níveis dos suprimentos", cada rótulo fica dentro da coluna do seu cartucho, e as duas colunas não se sobrepõem.
@@ -52,6 +52,14 @@
   Verificar:
   - o `pnpm test:e2e` passa;
   - o `pnpm --filter @grafite/web test` passa, com o `FichaDoAtivo.test.tsx` e o `Suprimentos.test.tsx`.
+
+  Feito em 14/11:
+  - **antes do conserto:** o teste reprovou com o rótulo do toner acabando em 609,8 px e a coluna em 593,8. O "Desatualizado" passava 16 px da coluna de 112;
+  - **o conserto:** o `.suprimento` ficou com o `min-inline-size: 112px`, e a descrição, com o `max-inline-size: 112px` dentro dele. A regra da descrição veio depois da geral, como o Biome pede. A classe `.idadeDoSuprimento`, uma grade centrada, entrou no lugar da `.disponibilidade` embaixo do cartucho. Pela spec, o teste confere também que a idade e o rótulo ficam no centro da coluna, um embaixo do outro;
+  - **a verificação:**
+    - o `coleta.spec.ts` passou nos 11 testes;
+    - o `pnpm --filter @grafite/web test` passou nos 1.893;
+    - o `pnpm test:e2e` inteiro ficou para o fim da change, no CI, pelo modo enxuto que o usuário escolheu em 14/11.
 
 - [ ] 2.2 Em "Vários itens", no `docs/casca/modulos.md`, fazer a linha da ficha descrever os cartuchos, com a descrição, a idade e o "Desatualizado" embaixo de cada um (design, decisão 4).
 

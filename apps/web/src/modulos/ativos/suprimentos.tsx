@@ -251,7 +251,7 @@ export function SuprimentosNaFicha({
                       })}
                     />
                     <span className={estilos.descricaoDoSuprimento}>{suprimento.descricao}</span>
-                    <span className={estilos.disponibilidade}>
+                    <span className={estilos.idadeDoSuprimento}>
                       <IdadeEDesatualizado
                         momento={suprimento.momento}
                         agora={agora}
