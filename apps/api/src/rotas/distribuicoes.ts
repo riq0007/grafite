@@ -1,8 +1,9 @@
 // As distribuições de software pela API (spec distribuicao-de-software, "Distribuição às máquinas",
-// "Pedir agora" e "Histórico das distribuições"; change distribuicao-de-software, design, decisões 4
-// e 5): a criação para as máquinas com o agente ligado, nos locais em que a conta distribui; a lista
-// e a ficha, com a situação, a etapa e o log de cada máquina; as do ativo; o acordar dos agentes; e
-// a busca das máquinas com o agente ligado, para a escolha na tela.
+// "Quando instalar", "Acordar os agentes", "Assistente da distribuição" e "Histórico das
+// distribuições"; changes distribuicao-de-software e software-por-pacote): a busca das máquinas, os
+// alvos e a prévia do assistente; a criação pelo alvo, sem as puladas, com o quando, o fuso, o "Para
+// quem" e o acordar na fila, para agora; a lista e a ficha, com a situação, a etapa e o log de cada
+// máquina; e as do ativo.
 import {
   agentes,
   ativos,
@@ -14,17 +15,20 @@ import {
   naOrganizacao,
   pacotesDeSoftware,
   pessoas,
+  QUANDOS_DA_DISTRIBUICAO,
   type Transacao,
   tiposDeAtivo,
 } from '@grafite/db';
 import {
   alcance,
+  conferirQuando,
   fusoReconhecido,
+  fusoValido,
   LIMITE_DA_LISTA_COLADA,
   MENSAGEM_DA_LISTA_COLADA,
+  MENSAGENS_DO_QUANDO,
   MENSAGENS_DO_SOFTWARE,
   normalizarTexto,
-  podeEm,
   progressoDaDistribuicao,
   SITUACOES_DA_MAQUINA,
   SITUACOES_DA_MAQUINA_NO_BANCO,
@@ -34,29 +38,19 @@ import {
 import { and, desc, eq, inArray, like, or, type SQL, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { exigirEm, RecusaDePermissao, sessaoDa } from '../acesso/escopo.ts';
+import { exigirEm, sessaoDa } from '../acesso/escopo.ts';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { lerArvore } from '../arvore.ts';
 import { rotuloNoBanco } from '../ativos/colunas.ts';
 import { doResponsavel, lerAtivo } from '../ativos/leitura.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { contendo } from '../busca.ts';
+import type { FilaDeTarefas } from '../fila/fila.ts';
 import { conflito, dadosInvalidos, naoEncontrado, RespostaDeProblema } from '../problemas.ts';
+import { TAREFA_DE_ACORDAR } from '../software/acordar.ts';
 import { alvosDaConta, classificarOAlvo, resolverAlvo } from '../software/alvo.ts';
+import { paraQuemNaTela } from '../software/base.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
-
-/** Acorda o agente pelo IP: `true` quando ele respondeu. */
-export type AcordarAgente = (ip: string) => Promise<boolean>;
-
-/** O `/now` do agente do GLPI, na porta 62354, com 5 s de prazo. */
-export const acordarPeloHttp: AcordarAgente = async (ip) => {
-  try {
-    const resposta = await fetch(`http://${ip}:62354/now`, { signal: AbortSignal.timeout(5000) });
-    return resposta.ok;
-  } catch {
-    return false;
-  }
-};
 
 const SituacaoNaTela = z.object({
   chave: z.enum(SITUACOES_DA_MAQUINA_NO_BANCO),
@@ -70,6 +64,14 @@ const ResumoDaDistribuicao = z
     pacote: z.object({ id: z.uuid(), nome: z.string(), versao: z.string().nullable() }),
     criadaPor: z.string(),
     criadaEm: z.string(),
+    /** O nome da máquina, o local mais fundo que contém todas, "N locais" ou "N máquinas". */
+    paraQuem: z.string(),
+    /** O quando, com o dia marcado e o fuso de quem enviou. */
+    quando: z.object({
+      chave: z.enum(QUANDOS_DA_DISTRIBUICAO),
+      aPartirDe: z.string().nullable(),
+      fuso: z.string().nullable(),
+    }),
     maquinas: z.number(),
     progresso: z.string(),
   })
@@ -241,6 +243,10 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
       },
       criadaPor: pessoas.nome,
       criadaEm: distribuicoes.criadaEm,
+      paraQuem: distribuicoes.paraQuem,
+      quando: distribuicoes.quando,
+      aPartirDe: distribuicoes.aPartirDe,
+      fuso: distribuicoes.fuso,
     })
     .from(distribuicoes)
     .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
@@ -262,13 +268,15 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
         linhas.map(({ id }) => id),
       ),
     );
-  return linhas.map((linha) => {
+  return linhas.map(({ paraQuem, quando, aPartirDe, fuso, ...linha }) => {
     const daDistribuicao = situacoes
       .filter((maquina) => maquina.distribuicaoId === linha.id)
       .map((maquina) => maquina.situacao);
     return {
       ...linha,
       criadaEm: linha.criadaEm.toISOString(),
+      paraQuem: paraQuemNaTela(paraQuem, daDistribuicao.length),
+      quando: { chave: quando, aPartirDe: aPartirDe?.toISOString() ?? null, fuso },
       maquinas: daDistribuicao.length,
       progresso: progressoDaDistribuicao(daDistribuicao),
     };
@@ -311,8 +319,9 @@ async function ficha(tx: Transacao, id: string) {
 export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
   banco: Banco;
   agora: () => Date;
-  acordar: AcordarAgente;
-}> = async (app, { banco, agora, acordar }) => {
+  /** Sem ela, a distribuição de agora espera o próximo contato do agente, sem o chamado. */
+  fila?: FilaDeTarefas | undefined;
+}> = async (app, { banco, agora, fila }) => {
   app.get(
     '/software/maquinas',
     {
@@ -496,147 +505,94 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
     {
       config: { permissao: 'software.distribuir' },
       schema: {
-        summary: 'Distribuir um pacote às máquinas com o agente do GLPI ligado',
+        summary:
+          'Distribuir um pacote às máquinas do alvo com o agente do GLPI ligado, agora, na janela da noite ou a partir de um dia',
         body: z
           .object({
             pacoteId: z.uuid({ error: 'Escolha o pacote.' }),
-            ativoIds: z.array(z.uuid()).max(500, { error: 'Escolha até 500 máquinas.' }),
+            alvo: AlvoDaDistribuicao,
+            quando: z.enum(QUANDOS_DA_DISTRIBUICAO).default('agora'),
+            /** O momento do dia marcado, no `dia`. */
+            aPartirDe: z.string().max(40).nullable().optional(),
+            /** O fuso IANA de quem envia: o da preferência da conta ou o do navegador. */
+            fuso: z.string().max(64).nullable().optional(),
           })
           .meta({ id: 'PedidoDeDistribuicao' }),
         response: { 201: FichaDaDistribuicao, ...PROBLEMAS },
       },
     },
     async (requisicao, resposta) => {
-      const { contaId, acesso } = sessaoDa(requisicao);
-      const ativoIds = [...new Set(requisicao.body.ativoIds)];
-      if (ativoIds.length === 0)
-        throw dadosInvalidos({ ativoIds: MENSAGENS_DO_SOFTWARE.semMaquinas });
+      const sessao = sessaoDa(requisicao);
+      const { pacoteId, alvo, quando, aPartirDe, fuso } = requisicao.body;
       const momento = agora();
-      const criada = await naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
-        const [pacote] = await tx
-          .select()
-          .from(pacotesDeSoftware)
-          .where(eq(pacotesDeSoftware.id, requisicao.body.pacoteId));
-        if (!pacote) throw dadosInvalidos({ pacoteId: 'Escolha o pacote.' });
-        if (pacote.situacao !== 'ativo') throw conflito(MENSAGENS_DO_SOFTWARE.pacoteInativo);
+      if (fuso && !fusoValido(fuso)) {
+        throw dadosInvalidos({ fuso: MENSAGENS_DO_QUANDO.fusoDesconhecido });
+      }
+      const conferido = conferirQuando({ quando, aPartirDe, fuso }, momento);
+      if (!conferido.ok) throw dadosInvalidos(conferido.erros);
+      const orgId = requisicao.organizacao?.id ?? '';
+      const criada = await naOrganizacao(banco, orgId, async (tx) => {
+        const pacote = await pacoteParaDistribuir(tx, pacoteId);
         const arvore = await lerArvore(tx);
-        const linhas = await tx
-          .select({
-            id: ativos.id,
-            localId: ativos.localId,
-            situacao: ativos.situacao,
-            patrimonio: ativos.patrimonio,
-            rotulo: sql<string>`${rotuloNoBanco}`,
-          })
-          .from(ativos)
-          .innerJoin(tiposDeAtivo, doTipo)
-          .leftJoin(modelos, doModelo)
-          .where(inArray(ativos.id, ativoIds));
-        const agentesDosAtivos = await tx
-          .select({ id: agentes.id, ativoId: agentes.ativoId })
-          .from(agentes)
-          .where(inArray(agentes.ativoId, ativoIds))
-          .orderBy(desc(agentes.ultimoContato));
-        const maquinas: { ativoId: string; agenteId: string }[] = [];
-        for (const ativoId of ativoIds) {
-          const ativo = linhas.find((linha) => linha.id === ativoId);
-          if (ativo?.situacao !== 'ativo') {
-            throw dadosInvalidos({ ativoIds: 'Escolha só ativos ativos.' });
-          }
-          if (!podeEm(acesso, 'software.distribuir', ativo.localId, arvore)) {
-            throw new RecusaDePermissao('software.distribuir');
-          }
-          const agente = agentesDosAtivos.find((candidato) => candidato.ativoId === ativoId);
-          if (!agente) {
-            throw dadosInvalidos({
-              ativoIds: MENSAGENS_DO_SOFTWARE.semAgente(ativo.patrimonio ?? ativo.rotulo),
-            });
-          }
-          maquinas.push({ ativoId, agenteId: agente.id });
+        // A mesma conta da prévia, refeita no servidor.
+        const { maquinas } = await resolverAlvo(tx, { sessao, arvore, alvo });
+        if (maquinas.length === 0)
+          throw dadosInvalidos({ alvo: MENSAGENS_DO_SOFTWARE.semMaquinas });
+        const conta = await classificarOAlvo(tx, { arvore, pacote, maquinas, momento });
+        const entram = conta.maquinas.filter(({ classe }) => classe !== 'pulada');
+        if (entram.length === 0) {
+          throw dadosInvalidos({
+            alvo: MENSAGENS_DO_SOFTWARE.todasNaVersao(pacote.versao ?? ''),
+          });
         }
+        const { dados } = conferido;
         const [distribuicao] = await tx
           .insert(distribuicoes)
           .values({
-            orgId: requisicao.organizacao?.id ?? '',
+            orgId,
             pacoteId: pacote.id,
-            criadaPor: contaId,
+            criadaPor: sessao.contaId,
             criadaEm: momento,
+            quando: dados.quando,
+            aPartirDe: dados.aPartirDe,
+            fuso: dados.fuso,
+            paraQuem: conta.paraQuem,
           })
           .returning({ id: distribuicoes.id });
         if (!distribuicao) throw new Error('A distribuição não foi gravada.');
         await tx.insert(maquinasDasDistribuicoes).values(
-          maquinas.map((maquina) => ({
-            orgId: requisicao.organizacao?.id ?? '',
+          entram.map((maquina) => ({
+            orgId,
             distribuicaoId: distribuicao.id,
-            ...maquina,
+            ativoId: maquina.id,
+            agenteId: maquina.agenteId,
             atualizadaEm: momento,
           })),
         );
         await registrarNaAuditoria(tx, {
           acao: 'distribuicao.criada',
-          ator: { tipo: 'conta', contaId },
+          ator: { tipo: 'conta', contaId: sessao.contaId },
           alvo: { tipo: 'distribuicao', id: distribuicao.id },
-          dados: { pacote: pacote.nome, versao: pacote.versao, maquinas: maquinas.length },
+          dados: {
+            pacote: pacote.nome,
+            versao: pacote.versao,
+            maquinas: entram.length,
+            puladas: conta.conta.puladas,
+            paraQuem: conta.paraQuem,
+            quando: dados.quando,
+            aPartirDe: dados.aPartirDe?.toISOString() ?? null,
+            fuso: dados.fuso,
+          },
           origem: origemDa(requisicao),
           momento,
         });
+        // O agora chama os agentes na hora, pela fila, junto com a transação (design, decisão 8a).
+        if (dados.quando === 'agora' && fila?.rodando()) {
+          await fila.enviar(TAREFA_DE_ACORDAR, { orgId, distribuicaoId: distribuicao.id }, { tx });
+        }
         return ficha(tx, distribuicao.id);
       });
       return resposta.code(201).send(criada);
-    },
-  );
-
-  app.post(
-    '/software/distribuicoes/:id/agora',
-    {
-      config: { permissao: 'software.distribuir' },
-      schema: {
-        summary: 'Acordar os agentes das máquinas que aguardam a distribuição',
-        params: ParametrosDaDistribuicao,
-        response: {
-          200: z.object({ acordados: z.number(), total: z.number(), mensagem: z.string() }),
-          ...PROBLEMAS,
-        },
-      },
-    },
-    async (requisicao) => {
-      const { contaId } = sessaoDa(requisicao);
-      const orgId = requisicao.organizacao?.id ?? '';
-      const ips = await naOrganizacao(banco, orgId, async (tx) => {
-        await ficha(tx, requisicao.params.id);
-        return tx
-          .select({ ip: agentes.ip })
-          .from(maquinasDasDistribuicoes)
-          .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
-          .where(
-            and(
-              eq(maquinasDasDistribuicoes.distribuicaoId, requisicao.params.id),
-              eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
-            ),
-          );
-      });
-      const total = ips.length;
-      const respostas = await Promise.all(
-        ips.map(({ ip }) => (ip ? acordar(ip) : Promise.resolve(false))),
-      );
-      const acordados = respostas.filter(Boolean).length;
-      await naOrganizacao(banco, orgId, (tx) =>
-        registrarNaAuditoria(tx, {
-          acao: 'distribuicao.pedida-agora',
-          ator: { tipo: 'conta', contaId },
-          alvo: { tipo: 'distribuicao', id: requisicao.params.id },
-          dados: { acordados, total },
-          origem: origemDa(requisicao),
-          momento: agora(),
-        }),
-      );
-      const mensagem =
-        total === 0
-          ? 'Nenhuma máquina aguarda o agente.'
-          : acordados === total
-            ? `${total === 1 ? 'O agente foi acordado' : `Os ${total} agentes foram acordados`}.`
-            : `${acordados} de ${total} agentes acordados; os outros recebem a tarefa no próximo contato.`;
-      return { acordados, total, mensagem };
     },
   );
 

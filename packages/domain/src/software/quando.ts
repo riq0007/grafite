@@ -108,6 +108,18 @@ export function instanteNoFuso(data: string, hora: string, fuso: string): Date {
 
 const fusoDo = (pedido: PedidoNoTempo) => pedido.fuso ?? 'UTC';
 
+const doisDigitos = (valor: number) => String(valor).padStart(2, '0');
+
+/**
+ * A linha do log do chamado ao agente, com a hora no fuso de quem enviou ou, sem ele, na de UTC:
+ * "Chamado às 22:00" ou "Chamado às 22:00, sem resposta".
+ */
+export function linhaDoChamado(momento: Date, fuso: string | null, respondeu: boolean): string {
+  const { hora, minuto } = relogio(momento, fuso ?? 'UTC');
+  const quando = `Chamado às ${doisDigitos(hora)}:${doisDigitos(minuto)}`;
+  return respondeu ? quando : `${quando}, sem resposta`;
+}
+
 function naJanela(momento: Date, fuso: string): boolean {
   const { hora } = relogio(momento, fuso);
   return hora >= JANELA_DA_NOITE.abre || hora < JANELA_DA_NOITE.fecha;

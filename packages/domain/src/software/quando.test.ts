@@ -6,6 +6,7 @@ import {
   conferirQuando,
   expirationDoContato,
   instanteNoFuso,
+  linhaDoChamado,
   MENSAGENS_DO_QUANDO,
   type PedidoNoTempo,
   podeSeguir,
@@ -194,5 +195,18 @@ describe('conferirQuando', () => {
         em('2026-11-14T16:00:00Z'),
       ),
     ).toEqual({ ok: false, erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaDeHoje } });
+  });
+});
+
+describe('linhaDoChamado', () => {
+  it('diz a hora do chamado no fuso de quem enviou e se o agente respondeu', () => {
+    expect(linhaDoChamado(em('2026-11-16T01:00:00Z'), SP, true)).toBe('Chamado às 22:00');
+    expect(linhaDoChamado(em('2026-11-16T01:05:00Z'), SP, false)).toBe(
+      'Chamado às 22:05, sem resposta',
+    );
+  });
+
+  it('sem o fuso, a hora de UTC, como o pedido de antes da change', () => {
+    expect(linhaDoChamado(em('2026-11-16T01:00:00Z'), null, true)).toBe('Chamado às 01:00');
   });
 });

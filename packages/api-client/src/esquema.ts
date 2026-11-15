@@ -16298,7 +16298,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Distribuir um pacote às máquinas com o agente do GLPI ligado */
+        /** Distribuir um pacote às máquinas do alvo com o agente do GLPI ligado, agora, na janela da noite ou a partir de um dia */
         post: {
             parameters: {
                 query?: never;
@@ -16469,102 +16469,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/software/distribuicoes/{id}/agora": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Acordar os agentes das máquinas que aguardam a distribuição */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            acordados: number;
-                            total: number;
-                            mensagem: string;
-                        };
-                    };
-                };
-                /** @description Default Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -33038,6 +32942,13 @@ export interface components {
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
         };
@@ -33074,6 +32985,13 @@ export interface components {
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicaoInput"][];
@@ -34982,7 +34900,14 @@ export interface components {
         PedidoDeDistribuicaoInput: {
             /** Format: uuid */
             pacoteId: string;
-            ativoIds: string[];
+            alvo: components["schemas"]["AlvoDaDistribuicaoInput"];
+            /**
+             * @default agora
+             * @enum {string}
+             */
+            quando: "agora" | "noite" | "dia";
+            aPartirDe?: string | null;
+            fuso?: string | null;
         };
         ContasConvidaveisInput: {
             contas: {
@@ -37519,6 +37444,13 @@ export interface components {
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
         };
@@ -37555,6 +37487,13 @@ export interface components {
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicao"][];
@@ -39463,7 +39402,14 @@ export interface components {
         PedidoDeDistribuicao: {
             /** Format: uuid */
             pacoteId: string;
-            ativoIds: string[];
+            alvo: components["schemas"]["AlvoDaDistribuicao"];
+            /**
+             * @default agora
+             * @enum {string}
+             */
+            quando: "agora" | "noite" | "dia";
+            aPartirDe?: string | null;
+            fuso?: string | null;
         };
         ContasConvidaveis: {
             contas: {

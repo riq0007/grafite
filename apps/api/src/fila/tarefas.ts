@@ -13,6 +13,7 @@ import { tarefaDaImportacao } from '../importacao/tarefa.ts';
 import { tarefasDaEntrega } from '../notificacoes/entrega.ts';
 import { tarefasDoResumo } from '../notificacoes/resumo.ts';
 import { tarefasDosPaineis } from '../paineis/paineis.ts';
+import { type AcordarAgente, tarefasDoSoftware } from '../software/acordar.ts';
 import { tarefaDasFalhas } from './falhas.ts';
 import { tarefasDaManutencao } from './manutencao.ts';
 
@@ -95,6 +96,8 @@ export interface ContextoDasTarefas {
   enviar: EnviarTarefa;
   /** Os canais de fora que enviam neste ambiente (change p3c-email-e-push). */
   canais?: CanaisDaApi;
+  /** O chamado ao agente do GLPI pela porta 62354; sem ele, o do HTTP (change software-por-pacote). */
+  acordar?: AcordarAgente;
 }
 
 /** As tarefas da API. */
@@ -108,6 +111,7 @@ export function tarefasDaApi(contexto: ContextoDasTarefas): DefinicaoDeTarefa[] 
     ...tarefasDoResumo(contexto),
     ...tarefasDoControlId(contexto),
     ...tarefasDosPaineis(contexto),
+    ...tarefasDoSoftware(contexto),
   ];
   return [tarefaDasFalhas(contexto, outras), ...outras];
 }

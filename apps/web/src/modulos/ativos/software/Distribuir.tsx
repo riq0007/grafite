@@ -88,14 +88,18 @@ export function Distribuir({
     const resultado = await pedir(
       () =>
         api.POST('/software/distribuicoes', {
-          body: { pacoteId, ativoIds: [...escolhidas.keys()] },
+          body: {
+            pacoteId,
+            alvo: { locais: [], visoes: [], ativoIds: [...escolhidas.keys()], lista: '', fora: [] },
+            quando: 'agora',
+          },
         }),
       'distribuir o pacote',
     );
     definirEnviando(false);
     if ('erro' in resultado) {
-      const { campos } = recusaDe<'ativoIds' | 'pacoteId'>(resultado);
-      recusar(campos?.ativoIds ?? campos?.pacoteId ?? resultado.erro);
+      const { campos } = recusaDe<'alvo' | 'ativoIds' | 'pacoteId'>(resultado);
+      recusar(campos?.ativoIds ?? campos?.alvo ?? campos?.pacoteId ?? resultado.erro);
       return;
     }
     const quantas = resultado.dados.maquinas;

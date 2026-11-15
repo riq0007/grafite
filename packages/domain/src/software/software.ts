@@ -23,6 +23,7 @@ export const MENSAGENS_DO_SOFTWARE = {
   semMaquinas: 'Escolha pelo menos uma máquina.',
   pacoteInativo: 'O pacote está inativo.',
   semAgente: (ativo: string) => `O ativo ${ativo} não tem o agente do GLPI ligado.`,
+  todasNaVersao: (versao: string) => `Todas as máquinas escolhidas já têm a versão ${versao}.`,
   categoria: 'Escolha uma das categorias da base.',
 } as const;
 
@@ -126,6 +127,11 @@ const FIM_COM_SUCESSO = 'job successfully completed';
 
 const TERMINADAS: readonly SituacaoDaMaquina[] = ['concluida', 'falhou'];
 
+/** O log da máquina com a linha no fim, só com as últimas linhas. */
+export function comALinha(log: readonly string[], linha: string): string[] {
+  return [...log, linha].slice(-LINHAS_DO_LOG);
+}
+
 /**
  * O passo do `setStatus` do agente na máquina: a etapa, a linha do log e a situação. O "ko" faz
  * falhar, a mensagem final de sucesso conclui, e a máquina terminada não muda mais.
@@ -139,8 +145,7 @@ export function aplicarPassoDoAgente(
     : atual.etapa;
   const onde = passo.currentStep ? etapa : passo.status ? 'Fim' : etapa;
   const partes = [passo.status, passo.msg].filter((parte): parte is string => !!parte);
-  const linha = `${onde ?? 'Agente'}: ${partes.join(', ')}`;
-  const log = [...atual.log, linha].slice(-LINHAS_DO_LOG);
+  const log = comALinha(atual.log, `${onde ?? 'Agente'}: ${partes.join(', ')}`);
   if (TERMINADAS.includes(atual.situacao)) {
     return { situacao: atual.situacao, etapa: atual.etapa, log, terminou: false };
   }

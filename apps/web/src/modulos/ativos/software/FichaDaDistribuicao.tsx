@@ -1,10 +1,9 @@
-// A ficha de uma distribuição (spec distribuicao-de-software, "Histórico das distribuições" e
-// "Pedir agora"; change distribuicao-de-software, design, decisões 4 a 6): o pacote, quem criou e o
-// progresso; a tabela das máquinas com a situação, a etapa e o último passo; o log de cada uma numa
-// gaveta, na ordem em que chegou; e o "Pedir agora", que acorda os agentes das que aguardam.
+// A ficha de uma distribuição (spec distribuicao-de-software, "Histórico das distribuições";
+// changes distribuicao-de-software e software-por-pacote): o pacote, quem criou e o progresso; a
+// tabela das máquinas com a situação, a etapa e o último passo; e o log de cada uma numa gaveta, na
+// ordem em que chegou. O servidor acorda os agentes sozinho, pela fila, sem um botão na ficha.
 // Enquanto alguma máquina espera ou instala, a ficha se relê a cada 5 s.
 import {
-  avisar,
   Botao,
   CabecalhoDaPagina,
   CabecalhoDaTabela,
@@ -18,13 +17,9 @@ import {
   Tabela,
   useDataHora,
 } from '@grafite/ui';
-import { useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { Zap } from 'lucide-react';
 import { useState } from 'react';
-import { pedir } from '../../../api/pedir.ts';
-import { useApi } from '../../../api/useApi.tsx';
-import { CHAVE_DO_SOFTWARE, type MaquinaDaDistribuicao, useDistribuicao } from './consultas.ts';
+import { type MaquinaDaDistribuicao, useDistribuicao } from './consultas.ts';
 import estilos from './Software.module.css';
 
 const nomeDaMaquina = (maquina: MaquinaDaDistribuicao) =>
@@ -85,12 +80,9 @@ function LogDaMaquina({
 
 export function FichaDaDistribuicao() {
   const { id } = useParams({ from: '/gestao/software/distribuicoes/$id' });
-  const api = useApi();
-  const consultas = useQueryClient();
   const distribuicao = useDistribuicao(id);
   const { formatarDataEHora } = useDataHora();
   const [vendo, definirVendo] = useState<string | null>(null);
-  const [pedindo, definirPedindo] = useState(false);
 
   if (distribuicao.isPending) {
     return (
@@ -108,26 +100,7 @@ export function FichaDaDistribuicao() {
     );
   }
   const ficha = distribuicao.data;
-  const aguardando = ficha.maquinasDaDistribuicao.filter(
-    (maquina) => maquina.situacao.chave === 'aguardando',
-  ).length;
   const aberta = ficha.maquinasDaDistribuicao.find((maquina) => maquina.id === vendo);
-
-  async function pedirAgora() {
-    definirPedindo(true);
-    const resultado = await pedir(
-      () => api.POST('/software/distribuicoes/{id}/agora', { params: { path: { id: ficha.id } } }),
-      'acordar os agentes',
-    );
-    definirPedindo(false);
-    if ('erro' in resultado) {
-      avisar({ situacao: 'critico', titulo: resultado.erro });
-      return;
-    }
-    const { acordados, total, mensagem } = resultado.dados;
-    avisar({ situacao: acordados === total ? 'sucesso' : 'atencao', titulo: mensagem });
-    await consultas.invalidateQueries({ queryKey: [...CHAVE_DO_SOFTWARE, 'distribuicao', id] });
-  }
 
   return (
     <div className={estilos.tela}>
@@ -137,19 +110,6 @@ export function FichaDaDistribuicao() {
       <CabecalhoDaPagina
         titulo={[ficha.pacote.nome, ficha.pacote.versao].filter(Boolean).join(' · ')}
         detalhe={`${ficha.progresso} · criada por ${ficha.criadaPor} em ${formatarDataEHora(new Date(ficha.criadaEm))}`}
-        acoes={
-          aguardando > 0 && (
-            <Botao
-              nivel="primario"
-              icone={Zap}
-              carregando={pedindo}
-              rotuloCarregando="Acordando os agentes"
-              onPress={() => void pedirAgora()}
-            >
-              Pedir agora
-            </Botao>
-          )
-        }
       />
       <Tabela rotulo="Máquinas da distribuição" aoAbrirLinha={definirVendo}>
         <CabecalhoDaTabela>

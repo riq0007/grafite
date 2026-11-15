@@ -56,6 +56,8 @@ const ficha = (maquinas: Maquina[], progresso: string): Ficha => ({
   pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao },
   criadaPor: 'Ana Souza',
   criadaEm: '2026-10-28T12:00:00.000Z',
+  paraQuem: `${maquinas.length} máquinas`,
+  quando: { chave: 'agora', aPartirDe: null, fuso: null },
   maquinas: maquinas.length,
   progresso,
   maquinasDaDistribuicao: maquinas,
@@ -184,7 +186,17 @@ describe('a distribuição', () => {
     await waitFor(() =>
       expect(roteador.state.location.pathname).toBe('/gestao/software/distribuicoes/d1'),
     );
-    expect(corpo).toEqual({ pacoteId: PACOTE.id, ativoIds: ['ativo-00321', 'ativo-00518'] });
+    expect(corpo).toEqual({
+      pacoteId: PACOTE.id,
+      alvo: {
+        locais: [],
+        visoes: [],
+        ativoIds: ['ativo-00321', 'ativo-00518'],
+        lista: '',
+        fora: [],
+      },
+      quando: 'agora',
+    });
     expect(avisos()).toContain('Distribuição criada para 2 máquinas.');
     expect(await screen.findAllByText('Aguardando o agente')).toHaveLength(2);
   });
@@ -200,6 +212,8 @@ describe('a distribuição', () => {
               pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao },
               criadaPor: 'Ana Souza',
               criadaEm: '2026-10-28T12:00:00.000Z',
+              paraQuem: 'Jundiaí',
+              quando: { chave: 'agora', aPartirDe: null, fuso: null },
               maquinas: 3,
               progresso: '1 de 3 concluídas, 1 falhou',
             },
@@ -219,7 +233,6 @@ describe('a distribuição', () => {
     const tabela = await screen.findByRole('grid', { name: 'Máquinas da distribuição' });
     expect(within(tabela).getByText('Falhou')).toBeTruthy();
     expect(within(tabela).getByText('Executando: ko, action #1 processing failure')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Pedir agora' })).toBeNull();
     fireEvent.click(
       within(tabela).getByRole('button', { name: 'Ver o log de Computador PAT-00412 (PAT-00412)' }),
     );
@@ -232,29 +245,5 @@ describe('a distribuição', () => {
         .getAllByRole('listitem')
         .map((linha) => linha.textContent),
     ).toEqual(FALHOU.log);
-  });
-
-  it('Agente acordado: o pedir agora diz quantos responderam', async () => {
-    const agora = vi.fn(() =>
-      Response.json({
-        acordados: 1,
-        total: 2,
-        mensagem: '1 de 2 agentes acordados; os outros recebem a tarefa no próximo contato.',
-      }),
-    );
-    abrir('/gestao/software/distribuicoes/d1', {
-      'GET /api/software/distribuicoes/d1': () =>
-        Response.json(
-          ficha([maquina('m1', 'PAT-00321'), maquina('m3', 'PAT-00518')], '0 de 2 concluídas'),
-        ),
-      'POST /api/software/distribuicoes/d1/agora': agora,
-    });
-    fireEvent.click(await screen.findByRole('button', { name: 'Pedir agora' }));
-    await waitFor(() =>
-      expect(avisos()).toContain(
-        '1 de 2 agentes acordados; os outros recebem a tarefa no próximo contato.',
-      ),
-    );
-    expect(agora).toHaveBeenCalledTimes(1);
   });
 });

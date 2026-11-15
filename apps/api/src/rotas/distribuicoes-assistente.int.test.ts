@@ -1,13 +1,15 @@
-// A prévia do assistente da distribuição pela API (spec distribuicao-de-software, "Distribuição às
-// máquinas" e "Assistente da distribuição"; change software-por-pacote, design, decisões 9 e 10): a
-// união dos locais, das visões, dos ativos escolhidos e da lista colada, sem as tiradas da lista; a
-// classe de cada máquina, na ordem pulada, na fila e vai instalar, com o sem contato pelo prazo da
-// organização e a outra instalação em andamento; a permissão, com a visão, a busca e a lista no
-// escopo do `ativos.ver` e as máquinas fora dos locais do `software.distribuir` de fora em silêncio;
-// as contagens da árvore e das visões; e a busca das máquinas.
+// O assistente da distribuição pela API (spec distribuicao-de-software, "Distribuição às máquinas",
+// "Quando instalar", "Acordar os agentes" e "Assistente da distribuição"; change software-por-pacote,
+// design, decisões 7, 8a, 9 e 10). A prévia: a união dos locais, das visões, dos ativos escolhidos e
+// da lista colada, sem as tiradas da lista; a classe de cada máquina, na ordem pulada, na fila e vai
+// instalar, com o sem contato pelo prazo da organização e a outra instalação em andamento; a
+// permissão, com a visão, a busca e a lista no escopo do `ativos.ver` e as máquinas fora dos locais
+// do `software.distribuir` de fora em silêncio. As contagens da árvore e das visões; a busca das
+// máquinas; e a criação, com a mesma conta, o quando, o fuso, a auditoria e o acordar na fila.
 import {
   agentes,
   ativos,
+  auditoria,
   cadastroDosAgentes,
   distribuicoes,
   maquinasDasDistribuicoes,
@@ -18,6 +20,7 @@ import {
   visoes,
 } from '@grafite/db';
 import { normalizarTexto, textoDeBusca } from '@grafite/domain';
+import { desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   type ApiDeTeste,
@@ -31,8 +34,9 @@ import {
   type Entrada,
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
+import { tarefasDaApi } from '../fila/tarefas.ts';
 
-const host = 'grafite.previa-da-distribuicao.local';
+const host = 'grafite.assistente-da-distribuicao.local';
 let api: ApiDeTeste;
 let org = '';
 let cliente: ReturnType<typeof clienteDaApi>;
@@ -41,6 +45,9 @@ const locais: Record<string, string> = {};
 const ids: Record<string, string> = {};
 const daVisao: Record<string, string> = {};
 const pacotes: Record<string, string> = {};
+/** Os IPs que a tarefa de acordar chamou; o da F3 não responde. */
+const chamados: string[] = [];
+const IP_QUE_NAO_RESPONDE = '10.9.0.3';
 
 const como = (usuario: string) => entradas[usuario] ?? SEM_ENTRADA;
 
@@ -101,7 +108,14 @@ const DEFINICAO = (texto: string | null) => ({
 });
 
 beforeAll(async () => {
-  api = await abrirApi();
+  api = await abrirApi({
+    acordarAgente: async (ip) => {
+      chamados.push(ip);
+      return ip !== IP_QUE_NAO_RESPONDE;
+    },
+    tarefas: (contexto) => tarefasDaApi(contexto),
+    intervaloDaFila: 0.5,
+  });
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });
   cliente = clienteDaApi(api, host);
   locais.matriz = await criarLocal(api, org, { nome: 'Matriz', tipo: 'unidade' });
@@ -154,7 +168,7 @@ beforeAll(async () => {
       })
       .returning({ id: tiposDeAtivo.id });
     const agenteDa: Record<string, string> = {};
-    for (const maquina of MAQUINAS) {
+    for (const [posicao, maquina] of MAQUINAS.entries()) {
       const nome = `Estação ${maquina.chave.toUpperCase()}`;
       let responsavelId: string | null = null;
       if (maquina.responsavel) {
@@ -191,6 +205,7 @@ beforeAll(async () => {
             orgId: org,
             deviceid: `${maquina.hostname}-2024`,
             nome: maquina.hostname,
+            ip: `10.9.0.${posicao + 1}`,
             ativoId,
             ultimoContato: new Date(CONTATO[maquina.contato]),
           })
@@ -414,6 +429,196 @@ describe('POST /software/distribuicoes/previa', () => {
         tx.update(cadastroDosAgentes).set({ diasSemContato: 2 }),
       );
     }
+  });
+});
+
+/** Espera a condição, de 100 em 100 ms, até 10 s. */
+async function esperar(condicao: () => Promise<boolean>) {
+  for (let vez = 0; vez < 100; vez++) {
+    if (await condicao()) return true;
+    await new Promise((pronto) => setTimeout(pronto, 100));
+  }
+  return false;
+}
+
+const distribuir = (usuario: string, pedido: Record<string, unknown>) =>
+  cliente.enviar('POST', '/software/distribuicoes', como(usuario), {
+    pacoteId: pacotes['7-Zip'],
+    ...pedido,
+  });
+
+/** O chamado de cada máquina da distribuição, pelo rótulo: quando foi, se respondeu e o log. */
+const chamadosDa = async (distribuicaoId: string) => {
+  const r = await cliente.consultar(`/software/distribuicoes/${distribuicaoId}`, como('ana'));
+  const linhas = await naOrganizacao(api.banco, org, (tx) =>
+    tx
+      .select()
+      .from(maquinasDasDistribuicoes)
+      .where(eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId)),
+  );
+  return Object.fromEntries(
+    r
+      .json()
+      .maquinasDaDistribuicao.map(
+        (maquina: { id: string; ativo: { rotulo: string }; log: string[] }) => {
+          const linha = linhas.find(({ id }) => id === maquina.id);
+          return [
+            maquina.ativo.rotulo,
+            {
+              chamadaEm: linha?.chamadaEm?.toISOString() ?? null,
+              respondeu: linha?.chamadaRespondeu ?? null,
+              log: maquina.log,
+            },
+          ];
+        },
+      ),
+  );
+};
+
+const auditoriaDa = async (distribuicaoId: string) => {
+  const [registro] = await naOrganizacao(api.banco, org, (tx) =>
+    tx
+      .select()
+      .from(auditoria)
+      .where(eq(auditoria.alvoId, distribuicaoId))
+      .orderBy(desc(auditoria.id)),
+  );
+  return registro;
+};
+
+describe('POST /software/distribuicoes', () => {
+  it('Máquina que já tem a versão: as puladas ficam de fora, a sem contato entra na fila, e o agora acorda os agentes', async () => {
+    const r = await distribuir('ana', {
+      alvo: { locais: [locais.financeiro] },
+      quando: 'agora',
+      fuso: 'America/Sao_Paulo',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    const ficha = r.json();
+    expect(ficha).toMatchObject({
+      paraQuem: 'Financeiro',
+      quando: { chave: 'agora', aPartirDe: null, fuso: 'America/Sao_Paulo' },
+      maquinas: 3,
+      progresso: '0 de 3 concluídas',
+    });
+    expect(
+      ficha.maquinasDaDistribuicao.map(
+        (maquina: { ativo: { rotulo: string }; situacao: { chave: string } }) => [
+          maquina.ativo.rotulo,
+          maquina.situacao.chave,
+        ],
+      ),
+    ).toEqual([
+      ['Estação F2', 'aguardando'],
+      ['Estação F3', 'aguardando'],
+      ['Estação F4', 'aguardando'],
+    ]);
+    expect((await auditoriaDa(ficha.id))?.dados).toEqual({
+      pacote: '7-Zip',
+      versao: '24.08',
+      maquinas: 3,
+      puladas: 2,
+      paraQuem: 'Financeiro',
+      quando: 'agora',
+      aPartirDe: null,
+      fuso: 'America/Sao_Paulo',
+    });
+    // A F2 e a F3 são chamadas na hora, às 09:00 de São Paulo; a F4, sem contato, não.
+    const chamadas = async () =>
+      Object.values(await chamadosDa(ficha.id)).filter(({ chamadaEm }) => chamadaEm).length;
+    expect(await esperar(async () => (await chamadas()) === 2)).toBe(true);
+    expect(await chamadosDa(ficha.id)).toEqual({
+      'Estação F2': {
+        chamadaEm: '2026-10-02T12:00:00.000Z',
+        respondeu: true,
+        log: ['Chamado às 09:00'],
+      },
+      'Estação F3': {
+        chamadaEm: '2026-10-02T12:00:00.000Z',
+        respondeu: false,
+        log: ['Chamado às 09:00, sem resposta'],
+      },
+      'Estação F4': { chamadaEm: null, respondeu: null, log: [] },
+    });
+    expect(chamados).not.toContain('10.9.0.4');
+  });
+
+  it('Driver na janela da noite e o dia marcado: guardam o quando e o fuso, sem acordar ninguém na hora', async () => {
+    const noite = await distribuir('ana', {
+      alvo: { ativoIds: [ids.c1] },
+      quando: 'noite',
+      fuso: 'America/Sao_Paulo',
+    });
+    expect(noite.statusCode, noite.body).toBe(201);
+    expect(noite.json()).toMatchObject({
+      paraQuem: 'Estação C1',
+      quando: { chave: 'noite', aPartirDe: null, fuso: 'America/Sao_Paulo' },
+    });
+    // Amanhã às 22:00 em São Paulo, frente ao relógio da API em 2026-10-02T12:00:00Z.
+    const dia = await distribuir('ana', {
+      alvo: { ativoIds: [ids.c1] },
+      quando: 'dia',
+      aPartirDe: '2026-10-04T01:00:00.000Z',
+      fuso: 'America/Sao_Paulo',
+    });
+    expect(dia.statusCode, dia.body).toBe(201);
+    expect(dia.json().quando).toEqual({
+      chave: 'dia',
+      aPartirDe: '2026-10-04T01:00:00.000Z',
+      fuso: 'America/Sao_Paulo',
+    });
+    expect((await auditoriaDa(dia.json().id))?.dados).toMatchObject({
+      quando: 'dia',
+      aPartirDe: '2026-10-04T01:00:00.000Z',
+      fuso: 'America/Sao_Paulo',
+    });
+    // A da noite e a do dia não chamam ninguém na hora.
+    expect((await chamadosDa(noite.json().id))['Estação C1']?.chamadaEm).toBeNull();
+    expect((await chamadosDa(dia.json().id))['Estação C1']?.chamadaEm).toBeNull();
+  });
+
+  it('recusa o dia de hoje, o fuso que não existe e a noite sem o fuso', async () => {
+    const hoje = await distribuir('ana', {
+      alvo: { ativoIds: [ids.c1] },
+      quando: 'dia',
+      aPartirDe: '2026-10-02T23:00:00.000Z',
+      fuso: 'America/Sao_Paulo',
+    });
+    expect(hoje.statusCode).toBe(400);
+    expect(hoje.json().campos).toEqual({ aPartirDe: 'Escolha um dia de amanhã em diante.' });
+    for (const pedido of [
+      { quando: 'noite', fuso: 'America/Atlantida' },
+      { quando: 'agora', fuso: 'America/Atlantida' },
+      { quando: 'noite' },
+    ]) {
+      const r = await distribuir('ana', { alvo: { ativoIds: [ids.c1] }, ...pedido });
+      expect(r.statusCode, JSON.stringify(pedido)).toBe(400);
+      expect(r.json().campos).toEqual({ fuso: 'O fuso de quem envia não existe.' });
+    }
+  });
+
+  it('recusa sem máquinas e com todas as máquinas já na versão-alvo', async () => {
+    const sem = await distribuir('ana', { alvo: {} });
+    expect(sem.statusCode).toBe(400);
+    expect(sem.json().campos).toEqual({ alvo: 'Escolha pelo menos uma máquina.' });
+    const todas = await distribuir('ana', { alvo: { ativoIds: [ids.f1, ids.f5] } });
+    expect(todas.statusCode).toBe(400);
+    expect(todas.json().campos).toEqual({
+      alvo: 'Todas as máquinas escolhidas já têm a versão 24.08.',
+    });
+  });
+
+  it('A mesma permissão da prévia: a visão fica nos locais em que a conta distribui, e o local de fora dá 403', async () => {
+    const r = await distribuir('carla', { alvo: { visoes: [daVisao.notebooks] } });
+    expect(r.statusCode, r.body).toBe(201);
+    // A F1 já tem a 24.08, e a da Filial fica de fora: só a C1 entra.
+    expect(r.json()).toMatchObject({ paraQuem: 'Estação C1', maquinas: 1 });
+    expect((await distribuir('carla', { alvo: { locais: [locais.filial] } })).statusCode).toBe(403);
+  });
+
+  it('a rota do "Pedir agora" saiu', async () => {
+    const r = await cliente.enviar('POST', `/software/distribuicoes/${ids.f1}/agora`, como('ana'));
+    expect(r.statusCode).toBe(404);
   });
 });
 

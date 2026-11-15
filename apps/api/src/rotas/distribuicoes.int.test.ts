@@ -1,6 +1,7 @@
-// As distribuições pela API (spec distribuicao-de-software; change distribuicao-de-software): a
-// distribuição para três máquinas, as recusas (sem máquinas, sem agente, outro local e o pacote
-// inativo), a lista e a ficha com o progresso, o pedir agora e as distribuições na ficha do ativo.
+// As distribuições pela API (spec distribuicao-de-software; changes distribuicao-de-software e
+// software-por-pacote): a distribuição para três máquinas, pelo alvo, as recusas (sem máquinas, sem
+// agente, outro local e o pacote inativo), a lista e a ficha com o progresso, a busca das máquinas e
+// as distribuições na ficha do ativo.
 import {
   agentes,
   ativos,
@@ -31,7 +32,6 @@ let org = '';
 let cliente: ReturnType<typeof clienteDaApi>;
 const entradas: Record<string, Entrada> = {};
 const ids: Record<string, string> = {};
-const acordados: string[] = [];
 let distribuicao = '';
 
 const como = (usuario: string) => entradas[usuario] ?? SEM_ENTRADA;
@@ -39,12 +39,7 @@ const naOrg = <T>(fazer: Parameters<typeof naOrganizacao<T>>[2]) =>
   naOrganizacao(api.banco, org, fazer);
 
 beforeAll(async () => {
-  api = await abrirApi({
-    acordarAgente: async (ip) => {
-      acordados.push(ip);
-      return ip !== '10.0.0.4';
-    },
-  });
+  api = await abrirApi();
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });
   cliente = clienteDaApi(api, host);
   const jundiai = await criarLocal(api, org, { nome: 'Jundiaí', tipo: 'unidade' });
@@ -130,7 +125,10 @@ afterAll(async () => {
 });
 
 const distribuir = (usuario: string, pacoteId: string, ativoIds: (string | undefined)[]) =>
-  cliente.enviar('POST', '/software/distribuicoes', como(usuario), { pacoteId, ativoIds });
+  cliente.enviar('POST', '/software/distribuicoes', como(usuario), {
+    pacoteId,
+    alvo: { ativoIds },
+  });
 
 describe('a distribuição', () => {
   it('Distribuição para três máquinas: todas aguardando o agente, com o progresso', async () => {
@@ -158,7 +156,7 @@ describe('a distribuição', () => {
 
   it('recusa sem máquinas, o ativo sem agente, o local sem a permissão e o pacote inativo', async () => {
     expect((await distribuir('ana', ids.pacote ?? '', [])).json().campos).toEqual({
-      ativoIds: 'Escolha pelo menos uma máquina.',
+      alvo: 'Escolha pelo menos uma máquina.',
     });
     expect((await distribuir('ana', ids.pacote ?? '', [ids.pc3])).json().campos).toEqual({
       ativoIds: 'O ativo PAT-pc3 não tem o agente do GLPI ligado.',
@@ -181,20 +179,6 @@ describe('a distribuição', () => {
       etapa: null,
       log: [],
     });
-  });
-
-  it('Agente acordado: diz quantos responderam', async () => {
-    const r = await cliente.enviar(
-      'POST',
-      `/software/distribuicoes/${distribuicao}/agora`,
-      como('ana'),
-    );
-    expect(r.json()).toEqual({
-      acordados: 2,
-      total: 3,
-      mensagem: '2 de 3 agentes acordados; os outros recebem a tarefa no próximo contato.',
-    });
-    expect(acordados.sort()).toEqual(['10.0.0.1', '10.0.0.2', '10.0.0.4']);
   });
 
   it('a busca das máquinas traz os ativos com o agente, nos locais em que a conta distribui', async () => {

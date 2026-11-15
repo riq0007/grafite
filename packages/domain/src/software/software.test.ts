@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   aplicarPassoDoAgente,
   CODIGOS_DE_SUCESSO_PADRAO,
+  comALinha,
   conferirPacote,
   LINHAS_DO_LOG,
   MENSAGENS_DO_SOFTWARE,
@@ -139,5 +140,22 @@ describe('o progresso da distribuição', () => {
     );
     expect(progressoDaDistribuicao(['falhou', 'falhou'])).toBe('0 de 2 concluídas, 2 falharam');
     expect(progressoDaDistribuicao(['concluida'])).toBe('1 de 1 concluída');
+  });
+});
+
+describe('o log da máquina', () => {
+  it('acrescenta a linha no fim e guarda só as últimas', () => {
+    expect(comALinha(['a', 'b'], 'c')).toEqual(['a', 'b', 'c']);
+    const cheio = Array.from({ length: LINHAS_DO_LOG }, (_, posicao) => `linha ${posicao}`);
+    const depois = comALinha(cheio, 'nova');
+    expect(depois).toHaveLength(LINHAS_DO_LOG);
+    expect(depois[0]).toBe('linha 1');
+    expect(depois.at(-1)).toBe('nova');
+  });
+
+  it('a recusa de todas as máquinas já na versão-alvo diz a versão', () => {
+    expect(MENSAGENS_DO_SOFTWARE.todasNaVersao('24.08')).toBe(
+      'Todas as máquinas escolhidas já têm a versão 24.08.',
+    );
   });
 });
