@@ -15053,6 +15053,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ativos/{id}/software": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O software da máquina: os instalados do último inventário e, para quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SoftwareDaMaquina"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/software/pacotes/{id}": {
         parameters: {
             query?: never;
@@ -35141,6 +35233,73 @@ export interface components {
                 total: number;
             }[];
         };
+        SoftwareDaMaquinaInput: {
+            instalados: {
+                nome: string;
+                versao: string | null;
+                editor: string | null;
+                instaladoEm: string | null;
+                doSistema: boolean;
+                base: {
+                    /** @enum {string} */
+                    comparacao: "ha-na-base" | "na-versao" | "sem-versao-alvo" | "fora-da-base" | "do-windows";
+                    texto: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    } | null;
+                    origem: {
+                        /** Format: uuid */
+                        distribuicaoId: string;
+                        por: string;
+                    } | null;
+                } | null;
+            }[];
+            inventariadoEm: string | null;
+            agente: {
+                ultimoContato: string;
+                semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            } | null;
+            distribuir: {
+                mandados: {
+                    /** Format: uuid */
+                    distribuicaoId: string;
+                    /** Format: uuid */
+                    maquinaId: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    };
+                    paraQuem: string;
+                    situacao: {
+                        /** @enum {string} */
+                        chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
+                        texto: string;
+                        /** @enum {string} */
+                        tipo: "neutra" | "info" | "sucesso" | "critico";
+                    };
+                    codigo: {
+                        numero: number;
+                        explicacao: string | null;
+                    } | null;
+                    etapa: string | null;
+                    criadaEm: string;
+                    criadaPor: string;
+                    enviadaEm: string | null;
+                    terminadaEm: string | null;
+                }[];
+                pacotes: {
+                    pacote: components["schemas"]["PacoteDeSoftwareInput"];
+                    /** @enum {string} */
+                    situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                    versao: string | null;
+                }[];
+            } | null;
+        };
         CategoriaDeSoftwareInput: {
             /** Format: uuid */
             id: string;
@@ -39719,6 +39878,73 @@ export interface components {
                 naVersao: number;
                 total: number;
             }[];
+        };
+        SoftwareDaMaquina: {
+            instalados: {
+                nome: string;
+                versao: string | null;
+                editor: string | null;
+                instaladoEm: string | null;
+                doSistema: boolean;
+                base: {
+                    /** @enum {string} */
+                    comparacao: "ha-na-base" | "na-versao" | "sem-versao-alvo" | "fora-da-base" | "do-windows";
+                    texto: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    } | null;
+                    origem: {
+                        /** Format: uuid */
+                        distribuicaoId: string;
+                        por: string;
+                    } | null;
+                } | null;
+            }[];
+            inventariadoEm: string | null;
+            agente: {
+                ultimoContato: string;
+                semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            } | null;
+            distribuir: {
+                mandados: {
+                    /** Format: uuid */
+                    distribuicaoId: string;
+                    /** Format: uuid */
+                    maquinaId: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    };
+                    paraQuem: string;
+                    situacao: {
+                        /** @enum {string} */
+                        chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
+                        texto: string;
+                        /** @enum {string} */
+                        tipo: "neutra" | "info" | "sucesso" | "critico";
+                    };
+                    codigo: {
+                        numero: number;
+                        explicacao: string | null;
+                    } | null;
+                    etapa: string | null;
+                    criadaEm: string;
+                    criadaPor: string;
+                    enviadaEm: string | null;
+                    terminadaEm: string | null;
+                }[];
+                pacotes: {
+                    pacote: components["schemas"]["PacoteDeSoftware"];
+                    /** @enum {string} */
+                    situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                    versao: string | null;
+                }[];
+            } | null;
         };
         CategoriaDeSoftware: {
             /** Format: uuid */

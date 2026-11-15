@@ -2,7 +2,8 @@
 // distribuicao-de-software): a lista para quem distribui, e o cadastro, a edição, a inativação e o
 // envio do arquivo para quem administra o software, tudo na auditoria; e o arquivo inteiro, montado
 // das partes, para quem vê a base. Na change software-por-pacote, o pacote ganha a categoria, o nome
-// no inventário, o tipo pela extensão e quem guardou o arquivo (design, decisões 1, 3 e 4).
+// no inventário, o tipo pela extensão e quem guardou o arquivo (design, decisões 1, 3 e 4); e
+// ganham a matriz (decisão 12) e o software na ficha da máquina (decisão 13).
 import { Readable } from 'node:stream';
 import { gunzipSync } from 'node:zlib';
 import {
@@ -16,12 +17,14 @@ import {
   type Transacao,
 } from '@grafite/db';
 import {
+  COMPARACOES_COM_A_BASE,
   conferirPacote,
   contasDoPacote,
   LIMITE_DO_ARQUIVO_DO_PACOTE,
   MENSAGENS_DO_SOFTWARE,
   normalizarTexto,
   pode,
+  podeEm,
   tipoDoPacote,
 } from '@grafite/domain';
 import { and, asc, count, eq } from 'drizzle-orm';
@@ -33,6 +36,7 @@ import { type Armazenamento, chaveDaParteDoPacote } from '../arquivos/armazename
 import { BytesDoArquivo } from '../arquivos/esquemas.ts';
 import { lerArvore } from '../arvore.ts';
 import { nomeCodificado, nomeEmAscii } from '../ativos/arquivos-dos-campos.ts';
+import { lerAtivo } from '../ativos/leitura.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouChaveEstrangeira, violouUnicidade } from '../banco.ts';
 import {
@@ -47,9 +51,10 @@ import {
   instalacoesNaConta,
   ultimasDistribuicoes,
 } from '../software/base.ts';
+import { softwareDaMaquina } from '../software/maquina.ts';
 import { matrizPorLocal, matrizPorMaquina } from '../software/matriz.ts';
 import { trocarArquivoDoPacote } from '../software/pacotes.ts';
-import { SemContato } from './distribuicoes.ts';
+import { SemContato, SituacaoNaTela } from './distribuicoes.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 export const PacoteDeSoftware = z
@@ -226,7 +231,7 @@ const visaoDoPacote = ({ pacote: linha, categoria }: PacoteLido) => ({
   situacao: linha.situacao,
 });
 
-/** O nome do arquivo sem pasta: até 200 caracteres, sem os proibidos no Windows nem os de controle. */
+/** A máquina frente ao pacote, pelas versões dos programas dela que casam com ele. */
 const SituacaoNaMatriz = z.enum([
   'na-versao',
   'desatualizada',
@@ -299,6 +304,79 @@ const MatrizPorLocal = z
   })
   .meta({ id: 'MatrizPorLocal' });
 
+const PacoteNaRelacao = z.object({ id: z.uuid(), nome: z.string(), versao: z.string().nullable() });
+
+const SoftwareDaMaquina = z
+  .object({
+    /**
+     * Os programas do último inventário: pelo nome, ou, para quem distribui no local do ativo, na
+     * ordem "Frente à base · ação primeiro".
+     */
+    instalados: z.array(
+      z.object({
+        nome: z.string(),
+        versao: z.string().nullable(),
+        editor: z.string().nullable(),
+        instaladoEm: z.string().nullable(),
+        /** Do Windows, pelos campos que o agente manda. */
+        doSistema: z.boolean(),
+        /** A comparação com a base e a origem; `null` para quem não distribui no local do ativo. */
+        base: z
+          .object({
+            comparacao: z.enum(COMPARACOES_COM_A_BASE),
+            /** "Há a 131 na base". */
+            texto: z.string(),
+            /** O pacote ativo que casa com o programa. */
+            pacote: PacoteNaRelacao.nullable(),
+            /**
+             * A última distribuição concluída do pacote do programa, com quem a mandou ("Grafite ·
+             * <nome>"); `null`, "Fora do Grafite".
+             */
+            origem: z.object({ distribuicaoId: z.uuid(), por: z.string() }).nullable(),
+          })
+          .nullable(),
+      }),
+    ),
+    /** Quando o agente mandou a lista; `null` sem nenhuma. */
+    inventariadoEm: z.string().nullable(),
+    /** O agente do GLPI da máquina, com o sem contato pelo prazo da organização. */
+    agente: z.object({ ultimoContato: z.string(), semContato: SemContato.nullable() }).nullable(),
+    /** Só para quem distribui no local do ativo. */
+    distribuir: z
+      .object({
+        /** As distribuições que chegaram à máquina, das mais novas para as mais antigas. */
+        mandados: z.array(
+          z.object({
+            distribuicaoId: z.uuid(),
+            /** A máquina na distribuição, para o "Tentar de novo" e o "Tirar da fila". */
+            maquinaId: z.uuid(),
+            pacote: PacoteNaRelacao,
+            paraQuem: z.string(),
+            situacao: SituacaoNaTela,
+            /** O código de saída do comando, com a frase dos códigos do Windows Installer. */
+            codigo: z.object({ numero: z.number(), explicacao: z.string().nullable() }).nullable(),
+            etapa: z.string().nullable(),
+            criadaEm: z.string(),
+            criadaPor: z.string(),
+            enviadaEm: z.string().nullable(),
+            terminadaEm: z.string().nullable(),
+          }),
+        ),
+        /** Os pacotes ativos, pelo nome, com a máquina frente a cada um. */
+        pacotes: z.array(
+          z.object({
+            pacote: PacoteDeSoftware,
+            situacao: SituacaoNaMatriz,
+            /** A versão do inventário que vale frente ao pacote. */
+            versao: z.string().nullable(),
+          }),
+        ),
+      })
+      .nullable(),
+  })
+  .meta({ id: 'SoftwareDaMaquina' });
+
+/** O nome do arquivo sem pasta: até 200 caracteres, sem os proibidos no Windows nem os de controle. */
 const PROIBIDOS_NO_NOME = new Set([...'\\/:*?"<>|']);
 const nomeDeArquivoValido = (nome: string) =>
   nome.length >= 1 &&
@@ -422,6 +500,35 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
             momento: agora(),
           })),
         };
+      });
+    },
+  );
+
+  app.get(
+    '/ativos/:id/software',
+    {
+      config: { permissao: 'ativos.ver' },
+      schema: {
+        summary:
+          'O software da máquina: os instalados do último inventário e, para quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar',
+        params: z.object({ id: z.uuid({ error: 'Ativo não encontrado.' }) }),
+        response: { 200: SoftwareDaMaquina, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const { acesso } = sessaoDa(requisicao);
+      return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        const { ativo } = await lerAtivo(tx, requisicao.params.id);
+        const arvore = await lerArvore(tx);
+        exigirEm(requisicao, 'ativos.ver', ativo.localId, arvore);
+        const pacotes = podeEm(acesso, 'software.distribuir', ativo.localId, arvore)
+          ? (
+              await selecionarPacotes(tx)
+                .where(eq(pacotesDeSoftware.situacao, 'ativo'))
+                .orderBy(asc(pacotesDeSoftware.nomeNormalizado))
+            ).map(pacoteNaTela)
+          : null;
+        return softwareDaMaquina(tx, { ativoId: ativo.id, pacotes, momento: agora() });
       });
     },
   );

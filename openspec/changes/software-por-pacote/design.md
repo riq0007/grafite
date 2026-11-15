@@ -219,8 +219,8 @@ Uma rota só, `GET /software/matriz?local=<id>` ou `?por=local`, devolve os paco
 - os instalados frente à base, com a origem e a comparação.
 
 A origem de cada programa:
-- "GRAFITE · <nome>", quando o pacote dele chegou ao ativo por uma distribuição concluída;
-- "Fora do Grafite", nos outros.
+- "GRAFITE · <nome>", quando o pacote dele chegou ao ativo por uma distribuição concluída, com o nome de quem mandou a última delas, mesmo a de um pacote já inativo;
+- "Fora do Grafite", nos outros, e nos do sistema.
 
 A comparação com a base:
 - "HÁ A <versão> NA BASE", quando a versão do inventário está abaixo da do pacote;
@@ -228,7 +228,7 @@ A comparação com a base:
 - "NÃO ESTÁ NA BASE";
 - "DO WINDOWS, NÃO SE DISTRIBUI".
 
-A ordem "Frente à base · ação primeiro" vai nessa sequência, e pelo nome dentro de cada grupo.
+A ordem "Frente à base · ação primeiro" vai nessa sequência, e pelo nome dentro de cada grupo. Para quem só vê o ativo, a rota traz os instalados pelo nome, sem a comparação, a origem, os mandados e os pacotes; o agente e o sem contato vêm para os dois. A rota substitui o `/ativos/:id/softwares` e o `/ativos/:id/distribuicoes`, que saem quando a aba passa a usá-la.
 
 O programa do sistema vem dos campos que o agente do GLPI manda, conferidos no repositório público em 14/11/2026 (`Task/Inventory/Win32/Softwares.pm` e `Tools/Win32/Constants.pm` do agente, e o `inventory.schema.json` do `inventory_format`):
 - o `system_category` vem em todo programa do Windows: `system_component` (o `SystemComponent` do registro), `application`, `update`, `security_update` e `hotfix` (as atualizações), e, nos aplicativos da loja, o `SignatureKind` em minúsculas (`system`, `store`, `developer`, `enterprise` e `none`);

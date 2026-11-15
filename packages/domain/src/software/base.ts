@@ -134,12 +134,16 @@ export function monograma(nome: string): string {
   return `${(letras[0] ?? '').toUpperCase()}${letras[1] ?? ''}`;
 }
 
-export type ComparacaoComABase =
-  | 'ha-na-base'
-  | 'na-versao'
-  | 'sem-versao-alvo'
-  | 'fora-da-base'
-  | 'do-windows';
+/** O programa da máquina frente à base, na ordem "Frente à base · ação primeiro". */
+export const COMPARACOES_COM_A_BASE = [
+  'ha-na-base',
+  'na-versao',
+  'sem-versao-alvo',
+  'fora-da-base',
+  'do-windows',
+] as const;
+
+export type ComparacaoComABase = (typeof COMPARACOES_COM_A_BASE)[number];
 
 export interface PacoteDaBase {
   nome: string;

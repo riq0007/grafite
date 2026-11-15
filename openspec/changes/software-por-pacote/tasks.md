@@ -22,7 +22,7 @@
 - [x] 3.7 O Deploy, a volta e o chamado (decisões 6, 7, 8 e 8a): o `getJobs` só com o que pode seguir; o código de saída no `setStatus`; o `expiration` do CONTACT e do INVENTORY e o `volta_ate` do agente; a periódica `software.acordar-agendados`, a cada 15 minutos, com a regra das 2 horas, que chama pelo mesmo caminho da `software.acordar`. Começa pelos testes do Deploy, do protocolo e das tarefas. Verificar: esses testes, o lint e o typecheck.
 - [x] 3.8 Tentar de novo e tirar da fila (decisão 11), e a distribuição com o sem contato, o código e a explicação de cada máquina. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [x] 3.9 A matriz (decisão 12): `GET /software/matriz`, por máquina de um local e por local. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
-- [ ] 3.10 O software na ficha (decisão 13): `GET /ativos/:id/software`, com os mandados, os instalados frente à base, a origem, o sem contato e a fila; a permissão de cada parte. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
+- [x] 3.10 O software na ficha (decisão 13): `GET /ativos/:id/software`, com os mandados, os instalados frente à base, a origem, o sem contato e a fila; a permissão de cada parte. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
 
 ## 4. Web
 
@@ -34,7 +34,7 @@ Visual, sem teste novo: o usuário confere na tela. Cada tarefa ajusta os testes
 - [ ] 4.4 O assistente, primeira parte (m03): o trilho com "Já enviado hoje", o passo Pacote e o passo Máquinas, com as quatro abas e o "Até agora".
 - [ ] 4.5 O assistente, segunda parte (m04, m05 e m08): o passo Quando, com a faixa das 24 horas; o Conferir; a entrada pela matriz; o envio; e o passo 37 da ponta a ponta da pilha no assistente novo.
 - [ ] 4.6 A matriz (m06 e m07): por máquina, com a marcação e a dica, e por local, com o painel da direita; "Exportar".
-- [ ] 4.7 A aba Software da ficha (m09 e m11): os mandados, a tabela frente à base, o aviso e a fila do sem contato e o rótulo do cabeçalho.
+- [ ] 4.7 A aba Software da ficha (m09 e m11): os mandados, a tabela frente à base, o aviso e a fila do sem contato e o rótulo do cabeçalho, pelo `GET /ativos/:id/software`; o `/ativos/:id/softwares` e o `/ativos/:id/distribuicoes` saem, com os testes deles.
 - [ ] 4.8 "Instalar outro pacote nesta máquina" (m10): a camada, a busca, o quando e a instalação.
 - [ ] 4.9 O menu do Software na Gestão de ativos (a Base de pacotes, as Distribuições e a Matriz) e o prazo do sem contato na Administração.
 

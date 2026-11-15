@@ -799,6 +799,7 @@ export {
   situacaoDaSalaNoMapa,
 } from './salas/salas.ts';
 export {
+  COMPARACOES_COM_A_BASE,
   type ComparacaoComABase,
   type ContasDoPacote,
   contasDoPacote,

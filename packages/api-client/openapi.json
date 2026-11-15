@@ -22093,6 +22093,364 @@
           "celulas"
         ]
       },
+      "SoftwareDaMaquinaInput": {
+        "type": "object",
+        "properties": {
+          "instalados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string"
+                },
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "editor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "instaladoEm": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "doSistema": {
+                  "type": "boolean"
+                },
+                "base": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "comparacao": {
+                          "type": "string",
+                          "enum": [
+                            "ha-na-base",
+                            "na-versao",
+                            "sem-versao-alvo",
+                            "fora-da-base",
+                            "do-windows"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "pacote": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "nome": {
+                                  "type": "string"
+                                },
+                                "versao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nome",
+                                "versao"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "origem": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "distribuicaoId": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "por": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "distribuicaoId",
+                                "por"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "comparacao",
+                        "texto",
+                        "pacote",
+                        "origem"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "nome",
+                "versao",
+                "editor",
+                "instaladoEm",
+                "doSistema",
+                "base"
+              ]
+            }
+          },
+          "inventariadoEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agente": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimoContato": {
+                    "type": "string"
+                  },
+                  "semContato": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "ultimoContato",
+                  "semContato"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distribuir": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "mandados": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "distribuicaoId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "maquinaId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "pacote": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "nome": {
+                              "type": "string"
+                            },
+                            "versao": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nome",
+                            "versao"
+                          ]
+                        },
+                        "paraQuem": {
+                          "type": "string"
+                        },
+                        "situacao": {
+                          "type": "object",
+                          "properties": {
+                            "chave": {
+                              "type": "string",
+                              "enum": [
+                                "aguardando",
+                                "em-andamento",
+                                "concluida",
+                                "falhou",
+                                "tirada"
+                              ]
+                            },
+                            "texto": {
+                              "type": "string"
+                            },
+                            "tipo": {
+                              "type": "string",
+                              "enum": [
+                                "neutra",
+                                "info",
+                                "sucesso",
+                                "critico"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "chave",
+                            "texto",
+                            "tipo"
+                          ]
+                        },
+                        "codigo": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "numero": {
+                                  "type": "number"
+                                },
+                                "explicacao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "numero",
+                                "explicacao"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "etapa": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "criadaEm": {
+                          "type": "string"
+                        },
+                        "criadaPor": {
+                          "type": "string"
+                        },
+                        "enviadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "terminadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "distribuicaoId",
+                        "maquinaId",
+                        "pacote",
+                        "paraQuem",
+                        "situacao",
+                        "codigo",
+                        "etapa",
+                        "criadaEm",
+                        "criadaPor",
+                        "enviadaEm",
+                        "terminadaEm"
+                      ]
+                    }
+                  },
+                  "pacotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "pacote": {
+                          "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "na-versao",
+                            "desatualizada",
+                            "sem-o-programa",
+                            "instalado-sem-alvo"
+                          ]
+                        },
+                        "versao": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "pacote",
+                        "situacao",
+                        "versao"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "mandados",
+                  "pacotes"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "instalados",
+          "inventariadoEm",
+          "agente",
+          "distribuir"
+        ]
+      },
       "CategoriaDeSoftwareInput": {
         "type": "object",
         "properties": {
@@ -45569,6 +45927,376 @@
         ],
         "additionalProperties": false
       },
+      "SoftwareDaMaquina": {
+        "type": "object",
+        "properties": {
+          "instalados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "type": "string"
+                },
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "editor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "instaladoEm": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "doSistema": {
+                  "type": "boolean"
+                },
+                "base": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "comparacao": {
+                          "type": "string",
+                          "enum": [
+                            "ha-na-base",
+                            "na-versao",
+                            "sem-versao-alvo",
+                            "fora-da-base",
+                            "do-windows"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "pacote": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "nome": {
+                                  "type": "string"
+                                },
+                                "versao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nome",
+                                "versao"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "origem": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "distribuicaoId": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "por": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "distribuicaoId",
+                                "por"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "comparacao",
+                        "texto",
+                        "pacote",
+                        "origem"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "nome",
+                "versao",
+                "editor",
+                "instaladoEm",
+                "doSistema",
+                "base"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "inventariadoEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agente": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimoContato": {
+                    "type": "string"
+                  },
+                  "semContato": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/SemContatoDoAgente"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "ultimoContato",
+                  "semContato"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distribuir": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "mandados": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "distribuicaoId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "maquinaId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "pacote": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "nome": {
+                              "type": "string"
+                            },
+                            "versao": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nome",
+                            "versao"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "paraQuem": {
+                          "type": "string"
+                        },
+                        "situacao": {
+                          "type": "object",
+                          "properties": {
+                            "chave": {
+                              "type": "string",
+                              "enum": [
+                                "aguardando",
+                                "em-andamento",
+                                "concluida",
+                                "falhou",
+                                "tirada"
+                              ]
+                            },
+                            "texto": {
+                              "type": "string"
+                            },
+                            "tipo": {
+                              "type": "string",
+                              "enum": [
+                                "neutra",
+                                "info",
+                                "sucesso",
+                                "critico"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "chave",
+                            "texto",
+                            "tipo"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "codigo": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "numero": {
+                                  "type": "number"
+                                },
+                                "explicacao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "numero",
+                                "explicacao"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "etapa": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "criadaEm": {
+                          "type": "string"
+                        },
+                        "criadaPor": {
+                          "type": "string"
+                        },
+                        "enviadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "terminadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "distribuicaoId",
+                        "maquinaId",
+                        "pacote",
+                        "paraQuem",
+                        "situacao",
+                        "codigo",
+                        "etapa",
+                        "criadaEm",
+                        "criadaPor",
+                        "enviadaEm",
+                        "terminadaEm"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "pacotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "pacote": {
+                          "$ref": "#/components/schemas/PacoteDeSoftware"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "na-versao",
+                            "desatualizada",
+                            "sem-o-programa",
+                            "instalado-sem-alvo"
+                          ]
+                        },
+                        "versao": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "pacote",
+                        "situacao",
+                        "versao"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "mandados",
+                  "pacotes"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "instalados",
+          "inventariadoEm",
+          "agente",
+          "distribuir"
+        ],
+        "additionalProperties": false
+      },
       "CategoriaDeSoftware": {
         "type": "object",
         "properties": {
@@ -61796,6 +62524,95 @@
                       "$ref": "#/components/schemas/MatrizPorLocal"
                     }
                   ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ativos/{id}/software": {
+      "get": {
+        "summary": "O software da máquina: os instalados do último inventário e, para quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoftwareDaMaquina"
                 }
               }
             }

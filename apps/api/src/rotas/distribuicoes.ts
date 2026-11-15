@@ -57,7 +57,7 @@ import { alvosDaConta, classificarOAlvo, resolverAlvo } from '../software/alvo.t
 import { paraQuemNaTela } from '../software/base.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
-const SituacaoNaTela = z.object({
+export const SituacaoNaTela = z.object({
   chave: z.enum(SITUACOES_DA_MAQUINA_NO_BANCO),
   texto: z.string(),
   tipo: z.enum(['neutra', 'info', 'sucesso', 'critico']),
