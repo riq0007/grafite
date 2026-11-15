@@ -815,6 +815,16 @@ export {
   TAMANHO_DA_PARTE_DO_PACOTE,
 } from './software/software.ts';
 export {
+  casaComOPacote,
+  compararVersoes,
+  estadoDaVersao,
+  type SituacaoFrenteAoPacote,
+  situacaoFrenteAoPacote,
+  temVersaoAlvo,
+  versaoCortada,
+  versaoMaisAlta,
+} from './software/versoes.ts';
+export {
   atendeASolicitacao,
   type CompativelParaSugestao,
   type DadosDaSolicitacao,
