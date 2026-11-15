@@ -2502,7 +2502,7 @@ describe('a aba Software', () => {
     agente: { ultimoContato: '2026-10-28T09:00:00.000Z', semContato: null },
     distribuir: null,
   };
-  const CHROME = { id: 'p1', nome: 'Google Chrome', versao: '131' };
+  const CHROME = { id: 'p1', nome: 'Google Chrome', versao: '131', situacao: 'ativo' as const };
   const mandado = (extras: Partial<Mandado>): Mandado => ({
     distribuicaoId: 'd1',
     maquinaId: 'm1',
@@ -2610,7 +2610,7 @@ describe('a aba Software', () => {
               mandado({
                 distribuicaoId: 'd2',
                 maquinaId: 'm2',
-                pacote: { id: 'p2', nome: 'Agente de backup', versao: '12.0' },
+                pacote: { id: 'p2', nome: 'Agente de backup', versao: '12.0', situacao: 'ativo' },
                 situacao: { chave: 'concluida', texto: 'Concluída', tipo: 'sucesso' },
                 criadaPor: 'Bruno Lima',
               }),
@@ -2678,6 +2678,50 @@ describe('a aba Software', () => {
     );
     await waitFor(() => expect(avisos()).toContain('Google Chrome 131 saiu da fila.'));
     expect(pedidos).toEqual(['/api/software/distribuicoes/d1/maquinas/m1/tirar-da-fila']);
+  });
+
+  it('Pacote inativado na fila: o mandado que aguarda diz "Pacote inativado", e o que falhou fica sem o "Tentar de novo"', async () => {
+    const INATIVO = { ...CHROME, situacao: 'inativo' as const };
+    const mandados = [
+      mandado({ pacote: INATIVO }),
+      mandado({
+        distribuicaoId: 'd2',
+        maquinaId: 'm2',
+        pacote: INATIVO,
+        situacao: { chave: 'falhou', texto: 'Falhou', tipo: 'critico' },
+        codigo: { numero: 1603, explicacao: 'Erro fatal na instalação.' },
+      }),
+    ];
+    const comA = (agente: Software['agente']): ServidorDeTeste => ({
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({ ...SOFTWARE, agente, distribuir: { mandados, pacotes: [] } }),
+    });
+    abrir(
+      comA(SOFTWARE.agente),
+      naOrganizacao('ativos.ver', 'software.distribuir'),
+      '/ativos/a1?aba=softwares',
+    );
+    const regiao = await screen.findByRole('region', { name: 'Mandados pelo Grafite · 2' });
+    // O que aguarda leva o rótulo, e o que falhou diz o porquê no lugar do botão.
+    expect(within(regiao).getAllByText('Pacote inativado')).toHaveLength(2);
+    expect(within(regiao).queryByText('Na fila')).toBeNull();
+    expect(within(regiao).queryByRole('button', { name: /^Tentar de novo/ })).toBeNull();
+
+    // Na máquina sem contato, o pedido que espera a volta dela também diz "Pacote inativado".
+    cleanup();
+    const tresDias = new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString();
+    abrir(
+      comA({ ultimoContato: tresDias, semContato: { dias: 3, texto: 'Sem contato · há 3 dias' } }),
+      naOrganizacao('ativos.ver', 'software.distribuir'),
+      '/ativos/a1?aba=softwares',
+    );
+    const fila = await screen.findByRole('region', { name: 'Esperando a máquina voltar' });
+    expect(within(fila).getByText('Pacote inativado')).toBeTruthy();
+    expect(within(fila).queryByText('Na fila')).toBeNull();
+    expect(
+      within(fila).getByRole('button', { name: 'Tirar o Google Chrome 131 da fila' }),
+    ).toBeTruthy();
   });
 
   const pacoteDaBase = (id: string, nome: string, versao: string) => ({

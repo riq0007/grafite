@@ -69,7 +69,14 @@ export async function jobsDoAgente(
     .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
     .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
-    .where(and(eq(agentes.deviceid, deviceid), eq(maquinasDasDistribuicoes.situacao, 'aguardando')))
+    .where(
+      and(
+        eq(agentes.deviceid, deviceid),
+        eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
+        // O pacote inativado segura a fila até ser reativado (design, decisão 17).
+        eq(pacotesDeSoftware.situacao, 'ativo'),
+      ),
+    )
     .orderBy(asc(distribuicoes.criadaEm));
   const linhas = aguardando.filter((linha) => podeSeguir(linha, momento));
   if (linhas.length === 0) return {};
@@ -218,8 +225,14 @@ export async function expirationDoAgente(
     .from(maquinasDasDistribuicoes)
     .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
+    .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
     .where(
-      and(eq(agentes.deviceid, deviceid), eq(maquinasDasDistribuicoes.situacao, 'aguardando')),
+      and(
+        eq(agentes.deviceid, deviceid),
+        eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
+        // O pedido do pacote inativo não conta (design, decisão 17).
+        eq(pacotesDeSoftware.situacao, 'ativo'),
+      ),
     );
   return expirationDoContato(pedidos, momento);
 }

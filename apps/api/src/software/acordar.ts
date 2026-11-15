@@ -10,6 +10,7 @@ import {
   distribuicoes,
   maquinasDasDistribuicoes,
   naOrganizacao,
+  pacotesDeSoftware,
   type Transacao,
 } from '@grafite/db';
 import { comALinha, linhaDoChamado, podeSeguir, semContato } from '@grafite/domain';
@@ -59,9 +60,9 @@ export interface MaquinaParaChamar {
 }
 
 /**
- * As máquinas que aguardam, com o pedido que pode seguir no momento, o agente em contato pelo prazo
- * da organização e o IP: as de uma distribuição (ou só a pedida), ou as da organização que não foram
- * chamadas desde o `chamadasAte`.
+ * As máquinas que aguardam um pacote ativo, com o pedido que pode seguir no momento, o agente em
+ * contato pelo prazo da organização e o IP: as de uma distribuição (ou só a pedida), ou as da
+ * organização que não foram chamadas desde o `chamadasAte`.
  */
 export async function maquinasParaChamar(
   tx: Transacao,
@@ -90,8 +91,11 @@ export async function maquinasParaChamar(
     .from(maquinasDasDistribuicoes)
     .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
+    .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
     .where(
       and(
+        // O pacote inativado não acorda ninguém até ser reativado (design, decisão 17).
+        eq(pacotesDeSoftware.situacao, 'ativo'),
         distribuicaoId ? eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId) : undefined,
         maquinaId ? eq(maquinasDasDistribuicoes.id, maquinaId) : undefined,
         chamadasAte

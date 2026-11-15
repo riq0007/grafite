@@ -33133,6 +33133,8 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
@@ -33192,6 +33194,8 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
@@ -35081,6 +35085,8 @@ export interface components {
                         id: string;
                         nome: string;
                         versao: string | null;
+                        /** @enum {string} */
+                        situacao: "ativo" | "inativo";
                     };
                     paraQuem: string;
                     situacao: {
@@ -37755,6 +37761,8 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
@@ -37814,6 +37822,8 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
@@ -39703,6 +39713,8 @@ export interface components {
                         id: string;
                         nome: string;
                         versao: string | null;
+                        /** @enum {string} */
+                        situacao: "ativo" | "inativo";
                     };
                     paraQuem: string;
                     situacao: {

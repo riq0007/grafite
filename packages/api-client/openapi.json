@@ -12450,12 +12450,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ]
           },
           "criadaPor": {
@@ -12738,12 +12746,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ]
           },
           "criadaPor": {
@@ -22225,12 +22241,20 @@
                                 "string",
                                 "null"
                               ]
+                            },
+                            "situacao": {
+                              "type": "string",
+                              "enum": [
+                                "ativo",
+                                "inativo"
+                              ]
                             }
                           },
                           "required": [
                             "id",
                             "nome",
-                            "versao"
+                            "versao",
+                            "situacao"
                           ]
                         },
                         "paraQuem": {
@@ -35831,12 +35855,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ],
             "additionalProperties": false
           },
@@ -36128,12 +36160,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ],
             "additionalProperties": false
           },
@@ -45943,12 +45983,20 @@
                                 "string",
                                 "null"
                               ]
+                            },
+                            "situacao": {
+                              "type": "string",
+                              "enum": [
+                                "ativo",
+                                "inativo"
+                              ]
                             }
                           },
                           "required": [
                             "id",
                             "nome",
-                            "versao"
+                            "versao",
+                            "situacao"
                           ],
                           "additionalProperties": false
                         },

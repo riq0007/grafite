@@ -112,6 +112,7 @@ export async function softwareDaMaquina<P extends PacoteDaMaquina>(
         id: pacotesDeSoftware.id,
         nome: pacotesDeSoftware.nome,
         versao: pacotesDeSoftware.versao,
+        situacao: pacotesDeSoftware.situacao,
       },
       paraQuem: distribuicoes.paraQuem,
       situacao: maquinasDasDistribuicoes.situacao,

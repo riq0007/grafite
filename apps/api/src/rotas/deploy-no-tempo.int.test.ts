@@ -16,6 +16,7 @@ import {
 import { normalizarTexto } from '@grafite/domain';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { chamarOsAgendados as chamarOsAgendadosDa } from '../../test/agendados.ts';
 import { type ApiDeTeste, abrirApi, criarConta, criarOrganizacao } from '../../test/integracao.ts';
 import { hashDoToken } from '../agentes/agentes.ts';
 import { TAREFA_DOS_AGENDADOS, tarefasDoSoftware } from '../software/acordar.ts';
@@ -65,44 +66,8 @@ const agente = (deviceid: string) =>
     return linha;
   });
 
-/**
- * Uma volta da tarefa periódica, com o chamado simulado: o 10.8.0.13 não responde. O banco é o de
- * todos os arquivos dos testes, e a tarefa passa por todas as organizações dele: a volta devolve
- * só os IPs das máquinas desta que ficaram com o chamado do momento, lidos do banco pela
- * organização, e confere que o agente de cada uma recebeu o chamado.
- */
-async function chamarOsAgendados() {
-  const chamados: string[] = [];
-  const [tarefa] = tarefasDoSoftware({
-    banco: api.banco,
-    armazenamento: api.armazenamento,
-    agora: api.relogio.agora,
-    log: { info: () => {}, warn: () => {}, error: () => {} },
-    enviar: async () => null,
-    acordar: async (ip) => {
-      chamados.push(ip);
-      return ip !== '10.8.0.13';
-    },
-  }).filter(({ nome }) => nome === TAREFA_DOS_AGENDADOS);
-  if (!tarefa) throw new Error('A tarefa dos agendados não está no catálogo.');
-  await tarefa.trabalho(undefined, {
-    tarefaId: 'teste',
-    tentativa: 0,
-    sinal: new AbortController().signal,
-  });
-  const momento = api.relogio.agora();
-  const marcadas = await naOrg((tx) =>
-    tx
-      .select({ ip: agentes.ip })
-      .from(maquinasDasDistribuicoes)
-      .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
-      .where(eq(maquinasDasDistribuicoes.chamadaEm, momento)),
-  );
-  const ips = marcadas.map(({ ip }) => ip ?? '').sort();
-  // Contém, e não igual: os agentes das outras organizações do banco também são chamados.
-  expect(chamados).toEqual(expect.arrayContaining(ips));
-  return ips;
-}
+/** Uma volta da tarefa periódica, com o chamado simulado: o 10.8.0.13 não responde. */
+const chamarOsAgendados = () => chamarOsAgendadosDa(api, org, { semResposta: ['10.8.0.13'] });
 
 beforeAll(async () => {
   api = await abrirApi();

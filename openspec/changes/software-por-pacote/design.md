@@ -288,7 +288,7 @@ Alternativa recusada: tirar da fila as máquinas ao inativar. A TI perderia a fi
 
 ## Risks / Trade-offs
 
-- **[A porta 62354 fechada]** O "Agora" espera o contato diário, e a primeira noite pode passar, quando o agente falou antes de a distribuição existir e só volta no dia seguinte → o `expiration` da decisão 8 garante a noite seguinte; "Na fila" diz que o agente não respondeu ao chamado e até quando ele volta; o runbook pede a porta.
+- **[A porta 62354 fechada]** O "Agora" espera o contato diário, e a primeira noite pode passar, quando o agente falou antes de a distribuição existir e só volta no dia seguinte, ou quando falou com o pacote inativado e levou as 24 horas (decisão 17: o cenário "Pacote reativado" conta com o chamado respondido) → o `expiration` da decisão 8 garante a noite seguinte; "Na fila" diz que o agente não respondeu ao chamado e até quando ele volta; o runbook pede a porta.
 - **[O `expiration` curto]** O agente com pedido para a noite faz o inventário de novo quando volta → o prazo curto vale só enquanto há pedido aguardando que ainda não pode seguir, e volta às 24 horas no contato seguinte.
 - **[O nome no inventário errado]** O pacote casa com nada, e todas as máquinas aparecem "Sem o programa" → o "Instalado em 0" da base e da ficha do pacote mostra o erro, e o nome no inventário fica na ficha do pacote, ao lado da categoria.
 - **[A conta pesada na base]** As contas cruzam todos os programas do inventário com os pacotes → uma consulta por tela, com o casamento no banco pelo `nome_normalizado` e um índice por organização e nome normalizado.

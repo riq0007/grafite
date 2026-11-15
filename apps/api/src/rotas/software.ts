@@ -307,6 +307,9 @@ const MatrizPorLocal = z
 
 const PacoteNaRelacao = z.object({ id: z.uuid(), nome: z.string(), versao: z.string().nullable() });
 
+/** O pacote do mandado, com a situação: o inativo segura a fila até ser reativado (decisão 17). */
+const PacoteDoMandado = PacoteNaRelacao.extend({ situacao: z.enum(['ativo', 'inativo']) });
+
 const SoftwareDaMaquina = z
   .object({
     /**
@@ -351,7 +354,7 @@ const SoftwareDaMaquina = z
             distribuicaoId: z.uuid(),
             /** A máquina na distribuição, para o "Tentar de novo" e o "Tirar da fila". */
             maquinaId: z.uuid(),
-            pacote: PacoteNaRelacao,
+            pacote: PacoteDoMandado,
             paraQuem: z.string(),
             situacao: SituacaoNaTela,
             /** O código de saída do comando, com a frase dos códigos do Windows Installer. */

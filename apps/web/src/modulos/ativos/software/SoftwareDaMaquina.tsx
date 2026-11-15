@@ -39,6 +39,7 @@ import {
   type PacoteParaInstalar,
 } from './InstalarNaMaquina.tsx';
 import { IconeDoPacote } from './Pecas.tsx';
+import doSoftware from './Software.module.css';
 import estilos from './SoftwareDaMaquina.module.css';
 
 /** As linhas que a tabela mostra antes do "Mostrar os outros N". */
@@ -54,7 +55,14 @@ function contagem(vistos: number, total: number): string {
     : `${NUMERO.format(vistos)} de ${NUMERO.format(total)} ${nome}`;
 }
 
-/** O rótulo do mandado: "Falhou · 1603", "Concluída", "Instalando", "Na fila" ou "Tirada da fila". */
+/** O pedido que espera um pacote inativado, que segura a fila até ser reativado (decisão 17). */
+const naFilaOuInativado = (mandado: MandadoPeloGrafite) =>
+  mandado.pacote.situacao === 'inativo' ? 'Pacote inativado' : 'Na fila';
+
+/**
+ * O rótulo do mandado: "Falhou · 1603", "Concluída", "Instalando", "Na fila", "Pacote inativado" ou
+ * "Tirada da fila".
+ */
 function rotuloDoMandado(mandado: MandadoPeloGrafite): { situacao: Situacao; texto: string } {
   switch (mandado.situacao.chave) {
     case 'falhou':
@@ -67,7 +75,7 @@ function rotuloDoMandado(mandado: MandadoPeloGrafite): { situacao: Situacao; tex
     case 'em-andamento':
       return { situacao: 'info', texto: 'Instalando' };
     case 'aguardando':
-      return { situacao: 'neutra', texto: 'Na fila' };
+      return { situacao: 'neutra', texto: naFilaOuInativado(mandado) };
     default:
       return { situacao: 'neutra', texto: 'Tirada da fila' };
   }
@@ -242,7 +250,7 @@ function AvisoDoInventario({ software }: { software: Software }) {
     texto = `${agente?.semContato?.texto ?? 'Sem contato'}: o agente ainda não mandou o inventário.`;
   }
   return (
-    <p className={estilos.aviso}>
+    <p className={doSoftware.aviso}>
       <Icone icone={Unplug} tamanho={16} />
       <span>{texto}</span>
     </p>
@@ -328,7 +336,7 @@ function Fila({ mandados }: { mandados: readonly MandadoPeloGrafite[] }) {
                 {mandado.criadaPor}
               </span>
             </span>
-            <RotuloDeSituacao situacao="neutra">Na fila</RotuloDeSituacao>
+            <RotuloDeSituacao situacao="neutra">{naFilaOuInativado(mandado)}</RotuloDeSituacao>
             <AcaoDoMandado mandado={mandado} acao="tirar-da-fila" />
           </li>
         ))}
@@ -376,7 +384,12 @@ function Mandados({
               )}
               <span className={estilos.porQuem}>
                 por {mandado.criadaPor}
-                {falhou && <AcaoDoMandado mandado={mandado} acao="tentar-de-novo" />}
+                {falhou &&
+                  (mandado.pacote.situacao === 'inativo' ? (
+                    <span className={doSoftware.semAcao}>Pacote inativado</span>
+                  ) : (
+                    <AcaoDoMandado mandado={mandado} acao="tentar-de-novo" />
+                  ))}
               </span>
             </li>
           );

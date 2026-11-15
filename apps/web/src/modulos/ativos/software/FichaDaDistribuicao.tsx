@@ -21,7 +21,15 @@ import {
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { ChevronLeft, CircleCheck, CircleMinus, Download, Rocket, RotateCw } from 'lucide-react';
+import {
+  ChevronLeft,
+  CircleCheck,
+  CircleMinus,
+  Download,
+  PackageX,
+  Rocket,
+  RotateCw,
+} from 'lucide-react';
 import { useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
@@ -81,15 +89,21 @@ function contar(maquinas: readonly MaquinaDaDistribuicao[]): ResultadoDaDistribu
   return resultado;
 }
 
-/** O log da máquina numa gaveta, como o agente mandou. */
+/**
+ * O log da máquina numa gaveta, como o agente mandou. Com o pacote inativado, a que aguarda diz
+ * por que o agente não recebe a tarefa (design, decisão 17).
+ */
 function LogDaMaquina({
   maquina,
+  pacoteInativo,
   aoFechar,
 }: {
   maquina: MaquinaDaDistribuicao;
+  pacoteInativo: boolean;
   aoFechar: () => void;
 }) {
   const { formatarDataEHora } = useDataHora();
+  const segurada = pacoteInativo && maquina.situacao.chave === 'aguardando';
   return (
     <Gaveta
       aberta
@@ -102,6 +116,7 @@ function LogDaMaquina({
         <p className={doSoftware.nota}>
           {[
             maquina.situacao.texto,
+            segurada ? 'pacote inativado' : null,
             maquina.etapa ? `etapa ${maquina.etapa}` : null,
             maquina.enviadaEm
               ? `enviada ao agente em ${formatarDataEHora(new Date(maquina.enviadaEm))}`
@@ -116,7 +131,11 @@ function LogDaMaquina({
         {maquina.log.length === 0 ? (
           <EstadoVazio
             titulo="O agente ainda não mandou nenhum passo."
-            descricao="Ele pega a tarefa quando o pedido pode seguir, no contato seguinte com o Grafite."
+            descricao={
+              segurada
+                ? 'O pacote está inativado: o agente só recebe a tarefa depois de ele ser reativado.'
+                : 'Ele pega a tarefa quando o pedido pode seguir, no contato seguinte com o Grafite.'
+            }
           />
         ) : (
           <ol className={doSoftware.log} aria-label="Passos do agente">
@@ -305,9 +324,15 @@ export function FichaDaDistribuicao() {
   const tiradas = maquinas.filter(({ situacao }) => situacao.chave === 'tirada');
 
   const aPartirDe = ficha.quando.aPartirDe ? new Date(ficha.quando.aPartirDe) : null;
+  // O pacote inativado segura a fila até ser reativado, sem o "Tentar de novo" (decisão 17).
+  const inativo = ficha.pacote.situacao === 'inativo';
 
-  /** Quando o pedido da máquina na fila segue, ou até quando o agente que não respondeu volta. */
+  /**
+   * Quando o pedido da máquina na fila segue, até quando o agente que não respondeu volta, ou o
+   * pacote inativado, que segura a fila.
+   */
   function textoDaFila(maquina: MaquinaDaDistribuicao): string {
+    if (inativo) return 'Pacote inativado';
     const chamada = maquina.chamada;
     if (chamada && !chamada.respondeu) {
       const volta = hora(maquina.voltaAte);
@@ -345,6 +370,17 @@ export function FichaDaDistribuicao() {
     await consultas.invalidateQueries({ queryKey: CHAVE_DO_SOFTWARE });
   }
 
+  /** A situação no CSV diz, como a tela, o pacote inativado e a falta de contato da que aguarda. */
+  function situacaoNoCsv(maquina: MaquinaDaDistribuicao): string {
+    const detalhes = [
+      inativo && maquina.situacao.chave === 'aguardando' ? 'Pacote inativado' : null,
+      maquina.semContato?.texto ?? null,
+    ].filter(Boolean);
+    return detalhes.length > 0
+      ? `${maquina.situacao.texto} (${detalhes.join(' · ')})`
+      : maquina.situacao.texto;
+  }
+
   function exportar() {
     const momento = (valor: string | null) => (valor ? formatarDataEHora(new Date(valor)) : null);
     gravarCsv(
@@ -365,9 +401,7 @@ export function FichaDaDistribuicao() {
           maquina.ativo.rotulo,
           maquina.ativo.patrimonio,
           maquina.pessoa,
-          maquina.semContato
-            ? `${maquina.situacao.texto} (${maquina.semContato.texto})`
-            : maquina.situacao.texto,
+          situacaoNoCsv(maquina),
           maquina.etapa,
           maquina.codigo?.numero ?? null,
           momento(maquina.enviadaEm),
@@ -415,6 +449,14 @@ export function FichaDaDistribuicao() {
               : `${ficha.foraDoAlcance} máquinas em locais fora do seu alcance`}
           </p>
         )}
+        {inativo && contas.aguardando > 0 && (
+          <p className={doSoftware.aviso}>
+            <Icone icone={PackageX} tamanho={16} />
+            <span>
+              Pacote inativado: as máquinas que aguardam ficam na fila até ele ser reativado.
+            </span>
+          </p>
+        )}
         {falharam.length + semContato.length > 0 && (
           <section className={estilos.secao}>
             <Carimbo>Precisa de você</Carimbo>
@@ -437,14 +479,18 @@ export function FichaDaDistribuicao() {
                         : 'O agente avisou a falha. O log diz o que ele mandou.')}
                   </p>
                   <div className={estilos.acoesDoCartao}>
-                    <Botao
-                      nivel="primario"
-                      icone={RotateCw}
-                      carregando={ocupada === maquina.id}
-                      onPress={() => void agir(maquina, 'tentar-de-novo')}
-                    >
-                      Tentar de novo
-                    </Botao>
+                    {inativo ? (
+                      <span className={doSoftware.semAcao}>Pacote inativado</span>
+                    ) : (
+                      <Botao
+                        nivel="primario"
+                        icone={RotateCw}
+                        carregando={ocupada === maquina.id}
+                        onPress={() => void agir(maquina, 'tentar-de-novo')}
+                      >
+                        Tentar de novo
+                      </Botao>
+                    )}
                     <Botao onPress={() => verFicha(maquina)}>Ver a ficha</Botao>
                     {maquina.terminadaEm && (
                       <span className={estilos.fim}>falhou às {hora(maquina.terminadaEm)}</span>
@@ -464,8 +510,9 @@ export function FichaDaDistribuicao() {
                     </RotuloDeSituacao>
                   </div>
                   <p>
-                    O agente não responde. A instalação espera na fila. Ligue a máquina ou confira o
-                    agente.
+                    {inativo
+                      ? 'Pacote inativado: a instalação fica na fila até ele ser reativado. O agente também não responde: ligue a máquina ou confira o agente.'
+                      : 'O agente não responde. A instalação espera na fila. Ligue a máquina ou confira o agente.'}
                   </p>
                   <div className={estilos.acoesDoCartao}>
                     <Botao onPress={() => verFicha(maquina)}>Ver a ficha</Botao>
@@ -579,7 +626,13 @@ export function FichaDaDistribuicao() {
           </section>
         )}
       </div>
-      {aberta && <LogDaMaquina maquina={aberta} aoFechar={() => definirVendo(null)} />}
+      {aberta && (
+        <LogDaMaquina
+          maquina={aberta}
+          pacoteInativo={inativo}
+          aoFechar={() => definirVendo(null)}
+        />
+      )}
     </div>
   );
 }

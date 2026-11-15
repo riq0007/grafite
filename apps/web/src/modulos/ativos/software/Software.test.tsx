@@ -90,9 +90,14 @@ const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}):
   ...extras,
 });
 
-const ficha = (maquinas: Maquina[], progresso: string, foraDoAlcance = 0): Ficha => ({
+const ficha = (
+  maquinas: Maquina[],
+  progresso: string,
+  foraDoAlcance = 0,
+  situacaoDoPacote: Ficha['pacote']['situacao'] = 'ativo',
+): Ficha => ({
   id: 'd1',
-  pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao },
+  pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao, situacao: situacaoDoPacote },
   criadaPor: 'Ana Souza',
   criadaEm: '2026-10-28T12:00:00.000Z',
   paraQuem: `${maquinas.length} máquinas`,
@@ -228,6 +233,11 @@ describe('a ficha do pacote', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Inativar' }));
     await waitFor(() => expect(avisos()).toContain('Pacote inativado.'));
     expect(await screen.findByRole('button', { name: 'Reativar' })).toBeTruthy();
+    expect(
+      screen.getByText(
+        'O pacote inativo não entra em distribuições novas, e as máquinas que o aguardam ficam na fila até ele ser reativado.',
+      ),
+    ).toBeTruthy();
   });
 });
 
@@ -339,7 +349,12 @@ describe('a distribuição', () => {
           distribuicoes: [
             {
               id: 'd1',
-              pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao },
+              pacote: {
+                id: PACOTE.id,
+                nome: PACOTE.nome,
+                versao: PACOTE.versao,
+                situacao: 'ativo',
+              },
               criadaPor: 'Ana Souza',
               criadaEm: '2026-10-28T12:00:00.000Z',
               paraQuem: 'Jundiaí',
@@ -417,6 +432,7 @@ describe('a distribuição', () => {
     expect(await screen.findByText('Falhou · 1603')).toBeTruthy();
     expect(screen.getByText('Erro fatal: costuma ser outra instalação em andamento.')).toBeTruthy();
     expect(screen.getByText('Sem contato · há 3 dias')).toBeTruthy();
+    expect(screen.queryByText(/Pacote inativado/)).toBeNull();
     const lista = await screen.findByRole('list', { name: 'Distribuições do pacote' });
     expect(
       within(lista)
@@ -433,6 +449,92 @@ describe('a distribuição', () => {
       '/api/software/distribuicoes/d1/maquinas/m2/tentar-de-novo',
       '/api/software/distribuicoes/d1/maquinas/m4/tirar-da-fila',
     ]);
+  });
+
+  it('Pacote inativado na fila: a distribuição avisa, e cada máquina diz "Pacote inativado", sem o "Tentar de novo"', async () => {
+    const longe = maquina('m4', 'PAT-00777', {
+      semContato: { dias: 3, texto: 'Sem contato · há 3 dias' },
+    });
+    abrir('/gestao/software/distribuicoes/d1', {
+      'GET /api/software/distribuicoes/d1': () =>
+        Response.json(
+          ficha(
+            [FALHOU, maquina('m1', 'PAT-00321'), longe],
+            '0 de 3 concluídas, 1 falhou',
+            0,
+            'inativo',
+          ),
+        ),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () =>
+        Response.json({
+          ...FICHA_DO_PACOTE,
+          pacote: { ...FICHA_DO_PACOTE.pacote, situacao: 'inativo' },
+        }),
+    });
+    expect(
+      await screen.findByText(
+        'Pacote inativado: as máquinas que aguardam ficam na fila até ele ser reativado.',
+      ),
+    ).toBeTruthy();
+    const daMaquina = (nome: string) => {
+      const item = screen.getByRole('button', { name: nome }).closest('li');
+      if (!item) throw new Error(`${nome} fora de uma lista.`);
+      return within(item);
+    };
+    // A que falhou fica sem o "Tentar de novo"; a da fila e a sem contato continuam saindo da fila.
+    expect(daMaquina('Computador PAT-00412').getByText('Pacote inativado')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
+    expect(daMaquina('Computador PAT-00321').getByText('Pacote inativado')).toBeTruthy();
+    expect(
+      daMaquina('Computador PAT-00777').getByText(
+        /^Pacote inativado: a instalação fica na fila até ele ser reativado\./,
+      ),
+    ).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Tirar da fila' })).toHaveLength(2);
+
+    // O CSV diz o pacote inativado nas que aguardam, como a tela.
+    const arquivos: Blob[] = [];
+    const { createObjectURL, revokeObjectURL } = URL;
+    URL.createObjectURL = vi.fn((objeto: Blob | MediaSource) => {
+      if (objeto instanceof Blob) arquivos.push(objeto);
+      return 'blob:csv';
+    });
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Exportar' }));
+      const csv = await arquivos[0]?.text();
+      expect(csv).toContain(';Falhou;');
+      expect(csv).toContain(';Aguardando o agente (Pacote inativado);');
+      expect(csv).toContain(';Aguardando o agente (Pacote inativado · Sem contato · há 3 dias);');
+    } finally {
+      URL.createObjectURL = createObjectURL;
+      URL.revokeObjectURL = revokeObjectURL;
+    }
+
+    // O log da que aguarda diz por que o agente não recebe a tarefa.
+    fireEvent.click(screen.getByRole('button', { name: 'Computador PAT-00321' }));
+    const gaveta = await screen.findByRole('dialog', {
+      name: 'Log de Computador PAT-00321 (PAT-00321)',
+    });
+    expect(within(gaveta).getByText(/^Aguardando o agente · pacote inativado · /)).toBeTruthy();
+    expect(
+      within(gaveta).getByText(
+        'O pacote está inativado: o agente só recebe a tarefa depois de ele ser reativado.',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('o pacote inativo só com a que falhou: sem o aviso da fila, e o cartão diz "Pacote inativado" no lugar do "Tentar de novo"', async () => {
+    abrir('/gestao/software/distribuicoes/d1', {
+      'GET /api/software/distribuicoes/d1': () =>
+        Response.json(ficha([FALHOU], '0 de 1 concluída, 1 falhou', 0, 'inativo')),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
+    });
+    expect(await screen.findByText('Precisa de você')).toBeTruthy();
+    expect(screen.getByText('Pacote inativado')).toBeTruthy();
+    expect(screen.queryByText(/^Pacote inativado: as máquinas que aguardam/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
   });
 });
 

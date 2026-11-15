@@ -44,20 +44,6 @@
   width: 220px;
 }
 
-/* O aviso do sem contato: a idade do inventário que a tabela mostra. */
-.aviso {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-items: start;
-  gap: var(--esp-2);
-  margin: 0;
-  padding: var(--esp-2) var(--esp-3);
-  border: 1px solid var(--cor-atencao-borda);
-  border-radius: var(--raio-base);
-  background: var(--cor-atencao-fundo);
-  font-size: var(--texto-dado);
-}
-
 /* A fila do sem contato: o pacote, desde quando, o rótulo e "Tirar da fila". */
 .fila {
   display: grid;

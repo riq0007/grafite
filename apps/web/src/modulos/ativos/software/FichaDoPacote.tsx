@@ -274,7 +274,10 @@ export function FichaDoPacote() {
         </dl>
         <div className={dividida.pe}>
           {!ativo && (
-            <p className={dividida.nota}>O pacote inativo não entra em distribuições novas.</p>
+            <p className={dividida.nota}>
+              O pacote inativo não entra em distribuições novas, e as máquinas que o aguardam ficam
+              na fila até ele ser reativado.
+            </p>
           )}
           <Botao
             nivel="primario"

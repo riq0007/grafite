@@ -314,7 +314,12 @@ describe('o software na ficha da máquina', () => {
       {
         distribuicaoId: daDistribuicao.chrome,
         maquinaId: naDistribuicao['chrome:f17'],
-        pacote: { id: pacotes['Google Chrome'], nome: 'Google Chrome', versao: '131' },
+        pacote: {
+          id: pacotes['Google Chrome'],
+          nome: 'Google Chrome',
+          versao: '131',
+          situacao: 'ativo',
+        },
         paraQuem: 'Financeiro',
         situacao: expect.objectContaining({ chave: 'falhou', texto: 'Falhou' }),
         codigo: { numero: 1603, explicacao: explicarOCodigoDeSaida(1603) },

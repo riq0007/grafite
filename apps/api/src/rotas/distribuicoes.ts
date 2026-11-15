@@ -77,7 +77,13 @@ export const SituacaoNaTela = z.object({
 const ResumoDaDistribuicao = z
   .object({
     id: z.uuid(),
-    pacote: z.object({ id: z.uuid(), nome: z.string(), versao: z.string().nullable() }),
+    /** O pacote, com a situação: o inativo segura a fila até ser reativado (decisão 17). */
+    pacote: z.object({
+      id: z.uuid(),
+      nome: z.string(),
+      versao: z.string().nullable(),
+      situacao: z.enum(['ativo', 'inativo']),
+    }),
     criadaPor: z.string(),
     criadaEm: z.string(),
     /** O nome da máquina, o local mais fundo que contém todas, "N locais" ou "N máquinas". */
@@ -263,6 +269,7 @@ async function resumos(tx: Transacao, escopo: AlcanceDaDistribuicao, ids?: reado
         id: pacotesDeSoftware.id,
         nome: pacotesDeSoftware.nome,
         versao: pacotesDeSoftware.versao,
+        situacao: pacotesDeSoftware.situacao,
       },
       criadaPor: pessoas.nome,
       criadaEm: distribuicoes.criadaEm,
@@ -421,6 +428,7 @@ async function maquinaParaMudar(tx: Transacao, distribuicaoId: string, maquinaId
       patrimonio: ativos.patrimonio,
       rotulo: sql<string>`${rotuloNoBanco}`,
       pacote: pacotesDeSoftware.nome,
+      situacaoDoPacote: pacotesDeSoftware.situacao,
       quando: distribuicoes.quando,
       aPartirDe: distribuicoes.aPartirDe,
       fuso: distribuicoes.fuso,
@@ -653,6 +661,8 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         const arvore = await lerArvore(tx);
         exigirEm(requisicao, 'software.distribuir', linha.localId, arvore);
         if (linha.maquina.situacao !== 'falhou') throw conflito(MENSAGENS_DO_SOFTWARE.soAQueFalhou);
+        // O pacote inativado não volta à fila pelo "Tentar de novo" (decisão 17).
+        if (linha.situacaoDoPacote !== 'ativo') throw conflito(MENSAGENS_DO_SOFTWARE.pacoteInativo);
         const [quem] = await tx
           .select({ nome: pessoas.nome })
           .from(contas)
