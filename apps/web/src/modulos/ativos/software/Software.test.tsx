@@ -531,7 +531,7 @@ describe('o assistente da distribuição', () => {
       },
     );
     expect(await screen.findByRole('heading', { name: 'Quando instalar?' })).toBeTruthy();
-    expect(screen.getByText('Vindo da matriz')).toBeTruthy();
+    expect(await screen.findByText('Vindo da matriz do local Financeiro')).toBeTruthy();
     expect(await screen.findByText('18 máquinas, vindas da matriz')).toBeTruthy();
     const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
     expect(
@@ -558,5 +558,125 @@ describe('o assistente da distribuição', () => {
     );
     expect(corpo).toMatchObject({ quando: 'dia', fuso: expect.any(String) });
     expect(Date.parse(corpo?.aPartirDe ?? '')).toBeGreaterThan(Date.now());
+  });
+});
+
+describe('a matriz do software', () => {
+  type PorMaquina = components['schemas']['MatrizPorMaquina'];
+  const LOCAL = { id: 'l-fin', nome: 'Financeiro', caminho: 'Sede · Financeiro' };
+  const naMatriz = (
+    id: string,
+    rotulo: string,
+    extras: Partial<PorMaquina['maquinas'][number]> = {},
+  ) => ({
+    id,
+    rotulo,
+    patrimonio: null,
+    hostname: rotulo,
+    pessoa: null,
+    semContato: null,
+    ...extras,
+  });
+  const POR_MAQUINA: PorMaquina = {
+    por: 'maquina',
+    local: LOCAL,
+    pacotes: [PACOTE],
+    maquinas: [
+      naMatriz('a1', 'PC-FIN-01'),
+      naMatriz('a2', 'PC-FIN-02', { pessoa: 'Renata Lopes' }),
+      naMatriz('a3', 'PC-FIN-03'),
+      naMatriz('a4', 'PC-FIN-04', { semContato: { dias: 3, texto: 'Sem contato · há 3 dias' } }),
+    ],
+    celulas: [
+      {
+        pacoteId: PACOTE.id,
+        ativoId: 'a1',
+        situacao: 'na-versao',
+        versao: '23.01',
+        distribuicao: null,
+      },
+      {
+        pacoteId: PACOTE.id,
+        ativoId: 'a2',
+        situacao: 'desatualizada',
+        versao: '22.01',
+        distribuicao: null,
+      },
+      {
+        pacoteId: PACOTE.id,
+        ativoId: 'a3',
+        situacao: 'sem-o-programa',
+        versao: null,
+        distribuicao: { id: 'd1', situacao: 'falhou', texto: 'Falhou', codigo: 1603 },
+      },
+      {
+        pacoteId: PACOTE.id,
+        ativoId: 'a4',
+        situacao: 'desatualizada',
+        versao: '19.00',
+        distribuicao: null,
+      },
+    ],
+    ultimas: [],
+  };
+  const POR_LOCAL: components['schemas']['MatrizPorLocal'] = {
+    por: 'local',
+    pacotes: [PACOTE],
+    locais: [{ ...LOCAL, maquinas: 4 }],
+    celulas: [{ pacoteId: PACOTE.id, localId: LOCAL.id, naVersao: 1, total: 4 }],
+  };
+
+  it('a célula do local abre o painel, e as células marcadas levam ao assistente com o local', async () => {
+    const roteador = abrir('/gestao/software/matriz?por=local', {
+      ...base(true),
+      'GET /api/software/matriz': (pedido) =>
+        Response.json(
+          new URL(pedido.url).searchParams.get('por') === 'local' ? POR_LOCAL : POR_MAQUINA,
+        ),
+    });
+    expect(await screen.findByRole('heading', { name: /^Software × locais/ })).toBeTruthy();
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Financeiro · 7-Zip 23.01: 1 de 4 na versão-alvo',
+      }),
+    );
+    const painel = await screen.findByRole('complementary', { name: 'Sede · Financeiro' });
+    expect(await within(painel).findByText('3 fora da versão-alvo')).toBeTruthy();
+    expect(within(painel).getByText('Falhou · 1603')).toBeTruthy();
+    expect(within(painel).getByText('Sem contato')).toBeTruthy();
+    expect(within(painel).getByText('Abaixo da versão-alvo')).toBeTruthy();
+
+    // "Abrir a matriz do local" troca para o "Por máquina" daquele local.
+    fireEvent.click(
+      within(painel).getByRole('button', { name: 'Abrir a matriz do local Financeiro' }),
+    );
+    await waitFor(() => expect(roteador.state.location.search).toEqual({ local: LOCAL.id }));
+    expect(await screen.findByRole('heading', { name: /^Software × máquinas/ })).toBeTruthy();
+    const dePc = (numero: string) =>
+      screen.getByRole('button', { name: new RegExp(`^PC-FIN-${numero} · 7-Zip 23\\.01:`) });
+    expect(
+      await screen.findByRole('button', {
+        name: 'PC-FIN-02 · 7-Zip 23.01: 22.01, abaixo da versão-alvo',
+      }),
+    ).toBeTruthy();
+    for (const numero of ['02', '03', '04']) fireEvent.click(dePc(numero));
+    expect(dePc('03').getAttribute('aria-label')).toBe('PC-FIN-03 · 7-Zip 23.01: falta, marcada');
+    const barra = screen.getByRole('region', { name: '3 marcadas no 7-Zip 23.01' });
+    expect(
+      within(barra).getByText(
+        'PC-FIN-02, PC-FIN-03 e PC-FIN-04: 1 instala, 1 falhou da última vez e 1 está sem contato.',
+      ),
+    ).toBeTruthy();
+    fireEvent.click(
+      within(barra).getByRole('button', { name: 'Distribuir 7-Zip 23.01 a estas 3' }),
+    );
+    await waitFor(() =>
+      expect(roteador.state.location.pathname).toBe('/gestao/software/distribuicoes/nova'),
+    );
+    expect(roteador.state.location.search).toEqual({
+      pacote: PACOTE.id,
+      maquinas: ['a2', 'a3', 'a4'],
+      local: LOCAL.id,
+    });
   });
 });

@@ -24,7 +24,7 @@ import {
   useDataHora,
 } from '@grafite/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { ChevronRight, ListFilter, Plus, Tags } from 'lucide-react';
+import { ChevronRight, Grid3x3, ListFilter, Plus, Tags } from 'lucide-react';
 import { useState } from 'react';
 import estilos from './BaseDePacotes.module.css';
 import { Categorias } from './Categorias.tsx';
@@ -54,6 +54,7 @@ function Pe({ pacotes, maquinas }: { pacotes: readonly PacoteNaBase[]; maquinas:
   const abaixo = ativos.reduce((soma, { contas }) => soma + (contas.desatualizadas ?? 0), 0);
   const comAbaixo = ativos.filter(({ contas }) => (contas.desatualizadas ?? 0) > 0).length;
   const entre = `entre as ${maquinas} ${maquinas === 1 ? 'máquina' : 'máquinas'} com o agente do GLPI`;
+  const navegar = useNavigate();
   return (
     <div className={estilos.pe}>
       {abaixo > 0 ? (
@@ -71,6 +72,9 @@ function Pe({ pacotes, maquinas }: { pacotes: readonly PacoteNaBase[]; maquinas:
           <span>{entre.charAt(0).toUpperCase() + entre.slice(1)}</span>
         </>
       )}
+      <Botao icone={Grid3x3} onPress={() => void navegar({ to: '/gestao/software/matriz' })}>
+        Ver na matriz
+      </Botao>
     </div>
   );
 }

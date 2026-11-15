@@ -18,6 +18,7 @@ import { BaseDePacotes } from '../ativos/software/BaseDePacotes.tsx';
 import { lerAbaDoSoftware, TelaDasDistribuicoes } from '../ativos/software/Distribuicoes.tsx';
 import { FichaDaDistribuicao } from '../ativos/software/FichaDaDistribuicao.tsx';
 import { FichaDoPacote } from '../ativos/software/FichaDoPacote.tsx';
+import { lerPedidoDaMatriz, Matriz } from '../ativos/software/Matriz.tsx';
 import { FichaDoTipo } from '../ativos/tipos/FichaDoTipo.tsx';
 import { TipoNovo } from '../ativos/tipos/TipoNovo.tsx';
 import { Tipos } from '../ativos/tipos/Tipos.tsx';
@@ -111,6 +112,14 @@ const distribuicaoDeSoftware = createRoute({
   component: FichaDaDistribuicao,
 });
 
+// A matriz do software: por máquina de um local ou por local.
+const matrizDoSoftware = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/matriz',
+  validateSearch: lerPedidoDaMatriz,
+  component: Matriz,
+});
+
 const catalogo = createRoute({
   getParentRoute: () => gestao,
   path: 'catalogo',
@@ -192,6 +201,7 @@ export const rotasDaGestao = gestao.addChildren([
   distribuicoesDeSoftware,
   distribuicaoNova,
   distribuicaoDeSoftware,
+  matrizDoSoftware,
   catalogo.addChildren([
     inicioDoCatalogo,
     tipos,

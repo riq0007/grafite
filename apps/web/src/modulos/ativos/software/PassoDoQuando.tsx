@@ -308,7 +308,7 @@ function DaMatriz({
     <div className={estilos.origem}>
       <div className={estilos.linhaDaOrigem}>
         <RotuloDeSituacao situacao="info" semIcone>
-          Vindo da matriz
+          {origem.local ? `Vindo da matriz do local ${origem.local}` : 'Vindo da matriz'}
         </RotuloDeSituacao>
         <span className={estilos.caminho}>
           Matriz

@@ -163,3 +163,43 @@ export function useMaquinasParaDistribuir(busca: string) {
       ),
   });
 }
+
+export type MatrizPorMaquina = components['schemas']['MatrizPorMaquina'];
+export type MatrizPorLocal = components['schemas']['MatrizPorLocal'];
+
+/** A matriz por local: os pacotes ativos frente aos locais com máquinas com o agente. */
+export function useMatrizPorLocal() {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_SOFTWARE, 'matriz', 'local'],
+    queryFn: async (): Promise<MatrizPorLocal> => {
+      const matriz = await consultar(
+        () => api.GET('/software/matriz', { params: { query: { por: 'local' } } }),
+        'carregar a matriz',
+      );
+      if (matriz.por !== 'local') throw new Error('Não foi possível carregar a matriz.');
+      return matriz;
+    },
+  });
+}
+
+/** A matriz por máquina de um local: os pacotes ativos frente às máquinas do próprio local. */
+export function useMatrizPorMaquina(local: string | null) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_SOFTWARE, 'matriz', 'maquina', local],
+    enabled: local !== null,
+    queryFn: async (): Promise<MatrizPorMaquina> => {
+      const matriz = await consultar(
+        () =>
+          api.GET('/software/matriz', {
+            params: { query: { por: 'maquina', local: local ?? '' } },
+          }),
+        'carregar a matriz do local',
+      );
+      if (matriz.por !== 'maquina') throw new Error('Não foi possível carregar a matriz do local.');
+      return matriz;
+    },
+    placeholderData: keepPreviousData,
+  });
+}

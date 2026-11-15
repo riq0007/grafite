@@ -308,7 +308,7 @@ O passo Conferir SHALL ter três grupos, com o número grande e as máquinas em 
 
 Ao lado, o envio (para quem, quando e quem envia), "Depois de enviar", com o que acontece em seguida, e "Enviar".
 
-Vindo da matriz, o assistente SHALL abrir no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do Financeiro"), a trilha e "Voltar à matriz".
+Vindo da matriz, o assistente SHALL abrir no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do local Financeiro"), a trilha e "Voltar à matriz".
 
 #### Scenario: A conta antes de enviar
 - **WHEN** a técnica escolhe o Driver HP Universal 7.3 e marca o Financeiro, com 18 máquinas: 5 já na 7.3, 5 na 7.2, 7 sem o driver e a PC-FIN-18 sem contato
@@ -338,11 +338,11 @@ A matriz SHALL ter o controle "Por máquina | Por local", "Filtrar programas" e 
 
 Marcar células de um pacote SHALL abrir a barra "N marcadas no <pacote>", com o que acontece com cada uma, "Limpar" e "Distribuir <pacote> <versão> a estas N", que abre o assistente no passo Quando. Marcar uma célula de outro pacote SHALL recomeçar a marcação.
 
-**Por local** SHALL ter os pacotes nas linhas e os locais com máquinas com o agente nas colunas, cada máquina contada no próprio local. Cada célula SHALL trazer "N de M" na versão-alvo, com o fundo de todas na versão-alvo, de parte fora dela ou de nenhuma nela, com a borda contínua. O clique numa célula SHALL mostrar, à direita, o "N de M na versão-alvo", as máquinas fora da versão-alvo com a versão e a situação, as que estão nela, a última distribuição no local, "Distribuir <pacote> <versão> a estas N" e "Abrir a matriz do <local>".
+**Por local** SHALL ter os pacotes nas linhas e os locais com máquinas com o agente nas colunas, cada máquina contada no próprio local. Cada célula SHALL trazer "N de M" na versão-alvo, com o fundo de todas na versão-alvo, de parte fora dela ou de nenhuma nela, com a borda contínua. O clique numa célula SHALL mostrar, à direita, o "N de M na versão-alvo", as máquinas fora da versão-alvo com a versão e a situação, as que estão nela, a última distribuição no local, "Distribuir <pacote> <versão> a estas N" e "Abrir a matriz do local <local>".
 
 #### Scenario: Da matriz ao assistente
 - **WHEN** a técnica marca as 4 células do Chrome fora da versão-alvo no Financeiro e escolhe "Distribuir Google Chrome 131 a estas 4"
-- **THEN** o assistente abre no passo Quando, com as 4 máquinas e "Vindo da matriz do Financeiro"
+- **THEN** o assistente abre no passo Quando, com as 4 máquinas e "Vindo da matriz do local Financeiro"
 
 #### Scenario: Local sem nenhuma na versão-alvo
 - **WHEN** as 6 máquinas da Diretoria têm o Chrome 130

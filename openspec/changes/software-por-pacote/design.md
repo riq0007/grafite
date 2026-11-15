@@ -206,9 +206,9 @@ A tela "Software × máquinas" fica em Gestão de ativos › Software, com o con
   - Marcar células de um pacote abre a barra "N marcadas no <pacote>", com o que acontece com cada uma, "Limpar" e "Distribuir <pacote> <versão> a estas N".
   - Marcar uma célula de outro pacote recomeça a marcação.
 - **Por local:** as colunas são os locais que têm máquinas com o agente, cada máquina contada no próprio local. A célula traz "N de M" na versão-alvo, com o fundo de todas, de parte ou de nenhuma.
-  - O clique abre, à direita, as máquinas do local fora da versão-alvo, as que estão nela, a última distribuição, "Distribuir <pacote> <versão> a estas N" e "Abrir a matriz do <local>".
+  - O clique abre, à direita, as máquinas do local fora da versão-alvo, as que estão nela, a última distribuição, "Distribuir <pacote> <versão> a estas N" e "Abrir a matriz do local <local>".
 
-O "Distribuir" da matriz abre o assistente no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do Financeiro") e "Voltar à matriz" (m08).
+O "Distribuir" da matriz abre o assistente no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do local Financeiro") e "Voltar à matriz" (m08).
 
 Uma rota só, `GET /software/matriz?local=<id>` ou `?por=local`, devolve os pacotes, as colunas e as células. O "Por máquina" mostra as máquinas do próprio local, sem as dos locais de dentro, como o "Por local" as conta, e traz a última distribuição de cada pacote no local, que o painel do "Por local" mostra ao abrir a célula.
 
