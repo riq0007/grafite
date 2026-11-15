@@ -46,6 +46,33 @@ const NA_BASE: NaBase = {
   ultimaDistribuicao: null,
 };
 
+const FICHA_DO_PACOTE: components['schemas']['FichaDoPacote'] = {
+  pacote: { ...PACOTE, nomeNoInventario: '7-Zip' },
+  partes: 1,
+  contas: NA_BASE.contas,
+  versoes: [
+    { versao: '23.01', estado: 'alvo', quantas: 41 },
+    { versao: '22.01', estado: 'abaixo', quantas: 3 },
+  ],
+  distribuicoes: [
+    {
+      id: 'd1',
+      criadaEm: '2026-10-28T12:00:00.000Z',
+      paraQuem: 'Financeiro',
+      maquinas: 18,
+      resultado: {
+        concluidas: 14,
+        emAndamento: 2,
+        aguardando: 1,
+        falharam: 1,
+        tiradas: 0,
+        semContato: 1,
+      },
+    },
+  ],
+  permite: { administrar: true },
+};
+
 const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}): Maquina => ({
   id,
   ativo: { id: `ativo-${id}`, rotulo: `Computador ${patrimonio}`, patrimonio },
@@ -174,33 +201,6 @@ describe('a base de software', () => {
 });
 
 describe('a ficha do pacote', () => {
-  const FICHA_DO_PACOTE: components['schemas']['FichaDoPacote'] = {
-    pacote: { ...PACOTE, nomeNoInventario: '7-Zip' },
-    partes: 1,
-    contas: NA_BASE.contas,
-    versoes: [
-      { versao: '23.01', estado: 'alvo', quantas: 41 },
-      { versao: '22.01', estado: 'abaixo', quantas: 3 },
-    ],
-    distribuicoes: [
-      {
-        id: 'd1',
-        criadaEm: '2026-10-28T12:00:00.000Z',
-        paraQuem: 'Financeiro',
-        maquinas: 18,
-        resultado: {
-          concluidas: 14,
-          emAndamento: 2,
-          aguardando: 1,
-          falharam: 1,
-          tiradas: 0,
-          semContato: 1,
-        },
-      },
-    ],
-    permite: { administrar: true },
-  };
-
   it('a linha da base abre a ficha frente ao inventário, e "Inativar" grava', async () => {
     let inativo = false;
     const roteador = abrir('/gestao/software', {
@@ -257,6 +257,7 @@ describe('a distribuição', () => {
         return Response.json(DUAS, { status: 201 });
       },
       'GET /api/software/distribuicoes/d1': () => Response.json(DUAS),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
     });
     const [nova] = await screen.findAllByRole('button', { name: 'Nova distribuição' });
     fireEvent.click(nova as HTMLElement);
@@ -314,17 +315,14 @@ describe('a distribuição', () => {
     expect(within(tabela).getByRole('link', { name: '7-Zip 23.01 · 23.01' })).toBeTruthy();
   });
 
-  it('Log da máquina: a ficha abre o log da que falhou, na ordem em que chegou', async () => {
+  it('Log da máquina: o nome da que falhou abre o log, na ordem em que chegou', async () => {
     abrir('/gestao/software/distribuicoes/d1', {
       'GET /api/software/distribuicoes/d1': () =>
         Response.json(ficha([FALHOU], '0 de 1 concluída, 1 falhou')),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
     });
-    const tabela = await screen.findByRole('grid', { name: 'Máquinas da distribuição' });
-    expect(within(tabela).getByText('Falhou')).toBeTruthy();
-    expect(within(tabela).getByText('Executando: ko, action #1 processing failure')).toBeTruthy();
-    fireEvent.click(
-      within(tabela).getByRole('button', { name: 'Ver o log de Computador PAT-00412 (PAT-00412)' }),
-    );
+    expect(await screen.findByText('Precisa de você')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Computador PAT-00412' }));
     const gaveta = await screen.findByRole('dialog', {
       name: 'Log de Computador PAT-00412 (PAT-00412)',
     });
@@ -334,5 +332,49 @@ describe('a distribuição', () => {
         .getAllByRole('listitem')
         .map((linha) => linha.textContent),
     ).toEqual(FALHOU.log);
+  });
+
+  it('O que precisa de você: a que falhou tenta de novo, e a sem contato sai da fila', async () => {
+    const pedidos: string[] = [];
+    const falhou1603 = {
+      ...FALHOU,
+      codigo: {
+        numero: 1603,
+        explicacao: 'Erro fatal: costuma ser outra instalação em andamento.',
+      },
+    };
+    const longe = maquina('m4', 'PAT-00777', {
+      semContato: { dias: 3, texto: 'Sem contato · há 3 dias' },
+    });
+    const registrar = (pedido: Request) => {
+      pedidos.push(new URL(pedido.url).pathname);
+      return Response.json(maquina('m0', 'PAT-00000'));
+    };
+    abrir('/gestao/software/distribuicoes/d1', {
+      'GET /api/software/distribuicoes/d1': () =>
+        Response.json(ficha([falhou1603, longe], '0 de 2 concluídas, 1 falhou')),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
+      'POST /api/software/distribuicoes/d1/maquinas/m2/tentar-de-novo': registrar,
+      'POST /api/software/distribuicoes/d1/maquinas/m4/tirar-da-fila': registrar,
+    });
+    expect(await screen.findByText('Falhou · 1603')).toBeTruthy();
+    expect(screen.getByText('Erro fatal: costuma ser outra instalação em andamento.')).toBeTruthy();
+    expect(screen.getByText('Sem contato · há 3 dias')).toBeTruthy();
+    const lista = await screen.findByRole('list', { name: 'Distribuições do pacote' });
+    expect(
+      within(lista)
+        .getByRole('link', { name: /Financeiro/ })
+        .getAttribute('aria-current'),
+    ).toBe('page');
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
+    await waitFor(() =>
+      expect(avisos()).toContain('Computador PAT-00412 voltou a aguardar o agente.'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Tirar da fila' }));
+    await waitFor(() => expect(avisos()).toContain('Computador PAT-00777 saiu da fila.'));
+    expect(pedidos).toEqual([
+      '/api/software/distribuicoes/d1/maquinas/m2/tentar-de-novo',
+      '/api/software/distribuicoes/d1/maquinas/m4/tirar-da-fila',
+    ]);
   });
 });

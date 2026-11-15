@@ -27,16 +27,32 @@ export function IconeDoPacote({
   );
 }
 
+export type ResultadoDaDistribuicao = DistribuicaoDoPacote['resultado'];
+
 /**
  * O resultado de uma distribuição em rótulos: "Todas concluídas", quando todas instalaram, ou um
  * rótulo por situação com máquinas. As sem contato saem das que aguardam e ganham o rótulo delas.
+ * O compacto, da lista ao lado da distribuição aberta, mostra só o que precisa de alguém (as que
+ * falharam e as sem contato), ou quantas já concluíram.
  */
 export function RotulosDoResultado({
   maquinas,
   resultado,
-}: Pick<DistribuicaoDoPacote, 'maquinas' | 'resultado'>) {
+  compacto = false,
+}: {
+  maquinas: number;
+  resultado: ResultadoDaDistribuicao;
+  compacto?: boolean;
+}) {
   if (resultado.concluidas === maquinas) {
     return <RotuloDeSituacao situacao="sucesso">Todas concluídas</RotuloDeSituacao>;
+  }
+  if (compacto && resultado.falharam === 0 && resultado.semContato === 0) {
+    return (
+      <RotuloDeSituacao situacao="neutra" semIcone>
+        {resultado.concluidas} de {maquinas} {maquinas === 1 ? 'concluída' : 'concluídas'}
+      </RotuloDeSituacao>
+    );
   }
   const rotulos: { situacao: Situacao; texto: string; quantidade: number }[] = [
     {
@@ -70,10 +86,13 @@ export function RotulosDoResultado({
       texto: `${plural(resultado.tiradas, 'tirada', 'tiradas')} da fila`,
     },
   ];
+  const doCompacto = new Set<Situacao>(['critico', 'atencao']);
   return (
     <span className={estilos.resultado}>
       {rotulos
-        .filter(({ quantidade }) => quantidade > 0)
+        .filter(
+          ({ quantidade, situacao }) => quantidade > 0 && (!compacto || doCompacto.has(situacao)),
+        )
         .map(({ situacao, texto }) => (
           <RotuloDeSituacao key={texto} situacao={situacao} semIcone>
             {texto}
@@ -98,11 +117,13 @@ export function BarraDeSituacoes({
 }) {
   return (
     <span aria-hidden="true" className={[estilos.barra, className].filter(Boolean).join(' ')}>
-      {partes
-        .filter(({ quantidade }) => quantidade > 0)
-        .map(({ parte, quantidade }) => (
-          <i key={parte} data-parte={parte} style={{ flex: quantidade }} />
-        ))}
+      {partes.map(({ parte, quantidade }, indice) =>
+        quantidade > 0 ? (
+          // A mesma situação pode vir em dois pedaços, como as que aguardam e as tiradas.
+          // biome-ignore lint/suspicious/noArrayIndexKey: os pedaços vêm sempre na mesma ordem.
+          <i key={indice} data-parte={parte} style={{ flex: quantidade }} />
+        ) : null,
+      )}
     </span>
   );
 }

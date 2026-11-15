@@ -5,13 +5,6 @@
   min-width: 0;
 }
 
-.aba {
-  display: grid;
-  gap: var(--esp-4);
-  min-width: 0;
-  padding-top: var(--esp-4);
-}
-
 .busca {
   max-width: 28rem;
 }
@@ -133,11 +126,4 @@
 .secao h3 {
   margin: 0;
   font-size: var(--texto-subtitulo);
-}
-
-/* A aba Softwares da ficha do ativo: os instalados e, depois, as distribuições. */
-.partes {
-  display: grid;
-  gap: var(--esp-8);
-  min-width: 0;
 }

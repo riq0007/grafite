@@ -1,52 +1,7 @@
 /*
- * A ficha do pacote (m01): a coluna do pacote à esquerda, no fundo afundado, e o centro com os
- * números, o comando, as versões e as distribuições. A ficha ocupa a janela inteira, até as bordas,
- * por cima do respiro da janela.
+ * A ficha do pacote (m01), na tela dividida (Dividida.module.css): o pacote na coluna da esquerda e,
+ * no centro, os números, o comando, as versões e as distribuições.
  */
-.ficha {
-  --respiro: var(--respiro-da-janela, var(--esp-6));
-
-  display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  min-height: calc(100% + 2 * var(--respiro));
-  margin: calc(-1 * var(--respiro));
-}
-
-.carregando {
-  display: grid;
-  gap: var(--esp-4);
-}
-
-.lateral {
-  display: flex;
-  flex-direction: column;
-  gap: var(--esp-4);
-  min-width: 0;
-  padding: var(--esp-6);
-  border-right: 1px solid var(--cor-linha);
-  background: var(--cor-superficie-afundada);
-}
-
-.volta {
-  display: inline-flex;
-  align-self: start;
-  align-items: center;
-  gap: calc(var(--esp-1) * 1.5);
-  border-radius: var(--raio-controle);
-  color: var(--cor-texto);
-  font-size: var(--texto-dado);
-  text-decoration: none;
-  outline: none;
-}
-
-.volta:hover {
-  text-decoration: underline;
-}
-
-.volta:focus-visible {
-  outline: 2px solid var(--cor-foco);
-  outline-offset: 2px;
-}
 
 /* O cabeçalho da coluna vem sem a linha de baixo, com o título grande do mockup. */
 .lateral [data-cabecalho-da-pagina] {
@@ -95,33 +50,9 @@
   overflow-wrap: anywhere;
 }
 
-.acoes {
-  display: grid;
-  gap: var(--esp-2);
-  margin-top: auto;
-}
-
-.principal {
-  min-height: calc(var(--altura-controle) + var(--esp-2));
-}
-
-.nota {
-  margin: 0;
-  color: var(--cor-texto-2);
-  font-size: var(--texto-dado);
-}
-
 .mono {
   font-family: var(--fonte-mono);
   font-variant-numeric: tabular-nums;
-}
-
-.centro {
-  display: flex;
-  flex-direction: column;
-  gap: var(--esp-5);
-  min-width: 0;
-  padding: var(--esp-6) var(--esp-8);
 }
 
 /* Os quatro números, o primeiro mais largo, por causa da barra. */

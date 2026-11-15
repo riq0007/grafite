@@ -1,0 +1,75 @@
+/*
+ * A tela dividida das fichas do software (m01 e m02): a coluna do pacote à esquerda, no fundo
+ * afundado, e o centro. A tela ocupa a janela inteira, até as bordas, por cima do respiro da janela.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  min-height: calc(100% + 2 * var(--respiro));
+  margin: calc(-1 * var(--respiro));
+}
+
+/* Enquanto carrega ou quando falha, a tela fica no respiro da janela, como as outras. */
+.espera {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+  padding: var(--esp-6);
+  border-right: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-afundada);
+}
+
+.volta {
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  gap: calc(var(--esp-1) * 1.5);
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  text-decoration: none;
+  outline: none;
+}
+
+.volta:hover {
+  text-decoration: underline;
+}
+
+.volta:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O pé da coluna, com as ações embaixo. */
+.pe {
+  display: grid;
+  gap: var(--esp-2);
+  margin-top: auto;
+}
+
+/* A ação principal da coluna, mais alta, como no mockup. */
+.principal {
+  min-height: calc(var(--altura-controle) + var(--esp-2));
+}
+
+.centro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-8);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

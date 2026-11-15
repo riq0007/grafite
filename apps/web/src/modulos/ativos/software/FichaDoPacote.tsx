@@ -29,6 +29,7 @@ import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { CHAVE_DO_SOFTWARE, type FichaDoPacote as Ficha, usePacote } from './consultas.ts';
 import { Distribuir } from './Distribuir.tsx';
+import dividida from './Dividida.module.css';
 import estilos from './FichaDoPacote.module.css';
 import { momentoCurto, plural } from './formatos.ts';
 import { Pacote } from './Pacote.tsx';
@@ -177,9 +178,9 @@ export function FichaDoPacote() {
 
   if (pacote.isPending) {
     return (
-      <div className={estilos.carregando}>
+      <div className={dividida.espera}>
         <CabecalhoDaPagina titulo="Pacote" />
-        <p role="status" className={estilos.nota}>
+        <p role="status" className={dividida.nota}>
           Carregando o pacote…
         </p>
       </div>
@@ -187,7 +188,7 @@ export function FichaDoPacote() {
   }
   if (pacote.isError) {
     return (
-      <div className={estilos.carregando}>
+      <div className={dividida.espera}>
         <CabecalhoDaPagina titulo="Pacote" />
         <EstadoVazio
           titulo={pacote.error.message}
@@ -222,9 +223,9 @@ export function FichaDoPacote() {
   }
 
   return (
-    <div className={estilos.ficha}>
-      <div className={estilos.lateral}>
-        <Link to="/gestao/software" className={estilos.volta}>
+    <div className={dividida.tela}>
+      <div className={`${dividida.lateral} ${estilos.lateral}`}>
+        <Link to="/gestao/software" className={dividida.volta}>
           <Icone icone={ChevronLeft} tamanho={14} />
           Base de pacotes
         </Link>
@@ -272,15 +273,15 @@ export function FichaDoPacote() {
           <dt>Nome no inventário</dt>
           <dd>{nomeDoPrograma(dados)}</dd>
         </dl>
-        <div className={estilos.acoes}>
+        <div className={dividida.pe}>
           {!ativo && (
-            <p className={estilos.nota}>O pacote inativo não entra em distribuições novas.</p>
+            <p className={dividida.nota}>O pacote inativo não entra em distribuições novas.</p>
           )}
           <Botao
             nivel="primario"
             icone={Rocket}
             isDisabled={!ativo}
-            className={estilos.principal}
+            className={dividida.principal}
             onPress={() => definirAberta('distribuir')}
           >
             Distribuir este pacote
@@ -301,7 +302,7 @@ export function FichaDoPacote() {
           )}
         </div>
       </div>
-      <div className={estilos.centro}>
+      <div className={dividida.centro}>
         <Numeros ficha={ficha} />
         <OQueAInstalacaoFaz comando={dados.comando} />
         <Versoes ficha={ficha} />
