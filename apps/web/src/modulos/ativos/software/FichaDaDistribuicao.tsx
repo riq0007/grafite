@@ -32,7 +32,6 @@ import {
   usePacote,
 } from './consultas.ts';
 import { gravarCsv } from './csv.ts';
-import { Distribuir } from './Distribuir.tsx';
 import dividida from './Dividida.module.css';
 import estilos from './FichaDaDistribuicao.module.css';
 import { momentoCurto, plural } from './formatos.ts';
@@ -136,7 +135,7 @@ function LogDaMaquina({
 function Lateral({ ficha }: { ficha: Ficha }) {
   const pacote = usePacote(ficha.pacote.id);
   const dataHora = useDataHora();
-  const [distribuindo, definirDistribuindo] = useState(false);
+  const navegar = useNavigate();
   const agora = new Date();
   const dados = pacote.data?.pacote;
   return (
@@ -191,14 +190,16 @@ function Lateral({ ficha }: { ficha: Ficha }) {
           icone={Rocket}
           className={dividida.principal}
           isDisabled={dados?.situacao !== 'ativo'}
-          onPress={() => definirDistribuindo(true)}
+          onPress={() =>
+            void navegar({
+              to: '/gestao/software/distribuicoes/nova',
+              search: { pacote: ficha.pacote.id },
+            })
+          }
         >
           Distribuir este pacote
         </Botao>
       </div>
-      {distribuindo && dados && (
-        <Distribuir pacote={dados} pacotes={[dados]} aoFechar={() => definirDistribuindo(false)} />
-      )}
     </div>
   );
 }

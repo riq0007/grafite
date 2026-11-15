@@ -1819,10 +1819,11 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   // 37. A distribuição de software pelo agente do GLPI (changes inventario-pelo-agente-glpi e
   // distribuicao-de-software): a administradora gera o endereço dos agentes, e o teste, no papel do
   // agente de um computador, manda o CONTACT, que anuncia o Deploy. Ela liga o agente à PAT-00412,
-  // cadastra o pacote com um arquivo de 9 MB, que vai em duas partes, e o distribui à máquina. O
-  // agente faz o Deploy como o do GLPI: o getConfig, o getJobs, as partes do espelho conferidas pelo
-  // SHA-512 e juntas pelo gunzip e os passos; a ficha da distribuição, que se relê sozinha, mostra a
-  // máquina concluída, com o log na ordem.
+  // cadastra o pacote com um arquivo de 9 MB, que vai em duas partes, e o distribui à máquina pelo
+  // assistente da ficha do pacote (change software-por-pacote): a máquina pela busca, agora, e o
+  // Conferir antes do envio. O agente faz o Deploy como o do GLPI: o getConfig, o getJobs, as partes
+  // do espelho conferidas pelo SHA-512 e juntas pelo gunzip e os passos; a ficha da distribuição,
+  // que se relê sozinha, mostra a máquina concluída, com o log na ordem.
   await page.goto('/administracao/agentes');
   await page.getByRole('button', { name: 'Gerar o endereço' }).click();
   const dialogoDoEndereco = page.getByRole('dialog', { name: 'Endereço dos agentes' });
@@ -1873,7 +1874,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await page.goto('/gestao/software');
   await page.getByRole('button', { name: 'Novo pacote' }).first().click();
   const novoPacote = page.getByRole('dialog', { name: 'Novo pacote' });
-  await novoPacote.getByRole('textbox', { name: /^Nome/ }).fill('7-Zip 23.01');
+  await novoPacote.getByRole('textbox', { name: 'Nome', exact: true }).fill('7-Zip 23.01');
   await novoPacote.getByRole('textbox', { name: /^Versão/ }).fill('23.01');
   await novoPacote
     .getByRole('textbox', { name: /^Comando/ })
@@ -1888,21 +1889,31 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     });
   await novoPacote.getByRole('button', { name: 'Cadastrar pacote' }).click();
   await expect(page.getByText('Pacote cadastrado.')).toBeVisible();
-  const base = page.getByRole('grid', { name: 'Base de software' });
-  await expect(base).toContainText('7z2301-x64.msi · 9 MB');
+  const base = page.getByRole('grid', { name: 'Base de pacotes' });
+  await expect(base).toContainText('MSI · 9 MB');
 
-  await base.getByRole('button', { name: 'Distribuir' }).click();
-  const distribuir = page.getByRole('dialog', { name: 'Distribuir 7-Zip 23.01' });
-  await distribuir
-    .getByRole('list', { name: 'Máquinas achadas' })
-    .getByText(/PAT-00412/)
+  await base.getByText('7-Zip 23.01').click();
+  await page.getByRole('button', { name: 'Distribuir este pacote' }).click();
+  await expect(page).toHaveURL(/\/gestao\/software\/distribuicoes\/nova\?pacote=/);
+  await page
+    .getByRole('radiogroup', { name: 'Como escolher as máquinas' })
+    .locator('label')
+    .filter({ hasText: 'Por busca' })
     .click();
-  await expect(distribuir.getByText('1 máquina escolhida')).toBeVisible();
-  await distribuir.getByRole('button', { name: 'Distribuir para 1 máquina' }).click();
+  await page.getByRole('searchbox', { name: 'Procurar máquinas' }).fill('00412');
+  await page.getByRole('list', { name: 'Máquinas achadas' }).locator('label').first().click();
+  const ateAgora = page.getByRole('complementary', { name: 'Até agora' });
+  await expect(ateAgora.getByText('Vão instalar')).toBeVisible();
+  await ateAgora.getByRole('button', { name: 'Quando instalar' }).click();
+  await ateAgora.getByRole('button', { name: 'Conferir' }).click();
+  await expect(
+    page.getByRole('heading', { name: /^1 vai instalar o 7-Zip 23\.01 Instala agora/ }),
+  ).toBeVisible();
+  await ateAgora.getByRole('button', { name: 'Enviar' }).click();
   await expect(page.getByText('Distribuição criada para 1 máquina.')).toBeVisible();
   await expect(page).toHaveURL(/\/gestao\/software\/distribuicoes\/[\w-]+$/);
-  const maquinas = page.getByRole('grid', { name: 'Máquinas da distribuição' });
-  await expect(maquinas).toContainText('Aguardando o agente');
+  await expect(page.getByRole('heading', { name: 'Na fila' })).toBeVisible();
+  await expect(page.getByText('Aguardando o agente')).toBeVisible();
 
   /** O GET do cliente "Fusion" do agente: o hash vira `chave[campo]`, e a lista, `chave[]`. */
   const comoOAgente = async (
@@ -1956,7 +1967,10 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   expect(Buffer.concat(juntas).equals(instalador)).toBe(true);
   // A ficha relê a distribuição a cada 5 s (RELEITURA_DA_FICHA), sem evento do servidor: o pedido
   // do agente logo depois de uma releitura só aparece na seguinte, no limite dos 5 s do padrão.
-  await expect(maquinas).toContainText('Em andamento', { timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Em andamento' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText('Instalando')).toBeVisible();
 
   const passo = (args: Record<string, string | string[]>) =>
     comoOAgente(remote, {
@@ -1975,9 +1989,9 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await passo({ status: 'ok', msg: 'job successfully completed' });
 
   // A ficha se relê a cada 5 s enquanto a máquina instala.
-  await expect(maquinas).toContainText('Concluída', { timeout: 15_000 });
-  await expect(page.getByText(/^1 de 1 concluída/)).toBeVisible();
-  await maquinas.getByRole('button', { name: /^Ver o log de .*PAT-00412/ }).click();
+  await expect(page.getByRole('heading', { name: 'Concluídas' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('de 1 concluída', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /PAT-00412/ }).click();
   const log = page.getByRole('list', { name: 'Passos do agente' });
   await expect(log.getByRole('listitem')).toHaveText([
     'Agente: job received',

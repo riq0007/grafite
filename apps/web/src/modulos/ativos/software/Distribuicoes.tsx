@@ -14,12 +14,10 @@ import {
   Tabela,
   useDataHora,
 } from '@grafite/ui';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Send } from 'lucide-react';
-import { useState } from 'react';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
-import { useDistribuicoes, usePacotes } from './consultas.ts';
-import { Distribuir } from './Distribuir.tsx';
+import { useDistribuicoes } from './consultas.ts';
 import estilos from './Software.module.css';
 
 /** O endereço antigo da aba das distribuições: `?aba=distribuicoes`. */
@@ -89,28 +87,21 @@ function ListaDasDistribuicoes({ aoDistribuir }: { aoDistribuir: () => void }) {
 /** A tela das distribuições. */
 export function TelaDasDistribuicoes() {
   const { pode } = useAcesso();
-  const pacotes = usePacotes();
-  const [distribuindo, definirDistribuindo] = useState(false);
+  const navegar = useNavigate();
+  const distribuir = () => void navegar({ to: '/gestao/software/distribuicoes/nova' });
   return (
     <div className={estilos.tela}>
       <CabecalhoDaPagina
         titulo="Distribuições"
         acoes={
           pode('software.distribuir') && (
-            <Botao nivel="primario" icone={Send} onPress={() => definirDistribuindo(true)}>
+            <Botao nivel="primario" icone={Send} onPress={distribuir}>
               Nova distribuição
             </Botao>
           )
         }
       />
-      <ListaDasDistribuicoes aoDistribuir={() => definirDistribuindo(true)} />
-      {distribuindo && (
-        <Distribuir
-          pacote={null}
-          pacotes={pacotes.data?.pacotes ?? []}
-          aoFechar={() => definirDistribuindo(false)}
-        />
-      )}
+      <ListaDasDistribuicoes aoDistribuir={distribuir} />
     </div>
   );
 }

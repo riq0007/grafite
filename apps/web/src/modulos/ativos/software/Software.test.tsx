@@ -140,12 +140,6 @@ const base = (administrar: boolean, pacotes: NaBase[] = [NA_BASE]) => ({
   'GET /api/software/categorias': () => Response.json({ categorias: [] }),
 });
 
-/** O botão de uma seleção, pelo rótulo. */
-const selecao = (onde: HTMLElement, rotulo: RegExp) =>
-  within(onde)
-    .getAllByRole('button', { name: rotulo })
-    .find((botao) => botao.getAttribute('aria-haspopup') === 'listbox') as HTMLElement;
-
 describe('a base de software', () => {
   it('Técnico sem a administração: vê a base frente ao inventário, sem "Novo pacote" nem "Categorias…"', async () => {
     abrir('/gestao/software', base(false), naOrganizacao('software.distribuir'));
@@ -237,11 +231,37 @@ describe('a ficha do pacote', () => {
 });
 
 describe('a distribuição', () => {
-  it('Distribuição para as máquinas: escolhe pela busca e abre a ficha', async () => {
-    let corpo: unknown;
+  it('Distribuição para as máquinas: o assistente escolhe pela busca, confere e abre a ficha', async () => {
+    let corpo: { alvo: { fuso?: string }; fuso?: string } | undefined;
     const roteador = abrir('/gestao/software/distribuicoes', {
       ...base(true),
       'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () => Response.json({ locais: [], visoes: [] }),
+      'POST /api/software/distribuicoes/previa': async (pedido) => {
+        const { alvo } = (await pedido.json()) as { alvo: { ativoIds: string[] } };
+        return Response.json({
+          maquinas: alvo.ativoIds.map((id) => ({
+            id,
+            rotulo: `Computador ${id.slice(6)}`,
+            patrimonio: `PAT-${id.slice(6)}`,
+            hostname: null,
+            local: 'Jundiaí',
+            classe: 'vai-instalar',
+            versao: null,
+            semContato: null,
+            emAndamento: null,
+          })),
+          naoAchados: [],
+          conta: {
+            vaoInstalar: alvo.ativoIds.length,
+            puladas: 0,
+            naFila: 0,
+            primeiraVez: alvo.ativoIds.length,
+            porVersao: [],
+          },
+          paraQuem: 'Jundiaí',
+        });
+      },
       'GET /api/software/maquinas': () =>
         Response.json({
           maquinas: ['00321', '00412', '00518'].map((numero) => ({
@@ -261,18 +281,34 @@ describe('a distribuição', () => {
     });
     const [nova] = await screen.findAllByRole('button', { name: 'Nova distribuição' });
     fireEvent.click(nova as HTMLElement);
-    const gaveta = await screen.findByRole('dialog', { name: 'Nova distribuição' });
-    fireEvent.click(selecao(gaveta, /Pacote/));
-    fireEvent.click(await screen.findByRole('option', { name: '7-Zip 23.01' }));
-    const achadas = await within(gaveta).findByRole('list', { name: 'Máquinas achadas' });
-    fireEvent.click(
-      within(achadas).getByRole('checkbox', { name: 'Computador 00321 (PAT-00321)' }),
-    );
-    fireEvent.click(
-      within(achadas).getByRole('checkbox', { name: 'Computador 00518 (PAT-00518)' }),
-    );
-    expect(within(gaveta).getByText('2 máquinas escolhidas')).toBeTruthy();
-    fireEvent.click(within(gaveta).getByRole('button', { name: 'Distribuir para 2 máquinas' }));
+    fireEvent.click(await screen.findByRole('radio', { name: /^7-Zip 23\.01/ }));
+    const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Máquinas' }));
+    fireEvent.click(await screen.findByRole('radio', { name: /^Por busca/ }));
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Procurar máquinas' }), {
+      target: { value: '00' },
+    });
+    const achadas = await screen.findByRole('list', { name: 'Máquinas achadas' });
+    fireEvent.click(within(achadas).getByRole('checkbox', { name: 'Computador 00321' }));
+    fireEvent.click(within(achadas).getByRole('checkbox', { name: 'Computador 00518' }));
+    expect(await within(ateAgora).findByText('máquinas escolhidas, do local Jundiaí')).toBeTruthy();
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Quando instalar' }));
+
+    // O passo Quando: a janela da noite mostra o que acontece com cada máquina.
+    expect((screen.getByRole('radio', { name: /^Agora/ }) as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: /^Na janela da noite/ }));
+    expect(
+      screen.getByRole('heading', { name: 'Na janela da noite, se a máquina estiver…' }),
+    ).toBeTruthy();
+    expect(within(ateAgora).getByText(/^Toda noite, das 22:00 às 06:00/)).toBeTruthy();
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+
+    // O Conferir: o grupo das que vão instalar e quem envia; nada saiu ainda.
+    expect(screen.getByRole('heading', { name: /^2 vão instalar o 7-Zip 23\.01/ })).toBeTruthy();
+    expect(within(ateAgora).getByText('Ana Souza')).toBeTruthy();
+    expect(screen.getByText('Nada foi enviado ainda.')).toBeTruthy();
+    expect(corpo).toBeUndefined();
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Enviar' }));
     await waitFor(() =>
       expect(roteador.state.location.pathname).toBe('/gestao/software/distribuicoes/d1'),
     );
@@ -284,8 +320,11 @@ describe('a distribuição', () => {
         ativoIds: ['ativo-00321', 'ativo-00518'],
         lista: '',
         fora: [],
+        fuso: corpo?.fuso,
       },
-      quando: 'agora',
+      quando: 'noite',
+      aPartirDe: null,
+      fuso: expect.any(String),
     });
     expect(avisos()).toContain('Distribuição criada para 2 máquinas.');
     expect(await screen.findAllByText('Aguardando o agente')).toHaveLength(2);
@@ -456,5 +495,68 @@ describe('o assistente da distribuição', () => {
     const financeiro = screen.getByRole('checkbox', { name: 'Financeiro' }) as HTMLInputElement;
     expect(financeiro.checked).toBe(true);
     expect(financeiro.disabled).toBe(true);
+  });
+
+  it('vindo da matriz, abre no Quando; a sem contato sai da lista e o dia marcado segue com o fuso', async () => {
+    const marcadas = PREVIA.maquinas.map((maquina) => maquina.id);
+    const pedidos: { alvo: { fora: string[] } }[] = [];
+    let corpo: { quando?: string; aPartirDe?: string | null; fuso?: string } | undefined;
+    const roteador = abrir(
+      `/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}&maquinas=${encodeURIComponent(JSON.stringify(marcadas))}&local=l-fin`,
+      {
+        ...base(true),
+        'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+        'GET /api/software/distribuicoes/alvos': () =>
+          Response.json({
+            locais: [{ id: 'l-fin', nome: 'Financeiro', paiId: null, maquinas: 18, semContato: 1 }],
+            visoes: [],
+          }),
+        'POST /api/software/distribuicoes/previa': async (pedido) => {
+          const corpoDaPrevia = (await pedido.json()) as { alvo: { fora: string[] } };
+          pedidos.push(corpoDaPrevia);
+          const fora = new Set(corpoDaPrevia.alvo.fora);
+          const maquinas = PREVIA.maquinas.filter((maquina) => !fora.has(maquina.id));
+          return Response.json({
+            ...PREVIA,
+            maquinas,
+            conta: { ...PREVIA.conta, naFila: fora.size > 0 ? 0 : 1 },
+          });
+        },
+        'POST /api/software/distribuicoes': async (pedido) => {
+          corpo = await pedido.json();
+          return Response.json(DUAS, { status: 201 });
+        },
+        'GET /api/software/distribuicoes/d1': () => Response.json(DUAS),
+        [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
+      },
+    );
+    expect(await screen.findByRole('heading', { name: 'Quando instalar?' })).toBeTruthy();
+    expect(screen.getByText('Vindo da matriz')).toBeTruthy();
+    expect(await screen.findByText('18 máquinas, vindas da matriz')).toBeTruthy();
+    const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
+    expect(
+      await within(ateAgora).findByText('máquinas marcadas na matriz do local Financeiro'),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole('list', { name: 'Máquinas marcadas na matriz' })).getAllByRole(
+        'listitem',
+      ),
+    ).toHaveLength(18);
+
+    // O dia marcado já vem com amanhã às 22:00; o Conferir mostra a sem contato, que sai da lista.
+    fireEvent.click(screen.getByRole('radio', { name: /^Escolher o dia/ }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+    expect(
+      screen.getByRole('heading', { name: /^1 sem contato: Computador PAT-00300 entra na fila/ }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Tirar da lista' }));
+    await waitFor(() => expect(pedidos.at(-1)?.alvo.fora).toEqual(['ativo-300']));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: /sem contato/ })).toBeNull());
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Enviar' }));
+    await waitFor(() =>
+      expect(roteador.state.location.pathname).toBe('/gestao/software/distribuicoes/d1'),
+    );
+    expect(corpo).toMatchObject({ quando: 'dia', fuso: expect.any(String) });
+    expect(Date.parse(corpo?.aPartirDe ?? '')).toBeGreaterThan(Date.now());
   });
 });

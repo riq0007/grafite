@@ -28,7 +28,6 @@ import { useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { CHAVE_DO_SOFTWARE, type FichaDoPacote as Ficha, usePacote } from './consultas.ts';
-import { Distribuir } from './Distribuir.tsx';
 import dividida from './Dividida.module.css';
 import estilos from './FichaDoPacote.module.css';
 import { momentoCurto, plural } from './formatos.ts';
@@ -173,7 +172,7 @@ export function FichaDoPacote() {
   const consultas = useQueryClient();
   const navegar = useNavigate();
   const dataHora = useDataHora();
-  const [aberta, definirAberta] = useState<'distribuir' | 'editar' | null>(null);
+  const [editando, definirEditando] = useState(false);
   const [mudando, definirMudando] = useState(false);
 
   if (pacote.isPending) {
@@ -282,12 +281,17 @@ export function FichaDoPacote() {
             icone={Rocket}
             isDisabled={!ativo}
             className={dividida.principal}
-            onPress={() => definirAberta('distribuir')}
+            onPress={() =>
+              void navegar({
+                to: '/gestao/software/distribuicoes/nova',
+                search: { pacote: dados.id },
+              })
+            }
           >
             Distribuir este pacote
           </Botao>
           {permite.administrar && (
-            <Botao icone={Pencil} onPress={() => definirAberta('editar')}>
+            <Botao icone={Pencil} onPress={() => definirEditando(true)}>
               Editar
             </Botao>
           )}
@@ -348,10 +352,7 @@ export function FichaDoPacote() {
           </Tabela>
         </section>
       </div>
-      {aberta === 'distribuir' && (
-        <Distribuir pacote={dados} pacotes={[dados]} aoFechar={() => definirAberta(null)} />
-      )}
-      {aberta === 'editar' && <Pacote pacote={dados} aoFechar={() => definirAberta(null)} />}
+      {editando && <Pacote pacote={dados} aoFechar={() => definirEditando(false)} />}
     </div>
   );
 }
