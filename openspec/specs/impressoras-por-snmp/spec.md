@@ -149,7 +149,9 @@ A ficha de um ativo de um tipo com a capacidade SHALL ter o painel "Suprimentos"
 - os contadores;
 - as condições do equipamento e as mensagens do fabricante.
 
-Sem leitura, o painel SHALL dizer "Não verificado", com o motivo, como a disponibilidade na rede (spec disponibilidade-de-rede): "Sem IP", "Nenhum coletor alcança o IP 10.9.0.5." ou "Aguardando a primeira leitura.". A leitura mais antiga que 30 minutos, 3 intervalos, SHALL mostrar "Desatualizado" ao lado (spec leituras-e-estado). O ativo inativo SHALL NOT mostrar o painel.
+Embaixo de cada cartucho SHALL ficar a descrição do suprimento, a idade da leitura dele e, com a leitura velha, o "Desatualizado", um embaixo do outro e centrados. A coluna do cartucho SHALL caber o rótulo, e os rótulos de dois cartuchos vizinhos SHALL NOT encostar um no outro.
+
+Sem leitura, o painel SHALL dizer "Não verificado", com o motivo, como a disponibilidade na rede (spec disponibilidade-de-rede): "Sem IP", "Nenhum coletor alcança o IP 10.9.0.5." ou "Aguardando a primeira leitura.". A leitura mais antiga que 30 minutos, 3 intervalos, SHALL mostrar "Desatualizado" (spec leituras-e-estado): ao lado da idade, na resposta do SNMP, e embaixo dela, em cada cartucho. O ativo inativo SHALL NOT mostrar o painel.
 
 #### Scenario: Painel da impressora
 - **WHEN** alguém abre a ficha da PAT-00412, lida há 3 minutos com o toner a 8%, o cilindro a 60% e o total de 12.500 páginas
@@ -166,6 +168,10 @@ Sem leitura, o painel SHALL dizer "Não verificado", com o motivo, como a dispon
 #### Scenario: Quando o toner acaba
 - **WHEN** o toner preto caiu, sem troca, de 75% para 25% em 25 dias, 2 pontos por dia
 - **THEN** o cartucho mostra "Acaba em cerca de 13 dias", com "pelas leituras desde" e a data da primeira leitura usada
+
+#### Scenario: Cartuchos com a leitura velha
+- **WHEN** a ficha mostra o toner e o cilindro, lidos há 16 dias
+- **THEN** embaixo de cada cartucho aparecem a descrição, "há 16 d" e "Desatualizado", e cada rótulo fica dentro da coluna do seu cartucho, sem encostar no do lado
 
 ### Requirement: Série dos suprimentos
 
@@ -189,8 +195,12 @@ A estimativa SHALL usar a série desde a última troca, que é a subida de mais 
 
 ### Requirement: Medidor na coluna dos suprimentos
 
-A coluna dos suprimentos da lista dos ativos SHALL mostrar, ao lado do texto do menor nível, o medidor compacto dele, na tinta do suprimento. O texto copiado da célula SHALL continuar o de hoje.
+A coluna dos suprimentos da lista dos ativos SHALL mostrar, ao lado do texto do menor nível, o medidor compacto dele, na tinta do suprimento. O medidor SHALL vir antes do número e SHALL NOT cobri-lo, nas três densidades. O texto copiado da célula SHALL continuar o de hoje.
 
 #### Scenario: Menor nível na lista
 - **WHEN** a lista mostra a PAT-00412 com o toner preto a 8%
 - **THEN** a célula traz o medidor compacto do preto e "8% · Black Toner Cartridge"
+
+#### Scenario: Número à vista ao lado do medidor
+- **WHEN** a lista mostra a impressora com o toner preto a 8%
+- **THEN** a régua do medidor acaba antes do "8%", e o número fica inteiro à vista
