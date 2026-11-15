@@ -4,8 +4,9 @@
 // da lista colada, sem as tiradas da lista; a classe de cada máquina, na ordem pulada, na fila e vai
 // instalar, com o sem contato pelo prazo da organização e a outra instalação em andamento; a
 // permissão, com a visão, a busca e a lista no escopo do `ativos.ver` e as máquinas fora dos locais
-// do `software.distribuir` de fora em silêncio. As contagens da árvore e das visões; a busca das
-// máquinas; e a criação, com a mesma conta, o quando, o fuso, a auditoria e o acordar na fila.
+// do `software.distribuir` de fora em silêncio. As contagens da árvore e das visões, com a visão que
+// deixou de valer sem a contagem e recusada pelo nome; a busca das máquinas; e a criação, com a
+// mesma conta, o quando, o dia marcado como o instante com o fuso, a auditoria e o acordar na fila.
 import {
   agentes,
   ativos,
@@ -258,6 +259,28 @@ beforeAll(async () => {
           nome,
           nomeNormalizado: normalizarTexto(nome),
           definicao: DEFINICAO(texto),
+        })
+        .returning({ id: visoes.id });
+      daVisao[chave] = visao?.id ?? '';
+    }
+    // As da Ana que deixaram de valer: um filtro que a coluna não aceita e a definição que não se lê.
+    for (const [chave, nome, definicao] of [
+      [
+        'notebooksAntigos',
+        'Notebooks antigos',
+        { ...DEFINICAO(null), filtros: [{ chave: 'ativo.hostname', operador: 'entre', de: 1 }] },
+      ],
+      ['impressorasVelhas', 'Impressoras velhas', { ...DEFINICAO(null), filtros: 'todas' }],
+    ] as const) {
+      const [visao] = await tx
+        .insert(visoes)
+        .values({
+          orgId: org,
+          tabela: 'ativos',
+          contaId: ana.id,
+          nome,
+          nomeNormalizado: normalizarTexto(nome),
+          definicao,
         })
         .returning({ id: visoes.id });
       daVisao[chave] = visao?.id ?? '';
@@ -592,6 +615,27 @@ describe('POST /software/distribuicoes', () => {
     expect((await tirarDaFila(dia.json())).statusCode).toBe(200);
   });
 
+  it('o dia marcado chega como o instante ISO com o fuso e vai até daqui a um ano', async () => {
+    const depoisDeUmAno = new Date(Date.now() + 400 * 86_400_000).toISOString();
+    for (const [aPartirDe, fuso, motivo] of [
+      ['2026-12-05T22:00:00', 'America/Sao_Paulo', 'Escolha o dia e a hora.'],
+      ['2026-12-05', 'America/Sao_Paulo', 'Escolha o dia e a hora.'],
+      ['5 de dezembro, 22:00', 'America/Sao_Paulo', 'Escolha o dia e a hora.'],
+      // O esquema da rota recusa o texto antes de o fuso ser conferido, como os outros campos.
+      ['2026-12-05T22:00:00', 'America/Atlantida', 'Escolha o dia e a hora.'],
+      [depoisDeUmAno, 'America/Sao_Paulo', 'Escolha um dia até daqui a um ano.'],
+    ] as const) {
+      const r = await distribuir('ana', {
+        alvo: { ativoIds: [ids.c1] },
+        quando: 'dia',
+        aPartirDe,
+        fuso,
+      });
+      expect(r.statusCode, aPartirDe).toBe(400);
+      expect(r.json().campos, `${aPartirDe} ${fuso}`).toEqual({ aPartirDe: motivo });
+    }
+  });
+
   it('recusa o dia de hoje, o fuso que não existe e a noite sem o fuso', async () => {
     const hoje = await distribuir('ana', {
       alvo: { ativoIds: [ids.c1] },
@@ -664,6 +708,46 @@ describe('GET /software/distribuicoes/alvos', () => {
       ['Do financeiro', false, 5],
       ['Notebooks', true, 2],
     ]);
+    expect(
+      corpo.visoes.map(({ deixouDeValer }: { deixouDeValer: boolean }) => deixouDeValer),
+    ).toEqual([false, false]);
+  });
+
+  it('A visão que deixou de valer vem sem a contagem, e a prévia e a criação a recusam pelo nome', async () => {
+    const r = await cliente.consultar('/software/distribuicoes/alvos', como('ana'));
+    expect(r.statusCode, r.body).toBe(200);
+    expect(
+      r
+        .json()
+        .visoes.map((visao: { nome: string; maquinas: number | null; deixouDeValer: boolean }) => [
+          visao.nome,
+          visao.deixouDeValer,
+          visao.maquinas,
+        ]),
+    ).toEqual([
+      ['Da Ana', false, 7],
+      ['Impressoras velhas', true, null],
+      ['Notebooks', false, 3],
+      ['Notebooks antigos', true, null],
+    ]);
+
+    const motivo = (nome: string) =>
+      `A visão ${nome} deixou de valer. Refaça os filtros dela na tabela do Ativos.`;
+    const doFiltro = await previa('ana', {
+      visoes: [daVisao.notebooks, daVisao.notebooksAntigos],
+    });
+    expect(doFiltro.statusCode, doFiltro.body).toBe(400);
+    expect(doFiltro.json().campos).toEqual({ visoes: motivo('Notebooks antigos') });
+    const daDefinicao = await previa('ana', { visoes: [daVisao.impressorasVelhas] });
+    expect(daDefinicao.statusCode, daDefinicao.body).toBe(400);
+    expect(daDefinicao.json().campos).toEqual({ visoes: motivo('Impressoras velhas') });
+
+    const antes = await naOrganizacao(api.banco, org, (tx) => tx.select().from(distribuicoes));
+    const naCriacao = await distribuir('ana', { alvo: { visoes: [daVisao.notebooksAntigos] } });
+    expect(naCriacao.statusCode, naCriacao.body).toBe(400);
+    expect(naCriacao.json().campos).toEqual({ visoes: motivo('Notebooks antigos') });
+    const depois = await naOrganizacao(api.banco, org, (tx) => tx.select().from(distribuicoes));
+    expect(depois).toHaveLength(antes.length);
   });
 });
 

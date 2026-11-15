@@ -245,13 +245,17 @@ const AlvosDaDistribuicao = z
         semContato: z.number(),
       }),
     ),
-    /** As visões da tabela do Ativos, da organização e da conta, com as máquinas que acham. */
+    /**
+     * As visões da tabela do Ativos, da organização e da conta, com as máquinas que acham. A que
+     * deixou de valer, com a definição ou um filtro que a tabela não aceita mais, vem sem a contagem.
+     */
     visoes: z.array(
       z.object({
         id: z.uuid(),
         nome: z.string(),
         compartilhada: z.boolean(),
-        maquinas: z.number(),
+        maquinas: z.number().nullable(),
+        deixouDeValer: z.boolean(),
       }),
     ),
   })
@@ -821,8 +825,16 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
             pacoteId: z.uuid({ error: 'Escolha o pacote.' }),
             alvo: AlvoDaDistribuicao,
             quando: z.enum(QUANDOS_DA_DISTRIBUICAO).default('agora'),
-            /** O momento do dia marcado, no `dia`. */
-            aPartirDe: z.string().max(40).nullable().optional(),
+            /**
+             * O momento do dia marcado, no `dia`: o instante ISO 8601 com o fuso
+             * ("2026-11-19T22:00:00-03:00" ou com o "Z"). O texto sem o fuso viraria a hora do
+             * servidor.
+             */
+            aPartirDe: z.iso
+              .datetime({ offset: true, error: MENSAGENS_DO_QUANDO.diaFaltando })
+              .max(40, { error: MENSAGENS_DO_QUANDO.diaFaltando })
+              .nullable()
+              .optional(),
             /** O fuso IANA de quem envia: o da preferência da conta ou o do navegador. */
             fuso: z.string().max(64).nullable().optional(),
           })

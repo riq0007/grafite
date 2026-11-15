@@ -53,6 +53,15 @@ export function amanhaNoFuso(agora: Date, fuso: string): string {
   return new Date(Date.UTC(ano, mes - 1, dia + 1)).toISOString().slice(0, 10);
 }
 
+/**
+ * O último dia que dá para marcar: o mesmo de hoje no ano que vem, no relógio do fuso, em
+ * `aaaa-mm-dd`. O 29 de fevereiro sem par só deixa passar os dias antes dele, como na API.
+ */
+export function daquiAUmAnoNoFuso(agora: Date, fuso: string): string {
+  const hoje = diaNoFuso(agora, fuso);
+  return `${Number(hoje.slice(0, 4)) + 1}${hoje.slice(4)}`;
+}
+
 /** Se o momento cai na janela da noite, das 22:00 às 06:00 do relógio do fuso. */
 export function naJanelaDaNoite(momento: Date, fuso: string): boolean {
   const { hora } = relogioNoFuso(momento, fuso);
@@ -90,7 +99,10 @@ export function textoDoMomento(quando: QuandoDoAssistente, agora: Date, fuso: st
   return `${dia} às ${quando.hora}`;
 }
 
-/** O dia marcado conferido: o instante dele no fuso, de amanhã em diante, ou o motivo da recusa. */
+/**
+ * O dia marcado conferido: o instante dele no fuso, de amanhã até daqui a um ano, ou o motivo da
+ * recusa.
+ */
 export function conferirODia(
   { dia, hora }: Pick<QuandoDoAssistente, 'dia' | 'hora'>,
   agora: Date,
@@ -100,6 +112,9 @@ export function conferirODia(
   if (!HORA.test(hora)) return { ok: false, erros: { hora: MENSAGEM_DA_HORA } };
   if (dia <= diaNoFuso(agora, fuso)) {
     return { ok: false, erros: { dia: MENSAGENS_DO_QUANDO.diaDeHoje } };
+  }
+  if (dia > daquiAUmAnoNoFuso(agora, fuso)) {
+    return { ok: false, erros: { dia: MENSAGENS_DO_QUANDO.diaDepoisDeUmAno } };
   }
   return { ok: true, instante: instanteNoFuso(dia, hora, fuso) };
 }

@@ -41,7 +41,7 @@ import type { SessaoDaRequisicao } from '../acesso/sessoes.ts';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { condicoesDosFiltros, lerContextoDaTabela, rotuloNoBanco } from '../ativos/colunas.ts';
 import { doModelo, doTipo } from '../ativos/leitura.ts';
-import { dadosInvalidos, naoEncontrado } from '../problemas.ts';
+import { dadosInvalidos, naoEncontrado, ProblemaDaApi } from '../problemas.ts';
 import { versoesDoPacoteNasMaquinas } from './base.ts';
 import { naFilaDe, type OutraDistribuicao, ondeJaAguardam } from './ja-aguarda.ts';
 
@@ -129,27 +129,37 @@ async function visoesDaConta(tx: Transacao, contaId: string, ids?: readonly stri
     .orderBy(asc(visoes.nomeNormalizado), asc(visoes.id));
 }
 
-/** Os ativos que os filtros da visão acham, no escopo do `ativos.ver`. */
+/**
+ * As condições dos filtros da visão, ou `null` na visão que deixou de valer: a definição guardada
+ * que a tabela não lê mais ou um filtro que ela recusa (design, decisão 10). Só essas duas recusas
+ * viram `null`; o resto, como o erro do banco, segue como está.
+ */
+function condicoesDaVisao(
+  definicao: Record<string, unknown>,
+  contexto: Awaited<ReturnType<typeof lerContextoDaTabela>>,
+): SQL[] | null {
+  const lida = lerDefinicaoDaVisao(definicao);
+  if (!lida.ok) return null;
+  try {
+    return condicoesDosFiltros(lida.definicao.filtros, contexto);
+  } catch (erro) {
+    if (erro instanceof ProblemaDaApi && erro.dados.campos?.filtros !== undefined) return null;
+    throw erro;
+  }
+}
+
+/** Os ativos que as condições da visão acham, no escopo do `ativos.ver`. */
 async function achadosPelaVisao(
   tx: Transacao,
-  definicao: Record<string, unknown>,
+  condicoes: readonly SQL[],
   doVer: SQL,
-  contexto: Awaited<ReturnType<typeof lerContextoDaTabela>>,
 ): Promise<Set<string>> {
-  const lida = lerDefinicaoDaVisao(definicao);
-  if (!lida.ok) throw new Error('A definição guardada da visão não é válida.');
   const linhas = await tx
     .select({ id: ativos.id })
     .from(ativos)
     .innerJoin(tiposDeAtivo, doTipo)
     .leftJoin(modelos, doModelo)
-    .where(
-      and(
-        eq(ativos.situacao, 'ativo'),
-        doVer,
-        ...condicoesDosFiltros(lida.definicao.filtros, contexto),
-      ),
-    );
+    .where(and(eq(ativos.situacao, 'ativo'), doVer, ...condicoes));
   return new Set(linhas.map(({ id }) => id));
 }
 
@@ -236,7 +246,11 @@ export async function resolverAlvo(
     if (linhas.length !== visoesPedidas.length) throw naoEncontrado('Visão não encontrada.');
     const contexto = await lerContextoDaTabela(tx, sessao, arvore, alvo.fuso ?? 'UTC');
     for (const visao of linhas) {
-      for (const id of await achadosPelaVisao(tx, visao.definicao, noAlcance(doVer), contexto)) {
+      const condicoes = condicoesDaVisao(visao.definicao, contexto);
+      if (!condicoes) {
+        throw dadosInvalidos({ visoes: MENSAGENS_DO_SOFTWARE.visaoQueDeixouDeValer(visao.nome) });
+      }
+      for (const id of await achadosPelaVisao(tx, condicoes, noAlcance(doVer))) {
         if (porId.has(id)) escolhidas.add(id);
       }
     }
@@ -455,17 +469,25 @@ export async function alvosDaConta(
   percorrer(null);
 
   const doVer = alcance(acesso, 'ativos.ver', arvore);
-  const daVisao: { id: string; nome: string; compartilhada: boolean; maquinas: number }[] = [];
+  const daVisao: {
+    id: string;
+    nome: string;
+    compartilhada: boolean;
+    maquinas: number | null;
+    deixouDeValer: boolean;
+  }[] = [];
   if (doVer !== null) {
     const ids = new Set(daConta.map(({ id }) => id));
     const contexto = await lerContextoDaTabela(tx, sessao, arvore, fuso ?? 'UTC');
     for (const visao of await visoesDaConta(tx, sessao.contaId)) {
-      const achados = await achadosPelaVisao(tx, visao.definicao, noAlcance(doVer), contexto);
+      const condicoes = condicoesDaVisao(visao.definicao, contexto);
+      const achados = condicoes && (await achadosPelaVisao(tx, condicoes, noAlcance(doVer)));
       daVisao.push({
         id: visao.id,
         nome: visao.nome,
         compartilhada: visao.contaId === null,
-        maquinas: [...achados].filter((id) => ids.has(id)).length,
+        maquinas: achados ? [...achados].filter((id) => ids.has(id)).length : null,
+        deixouDeValer: !achados,
       });
     }
     daVisao.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));

@@ -28,6 +28,8 @@ export const MENSAGENS_DO_SOFTWARE = {
   todasNaVersaoOuJaAguardam: (versao: string) =>
     `Todas as máquinas escolhidas já têm a versão ${versao} ou já aguardam este pacote.`,
   jaAguardaNoutra: 'A máquina já aguarda este pacote noutra distribuição.',
+  visaoQueDeixouDeValer: (visao: string) =>
+    `A visão ${visao} deixou de valer. Refaça os filtros dela na tabela do Ativos.`,
   categoria: 'Escolha uma das categorias da base.',
   maquinaNaoEncontrada: 'Máquina da distribuição não encontrada.',
   soAQueFalhou: 'Só a máquina que falhou pode ser tentada de novo.',

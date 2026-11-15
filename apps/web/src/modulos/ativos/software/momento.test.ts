@@ -33,6 +33,17 @@ describe('o quando do assistente', () => {
     });
   });
 
+  it('recusa o dia depois de um ano, pelo calendário do fuso', () => {
+    expect(conferirODia({ dia: '2027-11-11', hora: '22:00' }, AGORA, FUSO).ok).toBe(true);
+    expect(conferirODia({ dia: '2027-11-12', hora: '08:00' }, AGORA, FUSO)).toEqual({
+      ok: false,
+      erros: { dia: 'Escolha um dia até daqui a um ano.' },
+    });
+    // Às 23:00 de São Paulo já é dia 12 em UTC, e o teto continua no dia 11 do ano que vem.
+    expect(conferirODia({ dia: '2027-11-11', hora: '22:00' }, NOITE, FUSO).ok).toBe(true);
+    expect(conferirODia({ dia: '2027-11-12', hora: '22:00' }, NOITE, FUSO).ok).toBe(false);
+  });
+
   it('hoje e amanhã pelo relógio do fuso, e não pelo de UTC', () => {
     expect(diaNoFuso(NOITE, FUSO)).toBe('2026-11-11');
     expect(amanhaNoFuso(NOITE, FUSO)).toBe('2026-11-12');

@@ -22,7 +22,29 @@ export const MENSAGENS_DO_QUANDO = {
   fusoDesconhecido: 'O fuso de quem envia não existe.',
   diaFaltando: 'Escolha o dia e a hora.',
   diaDeHoje: 'Escolha um dia de amanhã em diante.',
+  diaDepoisDeUmAno: 'Escolha um dia até daqui a um ano.',
 } as const;
+
+/**
+ * O instante ISO 8601 com o fuso, na forma que o `z.iso.datetime({ offset: true })` da rota aceita:
+ * com os segundos, a fração opcional e o "Z" ou o "±hh:mm".
+ */
+const INSTANTE_COM_FUSO =
+  /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+/**
+ * O instante do texto ISO com o fuso, num dia que existe; `null` em qualquer outra forma. O texto
+ * sem o fuso viraria a hora do servidor, e o `Date` aceita formas que o Node inventa.
+ */
+function instanteComFuso(texto: string): Date | null {
+  const partes = INSTANTE_COM_FUSO.exec(texto);
+  if (!partes) return null;
+  const [ano = 0, mes = 0, dia = 0] = partes.slice(1, 4).map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  if (data.getUTCMonth() !== mes - 1 || data.getUTCDate() !== dia) return null;
+  const instante = new Date(texto);
+  return Number.isNaN(instante.getTime()) ? null : instante;
+}
 
 const formatos = new Map<string, Intl.DateTimeFormat>();
 
@@ -162,7 +184,7 @@ const dataDoRelogio = ({ ano, mes, dia }: Relogio) => ano * 10_000 + mes * 100 +
 
 /**
  * O quando que a distribuição guarda: agora, sem o dia; a noite e o dia, com o fuso que existe; e o
- * dia, de amanhã em diante no relógio do fuso.
+ * dia, como o instante ISO com o fuso, de amanhã até o mesmo dia do ano que vem no calendário do fuso.
  */
 export function conferirQuando(
   pedido: { quando: QuandoDaDistribuicao; aPartirDe?: string | null; fuso?: string | null },
@@ -181,12 +203,19 @@ export function conferirQuando(
     return { ok: false, erros: { fuso: MENSAGENS_DO_QUANDO.fusoDesconhecido } };
   if (pedido.quando === 'noite')
     return { ok: true, dados: { quando: 'noite', aPartirDe: null, fuso } };
-  const aPartirDe = pedido.aPartirDe ? new Date(pedido.aPartirDe) : null;
-  if (!aPartirDe || Number.isNaN(aPartirDe.getTime())) {
+  const aPartirDe = pedido.aPartirDe ? instanteComFuso(pedido.aPartirDe) : null;
+  if (!aPartirDe) {
     return { ok: false, erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaFaltando } };
   }
-  if (dataDoRelogio(relogio(aPartirDe, fuso)) <= dataDoRelogio(relogio(momento, fuso))) {
+  const marcado = dataDoRelogio(relogio(aPartirDe, fuso));
+  const hoje = relogio(momento, fuso);
+  if (marcado <= dataDoRelogio(hoje)) {
     return { ok: false, erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaDeHoje } };
+  }
+  // O mesmo dia do ano que vem; o 29 de fevereiro sem par fica no 28, porque o número do dia que não
+  // existe só deixa passar os dias antes dele.
+  if (marcado > dataDoRelogio({ ...hoje, ano: hoje.ano + 1 })) {
+    return { ok: false, erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaDepoisDeUmAno } };
   }
   return { ok: true, dados: { quando: 'dia', aPartirDe, fuso } };
 }

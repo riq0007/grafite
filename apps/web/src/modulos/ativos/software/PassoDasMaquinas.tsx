@@ -367,8 +367,10 @@ function ListaDasVisoes({
         return (
           <li key={visao.id} className={estilos.no} data-marcado={marcada || undefined}>
             <span />
+            {/* A que deixou de valer depois de marcada segue desmarcável. */}
             <Checkbox
               isSelected={marcada}
+              isDisabled={visao.deixouDeValer && !marcada}
               onChange={(sim) =>
                 aoMudar(sim ? [...marcadas, visao.id] : marcadas.filter((id) => id !== visao.id))
               }
@@ -376,9 +378,17 @@ function ListaDasVisoes({
               {visao.nome}
             </Checkbox>
             <span className={estilos.contagem}>
-              {visao.compartilhada ? 'Da organização' : 'Só sua'}
+              {visao.deixouDeValer
+                ? 'Deixou de valer · refaça os filtros no Ativos'
+                : visao.compartilhada
+                  ? 'Da organização'
+                  : 'Só sua'}
             </span>
-            <b className={estilos.quantas}>{visao.maquinas}</b>
+            {visao.maquinas === null ? (
+              <span />
+            ) : (
+              <b className={estilos.quantas}>{visao.maquinas}</b>
+            )}
           </li>
         );
       })}

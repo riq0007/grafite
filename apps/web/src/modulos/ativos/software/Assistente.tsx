@@ -30,7 +30,8 @@ import {
   TriangleAlert,
   Zap,
 } from 'lucide-react';
-import { Fragment, type ReactNode, useId, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useId, useState } from 'react';
+import { FalhaDaConsulta } from '../../../api/consultas.ts';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { useSessao } from '../../../sessao/useSessao.tsx';
@@ -154,6 +155,15 @@ export function NovaDistribuicao() {
   const ativos = (pacotes.data?.pacotes ?? []).filter((um) => um.situacao === 'ativo');
   const pacote = ativos.find((um) => um.id === pacoteId) ?? null;
   const previa = usePrevia(pacote?.id ?? null, alvo, fuso);
+  // A visão que deixou de valer depois da contagem, na recusa da prévia: a aba "Por visão" é relida
+  // e a mostra desabilitada (decisão 10).
+  const falhaDaPrevia = previa.error instanceof FalhaDaConsulta ? previa.error.falha : null;
+  const visaoQueDeixouDeValer = falhaDaPrevia?.problema?.campos?.visoes;
+  useEffect(() => {
+    if (visaoQueDeixouDeValer !== undefined) {
+      void consultas.invalidateQueries({ queryKey: [...CHAVE_DO_SOFTWARE, 'alvos'] });
+    }
+  }, [visaoQueDeixouDeValer, consultas]);
   const escolheu = alvoEscolhido(alvo);
   // O pacote do endereço que não está entre os ativos manda de volta ao primeiro passo, e a falta de
   // máquinas, ao segundo.
@@ -161,7 +171,16 @@ export function NovaDistribuicao() {
     passo > 1 && !pacotes.isPending && !pacote ? 1 : passo > 2 && !escolheu ? 2 : passo;
   const conta = escolheu ? previa.data : undefined;
   const total = conta?.maquinas.length ?? 0;
-  const temMaquinas = conta !== undefined && conta.conta.vaoInstalar + conta.conta.naFila > 0;
+  // A prévia recusada não deixa seguir com a conta de antes, que o cache guarda depois de relida.
+  const temMaquinas =
+    !previa.isError && conta !== undefined && conta.conta.vaoInstalar + conta.conta.naFila > 0;
+  // A recusa da prévia vem num campo, que o "Até agora" não tem: o texto é o do campo. Na visão que
+  // deixou de valer, ele leva a saída de dentro do assistente: desmarcá-la no passo Máquinas, onde a
+  // caixa dela segue habilitada enquanto marcada.
+  const textoDaFalhaDaPrevia =
+    visaoQueDeixouDeValer !== undefined
+      ? `${visaoQueDeixouDeValer} ${atual === 2 ? 'Desmarque-a para seguir sem ela.' : 'Volte ao passo Máquinas e desmarque-a.'}`
+      : (Object.values(falhaDaPrevia?.problema?.campos ?? {})[0] ?? previa.error?.message);
 
   const agora = new Date();
   const dia = quando.chave === 'dia' ? conferirODia(quando, agora, fuso) : null;
@@ -230,7 +249,15 @@ export function NovaDistribuicao() {
     );
     definirEnviando(false);
     if ('erro' in resultado) {
-      const { campos } = recusaDe<'aPartirDe' | 'alvo' | 'pacoteId' | 'fuso'>(resultado);
+      const { campos } = recusaDe<'aPartirDe' | 'alvo' | 'visoes' | 'pacoteId' | 'fuso'>(resultado);
+      // A visão que deixou de valer entre a conta e o envio: a prévia relida a recusa também, e o
+      // "Até agora" diz o motivo com o caminho até as Máquinas, sem deixar seguir com a conta velha.
+      // A recusa da prévia relê a aba "Por visão" (decisão 10).
+      if (campos?.visoes !== undefined) {
+        definirRecusa(({ vez }) => ({ texto: null, vez, doAlvo: false }));
+        await consultas.invalidateQueries({ queryKey: [...CHAVE_DO_SOFTWARE, 'previa'] });
+        return;
+      }
       // A recusa do alvo diz que a prévia ficou velha, como quando outra distribuição levou as
       // máquinas entre a conta e o envio. A prévia relida mostra onde elas ficaram (decisão 10).
       const doAlvo = campos?.alvo !== undefined;
@@ -277,7 +304,7 @@ export function NovaDistribuicao() {
           definirAlvo(novo);
           definirVindoDaMatriz(false);
         }}
-        previa={conta}
+        previa={previa.isError ? undefined : conta}
         versaoAlvo={pacote?.versao ?? null}
         tiradas={tiradas}
         definirTiradas={definirTiradas}
@@ -394,7 +421,7 @@ export function NovaDistribuicao() {
               <p className={estilos.nota}>Marque locais, visões ou máquinas ao lado.</p>
             ) : previa.isError ? (
               <p role="alert" className={estilos.nota}>
-                {previa.error.message}
+                {textoDaFalhaDaPrevia}
               </p>
             ) : !conta ? (
               <p role="status" className={estilos.nota}>
@@ -404,7 +431,8 @@ export function NovaDistribuicao() {
               doPasso(conta)
             )}
             {atual === 4 && <MensagemDoPasso texto={recusa.texto} chave={recusa.vez} />}
-            {atual === 4 && recusa.doAlvo && conta && !temMaquinas && (
+            {/* O aviso sai só da prévia relida de verdade, sem nenhuma que entra. */}
+            {atual === 4 && recusa.doAlvo && !previa.isError && conta && !temMaquinas && (
               <AvisoDasQueJaAguardam maquinas={conta.maquinas} />
             )}
           </>

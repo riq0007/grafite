@@ -180,6 +180,60 @@ describe('conferirQuando', () => {
     });
   });
 
+  it('o dia chega como o instante ISO com o fuso; o texto sem ele e as formas que o Date inventa são recusados', () => {
+    for (const aPartirDe of [
+      '2026-11-15T22:00:00-03:00',
+      '2026-11-16T01:00:00Z',
+      '2026-11-16T01:00:00.000Z',
+    ]) {
+      expect(conferirQuando({ quando: 'dia', aPartirDe, fuso: SP }, momento).ok, aPartirDe).toBe(
+        true,
+      );
+    }
+    for (const aPartirDe of [
+      // Sem o fuso, o Date leria a hora do servidor.
+      '2026-11-15T22:00:00',
+      '2026-11-15',
+      '2026-11-15T22:00-03:00',
+      '2026-11-15T22:00:00+0300',
+      'Sun Nov 15 2026 22:00:00 GMT-0300',
+      '2026-02-30T10:00:00Z',
+    ]) {
+      expect(conferirQuando({ quando: 'dia', aPartirDe, fuso: SP }, momento), aPartirDe).toEqual({
+        ok: false,
+        erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaFaltando },
+      });
+    }
+  });
+
+  it('o dia vai até daqui a um ano, pelo calendário do fuso de quem envia', () => {
+    const depoisDeUmAno = { ok: false, erros: { aPartirDe: MENSAGENS_DO_QUANDO.diaDepoisDeUmAno } };
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-14T22:00:00-03:00', fuso: SP }, momento)
+        .ok,
+    ).toBe(true);
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-15T08:00:00-03:00', fuso: SP }, momento),
+    ).toEqual(depoisDeUmAno);
+    // 23:30 de São Paulo já é dia 15 em UTC: o teto é o dia 14 do ano que vem, lá.
+    const tarde = em('2026-11-14T23:30:00-03:00');
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-14T23:00:00-03:00', fuso: SP }, tarde).ok,
+    ).toBe(true);
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-15T00:30:00-03:00', fuso: SP }, tarde),
+    ).toEqual(depoisDeUmAno);
+    // 01:00 de Tóquio do dia 15 ainda é dia 14 em UTC: o teto é o dia 15, lá.
+    const emToquio = em('2026-11-14T16:00:00Z');
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-15T13:00:00Z', fuso: TOQUIO }, emToquio)
+        .ok,
+    ).toBe(true);
+    expect(
+      conferirQuando({ quando: 'dia', aPartirDe: '2027-11-15T15:30:00Z', fuso: TOQUIO }, emToquio),
+    ).toEqual(depoisDeUmAno);
+  });
+
   it('a virada do dia é a do fuso, e não a de UTC', () => {
     // 23:30 de São Paulo já é dia 15 em UTC, e as 08:00 do dia 15 são amanhã lá.
     expect(

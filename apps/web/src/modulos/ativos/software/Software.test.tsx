@@ -713,6 +713,46 @@ describe('o assistente da distribuição', () => {
     expect(Date.parse(corpo?.aPartirDe ?? '')).toBeGreaterThan(Date.now());
   });
 
+  it('o dia marcado vai até daqui a um ano: o dia seguinte é recusado no campo, e o último segue', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-11T15:00:00.000Z'));
+    try {
+      const marcadas = PREVIA.maquinas.map((maquina) => maquina.id);
+      abrir(
+        `/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}&maquinas=${encodeURIComponent(JSON.stringify(marcadas))}&local=l-fin`,
+        {
+          ...base(true),
+          'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+          'GET /api/software/distribuicoes/alvos': () =>
+            Response.json({
+              locais: [
+                { id: 'l-fin', nome: 'Financeiro', paiId: null, maquinas: 18, semContato: 1 },
+              ],
+              visoes: [],
+            }),
+          'POST /api/software/distribuicoes/previa': () => Response.json(PREVIA),
+        },
+      );
+      expect(await screen.findByRole('heading', { name: 'Quando instalar?' })).toBeTruthy();
+      const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
+      fireEvent.click(screen.getByRole('radio', { name: /^Escolher o dia/ }));
+      // O dia vem com amanhã, 12/11; no ano que vem, ele passa do teto, que é 11/11/2027.
+      fireEvent.keyDown(screen.getByRole('spinbutton', { name: /^ano/ }), { key: 'ArrowUp' });
+      fireEvent.click(await within(ateAgora).findByRole('button', { name: 'Conferir' }));
+      expect(await screen.findByText('Escolha um dia até daqui a um ano.')).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Quando instalar?' })).toBeTruthy();
+
+      fireEvent.keyDown(screen.getByRole('spinbutton', { name: /^dia/ }), { key: 'ArrowDown' });
+      await waitFor(() =>
+        expect(screen.queryByText('Escolha um dia até daqui a um ano.')).toBeNull(),
+      );
+      fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+      expect(await screen.findByRole('heading', { name: 'Confira antes de enviar' })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('Máquina que já aguarda o pacote: o "Até agora" a conta à parte, o Conferir leva à outra distribuição, e a recusa também', async () => {
     // A que saiu "agora" há pouco, onde a PAT-00100 entra entre a prévia e o envio.
     const agoraHaPouco: components['schemas']['OutraDistribuicao'] = {
@@ -882,6 +922,244 @@ describe('o assistente da distribuição', () => {
     expect(screen.getByText('Já aguardam este pacote, puladas · 1')).toBeTruthy();
     const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
     expect(within(ateAgora).getByText('Computador PAT-00400 já aguarda este pacote')).toBeTruthy();
+  });
+
+  it('Visão que deixou de valer: a aba "Por visão" a mostra desabilitada, e a que quebra depois de marcada diz o motivo', async () => {
+    const DEIXOU = 'Deixou de valer · refaça os filtros no Ativos';
+    const MOTIVO =
+      'A visão Do financeiro deixou de valer. Refaça os filtros dela na tabela do Ativos.';
+    let quebrou = false;
+    let leiturasDosAlvos = 0;
+    abrir(`/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}`, {
+      ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () => {
+        leiturasDosAlvos++;
+        return Response.json({
+          locais: [],
+          visoes: [
+            {
+              id: 'v-fin',
+              nome: 'Do financeiro',
+              compartilhada: false,
+              maquinas: quebrou ? null : 18,
+              deixouDeValer: quebrou,
+            },
+            {
+              id: 'v-nb',
+              nome: 'Notebooks antigos',
+              compartilhada: true,
+              maquinas: null,
+              deixouDeValer: true,
+            },
+          ],
+        });
+      },
+      'POST /api/software/distribuicoes/previa': () => {
+        quebrou = true;
+        return Response.json(
+          {
+            type: 'urn:grafite:problema:dados-invalidos',
+            title: 'Dados inválidos',
+            status: 400,
+            detail: 'Confira os campos indicados.',
+            codigoDeRastreio: 'ABCD-1234',
+            campos: { visoes: MOTIVO },
+          },
+          { status: 400 },
+        );
+      },
+    });
+    const ateAgora = await screen.findByRole('complementary', { name: 'Até agora' });
+    fireEvent.click(await screen.findByRole('radio', { name: /^Por visão/ }));
+    const linhaDe = (nome: string) =>
+      screen.getByRole('checkbox', { name: nome }).closest('li') as HTMLElement;
+    const caixa = (nome: string) =>
+      screen.getByRole('checkbox', { name: nome }) as HTMLInputElement;
+
+    // A que já deixou de valer: desabilitada, com o motivo no lugar de quem a vê e sem a contagem.
+    await screen.findByRole('checkbox', { name: 'Notebooks antigos' });
+    expect(caixa('Notebooks antigos').disabled).toBe(true);
+    expect(within(linhaDe('Notebooks antigos')).getByText(DEIXOU)).toBeTruthy();
+    expect(within(linhaDe('Notebooks antigos')).queryByText('Da organização')).toBeNull();
+    expect(within(linhaDe('Notebooks antigos')).queryByText(/^\d+$/)).toBeNull();
+    expect(caixa('Do financeiro').disabled).toBe(false);
+    expect(within(linhaDe('Do financeiro')).getByText('Só sua')).toBeTruthy();
+    expect(within(linhaDe('Do financeiro')).getByText('18')).toBeTruthy();
+
+    // A que quebra depois de marcada: o "Até agora" diz o motivo e a saída de dentro do assistente,
+    // e a aba relida a mostra como a outra, ainda marcada, para a pessoa desmarcar.
+    fireEvent.click(caixa('Do financeiro'));
+    expect(
+      await within(ateAgora).findByText(`${MOTIVO} Desmarque-a para seguir sem ela.`),
+    ).toBeTruthy();
+    expect(within(ateAgora).getByRole('button', { name: 'Quando instalar' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    await waitFor(() => expect(leiturasDosAlvos).toBe(2));
+    expect(await within(linhaDe('Do financeiro')).findByText(DEIXOU)).toBeTruthy();
+    expect(caixa('Do financeiro').checked).toBe(true);
+    expect(caixa('Do financeiro').disabled).toBe(false);
+    fireEvent.click(caixa('Do financeiro'));
+    await waitFor(() => expect(caixa('Do financeiro').disabled).toBe(true));
+    expect(within(ateAgora).getByText('Marque locais, visões ou máquinas ao lado.')).toBeTruthy();
+  });
+
+  it('a visão que deixa de valer entre a conta e o envio: o "Até agora" diz o motivo e a saída, e a conta velha não segue', async () => {
+    const MOTIVO =
+      'A visão Do financeiro deixou de valer. Refaça os filtros dela na tabela do Ativos.';
+    const RECUSA = {
+      type: 'urn:grafite:problema:dados-invalidos',
+      title: 'Dados inválidos',
+      status: 400,
+      detail: 'Confira os campos indicados.',
+      codigoDeRastreio: 'ABCD-1234',
+      campos: { visoes: MOTIVO },
+    };
+    // A visão quebra entre a conta e o envio: daí em diante, a API a recusa também na prévia.
+    let quebrou = false;
+    let leiturasDosAlvos = 0;
+    abrir(`/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}`, {
+      ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () => {
+        leiturasDosAlvos++;
+        return Response.json({
+          locais: [],
+          visoes: [
+            {
+              id: 'v-fin',
+              nome: 'Do financeiro',
+              compartilhada: false,
+              maquinas: quebrou ? null : 18,
+              deixouDeValer: quebrou,
+            },
+          ],
+        });
+      },
+      'POST /api/software/distribuicoes/previa': () =>
+        quebrou ? Response.json(RECUSA, { status: 400 }) : Response.json(PREVIA),
+      'POST /api/software/distribuicoes': () => {
+        quebrou = true;
+        return Response.json(RECUSA, { status: 400 });
+      },
+    });
+    const ateAgora = await screen.findByRole('complementary', { name: 'Até agora' });
+    fireEvent.click(await screen.findByRole('radio', { name: /^Por visão/ }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Do financeiro' }));
+    expect(await within(ateAgora).findByText('Vão instalar')).toBeTruthy();
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Quando instalar' }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Enviar' }));
+
+    // A recusa relê a prévia e os alvos: o motivo vem com o caminho até as Máquinas, e o Enviar
+    // fica desabilitado.
+    expect(
+      await within(ateAgora).findByText(`${MOTIVO} Volte ao passo Máquinas e desmarque-a.`),
+    ).toBeTruthy();
+    expect(within(ateAgora).getByRole('button', { name: 'Enviar' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    await waitFor(() => expect(leiturasDosAlvos).toBe(2));
+
+    // De volta às Máquinas, a conta de antes da recusa não segue: o motivo fica, com a saída do
+    // passo, e o "Quando instalar" só volta quando ela é desmarcada.
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Voltar' }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Voltar' }));
+    expect(
+      await within(ateAgora).findByText(`${MOTIVO} Desmarque-a para seguir sem ela.`),
+    ).toBeTruthy();
+    expect(within(ateAgora).getByRole('button', { name: 'Quando instalar' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    expect(screen.queryByText(/^Ver as \d+ máquinas uma a uma$/)).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /^Por visão/ }));
+    const marcada = (await screen.findByRole('checkbox', {
+      name: 'Do financeiro',
+    })) as HTMLInputElement;
+    expect(marcada.checked).toBe(true);
+    fireEvent.click(marcada);
+    expect(
+      await within(ateAgora).findByText('Marque locais, visões ou máquinas ao lado.'),
+    ).toBeTruthy();
+  });
+
+  it('a recusa do alvo com a prévia relida em falha: o "Até agora" diz a falha, sem o aviso tirado da conta velha', async () => {
+    let recusou = false;
+    const CONTA_VELHA: components['schemas']['PreviaDaDistribuicao'] = {
+      ...PREVIA,
+      maquinas: [daPrevia(100, 'vai-instalar'), daPrevia(400, 'ja-aguarda', { outra: NA_NOITE })],
+      conta: {
+        vaoInstalar: 1,
+        puladas: 0,
+        jaAguardam: 1,
+        naFila: 0,
+        primeiraVez: 1,
+        porVersao: [{ versao: null, quantas: 1 }],
+      },
+    };
+    abrir(`/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}`, {
+      ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () =>
+        Response.json({
+          locais: [{ id: 'l-fin', nome: 'Financeiro', paiId: null, maquinas: 2, semContato: 0 }],
+          visoes: [],
+        }),
+      'POST /api/software/distribuicoes/previa': () =>
+        recusou
+          ? Response.json(
+              {
+                type: 'urn:grafite:problema:erro-interno',
+                title: 'Erro interno do servidor',
+                status: 500,
+                detail: 'Informe à TI o código ABCD-1234.',
+                codigoDeRastreio: 'ABCD-1234',
+              },
+              { status: 500 },
+            )
+          : Response.json(CONTA_VELHA),
+      'POST /api/software/distribuicoes': () => {
+        recusou = true;
+        return Response.json(
+          {
+            type: 'urn:grafite:problema:dados-invalidos',
+            title: 'Dados inválidos',
+            status: 400,
+            detail: 'Confira os campos indicados.',
+            codigoDeRastreio: 'ABCD-1234',
+            campos: { alvo: 'Todas as máquinas escolhidas já aguardam este pacote.' },
+          },
+          { status: 400 },
+        );
+      },
+    });
+    const ateAgora = await screen.findByRole('complementary', { name: 'Até agora' });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Financeiro' }));
+    await waitFor(() =>
+      expect(within(ateAgora).getByRole('button', { name: 'Quando instalar' })).toHaveProperty(
+        'disabled',
+        false,
+      ),
+    );
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Quando instalar' }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Enviar' }));
+
+    // A prévia relida falhou: o "Até agora" diz a falha e a recusa, e o caminho até a outra
+    // distribuição não sai da conta de antes da recusa.
+    expect(
+      await within(ateAgora).findByText(
+        'Não foi possível contar as máquinas. Informe à TI o código ABCD-1234.',
+      ),
+    ).toBeTruthy();
+    expect(
+      within(ateAgora).getByText('Todas as máquinas escolhidas já aguardam este pacote.'),
+    ).toBeTruthy();
+    expect(within(ateAgora).queryByRole('link', { name: /^Abrir a distribuição/ })).toBeNull();
   });
 });
 

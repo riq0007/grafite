@@ -33294,7 +33294,8 @@ export interface components {
                 id: string;
                 nome: string;
                 compartilhada: boolean;
-                maquinas: number;
+                maquinas: number | null;
+                deixouDeValer: boolean;
             }[];
         };
         CadastroDosDoisPassosInput: {
@@ -37938,7 +37939,8 @@ export interface components {
                 id: string;
                 nome: string;
                 compartilhada: boolean;
-                maquinas: number;
+                maquinas: number | null;
+                deixouDeValer: boolean;
             }[];
         };
         CadastroDosDoisPassos: {
