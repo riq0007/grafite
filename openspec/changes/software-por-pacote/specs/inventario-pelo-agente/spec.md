@@ -105,7 +105,7 @@ Sem nenhum software, a aba SHALL dizer que o agente ainda não mandou a lista.
 
 O agente SHALL ficar "Sem contato" quando o último contato dele passou do prazo da organização, de 1 a 30 dias, com 2 de fábrica. O texto SHALL dizer há quanto tempo, em dias, como "Sem contato · há 3 dias".
 
-Quem tem `coletores.administrar` SHALL ajustar o prazo na Administração, junto ao cadastro automático. A mudança SHALL ir para a auditoria. A situação do agente pela idade do inventário ("Em dia", "Parado há N dias") SHALL NOT mudar com o prazo.
+Quem tem `coletores.administrar` SHALL ajustar o prazo na Administração, na tela dos agentes, que SHALL mostrar o prazo em vigor no cabeçalho, como "Prazo do sem contato: 2 dias". A mudança SHALL ir para a auditoria. A situação do agente pela idade do inventário ("Em dia", "Parado há N dias") SHALL NOT mudar com o prazo.
 
 #### Scenario: Prazo de fábrica
 - **WHEN** o último contato do agente da PC-FIN-18 foi há 3 dias, e a organização não mudou o prazo

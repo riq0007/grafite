@@ -159,7 +159,9 @@ O `enviar` da fila não muda. O botão "Pedir agora" sai da tela, e a rota `POST
 
 `cadastro_dos_agentes` ganha `dias_sem_contato`, de 1 a 30, com 2 de fábrica: duas voltas do contato diário. O agente fica "Sem contato" quando o último contato passou desse prazo, e o texto diz há quanto tempo ("Sem contato · há 3 dias").
 
-Quem tem `coletores.administrar` ajusta o prazo na Administração, junto ao cadastro automático, com a auditoria.
+Quem tem `coletores.administrar` ajusta o prazo na Administração, na tela dos agentes, com a auditoria. Ele fica no cabeçalho da tela, como o prazo da confiança nos Perfis: "Prazo do sem contato: 2 dias" e "Mudar…", com o diálogo dos dias. Uma seção a mais acima da lista empurraria o primeiro agente para fora da primeira tela, a 1280 × 720, que o ponta a ponta dos agentes confere.
+
+O diálogo manda só o prazo no `PUT /agentes/cadastro`. A edição muda só o que manda: sem o prazo, fica o de antes; sem o tipo e o local, que vão juntos, ficam os de antes, sem revalidar. Assim, salvar o prazo não regrava o tipo e o local que outra pessoa mudou depois que a tela carregou, nem põe essa troca na auditoria de quem só mudou o prazo. E um local inativado depois não trava o prazo.
 
 A situação de hoje ("Em dia", "Parado há N dias"), que vem da idade do inventário, não muda.
 

@@ -76855,11 +76855,7 @@
                   "diasSemContato": {
                     "type": "number"
                   }
-                },
-                "required": [
-                  "tipoId",
-                  "localId"
-                ]
+                }
               }
             }
           }

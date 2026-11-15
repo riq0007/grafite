@@ -33,6 +33,7 @@ import {
   useAgentes,
   useAtivosParaLigar,
 } from './consultas.ts';
+import { PrazoDoSemContato } from './PrazoDoSemContato.tsx';
 
 /** A idade do inventário: "Agora", ou "Há 3 h". */
 function idadeNaTela(momento: string, agora: Date): string {
@@ -82,7 +83,7 @@ export function Agentes() {
     await consultas.invalidateQueries({ queryKey: CHAVE_DOS_AGENTES });
   }
 
-  const cabecalho = <CabecalhoDaPagina titulo="Agentes do GLPI" />;
+  const cabecalho = <CabecalhoDaPagina titulo="Agentes do GLPI" acoes={<PrazoDoSemContato />} />;
   if (agentes.isPending) {
     return (
       <div className={estilos.tela}>

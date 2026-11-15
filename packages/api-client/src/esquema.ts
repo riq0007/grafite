@@ -28894,8 +28894,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        tipoId: string | null;
-                        localId: string | null;
+                        tipoId?: string | null;
+                        localId?: string | null;
                         diasSemContato?: number;
                     };
                 };

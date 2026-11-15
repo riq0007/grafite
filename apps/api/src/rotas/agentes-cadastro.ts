@@ -1,6 +1,7 @@
 // O cadastro dos agentes do GLPI pela API (spec inventario-pelo-agente): o tipo e o local dos
 // computadores que o agente cadastra e, na change software-por-pacote, o prazo do sem contato, de
-// 1 a 30 dias, que a edição sem o campo mantém (design, decisão 9).
+// 1 a 30 dias (design, decisão 9). A edição muda só o que manda: sem o prazo, fica o de antes; sem
+// o tipo e o local, que vão juntos, ficam os de antes.
 import { type Banco, cadastroDosAgentes, locais, naOrganizacao, tiposDeAtivo } from '@grafite/db';
 import { MENSAGEM_DO_PRAZO_DO_SEM_CONTATO, prazoDoSemContatoValido } from '@grafite/domain';
 import { and, asc, eq, sql } from 'drizzle-orm';
@@ -64,7 +65,10 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
       schema: {
         summary:
           'Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato',
-        body: Cadastro.extend({
+        body: z.object({
+          /** O tipo e o local vão juntos; sem os dois, ficam os de antes. */
+          tipoId: z.uuid().nullable().optional(),
+          localId: z.uuid().nullable().optional(),
           /** De 1 a 30 dias; sem o campo, fica o de antes. */
           diasSemContato: z.number().optional(),
         }),
@@ -73,14 +77,24 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
     },
     async (requisicao, resposta) => {
       const { contaId } = sessaoDa(requisicao);
-      const { tipoId, diasSemContato } = requisicao.body;
+      const { tipoId: tipoPedido, localId: localPedido, diasSemContato } = requisicao.body;
+      if ((tipoPedido === undefined) !== (localPedido === undefined)) {
+        throw dadosInvalidos({
+          [tipoPedido === undefined ? 'tipoId' : 'localId']: 'Mande o tipo e o local juntos.',
+        });
+      }
       if (diasSemContato !== undefined && !prazoDoSemContatoValido(diasSemContato)) {
         throw dadosInvalidos({ diasSemContato: MENSAGEM_DO_PRAZO_DO_SEM_CONTATO });
       }
-      const localId = tipoId ? requisicao.body.localId : null;
+      // Sem o tipo e o local, como no prazo mudado sozinho, ficam os gravados, sem revalidar: um
+      // local inativado depois não trava o prazo, nem a edição regrava o que outra pessoa mudou.
+      const mudaOCadastro = tipoPedido !== undefined;
       const orgId = requisicao.organizacao?.id ?? '';
       await naOrganizacao(banco, orgId, async (tx) => {
-        if (tipoId) {
+        const antes = await lerCadastroDosAgentes(tx);
+        const tipoId = mudaOCadastro ? tipoPedido : antes.tipoId;
+        const localId = mudaOCadastro ? (tipoPedido ? (localPedido ?? null) : null) : antes.localId;
+        if (mudaOCadastro && tipoId) {
           const [tipo] = await tx
             .select()
             .from(tiposDeAtivo)
@@ -89,12 +103,11 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
           if (tipo?.situacao !== 'ativo' || !tipo.capacidades.includes('hardware.inventario'))
             throw dadosInvalidos({ tipoId: 'Escolha um tipo ativo com Inventário de hardware.' });
         }
-        if (localId) {
+        if (mudaOCadastro && localId) {
           const [local] = await tx.select().from(locais).where(eq(locais.id, localId)).for('share');
           if (local?.situacao !== 'ativo')
             throw dadosInvalidos({ localId: 'Escolha um local ativo desta organização.' });
         }
-        const antes = await lerCadastroDosAgentes(tx);
         const dias = diasSemContato ?? antes.diasSemContato;
         if (antes.tipoId === tipoId && antes.localId === localId && antes.diasSemContato === dias)
           return;

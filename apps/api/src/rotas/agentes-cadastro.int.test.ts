@@ -190,6 +190,58 @@ describe('a configuração do cadastro pelo agente', () => {
     }
     expect((await configurar(null)).statusCode).toBe(204);
   });
+
+  it('o prazo sozinho mantém o tipo e o local, mesmo com o local inativado depois', async () => {
+    const salaQueFecha = await naOrganizacao(api.banco, org, async (tx) => {
+      const [linha] = await tx
+        .insert(locais)
+        .values({
+          orgId: org,
+          nome: 'Sala que fecha',
+          nomeNormalizado: 'sala que fecha',
+          tipo: 'sala',
+        })
+        .returning();
+      return linha?.id ?? '';
+    });
+    expect((await configurar(tipo, salaQueFecha)).statusCode).toBe(204);
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx.update(locais).set({ situacao: 'inativo' }).where(eq(locais.id, salaQueFecha)),
+    );
+    const antes = (await cliente.consultar('/agentes/cadastro', entrada)).json().diasSemContato;
+    const r = await cliente.enviar('PUT', '/agentes/cadastro', entrada, { diasSemContato: 6 });
+    expect(r.statusCode, r.body).toBe(204);
+    expect((await cliente.consultar('/agentes/cadastro', entrada)).json()).toMatchObject({
+      tipoId: tipo,
+      localId: salaQueFecha,
+      diasSemContato: 6,
+    });
+    const [registro] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select()
+        .from(auditoria)
+        .where(eq(auditoria.acao, 'agentes.cadastro-configurado'))
+        .orderBy(desc(auditoria.id))
+        .limit(1),
+    );
+    expect(registro).toMatchObject({
+      antes: { tipoId: tipo, localId: salaQueFecha, diasSemContato: antes },
+      depois: { tipoId: tipo, localId: salaQueFecha, diasSemContato: 6 },
+    });
+
+    // O tipo e o local vão juntos: um só é recusado, sem mudar nada.
+    const soOTipo = await cliente.enviar('PUT', '/agentes/cadastro', entrada, { tipoId: tipo });
+    expect(soOTipo.statusCode).toBe(400);
+    expect(soOTipo.json().campos).toEqual({ localId: 'Mande o tipo e o local juntos.' });
+    const soOLocal = await cliente.enviar('PUT', '/agentes/cadastro', entrada, { localId: null });
+    expect(soOLocal.statusCode).toBe(400);
+    expect(soOLocal.json().campos).toEqual({ tipoId: 'Mande o tipo e o local juntos.' });
+    expect((await cliente.consultar('/agentes/cadastro', entrada)).json()).toMatchObject({
+      tipoId: tipo,
+      localId: salaQueFecha,
+    });
+    expect((await configurar(null)).statusCode).toBe(204);
+  });
 });
 
 const naOrg = <T>(fazer: Parameters<typeof naOrganizacao<T>>[2]) =>
