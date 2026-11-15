@@ -2679,4 +2679,212 @@ describe('a aba Software', () => {
     await waitFor(() => expect(avisos()).toContain('Google Chrome 131 saiu da fila.'));
     expect(pedidos).toEqual(['/api/software/distribuicoes/d1/maquinas/m1/tirar-da-fila']);
   });
+
+  const pacoteDaBase = (id: string, nome: string, versao: string) => ({
+    id,
+    nome,
+    versao,
+    descricao: null,
+    categoria: null,
+    nomeNoInventario: null,
+    comando: 'msiexec /i "pacote.msi" /qn /norestart',
+    codigosDeSucesso: [0, 3010],
+    tipo: { longo: 'Instalador MSI', curto: 'MSI' },
+    arquivo: { nome: 'pacote.msi', tamanho: 123_731_968, guardadoEm: null, guardadoPor: null },
+    situacao: 'ativo' as const,
+  });
+  // O inventário traz a versão inteira do Chrome; a relação a corta no tamanho da versão-alvo.
+  const PARA_INSTALAR = [
+    {
+      pacote: pacoteDaBase('p1', 'Google Chrome', '131'),
+      situacao: 'desatualizada' as const,
+      versao: '129.0.6668.90',
+    },
+    {
+      pacote: pacoteDaBase('p3', 'Chromium de testes', '130'),
+      situacao: 'sem-o-programa' as const,
+      versao: null,
+    },
+    {
+      pacote: pacoteDaBase('p4', '7-Zip', '23.01'),
+      situacao: 'na-versao' as const,
+      versao: '23.01',
+    },
+  ];
+  /** Abre a camada pelo botão, com o foco nele, como o clique de verdade (o fireEvent.click não foca). */
+  async function abrirACamada() {
+    const botao = await screen.findByRole('button', {
+      name: 'Instalar outro pacote nesta máquina',
+    });
+    botao.focus();
+    fireEvent.click(botao);
+    const camada = await screen.findByRole('dialog', {
+      name: 'Instalar outro pacote nesta máquina',
+    });
+    return { botao, camada };
+  }
+  /** Acha o Chrome pela busca "chr", escolhe e manda instalar. */
+  function instalarOChrome(camada: HTMLElement) {
+    fireEvent.change(within(camada).getByRole('searchbox', { name: 'Procurar na base' }), {
+      target: { value: 'chr' },
+    });
+    expect(within(camada).getByText('2 pacotes na base')).toBeTruthy();
+    fireEvent.click(within(camada).getByRole('radio', { name: /^Google Chrome 131/ }));
+    fireEvent.click(
+      within(camada).getByRole('button', { name: 'Instalar o Google Chrome 131 nesta máquina' }),
+    );
+  }
+
+  it('Instalar pela ficha: busca "chr", escolhe o Chrome 131 ("Atualiza a 129") e "Agora", e cria a distribuição só desta máquina', async () => {
+    let corpo: unknown;
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({
+          ...SOFTWARE,
+          distribuir: {
+            mandados: [
+              mandado({ situacao: { chave: 'concluida', texto: 'Concluída', tipo: 'sucesso' } }),
+            ],
+            pacotes: PARA_INSTALAR,
+          },
+        }),
+      'POST /api/software/distribuicoes': async (pedido) => {
+        corpo = await pedido.json();
+        return Response.json({ id: 'd9', maquinas: 1 }, { status: 201 });
+      },
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const { botao, camada } = await abrirACamada();
+    // O que já está na versão não pode ser escolhido.
+    expect(within(camada).getByRole('radio', { name: /^7-Zip 23\.01/ })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    // A 129.0.6668.90 do inventário sai cortada no tamanho da versão-alvo.
+    expect(within(camada).getByText('Atualiza a 129')).toBeTruthy();
+    // O escolhido que a busca esconde deixa de estar escolhido.
+    fireEvent.click(within(camada).getByRole('radio', { name: /^Google Chrome 131/ }));
+    fireEvent.change(within(camada).getByRole('searchbox', { name: 'Procurar na base' }), {
+      target: { value: '7-z' },
+    });
+    expect(within(camada).getByRole('button', { name: 'Escolha um pacote' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    instalarOChrome(camada);
+    await waitFor(() =>
+      expect(avisos()).toContain('Google Chrome 131: o pedido foi para HP LaserJet M404.'),
+    );
+    expect(corpo).toEqual({
+      pacoteId: 'p1',
+      alvo: {
+        locais: [],
+        visoes: [],
+        ativoIds: ['a1'],
+        lista: '',
+        fora: [],
+        fuso: expect.any(String),
+      },
+      quando: 'agora',
+      aPartirDe: null,
+      fuso: expect.any(String),
+    });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(botao));
+  });
+
+  it('Primeiro mandado: o botão passa dos instalados aos mandados, e o foco vai com ele', async () => {
+    let mandou = false;
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({
+          ...SOFTWARE,
+          distribuir: { mandados: mandou ? [mandado({})] : [], pacotes: PARA_INSTALAR },
+        }),
+      'POST /api/software/distribuicoes': () => {
+        mandou = true;
+        return Response.json({ id: 'd9', maquinas: 1 }, { status: 201 });
+      },
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const { botao, camada } = await abrirACamada();
+    const instalados = screen.getByRole('region', { name: 'Instalados, segundo o inventário' });
+    expect(within(instalados).getByRole('button', { name: botao.textContent ?? '' })).toBe(botao);
+    instalarOChrome(camada);
+    const mandados = await screen.findByRole('region', { name: 'Mandados pelo Grafite · 1' });
+    const novo = within(mandados).getByRole('button', {
+      name: 'Instalar outro pacote nesta máquina',
+    });
+    expect(novo).not.toBe(botao);
+    await waitFor(() => expect(document.activeElement).toBe(novo));
+  });
+
+  it('a releitura que falha depois do pedido encerra o cuidado do foco: os dados que voltam depois não o mexem', async () => {
+    let mandou = false;
+    let falhar = false;
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () => {
+        if (falhar) {
+          falhar = false;
+          return Response.json(
+            {
+              type: 'urn:grafite:problema:erro-interno',
+              title: 'Erro interno',
+              status: 500,
+              detail: 'Erro interno.',
+              codigoDeRastreio: 'R7K2-9QXM',
+            },
+            { status: 500 },
+          );
+        }
+        return Response.json({
+          ...SOFTWARE,
+          distribuir: { mandados: mandou ? [mandado({})] : [], pacotes: PARA_INSTALAR },
+        });
+      },
+      'POST /api/software/distribuicoes': () => {
+        mandou = true;
+        falhar = true;
+        return Response.json({ id: 'd9', maquinas: 1 }, { status: 201 });
+      },
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const { camada } = await abrirACamada();
+    instalarOChrome(camada);
+    // A releitura de depois do pedido falha, e a aba mostra a falha com o "Tentar de novo".
+    fireEvent.click(await screen.findByRole('button', { name: 'Tentar de novo' }));
+    const mandados = await screen.findByRole('region', { name: 'Mandados pelo Grafite · 1' });
+    const novo = within(mandados).getByRole('button', {
+      name: 'Instalar outro pacote nesta máquina',
+    });
+    expect(document.activeElement).not.toBe(novo);
+  });
+
+  it('na máquina sem contato, o aviso diz que o pedido fica na fila até ela voltar', async () => {
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({
+          ...SOFTWARE,
+          agente: {
+            ultimoContato: '2026-10-28T09:00:00.000Z',
+            semContato: { dias: 3, texto: 'Sem contato · há 3 dias' },
+          },
+          distribuir: { mandados: [], pacotes: PARA_INSTALAR },
+        }),
+      'POST /api/software/distribuicoes': () =>
+        Response.json({ id: 'd9', maquinas: 1 }, { status: 201 }),
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const { camada } = await abrirACamada();
+    instalarOChrome(camada);
+    await waitFor(() =>
+      expect(avisos()).toContain(
+        'Google Chrome 131: o pedido foi para HP LaserJet M404 e fica na fila até ela voltar.',
+      ),
+    );
+  });
 });

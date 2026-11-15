@@ -66,7 +66,13 @@ Para quem tem `software.distribuir` no local do ativo, a aba SHALL ter também:
 
 A tabela SHALL mostrar as 10 primeiras linhas e "Mostrar os outros N".
 
-"Instalar outro pacote nesta máquina" SHALL abrir uma camada sobreposta com a busca dos pacotes ativos e, em cada um, a relação com a máquina: "ATUALIZA A <versão>", "NÃO INSTALADO" ou "JÁ NA VERSÃO", que não pode ser escolhido. A camada SHALL ter "Vai direto para esta máquina", o quando (Agora ou Na janela da noite), "Cancelar", que o Esc também faz, e "Instalar o <pacote> <versão> nesta máquina", que cria a distribuição de uma máquina (spec distribuicao-de-software). Ao fechar, o foco SHALL voltar ao botão que a abriu.
+"Instalar outro pacote nesta máquina" SHALL abrir uma camada sobreposta e opaca, com a busca dos pacotes ativos e, em cada um, a relação com a máquina:
+- "ATUALIZA A <versão>", com a versão do inventário cortada no tamanho da versão-alvo, como nas barras da ficha do pacote, ou "ATUALIZA A INSTALADA", quando o inventário não traz a versão;
+- "NÃO INSTALADO";
+- "JÁ INSTALADO", no pacote sem versão-alvo que a máquina já tem;
+- "JÁ NA VERSÃO", que não pode ser escolhido.
+
+A lista SHALL rolar sozinha, com a busca e as ações sempre à vista, e o pacote que a busca esconde SHALL deixar de estar escolhido. A camada SHALL ter "Vai direto para esta máquina", o quando (Agora ou Janela da noite), "Cancelar", que o Esc também faz, e "Instalar o <pacote> <versão> nesta máquina", que cria a distribuição de uma máquina (spec distribuicao-de-software). Na máquina sem contato, o aviso SHALL dizer que o pedido fica na fila até ela voltar. Ao fechar, o foco SHALL voltar ao botão que a abriu ou, quando o primeiro mandado leva o botão dos instalados para os mandados, ao botão que fica no lugar dele.
 
 Com o agente sem contato (Requirement "Agente sem contato"), a aba SHALL ter o aviso com a idade do inventário ("lido há 3 dias, em 08/11 às 09:12") e "Esperando a máquina voltar", com os pedidos que aguardam, cada um com o rótulo "NA FILA" e "Tirar da fila". O cabeçalho da ficha SHALL mostrar "SEM CONTATO · HÁ N DIAS" ao lado do uso.
 
@@ -81,8 +87,12 @@ Sem nenhum software, a aba SHALL dizer que o agente ainda não mandou a lista.
 - **THEN** a tabela começa pelo Chrome, pelo 7-Zip e pelo VLC, com "HÁ A 131 NA BASE", "HÁ A 24.08 NA BASE" e "HÁ A 3.0.21 NA BASE", e o Edge vem por último, com "DO WINDOWS, NÃO SE DISTRIBUI"
 
 #### Scenario: Instalar pela ficha
-- **WHEN** a técnica busca "chr" em "Instalar outro pacote nesta máquina", escolhe o Google Chrome 131 ("ATUALIZA A 129") e "Agora"
+- **WHEN** a técnica busca "chr" em "Instalar outro pacote nesta máquina", escolhe o Google Chrome 131 ("ATUALIZA A 129", com a 129.0.6668.90 no inventário) e "Agora"
 - **THEN** o Grafite cria a distribuição só para essa máquina, e o cartão do Chrome aparece em "Mandados pelo Grafite"
+
+#### Scenario: Primeiro mandado
+- **WHEN** a técnica instala o primeiro pacote numa máquina sem mandados, pelo botão dos instalados
+- **THEN** o botão passa aos "Mandados pelo Grafite", e o foco vai com ele
 
 ## ADDED Requirements
 

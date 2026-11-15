@@ -7,7 +7,7 @@ import {
   avisar,
   Botao,
   CabecalhoDaTabela,
-  CampoDeTexto,
+  CampoDeBusca,
   Carimbo,
   Celula,
   Coluna,
@@ -22,7 +22,7 @@ import {
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Rocket, RotateCw, Unplug } from 'lucide-react';
-import { type ReactNode, useId, useState } from 'react';
+import { type ReactNode, type RefObject, useId, useLayoutEffect, useRef, useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import {
@@ -33,6 +33,11 @@ import {
   useSoftwareDaMaquina,
 } from './consultas.ts';
 import { nomeComVersao, plural } from './formatos.ts';
+import {
+  InstalarNaMaquina,
+  type MaquinaDaFicha,
+  type PacoteParaInstalar,
+} from './InstalarNaMaquina.tsx';
 import { IconeDoPacote } from './Pecas.tsx';
 import estilos from './SoftwareDaMaquina.module.css';
 
@@ -92,8 +97,77 @@ function useMomento() {
   };
 }
 
-export function SoftwareDaMaquina({ ativoId }: { ativoId: string }) {
-  const software = useSoftwareDaMaquina(ativoId);
+/**
+ * O que o botão "Instalar outro pacote nesta máquina" precisa: a máquina, os pacotes ativos, se o
+ * agente está sem contato e a referência do botão, que a aba guarda para o foco seguir o botão
+ * quando o primeiro mandado o leva dos instalados aos mandados.
+ */
+interface Instalar {
+  maquina: MaquinaDaFicha;
+  pacotes: readonly PacoteParaInstalar[];
+  semContato: boolean;
+  botao: RefObject<HTMLButtonElement | null>;
+  aoInstalar: () => void;
+}
+
+/**
+ * O cabeçalho de uma seção: o carimbo à esquerda e a busca ou a ação à direita. Com o `instalar`, o
+ * botão abre a camada do m10 logo abaixo do cabeçalho, na largura dele.
+ */
+function CabecaDaSecao({
+  id,
+  titulo,
+  children,
+  instalar,
+  nivel = 'secundario',
+}: {
+  id: string;
+  titulo: string;
+  children?: ReactNode;
+  instalar?: Instalar | null;
+  nivel?: 'primario' | 'secundario';
+}) {
+  const ancora = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={ancora} className={estilos.cabecaDaSecao}>
+      <Carimbo id={id}>{titulo}</Carimbo>
+      {children}
+      {instalar && (
+        <InstalarNaMaquina
+          maquina={instalar.maquina}
+          pacotes={instalar.pacotes}
+          semContato={instalar.semContato}
+          ancora={ancora}
+          botao={instalar.botao}
+          aoInstalar={instalar.aoInstalar}
+          nivel={nivel}
+        />
+      )}
+    </div>
+  );
+}
+
+export function SoftwareDaMaquina({ maquina }: { maquina: MaquinaDaFicha }) {
+  const software = useSoftwareDaMaquina(maquina.id);
+  // Um botão só está montado por vez, nos mandados ou nos instalados: a referência é dele.
+  const botaoDeInstalar = useRef<HTMLButtonElement>(null);
+  // Os momentos dos dados e da falha de quando a camada mandou o pedido. Quando os dados novos
+  // chegam à tela e o foco se perdeu (o primeiro mandado leva o botão dos instalados aos mandados,
+  // e o que tinha o foco sai da tela), o foco vai ao botão que ficou no lugar. A releitura que
+  // falha encerra o cuidado: os dados que vierem depois não mexem no foco.
+  const pedido = useRef<{ dados: number; falha: number } | null>(null);
+  useLayoutEffect(() => {
+    const antes = pedido.current;
+    if (antes === null) return;
+    if (software.errorUpdatedAt > antes.falha) {
+      pedido.current = null;
+      return;
+    }
+    if (software.dataUpdatedAt <= antes.dados) return;
+    pedido.current = null;
+    const foco = document.activeElement;
+    if (foco === null || foco === document.body) botaoDeInstalar.current?.focus();
+  }, [software.dataUpdatedAt, software.errorUpdatedAt]);
   if (software.isPending) {
     return (
       <p role="status" className={estilos.nota}>
@@ -117,15 +191,28 @@ export function SoftwareDaMaquina({ ativoId }: { ativoId: string }) {
     ? mandados.filter((mandado) => mandado.situacao.chave === 'aguardando')
     : [];
   const outros = mandados.filter((mandado) => !naFila.includes(mandado));
+  // O botão vai no cabeçalho dos mandados (m09) e, sem eles, no dos instalados (m11).
+  const instalar = distribuir
+    ? {
+        maquina,
+        pacotes: distribuir.pacotes,
+        semContato: semContato !== null,
+        botao: botaoDeInstalar,
+        aoInstalar: () => {
+          pedido.current = { dados: software.dataUpdatedAt, falha: software.errorUpdatedAt };
+        },
+      }
+    : null;
   return (
     <div className={estilos.aba}>
       {semContato && <AvisoDoInventario software={software.data} />}
       {naFila.length > 0 && <Fila mandados={naFila} />}
-      {outros.length > 0 && <Mandados mandados={outros} />}
+      {outros.length > 0 && <Mandados mandados={outros} instalar={instalar} />}
       <Instalados
         instalados={instalados}
         inventariadoEm={inventariadoEm}
         frenteABase={distribuir !== null}
+        instalar={outros.length > 0 ? null : instalar}
       />
     </div>
   );
@@ -229,9 +316,7 @@ function Fila({ mandados }: { mandados: readonly MandadoPeloGrafite[] }) {
   const momento = useMomento();
   return (
     <section className={estilos.secao} aria-labelledby={titulo}>
-      <div className={estilos.cabecaDaSecao}>
-        <Carimbo id={titulo}>Esperando a máquina voltar</Carimbo>
-      </div>
+      <CabecaDaSecao id={titulo} titulo="Esperando a máquina voltar" />
       <ul className={estilos.fila}>
         {mandados.map((mandado) => (
           <li key={`${mandado.distribuicaoId}-${mandado.maquinaId}`}>
@@ -253,14 +338,23 @@ function Fila({ mandados }: { mandados: readonly MandadoPeloGrafite[] }) {
 }
 
 /** "Mandados pelo Grafite" (m09): um cartão por distribuição que chegou à máquina. */
-function Mandados({ mandados }: { mandados: readonly MandadoPeloGrafite[] }) {
+function Mandados({
+  mandados,
+  instalar,
+}: {
+  mandados: readonly MandadoPeloGrafite[];
+  instalar: Instalar | null;
+}) {
   const titulo = useId();
   const momento = useMomento();
   return (
     <section className={estilos.secao} aria-labelledby={titulo}>
-      <div className={estilos.cabecaDaSecao}>
-        <Carimbo id={titulo}>Mandados pelo Grafite · {mandados.length}</Carimbo>
-      </div>
+      <CabecaDaSecao
+        id={titulo}
+        titulo={`Mandados pelo Grafite · ${mandados.length}`}
+        instalar={instalar}
+        nivel="primario"
+      />
       <ul className={estilos.mandados}>
         {mandados.map((mandado) => {
           const rotulo = rotuloDoMandado(mandado);
@@ -311,10 +405,12 @@ function Instalados({
   instalados,
   inventariadoEm,
   frenteABase,
+  instalar,
 }: {
   instalados: readonly InstaladoNaMaquina[];
   inventariadoEm: string | null;
   frenteABase: boolean;
+  instalar: Instalar | null;
 }) {
   const titulo = useId();
   const { formatarDataEHora } = useDataHora();
@@ -322,10 +418,13 @@ function Instalados({
   const [todos, definirTodos] = useState(false);
   if (instalados.length === 0) {
     return (
-      <EstadoVazio
-        titulo="O agente do GLPI ainda não mandou a lista dos softwares desta máquina."
-        descricao="A lista chega com o inventário do agente ligado a este ativo, em Administração › Agentes."
-      />
+      <section className={estilos.secao} aria-labelledby={titulo}>
+        <CabecaDaSecao id={titulo} titulo="Instalados, segundo o inventário" instalar={instalar} />
+        <EstadoVazio
+          titulo="O agente do GLPI ainda não mandou a lista dos softwares desta máquina."
+          descricao="A lista chega com o inventário do agente ligado a este ativo, em Administração › Agentes."
+        />
+      </section>
     );
   }
   const termo = normalizarTexto(busca.trim());
@@ -343,17 +442,15 @@ function Instalados({
   const vazio = <EstadoVazio titulo="Nenhum programa com essa busca." />;
   return (
     <section className={estilos.secao} aria-labelledby={titulo}>
-      <div className={estilos.cabecaDaSecao}>
-        <Carimbo id={titulo}>Instalados, segundo o inventário</Carimbo>
-        <CampoDeTexto
+      <CabecaDaSecao id={titulo} titulo="Instalados, segundo o inventário" instalar={instalar}>
+        <CampoDeBusca
           rotulo="Procurar"
-          type="search"
           autoComplete="off"
           value={busca}
           onChange={definirBusca}
           className={estilos.busca}
         />
-      </div>
+      </CabecaDaSecao>
       <p role="status" className={estilos.nota}>
         {contagem(achados.length, instalados.length)}
         {inventariadoEm && (

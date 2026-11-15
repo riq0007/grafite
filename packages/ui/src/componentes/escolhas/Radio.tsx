@@ -15,6 +15,8 @@ export interface PropsDoGrupoDeRadios
   children: ReactNode;
   descricao?: string;
   obrigatorio?: boolean;
+  /** Quando a tela ao lado já diz o que é o grupo, o rótulo fica só para o leitor de tela. */
+  ocultarRotulo?: boolean;
   /** Erro vindo de fora do grupo (da API, por exemplo). */
   erro?: string;
   className?: string;
@@ -26,6 +28,7 @@ export function GrupoDeRadios({
   children,
   descricao,
   obrigatorio = false,
+  ocultarRotulo = false,
   erro,
   className,
   ...resto
@@ -34,10 +37,11 @@ export function GrupoDeRadios({
     <RadioGroup
       {...resto}
       isRequired={obrigatorio}
+      aria-label={ocultarRotulo ? rotulo : undefined}
       isInvalid={erro ? true : undefined}
       className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}
     >
-      <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />
+      {!ocultarRotulo && <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />}
       <div className={estilos.opcoesDoGrupo}>{children}</div>
       {descricao && <DescricaoDoCampo>{descricao}</DescricaoDoCampo>}
       <ErroDoCampo erro={erro} tipo="escolha" />

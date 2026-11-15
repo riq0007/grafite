@@ -35,7 +35,7 @@ Visual, sem teste novo: o usuário confere na tela. Cada tarefa ajusta os testes
 - [x] 4.5 O assistente, segunda parte (m04, m05 e m08): o passo Quando, com a faixa das 24 horas; o Conferir; a entrada pela matriz; o envio; e o passo 37 da ponta a ponta da pilha no assistente novo.
 - [x] 4.6 A matriz (m06 e m07): por máquina, com a marcação e a dica, e por local, com o painel da direita; "Exportar".
 - [x] 4.7 A aba Software da ficha (m09 e m11): os mandados, a tabela frente à base, o aviso e a fila do sem contato e o rótulo do cabeçalho, pelo `GET /ativos/:id/software`; o `/ativos/:id/softwares` e o `/ativos/:id/distribuicoes` saem, com os testes deles.
-- [ ] 4.8 "Instalar outro pacote nesta máquina" (m10): a camada, a busca, o quando e a instalação.
+- [x] 4.8 "Instalar outro pacote nesta máquina" (m10): a camada, a busca, o quando e a instalação.
 - [ ] 4.9 O menu do Software na Gestão de ativos (a Base de pacotes, as Distribuições e a Matriz) e o prazo do sem contato na Administração.
 
 ## 5. Documentação e fim

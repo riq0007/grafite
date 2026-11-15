@@ -288,7 +288,15 @@ export function FichaDoAtivo() {
                 {
                   id: 'softwares',
                   rotulo: 'Software',
-                  conteudo: <SoftwareDaMaquina ativoId={ficha.id} />,
+                  conteudo: (
+                    <SoftwareDaMaquina
+                      maquina={{
+                        id: ficha.id,
+                        rotulo: ficha.rotulo,
+                        pessoa: ficha.responsavel?.nome ?? null,
+                      }}
+                    />
+                  ),
                 },
               ]
             : []),

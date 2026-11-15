@@ -16,6 +16,11 @@ export interface PropsDoPopover {
   titulo: string;
   /** Quando o gatilho já diz o que é, o título fica só para o leitor de tela. */
   ocultarTitulo?: boolean;
+  /**
+   * A camada opaca, que esconde o que fica por baixo, no lugar do vidro, como a do m10: uma lista
+   * longa sobre uma tabela fica difícil de ler pelo vidro.
+   */
+  opaco?: boolean;
   children: ReactNode;
   posicao?: PopoverProps['placement'];
 }
@@ -31,6 +36,7 @@ export function Popover({
   aoMudarAberto,
   titulo,
   ocultarTitulo = false,
+  opaco = false,
   children,
   posicao = 'bottom start',
 }: PropsDoPopover) {
@@ -38,7 +44,7 @@ export function Popover({
     <PainelFlutuante
       placement={posicao}
       offset={8}
-      className={estilos.popover}
+      className={[estilos.popover, opaco ? estilos.opaco : null].filter(Boolean).join(' ')}
       {...(gatilho ? {} : { triggerRef: ancora, isOpen: aberto, onOpenChange: aoMudarAberto })}
     >
       <Dialog aria-label={ocultarTitulo ? titulo : undefined} className={estilos.dialogo}>

@@ -67,6 +67,12 @@
   padding: var(--esp-3);
 }
 
+/* A camada opaca (o Popover com o `opaco`): o material sólido, sem o vidro. */
+.painel.opaco {
+  background-color: var(--cor-material-solido);
+  backdrop-filter: none;
+}
+
 .dialogo {
   display: grid;
   gap: var(--esp-3);
