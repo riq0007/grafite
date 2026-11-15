@@ -261,16 +261,19 @@ function SeAMaquinaEstiver() {
   );
 }
 
-type TipoNaTira = 'ja' | 'atualiza' | 'novo' | 'fila';
+type TipoNaTira = 'ja' | 'aguarda' | 'atualiza' | 'novo' | 'fila';
 
+/** A máquina na tira: já na versão, já aguardando este pacote noutra distribuição, na fila ou não. */
 const tipoNaTira = (maquina: MaquinaDaPrevia): TipoNaTira =>
   maquina.classe === 'pulada'
     ? 'ja'
-    : maquina.classe === 'na-fila'
-      ? 'fila'
-      : maquina.versao
-        ? 'atualiza'
-        : 'novo';
+    : maquina.classe === 'ja-aguarda'
+      ? 'aguarda'
+      : maquina.classe === 'na-fila'
+        ? 'fila'
+        : maquina.versao
+          ? 'atualiza'
+          : 'novo';
 
 /** A caixa da origem (m08): de que matriz vieram as máquinas, cada uma com a versão de hoje. */
 function DaMatriz({
@@ -295,6 +298,11 @@ function DaMatriz({
       situacao: 'sucesso',
       texto: pacote.versao ? `Já na ${pacote.versao}, puladas` : 'Já têm o pacote, puladas',
       quantas: deTipo('ja').length,
+    },
+    {
+      situacao: 'neutra',
+      texto: 'Já aguardam este pacote, puladas',
+      quantas: deTipo('aguarda').length,
     },
     {
       situacao: 'atencao',
@@ -342,6 +350,8 @@ function DaMatriz({
                   <span className={estilos.mono}>{maquina.rotulo}</span>
                   {tipo === 'fila' ? (
                     <span>na fila</span>
+                  ) : tipo === 'aguarda' ? (
+                    <span>já na fila</span>
                   ) : maquina.versao ? (
                     <span className={estilos.versaoNaTira}>{maquina.versao}</span>
                   ) : (

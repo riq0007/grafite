@@ -1,8 +1,9 @@
 // O assistente da distribuição (spec distribuicao-de-software, "Distribuição às máquinas"; change
 // software-por-pacote, design, decisão 10; m03 a m05 e m08): o trilho dos quatro passos à esquerda,
-// com o que já saiu hoje; o passo no centro; e o "Até agora" à direita, com a conta da prévia. Nada é
-// enviado antes do último passo, e o passo feito volta pelo trilho. Vindo da matriz, com o pacote e
-// as máquinas no endereço, ele abre no passo Quando.
+// com o que já saiu hoje; o passo no centro; e o "Até agora" à direita, com a conta da prévia e o
+// caminho até a outra distribuição em que as máquinas já aguardam o pacote. Nada é enviado antes do
+// último passo, e o passo feito volta pelo trilho. Vindo da matriz, com o pacote e as máquinas no
+// endereço, ele abre no passo Quando.
 import { explicarOComando, MENSAGENS_DO_QUANDO } from '@grafite/domain';
 import {
   avisar,
@@ -15,12 +16,13 @@ import {
   useDataHora,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useRouter, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useRouter, useSearch } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
   CalendarCheck,
   Check,
+  ExternalLink,
   Info,
   Monitor,
   MoonStar,
@@ -28,7 +30,7 @@ import {
   TriangleAlert,
   Zap,
 } from 'lucide-react';
-import { type ReactNode, useId, useState } from 'react';
+import { Fragment, type ReactNode, useId, useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { useSessao } from '../../../sessao/useSessao.tsx';
@@ -47,7 +49,7 @@ import {
   usePacotes,
   usePrevia,
 } from './consultas.ts';
-import { nomeComVersao, plural, tipoETamanho } from './formatos.ts';
+import { nomeComVersao, plural, textoDaOutra, tipoETamanho } from './formatos.ts';
 import {
   ABRE_A_NOITE,
   amanhaNoFuso,
@@ -61,10 +63,11 @@ import {
   textoDoMomento,
 } from './momento.ts';
 import { PassoDasMaquinas } from './PassoDasMaquinas.tsx';
-import { PassoDeConferir } from './PassoDeConferir.tsx';
+import { PassoDeConferir, porOutra } from './PassoDeConferir.tsx';
 import { PassoDoPacote } from './PassoDoPacote.tsx';
 import { PassoDoQuando } from './PassoDoQuando.tsx';
 import { IconeDoPacote } from './Pecas.tsx';
+import doSoftware from './Software.module.css';
 
 export type Passo = 1 | 2 | 3 | 4;
 
@@ -138,11 +141,15 @@ export function NovaDistribuicao() {
   const [conferiuODia, definirConferiuODia] = useState(false);
   const [diaRecusado, definirDiaRecusado] = useState<string | null>(null);
   const [enviando, definirEnviando] = useState(false);
-  const [recusa, definirRecusa] = useState<{ texto: string | null; vez: number }>({
-    texto: null,
-    vez: 0,
-  });
-  const recusar = (motivo: string) => definirRecusa(({ vez }) => ({ texto: motivo, vez: vez + 1 }));
+  // A recusa do envio. A do alvo relê a prévia e, sem nenhuma que entra, ganha o caminho até as
+  // outras distribuições em que elas já aguardam o pacote.
+  const [recusa, definirRecusa] = useState<{
+    texto: string | null;
+    vez: number;
+    doAlvo: boolean;
+  }>({ texto: null, vez: 0, doAlvo: false });
+  const recusar = (motivo: string, doAlvo = false) =>
+    definirRecusa(({ vez }) => ({ texto: motivo, vez: vez + 1, doAlvo }));
 
   const ativos = (pacotes.data?.pacotes ?? []).filter((um) => um.situacao === 'ativo');
   const pacote = ativos.find((um) => um.id === pacoteId) ?? null;
@@ -163,7 +170,7 @@ export function NovaDistribuicao() {
   const localDaMatriz = alvos.data?.locais.find((local) => local.id === pedido.local)?.nome ?? null;
 
   const irPara = (proximo: Passo) => {
-    definirRecusa(({ vez }) => ({ texto: null, vez }));
+    definirRecusa(({ vez }) => ({ texto: null, vez, doAlvo: false }));
     definirPasso(proximo);
   };
 
@@ -224,9 +231,16 @@ export function NovaDistribuicao() {
     definirEnviando(false);
     if ('erro' in resultado) {
       const { campos } = recusaDe<'aPartirDe' | 'alvo' | 'pacoteId' | 'fuso'>(resultado);
+      // A recusa do alvo diz que a prévia ficou velha, como quando outra distribuição levou as
+      // máquinas entre a conta e o envio. A prévia relida mostra onde elas ficaram (decisão 10).
+      const doAlvo = campos?.alvo !== undefined;
       recusar(
         campos?.aPartirDe ?? campos?.alvo ?? campos?.pacoteId ?? campos?.fuso ?? resultado.erro,
+        doAlvo,
       );
+      if (doAlvo) {
+        await consultas.invalidateQueries({ queryKey: [...CHAVE_DO_SOFTWARE, 'previa'] });
+      }
       return;
     }
     avisar({
@@ -390,6 +404,9 @@ export function NovaDistribuicao() {
               doPasso(conta)
             )}
             {atual === 4 && <MensagemDoPasso texto={recusa.texto} chave={recusa.vez} />}
+            {atual === 4 && recusa.doAlvo && conta && !temMaquinas && (
+              <AvisoDasQueJaAguardam maquinas={conta.maquinas} />
+            )}
           </>
         )}
       </AteAgora>
@@ -528,7 +545,10 @@ function CartaoDoPacote({ pacote }: { pacote: PacoteDeSoftware }) {
   );
 }
 
-/** A conta da prévia: quantas vão instalar, quantas já têm a versão-alvo e quantas vão para a fila. */
+/**
+ * A conta da prévia: quantas vão instalar, quantas já têm a versão-alvo, quantas já aguardam este
+ * pacote noutra distribuição e quantas vão para a fila.
+ */
 function Conta({
   previa,
   versaoAlvo,
@@ -548,10 +568,16 @@ function Conta({
       texto: versaoAlvo ? `Já têm a ${versaoAlvo} · puladas` : 'Puladas',
       quantas: conta.puladas,
     },
+    { situacao: 'neutra', texto: 'Já aguardam este pacote · puladas', quantas: conta.jaAguardam },
     { situacao: 'atencao', texto: 'Na fila', quantas: conta.naFila },
   ];
   const naFila = maquinas.filter((maquina) => maquina.classe === 'na-fila');
-  const ocupadas = maquinas.filter((maquina) => maquina.emAndamento !== null);
+  // Recebe este pacote em seguida só a que entra; a pulada e a que já aguarda não o recebem.
+  const ocupadas = maquinas.filter(
+    (maquina) =>
+      (maquina.classe === 'vai-instalar' || maquina.classe === 'na-fila') &&
+      maquina.emAndamento !== null,
+  );
   const [semContato] = naFila;
   const [ocupada] = ocupadas;
   return (
@@ -616,11 +642,68 @@ function Conta({
           )}
         </Aviso>
       )}
+      <AvisoDasQueJaAguardam maquinas={maquinas} />
     </>
   );
 }
 
-/** O "Até agora" do passo Quando (m04): quantas, quando, e o que acontece com as puladas e a fila. */
+/**
+ * As que já aguardam este pacote noutra distribuição (decisão 10): quantas, e o caminho até cada
+ * outra, em outra aba, onde o "Tirar da fila" deixa mandar de novo; a escolha segue no assistente.
+ * Também na recusa de quando nenhuma entra.
+ */
+function AvisoDasQueJaAguardam({ maquinas }: { maquinas: readonly MaquinaDaPrevia[] }) {
+  const dataHora = useDataHora();
+  const jaAguardam = maquinas.filter((maquina) => maquina.classe === 'ja-aguarda');
+  const outras = porOutra(jaAguardam);
+  const [primeira] = jaAguardam;
+  if (!primeira || outras.length === 0) return null;
+  const agora = new Date();
+  const uma = jaAguardam.length === 1;
+  return (
+    <Aviso tipo="info">
+      <b>
+        {uma ? `${primeira.rotulo} já aguarda` : `${jaAguardam.length} máquinas já aguardam`} este
+        pacote
+      </b>{' '}
+      {outras.length === 1
+        ? `noutra distribuição e ${uma ? 'segue' : 'seguem'} nela: `
+        : 'noutras distribuições e seguem nelas: '}
+      {outras.map(({ outra }, indice) => {
+        const texto = textoDaOutra(outra, agora, dataHora);
+        // O ícone de outra aba fica preso à última palavra, sem quebrar sozinho para a outra linha.
+        const corte = texto.lastIndexOf(' ') + 1;
+        return (
+          <Fragment key={outra.id}>
+            {indice > 0 && (indice === outras.length - 1 ? ' e ' : ', ')}
+            <Link
+              to="/gestao/software/distribuicoes/$id"
+              params={{ id: outra.id }}
+              target="_blank"
+              rel="noopener"
+              className={doSoftware.link}
+              aria-label={`Abrir a distribuição ${texto}, em outra aba`}
+            >
+              {texto.slice(0, corte)}
+              <span className={estilos.semQuebra}>
+                {texto.slice(corte)}
+                <span className={estilos.iconeDaOutraAba}>
+                  <Icone icone={ExternalLink} tamanho={14} />
+                </span>
+              </span>
+            </Link>
+          </Fragment>
+        );
+      })}
+      .
+    </Aviso>
+  );
+}
+
+/**
+ * O "Até agora" do passo Quando (m04): quantas, quando, e o que acontece com as puladas, as que já
+ * aguardam este pacote noutra distribuição e a fila.
+ */
 function ResumoDoQuando({
   previa,
   versaoAlvo,
@@ -634,8 +717,9 @@ function ResumoDoQuando({
   momento: string;
   naJanela: boolean;
 }) {
-  const { puladas, naFila } = previa.conta;
+  const { puladas, jaAguardam, naFila } = previa.conta;
   const total = previa.maquinas.length;
+  const outras = porOutra(previa.maquinas.filter((maquina) => maquina.classe === 'ja-aguarda'));
   const fila =
     naFila === 0
       ? ''
@@ -696,6 +780,21 @@ function ResumoDoQuando({
               </span>
             </li>
           )
+        )}
+        {jaAguardam > 0 && (
+          <li>
+            <Icone icone={Monitor} />
+            <span>
+              <b>
+                {jaAguardam} já {jaAguardam === 1 ? 'aguarda' : 'aguardam'} este pacote
+              </b>
+              {outras.length > 1
+                ? 'Seguem nas outras distribuições.'
+                : jaAguardam === 1
+                  ? 'Segue na outra distribuição.'
+                  : 'Seguem na outra distribuição.'}
+            </span>
+          </li>
         )}
         <li>
           <Icone icone={doQuando.icone} />

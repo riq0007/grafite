@@ -3,7 +3,8 @@
 // pacote, com a aberta em borda forte, e "Distribuir este pacote"; no centro, o "Para quem" e o
 // momento, as concluídas em número grande com a régua, quantas máquinas ficam fora dos locais em
 // que a conta distribui (design, decisão 16), o que precisa de alguém (as que falharam,
-// com o código explicado e "Tentar de novo", e as sem contato, com "Tirar da fila"), a fila, as em
+// com o código explicado e "Tentar de novo", ou o caminho até a outra distribuição em que a máquina
+// já aguarda o pacote, decisão 11, e as sem contato, com "Tirar da fila"), a fila, as em
 // andamento, as concluídas e as tiradas da fila, e "Exportar". O nome de cada máquina abre o log
 // dela. O servidor acorda os agentes sozinho, pela fila; enquanto alguma máquina espera ou instala,
 // a ficha se relê a cada 5 s.
@@ -43,7 +44,7 @@ import {
 import { gravarCsv } from './csv.ts';
 import dividida from './Dividida.module.css';
 import estilos from './FichaDaDistribuicao.module.css';
-import { momentoCurto, plural } from './formatos.ts';
+import { momentoCurto, plural, textoDaOutra } from './formatos.ts';
 import {
   BarraDeSituacoes,
   IconeDoPacote,
@@ -281,7 +282,8 @@ export function FichaDaDistribuicao() {
   const api = useApi();
   const consultas = useQueryClient();
   const navegar = useNavigate();
-  const { formatarHora, formatarDia, formatarDataEHora } = useDataHora();
+  const dataHora = useDataHora();
+  const { formatarHora, formatarDia, formatarDataEHora } = dataHora;
   const [vendo, definirVendo] = useState<string | null>(null);
   const [ocupada, definirOcupada] = useState<string | null>(null);
 
@@ -478,9 +480,22 @@ export function FichaDaDistribuicao() {
                         ? `O instalador terminou com o código ${maquina.codigo.numero}. O log diz o que ele mandou.`
                         : 'O agente avisou a falha. O log diz o que ele mandou.')}
                   </p>
+                  {maquina.aguardaNoutra && (
+                    <p>
+                      {`Já aguarda este pacote noutra distribuição, ${textoDaOutra(maquina.aguardaNoutra, new Date(), dataHora)}.`}
+                    </p>
+                  )}
                   <div className={estilos.acoesDoCartao}>
                     {inativo ? (
                       <span className={doSoftware.semAcao}>Pacote inativado</span>
+                    ) : maquina.aguardaNoutra ? (
+                      <Link
+                        to="/gestao/software/distribuicoes/$id"
+                        params={{ id: maquina.aguardaNoutra.id }}
+                        className={doSoftware.link}
+                      >
+                        Abrir a outra distribuição
+                      </Link>
                     ) : (
                       <Botao
                         nivel="primario"

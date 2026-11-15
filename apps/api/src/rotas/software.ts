@@ -55,7 +55,7 @@ import {
 import { softwareDaMaquina } from '../software/maquina.ts';
 import { matrizPorLocal, matrizPorMaquina } from '../software/matriz.ts';
 import { trocarArquivoDoPacote } from '../software/pacotes.ts';
-import { SemContato, SituacaoNaTela } from './distribuicoes.ts';
+import { OutraDistribuicao, SemContato, SituacaoNaTela } from './distribuicoes.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 export const PacoteDeSoftware = z
@@ -364,6 +364,11 @@ const SoftwareDaMaquina = z
             criadaPor: z.string(),
             enviadaEm: z.string().nullable(),
             terminadaEm: z.string().nullable(),
+            /**
+             * No que falhou, a outra distribuição em que a máquina aguarda ou instala o mesmo
+             * pacote: o "Tentar de novo" dá lugar ao caminho até ela.
+             */
+            aguardaNoutra: OutraDistribuicao.nullable(),
           }),
         ),
         /** Os pacotes ativos, pelo nome, com a máquina frente a cada um. */
@@ -373,6 +378,8 @@ const SoftwareDaMaquina = z
             situacao: SituacaoNaMatriz,
             /** A versão do inventário que vale frente ao pacote. */
             versao: z.string().nullable(),
+            /** A máquina já aguarda ou instala o pacote noutra distribuição: "JÁ NA FILA". */
+            naFila: z.boolean(),
           }),
         ),
       })

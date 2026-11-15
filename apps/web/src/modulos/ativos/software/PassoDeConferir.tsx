@@ -1,13 +1,30 @@
 // O passo Conferir do assistente da distribuição (spec distribuicao-de-software, "Distribuição às
-// máquinas"; change software-por-pacote, m05): o que vai acontecer com cada grupo de máquinas antes
-// do envio. As que vão instalar, pela versão de hoje; as puladas, que já têm a versão-alvo; e as sem
-// contato, que entram na fila e saem da lista por um botão.
+// máquinas"; change software-por-pacote, m05 e design, decisão 10): o que vai acontecer com cada
+// grupo de máquinas antes do envio. As que vão instalar, pela versão de hoje; as puladas, que já têm
+// a versão-alvo; as que já aguardam este pacote, que seguem na outra distribuição, com o caminho até
+// ela, em outra aba; e as sem contato, que entram na fila e saem da lista por um botão.
 import { explicarOComando, versaoCortada } from '@grafite/domain';
-import { Botao, CabecalhoDaPagina, RotuloDeSituacao, type Situacao } from '@grafite/ui';
+import {
+  Botao,
+  CabecalhoDaPagina,
+  Icone,
+  RotuloDeSituacao,
+  type Situacao,
+  useDataHora,
+} from '@grafite/ui';
+import { Link } from '@tanstack/react-router';
+import { ExternalLink } from 'lucide-react';
 import { type ReactNode, useId } from 'react';
 import estilos from './Assistente.module.css';
-import type { MaquinaDaPrevia, PacoteDeSoftware, PreviaDaDistribuicao } from './consultas.ts';
-import { nomeComVersao, plural } from './formatos.ts';
+import type {
+  MaquinaDaPrevia,
+  OutraDistribuicao,
+  PacoteDeSoftware,
+  PreviaDaDistribuicao,
+} from './consultas.ts';
+import { nomeComVersao, plural, textoDaOutra } from './formatos.ts';
+import { comMaiuscula } from './momento.ts';
+import doSoftware from './Software.module.css';
 
 /** Até quantas máquinas cada grupo mostra pelo nome; as outras viram "e mais N". */
 const MAQUINAS_A_VISTA = 40;
@@ -25,10 +42,14 @@ export function PassoDeConferir({
   aoTirarDaLista: (maquinas: readonly MaquinaDaPrevia[]) => void;
 }) {
   const { resumo } = explicarOComando(pacote.comando);
+  const dataHora = useDataHora();
+  const agora = new Date();
   const daClasse = (classe: MaquinaDaPrevia['classe']) =>
     previa.maquinas.filter((maquina) => maquina.classe === classe);
   const vaoInstalar = daClasse('vai-instalar');
   const puladas = daClasse('pulada');
+  const jaAguardam = daClasse('ja-aguarda');
+  const outras = porOutra(jaAguardam);
   const naFila = daClasse('na-fila');
   const [semContato] = naFila;
   const uma = (lista: readonly unknown[]) => lista.length === 1;
@@ -81,6 +102,54 @@ export function PassoDeConferir({
               <Maquinas maquinas={puladas} rotulo="Máquinas puladas" tipo="pulada" />
             </Grupo>
           )}
+          {jaAguardam.length > 0 && (
+            <Grupo
+              numero={jaAguardam.length}
+              situacao="neutra"
+              titulo={
+                uma(jaAguardam)
+                  ? 'já aguarda este pacote e será pulada'
+                  : 'já aguardam este pacote e serão puladas'
+              }
+              rotulo={
+                !uma(outras)
+                  ? 'Seguem nas outras distribuições'
+                  : uma(jaAguardam)
+                    ? 'Segue na outra distribuição'
+                    : 'Seguem na outra distribuição'
+              }
+              descricao={`Para mandar de novo, ${uma(jaAguardam) ? 'tire-a' : 'tire-as'} da fila ${uma(outras) ? 'na outra distribuição' : 'nas outras distribuições'}.`}
+            >
+              {outras.map(({ outra, maquinas }) => {
+                const texto = textoDaOutra(outra, agora, dataHora);
+                return (
+                  <div key={outra.id}>
+                    <p className={estilos.subgrupo}>
+                      <span className={estilos.legendaForte}>{comMaiuscula(texto)}</span>
+                      <b>{maquinas.length}</b>
+                    </p>
+                    <Maquinas
+                      maquinas={maquinas}
+                      rotulo={`Máquinas que seguem na distribuição ${texto}`}
+                      tipo="pulada"
+                    />
+                    {/* Em outra aba, para a escolha seguir no assistente. */}
+                    <Link
+                      to="/gestao/software/distribuicoes/$id"
+                      params={{ id: outra.id }}
+                      target="_blank"
+                      rel="noopener"
+                      className={`${doSoftware.link} ${estilos.paraAOutra}`}
+                      aria-label={`Abrir a distribuição ${texto}, em outra aba`}
+                    >
+                      Abrir a distribuição
+                      <Icone icone={ExternalLink} tamanho={14} />
+                    </Link>
+                  </div>
+                );
+              })}
+            </Grupo>
+          )}
           {semContato && (
             <Grupo
               numero={naFila.length}
@@ -111,6 +180,18 @@ export function PassoDeConferir({
       )}
     </>
   );
+}
+
+/** As que já aguardam este pacote, por outra distribuição em que aguardam, a mais nova primeiro. */
+export function porOutra(maquinas: readonly MaquinaDaPrevia[]) {
+  const grupos = new Map<string, { outra: OutraDistribuicao; maquinas: MaquinaDaPrevia[] }>();
+  for (const maquina of maquinas) {
+    if (!maquina.outra) continue;
+    const grupo = grupos.get(maquina.outra.id);
+    if (grupo) grupo.maquinas.push(maquina);
+    else grupos.set(maquina.outra.id, { outra: maquina.outra, maquinas: [maquina] });
+  }
+  return [...grupos.values()].sort((a, b) => b.outra.criadaEm.localeCompare(a.outra.criadaEm));
 }
 
 /** As que vão instalar pela versão de hoje, cortada no tamanho da versão-alvo, da mais nova para a

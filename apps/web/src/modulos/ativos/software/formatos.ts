@@ -1,7 +1,8 @@
-// Os formatos das telas do software (change software-por-pacote): o momento curto das listas, o tipo
-// com o tamanho do pacote e a cor do ícone de cada um.
+// Os formatos das telas do software (change software-por-pacote): o momento curto das listas, a
+// outra distribuição em que a máquina já aguarda o pacote, o tipo com o tamanho do pacote e a cor do
+// ícone de cada um.
 import { formatarTamanho } from '@grafite/ui';
-import type { PacoteDeSoftware } from './consultas.ts';
+import type { OutraDistribuicao, PacoteDeSoftware } from './consultas.ts';
 
 interface FormatosDeData {
   formatarHora: (data: Date) => string;
@@ -13,6 +14,34 @@ interface FormatosDeData {
 export function momentoCurto(data: Date, agora: Date, formatos: FormatosDeData): string {
   if (formatos.grupoDoDia(data, agora) === 'Hoje') return `hoje ${formatos.formatarHora(data)}`;
   return formatos.formatarDia(data).split(' ').slice(1).join(' ');
+}
+
+/**
+ * A outra distribuição em que a máquina já aguarda o pacote (design, decisões 10 e 11): o quando dela
+ * e a hora do envio, no relógio de quem vê, como "na janela da noite, enviada às 09:02", "enviada
+ * ontem às 18:40" ou "a partir de qui 19 nov às 08:00, enviada em 12 nov às 11:30".
+ */
+export function textoDaOutra(
+  outra: OutraDistribuicao,
+  agora: Date,
+  formatos: FormatosDeData,
+): string {
+  const criadaEm = new Date(outra.criadaEm);
+  const hora = formatos.formatarHora(criadaEm);
+  const dia = formatos.grupoDoDia(criadaEm, agora);
+  const enviada =
+    dia === 'Hoje'
+      ? `enviada às ${hora}`
+      : dia === 'Ontem'
+        ? `enviada ontem às ${hora}`
+        : `enviada em ${momentoCurto(criadaEm, agora, formatos)} às ${hora}`;
+  const { chave, aPartirDe } = outra.quando;
+  if (chave === 'noite') return `na janela da noite, ${enviada}`;
+  if (chave === 'dia' && aPartirDe) {
+    const inicio = new Date(aPartirDe);
+    return `a partir de ${formatos.formatarDia(inicio)} às ${formatos.formatarHora(inicio)}, ${enviada}`;
+  }
+  return enviada;
 }
 
 /** "MSI · 118 MB", ou só o tipo, sem arquivo. */

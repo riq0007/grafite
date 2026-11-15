@@ -24,6 +24,10 @@ export const MENSAGENS_DO_SOFTWARE = {
   pacoteInativo: 'O pacote está inativo.',
   semAgente: (ativo: string) => `O ativo ${ativo} não tem o agente do GLPI ligado.`,
   todasNaVersao: (versao: string) => `Todas as máquinas escolhidas já têm a versão ${versao}.`,
+  todasJaAguardam: 'Todas as máquinas escolhidas já aguardam este pacote.',
+  todasNaVersaoOuJaAguardam: (versao: string) =>
+    `Todas as máquinas escolhidas já têm a versão ${versao} ou já aguardam este pacote.`,
+  jaAguardaNoutra: 'A máquina já aguarda este pacote noutra distribuição.',
   categoria: 'Escolha uma das categorias da base.',
   maquinaNaoEncontrada: 'Máquina da distribuição não encontrada.',
   soAQueFalhou: 'Só a máquina que falhou pode ser tentada de novo.',

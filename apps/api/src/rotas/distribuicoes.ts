@@ -38,6 +38,7 @@ import {
   normalizarTexto,
   podeSeguir,
   progressoDaDistribuicao,
+  recusaSemNenhumaQueEntra,
   SITUACOES_DA_MAQUINA,
   SITUACOES_DA_MAQUINA_NO_BANCO,
   semContato,
@@ -66,6 +67,12 @@ import {
 } from '../software/alcance.ts';
 import { alvosDaConta, classificarOAlvo, resolverAlvo } from '../software/alvo.ts';
 import { paraQuemNaTela } from '../software/base.ts';
+import {
+  naFilaDe,
+  type OutraDistribuicao as OutraNaFila,
+  ondeJaAguardam,
+} from '../software/ja-aguarda.ts';
+import { travar } from '../travas.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 export const SituacaoNaTela = z.object({
@@ -73,6 +80,21 @@ export const SituacaoNaTela = z.object({
   texto: z.string(),
   tipo: z.enum(['neutra', 'info', 'sucesso', 'critico']),
 });
+
+/** O quando, com o dia marcado e o fuso de quem enviou. */
+const QuandoDaDistribuicao = z.object({
+  chave: z.enum(QUANDOS_DA_DISTRIBUICAO),
+  aPartirDe: z.string().nullable(),
+  fuso: z.string().nullable(),
+});
+
+/**
+ * A outra distribuição em que a máquina aguarda ou instala o mesmo pacote, com o envio e o quando,
+ * para o caminho até ela (design, decisões 10 e 11).
+ */
+export const OutraDistribuicao = z
+  .object({ id: z.uuid(), criadaEm: z.string(), quando: QuandoDaDistribuicao })
+  .meta({ id: 'OutraDistribuicao' });
 
 const ResumoDaDistribuicao = z
   .object({
@@ -88,12 +110,7 @@ const ResumoDaDistribuicao = z
     criadaEm: z.string(),
     /** O nome da máquina, o local mais fundo que contém todas, "N locais" ou "N máquinas". */
     paraQuem: z.string(),
-    /** O quando, com o dia marcado e o fuso de quem enviou. */
-    quando: z.object({
-      chave: z.enum(QUANDOS_DA_DISTRIBUICAO),
-      aPartirDe: z.string().nullable(),
-      fuso: z.string().nullable(),
-    }),
+    quando: QuandoDaDistribuicao,
     /** As máquinas nos locais em que a conta distribui; o progresso conta só elas. */
     maquinas: z.number(),
     progresso: z.string(),
@@ -127,6 +144,11 @@ const MaquinaDaDistribuicao = z
     enviadaEm: z.string().nullable(),
     atualizadaEm: z.string().nullable(),
     terminadaEm: z.string().nullable(),
+    /**
+     * Na que falhou, a outra distribuição em que a máquina aguarda ou instala o mesmo pacote: o
+     * "Tentar de novo" dá lugar ao caminho até ela (decisão 11).
+     */
+    aguardaNoutra: OutraDistribuicao.nullable(),
   })
   .meta({ id: 'MaquinaDaDistribuicao' });
 
@@ -174,13 +196,15 @@ const MaquinaDaPrevia = z
     patrimonio: z.string().nullable(),
     hostname: z.string().nullable(),
     local: z.string().nullable(),
-    /** Na ordem de precedência: pulada, na fila e vai instalar. */
-    classe: z.enum(['pulada', 'na-fila', 'vai-instalar']),
+    /** Na ordem de precedência: pulada, já aguarda, na fila e vai instalar. */
+    classe: z.enum(['pulada', 'ja-aguarda', 'na-fila', 'vai-instalar']),
     /** A versão mais alta do programa na máquina. */
     versao: z.string().nullable(),
     semContato: SemContato.nullable(),
     /** A outra instalação que o agente faz agora na máquina. */
     emAndamento: z.object({ pacote: z.string() }).nullable(),
+    /** Na que já aguarda, a outra distribuição em que ela aguarda ou instala o pacote. */
+    outra: OutraDistribuicao.nullable(),
   })
   .meta({ id: 'MaquinaDaPrevia' });
 
@@ -191,14 +215,20 @@ const PreviaDaDistribuicao = z
     naoAchados: z.array(z.string()),
     conta: z.object({
       vaoInstalar: z.number(),
+      /** As puladas pela versão-alvo. */
       puladas: z.number(),
+      /** As que já aguardam o mesmo pacote noutra distribuição, também puladas. */
+      jaAguardam: z.number(),
       naFila: z.number(),
       /** As que vão instalar sem ter o programa. */
       primeiraVez: z.number(),
       /** As que vão instalar com o programa, pela versão de hoje. */
       porVersao: z.array(z.object({ versao: z.string().nullable(), quantas: z.number() })),
     }),
-    /** O "Para quem" das que entram na distribuição. */
+    /**
+     * De onde vêm todas as escolhidas, com as puladas, ao lado do total delas ("18 máquinas
+     * escolhidas, do Financeiro"). A distribuição criada guarda o "Para quem" só das que entram.
+     */
     paraQuem: z.string(),
   })
   .meta({ id: 'PreviaDaDistribuicao' });
@@ -256,7 +286,6 @@ async function pacoteParaDistribuir(tx: Transacao, id: string) {
   return pacote;
 }
 
-/** Os resumos das distribuições dadas, ou das 100 mais novas, com o progresso. */
 /**
  * As distribuições com alguma máquina no alcance da conta (ou só as pedidas), das 100 mais novas,
  * com as máquinas e o progresso contados no alcance e as de fora à parte (design, decisão 16).
@@ -358,8 +387,10 @@ async function maquinasDa(
       },
       ultimoContato: agentes.ultimoContato,
       voltaAte: agentes.voltaAte,
+      pacoteId: distribuicoes.pacoteId,
     })
     .from(maquinasDasDistribuicoes)
+    .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
     .innerJoin(ativos, doAtivoDaMaquina)
     .innerJoin(tiposDeAtivo, doTipo)
     .leftJoin(modelos, doModelo)
@@ -373,7 +404,17 @@ async function maquinasDa(
       ),
     )
     .orderBy(sql`${rotuloNoBanco}`);
-  return linhas.map(({ maquina, ativo, responsavel, ultimoContato, voltaAte }) => {
+  // A que falhou e já aguarda o mesmo pacote noutra distribuição leva o caminho até ela (decisão 11).
+  const falharam = linhas.filter(({ maquina }) => maquina.situacao === 'falhou');
+  const [primeira] = linhas;
+  const outras =
+    primeira && falharam.length > 0
+      ? await ondeJaAguardam(tx, {
+          ativoIds: falharam.map(({ maquina }) => maquina.ativoId),
+          pacoteIds: [primeira.pacoteId],
+        })
+      : new Map<string, OutraNaFila>();
+  return linhas.map(({ maquina, ativo, responsavel, ultimoContato, voltaAte, pacoteId }) => {
     const contato = semContato(ultimoContato, momento, diasSemContato);
     const codigo = maquina.codigoDeSaida;
     return {
@@ -400,6 +441,10 @@ async function maquinasDa(
       enviadaEm: maquina.enviadaEm?.toISOString() ?? null,
       atualizadaEm: maquina.atualizadaEm?.toISOString() ?? null,
       terminadaEm: maquina.terminadaEm?.toISOString() ?? null,
+      aguardaNoutra:
+        maquina.situacao === 'falhou'
+          ? (outras.get(naFilaDe(maquina.ativoId, pacoteId)) ?? null)
+          : null,
     };
   });
 }
@@ -428,6 +473,7 @@ async function maquinaParaMudar(tx: Transacao, distribuicaoId: string, maquinaId
       patrimonio: ativos.patrimonio,
       rotulo: sql<string>`${rotuloNoBanco}`,
       pacote: pacotesDeSoftware.nome,
+      pacoteId: distribuicoes.pacoteId,
       situacaoDoPacote: pacotesDeSoftware.situacao,
       quando: distribuicoes.quando,
       aPartirDe: distribuicoes.aPartirDe,
@@ -592,10 +638,11 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
             versao: maquina.versao,
             semContato: maquina.semContato,
             emAndamento: maquina.emAndamento,
+            outra: maquina.outra,
           })),
           naoAchados,
           conta: previa.conta,
-          paraQuem: previa.paraQuem,
+          paraQuem: previa.paraQuemDasEscolhidas,
         };
       });
     },
@@ -663,6 +710,14 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         if (linha.maquina.situacao !== 'falhou') throw conflito(MENSAGENS_DO_SOFTWARE.soAQueFalhou);
         // O pacote inativado não volta à fila pelo "Tentar de novo" (decisão 17).
         if (linha.situacaoDoPacote !== 'ativo') throw conflito(MENSAGENS_DO_SOFTWARE.pacoteInativo);
+        // A máquina que já aguarda o pacote noutra distribuição instalaria duas vezes (decisão 11).
+        // A trava do pacote vem antes da leitura, como na criação.
+        await travar(tx, `pacote:${linha.pacoteId}`);
+        const outras = await ondeJaAguardam(tx, {
+          ativoIds: [linha.maquina.ativoId],
+          pacoteIds: [linha.pacoteId],
+        });
+        if (outras.size > 0) throw conflito(MENSAGENS_DO_SOFTWARE.jaAguardaNoutra);
         const [quem] = await tx
           .select({ nome: pessoas.nome })
           .from(contas)
@@ -787,17 +842,20 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
       const orgId = requisicao.organizacao?.id ?? '';
       const criada = await naOrganizacao(banco, orgId, async (tx) => {
         const pacote = await pacoteParaDistribuir(tx, pacoteId);
+        // Duas criações do mesmo pacote passam uma de cada vez: a segunda vê as máquinas da
+        // primeira na fila (decisão 10).
+        await travar(tx, `pacote:${pacote.id}`);
         const arvore = await lerArvore(tx);
         // A mesma conta da prévia, refeita no servidor.
         const { maquinas } = await resolverAlvo(tx, { sessao, arvore, alvo });
         if (maquinas.length === 0)
           throw dadosInvalidos({ alvo: MENSAGENS_DO_SOFTWARE.semMaquinas });
         const conta = await classificarOAlvo(tx, { arvore, pacote, maquinas, momento });
-        const entram = conta.maquinas.filter(({ classe }) => classe !== 'pulada');
+        const entram = conta.maquinas.filter(
+          ({ classe }) => classe === 'vai-instalar' || classe === 'na-fila',
+        );
         if (entram.length === 0) {
-          throw dadosInvalidos({
-            alvo: MENSAGENS_DO_SOFTWARE.todasNaVersao(pacote.versao ?? ''),
-          });
+          throw dadosInvalidos({ alvo: recusaSemNenhumaQueEntra(conta.conta, pacote.versao) });
         }
         const { dados } = conferido;
         const [distribuicao] = await tx
@@ -832,6 +890,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
             versao: pacote.versao,
             maquinas: entram.length,
             puladas: conta.conta.puladas,
+            jaAguardavam: conta.conta.jaAguardam,
             paraQuem: conta.paraQuem,
             quando: dados.quando,
             aPartirDe: dados.aPartirDe?.toISOString() ?? null,

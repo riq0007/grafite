@@ -1,8 +1,10 @@
 // As máquinas no assistente da distribuição (spec distribuicao-de-software, "Assistente da
 // distribuição"; spec inventario-pelo-agente, "Agente sem contato"; change software-por-pacote,
 // design, decisões 9 e 10): o sem contato pelo prazo da organização, a classe de cada máquina, na
-// ordem pulada, na fila e vai instalar, a conta do "Conferir", o "Para quem" e a lista colada.
+// ordem pulada, já aguarda, na fila e vai instalar, a conta do "Conferir", a recusa sem nenhuma que
+// entra, o "Para quem" e a lista colada.
 import { normalizarTexto } from '../texto.ts';
+import { MENSAGENS_DO_SOFTWARE } from './software.ts';
 import { compararVersoes, type SituacaoFrenteAoPacote, versaoCortada } from './versoes.ts';
 
 const DIA = 86_400_000;
@@ -36,18 +38,35 @@ export function textoDoSemContato(dias: number): string {
   return `Sem contato · há ${dias} ${dias === 1 ? 'dia' : 'dias'}`;
 }
 
-export type ClasseNoAssistente = 'pulada' | 'na-fila' | 'vai-instalar';
+export type ClasseNoAssistente = 'pulada' | 'ja-aguarda' | 'na-fila' | 'vai-instalar';
 
 /**
  * A classe da máquina no assistente, nesta precedência: pulada, já na versão-alvo, mesmo sem
- * contato; na fila, sem contato; e vai instalar. O pacote sem versão-alvo não pula ninguém.
+ * contato; já aguarda, com o mesmo pacote aguardando ou em andamento noutra distribuição, também
+ * pulada; na fila, sem contato; e vai instalar. O pacote sem versão-alvo não pula ninguém pela
+ * versão.
  */
 export function classeNoAssistente(maquina: {
   situacao: SituacaoFrenteAoPacote;
   semContato: boolean;
+  jaAguarda?: boolean;
 }): ClasseNoAssistente {
   if (maquina.situacao === 'na-versao') return 'pulada';
+  if (maquina.jaAguarda) return 'ja-aguarda';
   return maquina.semContato ? 'na-fila' : 'vai-instalar';
+}
+
+/**
+ * A recusa da distribuição em que nenhuma máquina entra, pelo motivo das puladas: a versão-alvo, a
+ * outra distribuição em que elas já aguardam o pacote, ou os dois.
+ */
+export function recusaSemNenhumaQueEntra(
+  { puladas, jaAguardam }: { puladas: number; jaAguardam: number },
+  versaoAlvo: string | null,
+): string {
+  if (jaAguardam === 0) return MENSAGENS_DO_SOFTWARE.todasNaVersao(versaoAlvo ?? '');
+  if (puladas === 0 || versaoAlvo === null) return MENSAGENS_DO_SOFTWARE.todasJaAguardam;
+  return MENSAGENS_DO_SOFTWARE.todasNaVersaoOuJaAguardam(versaoAlvo);
 }
 
 export interface ContaDoAssistente {
@@ -55,6 +74,8 @@ export interface ContaDoAssistente {
   classes: ClasseNoAssistente[];
   vaoInstalar: number;
   puladas: number;
+  /** As que já aguardam o mesmo pacote noutra distribuição, também puladas. */
+  jaAguardam: number;
   naFila: number;
   /** As que vão instalar sem ter o programa. */
   primeiraVez: number;
@@ -69,6 +90,7 @@ export function contaDoAssistente(
     situacao: SituacaoFrenteAoPacote;
     versao: string | null;
     semContato: boolean;
+    jaAguarda?: boolean;
   }[],
   versaoAlvo: string | null,
 ): ContaDoAssistente {
@@ -95,6 +117,7 @@ export function contaDoAssistente(
     classes,
     vaoInstalar: contar('vai-instalar'),
     puladas: contar('pulada'),
+    jaAguardam: contar('ja-aguarda'),
     naFila: contar('na-fila'),
     primeiraVez,
     porVersao,

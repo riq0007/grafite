@@ -3,7 +3,7 @@
 // só distribui, o pacote novo com o arquivo, a distribuição pela busca das máquinas, a lista com o
 // progresso e a ficha com o log.
 import type { components } from '@grafite/api-client';
-import { filaDeAvisos } from '@grafite/ui';
+import { criarDataHora, filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -87,8 +87,19 @@ const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}):
   enviadaEm: null,
   atualizadaEm: '2026-10-28T12:00:00.000Z',
   terminadaEm: null,
+  aguardaNoutra: null,
   ...extras,
 });
+
+/** A outra distribuição, da janela da noite, em que a máquina já aguarda o pacote. */
+const NA_NOITE: components['schemas']['OutraDistribuicao'] = {
+  id: 'd-noite',
+  criadaEm: '2026-10-28T12:02:00.000Z',
+  quando: { chave: 'noite', aPartirDe: null, fuso: 'America/Sao_Paulo' },
+};
+/** A hora do envio dela, no fuso de quem roda o teste. */
+const HORA_DA_NOITE = criarDataHora().formatarHora(new Date(NA_NOITE.criadaEm));
+const naNoite = `na janela da noite, enviada em 28 out às ${HORA_DA_NOITE}`;
 
 const ficha = (
   maquinas: Maquina[],
@@ -261,11 +272,13 @@ describe('a distribuição', () => {
             versao: null,
             semContato: null,
             emAndamento: null,
+            outra: null,
           })),
           naoAchados: [],
           conta: {
             vaoInstalar: alvo.ativoIds.length,
             puladas: 0,
+            jaAguardam: 0,
             naFila: 0,
             primeiraVez: alvo.ativoIds.length,
             porVersao: [],
@@ -536,6 +549,24 @@ describe('a distribuição', () => {
     expect(screen.queryByText(/^Pacote inativado: as máquinas que aguardam/)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
   });
+
+  it('Máquina que já aguarda o pacote noutra distribuição: o cartão da que falhou leva até ela, no lugar do "Tentar de novo"', async () => {
+    abrir('/gestao/software/distribuicoes/d1', {
+      'GET /api/software/distribuicoes/d1': () =>
+        Response.json(
+          ficha([{ ...FALHOU, aguardaNoutra: NA_NOITE }], '0 de 1 concluída, 1 falhou'),
+        ),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
+    });
+    expect(
+      await screen.findByText(`Já aguarda este pacote noutra distribuição, ${naNoite}.`),
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'Abrir a outra distribuição' }).getAttribute('href'),
+    ).toBe('/gestao/software/distribuicoes/d-noite');
+    expect(screen.getByRole('button', { name: 'Ver a ficha' })).toBeTruthy();
+  });
 });
 
 describe('o assistente da distribuição', () => {
@@ -554,6 +585,7 @@ describe('o assistente da distribuição', () => {
     versao: classe === 'pulada' ? '23.01' : null,
     semContato: null,
     emAndamento: null,
+    outra: null,
     ...extras,
   });
   const PREVIA: components['schemas']['PreviaDaDistribuicao'] = {
@@ -566,6 +598,7 @@ describe('o assistente da distribuição', () => {
     conta: {
       vaoInstalar: 12,
       puladas: 5,
+      jaAguardam: 0,
       naFila: 1,
       primeiraVez: 12,
       porVersao: [{ versao: null, quantas: 12 }],
@@ -678,6 +711,177 @@ describe('o assistente da distribuição', () => {
     );
     expect(corpo).toMatchObject({ quando: 'dia', fuso: expect.any(String) });
     expect(Date.parse(corpo?.aPartirDe ?? '')).toBeGreaterThan(Date.now());
+  });
+
+  it('Máquina que já aguarda o pacote: o "Até agora" a conta à parte, o Conferir leva à outra distribuição, e a recusa também', async () => {
+    // A que saiu "agora" há pouco, onde a PAT-00100 entra entre a prévia e o envio.
+    const agoraHaPouco: components['schemas']['OutraDistribuicao'] = {
+      id: 'd-agora',
+      criadaEm: '2026-10-28T12:40:00.000Z',
+      quando: { chave: 'agora', aPartirDe: null, fuso: null },
+    };
+    const enviadaAgora = `enviada em 28 out às ${criarDataHora().formatarHora(new Date(agoraHaPouco.criadaEm))}`;
+    // A PAT-00100 entra e ainda instala outro pacote; a PAT-00401 instala este na outra
+    // distribuição, e a PAT-00200, pulada pela versão, instala outro: só a primeira recebe este em
+    // seguida.
+    const COM_A_OUTRA: components['schemas']['PreviaDaDistribuicao'] = {
+      ...PREVIA,
+      maquinas: [
+        daPrevia(100, 'vai-instalar', { emAndamento: { pacote: 'SumatraPDF' } }),
+        daPrevia(400, 'ja-aguarda', { outra: NA_NOITE }),
+        daPrevia(401, 'ja-aguarda', { outra: NA_NOITE, emAndamento: { pacote: PACOTE.nome } }),
+        daPrevia(200, 'pulada', { emAndamento: { pacote: 'SumatraPDF' } }),
+      ],
+      conta: {
+        vaoInstalar: 1,
+        puladas: 1,
+        jaAguardam: 2,
+        naFila: 0,
+        primeiraVez: 1,
+        porVersao: [{ versao: null, quantas: 1 }],
+      },
+    };
+    const TODAS: components['schemas']['PreviaDaDistribuicao'] = {
+      ...COM_A_OUTRA,
+      maquinas: [
+        daPrevia(100, 'ja-aguarda', { outra: agoraHaPouco }),
+        ...COM_A_OUTRA.maquinas.slice(1),
+      ],
+      conta: { ...COM_A_OUTRA.conta, vaoInstalar: 0, jaAguardam: 3, primeiraVez: 0, porVersao: [] },
+    };
+    let recusou = false;
+    abrir(`/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}`, {
+      ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () =>
+        Response.json({
+          locais: [{ id: 'l-fin', nome: 'Financeiro', paiId: null, maquinas: 3, semContato: 0 }],
+          visoes: [],
+        }),
+      'POST /api/software/distribuicoes/previa': () => Response.json(recusou ? TODAS : COM_A_OUTRA),
+      'POST /api/software/distribuicoes': () => {
+        recusou = true;
+        return Response.json(
+          {
+            type: 'urn:grafite:problema:dados-invalidos',
+            title: 'Dados inválidos',
+            status: 400,
+            detail: 'Confira os campos indicados.',
+            codigoDeRastreio: 'ABCD-1234',
+            campos: { alvo: 'Todas as máquinas escolhidas já aguardam este pacote.' },
+          },
+          { status: 400 },
+        );
+      },
+    });
+    const ateAgora = await screen.findByRole('complementary', { name: 'Até agora' });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Financeiro' }));
+
+    // O "Até agora" do passo Máquinas conta as que já aguardam e diz onde elas ficaram, numa aba
+    // à parte, para a escolha seguir no assistente.
+    expect(await within(ateAgora).findByText('Já aguardam este pacote · puladas')).toBeTruthy();
+    expect(within(ateAgora).getByText('2 máquinas já aguardam este pacote')).toBeTruthy();
+    const paraANoite = within(ateAgora).getByRole('link', {
+      name: `Abrir a distribuição ${naNoite}, em outra aba`,
+    });
+    expect(paraANoite.getAttribute('href')).toBe('/gestao/software/distribuicoes/d-noite');
+    expect(paraANoite.getAttribute('target')).toBe('_blank');
+    // Ainda instala outro pacote só a que entra; a pulada e a que já aguarda não recebem este.
+    expect(
+      within(ateAgora).getByText('Computador PAT-00100 ainda instala o SumatraPDF.'),
+    ).toBeTruthy();
+    expect(within(ateAgora).queryByText(/ainda instalam outro pacote/)).toBeNull();
+
+    // O Quando diz que elas seguem na outra.
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Quando instalar' }));
+    expect(within(ateAgora).getByText('2 já aguardam este pacote')).toBeTruthy();
+    expect(within(ateAgora).getByText('Seguem na outra distribuição.')).toBeTruthy();
+
+    // O Conferir põe as duas num grupo, com o quando da outra, a hora do envio e o caminho.
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Conferir' }));
+    expect(
+      screen.getByRole('heading', { name: /^2 já aguardam este pacote e serão puladas/ }),
+    ).toBeTruthy();
+    expect(screen.getByText('Seguem na outra distribuição')).toBeTruthy();
+    expect(
+      screen.getByText(`Na janela da noite, enviada em 28 out às ${HORA_DA_NOITE}`),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole('list', { name: `Máquinas que seguem na distribuição ${naNoite}` }))
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Computador PAT-00400', 'Computador PAT-00401']);
+    const doGrupo = screen.getByRole('link', {
+      name: `Abrir a distribuição ${naNoite}, em outra aba`,
+    });
+    expect(doGrupo.getAttribute('href')).toBe('/gestao/software/distribuicoes/d-noite');
+    expect(doGrupo.getAttribute('target')).toBe('_blank');
+
+    // A recusa por já aguardarem relê a prévia e ganha o mesmo caminho, até as duas outras.
+    fireEvent.click(within(ateAgora).getByRole('button', { name: 'Enviar' }));
+    expect(
+      await within(ateAgora).findByText('Todas as máquinas escolhidas já aguardam este pacote.'),
+    ).toBeTruthy();
+    const paraAAgora = await within(ateAgora).findByRole('link', {
+      name: `Abrir a distribuição ${enviadaAgora}, em outra aba`,
+    });
+    expect(paraAAgora.getAttribute('href')).toBe('/gestao/software/distribuicoes/d-agora');
+    expect(paraAAgora.getAttribute('target')).toBe('_blank');
+    expect(
+      within(ateAgora).getByRole('link', {
+        name: `Abrir a distribuição ${naNoite}, em outra aba`,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: /^3 já aguardam este pacote e serão puladas/ }),
+    ).toBeTruthy();
+    expect(screen.getByText('Seguem nas outras distribuições')).toBeTruthy();
+    expect(within(ateAgora).getByRole('button', { name: 'Enviar' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+  });
+
+  it('vindo da matriz, a que já aguarda o pacote fica na tira como "já na fila", entre as puladas', async () => {
+    const maquinas = [
+      daPrevia(100, 'vai-instalar'),
+      daPrevia(400, 'ja-aguarda', { outra: NA_NOITE }),
+    ];
+    const marcadas = encodeURIComponent(JSON.stringify(maquinas.map(({ id }) => id)));
+    abrir(
+      `/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}&maquinas=${marcadas}&local=l-fin`,
+      {
+        ...base(true),
+        'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+        'GET /api/software/distribuicoes/alvos': () =>
+          Response.json({
+            locais: [{ id: 'l-fin', nome: 'Financeiro', paiId: null, maquinas: 2, semContato: 0 }],
+            visoes: [],
+          }),
+        'POST /api/software/distribuicoes/previa': () =>
+          Response.json({
+            ...PREVIA,
+            maquinas,
+            conta: {
+              vaoInstalar: 1,
+              puladas: 0,
+              jaAguardam: 1,
+              naFila: 0,
+              primeiraVez: 1,
+              porVersao: [{ versao: null, quantas: 1 }],
+            },
+          }),
+      },
+    );
+    const tira = await screen.findByRole('list', { name: 'Máquinas marcadas na matriz' });
+    expect(
+      within(tira)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Computador PAT-00100sem', 'Computador PAT-00400já na fila']);
+    expect(screen.getByText('Já aguardam este pacote, puladas · 1')).toBeTruthy();
+    const ateAgora = screen.getByRole('complementary', { name: 'Até agora' });
+    expect(within(ateAgora).getByText('Computador PAT-00400 já aguarda este pacote')).toBeTruthy();
   });
 });
 

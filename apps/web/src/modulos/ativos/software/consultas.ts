@@ -16,6 +16,8 @@ export type CategoriaDeSoftware = components['schemas']['CategoriaDeSoftware'];
 export type ResumoDaDistribuicao = components['schemas']['ResumoDaDistribuicao'];
 export type FichaDaDistribuicao = components['schemas']['FichaDaDistribuicao'];
 export type MaquinaDaDistribuicao = components['schemas']['MaquinaDaDistribuicao'];
+/** A outra distribuição em que a máquina já aguarda ou instala o mesmo pacote (decisões 10 e 11). */
+export type OutraDistribuicao = components['schemas']['OutraDistribuicao'];
 export type MaquinaParaDistribuir = components['schemas']['MaquinaParaDistribuir'];
 export type SoftwareDaMaquina = components['schemas']['SoftwareDaMaquina'];
 export type MandadoPeloGrafite = NonNullable<SoftwareDaMaquina['distribuir']>['mandados'][number];

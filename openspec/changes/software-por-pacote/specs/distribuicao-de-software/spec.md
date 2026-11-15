@@ -325,7 +325,7 @@ O passo Máquinas SHALL juntar as máquinas escolhidas em quatro abas:
 - **Por busca:** pelo nome, pelo patrimônio, pelo hostname ou pela pessoa;
 - **Colar lista:** nomes, patrimônios ou hostnames, um por linha ou separados por vírgula, até 2.000 ("Cole até 2.000 máquinas de uma vez."), dizendo os que não foram achados.
 
-O "Até agora", à direita, SHALL ter o cartão do pacote (o monograma, o nome, a versão e "<tipo> · <tamanho> · instala sem perguntar"), o total de máquinas escolhidas e a conta em rótulos: "VÃO INSTALAR", "JÁ TÊM A <versão> · PULADAS", "JÁ AGUARDAM ESTE PACOTE · PULADAS", só quando houver, e "NA FILA". Ele SHALL avisar a máquina sem contato, que entra na fila e instala quando voltar, e a máquina com outra instalação em andamento, que recebe esta em seguida.
+O "Até agora", à direita, SHALL ter o cartão do pacote (o monograma, o nome, a versão e "<tipo> · <tamanho> · instala sem perguntar"), o total de máquinas escolhidas e a conta em rótulos: "VÃO INSTALAR", "JÁ TÊM A <versão> · PULADAS", "JÁ AGUARDAM ESTE PACOTE · PULADAS", só quando houver, e "NA FILA". Ele SHALL avisar a máquina sem contato, que entra na fila e instala quando voltar, a máquina com outra instalação em andamento, que recebe esta em seguida, e as que já aguardam este pacote noutra distribuição, com o caminho até cada uma.
 
 O passo Quando SHALL ter os três momentos em cartões de rádio, com "INDICADO PARA DRIVERS" na janela da noite e o dia de amanhã até daqui a um ano; a faixa das próximas 24 horas, com "agora" e a janela ou o dia marcados; e o que acontece com a máquina ligada, desligada e sem contato. Na janela da noite, o resumo SHALL dizer "Repete nas noites seguintes, até instalar".
 

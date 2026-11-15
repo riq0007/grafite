@@ -917,6 +917,26 @@ button.passo:focus-visible {
   margin-top: var(--esp-3);
 }
 
+/* O caminho até a outra distribuição em que as máquinas já aguardam o pacote (decisão 10). */
+.paraAOutra {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin-top: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+/* O "abre em outra aba" depois do link que fica dentro da frase, preso à última palavra dele. */
+.semQuebra {
+  white-space: nowrap;
+}
+
+.iconeDaOutraAba {
+  display: inline-flex;
+  margin-inline-start: var(--esp-1);
+  vertical-align: middle;
+}
+
 /* O passo feito sublinha o nome ao passar o cursor; no fim, pela ordem da especificidade. */
 button.passo:hover .textoDoPasso > b {
   text-decoration: underline;

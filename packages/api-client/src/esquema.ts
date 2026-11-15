@@ -33125,6 +33125,17 @@ export interface components {
             dn: string;
             senha: string;
         };
+        OutraDistribuicaoInput: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
+        };
         ResumoDaDistribuicaoInput: {
             /** Format: uuid */
             id: string;
@@ -33185,6 +33196,7 @@ export interface components {
             enviadaEm: string | null;
             atualizadaEm: string | null;
             terminadaEm: string | null;
+            aguardaNoutra: components["schemas"]["OutraDistribuicaoInput"] | null;
         };
         FichaDaDistribuicaoInput: {
             /** Format: uuid */
@@ -33244,12 +33256,13 @@ export interface components {
             hostname: string | null;
             local: string | null;
             /** @enum {string} */
-            classe: "pulada" | "na-fila" | "vai-instalar";
+            classe: "pulada" | "ja-aguarda" | "na-fila" | "vai-instalar";
             versao: string | null;
             semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
             emAndamento: {
                 pacote: string;
             } | null;
+            outra: components["schemas"]["OutraDistribuicaoInput"] | null;
         };
         PreviaDaDistribuicaoInput: {
             maquinas: components["schemas"]["MaquinaDaPreviaInput"][];
@@ -33257,6 +33270,7 @@ export interface components {
             conta: {
                 vaoInstalar: number;
                 puladas: number;
+                jaAguardam: number;
                 naFila: number;
                 primeiraVez: number;
                 porVersao: {
@@ -35105,12 +35119,14 @@ export interface components {
                     criadaPor: string;
                     enviadaEm: string | null;
                     terminadaEm: string | null;
+                    aguardaNoutra: components["schemas"]["OutraDistribuicaoInput"] | null;
                 }[];
                 pacotes: {
                     pacote: components["schemas"]["PacoteDeSoftwareInput"];
                     /** @enum {string} */
                     situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
                     versao: string | null;
+                    naFila: boolean;
                 }[];
             } | null;
         };
@@ -37753,6 +37769,17 @@ export interface components {
             dn: string;
             senha: string;
         };
+        OutraDistribuicao: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
+        };
         ResumoDaDistribuicao: {
             /** Format: uuid */
             id: string;
@@ -37813,6 +37840,7 @@ export interface components {
             enviadaEm: string | null;
             atualizadaEm: string | null;
             terminadaEm: string | null;
+            aguardaNoutra: components["schemas"]["OutraDistribuicao"] | null;
         };
         FichaDaDistribuicao: {
             /** Format: uuid */
@@ -37872,12 +37900,13 @@ export interface components {
             hostname: string | null;
             local: string | null;
             /** @enum {string} */
-            classe: "pulada" | "na-fila" | "vai-instalar";
+            classe: "pulada" | "ja-aguarda" | "na-fila" | "vai-instalar";
             versao: string | null;
             semContato: components["schemas"]["SemContatoDoAgente"] | null;
             emAndamento: {
                 pacote: string;
             } | null;
+            outra: components["schemas"]["OutraDistribuicao"] | null;
         };
         PreviaDaDistribuicao: {
             maquinas: components["schemas"]["MaquinaDaPrevia"][];
@@ -37885,6 +37914,7 @@ export interface components {
             conta: {
                 vaoInstalar: number;
                 puladas: number;
+                jaAguardam: number;
                 naFila: number;
                 primeiraVez: number;
                 porVersao: {
@@ -39733,12 +39763,14 @@ export interface components {
                     criadaPor: string;
                     enviadaEm: string | null;
                     terminadaEm: string | null;
+                    aguardaNoutra: components["schemas"]["OutraDistribuicao"] | null;
                 }[];
                 pacotes: {
                     pacote: components["schemas"]["PacoteDeSoftware"];
                     /** @enum {string} */
                     situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
                     versao: string | null;
+                    naFila: boolean;
                 }[];
             } | null;
         };

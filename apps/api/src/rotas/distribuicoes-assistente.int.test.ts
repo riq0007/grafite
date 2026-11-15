@@ -311,6 +311,7 @@ describe('POST /software/distribuicoes/previa', () => {
     expect(corpo.conta).toEqual({
       vaoInstalar: 2,
       puladas: 2,
+      jaAguardam: 0,
       naFila: 1,
       primeiraVez: 1,
       porVersao: [{ versao: '23.01', quantas: 1 }],
@@ -521,6 +522,7 @@ describe('POST /software/distribuicoes', () => {
       versao: '24.08',
       maquinas: 3,
       puladas: 2,
+      jaAguardavam: 0,
       paraQuem: 'Financeiro',
       quando: 'agora',
       aPartirDe: null,
@@ -557,6 +559,14 @@ describe('POST /software/distribuicoes', () => {
       paraQuem: 'Estação C1',
       quando: { chave: 'noite', aPartirDe: null, fuso: 'America/Sao_Paulo' },
     });
+    // A C1 sai da fila da noite para entrar na do dia marcado: a que já aguarda o pacote é pulada.
+    const tirarDaFila = (ficha: { id: string; maquinasDaDistribuicao: { id: string }[] }) =>
+      cliente.enviar(
+        'POST',
+        `/software/distribuicoes/${ficha.id}/maquinas/${ficha.maquinasDaDistribuicao[0]?.id}/tirar-da-fila`,
+        como('ana'),
+      );
+    expect((await tirarDaFila(noite.json())).statusCode).toBe(200);
     // Amanhã às 22:00 em São Paulo, frente ao relógio da API em 2026-10-02T12:00:00Z.
     const dia = await distribuir('ana', {
       alvo: { ativoIds: [ids.c1] },
@@ -578,6 +588,8 @@ describe('POST /software/distribuicoes', () => {
     // A da noite e a do dia não chamam ninguém na hora.
     expect((await chamadosDa(noite.json().id))['Estação C1']?.chamadaEm).toBeNull();
     expect((await chamadosDa(dia.json().id))['Estação C1']?.chamadaEm).toBeNull();
+    // A C1 fica livre para a distribuição da visão, mais adiante.
+    expect((await tirarDaFila(dia.json())).statusCode).toBe(200);
   });
 
   it('recusa o dia de hoje, o fuso que não existe e a noite sem o fuso', async () => {

@@ -328,6 +328,7 @@ describe('o software na ficha da máquina', () => {
         criadaPor: 'Carla Dias',
         enviadaEm: null,
         terminadaEm: '2026-10-02T11:13:00.000Z',
+        aguardaNoutra: null,
       },
       expect.objectContaining({
         distribuicaoId: daDistribuicao.backup,
@@ -347,19 +348,22 @@ describe('o software na ficha da máquina', () => {
           pacote,
           situacao,
           versao,
+          naFila,
         }: {
           pacote: { nome: string };
           situacao: string;
           versao: string | null;
-        }) => [pacote.nome, situacao, versao],
+          naFila: boolean;
+        }) => [pacote.nome, situacao, versao, naFila],
       ),
     ).toEqual([
-      ['7-Zip', 'desatualizada', '23.01'],
-      ['Agente de backup', 'na-versao', '12.0'],
-      ['Chromium de testes', 'sem-o-programa', null],
-      ['Google Chrome', 'desatualizada', '129.0.6668.101'],
-      ['SumatraPDF', 'na-versao', '3.5'],
-      ['VLC', 'desatualizada', '3.0.20'],
+      ['7-Zip', 'desatualizada', '23.01', false],
+      ['Agente de backup', 'na-versao', '12.0', false],
+      ['Chromium de testes', 'sem-o-programa', null, false],
+      // A F17 falhou no Chrome e não aguarda noutra distribuição: o pacote não está na fila dela.
+      ['Google Chrome', 'desatualizada', '129.0.6668.101', false],
+      ['SumatraPDF', 'na-versao', '3.5', false],
+      ['VLC', 'desatualizada', '3.0.20', false],
     ]);
     expect(distribuir.pacotes[0].pacote).toMatchObject({
       id: pacotes['7-Zip'],
@@ -382,8 +386,15 @@ describe('o software na ficha da máquina', () => {
         situacao: expect.objectContaining({ chave: 'aguardando' }),
         criadaPor: 'Carla Dias',
         terminadaEm: null,
+        aguardaNoutra: null,
       }),
     ]);
+    // O Chrome aguarda o agente da F18: a camada o mostra já na fila, e os outros pacotes, não.
+    expect(
+      software.distribuir.pacotes
+        .filter(({ naFila }: { naFila: boolean }) => naFila)
+        .map(({ pacote }: { pacote: { nome: string } }) => pacote.nome),
+    ).toEqual(['Google Chrome']);
   });
 
   it('sem nenhum software nem agente', async () => {

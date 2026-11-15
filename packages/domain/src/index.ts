@@ -836,6 +836,7 @@ export {
   PRAZO_DO_SEM_CONTATO,
   paraQuem,
   prazoDoSemContatoValido,
+  recusaSemNenhumaQueEntra,
   semContato,
   textoDoSemContato,
 } from './software/maquinas.ts';

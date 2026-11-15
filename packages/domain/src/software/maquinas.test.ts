@@ -7,6 +7,7 @@ import {
   contaDoAssistente,
   itensDaListaColada,
   paraQuem,
+  recusaSemNenhumaQueEntra,
   semContato,
   textoDoSemContato,
 } from './maquinas.ts';
@@ -61,6 +62,21 @@ describe('classeNoAssistente', () => {
       'na-fila',
     );
   });
+
+  it('já aguarda vem depois de pulada e antes de na fila: a que aguarda o pacote noutra distribuição é pulada com esse motivo', () => {
+    expect(classeNoAssistente({ situacao: 'na-versao', semContato: false, jaAguarda: true })).toBe(
+      'pulada',
+    );
+    expect(
+      classeNoAssistente({ situacao: 'desatualizada', semContato: true, jaAguarda: true }),
+    ).toBe('ja-aguarda');
+    expect(
+      classeNoAssistente({ situacao: 'sem-o-programa', semContato: false, jaAguarda: true }),
+    ).toBe('ja-aguarda');
+    expect(
+      classeNoAssistente({ situacao: 'instalado-sem-alvo', semContato: false, jaAguarda: true }),
+    ).toBe('ja-aguarda');
+  });
 });
 
 describe('contaDoAssistente', () => {
@@ -86,6 +102,7 @@ describe('contaDoAssistente', () => {
     expect(conta).toMatchObject({
       vaoInstalar: 13,
       puladas: 5,
+      jaAguardam: 0,
       naFila: 1,
       primeiraVez: 7,
       porVersao: [
@@ -110,6 +127,44 @@ describe('contaDoAssistente', () => {
       { versao: null, quantas: 1 },
     ]);
     expect(conta.primeiraVez).toBe(0);
+  });
+
+  it('Máquina que já aguarda o pacote: conta à parte, fora das que vão instalar e da fila', () => {
+    const conta = contaDoAssistente(
+      [
+        { situacao: 'desatualizada', versao: '7.2', semContato: false, jaAguarda: true },
+        { situacao: 'sem-o-programa', versao: null, semContato: true, jaAguarda: true },
+        { situacao: 'na-versao', versao: '7.3', semContato: false, jaAguarda: true },
+        { situacao: 'desatualizada', versao: '7.2', semContato: false, jaAguarda: false },
+      ],
+      '7.3',
+    );
+    expect(conta).toEqual({
+      classes: ['ja-aguarda', 'ja-aguarda', 'pulada', 'vai-instalar'],
+      vaoInstalar: 1,
+      puladas: 1,
+      jaAguardam: 2,
+      naFila: 0,
+      primeiraVez: 0,
+      porVersao: [{ versao: '7.2', quantas: 1 }],
+    });
+  });
+});
+
+describe('recusaSemNenhumaQueEntra', () => {
+  it('diz o motivo de nenhuma máquina entrar: a versão, a outra distribuição ou os dois', () => {
+    expect(recusaSemNenhumaQueEntra({ puladas: 5, jaAguardam: 0 }, '7.3')).toBe(
+      'Todas as máquinas escolhidas já têm a versão 7.3.',
+    );
+    expect(recusaSemNenhumaQueEntra({ puladas: 0, jaAguardam: 12 }, '131')).toBe(
+      'Todas as máquinas escolhidas já aguardam este pacote.',
+    );
+    expect(recusaSemNenhumaQueEntra({ puladas: 5, jaAguardam: 12 }, '7.3')).toBe(
+      'Todas as máquinas escolhidas já têm a versão 7.3 ou já aguardam este pacote.',
+    );
+    expect(recusaSemNenhumaQueEntra({ puladas: 0, jaAguardam: 1 }, null)).toBe(
+      'Todas as máquinas escolhidas já aguardam este pacote.',
+    );
   });
 });
 

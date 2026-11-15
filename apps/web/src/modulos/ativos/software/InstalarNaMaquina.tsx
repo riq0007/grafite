@@ -38,10 +38,14 @@ export interface MaquinaDaFicha {
 }
 
 /**
- * A relação do pacote com a máquina; o que já está na versão não pode ser escolhido. A versão do
- * inventário sai cortada no tamanho da versão-alvo, como nas barras da ficha do pacote.
+ * A relação do pacote com a máquina; o que já está na versão ou já na fila dela, noutra distribuição
+ * (decisão 10), não pode ser escolhido, e o "Já na versão" vem antes. A versão do inventário sai
+ * cortada no tamanho da versão-alvo, como nas barras da ficha do pacote.
  */
 function relacao(pacote: PacoteParaInstalar): { situacao: Situacao; texto: string } {
+  if (pacote.situacao !== 'na-versao' && pacote.naFila) {
+    return { situacao: 'neutra', texto: 'Já na fila' };
+  }
   switch (pacote.situacao) {
     case 'desatualizada': {
       const versao = versaoCortada(pacote.versao, pacote.pacote.versao);
@@ -220,7 +224,7 @@ function Camada({
                 <Radio
                   key={umPacote.pacote.id}
                   value={umPacote.pacote.id}
-                  isDisabled={umPacote.situacao === 'na-versao'}
+                  isDisabled={umPacote.situacao === 'na-versao' || umPacote.naFila}
                   className={estilos.opcao}
                 >
                   <IconeDoPacote nome={umPacote.pacote.nome} tamanho="p" />

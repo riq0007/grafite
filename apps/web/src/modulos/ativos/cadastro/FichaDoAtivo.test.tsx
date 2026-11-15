@@ -1,5 +1,5 @@
 import type { components } from '@grafite/api-client';
-import { filaDeAvisos } from '@grafite/ui';
+import { criarDataHora, filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -2515,6 +2515,7 @@ describe('a aba Software', () => {
     criadaPor: 'Ana Souza',
     enviadaEm: null,
     terminadaEm: null,
+    aguardaNoutra: null,
     ...extras,
   });
   const fora = (nome: string): Instalado => ({
@@ -2743,16 +2744,19 @@ describe('a aba Software', () => {
       pacote: pacoteDaBase('p1', 'Google Chrome', '131'),
       situacao: 'desatualizada' as const,
       versao: '129.0.6668.90',
+      naFila: false,
     },
     {
       pacote: pacoteDaBase('p3', 'Chromium de testes', '130'),
       situacao: 'sem-o-programa' as const,
       versao: null,
+      naFila: false,
     },
     {
       pacote: pacoteDaBase('p4', '7-Zip', '23.01'),
       situacao: 'na-versao' as const,
       versao: '23.01',
+      naFila: false,
     },
   ];
   /** Abre a camada pelo botão, com o foco nele, como o clique de verdade (o fireEvent.click não foca). */
@@ -2905,6 +2909,57 @@ describe('a aba Software', () => {
       name: 'Instalar outro pacote nesta máquina',
     });
     expect(document.activeElement).not.toBe(novo);
+  });
+
+  it('Pacote que já aguarda a máquina: o que falhou leva à outra distribuição, no lugar do "Tentar de novo", e a camada diz "Já na fila"', async () => {
+    const noite = {
+      id: 'd3',
+      criadaEm: '2026-10-28T12:02:00.000Z',
+      quando: { chave: 'noite' as const, aPartirDe: null, fuso: null },
+    };
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({
+          ...SOFTWARE,
+          distribuir: {
+            mandados: [
+              mandado({ distribuicaoId: 'd3', maquinaId: 'm3' }),
+              mandado({
+                situacao: { chave: 'falhou', texto: 'Falhou', tipo: 'critico' },
+                codigo: { numero: 1603, explicacao: 'Erro fatal na instalação.' },
+                aguardaNoutra: noite,
+              }),
+            ],
+            pacotes: PARA_INSTALAR.map((umPacote) => ({
+              ...umPacote,
+              naFila: umPacote.pacote.id === 'p1',
+            })),
+          },
+        }),
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const mandados = await screen.findByRole('region', { name: 'Mandados pelo Grafite · 2' });
+    const hora = criarDataHora().formatarHora(new Date(noite.criadaEm));
+    expect(
+      within(mandados).getByText(
+        `Já aguarda este pacote noutra distribuição, na janela da noite, enviada em 28 out às ${hora}.`,
+      ),
+    ).toBeTruthy();
+    expect(within(mandados).queryByRole('button', { name: /^Tentar de novo/ })).toBeNull();
+    expect(
+      within(mandados)
+        .getByRole('link', { name: 'Abrir a outra distribuição do Google Chrome 131' })
+        .getAttribute('href'),
+    ).toBe('/gestao/software/distribuicoes/d3');
+    // O pacote que a máquina já aguarda não pode ser escolhido de novo.
+    const { camada } = await abrirACamada();
+    expect(within(camada).getByRole('radio', { name: /^Google Chrome 131/ })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    expect(within(camada).getByText('Já na fila')).toBeTruthy();
+    expect(within(camada).queryByText('Atualiza a 129')).toBeNull();
   });
 
   it('na máquina sem contato, o aviso diz que o pedido fica na fila até ela voltar', async () => {

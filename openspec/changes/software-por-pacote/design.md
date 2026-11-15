@@ -177,7 +177,7 @@ A API resolve a união numa rota de prévia, `POST /software/distribuicoes/previ
 - **na fila:** sem contato;
 - **vai instalar:** com o agente em contato e sem a versão-alvo, com a versão de hoje ou nenhuma.
 
-A conta ganha o `jaAguardam`. O "Até agora" mostra "JÁ AGUARDAM ESTE PACOTE · PULADAS" só quando houver, e o Conferir põe essas máquinas num grupo próprio, "Seguem na outra distribuição". Na prévia, cada máquina que já aguarda traz a `outra`: o id, o `criadaEm` e o quando da distribuição em que ela aguarda. O grupo diz cada outra distribuição, com o quando e a hora do envio ("na janela da noite, enviada às 09:02") e o caminho até ela, onde o "Tirar da fila" deixa mandar de novo: quem manda "agora" o que já mandou para a noite precisa saber onde as máquinas ficaram. A criação sem nenhuma que entra recusa pelo motivo: "Todas as máquinas escolhidas já têm a versão <versão>.", "Todas as máquinas escolhidas já aguardam este pacote." ou, com os dois, "Todas as máquinas escolhidas já têm a versão <versão> ou já aguardam este pacote.". Na tela, a recusa por já aguardarem ganha o mesmo caminho, pelos dados da prévia. A auditoria guarda as `puladas` pela versão e as `jaAguardavam` à parte.
+A conta ganha o `jaAguardam`. O "Até agora" mostra "JÁ AGUARDAM ESTE PACOTE · PULADAS" só quando houver, com o aviso de onde elas ficaram e o caminho até cada outra distribuição: quando todas já aguardam, o passo Máquinas não segue, e o caminho fica ali. O passo Quando diz que elas seguem na outra, a tira da matriz as mostra "já na fila", e o Conferir põe essas máquinas num grupo próprio, "Seguem na outra distribuição". Na prévia, cada máquina que já aguarda traz a `outra`: o id, o `criadaEm` e o quando da distribuição em que ela aguarda. O grupo diz cada outra distribuição, com o quando e a hora do envio ("na janela da noite, enviada às 09:02") e o caminho até ela, onde o "Tirar da fila" deixa mandar de novo: quem manda "agora" o que já mandou para a noite precisa saber onde as máquinas ficaram. Dentro do assistente, o caminho abre a outra distribuição em outra aba, com o ícone de outra aba, como o "Abrir em outra aba" dos Painéis: a escolha das máquinas fica só no assistente, e quem vai tirar da fila volta a ela. A criação sem nenhuma que entra recusa pelo motivo: "Todas as máquinas escolhidas já têm a versão <versão>.", "Todas as máquinas escolhidas já aguardam este pacote." ou, com os dois, "Todas as máquinas escolhidas já têm a versão <versão> ou já aguardam este pacote.". Na tela, a recusa do alvo relê a prévia e, quando nenhuma entra, ganha o mesmo caminho, pelos dados da prévia relida, sem olhar o texto da mensagem. A auditoria guarda as `puladas` pela versão e as `jaAguardavam` à parte.
 
 A conferência da fila e a gravação correm sob a trava do pacote: a criação e o "Tentar de novo" (decisão 11) esperam o `travar(tx, 'pacote:<id>')` (`travas.ts`, o `pg_advisory_xact_lock` na organização da transação) antes de ler quem já aguarda. Duas criações do mesmo pacote no mesmo instante passam uma de cada vez, e a segunda vê as máquinas da primeira.
 
@@ -189,7 +189,7 @@ A permissão na prévia e na criação, que refaz a conta pela mesma regra:
 - a visão de outra conta dá 404;
 - a lista colada aceita até 2.000 itens ("Cole até 2.000 máquinas de uma vez.").
 
-A prévia também diz qual máquina tem outra instalação em andamento. O "Conferir" agrupa as que vão instalar pela versão de hoje ("Atualizam da 7.2 · 5") e pela primeira vez.
+A prévia também diz qual máquina tem outra instalação em andamento. O aviso de que este pacote entra na fila dela e instala em seguida vale só para as que entram: a pulada e a que já aguarda não o recebem. O "Conferir" agrupa as que vão instalar pela versão de hoje ("Atualizam da 7.2 · 5") e pela primeira vez.
 
 A prévia recebe o alvo: os locais, as visões, os ativos pelo id, a lista colada e as máquinas tiradas da lista. As contagens das abas, quantas máquinas cada local e cada visão têm, vêm de `GET /software/distribuicoes/alvos`, lido ao abrir o passo. A busca é a das máquinas para distribuir (`GET /software/maquinas`), que passa a rodar com o escopo do `ativos.ver`, a achar pela pessoa e a dizer o sem contato.
 
@@ -200,6 +200,8 @@ O "Para quem":
 - o local mais fundo que contém todas;
 - "N locais", quando não há esse local;
 - "N máquinas", quando elas não têm local, ou só uma parte tem e num local só.
+
+A distribuição guarda o "Para quem" só das que entram nela. No assistente, o total do "Até agora" e o "Para" do envio contam todas as escolhidas, com as puladas, e o "Para quem" da prévia diz de onde vêm todas elas: "18 máquinas escolhidas, do Financeiro (2º andar)" e "Financeiro, 18 máquinas", no m03 e no m05, com 5 puladas. Pelas que entram, a prévia sem nenhuma que entra diria "do local 0 máquinas", e a com uma só, o nome dela como local.
 
 A distribuição de antes desta change fica sem o "Para quem", e a tela mostra quantas máquinas ela tem ("12 máquinas").
 
@@ -295,3 +297,4 @@ Alternativa recusada: tirar da fila as máquinas ao inativar. A TI perderia a fi
 - **[O fuso de quem enviou]** Uma máquina noutro fuso instala na noite de quem enviou → o fuso fica escrito no resumo ("hoje às 22:00, horário de Brasília").
 - **[A distribuição vista em parte]** Duas contas com alcances diferentes veem números diferentes da mesma distribuição → a linha "N máquinas em locais fora do seu alcance" diz que há mais, e o "Para quem" de todas fica no título.
 - **[O pacote inativado esquecido]** As máquinas ficam na fila para sempre → a distribuição aberta e a ficha dizem "Pacote inativado" em cada uma, e o "Tirar da fila" continua.
+- **[A que falhou numa e instalou noutra]** A PC-FIN-17 falhou o Chrome 131 na distribuição da manhã e o instalou na da noite: o "já aguarda" olha só as que aguardam ou instalam, e a manhã continua com "Falhou · 1603" e o "Tentar de novo", que manda instalar outra vez o que ela já tem → fica para depois, por decisão do usuário em 15/11/2026; a ficha da máquina mostra, ao lado, o mandado concluído da noite, e o inventário seguinte, a versão.

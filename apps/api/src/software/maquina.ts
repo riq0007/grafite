@@ -1,8 +1,9 @@
 // O software na ficha da máquina (spec inventario-pelo-agente, "Softwares na ficha do ativo"; change
 // software-por-pacote, design, decisão 13): os instalados do último inventário e o agente, para quem
 // vê o ativo; e, para quem distribui no local dele, a comparação de cada programa com a base, na
-// ordem "Frente à base · ação primeiro", a origem, os mandados pelo Grafite e a máquina frente a
-// cada pacote ativo, para o "Instalar outro pacote nesta máquina".
+// ordem "Frente à base · ação primeiro", a origem, os mandados pelo Grafite, com a outra
+// distribuição em que o pacote do mandado que falhou já aguarda (decisão 11), e a máquina frente a
+// cada pacote ativo, com o pacote que ela já aguarda, para o "Instalar outro pacote nesta máquina".
 import {
   agentes,
   contas,
@@ -28,6 +29,7 @@ import {
 import { and, asc, count, desc, eq, inArray } from 'drizzle-orm';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { paraQuemNaTela } from './base.ts';
+import { naFilaDe, ondeJaAguardam } from './ja-aguarda.ts';
 
 /** O pacote ativo como a ficha da máquina o compara. */
 export interface PacoteDaMaquina extends PacoteDaBase {
@@ -131,6 +133,9 @@ export async function softwareDaMaquina<P extends PacoteDaMaquina>(
     .where(eq(maquinasDasDistribuicoes.ativoId, ativoId))
     .orderBy(desc(distribuicoes.criadaEm), desc(distribuicoes.id))
     .limit(LIMITE_DOS_MANDADOS);
+  // Os pacotes que a máquina já aguarda ou instala: o "JÁ NA FILA" da camada e o caminho no lugar
+  // do "Tentar de novo" do mandado que falhou (design, decisões 10 e 11).
+  const naFila = await ondeJaAguardam(tx, { ativoIds: [ativoId] });
   // A distribuição de antes do "Para quem" diz quantas máquinas teve.
   const semParaQuem = mandados
     .filter(({ paraQuem }) => paraQuem === null)
@@ -206,6 +211,10 @@ export async function softwareDaMaquina<P extends PacoteDaMaquina>(
           criadaEm: criadaEm.toISOString(),
           enviadaEm: enviadaEm?.toISOString() ?? null,
           terminadaEm: terminadaEm?.toISOString() ?? null,
+          aguardaNoutra:
+            situacao === 'falhou'
+              ? (naFila.get(naFilaDe(ativoId, mandado.pacote.id)) ?? null)
+              : null,
         }),
       ),
       // A máquina frente a cada pacote ativo, pelas versões dos programas dela que casam com ele.
@@ -214,7 +223,11 @@ export async function softwareDaMaquina<P extends PacoteDaMaquina>(
         const versoes = programas
           .filter(({ nome }) => casaComOPacote(nome, nomeNoInventario))
           .map(({ versao }) => versao);
-        return { pacote, ...situacaoFrenteAoPacote(versoes, pacote.versao) };
+        return {
+          pacote,
+          ...situacaoFrenteAoPacote(versoes, pacote.versao),
+          naFila: naFila.has(naFilaDe(ativoId, pacote.id)),
+        };
       }),
     },
   };

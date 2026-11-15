@@ -12426,6 +12426,54 @@
           "senha"
         ]
       },
+      "OutraDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "quando"
+        ]
+      },
       "ResumoDaDistribuicaoInput": {
         "type": "object",
         "properties": {
@@ -12704,6 +12752,16 @@
               "string",
               "null"
             ]
+          },
+          "aguardaNoutra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -12719,7 +12777,8 @@
           "log",
           "enviadaEm",
           "atualizadaEm",
-          "terminadaEm"
+          "terminadaEm",
+          "aguardaNoutra"
         ]
       },
       "FichaDaDistribuicaoInput": {
@@ -12974,6 +13033,7 @@
             "type": "string",
             "enum": [
               "pulada",
+              "ja-aguarda",
               "na-fila",
               "vai-instalar"
             ]
@@ -13011,6 +13071,16 @@
                 "type": "null"
               }
             ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -13022,7 +13092,8 @@
           "classe",
           "versao",
           "semContato",
-          "emAndamento"
+          "emAndamento",
+          "outra"
         ]
       },
       "PreviaDaDistribuicaoInput": {
@@ -13047,6 +13118,9 @@
                 "type": "number"
               },
               "puladas": {
+                "type": "number"
+              },
+              "jaAguardam": {
                 "type": "number"
               },
               "naFila": {
@@ -13080,6 +13154,7 @@
             "required": [
               "vaoInstalar",
               "puladas",
+              "jaAguardam",
               "naFila",
               "primeiraVez",
               "porVersao"
@@ -22340,6 +22415,16 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "aguardaNoutra": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/OutraDistribuicaoInput"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -22353,7 +22438,8 @@
                         "criadaEm",
                         "criadaPor",
                         "enviadaEm",
-                        "terminadaEm"
+                        "terminadaEm",
+                        "aguardaNoutra"
                       ]
                     }
                   },
@@ -22379,12 +22465,16 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "naFila": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "pacote",
                         "situacao",
-                        "versao"
+                        "versao",
+                        "naFila"
                       ]
                     }
                   }
@@ -35831,6 +35921,56 @@
         ],
         "additionalProperties": false
       },
+      "OutraDistribuicao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "quando"
+        ],
+        "additionalProperties": false
+      },
       "ResumoDaDistribuicao": {
         "type": "object",
         "properties": {
@@ -36117,6 +36257,16 @@
               "string",
               "null"
             ]
+          },
+          "aguardaNoutra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicao"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -36132,7 +36282,8 @@
           "log",
           "enviadaEm",
           "atualizadaEm",
-          "terminadaEm"
+          "terminadaEm",
+          "aguardaNoutra"
         ],
         "additionalProperties": false
       },
@@ -36401,6 +36552,7 @@
             "type": "string",
             "enum": [
               "pulada",
+              "ja-aguarda",
               "na-fila",
               "vai-instalar"
             ]
@@ -36439,6 +36591,16 @@
                 "type": "null"
               }
             ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicao"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -36450,7 +36612,8 @@
           "classe",
           "versao",
           "semContato",
-          "emAndamento"
+          "emAndamento",
+          "outra"
         ],
         "additionalProperties": false
       },
@@ -36476,6 +36639,9 @@
                 "type": "number"
               },
               "puladas": {
+                "type": "number"
+              },
+              "jaAguardam": {
                 "type": "number"
               },
               "naFila": {
@@ -36510,6 +36676,7 @@
             "required": [
               "vaoInstalar",
               "puladas",
+              "jaAguardam",
               "naFila",
               "primeiraVez",
               "porVersao"
@@ -46085,6 +46252,16 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "aguardaNoutra": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/OutraDistribuicao"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -46098,7 +46275,8 @@
                         "criadaEm",
                         "criadaPor",
                         "enviadaEm",
-                        "terminadaEm"
+                        "terminadaEm",
+                        "aguardaNoutra"
                       ],
                       "additionalProperties": false
                     }
@@ -46125,12 +46303,16 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "naFila": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "pacote",
                         "situacao",
-                        "versao"
+                        "versao",
+                        "naFila"
                       ],
                       "additionalProperties": false
                     }

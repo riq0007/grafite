@@ -2,8 +2,9 @@
 // distribuição"; change software-por-pacote, design, decisões 9 e 10): as máquinas da conta, que são
 // os ativos ativos com o agente ligado nos locais em que ela distribui; a união dos locais, das
 // visões, dos ativos escolhidos e da lista colada, sem as tiradas da lista, com a visão e a lista no
-// escopo do `ativos.ver`; a classe de cada máquina frente ao pacote, com o sem contato pelo prazo da
-// organização e a outra instalação em andamento; e as contagens da árvore e das visões.
+// escopo do `ativos.ver`; a classe de cada máquina frente ao pacote e à fila dele, com o sem contato
+// pelo prazo da organização, a outra distribuição em que ela já aguarda o pacote e a outra instalação
+// em andamento; e as contagens da árvore e das visões.
 import {
   agentes,
   ativos,
@@ -42,6 +43,7 @@ import { condicoesDosFiltros, lerContextoDaTabela, rotuloNoBanco } from '../ativ
 import { doModelo, doTipo } from '../ativos/leitura.ts';
 import { dadosInvalidos, naoEncontrado } from '../problemas.ts';
 import { versoesDoPacoteNasMaquinas } from './base.ts';
+import { naFilaDe, type OutraDistribuicao, ondeJaAguardam } from './ja-aguarda.ts';
 
 /** O que o passo Máquinas escolheu. */
 export interface AlvoPedido {
@@ -275,6 +277,8 @@ export interface MaquinaNoAlvo {
   semContato: { dias: number; texto: string } | null;
   /** A outra instalação que o agente faz agora na máquina. */
   emAndamento: { pacote: string } | null;
+  /** Na que já aguarda, a outra distribuição em que ela aguarda ou instala o pacote. */
+  outra: OutraDistribuicao | null;
 }
 
 /** O caminho do local, da raiz até ele, para o "Para quem". */
@@ -287,8 +291,9 @@ const caminhoDe = (arvore: ArvoreDeLocais, localId: string | null) =>
     : [];
 
 /**
- * A classe de cada máquina frente ao pacote, na ordem pulada, na fila e vai instalar; a conta do
- * "Até agora" e do "Conferir"; e o "Para quem" das que entram na distribuição.
+ * A classe de cada máquina frente ao pacote, na ordem pulada, já aguarda, na fila e vai instalar;
+ * a conta do "Até agora" e do "Conferir"; o "Para quem" das que entram na distribuição; e o de
+ * todas as escolhidas, o do assistente.
  */
 export async function classificarOAlvo(
   tx: Transacao,
@@ -325,21 +330,32 @@ export async function classificarOAlvo(
       if (!emAndamento.has(ativoId)) emAndamento.set(ativoId, nome);
     }
   }
+  // A que aguarda ou instala o mesmo pacote noutra distribuição é pulada com esse motivo (decisão 10).
+  const jaAguardam = await ondeJaAguardam(tx, { ativoIds: ids, pacoteIds: [pacote.id] });
   const lidas = maquinas.map((maquina) => {
     const frente = situacaoFrenteAoPacote(versoes.get(maquina.id) ?? [], pacote.versao);
     const contato = semContato(maquina.agente.ultimoContato, momento, diasSemContato);
-    return { maquina, frente, contato };
+    const outra = jaAguardam.get(naFilaDe(maquina.id, pacote.id)) ?? null;
+    return { maquina, frente, contato, outra };
   });
   const conta = contaDoAssistente(
-    lidas.map(({ frente, contato }) => ({
+    lidas.map(({ frente, contato, outra }) => ({
       situacao: frente.situacao,
       versao: frente.versao,
       semContato: contato.semContato,
+      jaAguarda: outra !== null,
     })),
     pacote.versao,
   );
-  const noAlvo: MaquinaNoAlvo[] = lidas.map(({ maquina, frente, contato }, posicao) => {
-    const outra = emAndamento.get(maquina.id);
+  const noAlvo: MaquinaNoAlvo[] = lidas.map(({ maquina, frente, contato, outra }, posicao) => {
+    const instalando = emAndamento.get(maquina.id);
+    const classe =
+      conta.classes[posicao] ??
+      classeNoAssistente({
+        situacao: frente.situacao,
+        semContato: contato.semContato,
+        jaAguarda: outra !== null,
+      });
     return {
       id: maquina.id,
       rotulo: maquina.rotulo,
@@ -348,32 +364,37 @@ export async function classificarOAlvo(
       local: maquina.localId ? arvore.caminho(maquina.localId) : null,
       localId: maquina.localId,
       agenteId: maquina.agente.id,
-      classe:
-        conta.classes[posicao] ??
-        classeNoAssistente({ situacao: frente.situacao, semContato: contato.semContato }),
+      classe,
       versao: frente.versao,
       semContato: contato.semContato
         ? { dias: contato.dias, texto: textoDoSemContato(contato.dias) }
         : null,
-      emAndamento: outra ? { pacote: outra } : null,
+      emAndamento: instalando ? { pacote: instalando } : null,
+      outra: classe === 'ja-aguarda' ? outra : null,
     };
   });
-  const entram = noAlvo.filter(({ classe }) => classe !== 'pulada');
+  const entram = noAlvo.filter(({ classe }) => classe === 'vai-instalar' || classe === 'na-fila');
+  const deQuem = (doAlvo: readonly MaquinaNoAlvo[]) =>
+    paraQuem(
+      doAlvo.map((maquina) => ({
+        nome: maquina.rotulo,
+        locais: caminhoDe(arvore, maquina.localId),
+      })),
+    );
   return {
     maquinas: noAlvo,
     conta: {
       vaoInstalar: conta.vaoInstalar,
       puladas: conta.puladas,
+      jaAguardam: conta.jaAguardam,
       naFila: conta.naFila,
       primeiraVez: conta.primeiraVez,
       porVersao: conta.porVersao,
     },
-    paraQuem: paraQuem(
-      entram.map((maquina) => ({
-        nome: maquina.rotulo,
-        locais: caminhoDe(arvore, maquina.localId),
-      })),
-    ),
+    /** O "Para quem" da distribuição, só das que entram nela. */
+    paraQuem: deQuem(entram),
+    /** De onde vêm todas as escolhidas, com as puladas: o do assistente (m03 e m05). */
+    paraQuemDasEscolhidas: deQuem(noAlvo),
   };
 }
 

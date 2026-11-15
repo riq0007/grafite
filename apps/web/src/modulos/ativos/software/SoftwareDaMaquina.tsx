@@ -1,7 +1,8 @@
 // A aba Software da ficha da máquina (spec inventario-pelo-agente, "Softwares na ficha do ativo";
-// change software-por-pacote, design, decisão 13; m09 e m11): os mandados pelo Grafite, a fila do
-// sem contato com o aviso da idade do inventário e os instalados frente à base, com a ação primeiro.
-// Para quem só vê o ativo, só os instalados, pelo nome, com o editor.
+// change software-por-pacote, design, decisão 13; m09 e m11): os mandados pelo Grafite, com o caminho
+// até a outra distribuição no lugar do "Tentar de novo" quando a máquina já aguarda o pacote nela
+// (decisão 11), a fila do sem contato com o aviso da idade do inventário e os instalados frente à
+// base, com a ação primeiro. Para quem só vê o ativo, só os instalados, pelo nome, com o editor.
 import { normalizarTexto } from '@grafite/domain';
 import {
   avisar,
@@ -21,6 +22,7 @@ import {
   useDataHora,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { ChevronDown, Rocket, RotateCw, Unplug } from 'lucide-react';
 import { type ReactNode, type RefObject, useId, useLayoutEffect, useRef, useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
@@ -32,7 +34,7 @@ import {
   type SoftwareDaMaquina as Software,
   useSoftwareDaMaquina,
 } from './consultas.ts';
-import { nomeComVersao, plural } from './formatos.ts';
+import { nomeComVersao, plural, textoDaOutra } from './formatos.ts';
 import {
   InstalarNaMaquina,
   type MaquinaDaFicha,
@@ -355,6 +357,7 @@ function Mandados({
 }) {
   const titulo = useId();
   const momento = useMomento();
+  const dataHora = useDataHora();
   return (
     <section className={estilos.secao} aria-labelledby={titulo}>
       <CabecaDaSecao
@@ -382,11 +385,25 @@ function Mandados({
               {falhou && mandado.codigo?.explicacao && (
                 <span className={estilos.explicacao}>{mandado.codigo.explicacao}</span>
               )}
+              {falhou && mandado.aguardaNoutra && (
+                <span className={estilos.explicacao}>
+                  {`Já aguarda este pacote noutra distribuição, ${textoDaOutra(mandado.aguardaNoutra, new Date(), dataHora)}.`}
+                </span>
+              )}
               <span className={estilos.porQuem}>
                 por {mandado.criadaPor}
                 {falhou &&
                   (mandado.pacote.situacao === 'inativo' ? (
                     <span className={doSoftware.semAcao}>Pacote inativado</span>
+                  ) : mandado.aguardaNoutra ? (
+                    <Link
+                      to="/gestao/software/distribuicoes/$id"
+                      params={{ id: mandado.aguardaNoutra.id }}
+                      className={doSoftware.link}
+                      aria-label={`Abrir a outra distribuição do ${nomeComVersao(mandado.pacote)}`}
+                    >
+                      Abrir a outra distribuição
+                    </Link>
                   ) : (
                     <AcaoDoMandado mandado={mandado} acao="tentar-de-novo" />
                   ))}
