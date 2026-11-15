@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   classeNoAssistente,
   contaDoAssistente,
+  itensDaListaColada,
   paraQuem,
   semContato,
   textoDoSemContato,
@@ -153,5 +154,24 @@ describe('paraQuem', () => {
         { nome: 'Computador 2', locais: [] },
       ]),
     ).toBe('2 máquinas');
+  });
+});
+
+describe('itensDaListaColada', () => {
+  it('um por linha ou separados por vírgula, ponto e vírgula ou tabulação, sem os vazios', () => {
+    expect(
+      itensDaListaColada('PC-FIN-01\r\nPC-FIN-02, PAT-00321;nb-com-01\tnb-com-02\n\n , '),
+    ).toEqual(['PC-FIN-01', 'PC-FIN-02', 'PAT-00321', 'nb-com-01', 'nb-com-02']);
+  });
+
+  it('sem repetir, pelo texto sem maiúsculas, acentos e espaços a mais, na ordem da primeira vez', () => {
+    expect(itensDaListaColada('Recepção  01\nrecepcao 01\nPC-FIN-01\npc-fin-01')).toEqual([
+      'Recepção 01',
+      'PC-FIN-01',
+    ]);
+  });
+
+  it('a lista vazia não tem itens', () => {
+    expect(itensDaListaColada('  \n , ')).toEqual([]);
   });
 });

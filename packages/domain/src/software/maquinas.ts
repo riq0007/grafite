@@ -1,7 +1,8 @@
 // As máquinas no assistente da distribuição (spec distribuicao-de-software, "Assistente da
 // distribuição"; spec inventario-pelo-agente, "Agente sem contato"; change software-por-pacote,
 // design, decisões 9 e 10): o sem contato pelo prazo da organização, a classe de cada máquina, na
-// ordem pulada, na fila e vai instalar, a conta do "Conferir" e o "Para quem".
+// ordem pulada, na fila e vai instalar, a conta do "Conferir", o "Para quem" e a lista colada.
+import { normalizarTexto } from '../texto.ts';
 import { compararVersoes, type SituacaoFrenteAoPacote, versaoCortada } from './versoes.ts';
 
 const DIA = 86_400_000;
@@ -122,4 +123,27 @@ export function paraQuem(
   if (local) return local.nome;
   const distintos = new Set(maquinas.flatMap(({ locais }) => locais.at(-1)?.id ?? []));
   return distintos.size > 1 ? `${distintos.size} locais` : `${maquinas.length} máquinas`;
+}
+
+/** Quantos itens a lista colada do assistente aceita. */
+export const LIMITE_DA_LISTA_COLADA = 2000;
+
+export const MENSAGEM_DA_LISTA_COLADA = 'Cole até 2.000 máquinas de uma vez.';
+
+/**
+ * Os itens da lista colada: nomes, patrimônios ou hostnames, um por linha ou separados por vírgula,
+ * ponto e vírgula ou tabulação, sem os vazios e sem repetir pelo texto normalizado, na ordem da
+ * primeira vez.
+ */
+export function itensDaListaColada(texto: string): string[] {
+  const vistos = new Set<string>();
+  const itens: string[] = [];
+  for (const bruto of texto.split(/[\r\n,;\t]+/)) {
+    const item = bruto.replace(/\s+/g, ' ').trim();
+    const chave = normalizarTexto(item);
+    if (chave === '' || vistos.has(chave)) continue;
+    vistos.add(chave);
+    itens.push(item);
+  }
+  return itens;
 }

@@ -12723,6 +12723,21 @@
           "terminadaEm"
         ]
       },
+      "SemContatoDoAgenteInput": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "number"
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dias",
+          "texto"
+        ]
+      },
       "MaquinaParaDistribuirInput": {
         "type": "object",
         "properties": {
@@ -12760,6 +12775,16 @@
               "nome",
               "ultimoContato"
             ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -12767,7 +12792,294 @@
           "rotulo",
           "patrimonio",
           "local",
-          "agente"
+          "agente",
+          "semContato"
+        ]
+      },
+      "AlvoDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "default": [],
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "visoes": {
+            "default": [],
+            "maxItems": 150,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "ativoIds": {
+            "default": [],
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "lista": {
+            "default": "",
+            "type": "string",
+            "maxLength": 200000
+          },
+          "fora": {
+            "default": [],
+            "maxItems": 10000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "fuso": {
+            "type": "string"
+          }
+        }
+      },
+      "MaquinaDaPreviaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "classe": {
+            "type": "string",
+            "enum": [
+              "pulada",
+              "na-fila",
+              "vai-instalar"
+            ]
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emAndamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "pacote": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pacote"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "hostname",
+          "local",
+          "classe",
+          "versao",
+          "semContato",
+          "emAndamento"
+        ]
+      },
+      "PreviaDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaquinaDaPreviaInput"
+            }
+          },
+          "naoAchados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conta": {
+            "type": "object",
+            "properties": {
+              "vaoInstalar": {
+                "type": "number"
+              },
+              "puladas": {
+                "type": "number"
+              },
+              "naFila": {
+                "type": "number"
+              },
+              "primeiraVez": {
+                "type": "number"
+              },
+              "porVersao": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "versao": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantas": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "versao",
+                    "quantas"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "vaoInstalar",
+              "puladas",
+              "naFila",
+              "primeiraVez",
+              "porVersao"
+            ]
+          },
+          "paraQuem": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "maquinas",
+          "naoAchados",
+          "conta",
+          "paraQuem"
+        ]
+      },
+      "AlvosDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "paiId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maquinas": {
+                  "type": "number"
+                },
+                "semContato": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "paiId",
+                "maquinas",
+                "semContato"
+              ]
+            }
+          },
+          "visoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "compartilhada": {
+                  "type": "boolean"
+                },
+                "maquinas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "compartilhada",
+                "maquinas"
+              ]
+            }
+          }
+        },
+        "required": [
+          "locais",
+          "visoes"
         ]
       },
       "CadastroDosDoisPassosInput": {
@@ -21847,6 +22159,23 @@
         "required": [
           "fabricantes",
           "doTipo"
+        ]
+      },
+      "PedidoDaPreviaInput": {
+        "type": "object",
+        "properties": {
+          "pacoteId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicaoInput"
+          }
+        },
+        "required": [
+          "pacoteId",
+          "alvo"
         ]
       },
       "PedidoDeDistribuicaoInput": {
@@ -35087,6 +35416,22 @@
         ],
         "additionalProperties": false
       },
+      "SemContatoDoAgente": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "number"
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dias",
+          "texto"
+        ],
+        "additionalProperties": false
+      },
       "MaquinaParaDistribuir": {
         "type": "object",
         "properties": {
@@ -35125,6 +35470,16 @@
               "ultimoContato"
             ],
             "additionalProperties": false
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgente"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -35132,7 +35487,310 @@
           "rotulo",
           "patrimonio",
           "local",
-          "agente"
+          "agente",
+          "semContato"
+        ],
+        "additionalProperties": false
+      },
+      "AlvoDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "default": [],
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "visoes": {
+            "default": [],
+            "maxItems": 150,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "ativoIds": {
+            "default": [],
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "lista": {
+            "default": "",
+            "type": "string",
+            "maxLength": 200000
+          },
+          "fora": {
+            "default": [],
+            "maxItems": 10000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "fuso": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "locais",
+          "visoes",
+          "ativoIds",
+          "lista",
+          "fora"
+        ],
+        "additionalProperties": false
+      },
+      "MaquinaDaPrevia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "classe": {
+            "type": "string",
+            "enum": [
+              "pulada",
+              "na-fila",
+              "vai-instalar"
+            ]
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgente"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emAndamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "pacote": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pacote"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "hostname",
+          "local",
+          "classe",
+          "versao",
+          "semContato",
+          "emAndamento"
+        ],
+        "additionalProperties": false
+      },
+      "PreviaDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaquinaDaPrevia"
+            }
+          },
+          "naoAchados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conta": {
+            "type": "object",
+            "properties": {
+              "vaoInstalar": {
+                "type": "number"
+              },
+              "puladas": {
+                "type": "number"
+              },
+              "naFila": {
+                "type": "number"
+              },
+              "primeiraVez": {
+                "type": "number"
+              },
+              "porVersao": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "versao": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantas": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "versao",
+                    "quantas"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "vaoInstalar",
+              "puladas",
+              "naFila",
+              "primeiraVez",
+              "porVersao"
+            ],
+            "additionalProperties": false
+          },
+          "paraQuem": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "maquinas",
+          "naoAchados",
+          "conta",
+          "paraQuem"
+        ],
+        "additionalProperties": false
+      },
+      "AlvosDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "paiId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maquinas": {
+                  "type": "number"
+                },
+                "semContato": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "paiId",
+                "maquinas",
+                "semContato"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "visoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "compartilhada": {
+                  "type": "boolean"
+                },
+                "maquinas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "compartilhada",
+                "maquinas"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "locais",
+          "visoes"
         ],
         "additionalProperties": false
       },
@@ -44529,6 +45187,24 @@
         "required": [
           "fabricantes",
           "doTipo"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaPrevia": {
+        "type": "object",
+        "properties": {
+          "pacoteId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicao"
+          }
+        },
+        "required": [
+          "pacoteId",
+          "alvo"
         ],
         "additionalProperties": false
       },
@@ -61175,7 +61851,7 @@
     },
     "/software/maquinas": {
       "get": {
-        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui",
+        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa",
         "parameters": [
           {
             "schema": {
@@ -61206,6 +61882,180 @@
                     "maquinas"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/distribuicoes/alvos": {
+      "get": {
+        "summary": "Os locais e as visões do passo Máquinas do assistente, com as máquinas de cada um",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "fuso",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlvosDaDistribuicao"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/distribuicoes/previa": {
+      "post": {
+        "summary": "A prévia do assistente: as máquinas escolhidas, cada uma com a classe frente ao pacote, e os não achados da lista",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDaPreviaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviaDaDistribuicao"
                 }
               }
             }

@@ -180,6 +180,8 @@ A permissão na prévia e na criação, que refaz a conta pela mesma regra:
 
 A prévia também diz qual máquina tem outra instalação em andamento. O "Conferir" agrupa as que vão instalar pela versão de hoje ("Atualizam da 7.2 · 5") e pela primeira vez.
 
+A prévia recebe o alvo: os locais, as visões, os ativos pelo id, a lista colada e as máquinas tiradas da lista. As contagens das abas, quantas máquinas cada local e cada visão têm, vêm de `GET /software/distribuicoes/alvos`, lido ao abrir o passo. A busca é a das máquinas para distribuir (`GET /software/maquinas`), que passa a rodar com o escopo do `ativos.ver`, a achar pela pessoa e a dizer o sem contato.
+
 A criação refaz a conta no servidor e grava só as que vão instalar e as da fila. As puladas não entram na distribuição; a auditoria guarda quantas foram.
 
 O "Para quem":

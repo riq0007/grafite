@@ -88,6 +88,30 @@ export async function instalacoesNaConta(
   };
 }
 
+/** As versões dos programas que casam com o pacote em cada máquina dada que tem o programa. */
+export async function versoesDoPacoteNasMaquinas(
+  tx: Transacao,
+  pacoteId: string,
+  ativoIds: readonly string[],
+): Promise<Map<string, (string | null)[]>> {
+  const porMaquina = new Map<string, (string | null)[]>();
+  if (ativoIds.length === 0) return porMaquina;
+  const linhas = await tx
+    .select({ ativoId: softwaresDosAtivos.ativoId, versao: softwaresDosAtivos.versao })
+    .from(pacotesDeSoftware)
+    .innerJoin(
+      softwaresDosAtivos,
+      and(eq(softwaresDosAtivos.orgId, pacotesDeSoftware.orgId), casaNoBanco),
+    )
+    .where(
+      and(eq(pacotesDeSoftware.id, pacoteId), inArray(softwaresDosAtivos.ativoId, [...ativoIds])),
+    );
+  for (const { ativoId, versao } of linhas) {
+    porMaquina.set(ativoId, [...(porMaquina.get(ativoId) ?? []), versao]);
+  }
+  return porMaquina;
+}
+
 /** O "Para quem" da distribuição; a de antes da change software-por-pacote diz quantas máquinas. */
 export const paraQuemNaTela = (paraQuem: string | null, maquinas: number): string =>
   paraQuem ?? `${maquinas} ${maquinas === 1 ? 'máquina' : 'máquinas'}`;

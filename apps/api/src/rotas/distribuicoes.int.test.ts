@@ -53,9 +53,10 @@ beforeAll(async () => {
     nome: 'Software',
     permissoes: ['software.administrar', 'ativos.ver'],
   });
+  // A busca das máquinas roda com o escopo do ver (change software-por-pacote, design, decisão 10).
   const distribui = await criarPerfil(api, org, {
     nome: 'Distribui',
-    permissoes: ['software.distribuir'],
+    permissoes: ['software.distribuir', 'ativos.ver'],
   });
   const ana = await criarConta(api, org, { usuario: 'ana', nome: 'Ana Souza' });
   await atribuir(api, org, { perfilId: administra, contaId: ana.id });

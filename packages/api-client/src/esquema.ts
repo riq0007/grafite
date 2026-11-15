@@ -15940,7 +15940,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui */
+        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa */
         get: {
             parameters: {
                 query?: {
@@ -16021,6 +16021,192 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/distribuicoes/alvos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os locais e as visões do passo Máquinas do assistente, com as máquinas de cada um */
+        get: {
+            parameters: {
+                query?: {
+                    fuso?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlvosDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/distribuicoes/previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A prévia do assistente: as máquinas escolhidas, cada uma com a classe frente ao pacote, e os não achados da lista */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaPreviaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreviaDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -32909,6 +33095,10 @@ export interface components {
             criadaEm: string;
             terminadaEm: string | null;
         };
+        SemContatoDoAgenteInput: {
+            dias: number;
+            texto: string;
+        };
         MaquinaParaDistribuirInput: {
             /** Format: uuid */
             id: string;
@@ -32919,6 +33109,67 @@ export interface components {
                 nome: string;
                 ultimoContato: string;
             };
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+        };
+        AlvoDaDistribuicaoInput: {
+            /** @default [] */
+            locais: string[];
+            /** @default [] */
+            visoes: string[];
+            /** @default [] */
+            ativoIds: string[];
+            /** @default  */
+            lista: string;
+            /** @default [] */
+            fora: string[];
+            fuso?: string;
+        };
+        MaquinaDaPreviaInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            hostname: string | null;
+            local: string | null;
+            /** @enum {string} */
+            classe: "pulada" | "na-fila" | "vai-instalar";
+            versao: string | null;
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            emAndamento: {
+                pacote: string;
+            } | null;
+        };
+        PreviaDaDistribuicaoInput: {
+            maquinas: components["schemas"]["MaquinaDaPreviaInput"][];
+            naoAchados: string[];
+            conta: {
+                vaoInstalar: number;
+                puladas: number;
+                naFila: number;
+                primeiraVez: number;
+                porVersao: {
+                    versao: string | null;
+                    quantas: number;
+                }[];
+            };
+            paraQuem: string;
+        };
+        AlvosDaDistribuicaoInput: {
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                paiId: string | null;
+                maquinas: number;
+                semContato: number;
+            }[];
+            visoes: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                compartilhada: boolean;
+                maquinas: number;
+            }[];
         };
         CadastroDosDoisPassosInput: {
             chave: string;
@@ -34722,6 +34973,11 @@ export interface components {
         FabricantesInput: {
             fabricantes: string[];
             doTipo: string[];
+        };
+        PedidoDaPreviaInput: {
+            /** Format: uuid */
+            pacoteId: string;
+            alvo: components["schemas"]["AlvoDaDistribuicaoInput"];
         };
         PedidoDeDistribuicaoInput: {
             /** Format: uuid */
@@ -37320,6 +37576,10 @@ export interface components {
             criadaEm: string;
             terminadaEm: string | null;
         };
+        SemContatoDoAgente: {
+            dias: number;
+            texto: string;
+        };
         MaquinaParaDistribuir: {
             /** Format: uuid */
             id: string;
@@ -37330,6 +37590,67 @@ export interface components {
                 nome: string;
                 ultimoContato: string;
             };
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+        };
+        AlvoDaDistribuicao: {
+            /** @default [] */
+            locais: string[];
+            /** @default [] */
+            visoes: string[];
+            /** @default [] */
+            ativoIds: string[];
+            /** @default  */
+            lista: string;
+            /** @default [] */
+            fora: string[];
+            fuso?: string;
+        };
+        MaquinaDaPrevia: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            hostname: string | null;
+            local: string | null;
+            /** @enum {string} */
+            classe: "pulada" | "na-fila" | "vai-instalar";
+            versao: string | null;
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            emAndamento: {
+                pacote: string;
+            } | null;
+        };
+        PreviaDaDistribuicao: {
+            maquinas: components["schemas"]["MaquinaDaPrevia"][];
+            naoAchados: string[];
+            conta: {
+                vaoInstalar: number;
+                puladas: number;
+                naFila: number;
+                primeiraVez: number;
+                porVersao: {
+                    versao: string | null;
+                    quantas: number;
+                }[];
+            };
+            paraQuem: string;
+        };
+        AlvosDaDistribuicao: {
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                paiId: string | null;
+                maquinas: number;
+                semContato: number;
+            }[];
+            visoes: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                compartilhada: boolean;
+                maquinas: number;
+            }[];
         };
         CadastroDosDoisPassos: {
             chave: string;
@@ -39133,6 +39454,11 @@ export interface components {
         Fabricantes: {
             fabricantes: string[];
             doTipo: string[];
+        };
+        PedidoDaPrevia: {
+            /** Format: uuid */
+            pacoteId: string;
+            alvo: components["schemas"]["AlvoDaDistribuicao"];
         };
         PedidoDeDistribuicao: {
             /** Format: uuid */
