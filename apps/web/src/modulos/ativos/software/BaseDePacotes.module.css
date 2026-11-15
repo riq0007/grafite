@@ -16,8 +16,8 @@
 
 .quantos {
   margin-left: var(--esp-2);
-  font-family: var(--fonte-mono);
   font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
 }
 
 .pacote {
@@ -51,6 +51,10 @@
 
 .mono {
   font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.numeros {
   font-variant-numeric: tabular-nums;
 }
 

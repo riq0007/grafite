@@ -236,7 +236,7 @@ export function BaseDePacotes() {
                                 ]
                           }
                         />
-                        <span className={estilos.mono}>
+                        <span className={estilos.numeros}>
                           <b className={estilos.forte}>{contas.instalado}</b> de {contas.maquinas}
                         </span>
                       </span>

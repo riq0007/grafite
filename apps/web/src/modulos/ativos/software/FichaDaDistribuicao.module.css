@@ -95,17 +95,17 @@
   gap: var(--esp-2) var(--esp-6);
 }
 
+/* A contagem é quantidade: na Instrument Sans, com algarismos tabulares (ANTISLOP v3). */
 .grande {
-  font-family: var(--fonte-mono);
   font-size: calc(var(--texto-numeral) * 1.57);
   font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
 .grande small {
   margin-left: var(--esp-2);
-  font-family: var(--fonte-interface);
   font-size: var(--texto-corpo);
   font-weight: var(--peso-normal);
   letter-spacing: 0;

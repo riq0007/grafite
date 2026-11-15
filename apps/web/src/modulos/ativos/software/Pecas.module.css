@@ -91,11 +91,6 @@
   background: var(--cor-linha-forte);
 }
 
-.mono {
-  font-family: var(--fonte-mono);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Os rótulos do resultado de uma distribuição, que quebram para baixo na coluna estreita. */
 .resultado {
   display: flex;

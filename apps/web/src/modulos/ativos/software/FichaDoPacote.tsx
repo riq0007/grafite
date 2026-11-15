@@ -335,7 +335,7 @@ export function FichaDoPacote() {
                   <Celula mono>
                     {momentoCurto(new Date(distribuicao.criadaEm), agora, dataHora)}
                   </Celula>
-                  <Celula mono>{distribuicao.maquinas}</Celula>
+                  <Celula>{distribuicao.maquinas}</Celula>
                   <Celula>
                     <RotulosDoResultado
                       maquinas={distribuicao.maquinas}
