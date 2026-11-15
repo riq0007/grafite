@@ -219,7 +219,7 @@
   - **no Grafite e na Meia-noite:** no tema, só o `--cor-info-fundo` muda, de 15% para 17% e 24%, e a página serve o valor novo. A `--tinta-rotulo` saiu da raiz na 3.3.
 
   Fora desta change: na coluna dos suprimentos, o medidor compacto cobre o número do menor nível. A régua do medidor tem 64 px de mínimo, dentro da caixa de 40 px da célula, desde antes da change.
-- [ ] 5.3 Conferir as verificações:
+- [x] 5.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
   - `pnpm test`;
@@ -230,3 +230,10 @@
   - `openspec validate ajustes-dos-tokens --strict`.
 
   Verificar: os comandos passam.
+
+  Feito em 14/11, depois da 4.4, com o `pnpm dev` parado e nenhum processo nas portas dele:
+  - o `pnpm lint`, o `pnpm typecheck`, o `pnpm tokens:verificar` e o `openspec validate ajustes-dos-tokens --strict` passaram;
+  - o `pnpm tokens:contraste` deu AA em todas as combinações, e o `docs/identidade/contraste.md` não mudou;
+  - o `pnpm test` passou: 6.495 testes nos pacotes e nos scripts da raiz, com um pulado na API;
+  - o `pnpm test:stories` passou: 83 arquivos e 607 testes;
+  - o `pnpm test:e2e` passou: 191 testes na web e 7 no painel.
