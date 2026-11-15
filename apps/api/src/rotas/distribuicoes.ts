@@ -2,8 +2,9 @@
 // "Quando instalar", "Acordar os agentes", "Assistente da distribuição" e "Histórico das
 // distribuições"; changes distribuicao-de-software e software-por-pacote): a busca das máquinas, os
 // alvos e a prévia do assistente; a criação pelo alvo, sem as puladas, com o quando, o fuso, o "Para
-// quem" e o acordar na fila, para agora; a lista e a ficha, com a situação, a etapa e o log de cada
-// máquina; e as do ativo.
+// quem" e o acordar na fila, para agora; a lista e a ficha, com a situação, a etapa, o código e a
+// explicação, o sem contato, o chamado e o log de cada máquina; o "Tentar de novo" e o "Tirar da
+// fila" de cada máquina, pela permissão no local dela; e as do ativo.
 import {
   agentes,
   ativos,
@@ -21,14 +22,18 @@ import {
 } from '@grafite/db';
 import {
   alcance,
+  comALinha,
   conferirQuando,
+  explicarOCodigoDeSaida,
   fusoReconhecido,
   fusoValido,
   LIMITE_DA_LISTA_COLADA,
+  linhaDoTentarDeNovo,
   MENSAGEM_DA_LISTA_COLADA,
   MENSAGENS_DO_QUANDO,
   MENSAGENS_DO_SOFTWARE,
   normalizarTexto,
+  podeSeguir,
   progressoDaDistribuicao,
   SITUACOES_DA_MAQUINA,
   SITUACOES_DA_MAQUINA_NO_BANCO,
@@ -77,12 +82,27 @@ const ResumoDaDistribuicao = z
   })
   .meta({ id: 'ResumoDaDistribuicao' });
 
+/** O agente sem contato, pelo prazo da organização: "Sem contato · há 3 dias". */
+const SemContato = z
+  .object({ dias: z.number(), texto: z.string() })
+  .meta({ id: 'SemContatoDoAgente' });
+
 const MaquinaDaDistribuicao = z
   .object({
     id: z.uuid(),
     ativo: z.object({ id: z.uuid(), rotulo: z.string(), patrimonio: z.string().nullable() }),
+    /** A pessoa responsável pela máquina. */
+    pessoa: z.string().nullable(),
     situacao: SituacaoNaTela,
     etapa: z.string().nullable(),
+    /** O código de saída do comando, com a frase dos códigos do Windows Installer. */
+    codigo: z.object({ numero: z.number(), explicacao: z.string().nullable() }).nullable(),
+    /** Na que aguarda, o agente sem contato pelo prazo da organização. */
+    semContato: SemContato.nullable(),
+    /** O último chamado ao agente, e se ele respondeu. */
+    chamada: z.object({ em: z.string(), respondeu: z.boolean() }).nullable(),
+    /** Até quando o agente deve voltar, pelo `expiration` do último contato. */
+    voltaAte: z.string().nullable(),
     log: z.array(z.string()),
     enviadaEm: z.string().nullable(),
     atualizadaEm: z.string().nullable(),
@@ -103,11 +123,6 @@ const DistribuicaoDoAtivo = z
     terminadaEm: z.string().nullable(),
   })
   .meta({ id: 'DistribuicaoDoAtivo' });
-
-/** O agente sem contato, pelo prazo da organização: "Sem contato · há 3 dias". */
-const SemContato = z
-  .object({ dias: z.number(), texto: z.string() })
-  .meta({ id: 'SemContatoDoAgente' });
 
 const MaquinaParaDistribuir = z
   .object({
@@ -209,6 +224,10 @@ const ParametrosDaDistribuicao = z.object({
   id: z.uuid({ error: 'Distribuição não encontrada.' }),
 });
 
+const ParametrosDaMaquina = ParametrosDaDistribuicao.extend({
+  maquinaId: z.uuid({ error: MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada }),
+});
+
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
 const situacaoNaTela = (chave: keyof typeof SITUACOES_DA_MAQUINA) => ({
@@ -283,10 +302,17 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
   });
 }
 
-async function ficha(tx: Transacao, id: string) {
-  const [resumo] = await resumos(tx, [id]);
-  if (!resumo) throw naoEncontrado('Distribuição não encontrada.');
-  const maquinas = await tx
+/** As máquinas da distribuição (ou só a pedida), como a ficha as mostra. */
+async function maquinasDa(
+  tx: Transacao,
+  {
+    distribuicaoId,
+    maquinaId,
+    momento,
+  }: { distribuicaoId: string; maquinaId?: string; momento: Date },
+): Promise<z.infer<typeof MaquinaDaDistribuicao>[]> {
+  const { diasSemContato } = await lerCadastroDosAgentes(tx);
+  const linhas = await tx
     .select({
       maquina: maquinasDasDistribuicoes,
       ativo: {
@@ -294,26 +320,91 @@ async function ficha(tx: Transacao, id: string) {
         rotulo: sql<string>`${rotuloNoBanco}`,
         patrimonio: ativos.patrimonio,
       },
+      pessoa: pessoas.nome,
+      ultimoContato: agentes.ultimoContato,
+      voltaAte: agentes.voltaAte,
     })
     .from(maquinasDasDistribuicoes)
     .innerJoin(ativos, doAtivo)
     .innerJoin(tiposDeAtivo, doTipo)
     .leftJoin(modelos, doModelo)
-    .where(eq(maquinasDasDistribuicoes.distribuicaoId, id))
+    .leftJoin(pessoas, doResponsavel)
+    .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
+    .where(
+      and(
+        eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId),
+        maquinaId ? eq(maquinasDasDistribuicoes.id, maquinaId) : undefined,
+      ),
+    )
     .orderBy(sql`${rotuloNoBanco}`);
-  return {
-    ...resumo,
-    maquinasDaDistribuicao: maquinas.map(({ maquina, ativo }) => ({
+  return linhas.map(({ maquina, ativo, pessoa, ultimoContato, voltaAte }) => {
+    const contato = semContato(ultimoContato, momento, diasSemContato);
+    const codigo = maquina.codigoDeSaida;
+    return {
       id: maquina.id,
       ativo,
+      pessoa,
       situacao: situacaoNaTela(maquina.situacao),
       etapa: maquina.etapa,
+      codigo:
+        codigo === null ? null : { numero: codigo, explicacao: explicarOCodigoDeSaida(codigo) },
+      semContato:
+        maquina.situacao === 'aguardando' && contato.semContato
+          ? { dias: contato.dias, texto: textoDoSemContato(contato.dias) }
+          : null,
+      chamada:
+        maquina.chamadaEm && maquina.chamadaRespondeu !== null
+          ? { em: maquina.chamadaEm.toISOString(), respondeu: maquina.chamadaRespondeu }
+          : null,
+      voltaAte: voltaAte?.toISOString() ?? null,
       log: maquina.log,
       enviadaEm: maquina.enviadaEm?.toISOString() ?? null,
       atualizadaEm: maquina.atualizadaEm?.toISOString() ?? null,
       terminadaEm: maquina.terminadaEm?.toISOString() ?? null,
-    })),
+    };
+  });
+}
+
+async function ficha(tx: Transacao, id: string, momento: Date) {
+  const [resumo] = await resumos(tx, [id]);
+  if (!resumo) throw naoEncontrado('Distribuição não encontrada.');
+  return {
+    ...resumo,
+    maquinasDaDistribuicao: await maquinasDa(tx, { distribuicaoId: id, momento }),
   };
+}
+
+/**
+ * A máquina da distribuição, travada, com o pacote e o local, para o "Tentar de novo" e o "Tirar da
+ * fila": a de outra distribuição, ou a que não existe, dá 404.
+ */
+async function maquinaParaMudar(tx: Transacao, distribuicaoId: string, maquinaId: string) {
+  const [linha] = await tx
+    .select({
+      maquina: maquinasDasDistribuicoes,
+      localId: ativos.localId,
+      patrimonio: ativos.patrimonio,
+      rotulo: sql<string>`${rotuloNoBanco}`,
+      pacote: pacotesDeSoftware.nome,
+      quando: distribuicoes.quando,
+      aPartirDe: distribuicoes.aPartirDe,
+      fuso: distribuicoes.fuso,
+    })
+    .from(maquinasDasDistribuicoes)
+    .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
+    .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
+    .innerJoin(ativos, doAtivo)
+    .innerJoin(tiposDeAtivo, doTipo)
+    .leftJoin(modelos, doModelo)
+    .where(
+      and(
+        eq(maquinasDasDistribuicoes.id, maquinaId),
+        eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId),
+      ),
+    )
+    .for('update', { of: maquinasDasDistribuicoes });
+  if (!linha) throw naoEncontrado(MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada);
+  return linha;
 }
 
 export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
@@ -496,8 +587,108 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
     },
     (requisicao) =>
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
-        ficha(tx, requisicao.params.id),
+        ficha(tx, requisicao.params.id, agora()),
       ),
+  );
+
+  app.post(
+    '/software/distribuicoes/:id/maquinas/:maquinaId/tentar-de-novo',
+    {
+      config: { permissao: 'software.distribuir' },
+      schema: {
+        summary:
+          'Tentar de novo a máquina que falhou: ela volta a aguardar o agente, que é acordado se o pedido pode seguir',
+        params: ParametrosDaMaquina,
+        response: { 200: MaquinaDaDistribuicao, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const sessao = sessaoDa(requisicao);
+      const { id, maquinaId } = requisicao.params;
+      const orgId = requisicao.organizacao?.id ?? '';
+      const momento = agora();
+      return naOrganizacao(banco, orgId, async (tx) => {
+        const linha = await maquinaParaMudar(tx, id, maquinaId);
+        exigirEm(requisicao, 'software.distribuir', linha.localId, await lerArvore(tx));
+        if (linha.maquina.situacao !== 'falhou') throw conflito(MENSAGENS_DO_SOFTWARE.soAQueFalhou);
+        const [quem] = await tx
+          .select({ nome: pessoas.nome })
+          .from(contas)
+          .innerJoin(pessoas, eq(pessoas.id, contas.pessoaId))
+          .where(eq(contas.id, sessao.contaId));
+        await tx
+          .update(maquinasDasDistribuicoes)
+          .set({
+            situacao: 'aguardando',
+            etapa: null,
+            codigoDeSaida: null,
+            enviadaEm: null,
+            terminadaEm: null,
+            atualizadaEm: momento,
+            log: comALinha(linha.maquina.log, linhaDoTentarDeNovo(quem?.nome ?? '')),
+          })
+          .where(eq(maquinasDasDistribuicoes.id, maquinaId));
+        await registrarNaAuditoria(tx, {
+          acao: 'distribuicao.maquina-tentada-de-novo',
+          ator: { tipo: 'conta', contaId: sessao.contaId },
+          alvo: { tipo: 'distribuicao', id },
+          dados: {
+            pacote: linha.pacote,
+            maquina: linha.patrimonio ?? linha.rotulo,
+            codigoDeSaida: linha.maquina.codigoDeSaida,
+          },
+          origem: origemDa(requisicao),
+          momento,
+        });
+        // O pedido que pode seguir acorda o agente na hora, pela fila (design, decisão 8a).
+        if (podeSeguir(linha, momento) && fila?.rodando()) {
+          await fila.enviar(TAREFA_DE_ACORDAR, { orgId, distribuicaoId: id, maquinaId }, { tx });
+        }
+        const [maquina] = await maquinasDa(tx, { distribuicaoId: id, maquinaId, momento });
+        if (!maquina) throw naoEncontrado(MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada);
+        return maquina;
+      });
+    },
+  );
+
+  app.post(
+    '/software/distribuicoes/:id/maquinas/:maquinaId/tirar-da-fila',
+    {
+      config: { permissao: 'software.distribuir' },
+      schema: {
+        summary:
+          'Tirar da fila a máquina que aguarda o agente: ela não recebe mais o pedido, com o fim marcado',
+        params: ParametrosDaMaquina,
+        response: { 200: MaquinaDaDistribuicao, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const sessao = sessaoDa(requisicao);
+      const { id, maquinaId } = requisicao.params;
+      const momento = agora();
+      return naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
+        const linha = await maquinaParaMudar(tx, id, maquinaId);
+        exigirEm(requisicao, 'software.distribuir', linha.localId, await lerArvore(tx));
+        if (linha.maquina.situacao !== 'aguardando') {
+          throw conflito(MENSAGENS_DO_SOFTWARE.soAQueAguarda);
+        }
+        await tx
+          .update(maquinasDasDistribuicoes)
+          .set({ situacao: 'tirada', terminadaEm: momento, atualizadaEm: momento })
+          .where(eq(maquinasDasDistribuicoes.id, maquinaId));
+        await registrarNaAuditoria(tx, {
+          acao: 'distribuicao.maquina-tirada-da-fila',
+          ator: { tipo: 'conta', contaId: sessao.contaId },
+          alvo: { tipo: 'distribuicao', id },
+          dados: { pacote: linha.pacote, maquina: linha.patrimonio ?? linha.rotulo },
+          origem: origemDa(requisicao),
+          momento,
+        });
+        const [maquina] = await maquinasDa(tx, { distribuicaoId: id, maquinaId, momento });
+        if (!maquina) throw naoEncontrado(MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada);
+        return maquina;
+      });
+    },
   );
 
   app.post(
@@ -590,7 +781,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         if (dados.quando === 'agora' && fila?.rodando()) {
           await fila.enviar(TAREFA_DE_ACORDAR, { orgId, distribuicaoId: distribuicao.id }, { tx });
         }
-        return ficha(tx, distribuicao.id);
+        return ficha(tx, distribuicao.id, momento);
       });
       return resposta.code(201).send(criada);
     },

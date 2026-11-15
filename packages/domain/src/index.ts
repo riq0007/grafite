@@ -861,6 +861,7 @@ export {
   type DadosDoPacote,
   LIMITE_DO_ARQUIVO_DO_PACOTE,
   LINHAS_DO_LOG,
+  linhaDoTentarDeNovo,
   MENSAGENS_DO_SOFTWARE,
   progressoDaDistribuicao,
   SITUACOES_DA_MAQUINA,

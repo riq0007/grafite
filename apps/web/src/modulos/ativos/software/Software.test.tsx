@@ -42,8 +42,13 @@ const PACOTE: Pacote = {
 const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}): Maquina => ({
   id,
   ativo: { id: `ativo-${id}`, rotulo: `Computador ${patrimonio}`, patrimonio },
+  pessoa: null,
   situacao: { chave: 'aguardando', texto: 'Aguardando o agente', tipo: 'neutra' },
   etapa: null,
+  codigo: null,
+  semContato: null,
+  chamada: null,
+  voltaAte: null,
   log: [],
   enviadaEm: null,
   atualizadaEm: '2026-10-28T12:00:00.000Z',

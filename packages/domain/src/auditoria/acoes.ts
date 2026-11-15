@@ -235,6 +235,9 @@ export const ACOES_DA_AUDITORIA = {
   'categorias-de-software.ordenadas': 'Categorias de software reordenadas',
   'distribuicao.criada': 'Distribuição de software criada',
   'distribuicao.pedida-agora': 'Agentes acordados para a distribuição',
+  // As máquinas da distribuição (change software-por-pacote)
+  'distribuicao.maquina-tentada-de-novo': 'Máquina da distribuição tentada de novo',
+  'distribuicao.maquina-tirada-da-fila': 'Máquina tirada da fila da distribuição',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

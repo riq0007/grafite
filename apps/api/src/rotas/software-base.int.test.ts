@@ -270,14 +270,28 @@ describe('a ficha do pacote', () => {
         criadaEm: '2026-10-01T12:02:00.000Z',
         paraQuem: 'Financeiro',
         maquinas: 3,
-        resultado: { concluidas: 1, emAndamento: 1, aguardando: 0, falharam: 1, tiradas: 0 },
+        resultado: {
+          concluidas: 1,
+          emAndamento: 1,
+          aguardando: 0,
+          falharam: 1,
+          tiradas: 0,
+          semContato: 0,
+        },
       },
       {
         id: distribuicoesDoChrome[1],
         criadaEm: '2026-09-14T13:00:00.000Z',
         paraQuem: '2 máquinas',
         maquinas: 2,
-        resultado: { concluidas: 2, emAndamento: 0, aguardando: 0, falharam: 0, tiradas: 0 },
+        resultado: {
+          concluidas: 2,
+          emAndamento: 0,
+          aguardando: 0,
+          falharam: 0,
+          tiradas: 0,
+          semContato: 0,
+        },
       },
     ]);
   });

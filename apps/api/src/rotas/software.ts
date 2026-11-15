@@ -186,6 +186,8 @@ const DistribuicaoDoPacote = z
       aguardando: z.number(),
       falharam: z.number(),
       tiradas: z.number(),
+      /** Das que aguardam, as com o agente sem contato. */
+      semContato: z.number(),
     }),
   })
   .meta({ id: 'DistribuicaoDoPacote' });
@@ -323,7 +325,7 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
           partes: partes?.quantas ?? 0,
           contas,
           versoes,
-          distribuicoes: await distribuicoesDoPacote(tx, lido.pacote.id),
+          distribuicoes: await distribuicoesDoPacote(tx, lido.pacote.id, agora()),
           permite: { administrar: pode(acesso, 'software.administrar') },
         };
       });

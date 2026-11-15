@@ -25,6 +25,9 @@ export const MENSAGENS_DO_SOFTWARE = {
   semAgente: (ativo: string) => `O ativo ${ativo} não tem o agente do GLPI ligado.`,
   todasNaVersao: (versao: string) => `Todas as máquinas escolhidas já têm a versão ${versao}.`,
   categoria: 'Escolha uma das categorias da base.',
+  maquinaNaoEncontrada: 'Máquina da distribuição não encontrada.',
+  soAQueFalhou: 'Só a máquina que falhou pode ser tentada de novo.',
+  soAQueAguarda: 'Só a máquina que aguarda o agente sai da fila.',
 } as const;
 
 export interface DadosDoPacote {
@@ -158,12 +161,19 @@ export function aplicarPassoDoAgente(
   return { situacao, etapa, log, terminou: TERMINADAS.includes(situacao) };
 }
 
-/** O progresso da distribuição: "2 de 3 concluídas, 1 falhou". */
+/** A linha do log da máquina tentada de novo: "Tentar de novo, por Ana Souza". */
+export function linhaDoTentarDeNovo(nome: string): string {
+  return `Tentar de novo, por ${nome}`;
+}
+
+/** O progresso da distribuição: "2 de 3 concluídas, 1 falhou, 1 tirada da fila". */
 export function progressoDaDistribuicao(situacoes: readonly SituacaoDaMaquina[]): string {
   const total = situacoes.length;
   const concluidas = situacoes.filter((situacao) => situacao === 'concluida').length;
   const falhas = situacoes.filter((situacao) => situacao === 'falhou').length;
-  const base = `${concluidas} de ${total} ${total === 1 ? 'concluída' : 'concluídas'}`;
-  if (falhas === 0) return base;
-  return `${base}, ${falhas} ${falhas === 1 ? 'falhou' : 'falharam'}`;
+  const tiradas = situacoes.filter((situacao) => situacao === 'tirada').length;
+  const partes = [`${concluidas} de ${total} ${total === 1 ? 'concluída' : 'concluídas'}`];
+  if (falhas > 0) partes.push(`${falhas} ${falhas === 1 ? 'falhou' : 'falharam'}`);
+  if (tiradas > 0) partes.push(`${tiradas} ${tiradas === 1 ? 'tirada' : 'tiradas'} da fila`);
+  return partes.join(', ');
 }

@@ -12,8 +12,9 @@ import {
   softwaresDosAtivos,
   type Transacao,
 } from '@grafite/db';
-import { type Acesso, alcance, type SituacaoDaMaquina } from '@grafite/domain';
+import { type Acesso, alcance, type SituacaoDaMaquina, semContato } from '@grafite/domain';
 import { and, count, desc, eq, exists, inArray, type SQL, sql } from 'drizzle-orm';
+import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { lerArvore } from '../arvore.ts';
 
 const programa = sql`${softwaresDosAtivos.nomeNormalizado}`;
@@ -196,7 +197,32 @@ export async function ultimasDistribuicoes(
 const DISTRIBUICOES_NA_FICHA = 50;
 
 /** As distribuições do pacote, da mais nova para a mais antiga, com o resultado de cada uma. */
-export async function distribuicoesDoPacote(tx: Transacao, pacoteId: string) {
+/** Das que aguardam em cada distribuição, quantas têm o agente sem contato pelo prazo da organização. */
+async function semContatoDas(tx: Transacao, ids: readonly string[], momento: Date) {
+  const porDistribuicao = new Map<string, number>();
+  if (ids.length === 0) return porDistribuicao;
+  const { diasSemContato } = await lerCadastroDosAgentes(tx);
+  const linhas = await tx
+    .select({
+      distribuicaoId: maquinasDasDistribuicoes.distribuicaoId,
+      ultimoContato: agentes.ultimoContato,
+    })
+    .from(maquinasDasDistribuicoes)
+    .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
+    .where(
+      and(
+        inArray(maquinasDasDistribuicoes.distribuicaoId, [...ids]),
+        eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
+      ),
+    );
+  for (const { distribuicaoId, ultimoContato } of linhas) {
+    if (!semContato(ultimoContato, momento, diasSemContato).semContato) continue;
+    porDistribuicao.set(distribuicaoId, (porDistribuicao.get(distribuicaoId) ?? 0) + 1);
+  }
+  return porDistribuicao;
+}
+
+export async function distribuicoesDoPacote(tx: Transacao, pacoteId: string, momento: Date) {
   const linhas = await tx
     .select({
       id: distribuicoes.id,
@@ -207,10 +233,9 @@ export async function distribuicoesDoPacote(tx: Transacao, pacoteId: string) {
     .where(eq(distribuicoes.pacoteId, pacoteId))
     .orderBy(desc(distribuicoes.criadaEm), desc(distribuicoes.id))
     .limit(DISTRIBUICOES_NA_FICHA);
-  const situacoes = await situacoesDas(
-    tx,
-    linhas.map(({ id }) => id),
-  );
+  const ids = linhas.map(({ id }) => id);
+  const situacoes = await situacoesDas(tx, ids);
+  const longe = await semContatoDas(tx, ids, momento);
   return linhas.map((linha) => {
     const resultado = situacoes.get(linha.id) ?? {
       concluidas: 0,
@@ -225,7 +250,7 @@ export async function distribuicoesDoPacote(tx: Transacao, pacoteId: string) {
       criadaEm: linha.criadaEm.toISOString(),
       paraQuem: paraQuemNaTela(linha.paraQuem, maquinas),
       maquinas,
-      resultado,
+      resultado: { ...resultado, semContato: longe.get(linha.id) ?? 0 },
     };
   });
 }

@@ -16475,6 +16475,192 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tentar-de-novo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tentar de novo a máquina que falhou: ela volta a aguardar o agente, que é acordado se o pedido pode seguir */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    maquinaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaquinaDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tirar-da-fila": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tirar da fila a máquina que aguarda o agente: ela não recebe mais o pedido, com o fim marcado */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    maquinaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaquinaDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ativos/{id}/distribuicoes": {
         parameters: {
             query?: never;
@@ -32952,6 +33138,10 @@ export interface components {
             maquinas: number;
             progresso: string;
         };
+        SemContatoDoAgenteInput: {
+            dias: number;
+            texto: string;
+        };
         MaquinaDaDistribuicaoInput: {
             /** Format: uuid */
             id: string;
@@ -32961,6 +33151,7 @@ export interface components {
                 rotulo: string;
                 patrimonio: string | null;
             };
+            pessoa: string | null;
             situacao: {
                 /** @enum {string} */
                 chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
@@ -32969,6 +33160,16 @@ export interface components {
                 tipo: "neutra" | "info" | "sucesso" | "critico";
             };
             etapa: string | null;
+            codigo: {
+                numero: number;
+                explicacao: string | null;
+            } | null;
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            chamada: {
+                em: string;
+                respondeu: boolean;
+            } | null;
+            voltaAte: string | null;
             log: string[];
             enviadaEm: string | null;
             atualizadaEm: string | null;
@@ -33012,10 +33213,6 @@ export interface components {
             };
             criadaEm: string;
             terminadaEm: string | null;
-        };
-        SemContatoDoAgenteInput: {
-            dias: number;
-            texto: string;
         };
         MaquinaParaDistribuirInput: {
             /** Format: uuid */
@@ -34769,6 +34966,7 @@ export interface components {
                 aguardando: number;
                 falharam: number;
                 tiradas: number;
+                semContato: number;
             };
         };
         FichaDoPacoteInput: {
@@ -37454,6 +37652,10 @@ export interface components {
             maquinas: number;
             progresso: string;
         };
+        SemContatoDoAgente: {
+            dias: number;
+            texto: string;
+        };
         MaquinaDaDistribuicao: {
             /** Format: uuid */
             id: string;
@@ -37463,6 +37665,7 @@ export interface components {
                 rotulo: string;
                 patrimonio: string | null;
             };
+            pessoa: string | null;
             situacao: {
                 /** @enum {string} */
                 chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
@@ -37471,6 +37674,16 @@ export interface components {
                 tipo: "neutra" | "info" | "sucesso" | "critico";
             };
             etapa: string | null;
+            codigo: {
+                numero: number;
+                explicacao: string | null;
+            } | null;
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            chamada: {
+                em: string;
+                respondeu: boolean;
+            } | null;
+            voltaAte: string | null;
             log: string[];
             enviadaEm: string | null;
             atualizadaEm: string | null;
@@ -37514,10 +37727,6 @@ export interface components {
             };
             criadaEm: string;
             terminadaEm: string | null;
-        };
-        SemContatoDoAgente: {
-            dias: number;
-            texto: string;
         };
         MaquinaParaDistribuir: {
             /** Format: uuid */
@@ -39271,6 +39480,7 @@ export interface components {
                 aguardando: number;
                 falharam: number;
                 tiradas: number;
+                semContato: number;
             };
         };
         FichaDoPacote: {
