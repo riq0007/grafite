@@ -115,6 +115,10 @@ export {
 } from './componentes/aviso/RegiaoDeAvisos.tsx';
 export { Botao, type NivelDoBotao, type PropsDoBotao } from './componentes/botao/Botao.tsx';
 export {
+  BotaoAlternavel,
+  type PropsDoBotaoAlternavel,
+} from './componentes/botao/BotaoAlternavel.tsx';
+export {
   BuscaComSugestoes,
   type PropsDaBusca,
   type SugeridasDaBusca,

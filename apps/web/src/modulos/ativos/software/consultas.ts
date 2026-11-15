@@ -1,14 +1,16 @@
 // As consultas da distribuição de software na web (spec distribuicao-de-software; change
-// distribuicao-de-software, design, decisão 6): a base, as distribuições, a ficha de uma, as do
-// ativo e a busca das máquinas com o agente, todas debaixo da chave que o evento `software.mudou`
-// invalida. Os passos do agente não publicam evento: a ficha se relê enquanto alguma máquina espera
-// ou instala.
+// distribuicao-de-software, design, decisão 6): a base, as categorias, as distribuições, a ficha de
+// uma, as do ativo e a busca das máquinas com o agente, todas debaixo da chave que o evento
+// `software.mudou` invalida. Os passos do agente não publicam evento: a ficha se relê enquanto
+// alguma máquina espera ou instala.
 import type { components } from '@grafite/api-client';
 import { useQuery } from '@tanstack/react-query';
 import { consultar } from '../../../api/consultas.ts';
 import { useApi } from '../../../api/useApi.tsx';
 
 export type PacoteDeSoftware = components['schemas']['PacoteDeSoftware'];
+export type PacoteNaBase = components['schemas']['PacoteNaBase'];
+export type CategoriaDeSoftware = components['schemas']['CategoriaDeSoftware'];
 export type ResumoDaDistribuicao = components['schemas']['ResumoDaDistribuicao'];
 export type FichaDaDistribuicao = components['schemas']['FichaDaDistribuicao'];
 export type MaquinaDaDistribuicao = components['schemas']['MaquinaDaDistribuicao'];
@@ -30,6 +32,16 @@ export function usePacotes() {
   return useQuery({
     queryKey: [...CHAVE_DO_SOFTWARE, 'pacotes'],
     queryFn: () => consultar(() => api.GET('/software/pacotes'), 'carregar a base de software'),
+  });
+}
+
+/** As categorias da base, na ordem das abas. */
+export function useCategorias() {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_SOFTWARE, 'categorias'],
+    queryFn: () =>
+      consultar(() => api.GET('/software/categorias'), 'carregar as categorias da base'),
   });
 }
 

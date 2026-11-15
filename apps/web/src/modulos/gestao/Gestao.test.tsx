@@ -102,14 +102,15 @@ describe('os endereços antigos', () => {
     expect(roteador.state.location.search).toEqual({ situacao: 'inativos' });
   });
 
-  it('o software e o Control iD também, com a aba do software', async () => {
+  it('o software e o Control iD também, e a aba antiga das distribuições leva à tela delas', async () => {
     noComputador();
     const software = abrir(
       '/ativos/software?aba=distribuicoes',
       naOrganizacao('software.distribuir'),
     );
-    await waitFor(() => expect(software.state.location.pathname).toBe('/gestao/software'));
-    expect(software.state.location.search).toEqual({ aba: 'distribuicoes' });
+    await waitFor(() =>
+      expect(software.state.location.pathname).toBe('/gestao/software/distribuicoes'),
+    );
     cleanup();
     const controlId = abrir('/ativos/control-id/comparar', naOrganizacao('controlid.ver'));
     await waitFor(() =>

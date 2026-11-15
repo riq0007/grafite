@@ -1,0 +1,84 @@
+/* A base de pacotes (m12): as abas por categoria, a tabela e o pé com as instalações abaixo da versão-alvo. */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.busca {
+  width: 280px;
+}
+
+.categorias {
+  padding-bottom: var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.quantos {
+  margin-left: var(--esp-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+}
+
+.pacote {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.nome {
+  display: block;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.tipo {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.instalado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.barra {
+  width: 150px;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}
+
+.abrir {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+.pe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--cor-linha);
+  font-size: var(--texto-dado);
+}
+
+.pe > :last-child:not(:first-child):is(button, a) {
+  margin-left: auto;
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

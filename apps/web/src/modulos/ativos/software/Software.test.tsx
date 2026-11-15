@@ -1,7 +1,7 @@
-// A distribuição de software na web (spec distribuicao-de-software; change
-// distribuicao-de-software, design, decisão 6): a base para quem só distribui, o pacote novo com o
-// arquivo, a distribuição pela busca das máquinas, a lista com o progresso, a ficha com o log e o
-// pedir agora, e as distribuições na ficha do ativo.
+// A distribuição de software na web (spec distribuicao-de-software; changes
+// distribuicao-de-software e software-por-pacote): a base de pacotes frente ao inventário para quem
+// só distribui, o pacote novo com o arquivo, a distribuição pela busca das máquinas, a lista com o
+// progresso e a ficha com o log.
 import type { components } from '@grafite/api-client';
 import { filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
@@ -22,6 +22,7 @@ afterEach(() => {
 });
 
 type Pacote = components['schemas']['PacoteDeSoftware'];
+type NaBase = components['schemas']['PacoteNaBase'];
 type Ficha = components['schemas']['FichaDaDistribuicao'];
 type Maquina = components['schemas']['MaquinaDaDistribuicao'];
 
@@ -37,6 +38,12 @@ const PACOTE: Pacote = {
   tipo: { longo: 'Instalador MSI', curto: 'MSI' },
   arquivo: { nome: '7z2301-x64.msi', tamanho: 1_572_864, guardadoEm: null, guardadoPor: null },
   situacao: 'ativo',
+};
+
+const NA_BASE: NaBase = {
+  ...PACOTE,
+  contas: { maquinas: 47, instalado: 44, naVersao: 41, desatualizadas: 3, sem: 3 },
+  ultimaDistribuicao: null,
 };
 
 const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}): Maquina => ({
@@ -100,19 +107,28 @@ function abrir(
 }
 
 const avisos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
-const base = (administrar: boolean, pacotes: Pacote[] = [PACOTE]) => ({
-  'GET /api/software/pacotes': () => Response.json({ pacotes, permite: { administrar } }),
+const base = (administrar: boolean, pacotes: NaBase[] = [NA_BASE]) => ({
+  'GET /api/software/pacotes': () =>
+    Response.json({ pacotes, maquinas: 47, permite: { administrar } }),
+  'GET /api/software/categorias': () => Response.json({ categorias: [] }),
 });
 
+/** O botão de uma seleção, pelo rótulo. */
+const selecao = (onde: HTMLElement, rotulo: RegExp) =>
+  within(onde)
+    .getAllByRole('button', { name: rotulo })
+    .find((botao) => botao.getAttribute('aria-haspopup') === 'listbox') as HTMLElement;
+
 describe('a base de software', () => {
-  it('Técnico sem a administração: vê os pacotes e distribui, mas não tem "Novo pacote"', async () => {
+  it('Técnico sem a administração: vê a base frente ao inventário, sem "Novo pacote" nem "Categorias…"', async () => {
     abrir('/gestao/software', base(false), naOrganizacao('software.distribuir'));
-    const tabela = await screen.findByRole('grid', { name: 'Base de software' });
-    expect(within(tabela).getByText('7-Zip 23.01')).toBeTruthy();
-    expect(within(tabela).getByText('7z2301-x64.msi · 1,5 MB')).toBeTruthy();
-    expect(within(tabela).getByRole('button', { name: 'Distribuir' })).toBeTruthy();
-    expect(within(tabela).queryByRole('button', { name: 'Editar' })).toBeNull();
+    const tabela = await screen.findByRole('grid', { name: 'Base de pacotes' });
+    expect(await within(tabela).findByText('7-Zip 23.01')).toBeTruthy();
+    expect(within(tabela).getByText('MSI · 1,5 MB')).toBeTruthy();
+    expect(within(tabela).getByText('3 desatualizadas')).toBeTruthy();
+    expect(screen.getByText('em 1 pacote, entre as 47 máquinas com o agente do GLPI')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Novo pacote' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Categorias…' })).toBeNull();
   });
 
   it('Pacote cadastrado: grava o pacote e envia o arquivo com o nome', async () => {
@@ -132,7 +148,7 @@ describe('a base de software', () => {
     expect(vazio).toBeTruthy();
     fireEvent.click(screen.getAllByRole('button', { name: 'Novo pacote' })[0] as HTMLElement);
     const gaveta = await screen.findByRole('dialog', { name: 'Novo pacote' });
-    fireEvent.change(within(gaveta).getByRole('textbox', { name: /^Nome/ }), {
+    fireEvent.change(within(gaveta).getByRole('textbox', { name: /^Nome(?! no)/ }), {
       target: { value: '7-Zip 23.01' },
     });
     fireEvent.change(within(gaveta).getByRole('textbox', { name: /^Comando/ }), {
@@ -146,6 +162,8 @@ describe('a base de software', () => {
     await waitFor(() => expect(avisos()).toContain('Pacote cadastrado.'));
     expect(pedidos[0]?.corpo).toEqual({
       nome: '7-Zip 23.01',
+      categoriaId: null,
+      nomeNoInventario: null,
       versao: null,
       descricao: null,
       comando: 'msiexec /i "7z2301-x64.msi" /qn /norestart',
@@ -158,8 +176,9 @@ describe('a base de software', () => {
 describe('a distribuição', () => {
   it('Distribuição para as máquinas: escolhe pela busca e abre a ficha', async () => {
     let corpo: unknown;
-    const roteador = abrir('/gestao/software', {
+    const roteador = abrir('/gestao/software/distribuicoes', {
       ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
       'GET /api/software/maquinas': () =>
         Response.json({
           maquinas: ['00321', '00412', '00518'].map((numero) => ({
@@ -176,9 +195,11 @@ describe('a distribuição', () => {
       },
       'GET /api/software/distribuicoes/d1': () => Response.json(DUAS),
     });
-    const tabela = await screen.findByRole('grid', { name: 'Base de software' });
-    fireEvent.click(within(tabela).getByRole('button', { name: 'Distribuir' }));
-    const gaveta = await screen.findByRole('dialog', { name: 'Distribuir 7-Zip 23.01' });
+    const [nova] = await screen.findAllByRole('button', { name: 'Nova distribuição' });
+    fireEvent.click(nova as HTMLElement);
+    const gaveta = await screen.findByRole('dialog', { name: 'Nova distribuição' });
+    fireEvent.click(selecao(gaveta, /Pacote/));
+    fireEvent.click(await screen.findByRole('option', { name: '7-Zip 23.01' }));
     const achadas = await within(gaveta).findByRole('list', { name: 'Máquinas achadas' });
     fireEvent.click(
       within(achadas).getByRole('checkbox', { name: 'Computador 00321 (PAT-00321)' }),

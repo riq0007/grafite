@@ -1,7 +1,8 @@
 // O cadastro e a edição de um pacote de software (spec distribuicao-de-software, "Base de
 // software"; change distribuicao-de-software, design, decisões 6 e 7), numa gaveta: o nome, a
-// versão, a descrição, o comando, os códigos de sucesso e o arquivo. O arquivo vai depois do
-// pacote gravado, com o progresso do envio.
+// categoria, o nome no inventário, a versão-alvo, a descrição, o comando, os códigos de sucesso e o
+// arquivo (change software-por-pacote, design, decisões 1 a 3). O arquivo vai depois do pacote
+// gravado, com o progresso do envio.
 import { LIMITE_DO_ARQUIVO_DO_PACOTE } from '@grafite/domain';
 import {
   AreaDeTexto,
@@ -11,16 +12,28 @@ import {
   EscolhaDeArquivo,
   Gaveta,
   MensagemDoPasso,
+  Selecao,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { recusaDe } from '../../administracao/recusa.ts';
-import { CHAVE_DO_SOFTWARE, type PacoteDeSoftware } from './consultas.ts';
+import { CHAVE_DO_SOFTWARE, type PacoteDeSoftware, useCategorias } from './consultas.ts';
 import estilos from './Software.module.css';
 
-type Campo = 'nome' | 'versao' | 'descricao' | 'comando' | 'codigosDeSucesso' | 'arquivo';
+type Campo =
+  | 'nome'
+  | 'categoriaId'
+  | 'nomeNoInventario'
+  | 'versao'
+  | 'descricao'
+  | 'comando'
+  | 'codigosDeSucesso'
+  | 'arquivo';
+
+/** A opção do pacote sem categoria, que aparece só em "Todos". */
+const SEM_CATEGORIA = 'sem-categoria';
 
 /** Os instaladores e os scripts mais comuns; o agente roda o que o comando mandar. */
 const FORMATOS_DO_PACOTE = [
@@ -48,7 +61,10 @@ export function Pacote({
 }) {
   const api = useApi();
   const consultas = useQueryClient();
+  const categorias = useCategorias();
   const [nome, definirNome] = useState(pacote?.nome ?? '');
+  const [categoriaId, definirCategoriaId] = useState(pacote?.categoria?.id ?? SEM_CATEGORIA);
+  const [nomeNoInventario, definirNomeNoInventario] = useState(pacote?.nomeNoInventario ?? '');
   const [versao, definirVersao] = useState(pacote?.versao ?? '');
   const [descricao, definirDescricao] = useState(pacote?.descricao ?? '');
   const [comando, definirComando] = useState(pacote?.comando ?? '');
@@ -87,6 +103,8 @@ export function Pacote({
     definirEnviando(true);
     const corpo = {
       nome,
+      categoriaId: categoriaId === SEM_CATEGORIA ? null : categoriaId,
+      nomeNoInventario: nomeNoInventario.trim() || null,
       versao: versao.trim() || null,
       descricao: descricao.trim() || null,
       comando,
@@ -159,9 +177,37 @@ export function Pacote({
           value={nome}
           onChange={definirNome}
           erro={erros.nome}
-          descricao="Como a equipe procura o pacote, como 7-Zip 23.01."
+          descricao="Como a equipe procura o pacote, como Google Chrome."
         />
-        <CampoDeTexto rotulo="Versão" value={versao} onChange={definirVersao} erro={erros.versao} />
+        <Selecao
+          rotulo="Categoria"
+          opcoes={[
+            { id: SEM_CATEGORIA, rotulo: 'Sem categoria' },
+            ...(categorias.data?.categorias ?? []).map(({ id, nome: daCategoria }) => ({
+              id,
+              rotulo: daCategoria,
+            })),
+          ]}
+          selectedKey={categoriaId}
+          onSelectionChange={(chave) => definirCategoriaId(String(chave))}
+          erro={erros.categoriaId}
+          descricao="A aba da base em que o pacote aparece. Sem categoria, ele aparece só em Todos."
+        />
+        <CampoDeTexto
+          rotulo="Nome no inventário"
+          value={nomeNoInventario}
+          onChange={definirNomeNoInventario}
+          erro={erros.nomeNoInventario}
+          placeholder={nome}
+          descricao='Como o Windows registra o programa: "7-Zip" acha o "7-Zip 23.01 (x64)" do inventário. Vazio, vale o nome.'
+        />
+        <CampoDeTexto
+          rotulo="Versão-alvo"
+          value={versao}
+          onChange={definirVersao}
+          erro={erros.versao}
+          descricao="Use a versão como o inventário a mostra; as barras da ficha do pacote dizem as que existem."
+        />
         <AreaDeTexto
           rotulo="Descrição"
           value={descricao}

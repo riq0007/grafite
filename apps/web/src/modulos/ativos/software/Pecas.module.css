@@ -1,0 +1,97 @@
+/* As peças comuns das telas do software: o ícone do pacote e a barra das instalações. */
+
+/* O ícone do pacote: o monograma em mono, no fundo da cor da série dele. */
+.icone {
+  --serie: var(--cor-serie-1);
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--serie) 45%, var(--cor-linha));
+  border-radius: var(--raio-controle);
+  background: color-mix(in srgb, var(--serie) 22%, var(--cor-superficie-2));
+  color: var(--cor-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.icone[data-tamanho="p"] {
+  width: 32px;
+  height: 32px;
+}
+
+.icone[data-tamanho="m"] {
+  width: 48px;
+  height: 48px;
+  font-size: var(--texto-corpo);
+}
+
+.icone[data-tamanho="gg"] {
+  width: 88px;
+  height: 88px;
+  border-radius: calc(var(--raio-base) * 1.4);
+  font-size: var(--texto-titulo-grande);
+}
+
+.icone[data-serie="1"] {
+  --serie: var(--cor-serie-1);
+}
+.icone[data-serie="2"] {
+  --serie: var(--cor-serie-2);
+}
+.icone[data-serie="3"] {
+  --serie: var(--cor-serie-3);
+}
+.icone[data-serie="4"] {
+  --serie: var(--cor-serie-4);
+}
+.icone[data-serie="5"] {
+  --serie: var(--cor-serie-5);
+}
+.icone[data-serie="6"] {
+  --serie: var(--cor-serie-6);
+}
+.icone[data-serie="7"] {
+  --serie: var(--cor-serie-7);
+}
+.icone[data-serie="8"] {
+  --serie: var(--cor-serie-8);
+}
+
+/* A barra em pedaços, um por situação, na proporção de cada um. */
+.barra {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--cor-superficie-afundada);
+}
+
+.barra > i {
+  display: block;
+  height: 100%;
+}
+
+.barra > [data-parte="ok"] {
+  background: var(--cor-ok-forte);
+}
+.barra > [data-parte="atencao"] {
+  background: var(--cor-atencao-forte);
+}
+.barra > [data-parte="critico"] {
+  background: var(--cor-critico-forte);
+}
+.barra > [data-parte="info"] {
+  background: var(--cor-info-forte);
+}
+.barra > [data-parte="neutra"] {
+  background: var(--cor-linha-forte);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}

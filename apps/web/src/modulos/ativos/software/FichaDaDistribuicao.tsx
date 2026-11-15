@@ -104,7 +104,7 @@ export function FichaDaDistribuicao() {
 
   return (
     <div className={estilos.tela}>
-      <Link to="/gestao/software" search={{ aba: 'distribuicoes' }} className={estilos.link}>
+      <Link to="/gestao/software/distribuicoes" className={estilos.link}>
         Distribuições
       </Link>
       <CabecalhoDaPagina
