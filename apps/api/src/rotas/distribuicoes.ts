@@ -83,7 +83,7 @@ const ResumoDaDistribuicao = z
   .meta({ id: 'ResumoDaDistribuicao' });
 
 /** O agente sem contato, pelo prazo da organização: "Sem contato · há 3 dias". */
-const SemContato = z
+export const SemContato = z
   .object({ dias: z.number(), texto: z.string() })
   .meta({ id: 'SemContatoDoAgente' });
 

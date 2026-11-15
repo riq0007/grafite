@@ -210,7 +210,7 @@ A tela "Software × máquinas" fica em Gestão de ativos › Software, com o con
 
 O "Distribuir" da matriz abre o assistente no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do Financeiro") e "Voltar à matriz" (m08).
 
-Uma rota só, `GET /software/matriz?local=<id>` ou `?por=local`, devolve os pacotes, as colunas e as células.
+Uma rota só, `GET /software/matriz?local=<id>` ou `?por=local`, devolve os pacotes, as colunas e as células. O "Por máquina" mostra as máquinas do próprio local, sem as dos locais de dentro, como o "Por local" as conta, e traz a última distribuição de cada pacote no local, que o painel do "Por local" mostra ao abrir a célula.
 
 ### 13. A ficha da máquina
 

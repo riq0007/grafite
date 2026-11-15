@@ -21,7 +21,7 @@
 - [x] 3.6 A criação com o quando (decisões 7, 8a e 10): a mesma permissão da prévia; as puladas fora; o "Para quem"; o fuso, com 400 no que não existe; a auditoria; e a tarefa `software.acordar` na hora, para agora, com os 20 chamados por vez e o chamado gravado na máquina e no log; a rota do "Pedir agora" e o botão da ficha saem. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [x] 3.7 O Deploy, a volta e o chamado (decisões 6, 7, 8 e 8a): o `getJobs` só com o que pode seguir; o código de saída no `setStatus`; o `expiration` do CONTACT e do INVENTORY e o `volta_ate` do agente; a periódica `software.acordar-agendados`, a cada 15 minutos, com a regra das 2 horas, que chama pelo mesmo caminho da `software.acordar`. Começa pelos testes do Deploy, do protocolo e das tarefas. Verificar: esses testes, o lint e o typecheck.
 - [x] 3.8 Tentar de novo e tirar da fila (decisão 11), e a distribuição com o sem contato, o código e a explicação de cada máquina. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
-- [ ] 3.9 A matriz (decisão 12): `GET /software/matriz`, por máquina de um local e por local. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
+- [x] 3.9 A matriz (decisão 12): `GET /software/matriz`, por máquina de um local e por local. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [ ] 3.10 O software na ficha (decisão 13): `GET /ativos/:id/software`, com os mandados, os instalados frente à base, a origem, o sem contato e a fila; a permissão de cada parte. Começa pelos testes de integração. Verificar: esses testes, o lint, o typecheck e o contrato.
 
 ## 4. Web

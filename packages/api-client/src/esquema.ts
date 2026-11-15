@@ -14960,6 +14960,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/software/matriz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A matriz do software: os pacotes ativos frente às máquinas de um local, ou frente aos locais, nos locais em que a conta distribui */
+        get: {
+            parameters: {
+                query?: {
+                    local?: string;
+                    por?: "maquina" | "local";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MatrizPorMaquina"] | components["schemas"]["MatrizPorLocal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/software/pacotes/{id}": {
         parameters: {
             query?: never;
@@ -34983,6 +35076,71 @@ export interface components {
                 administrar: boolean;
             };
         };
+        MatrizPorMaquinaInput: {
+            /** @constant */
+            por: "maquina";
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+            };
+            pacotes: components["schemas"]["PacoteDeSoftwareInput"][];
+            maquinas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                hostname: string | null;
+                pessoa: string | null;
+                semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                ativoId: string;
+                /** @enum {string} */
+                situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                versao: string | null;
+                distribuicao: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    situacao: "aguardando" | "em-andamento" | "falhou";
+                    texto: string;
+                    codigo: number | null;
+                } | null;
+            }[];
+            ultimas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                distribuicaoId: string;
+                criadaEm: string;
+                criadaPor: string;
+            }[];
+        };
+        MatrizPorLocalInput: {
+            /** @constant */
+            por: "local";
+            pacotes: components["schemas"]["PacoteDeSoftwareInput"][];
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+                maquinas: number;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                localId: string;
+                naVersao: number;
+                total: number;
+            }[];
+        };
         CategoriaDeSoftwareInput: {
             /** Format: uuid */
             id: string;
@@ -39496,6 +39654,71 @@ export interface components {
             permite: {
                 administrar: boolean;
             };
+        };
+        MatrizPorMaquina: {
+            /** @constant */
+            por: "maquina";
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+            };
+            pacotes: components["schemas"]["PacoteDeSoftware"][];
+            maquinas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                hostname: string | null;
+                pessoa: string | null;
+                semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                ativoId: string;
+                /** @enum {string} */
+                situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                versao: string | null;
+                distribuicao: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    situacao: "aguardando" | "em-andamento" | "falhou";
+                    texto: string;
+                    codigo: number | null;
+                } | null;
+            }[];
+            ultimas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                distribuicaoId: string;
+                criadaEm: string;
+                criadaPor: string;
+            }[];
+        };
+        MatrizPorLocal: {
+            /** @constant */
+            por: "local";
+            pacotes: components["schemas"]["PacoteDeSoftware"][];
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+                maquinas: number;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                localId: string;
+                naVersao: number;
+                total: number;
+            }[];
         };
         CategoriaDeSoftware: {
             /** Format: uuid */

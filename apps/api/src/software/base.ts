@@ -113,6 +113,41 @@ export async function versoesDoPacoteNasMaquinas(
   return porMaquina;
 }
 
+/**
+ * As versões dos programas que casam com cada pacote ativo, em cada máquina dada que tem o programa:
+ * pela id do pacote e, nele, pela id do ativo.
+ */
+export async function versoesDosPacotesNasMaquinas(
+  tx: Transacao,
+  ativoIds: readonly string[],
+): Promise<Map<string, Map<string, (string | null)[]>>> {
+  const porPacote = new Map<string, Map<string, (string | null)[]>>();
+  if (ativoIds.length === 0) return porPacote;
+  const linhas = await tx
+    .select({
+      pacoteId: pacotesDeSoftware.id,
+      ativoId: softwaresDosAtivos.ativoId,
+      versao: softwaresDosAtivos.versao,
+    })
+    .from(pacotesDeSoftware)
+    .innerJoin(
+      softwaresDosAtivos,
+      and(eq(softwaresDosAtivos.orgId, pacotesDeSoftware.orgId), casaNoBanco),
+    )
+    .where(
+      and(
+        eq(pacotesDeSoftware.situacao, 'ativo'),
+        inArray(softwaresDosAtivos.ativoId, [...ativoIds]),
+      ),
+    );
+  for (const { pacoteId, ativoId, versao } of linhas) {
+    const doPacote = porPacote.get(pacoteId) ?? new Map<string, (string | null)[]>();
+    porPacote.set(pacoteId, doPacote);
+    doPacote.set(ativoId, [...(doPacote.get(ativoId) ?? []), versao]);
+  }
+  return porPacote;
+}
+
 /** O "Para quem" da distribuição; a de antes da change software-por-pacote diz quantas máquinas. */
 export const paraQuemNaTela = (paraQuem: string | null, maquinas: number): string =>
   paraQuem ?? `${maquinas} ${maquinas === 1 ? 'máquina' : 'máquinas'}`;

@@ -28,9 +28,10 @@ import { and, asc, count, eq } from 'drizzle-orm';
 import type { FastifyError, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { sessaoDa } from '../acesso/escopo.ts';
+import { exigirEm, sessaoDa } from '../acesso/escopo.ts';
 import { type Armazenamento, chaveDaParteDoPacote } from '../arquivos/armazenamento.ts';
 import { BytesDoArquivo } from '../arquivos/esquemas.ts';
+import { lerArvore } from '../arvore.ts';
 import { nomeCodificado, nomeEmAscii } from '../ativos/arquivos-dos-campos.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouChaveEstrangeira, violouUnicidade } from '../banco.ts';
@@ -46,7 +47,9 @@ import {
   instalacoesNaConta,
   ultimasDistribuicoes,
 } from '../software/base.ts';
+import { matrizPorLocal, matrizPorMaquina } from '../software/matriz.ts';
 import { trocarArquivoDoPacote } from '../software/pacotes.ts';
+import { SemContato } from './distribuicoes.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 export const PacoteDeSoftware = z
@@ -224,6 +227,78 @@ const visaoDoPacote = ({ pacote: linha, categoria }: PacoteLido) => ({
 });
 
 /** O nome do arquivo sem pasta: até 200 caracteres, sem os proibidos no Windows nem os de controle. */
+const SituacaoNaMatriz = z.enum([
+  'na-versao',
+  'desatualizada',
+  'sem-o-programa',
+  'instalado-sem-alvo',
+]);
+
+const MatrizPorMaquina = z
+  .object({
+    por: z.literal('maquina'),
+    local: z.object({ id: z.uuid(), nome: z.string(), caminho: z.string() }),
+    pacotes: z.array(PacoteDeSoftware),
+    maquinas: z.array(
+      z.object({
+        id: z.uuid(),
+        rotulo: z.string(),
+        patrimonio: z.string().nullable(),
+        hostname: z.string().nullable(),
+        pessoa: z.string().nullable(),
+        semContato: SemContato.nullable(),
+      }),
+    ),
+    /** Uma por pacote e máquina: a versão do inventário frente à versão-alvo. */
+    celulas: z.array(
+      z.object({
+        pacoteId: z.uuid(),
+        ativoId: z.uuid(),
+        situacao: SituacaoNaMatriz,
+        versao: z.string().nullable(),
+        /** A distribuição mais nova do pacote que aguarda, instala ou falhou nesta máquina. */
+        distribuicao: z
+          .object({
+            id: z.uuid(),
+            situacao: z.enum(['aguardando', 'em-andamento', 'falhou']),
+            texto: z.string(),
+            codigo: z.number().nullable(),
+          })
+          .nullable(),
+      }),
+    ),
+    /** A última distribuição de cada pacote com alguma máquina do local. */
+    ultimas: z.array(
+      z.object({
+        pacoteId: z.uuid(),
+        distribuicaoId: z.uuid(),
+        criadaEm: z.string(),
+        criadaPor: z.string(),
+      }),
+    ),
+  })
+  .meta({ id: 'MatrizPorMaquina' });
+
+const MatrizPorLocal = z
+  .object({
+    por: z.literal('local'),
+    pacotes: z.array(PacoteDeSoftware),
+    /** Os locais com máquinas com o agente, na ordem da árvore, cada máquina no próprio local. */
+    locais: z.array(
+      z.object({ id: z.uuid(), nome: z.string(), caminho: z.string(), maquinas: z.number() }),
+    ),
+    /** "N de M" na versão-alvo; no pacote sem versão-alvo, as que têm o programa. */
+    celulas: z.array(
+      z.object({
+        pacoteId: z.uuid(),
+        localId: z.uuid(),
+        naVersao: z.number(),
+        total: z.number(),
+      }),
+    ),
+  })
+  .meta({ id: 'MatrizPorLocal' });
+
 const PROIBIDOS_NO_NOME = new Set([...'\\/:*?"<>|']);
 const nomeDeArquivoValido = (nome: string) =>
   nome.length >= 1 &&
@@ -291,6 +366,61 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
           pacotes,
           maquinas,
           permite: { administrar: pode(acesso, 'software.administrar') },
+        };
+      });
+    },
+  );
+
+  app.get(
+    '/software/matriz',
+    {
+      config: { permissao: 'software.distribuir' },
+      schema: {
+        summary:
+          'A matriz do software: os pacotes ativos frente às máquinas de um local, ou frente aos locais, nos locais em que a conta distribui',
+        querystring: z.object({
+          local: z.uuid({ error: 'Local não encontrado.' }).optional(),
+          por: z.enum(['maquina', 'local']).default('maquina'),
+        }),
+        response: {
+          200: z.discriminatedUnion('por', [MatrizPorMaquina, MatrizPorLocal]),
+          ...PROBLEMAS,
+        },
+      },
+    },
+    async (requisicao) => {
+      const { acesso } = sessaoDa(requisicao);
+      const { local, por } = requisicao.query;
+      if (por === 'maquina' && !local) throw dadosInvalidos({ local: 'Escolha o local.' });
+      return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        const arvore = await lerArvore(tx);
+        const lidos = await selecionarPacotes(tx)
+          .where(eq(pacotesDeSoftware.situacao, 'ativo'))
+          .orderBy(asc(pacotesDeSoftware.nomeNormalizado));
+        const pacotes = lidos.map(pacoteNaTela);
+        const comparados = lidos.map(({ pacote }) => ({ id: pacote.id, versao: pacote.versao }));
+        if (por === 'local') {
+          return {
+            por,
+            pacotes,
+            ...(await matrizPorLocal(tx, { acesso, arvore, pacotes: comparados })),
+          };
+        }
+        const localId = local ?? '';
+        const doLocal = arvore.local(localId);
+        if (!doLocal) throw naoEncontrado('Local não encontrado.');
+        exigirEm(requisicao, 'software.distribuir', localId, arvore);
+        return {
+          por,
+          local: { id: localId, nome: doLocal.nome, caminho: arvore.caminho(localId) },
+          pacotes,
+          ...(await matrizPorMaquina(tx, {
+            acesso,
+            arvore,
+            localId,
+            pacotes: comparados,
+            momento: agora(),
+          })),
         };
       });
     },
