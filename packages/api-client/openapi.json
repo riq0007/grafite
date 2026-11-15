@@ -21000,6 +21000,354 @@
           "comando"
         ]
       },
+      "ContasDoPacoteInput": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "number"
+          },
+          "instalado": {
+            "type": "number"
+          },
+          "naVersao": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desatualizadas": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sem": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "maquinas",
+          "instalado",
+          "naVersao",
+          "desatualizadas",
+          "sem"
+        ]
+      },
+      "PacoteNaBaseInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comando": {
+            "type": "string"
+          },
+          "codigosDeSucesso": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ]
+          },
+          "arquivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "tamanho": {
+                    "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacoteInput"
+          },
+          "ultimaDistribuicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "criadaEm": {
+                    "type": "string"
+                  },
+                  "paraQuem": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "criadaEm",
+                  "paraQuem"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "versao",
+          "descricao",
+          "categoria",
+          "nomeNoInventario",
+          "comando",
+          "codigosDeSucesso",
+          "tipo",
+          "arquivo",
+          "situacao",
+          "contas",
+          "ultimaDistribuicao"
+        ]
+      },
+      "DistribuicaoDoPacoteInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "paraQuem": {
+            "type": "string"
+          },
+          "maquinas": {
+            "type": "number"
+          },
+          "resultado": {
+            "type": "object",
+            "properties": {
+              "concluidas": {
+                "type": "number"
+              },
+              "emAndamento": {
+                "type": "number"
+              },
+              "aguardando": {
+                "type": "number"
+              },
+              "falharam": {
+                "type": "number"
+              },
+              "tiradas": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "concluidas",
+              "emAndamento",
+              "aguardando",
+              "falharam",
+              "tiradas"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "paraQuem",
+          "maquinas",
+          "resultado"
+        ]
+      },
+      "FichaDoPacoteInput": {
+        "type": "object",
+        "properties": {
+          "pacote": {
+            "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+          },
+          "partes": {
+            "type": "number"
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacoteInput"
+          },
+          "versoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "alvo",
+                        "abaixo",
+                        "acima"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "versao",
+                "estado",
+                "quantas"
+              ]
+            }
+          },
+          "distribuicoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistribuicaoDoPacoteInput"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "administrar": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "administrar"
+            ]
+          }
+        },
+        "required": [
+          "pacote",
+          "partes",
+          "contas",
+          "versoes",
+          "distribuicoes",
+          "permite"
+        ]
+      },
       "CategoriaDeSoftwareInput": {
         "type": "object",
         "properties": {
@@ -43295,6 +43643,366 @@
         ],
         "additionalProperties": false
       },
+      "ContasDoPacote": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "number"
+          },
+          "instalado": {
+            "type": "number"
+          },
+          "naVersao": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desatualizadas": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sem": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "maquinas",
+          "instalado",
+          "naVersao",
+          "desatualizadas",
+          "sem"
+        ],
+        "additionalProperties": false
+      },
+      "PacoteNaBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comando": {
+            "type": "string"
+          },
+          "codigosDeSucesso": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ],
+            "additionalProperties": false
+          },
+          "arquivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "tamanho": {
+                    "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacote"
+          },
+          "ultimaDistribuicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "criadaEm": {
+                    "type": "string"
+                  },
+                  "paraQuem": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "criadaEm",
+                  "paraQuem"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "versao",
+          "descricao",
+          "categoria",
+          "nomeNoInventario",
+          "comando",
+          "codigosDeSucesso",
+          "tipo",
+          "arquivo",
+          "situacao",
+          "contas",
+          "ultimaDistribuicao"
+        ],
+        "additionalProperties": false
+      },
+      "DistribuicaoDoPacote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "paraQuem": {
+            "type": "string"
+          },
+          "maquinas": {
+            "type": "number"
+          },
+          "resultado": {
+            "type": "object",
+            "properties": {
+              "concluidas": {
+                "type": "number"
+              },
+              "emAndamento": {
+                "type": "number"
+              },
+              "aguardando": {
+                "type": "number"
+              },
+              "falharam": {
+                "type": "number"
+              },
+              "tiradas": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "concluidas",
+              "emAndamento",
+              "aguardando",
+              "falharam",
+              "tiradas"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "paraQuem",
+          "maquinas",
+          "resultado"
+        ],
+        "additionalProperties": false
+      },
+      "FichaDoPacote": {
+        "type": "object",
+        "properties": {
+          "pacote": {
+            "$ref": "#/components/schemas/PacoteDeSoftware"
+          },
+          "partes": {
+            "type": "number"
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacote"
+          },
+          "versoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "alvo",
+                        "abaixo",
+                        "acima"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "versao",
+                "estado",
+                "quantas"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "distribuicoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistribuicaoDoPacote"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "administrar": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "administrar"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "pacote",
+          "partes",
+          "contas",
+          "versoes",
+          "distribuicoes",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
       "CategoriaDeSoftware": {
         "type": "object",
         "properties": {
@@ -59243,7 +59951,7 @@
     },
     "/software/pacotes": {
       "get": {
-        "summary": "A base de software da organização, pelo nome",
+        "summary": "A base de software frente ao inventário das máquinas da conta, com as mais desatualizadas primeiro",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -59255,8 +59963,11 @@
                     "pacotes": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/PacoteDeSoftware"
+                        "$ref": "#/components/schemas/PacoteNaBase"
                       }
+                    },
+                    "maquinas": {
+                      "type": "number"
                     },
                     "permite": {
                       "type": "object",
@@ -59273,6 +59984,7 @@
                   },
                   "required": [
                     "pacotes",
+                    "maquinas",
                     "permite"
                   ],
                   "additionalProperties": false
@@ -59429,6 +60141,93 @@
       }
     },
     "/software/pacotes/{id}": {
+      "get": {
+        "summary": "A ficha do pacote: as contas, as barras das versões e as distribuições",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDoPacote"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "summary": "Editar um pacote de software",
         "requestBody": {

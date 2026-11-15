@@ -50,6 +50,13 @@ export function compararVersoes(instalada: string, alvo: string): number {
   return compararAte(pedacos(instalada), doAlvo, doAlvo.length);
 }
 
+/** A ordem de duas versões pela versão inteira, para ordenar as barras ("16.0" antes de "16.0.1"). */
+export function ordemDasVersoes(a: string, b: string): number {
+  const deA = pedacos(a);
+  const deB = pedacos(b);
+  return compararAte(deA, deB, Math.max(deA.length, deB.length));
+}
+
 /** Se a versão do pacote compara: o pacote sem versão, ou com uma sem nenhum pedaço, não. */
 export function temVersaoAlvo(versao: string | null | undefined): versao is string {
   return !!versao && pedacos(versao).length > 0;

@@ -1,0 +1,1 @@
+CREATE INDEX "softwares_dos_ativos_nome_normalizado_idx" ON "softwares_dos_ativos" USING btree ("org_id",("nome_normalizado" collate "C"));

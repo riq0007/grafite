@@ -14793,7 +14793,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** A base de software da organização, pelo nome */
+        /** A base de software frente ao inventário das máquinas da conta, com as mais desatualizadas primeiro */
         get: {
             parameters: {
                 query?: never;
@@ -14810,7 +14810,8 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            pacotes: components["schemas"]["PacoteDeSoftware"][];
+                            pacotes: components["schemas"]["PacoteNaBase"][];
+                            maquinas: number;
                             permite: {
                                 administrar: boolean;
                             };
@@ -14966,7 +14967,83 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** A ficha do pacote: as contas, as barras das versões e as distribuições */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FichaDoPacote"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -34465,6 +34542,79 @@ export interface components {
             comando: string;
             codigosDeSucesso?: string | number[];
         };
+        ContasDoPacoteInput: {
+            maquinas: number;
+            instalado: number;
+            naVersao: number | null;
+            desatualizadas: number | null;
+            sem: number;
+        };
+        PacoteNaBaseInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            versao: string | null;
+            descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
+            comando: string;
+            codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
+            arquivo: {
+                nome: string;
+                tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
+            } | null;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+            contas: components["schemas"]["ContasDoPacoteInput"];
+            ultimaDistribuicao: {
+                /** Format: uuid */
+                id: string;
+                criadaEm: string;
+                paraQuem: string;
+            } | null;
+        };
+        DistribuicaoDoPacoteInput: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            paraQuem: string;
+            maquinas: number;
+            resultado: {
+                concluidas: number;
+                emAndamento: number;
+                aguardando: number;
+                falharam: number;
+                tiradas: number;
+            };
+        };
+        FichaDoPacoteInput: {
+            pacote: components["schemas"]["PacoteDeSoftwareInput"];
+            partes: number;
+            contas: components["schemas"]["ContasDoPacoteInput"];
+            versoes: {
+                versao: string | null;
+                estado: ("alvo" | "abaixo" | "acima") | null;
+                quantas: number;
+            }[];
+            distribuicoes: components["schemas"]["DistribuicaoDoPacoteInput"][];
+            permite: {
+                administrar: boolean;
+            };
+        };
         CategoriaDeSoftwareInput: {
             /** Format: uuid */
             id: string;
@@ -38801,6 +38951,79 @@ export interface components {
             nomeNoInventario?: string | null;
             comando: string;
             codigosDeSucesso?: string | number[];
+        };
+        ContasDoPacote: {
+            maquinas: number;
+            instalado: number;
+            naVersao: number | null;
+            desatualizadas: number | null;
+            sem: number;
+        };
+        PacoteNaBase: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            versao: string | null;
+            descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
+            comando: string;
+            codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
+            arquivo: {
+                nome: string;
+                tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
+            } | null;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+            contas: components["schemas"]["ContasDoPacote"];
+            ultimaDistribuicao: {
+                /** Format: uuid */
+                id: string;
+                criadaEm: string;
+                paraQuem: string;
+            } | null;
+        };
+        DistribuicaoDoPacote: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            paraQuem: string;
+            maquinas: number;
+            resultado: {
+                concluidas: number;
+                emAndamento: number;
+                aguardando: number;
+                falharam: number;
+                tiradas: number;
+            };
+        };
+        FichaDoPacote: {
+            pacote: components["schemas"]["PacoteDeSoftware"];
+            partes: number;
+            contas: components["schemas"]["ContasDoPacote"];
+            versoes: {
+                versao: string | null;
+                estado: ("alvo" | "abaixo" | "acima") | null;
+                quantas: number;
+            }[];
+            distribuicoes: components["schemas"]["DistribuicaoDoPacote"][];
+            permite: {
+                administrar: boolean;
+            };
         };
         CategoriaDeSoftware: {
             /** Format: uuid */

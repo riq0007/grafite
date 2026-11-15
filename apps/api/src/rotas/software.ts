@@ -17,13 +17,14 @@ import {
 } from '@grafite/db';
 import {
   conferirPacote,
+  contasDoPacote,
   LIMITE_DO_ARQUIVO_DO_PACOTE,
   MENSAGENS_DO_SOFTWARE,
   normalizarTexto,
   pode,
   tipoDoPacote,
 } from '@grafite/domain';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import type { FastifyError, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -40,6 +41,11 @@ import {
   ProblemaDaApi,
   RespostaDeProblema,
 } from '../problemas.ts';
+import {
+  distribuicoesDoPacote,
+  instalacoesNaConta,
+  ultimasDistribuicoes,
+} from '../software/base.ts';
 import { trocarArquivoDoPacote } from '../software/pacotes.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
@@ -150,6 +156,59 @@ export const pacoteNaTela = ({
   };
 };
 
+/** As contas do pacote nas máquinas da conta; sem versão-alvo, as duas do meio são `null`. */
+const ContasDoPacote = z
+  .object({
+    maquinas: z.number(),
+    instalado: z.number(),
+    naVersao: z.number().nullable(),
+    desatualizadas: z.number().nullable(),
+    sem: z.number(),
+  })
+  .meta({ id: 'ContasDoPacote' });
+
+const PacoteNaBase = PacoteDeSoftware.extend({
+  contas: ContasDoPacote,
+  ultimaDistribuicao: z
+    .object({ id: z.uuid(), criadaEm: z.string(), paraQuem: z.string() })
+    .nullable(),
+}).meta({ id: 'PacoteNaBase' });
+
+const DistribuicaoDoPacote = z
+  .object({
+    id: z.uuid(),
+    criadaEm: z.string(),
+    paraQuem: z.string(),
+    maquinas: z.number(),
+    resultado: z.object({
+      concluidas: z.number(),
+      emAndamento: z.number(),
+      aguardando: z.number(),
+      falharam: z.number(),
+      tiradas: z.number(),
+    }),
+  })
+  .meta({ id: 'DistribuicaoDoPacote' });
+
+const FichaDoPacote = z
+  .object({
+    pacote: PacoteDeSoftware,
+    /** Em quantas partes o arquivo está guardado ("118 MB, em 12 partes"). */
+    partes: z.number(),
+    contas: ContasDoPacote,
+    /** As barras das versões, da mais nova para a mais velha. */
+    versoes: z.array(
+      z.object({
+        versao: z.string().nullable(),
+        estado: z.enum(['alvo', 'abaixo', 'acima']).nullable(),
+        quantas: z.number(),
+      }),
+    ),
+    distribuicoes: z.array(DistribuicaoDoPacote),
+    permite: z.object({ administrar: z.boolean() }),
+  })
+  .meta({ id: 'FichaDoPacote' });
+
 /** O que a auditoria guarda do pacote: sem o SHA-512, com a categoria e o arquivo pelo nome. */
 const visaoDoPacote = ({ pacote: linha, categoria }: PacoteLido) => ({
   nome: linha.nome,
@@ -196,10 +255,13 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
     {
       config: { permissao: 'software.distribuir' },
       schema: {
-        summary: 'A base de software da organização, pelo nome',
+        summary:
+          'A base de software frente ao inventário das máquinas da conta, com as mais desatualizadas primeiro',
         response: {
           200: z.object({
-            pacotes: z.array(PacoteDeSoftware),
+            pacotes: z.array(PacoteNaBase),
+            /** As máquinas da conta: os ativos ativos com o agente ligado, nos locais dela. */
+            maquinas: z.number(),
             permite: z.object({ administrar: z.boolean() }),
           }),
           ...PROBLEMAS,
@@ -208,13 +270,63 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
     },
     async (requisicao) => {
       const { acesso } = sessaoDa(requisicao);
-      const linhas = await naOrganizacao(banco, orgDa(requisicao), (tx) =>
-        selecionarPacotes(tx).orderBy(asc(pacotesDeSoftware.nomeNormalizado)),
-      );
-      return {
-        pacotes: linhas.map(pacoteNaTela),
-        permite: { administrar: pode(acesso, 'software.administrar') },
-      };
+      return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        const linhas = await selecionarPacotes(tx).orderBy(asc(pacotesDeSoftware.nomeNormalizado));
+        const { maquinas, porPacote } = await instalacoesNaConta(tx, acesso);
+        const ultimas = await ultimasDistribuicoes(tx);
+        const pacotes = linhas.map((lido) => ({
+          ...pacoteNaTela(lido),
+          contas: contasDoPacote(porPacote.get(lido.pacote.id) ?? [], maquinas, lido.pacote.versao)
+            .contas,
+          ultimaDistribuicao: ultimas.get(lido.pacote.id) ?? null,
+        }));
+        pacotes.sort(
+          (a, b) =>
+            (b.contas.desatualizadas ?? 0) - (a.contas.desatualizadas ?? 0) ||
+            a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base', numeric: true }),
+        );
+        return {
+          pacotes,
+          maquinas,
+          permite: { administrar: pode(acesso, 'software.administrar') },
+        };
+      });
+    },
+  );
+
+  app.get(
+    '/software/pacotes/:id',
+    {
+      config: { permissao: 'software.distribuir' },
+      schema: {
+        summary: 'A ficha do pacote: as contas, as barras das versões e as distribuições',
+        params: ParametrosDoPacote,
+        response: { 200: FichaDoPacote, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const { acesso } = sessaoDa(requisicao);
+      return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        const lido = await lerPacote(tx, requisicao.params.id);
+        const { maquinas, porPacote } = await instalacoesNaConta(tx, acesso, lido.pacote.id);
+        const { contas, versoes } = contasDoPacote(
+          porPacote.get(lido.pacote.id) ?? [],
+          maquinas,
+          lido.pacote.versao,
+        );
+        const [partes] = await tx
+          .select({ quantas: count() })
+          .from(partesDosPacotes)
+          .where(eq(partesDosPacotes.pacoteId, lido.pacote.id));
+        return {
+          pacote: pacoteNaTela(lido),
+          partes: partes?.quantas ?? 0,
+          contas,
+          versoes,
+          distribuicoes: await distribuicoesDoPacote(tx, lido.pacote.id),
+          permite: { administrar: pode(acesso, 'software.administrar') },
+        };
+      });
     },
   );
 

@@ -414,6 +414,13 @@
       "when": 1794709326975,
       "tag": "0058_inventario_distribuicao_e_agente",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794712341217,
+      "tag": "0059_casamento_do_software",
+      "breakpoints": true
     }
   ]
 }

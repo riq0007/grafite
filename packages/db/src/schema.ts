@@ -3676,6 +3676,12 @@ export const softwaresDosAtivos = orgScoped(
       foreignColumns: [ativos.orgId, ativos.id],
     }),
     index('softwares_dos_ativos_ativo_idx').on(t.orgId, t.ativoId, t.nome),
+    // O casamento com o nome no inventário do pacote, pela igualdade e pelo começo do nome, na
+    // ordem dos bytes (change software-por-pacote, design, decisão 1).
+    index('softwares_dos_ativos_nome_normalizado_idx').on(
+      t.orgId,
+      sql`(${t.nomeNormalizado} collate "C")`,
+    ),
     check('softwares_dos_ativos_nome_valido', textoAte(t.nome, 500)),
   ],
 );

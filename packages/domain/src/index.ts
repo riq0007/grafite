@@ -800,12 +800,15 @@ export {
 } from './salas/salas.ts';
 export {
   type ComparacaoComABase,
+  type ContasDoPacote,
+  contasDoPacote,
   frenteABase,
   monograma,
   ordenarFrenteABase,
   type PacoteDaBase,
   textoFrenteABase,
   tipoDoPacote,
+  type VersaoDaFicha,
 } from './software/base.ts';
 export {
   CATEGORIAS_DE_SOFTWARE_DE_FABRICA,
@@ -861,6 +864,7 @@ export {
   casaComOPacote,
   compararVersoes,
   estadoDaVersao,
+  ordemDasVersoes,
   type SituacaoFrenteAoPacote,
   situacaoFrenteAoPacote,
   temVersaoAlvo,

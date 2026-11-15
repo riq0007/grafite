@@ -3,7 +3,81 @@
 // design, decisões 4 e 13): o tipo pela extensão do arquivo, o monograma do nome, a comparação de
 // cada programa com o pacote dele e a ordem "Frente à base · ação primeiro".
 import { normalizarTexto } from '../texto.ts';
-import { casaComOPacote, compararVersoes, temVersaoAlvo } from './versoes.ts';
+import {
+  casaComOPacote,
+  compararVersoes,
+  estadoDaVersao,
+  ordemDasVersoes,
+  situacaoFrenteAoPacote,
+  temVersaoAlvo,
+  versaoCortada,
+} from './versoes.ts';
+
+/**
+ * As contas do pacote nas máquinas da conta (design, decisão 2): sem versão-alvo, nada fica na
+ * versão nem desatualizado, e as duas contas são `null`.
+ */
+export interface ContasDoPacote {
+  maquinas: number;
+  instalado: number;
+  naVersao: number | null;
+  desatualizadas: number | null;
+  sem: number;
+}
+
+/** Uma barra da ficha do pacote: a versão cortada no tamanho da versão-alvo e o estado escrito. */
+export interface VersaoDaFicha {
+  versao: string | null;
+  estado: 'alvo' | 'abaixo' | 'acima' | null;
+  quantas: number;
+}
+
+/**
+ * As contas do pacote e as barras das versões, pelas versões dos programas que casam com ele em
+ * cada máquina que tem o programa; a máquina vale pela versão mais alta. As barras vão da versão
+ * mais nova para a mais velha, com a sem versão no fim.
+ */
+export function contasDoPacote(
+  versoesPorMaquina: readonly (readonly (string | null)[])[],
+  maquinas: number,
+  versaoAlvo: string | null,
+): { contas: ContasDoPacote; versoes: VersaoDaFicha[] } {
+  const alvo = temVersaoAlvo(versaoAlvo) ? versaoAlvo : null;
+  let instalado = 0;
+  let naVersao = 0;
+  let desatualizadas = 0;
+  const grupos = new Map<string | null, number>();
+  for (const versoes of versoesPorMaquina) {
+    if (versoes.length === 0) continue;
+    instalado++;
+    const { situacao, versao } = situacaoFrenteAoPacote(versoes, alvo);
+    if (situacao === 'na-versao') naVersao++;
+    if (situacao === 'desatualizada') desatualizadas++;
+    const cortada = versaoCortada(versao, alvo);
+    grupos.set(cortada, (grupos.get(cortada) ?? 0) + 1);
+  }
+  const versoes = [...grupos]
+    .map(([versao, quantas]) => ({
+      versao,
+      estado: alvo ? estadoDaVersao(versao, alvo) : null,
+      quantas,
+    }))
+    .sort((a, b) => {
+      if (a.versao === null) return 1;
+      if (b.versao === null) return -1;
+      return ordemDasVersoes(b.versao, a.versao);
+    });
+  return {
+    contas: {
+      maquinas,
+      instalado,
+      naVersao: alvo ? naVersao : null,
+      desatualizadas: alvo ? desatualizadas : null,
+      sem: maquinas - instalado,
+    },
+    versoes,
+  };
+}
 
 const TIPOS: Record<string, string> = {
   msi: 'Instalador MSI',
