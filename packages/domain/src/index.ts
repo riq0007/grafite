@@ -808,6 +808,19 @@ export {
   type TrechoDoComando,
 } from './software/comando.ts';
 export {
+  conferirQuando,
+  EXPIRATION_DE_FABRICA,
+  expirationDoContato,
+  fusoValido,
+  instanteNoFuso,
+  JANELA_DA_NOITE,
+  MENSAGENS_DO_QUANDO,
+  type PedidoNoTempo,
+  podeSeguir,
+  proximoMomento,
+  type QuandoDaDistribuicao,
+} from './software/quando.ts';
+export {
   aplicarPassoDoAgente,
   type CampoDoPacote,
   CODIGOS_DE_SUCESSO_PADRAO,
