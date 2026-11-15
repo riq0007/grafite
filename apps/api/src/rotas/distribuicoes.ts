@@ -22,6 +22,8 @@ import {
   tiposDeAtivo,
 } from '@grafite/db';
 import {
+  type Acesso,
+  type ArvoreDeLocais,
   alcance,
   comALinha,
   conferirQuando,
@@ -48,7 +50,7 @@ import { exigirEm, sessaoDa } from '../acesso/escopo.ts';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { lerArvore } from '../arvore.ts';
 import { rotuloNoBanco } from '../ativos/colunas.ts';
-import { doResponsavel } from '../ativos/leitura.ts';
+import { doResponsavel, pessoasVistas, veOResponsavel } from '../ativos/leitura.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { contendo } from '../busca.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
@@ -293,14 +295,24 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
   });
 }
 
-/** As máquinas da distribuição (ou só a pedida), como a ficha as mostra. */
+/** Quem lê a distribuição: o acesso e a árvore decidem se a pessoa da máquina aparece. */
+interface Leitor {
+  acesso: Acesso;
+  arvore: ArvoreDeLocais;
+}
+
+/**
+ * As máquinas da distribuição (ou só a pedida), como a ficha as mostra, com a pessoa só para quem a
+ * vê (design, decisão 15).
+ */
 async function maquinasDa(
   tx: Transacao,
   {
     distribuicaoId,
     maquinaId,
     momento,
-  }: { distribuicaoId: string; maquinaId?: string; momento: Date },
+    leitor,
+  }: { distribuicaoId: string; maquinaId?: string; momento: Date; leitor: Leitor },
 ): Promise<z.infer<typeof MaquinaDaDistribuicao>[]> {
   const { diasSemContato } = await lerCadastroDosAgentes(tx);
   const linhas = await tx
@@ -311,7 +323,12 @@ async function maquinasDa(
         rotulo: sql<string>`${rotuloNoBanco}`,
         patrimonio: ativos.patrimonio,
       },
-      pessoa: pessoas.nome,
+      responsavel: {
+        id: pessoas.id,
+        nome: pessoas.nome,
+        localId: pessoas.localId,
+        situacao: pessoas.situacao,
+      },
       ultimoContato: agentes.ultimoContato,
       voltaAte: agentes.voltaAte,
     })
@@ -328,13 +345,16 @@ async function maquinasDa(
       ),
     )
     .orderBy(sql`${rotuloNoBanco}`);
-  return linhas.map(({ maquina, ativo, pessoa, ultimoContato, voltaAte }) => {
+  return linhas.map(({ maquina, ativo, responsavel, ultimoContato, voltaAte }) => {
     const contato = semContato(ultimoContato, momento, diasSemContato);
     const codigo = maquina.codigoDeSaida;
     return {
       id: maquina.id,
       ativo,
-      pessoa,
+      pessoa:
+        responsavel && veOResponsavel({ responsavel }, leitor, leitor.arvore)
+          ? responsavel.nome
+          : null,
       situacao: situacaoNaTela(maquina.situacao),
       etapa: maquina.etapa,
       codigo:
@@ -356,12 +376,13 @@ async function maquinasDa(
   });
 }
 
-async function ficha(tx: Transacao, id: string, momento: Date) {
+async function ficha(tx: Transacao, id: string, momento: Date, { acesso }: { acesso: Acesso }) {
   const [resumo] = await resumos(tx, [id]);
   if (!resumo) throw naoEncontrado('Distribuição não encontrada.');
+  const leitor = { acesso, arvore: await lerArvore(tx) };
   return {
     ...resumo,
-    maquinasDaDistribuicao: await maquinasDa(tx, { distribuicaoId: id, momento }),
+    maquinasDaDistribuicao: await maquinasDa(tx, { distribuicaoId: id, momento, leitor }),
   };
 }
 
@@ -410,7 +431,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
       config: { permissao: 'software.distribuir' },
       schema: {
         summary:
-          'As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa',
+          'As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa que a conta vê',
         querystring: z.object({ busca: z.string().max(200).optional() }),
         response: { 200: z.object({ maquinas: z.array(MaquinaParaDistribuir) }), ...PROBLEMAS },
       },
@@ -429,6 +450,8 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
             condicoes.push(escopo.size > 0 ? inArray(ativos.localId, [...escopo]) : sql`false`);
           }
         }
+        // A pessoa só acha a máquina para quem a vê, como na ficha do ativo (design, decisão 15).
+        const dasPessoas = pessoasVistas(acesso, arvore);
         for (const palavra of normalizarTexto(requisicao.query.busca ?? '')
           .split(' ')
           .filter(Boolean)) {
@@ -436,7 +459,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
           const naMaquina = or(
             like(ativos.busca, padrao),
             like(modelos.busca, padrao),
-            like(pessoas.busca, padrao),
+            dasPessoas ? and(like(pessoas.busca, padrao), dasPessoas) : undefined,
           );
           if (naMaquina) condicoes.push(naMaquina);
         }
@@ -578,7 +601,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
     },
     (requisicao) =>
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
-        ficha(tx, requisicao.params.id, agora()),
+        ficha(tx, requisicao.params.id, agora(), sessaoDa(requisicao)),
       ),
   );
 
@@ -600,7 +623,8 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
       const momento = agora();
       return naOrganizacao(banco, orgId, async (tx) => {
         const linha = await maquinaParaMudar(tx, id, maquinaId);
-        exigirEm(requisicao, 'software.distribuir', linha.localId, await lerArvore(tx));
+        const arvore = await lerArvore(tx);
+        exigirEm(requisicao, 'software.distribuir', linha.localId, arvore);
         if (linha.maquina.situacao !== 'falhou') throw conflito(MENSAGENS_DO_SOFTWARE.soAQueFalhou);
         const [quem] = await tx
           .select({ nome: pessoas.nome })
@@ -635,7 +659,12 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         if (podeSeguir(linha, momento) && fila?.rodando()) {
           await fila.enviar(TAREFA_DE_ACORDAR, { orgId, distribuicaoId: id, maquinaId }, { tx });
         }
-        const [maquina] = await maquinasDa(tx, { distribuicaoId: id, maquinaId, momento });
+        const [maquina] = await maquinasDa(tx, {
+          distribuicaoId: id,
+          maquinaId,
+          momento,
+          leitor: { acesso: sessao.acesso, arvore },
+        });
         if (!maquina) throw naoEncontrado(MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada);
         return maquina;
       });
@@ -659,7 +688,8 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
       const momento = agora();
       return naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
         const linha = await maquinaParaMudar(tx, id, maquinaId);
-        exigirEm(requisicao, 'software.distribuir', linha.localId, await lerArvore(tx));
+        const arvore = await lerArvore(tx);
+        exigirEm(requisicao, 'software.distribuir', linha.localId, arvore);
         if (linha.maquina.situacao !== 'aguardando') {
           throw conflito(MENSAGENS_DO_SOFTWARE.soAQueAguarda);
         }
@@ -675,7 +705,12 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
           origem: origemDa(requisicao),
           momento,
         });
-        const [maquina] = await maquinasDa(tx, { distribuicaoId: id, maquinaId, momento });
+        const [maquina] = await maquinasDa(tx, {
+          distribuicaoId: id,
+          maquinaId,
+          momento,
+          leitor: { acesso: sessao.acesso, arvore },
+        });
         if (!maquina) throw naoEncontrado(MENSAGENS_DO_SOFTWARE.maquinaNaoEncontrada);
         return maquina;
       });
@@ -772,7 +807,7 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         if (dados.quando === 'agora' && fila?.rodando()) {
           await fila.enviar(TAREFA_DE_ACORDAR, { orgId, distribuicaoId: distribuicao.id }, { tx });
         }
-        return ficha(tx, distribuicao.id, momento);
+        return ficha(tx, distribuicao.id, momento, sessao);
       });
       return resposta.code(201).send(criada);
     },

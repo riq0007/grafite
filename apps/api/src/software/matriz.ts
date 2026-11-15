@@ -1,9 +1,9 @@
 // A matriz do software (spec distribuicao-de-software, "Matriz do software"; change
-// software-por-pacote, design, decisão 12). Por máquina: as células dos pacotes ativos frente às
-// máquinas com o agente de um local, só as do próprio local, como o "por local" as conta, com a
-// pessoa, o sem contato, a distribuição que aguarda, instala ou falhou e a última de cada pacote
-// no local. Por local: "N de M" na versão-alvo em cada local com máquinas. As duas ficam nos locais
-// em que a conta distribui.
+// software-por-pacote, design, decisões 12 e 15). Por máquina: as células dos pacotes ativos frente
+// às máquinas com o agente de um local, só as do próprio local, como o "por local" as conta, com a
+// pessoa, só para quem a vê, o sem contato, a distribuição que aguarda, instala ou falhou e a última
+// de cada pacote no local. Por local: "N de M" na versão-alvo em cada local com máquinas. As duas
+// ficam nos locais em que a conta distribui.
 import {
   ativos,
   contas,
@@ -23,7 +23,7 @@ import {
 } from '@grafite/domain';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
-import { doResponsavel } from '../ativos/leitura.ts';
+import { doResponsavel, pessoasVistas } from '../ativos/leitura.ts';
 import { lerMaquinasDaConta } from './alvo.ts';
 import { versoesDosPacotesNasMaquinas } from './base.ts';
 
@@ -83,13 +83,17 @@ export async function matrizPorMaquina(
     criadaEm: string;
     criadaPor: string;
   }[] = [];
-  if (ids.length > 0) {
+  // A pessoa só para quem a vê, como na ficha do ativo (design, decisão 15).
+  const dasPessoas = pessoasVistas(acesso, arvore);
+  if (ids.length > 0 && dasPessoas) {
     const comPessoa = await tx
       .select({ id: ativos.id, pessoa: pessoas.nome })
       .from(ativos)
       .innerJoin(pessoas, doResponsavel)
-      .where(inArray(ativos.id, ids));
+      .where(and(inArray(ativos.id, ids), dasPessoas));
     for (const { id, pessoa } of comPessoa) responsaveis.set(id, pessoa);
+  }
+  if (ids.length > 0) {
     // A mais nova de cada pacote em cada máquina, entre as que aguardam, instalam ou falharam.
     const daMatriz = await tx
       .select({

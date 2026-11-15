@@ -63371,7 +63371,7 @@
     },
     "/software/maquinas": {
       "get": {
-        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa",
+        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa que a conta vê",
         "parameters": [
           {
             "schema": {

@@ -16042,7 +16042,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa */
+        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa que a conta vê */
         get: {
             parameters: {
                 query?: {

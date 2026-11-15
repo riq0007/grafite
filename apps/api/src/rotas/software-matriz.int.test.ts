@@ -86,7 +86,7 @@ beforeAll(async () => {
   locais.filial = await criarLocal(api, org, { nome: 'Filial', tipo: 'unidade' });
   const administra = await criarPerfil(api, org, {
     nome: 'Software',
-    permissoes: ['software.administrar', 'ativos.ver'],
+    permissoes: ['software.administrar', 'ativos.ver', 'pessoas.ver'],
   });
   const distribui = await criarPerfil(api, org, {
     nome: 'Distribui',

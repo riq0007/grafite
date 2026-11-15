@@ -15,6 +15,7 @@ import {
   tiposDeAtivo,
 } from '@grafite/db';
 import {
+  type Acesso,
   type ArvoreDeLocais,
   alcance,
   CAMPOS_DO_ATIVO,
@@ -25,7 +26,7 @@ import {
   type TipoDeCampo,
   type ValorDeCampo,
 } from '@grafite/domain';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne, type SQL } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { SessaoDaRequisicao } from '../acesso/sessoes.ts';
 import { cofreLigadoNaOrganizacao, segredosDoAtivo } from '../cofre/no-ativo.ts';
@@ -75,15 +76,31 @@ export interface LinhaDoAtivo {
   } | null;
 }
 
-/** A conta vê a pessoa responsável no local de trabalho dela, e ela não está anonimizada. */
+/**
+ * A conta vê a pessoa responsável no local de trabalho dela, e ela não está anonimizada. A mesma
+ * regra, em SQL, está no `pessoasVistas`: mudou uma, muda a outra.
+ */
 export const veOResponsavel = (
   { responsavel }: Pick<LinhaDoAtivo, 'responsavel'>,
-  sessao: SessaoDaRequisicao,
+  { acesso }: Pick<SessaoDaRequisicao, 'acesso'>,
   arvore: ArvoreDeLocais,
 ) =>
   responsavel !== null &&
   responsavel.situacao !== 'anonimizada' &&
-  podeEm(sessao.acesso, 'pessoas.ver', responsavel.localId, arvore);
+  podeEm(acesso, 'pessoas.ver', responsavel.localId, arvore);
+
+/**
+ * As pessoas que a conta vê, pela regra do `veOResponsavel`, como condição da consulta que acha
+ * pela pessoa; `null` quando a conta não vê nenhuma. A pessoa sem local só entra com o `pessoas.ver`
+ * da organização, como no `podeEm`.
+ */
+export function pessoasVistas(acesso: Acesso, arvore: ArvoreDeLocais): SQL | null {
+  const doVer = alcance(acesso, 'pessoas.ver', arvore);
+  if (doVer === null) return null;
+  const naoAnonimizada = ne(pessoas.situacao, 'anonimizada');
+  if (doVer === 'organizacao') return naoAnonimizada;
+  return and(naoAnonimizada, inArray(pessoas.localId, [...doVer])) ?? null;
+}
 
 /** A consulta do ativo com o tipo, o modelo e o responsável. */
 export function consultarAtivos(tx: Transacao) {
