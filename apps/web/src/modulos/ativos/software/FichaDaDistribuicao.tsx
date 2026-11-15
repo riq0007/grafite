@@ -1,7 +1,8 @@
 // A distribuição aberta (spec distribuicao-de-software, "Histórico das distribuições"; changes
 // distribuicao-de-software e software-por-pacote, m02): à esquerda, as distribuições do mesmo
 // pacote, com a aberta em borda forte, e "Distribuir este pacote"; no centro, o "Para quem" e o
-// momento, as concluídas em número grande com a régua, o que precisa de alguém (as que falharam,
+// momento, as concluídas em número grande com a régua, quantas máquinas ficam fora dos locais em
+// que a conta distribui (design, decisão 16), o que precisa de alguém (as que falharam,
 // com o código explicado e "Tentar de novo", e as sem contato, com "Tirar da fila"), a fila, as em
 // andamento, as concluídas e as tiradas da fila, e "Exportar". O nome de cada máquina abre o log
 // dela. O servidor acorda os agentes sozinho, pela fila; enquanto alguma máquina espera ou instala,
@@ -407,6 +408,13 @@ export function FichaDaDistribuicao() {
             <RotulosDoResultado maquinas={ficha.maquinas} resultado={contas} />
           </div>
         </div>
+        {ficha.foraDoAlcance > 0 && (
+          <p className={dividida.nota}>
+            {ficha.foraDoAlcance === 1
+              ? '1 máquina num local fora do seu alcance'
+              : `${ficha.foraDoAlcance} máquinas em locais fora do seu alcance`}
+          </p>
+        )}
         {falharam.length + semContato.length > 0 && (
           <section className={estilos.secao}>
             <Carimbo>Precisa de você</Carimbo>

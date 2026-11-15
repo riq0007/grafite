@@ -12502,6 +12502,9 @@
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           }
         },
         "required": [
@@ -12512,7 +12515,8 @@
           "paraQuem",
           "quando",
           "maquinas",
-          "progresso"
+          "progresso",
+          "foraDoAlcance"
         ]
       },
       "SemContatoDoAgenteInput": {
@@ -12787,6 +12791,9 @@
           "progresso": {
             "type": "string"
           },
+          "foraDoAlcance": {
+            "type": "number"
+          },
           "maquinasDaDistribuicao": {
             "type": "array",
             "items": {
@@ -12803,6 +12810,7 @@
           "quando",
           "maquinas",
           "progresso",
+          "foraDoAlcance",
           "maquinasDaDistribuicao"
         ]
       },
@@ -35877,6 +35885,9 @@
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           }
         },
         "required": [
@@ -35887,7 +35898,8 @@
           "paraQuem",
           "quando",
           "maquinas",
-          "progresso"
+          "progresso",
+          "foraDoAlcance"
         ],
         "additionalProperties": false
       },
@@ -36171,6 +36183,9 @@
           "progresso": {
             "type": "string"
           },
+          "foraDoAlcance": {
+            "type": "number"
+          },
           "maquinasDaDistribuicao": {
             "type": "array",
             "items": {
@@ -36187,6 +36202,7 @@
           "quando",
           "maquinas",
           "progresso",
+          "foraDoAlcance",
           "maquinasDaDistribuicao"
         ],
         "additionalProperties": false

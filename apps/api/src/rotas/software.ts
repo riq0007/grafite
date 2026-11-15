@@ -46,6 +46,7 @@ import {
   ProblemaDaApi,
   RespostaDeProblema,
 } from '../problemas.ts';
+import { alcanceDaDistribuicao } from '../software/alcance.ts';
 import {
   distribuicoesDoPacote,
   instalacoesNaConta,
@@ -428,7 +429,9 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
       return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
         const linhas = await selecionarPacotes(tx).orderBy(asc(pacotesDeSoftware.nomeNormalizado));
         const { maquinas, porPacote } = await instalacoesNaConta(tx, acesso);
-        const ultimas = await ultimasDistribuicoes(tx);
+        // A última distribuição com alguma máquina no alcance da conta (design, decisão 16).
+        const escopo = alcanceDaDistribuicao(acesso, await lerArvore(tx));
+        const ultimas = escopo ? await ultimasDistribuicoes(tx, escopo) : new Map();
         const pacotes = linhas.map((lido) => ({
           ...pacoteNaTela(lido),
           contas: contasDoPacote(porPacote.get(lido.pacote.id) ?? [], maquinas, lido.pacote.versao)
@@ -557,12 +560,16 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
           .select({ quantas: count() })
           .from(partesDosPacotes)
           .where(eq(partesDosPacotes.pacoteId, lido.pacote.id));
+        // As distribuições com alguma máquina no alcance, contadas nele (design, decisão 16).
+        const escopo = alcanceDaDistribuicao(acesso, await lerArvore(tx));
         return {
           pacote: pacoteNaTela(lido),
           partes: partes?.quantas ?? 0,
           contas,
           versoes,
-          distribuicoes: await distribuicoesDoPacote(tx, lido.pacote.id, agora()),
+          distribuicoes: escopo
+            ? await distribuicoesDoPacote(tx, lido.pacote.id, agora(), escopo)
+            : [],
           permite: { administrar: pode(acesso, 'software.administrar') },
         };
       });

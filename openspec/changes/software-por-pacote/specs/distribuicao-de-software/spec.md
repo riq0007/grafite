@@ -120,7 +120,7 @@ A lista das distribuições SHALL vir da mais nova para a mais antiga, com:
 - quem criou e quando;
 - o progresso em texto, como "2 de 3 concluídas, 1 falhou".
 
-A lista, a distribuição aberta, as distribuições da ficha do pacote e a última distribuição da base SHALL mostrar e contar só as máquinas dos locais em que a conta tem `software.distribuir`. A distribuição sem nenhuma máquina nesses locais SHALL ficar fora da lista, e abri-la SHALL dar 404.
+A lista, a distribuição aberta, as distribuições da ficha do pacote e a última distribuição da base SHALL mostrar e contar só as máquinas que estão hoje nos locais em que a conta tem `software.distribuir`, pelo local do ativo, e não pelo da hora da distribuição. A distribuição sem nenhuma máquina nesses locais SHALL ficar fora da lista, e abri-la SHALL dar 404.
 
 A distribuição aberta SHALL ter, à esquerda, as distribuições do mesmo pacote, cada uma com o "Para quem", o momento e a situação em rótulo ("1 FALHOU", "1 SEM CONTATO", "TODAS CONCLUÍDAS"), com a aberta em borda forte e "Distribuir este pacote" no pé. No centro, ela SHALL ter:
 - o título com o "Para quem" e o momento ("Financeiro, hoje às 09:02"), e a linha com as máquinas, quem enviou e o resumo do comando ("18 máquinas · enviada por Ricardo V., sem perguntar e sem reiniciar");

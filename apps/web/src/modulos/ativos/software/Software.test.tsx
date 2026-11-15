@@ -90,7 +90,7 @@ const maquina = (id: string, patrimonio: string, extras: Partial<Maquina> = {}):
   ...extras,
 });
 
-const ficha = (maquinas: Maquina[], progresso: string): Ficha => ({
+const ficha = (maquinas: Maquina[], progresso: string, foraDoAlcance = 0): Ficha => ({
   id: 'd1',
   pacote: { id: PACOTE.id, nome: PACOTE.nome, versao: PACOTE.versao },
   criadaPor: 'Ana Souza',
@@ -99,6 +99,7 @@ const ficha = (maquinas: Maquina[], progresso: string): Ficha => ({
   quando: { chave: 'agora', aPartirDe: null, fuso: null },
   maquinas: maquinas.length,
   progresso,
+  foraDoAlcance,
   maquinasDaDistribuicao: maquinas,
 });
 
@@ -345,6 +346,7 @@ describe('a distribuição', () => {
               quando: { chave: 'agora', aPartirDe: null, fuso: null },
               maquinas: 3,
               progresso: '1 de 3 concluídas, 1 falhou',
+              foraDoAlcance: 0,
             },
           ],
         }),
@@ -361,6 +363,7 @@ describe('a distribuição', () => {
       [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
     });
     expect(await screen.findByText('Precisa de você')).toBeTruthy();
+    expect(screen.queryByText(/fora do seu alcance/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Computador PAT-00412' }));
     const gaveta = await screen.findByRole('dialog', {
       name: 'Log de Computador PAT-00412 (PAT-00412)',
@@ -371,6 +374,21 @@ describe('a distribuição', () => {
         .getAllByRole('listitem')
         .map((linha) => linha.textContent),
     ).toEqual(FALHOU.log);
+  });
+
+  it('Máquinas fora do alcance: a distribuição diz quantas ficam fora dos locais da conta', async () => {
+    const abrirCom = (foraDoAlcance: number) =>
+      abrir('/gestao/software/distribuicoes/d1', {
+        'GET /api/software/distribuicoes/d1': () =>
+          Response.json(ficha([FALHOU], '0 de 1 concluída, 1 falhou', foraDoAlcance)),
+        [`GET /api/software/pacotes/${PACOTE.id}`]: () => Response.json(FICHA_DO_PACOTE),
+      });
+    abrirCom(4);
+    expect(await screen.findByText('4 máquinas em locais fora do seu alcance')).toBeTruthy();
+    expect(screen.getByText(/de 1 concluída/)).toBeTruthy();
+    cleanup();
+    abrirCom(1);
+    expect(await screen.findByText('1 máquina num local fora do seu alcance')).toBeTruthy();
   });
 
   it('O que precisa de você: a que falhou tenta de novo, e a sem contato sai da fila', async () => {

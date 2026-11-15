@@ -56,6 +56,14 @@ import { contendo } from '../busca.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { conflito, dadosInvalidos, naoEncontrado, RespostaDeProblema } from '../problemas.ts';
 import { TAREFA_DE_ACORDAR } from '../software/acordar.ts';
+import {
+  type AlcanceDaDistribuicao,
+  alcanceDaDistribuicao,
+  comMaquinaNoAlcance,
+  doAtivoDaMaquina,
+  maquinaNoAlcance,
+  noAlcance,
+} from '../software/alcance.ts';
 import { alvosDaConta, classificarOAlvo, resolverAlvo } from '../software/alvo.ts';
 import { paraQuemNaTela } from '../software/base.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
@@ -80,8 +88,11 @@ const ResumoDaDistribuicao = z
       aPartirDe: z.string().nullable(),
       fuso: z.string().nullable(),
     }),
+    /** As máquinas nos locais em que a conta distribui; o progresso conta só elas. */
     maquinas: z.number(),
     progresso: z.string(),
+    /** As máquinas da distribuição fora dos locais em que a conta distribui (design, decisão 16). */
+    foraDoAlcance: z.number(),
   })
   .meta({ id: 'ResumoDaDistribuicao' });
 
@@ -228,10 +239,6 @@ const situacaoNaTela = (chave: keyof typeof SITUACOES_DA_MAQUINA) => ({
   ...SITUACOES_DA_MAQUINA[chave],
 });
 
-const doAtivo = and(
-  eq(ativos.orgId, maquinasDasDistribuicoes.orgId),
-  eq(ativos.id, maquinasDasDistribuicoes.ativoId),
-);
 const doTipo = and(eq(tiposDeAtivo.orgId, ativos.orgId), eq(tiposDeAtivo.id, ativos.tipoId));
 const doModelo = and(eq(modelos.orgId, ativos.orgId), eq(modelos.id, ativos.modeloId));
 
@@ -244,7 +251,11 @@ async function pacoteParaDistribuir(tx: Transacao, id: string) {
 }
 
 /** Os resumos das distribuições dadas, ou das 100 mais novas, com o progresso. */
-async function resumos(tx: Transacao, ids?: readonly string[]) {
+/**
+ * As distribuições com alguma máquina no alcance da conta (ou só as pedidas), das 100 mais novas,
+ * com as máquinas e o progresso contados no alcance e as de fora à parte (design, decisão 16).
+ */
+async function resumos(tx: Transacao, escopo: AlcanceDaDistribuicao, ids?: readonly string[]) {
   const linhas = await tx
     .select({
       id: distribuicoes.id,
@@ -264,7 +275,9 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
     .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
     .innerJoin(contas, eq(contas.id, distribuicoes.criadaPor))
     .innerJoin(pessoas, eq(pessoas.id, contas.pessoaId))
-    .where(ids ? inArray(distribuicoes.id, [...ids]) : undefined)
+    .where(
+      and(ids ? inArray(distribuicoes.id, [...ids]) : undefined, comMaquinaNoAlcance(tx, escopo)),
+    )
     .orderBy(desc(distribuicoes.criadaEm))
     .limit(100);
   if (linhas.length === 0) return [];
@@ -272,8 +285,10 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
     .select({
       distribuicaoId: maquinasDasDistribuicoes.distribuicaoId,
       situacao: maquinasDasDistribuicoes.situacao,
+      localId: ativos.localId,
     })
     .from(maquinasDasDistribuicoes)
+    .innerJoin(ativos, doAtivoDaMaquina)
     .where(
       inArray(
         maquinasDasDistribuicoes.distribuicaoId,
@@ -281,16 +296,19 @@ async function resumos(tx: Transacao, ids?: readonly string[]) {
       ),
     );
   return linhas.map(({ paraQuem, quando, aPartirDe, fuso, ...linha }) => {
-    const daDistribuicao = situacoes
-      .filter((maquina) => maquina.distribuicaoId === linha.id)
+    const todas = situacoes.filter((maquina) => maquina.distribuicaoId === linha.id);
+    const noAlcanceDaConta = todas
+      .filter((maquina) => noAlcance(escopo, maquina.localId))
       .map((maquina) => maquina.situacao);
     return {
       ...linha,
       criadaEm: linha.criadaEm.toISOString(),
-      paraQuem: paraQuemNaTela(paraQuem, daDistribuicao.length),
+      // A de antes da change diz o total das máquinas dela, também as de fora do alcance.
+      paraQuem: paraQuemNaTela(paraQuem, todas.length),
       quando: { chave: quando, aPartirDe: aPartirDe?.toISOString() ?? null, fuso },
-      maquinas: daDistribuicao.length,
-      progresso: progressoDaDistribuicao(daDistribuicao),
+      maquinas: noAlcanceDaConta.length,
+      progresso: progressoDaDistribuicao(noAlcanceDaConta),
+      foraDoAlcance: todas.length - noAlcanceDaConta.length,
     };
   });
 }
@@ -302,8 +320,8 @@ interface Leitor {
 }
 
 /**
- * As máquinas da distribuição (ou só a pedida), como a ficha as mostra, com a pessoa só para quem a
- * vê (design, decisão 15).
+ * As máquinas da distribuição (ou só a pedida) nos locais em que a conta distribui, como a ficha as
+ * mostra, com a pessoa só para quem a vê (design, decisões 15 e 16).
  */
 async function maquinasDa(
   tx: Transacao,
@@ -314,6 +332,8 @@ async function maquinasDa(
     leitor,
   }: { distribuicaoId: string; maquinaId?: string; momento: Date; leitor: Leitor },
 ): Promise<z.infer<typeof MaquinaDaDistribuicao>[]> {
+  const escopo = alcanceDaDistribuicao(leitor.acesso, leitor.arvore);
+  if (!escopo) return [];
   const { diasSemContato } = await lerCadastroDosAgentes(tx);
   const linhas = await tx
     .select({
@@ -333,7 +353,7 @@ async function maquinasDa(
       voltaAte: agentes.voltaAte,
     })
     .from(maquinasDasDistribuicoes)
-    .innerJoin(ativos, doAtivo)
+    .innerJoin(ativos, doAtivoDaMaquina)
     .innerJoin(tiposDeAtivo, doTipo)
     .leftJoin(modelos, doModelo)
     .leftJoin(pessoas, doResponsavel)
@@ -342,6 +362,7 @@ async function maquinasDa(
       and(
         eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId),
         maquinaId ? eq(maquinasDasDistribuicoes.id, maquinaId) : undefined,
+        maquinaNoAlcance(escopo),
       ),
     )
     .orderBy(sql`${rotuloNoBanco}`);
@@ -377,9 +398,11 @@ async function maquinasDa(
 }
 
 async function ficha(tx: Transacao, id: string, momento: Date, { acesso }: { acesso: Acesso }) {
-  const [resumo] = await resumos(tx, [id]);
-  if (!resumo) throw naoEncontrado('Distribuição não encontrada.');
   const leitor = { acesso, arvore: await lerArvore(tx) };
+  const escopo = alcanceDaDistribuicao(acesso, leitor.arvore);
+  // A distribuição sem nenhuma máquina no alcance dá 404, como a que não existe (decisão 16).
+  const [resumo] = escopo ? await resumos(tx, escopo, [id]) : [];
+  if (!resumo) throw naoEncontrado('Distribuição não encontrada.');
   return {
     ...resumo,
     maquinasDaDistribuicao: await maquinasDa(tx, { distribuicaoId: id, momento, leitor }),
@@ -405,7 +428,7 @@ async function maquinaParaMudar(tx: Transacao, distribuicaoId: string, maquinaId
     .from(maquinasDasDistribuicoes)
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
     .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
-    .innerJoin(ativos, doAtivo)
+    .innerJoin(ativos, doAtivoDaMaquina)
     .innerJoin(tiposDeAtivo, doTipo)
     .leftJoin(modelos, doModelo)
     .where(
@@ -582,11 +605,15 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
         },
       },
     },
-    async (requisicao) => ({
-      distribuicoes: await naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
-        resumos(tx),
-      ),
-    }),
+    async (requisicao) => {
+      const { acesso } = sessaoDa(requisicao);
+      return {
+        distribuicoes: await naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
+          const escopo = alcanceDaDistribuicao(acesso, await lerArvore(tx));
+          return escopo ? resumos(tx, escopo) : [];
+        }),
+      };
+    },
   );
 
   app.get(

@@ -275,6 +275,8 @@ Decisão do usuário de 15/11/2026, "Só as do alcance": a distribuição mostra
 
 O resumo ganha o `foraDoAlcance`, as máquinas da distribuição fora desses locais, e a distribuição aberta diz "N máquinas em locais fora do seu alcance" quando há alguma. A distribuição sem nenhuma máquina no alcance fica fora da lista, e abri-la dá 404, como a que não existe: ela não tem o que mostrar, e o 404 não diz que ela existe. A condição vai no SQL, por um `exists` das máquinas no alcance, para o limite das 100 mais novas valer depois dela. O "Para quem" continua o gravado na criação, de todas as máquinas, e a distribuição de antes desta change, sem ele, mostra o total das máquinas dela, também as de fora do alcance.
 
+O alcance segue o local de hoje do ativo, e não o da hora da distribuição. A máquina que mudou para um local fora do alcance sai da distribuição da conta, e a distribuição inteira pode sumir para quem a criou. É o mesmo critério do "Tentar de novo" e do "Tirar da fila", que exigem o `software.distribuir` no local de hoje da máquina: a conta não vê o que não pode mudar, nem muda o que não vê.
+
 ### 17. O pacote inativado segura a fila
 
 Decisão do usuário de 15/11/2026, "Segurar até reativar": a TI inativa um pacote com defeito, e a fila dele não pode instalá-lo dias depois, na janela da noite ou na volta da máquina sem contato.

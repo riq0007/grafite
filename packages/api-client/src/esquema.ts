@@ -33145,6 +33145,7 @@ export interface components {
             };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
         };
         SemContatoDoAgenteInput: {
             dias: number;
@@ -33203,6 +33204,7 @@ export interface components {
             };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicaoInput"][];
         };
         MaquinaParaDistribuirInput: {
@@ -37765,6 +37767,7 @@ export interface components {
             };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
         };
         SemContatoDoAgente: {
             dias: number;
@@ -37823,6 +37826,7 @@ export interface components {
             };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicao"][];
         };
         MaquinaParaDistribuir: {
