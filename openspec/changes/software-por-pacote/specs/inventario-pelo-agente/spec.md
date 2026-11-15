@@ -60,7 +60,7 @@ A ficha do ativo com softwares SHALL ter a aba "Software", para quem tem `ativos
 
 Para quem tem `software.distribuir` no local do ativo, a aba SHALL ter também:
 - **Mandados pelo Grafite:** um cartão por distribuição que chegou à máquina, com o pacote e a versão, a situação em rótulo ("FALHOU · 1603", com a borda de perigo; "CONCLUÍDA"; "INSTALANDO"; "NA FILA"; "TIRADA DA FILA"), o momento, quem mandou e, na que falhou, "Tentar de novo";
-- na tabela, a origem de cada programa ("GRAFITE · <nome>", quando o pacote dele chegou por uma distribuição concluída, ou "Fora do Grafite") e a comparação com a base: "HÁ A <versão> NA BASE", "NA VERSÃO DA BASE", "NÃO ESTÁ NA BASE" ou "DO WINDOWS, NÃO SE DISTRIBUI", para os programas do sistema;
+- na tabela, no lugar do editor (m09), a origem de cada programa ("GRAFITE · <nome>", quando o pacote dele chegou por uma distribuição concluída, "Veio com o Windows", nos do sistema, ou "Fora do Grafite") e a comparação com a base: "HÁ A <versão> NA BASE", "NA VERSÃO DA BASE", "NÃO ESTÁ NA BASE" ou "DO WINDOWS, NÃO SE DISTRIBUI", para os programas do sistema;
 - a ordem "Frente à base · ação primeiro", nessa sequência e pelo nome dentro de cada uma;
 - "Instalar outro pacote nesta máquina".
 

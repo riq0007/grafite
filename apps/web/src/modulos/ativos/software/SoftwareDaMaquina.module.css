@@ -1,0 +1,142 @@
+/*
+ * A aba Software da ficha da máquina (m09 e m11): o aviso do sem contato, a fila do que espera a
+ * máquina voltar, os cartões do que o Grafite mandou e a tabela dos instalados frente à base.
+ */
+.aba {
+  display: grid;
+  gap: var(--esp-5);
+  min-width: 0;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* O carimbo da seção à esquerda e a ação ou a busca à direita. */
+.cabecaDaSecao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-3);
+}
+
+.cabecaDaSecao > :first-child {
+  flex: 1;
+}
+
+.busca {
+  width: 220px;
+}
+
+/* O aviso do sem contato: a idade do inventário que a tabela mostra. */
+.aviso {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-atencao-borda);
+  border-radius: var(--raio-base);
+  background: var(--cor-atencao-fundo);
+  font-size: var(--texto-dado);
+}
+
+/* A fila do sem contato: o pacote, desde quando, o rótulo e "Tirar da fila". */
+.fila {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila > li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-elevada);
+  font-size: var(--texto-dado);
+}
+
+.textoDaFila {
+  display: grid;
+  min-width: 0;
+}
+
+.textoDaFila > b {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* Os cartões dos mandados, três por linha; o que falhou ganha a borda de perigo. */
+.mandados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mandados > li {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-elevada);
+  font-size: var(--texto-dado);
+}
+
+.mandados > li[data-falhou] {
+  border-color: var(--cor-critico-borda);
+}
+
+.mandados > li > b {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.linhaDoMandado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.explicacao {
+  color: var(--cor-texto-2);
+}
+
+.porQuem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.mostrar {
+  justify-self: start;
+}

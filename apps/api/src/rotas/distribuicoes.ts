@@ -4,7 +4,8 @@
 // alvos e a prévia do assistente; a criação pelo alvo, sem as puladas, com o quando, o fuso, o "Para
 // quem" e o acordar na fila, para agora; a lista e a ficha, com a situação, a etapa, o código e a
 // explicação, o sem contato, o chamado e o log de cada máquina; o "Tentar de novo" e o "Tirar da
-// fila" de cada máquina, pela permissão no local dela; e as do ativo.
+// fila" de cada máquina, pela permissão no local dela. As do ativo vão no software da máquina
+// (`GET /ativos/:id/software`, na rota da base).
 import {
   agentes,
   ativos,
@@ -47,7 +48,7 @@ import { exigirEm, sessaoDa } from '../acesso/escopo.ts';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { lerArvore } from '../arvore.ts';
 import { rotuloNoBanco } from '../ativos/colunas.ts';
-import { doResponsavel, lerAtivo } from '../ativos/leitura.ts';
+import { doResponsavel } from '../ativos/leitura.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { contendo } from '../busca.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
@@ -113,16 +114,6 @@ const MaquinaDaDistribuicao = z
 const FichaDaDistribuicao = ResumoDaDistribuicao.extend({
   maquinasDaDistribuicao: z.array(MaquinaDaDistribuicao),
 }).meta({ id: 'FichaDaDistribuicao' });
-
-const DistribuicaoDoAtivo = z
-  .object({
-    distribuicaoId: z.uuid(),
-    pacote: z.object({ nome: z.string(), versao: z.string().nullable() }),
-    situacao: SituacaoNaTela,
-    criadaEm: z.string(),
-    terminadaEm: z.string().nullable(),
-  })
-  .meta({ id: 'DistribuicaoDoAtivo' });
 
 const MaquinaParaDistribuir = z
   .object({
@@ -785,47 +776,5 @@ export const rotasDasDistribuicoes: FastifyPluginAsyncZod<{
       });
       return resposta.code(201).send(criada);
     },
-  );
-
-  app.get(
-    '/ativos/:id/distribuicoes',
-    {
-      config: { permissao: 'ativos.ver' },
-      schema: {
-        summary: 'As distribuições de software do ativo, da mais nova para a mais antiga',
-        params: z.object({ id: z.uuid({ error: 'Ativo não encontrado.' }) }),
-        response: {
-          200: z.object({ distribuicoes: z.array(DistribuicaoDoAtivo) }),
-          ...PROBLEMAS,
-        },
-      },
-    },
-    (requisicao) =>
-      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
-        const linha = await lerAtivo(tx, requisicao.params.id);
-        exigirEm(requisicao, 'ativos.ver', linha.ativo.localId, await lerArvore(tx));
-        const linhas = await tx
-          .select({
-            distribuicaoId: distribuicoes.id,
-            pacote: { nome: pacotesDeSoftware.nome, versao: pacotesDeSoftware.versao },
-            situacao: maquinasDasDistribuicoes.situacao,
-            criadaEm: distribuicoes.criadaEm,
-            terminadaEm: maquinasDasDistribuicoes.terminadaEm,
-          })
-          .from(maquinasDasDistribuicoes)
-          .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
-          .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
-          .where(eq(maquinasDasDistribuicoes.ativoId, linha.ativo.id))
-          .orderBy(desc(distribuicoes.criadaEm))
-          .limit(50);
-        return {
-          distribuicoes: linhas.map((distribuicao) => ({
-            ...distribuicao,
-            situacao: situacaoNaTela(distribuicao.situacao),
-            criadaEm: distribuicao.criadaEm.toISOString(),
-            terminadaEm: distribuicao.terminadaEm?.toISOString() ?? null,
-          })),
-        };
-      }),
   );
 };

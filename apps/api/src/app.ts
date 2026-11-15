@@ -101,7 +101,6 @@ import { rotasDeSessao } from './rotas/sessao.ts';
 import { rotasDasSessoesDaConta } from './rotas/sessoes-da-conta.ts';
 import { rotasDaBaseDeSoftware } from './rotas/software.ts';
 import { rotasDasCategoriasDeSoftware } from './rotas/software-categorias.ts';
-import { rotasDosSoftwares } from './rotas/softwares.ts';
 import { rotasDasSolicitacoes } from './rotas/solicitacoes.ts';
 import { rotasDasTarefas } from './rotas/tarefas.ts';
 import { rotasDosTiposDeAtivo } from './rotas/tipos-de-ativo.ts';
@@ -390,7 +389,6 @@ export async function criarApp({
         chaveDoisPassos,
       });
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
-      await doAtivos.register(rotasDosSoftwares, { banco });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
       await doAtivos.register(rotasDasCategoriasDeSoftware, { banco, agora });
       await doAtivos.register(rotasDasDistribuicoes, { banco, agora, fila });

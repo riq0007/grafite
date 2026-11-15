@@ -2476,41 +2476,67 @@ describe('os consumíveis compatíveis na ficha', () => {
   });
 });
 
-// Os softwares do agente do GLPI na ficha (spec inventario-pelo-agente, "Softwares na ficha do
-// ativo"; change inventario-pelo-agente-glpi): a aba nos tipos com o inventário de hardware, a
-// busca pelo nome ou pelo editor, a contagem, a data do inventário e a aba sem a lista.
-describe('a aba Softwares', () => {
-  const SOFTWARES = {
-    softwares: [
-      { nome: '7-Zip 23.01 (x64)', versao: '23.01', editor: 'Igor Pavlov', instaladoEm: null },
-      {
-        nome: 'Microsoft Office Professional Plus 2019',
-        versao: '16.0',
-        editor: 'Microsoft Corporation',
-        instaladoEm: '2024-03-02',
-      },
-      { nome: 'Zoom', versao: '5.17', editor: 'Zoom Video', instaladoEm: '2024-05-10' },
+// O software da máquina na ficha (spec inventario-pelo-agente, "Softwares na ficha do ativo";
+// changes inventario-pelo-agente-glpi e software-por-pacote): a aba nos tipos com o inventário de
+// hardware, a busca pelo nome ou pelo editor, a contagem, a data do inventário e a aba sem a lista;
+// para quem distribui, os mandados, a origem, a base e o "Tentar de novo"; e o sem contato.
+describe('a aba Software', () => {
+  type Software = components['schemas']['SoftwareDaMaquina'];
+  type Instalado = Software['instalados'][number];
+  type Mandado = NonNullable<Software['distribuir']>['mandados'][number];
+  const instalado = (nome: string, versao: string, editor: string): Instalado => ({
+    nome,
+    versao,
+    editor,
+    instaladoEm: null,
+    doSistema: false,
+    base: null,
+  });
+  const SOFTWARE: Software = {
+    instalados: [
+      instalado('7-Zip 23.01 (x64)', '23.01', 'Igor Pavlov'),
+      instalado('Microsoft Office Professional Plus 2019', '16.0', 'Microsoft Corporation'),
+      instalado('Zoom', '5.17', 'Zoom Video'),
     ],
     inventariadoEm: '2026-10-28T09:00:00.000Z',
+    agente: { ultimoContato: '2026-10-28T09:00:00.000Z', semContato: null },
+    distribuir: null,
   };
+  const CHROME = { id: 'p1', nome: 'Google Chrome', versao: '131' };
+  const mandado = (extras: Partial<Mandado>): Mandado => ({
+    distribuicaoId: 'd1',
+    maquinaId: 'm1',
+    pacote: CHROME,
+    paraQuem: 'Financeiro',
+    situacao: { chave: 'aguardando', texto: 'Aguardando o agente', tipo: 'neutra' },
+    codigo: null,
+    etapa: null,
+    criadaEm: '2026-10-28T12:00:00.000Z',
+    criadaPor: 'Ana Souza',
+    enviadaEm: null,
+    terminadaEm: null,
+    ...extras,
+  });
+  const fora = (nome: string): Instalado => ({
+    ...instalado(nome, '1.0', 'Editor'),
+    base: { comparacao: 'fora-da-base', texto: 'Não está na base', pacote: null, origem: null },
+  });
 
-  it('Softwares do computador: a busca acha pelo nome e pelo editor', async () => {
+  it('Software do computador: a busca acha pelo nome e pelo editor', async () => {
     const servidor: ServidorDeTeste = {
       ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
-      'GET /api/ativos/a1/softwares': () => Response.json(SOFTWARES),
+      'GET /api/ativos/a1/software': () => Response.json(SOFTWARE),
     };
     abrir(servidor, naOrganizacao('ativos.ver'), '/ativos/a1?aba=softwares');
-    const tabela = await screen.findByRole('grid', { name: 'Softwares instalados' });
+    const tabela = await screen.findByRole('grid', { name: 'Instalados, segundo o inventário' });
     expect(within(tabela).getAllByRole('row')).toHaveLength(4);
-    expect(screen.getByText('3 softwares')).toBeTruthy();
-    expect(screen.getByText(/Do inventário do agente do GLPI em/)).toBeTruthy();
-    expect(within(tabela).getByText('02/03/2024')).toBeTruthy();
-    fireEvent.change(screen.getByRole('textbox', { name: /^Buscar software/ }), {
+    expect(screen.getByText(/^3 programas, do inventário de/)).toBeTruthy();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Procurar' }), {
       target: { value: 'office' },
     });
-    expect(await screen.findByText('1 de 3 softwares')).toBeTruthy();
+    expect(await screen.findByText(/^1 de 3 programas/)).toBeTruthy();
     expect(within(tabela).getByText('Microsoft Office Professional Plus 2019')).toBeTruthy();
-    fireEvent.change(screen.getByRole('textbox', { name: /^Buscar software/ }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Procurar' }), {
       target: { value: 'pavlov' },
     });
     expect(await within(tabela).findByText('7-Zip 23.01 (x64)')).toBeTruthy();
@@ -2519,7 +2545,8 @@ describe('a aba Softwares', () => {
   it('sem a lista, a aba diz que o agente ainda não a mandou; o tipo sem o inventário não tem a aba', async () => {
     const servidor: ServidorDeTeste = {
       ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
-      'GET /api/ativos/a1/softwares': () => Response.json({ softwares: [], inventariadoEm: null }),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({ ...SOFTWARE, instalados: [], inventariadoEm: null }),
     };
     abrir(servidor, naOrganizacao('ativos.ver'), '/ativos/a1?aba=softwares');
     expect(
@@ -2533,32 +2560,123 @@ describe('a aba Softwares', () => {
       naOrganizacao('ativos.ver'),
     );
     await titulo();
-    expect(screen.queryByRole('tab', { name: 'Softwares' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Software' })).toBeNull();
   });
 
-  // As distribuições de software para a máquina (change distribuicao-de-software).
-  it('a aba mostra as distribuições da máquina, com a situação, e leva à ficha delas', async () => {
+  it('quem distribui vê os mandados, a origem e a base, com a ação primeiro, e a que falhou tenta de novo', async () => {
+    const pedidos: string[] = [];
     const servidor: ServidorDeTeste = {
       ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
-      'GET /api/ativos/a1/softwares': () => Response.json(SOFTWARES),
-      'GET /api/ativos/a1/distribuicoes': () =>
+      'GET /api/ativos/a1/software': () =>
         Response.json({
-          distribuicoes: [
+          ...SOFTWARE,
+          instalados: [
             {
-              distribuicaoId: 'd1',
-              pacote: { nome: '7-Zip 23.01', versao: '23.01' },
-              situacao: { chave: 'concluida', texto: 'Concluída', tipo: 'sucesso' },
-              criadaEm: '2026-10-28T12:00:00.000Z',
-              terminadaEm: '2026-10-28T12:05:00.000Z',
+              ...instalado('Google Chrome', '129.0.6668', 'Google LLC'),
+              base: {
+                comparacao: 'ha-na-base',
+                texto: 'Há a 131 na base',
+                pacote: CHROME,
+                origem: null,
+              },
+            },
+            {
+              ...instalado('Agente de backup', '12.0', 'Fornecedor do backup'),
+              base: {
+                comparacao: 'na-versao',
+                texto: 'Na versão da base',
+                pacote: { id: 'p2', nome: 'Agente de backup', versao: '12.0' },
+                origem: { distribuicaoId: 'd2', por: 'Bruno Lima' },
+              },
+            },
+            ...Array.from({ length: 9 }, (_, posicao) => fora(`Programa ${posicao + 1}`)),
+            {
+              ...instalado('Microsoft Edge', '130.0', 'Microsoft Corporation'),
+              doSistema: true,
+              base: {
+                comparacao: 'do-windows',
+                texto: 'Do Windows, não se distribui',
+                pacote: null,
+                origem: null,
+              },
             },
           ],
+          distribuir: {
+            mandados: [
+              mandado({
+                situacao: { chave: 'falhou', texto: 'Falhou', tipo: 'critico' },
+                codigo: { numero: 1603, explicacao: 'Erro fatal na instalação.' },
+              }),
+              mandado({
+                distribuicaoId: 'd2',
+                maquinaId: 'm2',
+                pacote: { id: 'p2', nome: 'Agente de backup', versao: '12.0' },
+                situacao: { chave: 'concluida', texto: 'Concluída', tipo: 'sucesso' },
+                criadaPor: 'Bruno Lima',
+              }),
+            ],
+            pacotes: [],
+          },
         }),
+      'POST /api/software/distribuicoes/d1/maquinas/m1/tentar-de-novo': (pedido) => {
+        pedidos.push(new URL(pedido.url).pathname);
+        return Response.json({});
+      },
     };
-    abrir(servidor, naOrganizacao('ativos.ver'), '/ativos/a1?aba=softwares');
-    const tabela = await screen.findByRole('grid', { name: 'Distribuições do ativo' });
-    expect(await within(tabela).findByText('Concluída')).toBeTruthy();
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
+    const mandados = await screen.findByRole('region', { name: 'Mandados pelo Grafite · 2' });
+    expect(within(mandados).getByText('Falhou · 1603')).toBeTruthy();
+    expect(within(mandados).getByText('Concluída')).toBeTruthy();
+    const tabela = screen.getByRole('grid', { name: 'Instalados, segundo o inventário' });
+    expect(within(tabela).getByText('Há a 131 na base')).toBeTruthy();
+    expect(within(tabela).getByText('Grafite · Bruno Lima')).toBeTruthy();
+    // As 10 primeiras e "Mostrar os outros 2": o Edge, do Windows, vem por último.
+    expect(within(tabela).getAllByRole('row')).toHaveLength(11);
+    expect(within(tabela).queryByText('Microsoft Edge')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar os outros 2' }));
+    expect(await within(tabela).findByText('Do Windows, não se distribui')).toBeTruthy();
+    expect(within(tabela).getByText('Veio com o Windows')).toBeTruthy();
+    fireEvent.click(
+      within(mandados).getByRole('button', { name: 'Tentar de novo o Google Chrome 131' }),
+    );
+    await waitFor(() =>
+      expect(avisos()).toContain('Google Chrome 131: o pedido voltou a aguardar o agente.'),
+    );
+    expect(pedidos).toEqual(['/api/software/distribuicoes/d1/maquinas/m1/tentar-de-novo']);
+  });
+
+  it('sem contato: o cabeçalho diz há quantos dias, o aviso dá a idade do inventário e o pedido sai da fila', async () => {
+    const tresDias = new Date(Date.now() - 3 * 86_400_000 - 60_000).toISOString();
+    const pedidos: string[] = [];
+    const servidor: ServidorDeTeste = {
+      ...servidorComCapacidade('hardware.inventario', () => fichaDe()),
+      'GET /api/ativos/a1/software': () =>
+        Response.json({
+          ...SOFTWARE,
+          inventariadoEm: tresDias,
+          agente: {
+            ultimoContato: tresDias,
+            semContato: { dias: 3, texto: 'Sem contato · há 3 dias' },
+          },
+          distribuir: { mandados: [mandado({})], pacotes: [] },
+        }),
+      'POST /api/software/distribuicoes/d1/maquinas/m1/tirar-da-fila': (pedido) => {
+        pedidos.push(new URL(pedido.url).pathname);
+        return Response.json({});
+      },
+    };
+    abrir(servidor, naOrganizacao('ativos.ver', 'software.distribuir'), '/ativos/a1?aba=softwares');
     expect(
-      within(tabela).getByRole('link', { name: '7-Zip 23.01 · 23.01' }).getAttribute('href'),
-    ).toBe('/gestao/software/distribuicoes/d1');
+      await screen.findByRole('heading', { level: 1, name: /Sem contato · há 3 dias/ }),
+    ).toBeTruthy();
+    expect(await screen.findByText(/^Inventário lido há 3 dias, em/)).toBeTruthy();
+    const fila = screen.getByRole('region', { name: 'Esperando a máquina voltar' });
+    expect(within(fila).getByText('Na fila')).toBeTruthy();
+    expect(screen.queryByRole('region', { name: /^Mandados pelo Grafite/ })).toBeNull();
+    fireEvent.click(
+      within(fila).getByRole('button', { name: 'Tirar o Google Chrome 131 da fila' }),
+    );
+    await waitFor(() => expect(avisos()).toContain('Google Chrome 131 saiu da fila.'));
+    expect(pedidos).toEqual(['/api/software/distribuicoes/d1/maquinas/m1/tirar-da-fila']);
   });
 });

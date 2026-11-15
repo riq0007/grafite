@@ -1434,7 +1434,6 @@ Um módulo opcional começa ligado em toda organização. Desligá-lo não apaga
         chaveDoisPassos,
       });
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
-      await doAtivos.register(rotasDosSoftwares, { banco });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
       await doAtivos.register(rotasDasDistribuicoes, { banco, agora, acordar: acordarAgente });
     });

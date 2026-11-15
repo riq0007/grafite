@@ -1,6 +1,6 @@
 // As consultas da distribuição de software na web (spec distribuicao-de-software; change
 // distribuicao-de-software, design, decisão 6): a base, a ficha do pacote, as categorias, as
-// distribuições, a ficha de uma, as do ativo e a busca das máquinas com o agente, todas debaixo da
+// distribuições, a ficha de uma, o software da máquina e a busca das máquinas com o agente, todas debaixo da
 // chave que o evento `software.mudou` invalida. Os passos do agente não publicam evento: a ficha se
 // relê enquanto alguma máquina espera ou instala.
 import type { components } from '@grafite/api-client';
@@ -17,7 +17,9 @@ export type ResumoDaDistribuicao = components['schemas']['ResumoDaDistribuicao']
 export type FichaDaDistribuicao = components['schemas']['FichaDaDistribuicao'];
 export type MaquinaDaDistribuicao = components['schemas']['MaquinaDaDistribuicao'];
 export type MaquinaParaDistribuir = components['schemas']['MaquinaParaDistribuir'];
-export type DistribuicaoDoAtivo = components['schemas']['DistribuicaoDoAtivo'];
+export type SoftwareDaMaquina = components['schemas']['SoftwareDaMaquina'];
+export type MandadoPeloGrafite = NonNullable<SoftwareDaMaquina['distribuir']>['mandados'][number];
+export type InstaladoNaMaquina = SoftwareDaMaquina['instalados'][number];
 
 /** A chave de tudo do software, que o evento `software.mudou` invalida. */
 export const CHAVE_DO_SOFTWARE = ['software'] as const;
@@ -83,14 +85,20 @@ export function useDistribuicao(id: string) {
   });
 }
 
-export function useDistribuicoesDoAtivo(ativoId: string) {
+/**
+ * O software da máquina (change software-por-pacote, design, decisão 13): os instalados e, para
+ * quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar. A ficha
+ * também a lê, para o "Sem contato" do cabeçalho.
+ */
+export function useSoftwareDaMaquina(ativoId: string, ativa = true) {
   const api = useApi();
   return useQuery({
-    queryKey: [...CHAVE_DO_SOFTWARE, 'ativo', ativoId],
+    queryKey: [...CHAVE_DO_SOFTWARE, 'maquina', ativoId],
+    enabled: ativa,
     queryFn: () =>
       consultar(
-        () => api.GET('/ativos/{id}/distribuicoes', { params: { path: { id: ativoId } } }),
-        'carregar as distribuições do ativo',
+        () => api.GET('/ativos/{id}/software', { params: { path: { id: ativoId } } }),
+        'carregar o software da máquina',
       ),
   });
 }

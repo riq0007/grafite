@@ -47,14 +47,3 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-
-.secao {
-  display: grid;
-  gap: var(--esp-3);
-  min-width: 0;
-}
-
-.secao h3 {
-  margin: 0;
-  font-size: var(--texto-subtitulo);
-}

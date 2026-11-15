@@ -198,16 +198,4 @@ describe('a distribuição', () => {
       expect.objectContaining({ patrimonio: 'PAT-pc5', local: 'Campinas' }),
     ]);
   });
-
-  it('a ficha do ativo mostra as distribuições dele', async () => {
-    const r = await cliente.consultar(`/ativos/${ids.pc1}/distribuicoes`, como('ana'));
-    expect(r.statusCode, r.body).toBe(200);
-    expect(r.json().distribuicoes).toEqual([
-      expect.objectContaining({
-        distribuicaoId: distribuicao,
-        pacote: { nome: '7-Zip 23.01', versao: '23.01' },
-        situacao: { chave: 'aguardando', texto: 'Aguardando o agente', tipo: 'neutra' },
-      }),
-    ]);
-  });
 });

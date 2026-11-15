@@ -151,19 +151,22 @@ describe('a ligação e os softwares', () => {
       ligadoAMao: true,
       situacao: { tipo: 'sucesso', texto: 'Em dia' },
     });
-    const softwares = await cliente.consultar(`/ativos/${computador}/softwares`, como('carla'));
-    expect(softwares.statusCode, softwares.body).toBe(200);
-    expect(softwares.json()).toEqual({
-      softwares: [
+    // Quem só vê o ativo recebe os instalados pelo nome, sem a base (change software-por-pacote).
+    const software = await cliente.consultar(`/ativos/${computador}/software`, como('carla'));
+    expect(software.statusCode, software.body).toBe(200);
+    expect(software.json()).toMatchObject({
+      instalados: [
         {
           nome: 'Adobe Acrobat Reader',
           versao: '24.1',
           editor: 'Adobe',
           instaladoEm: '2024-05-10',
+          base: null,
         },
-        { nome: 'Zoom', versao: '5.17', editor: 'Zoom Video', instaladoEm: null },
+        { nome: 'Zoom', versao: '5.17', editor: 'Zoom Video', instaladoEm: null, base: null },
       ],
       inventariadoEm: expect.any(String),
+      distribuir: null,
     });
     const [ativo] = await naOrganizacao(api.banco, org, (tx) =>
       tx.select({ valores: ativos.valores }).from(ativos).where(eq(ativos.id, computador)),

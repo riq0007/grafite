@@ -220,7 +220,8 @@ Uma rota só, `GET /software/matriz?local=<id>` ou `?por=local`, devolve os paco
 
 A origem de cada programa:
 - "GRAFITE · <nome>", quando o pacote dele chegou ao ativo por uma distribuição concluída, com o nome de quem mandou a última delas, mesmo a de um pacote já inativo;
-- "Fora do Grafite", nos outros, e nos do sistema.
+- "Veio com o Windows", nos do sistema (m09);
+- "Fora do Grafite", nos outros.
 
 A comparação com a base:
 - "HÁ A <versão> NA BASE", quando a versão do inventário está abaixo da do pacote;
