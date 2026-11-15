@@ -798,6 +798,15 @@ export {
   type SituacaoDaSalaNoMapa,
   situacaoDaSalaNoMapa,
 } from './salas/salas.ts';
+export {
+  type ComparacaoComABase,
+  frenteABase,
+  monograma,
+  ordenarFrenteABase,
+  type PacoteDaBase,
+  textoFrenteABase,
+  tipoDoPacote,
+} from './software/base.ts';
 export { CATEGORIAS_DE_SOFTWARE_DE_FABRICA } from './software/categorias.ts';
 export {
   codigoDaMensagem,
@@ -807,6 +816,15 @@ export {
   type ParteDaFrase,
   type TrechoDoComando,
 } from './software/comando.ts';
+export {
+  type ClasseNoAssistente,
+  type ContaDoAssistente,
+  classeNoAssistente,
+  contaDoAssistente,
+  paraQuem,
+  semContato,
+  textoDoSemContato,
+} from './software/maquinas.ts';
 export {
   conferirQuando,
   EXPIRATION_DE_FABRICA,

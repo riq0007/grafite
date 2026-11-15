@@ -86,7 +86,7 @@ O tipo vem da extensão do arquivo:
 
 Nas listas, o tipo vai curto, com a extensão em maiúsculas ("MSI · 118 MB").
 
-O ícone é o monograma do nome, com as iniciais das duas primeiras palavras, ou as duas primeiras letras quando o nome tem uma palavra só. O pacote ganha quem guardou o arquivo e quando, gravados na troca do arquivo.
+O ícone é o monograma do nome, com as iniciais das duas primeiras palavras, sem os conectivos ("Agente de backup" é "AB"), ou as duas primeiras letras quando o nome tem uma palavra só. As siglas do mockup ("Ch", "N+") foram escolhidas à mão e não saem de uma regra. O pacote ganha quem guardou o arquivo e quando, gravados na troca do arquivo.
 
 ### 5. O comando em português
 
@@ -185,7 +185,8 @@ A criação refaz a conta no servidor e grava só as que vão instalar e as da f
 O "Para quem":
 - o nome da máquina, quando é uma só;
 - o local mais fundo que contém todas;
-- "N locais", quando não há esse local.
+- "N locais", quando não há esse local;
+- "N máquinas", quando elas não têm local, ou só uma parte tem e num local só.
 
 A distribuição de antes desta change fica sem o "Para quem", e a tela mostra quantas máquinas ela tem ("12 máquinas").
 
