@@ -9,6 +9,8 @@ export interface SoftwareDoInventario {
   editor: string | null;
   /** AAAA-MM-DD, quando o agente manda nesse formato. */
   instaladoEm: string | null;
+  /** O programa do Windows, que não se distribui (change software-por-pacote, decisão 13). */
+  doSistema: boolean;
 }
 
 export interface InventarioDoAgente {
@@ -156,6 +158,29 @@ function redeDoInventario(conteudo: Objeto) {
   return { ips, mac: mac && /^(?:[\dA-F]{2}:){5}[\dA-F]{2}$/.test(mac) ? mac : null };
 }
 
+/**
+ * O `system_category` do programa do sistema: o `SystemComponent` do registro, as atualizações e o
+ * `SignatureKind` do aplicativo da loja que vem com o Windows.
+ */
+const CATEGORIAS_DO_SISTEMA = new Set([
+  'system_component',
+  'update',
+  'security_update',
+  'hotfix',
+  'system',
+]);
+
+/**
+ * O programa do sistema, pelo `system_category` ou pelo `NoRemove` do registro com o editor da
+ * Microsoft; o agente lê o `no_remove` como número, e o esquema do inventário o declara booleano.
+ */
+function doSistema(software: Objeto, editor: string | null): boolean {
+  const categoria = texto(software.system_category)?.toLowerCase();
+  if (categoria && CATEGORIAS_DO_SISTEMA.has(categoria)) return true;
+  const naoRemove = software.no_remove === true || texto(software.no_remove) === '1';
+  return naoRemove && (editor ?? '').toLowerCase().includes('microsoft');
+}
+
 function softwaresDoInventario(conteudo: Objeto): SoftwareDoInventario[] | null {
   if (!Array.isArray(conteudo.softwares)) return null;
   const vistos = new Map<string, SoftwareDoInventario>();
@@ -166,11 +191,13 @@ function softwaresDoInventario(conteudo: Objeto): SoftwareDoInventario[] | null 
     const data = texto(software.install_date);
     const chave = `${nome.toLowerCase()}\u0001${versao ?? ''}`;
     if (vistos.has(chave)) continue;
+    const editor = texto(software.publisher);
     vistos.set(chave, {
       nome,
       versao,
-      editor: texto(software.publisher),
+      editor,
       instaladoEm: data && DATA.test(data) ? data : null,
+      doSistema: doSistema(software, editor),
     });
   }
   return [...vistos.values()].sort((a, b) =>

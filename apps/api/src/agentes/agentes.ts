@@ -155,6 +155,7 @@ async function trocarSoftwares(
         versao: software.versao,
         editor: software.editor,
         instaladoEm: software.instaladoEm,
+        doSistema: software.doSistema,
         inventariadoEm: momento,
       })),
     );
