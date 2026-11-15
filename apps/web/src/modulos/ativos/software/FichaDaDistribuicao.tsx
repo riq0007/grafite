@@ -418,7 +418,7 @@ export function FichaDaDistribuicao() {
     void navegar({ to: '/ativos/$id', params: { id: maquina.ativo.id } });
 
   return (
-    <div className={dividida.tela}>
+    <div className={dividida.tela} data-janela-inteira="">
       <Lateral ficha={ficha} />
       <div className={`${dividida.centro} ${estilos.centro}`}>
         <Cabecalho ficha={ficha} aoExportar={exportar} />

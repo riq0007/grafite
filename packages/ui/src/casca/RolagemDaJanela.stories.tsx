@@ -116,6 +116,28 @@ export const ConteudoQueCabe: Historia = {
   },
 };
 
+/**
+ * Os filhos curtos da área ficam empilhados no alto, cada um do tamanho do que tem, como o título e o
+ * estado vazio de uma janela: só a tela que pede a janela inteira estica (AbasDaJanela).
+ */
+export const FilhosEmpilhadosNoAlto: Historia = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 320 }}>
+      <RolagemDaJanela>
+        <p style={{ margin: 0, color: 'var(--cor-texto)' }}>Título de exemplo</p>
+        <p style={{ margin: 0, color: 'var(--cor-texto)' }}>Texto de exemplo.</p>
+      </RolagemDaJanela>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const primeiro = tela.getByText('Título de exemplo').getBoundingClientRect();
+    const segundo = tela.getByText('Texto de exemplo.').getBoundingClientRect();
+    await expect(primeiro.height).toBeLessThan(40);
+    await expect(segundo.top - primeiro.bottom).toBeLessThanOrEqual(1);
+  },
+};
+
 /** O Tab que chega a um campo da faixa de baixo rola a área até o campo sair inteiro dela. */
 export const FocoForaDaFaixa: Historia = {
   play: async ({ canvasElement }) => {

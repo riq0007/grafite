@@ -169,6 +169,36 @@ describe('a base de software', () => {
     expect(screen.queryByRole('button', { name: 'Categorias…' })).toBeNull();
   });
 
+  it('a "Situação" ordena, dos mais desatualizados primeiro, e a busca com a lupa filtra a base', async () => {
+    const EM_DIA: NaBase = {
+      ...NA_BASE,
+      id: '0199a6e0-0000-7000-8000-0000000000e4',
+      nome: 'Notepad++ 8.7',
+      versao: '8.7',
+      contas: { maquinas: 47, instalado: 20, naVersao: 20, desatualizadas: 0, sem: 27 },
+    };
+    abrir('/gestao/software', base(false, [NA_BASE, EM_DIA]), naOrganizacao('software.distribuir'));
+    const tabela = await screen.findByRole('grid', { name: 'Base de pacotes' });
+    await within(tabela).findByText('7-Zip 23.01');
+    const ordem = () =>
+      within(tabela)
+        .getAllByRole('row')
+        .slice(1)
+        .map((linha) => (within(linha).queryByText('7-Zip 23.01') ? '7-Zip' : 'Notepad++'));
+    const situacao = within(tabela).getByRole('columnheader', { name: /Situação/ });
+    expect(situacao.getAttribute('aria-sort')).toBe('descending');
+    expect(ordem()).toEqual(['7-Zip', 'Notepad++']);
+    fireEvent.click(situacao);
+    await waitFor(() => expect(situacao.getAttribute('aria-sort')).toBe('ascending'));
+    expect(ordem()).toEqual(['Notepad++', '7-Zip']);
+
+    // A busca da lista: a lupa e o texto dentro da caixa, que diz o que ela procura.
+    const busca = screen.getByRole('searchbox', { name: 'Procurar na base' });
+    expect(busca.getAttribute('placeholder')).toBe('Procurar na base');
+    fireEvent.change(busca, { target: { value: 'notepad' } });
+    await waitFor(() => expect(ordem()).toEqual(['Notepad++']));
+  });
+
   it('Pacote cadastrado: grava o pacote e envia o arquivo com o nome', async () => {
     const pedidos: { corpo?: unknown; endereco: string }[] = [];
     abrir('/gestao/software', {

@@ -7,7 +7,6 @@
 
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
-  min-height: calc(100% + 2 * var(--respiro));
   margin: calc(-1 * var(--respiro));
 }
 
@@ -55,9 +54,9 @@
   margin-top: auto;
 }
 
-/* A ação principal da coluna, mais alta, como no mockup. */
+/* A ação principal da coluna, mais alta, como no mockup (40 na densidade Normal). */
 .principal {
-  min-height: calc(var(--altura-controle) + var(--esp-2));
+  min-height: calc(var(--altura-controle) + var(--esp-1));
 }
 
 .centro {

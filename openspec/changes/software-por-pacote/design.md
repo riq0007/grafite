@@ -288,6 +288,18 @@ Decisão do usuário de 15/11/2026, "Segurar até reativar": a TI inativa um pac
 
 Alternativa recusada: tirar da fila as máquinas ao inativar. A TI perderia a fila ao reativar um pacote que inativou por engano ou só por um tempo.
 
+### 18. A tela na janela inteira e a fonte do "Instalado em"
+
+A base, a ficha do pacote, a distribuição aberta, o assistente e a matriz vão do topo ao fim da janela, com o pé no fim, como no m12 e no m01 (relato do usuário de 15/11/2026). Até aqui, elas pediam `min-height: calc(100% + 2 * var(--respiro))`, que não valia: a área que rola e o painel da aba tinham a altura do conteúdo.
+- **Na casca:** a tela que pede a janela inteira põe `data-janela-inteira` na raiz, e só ela muda.
+  - O conteúdo da `RolagemDaJanela` vira uma grade de uma linha, com ao menos a altura da área, só quando o painel visível tem essa raiz.
+  - O painel da `AbasDaJanela` vira uma coluna flexível, em que a raiz cresce até o fim e o que vier antes dela, como o cabeçalho, fica do tamanho que tem.
+  - A tela sem o atributo continua um bloco do tamanho do que tem, com os filhos empilhados no alto.
+  - O contrato de módulo tem a seção "A tela na janela inteira".
+- **A fonte do "Instalado em":** decisão do usuário de 15/11/2026, "Mono, como no m12". O "38 de 47" fica na JetBrains Mono, com algarismos tabulares. É a exceção nomeada à regra das quantidades do `docs/ANTISLOP.md`, que as põe na Instrument Sans.
+
+Alternativa recusada: a altura da janela em cada tela, por `calc` com a altura da barra e do dock. Ela quebraria na troca da densidade, das abas e da postura.
+
 ## Risks / Trade-offs
 
 - **[A porta 62354 fechada]** O "Agora" espera o contato diário, e a primeira noite pode passar, quando o agente falou antes de a distribuição existir e só volta no dia seguinte, ou quando falou com o pacote inativado e levou as 24 horas (decisão 17: o cenário "Pacote reativado" conta com o chamado respondido) → o `expiration` da decisão 8 garante a noite seguinte; "Na fila" diz que o agente não respondeu ao chamado e até quando ele volta; o runbook pede a porta.

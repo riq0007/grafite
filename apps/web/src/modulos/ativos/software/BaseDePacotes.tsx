@@ -9,11 +9,12 @@ import {
   BotaoAlternavel,
   CabecalhoDaPagina,
   CabecalhoDaTabela,
-  CampoDeTexto,
+  CampoDeBusca,
   Celula,
   Coluna,
   ControleSegmentado,
   CorpoDaTabela,
+  type DirecaoDaOrdenacao,
   EstadoVazio,
   Icone,
   Linha,
@@ -24,7 +25,7 @@ import {
   useDataHora,
 } from '@grafite/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { ChevronRight, Grid3x3, ListFilter, Plus, Tags } from 'lucide-react';
+import { ArrowRight, ChevronRight, ListFilter, Plus, Tags } from 'lucide-react';
 import { useState } from 'react';
 import estilos from './BaseDePacotes.module.css';
 import { Categorias } from './Categorias.tsx';
@@ -49,6 +50,15 @@ function situacaoDoPacote(pacote: PacoteNaBase): { situacao: Situacao; texto: st
   return { situacao: 'sucesso', texto: 'Todas em dia' };
 }
 
+/**
+ * A ordem pela "Situação": a decrescente, a da API, com os mais desatualizados primeiro; a crescente,
+ * com os em dia primeiro. O nome desempata nas duas.
+ */
+const pelaSituacao = (direcao: DirecaoDaOrdenacao) => (a: PacoteNaBase, b: PacoteNaBase) =>
+  ((b.contas.desatualizadas ?? 0) - (a.contas.desatualizadas ?? 0)) *
+    (direcao === 'decrescente' ? 1 : -1) ||
+  a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base', numeric: true });
+
 function Pe({ pacotes, maquinas }: { pacotes: readonly PacoteNaBase[]; maquinas: number }) {
   const ativos = pacotes.filter(({ situacao }) => situacao === 'ativo');
   const abaixo = ativos.reduce((soma, { contas }) => soma + (contas.desatualizadas ?? 0), 0);
@@ -72,8 +82,9 @@ function Pe({ pacotes, maquinas }: { pacotes: readonly PacoteNaBase[]; maquinas:
           <span>{entre.charAt(0).toUpperCase() + entre.slice(1)}</span>
         </>
       )}
-      <Botao icone={Grid3x3} onPress={() => void navegar({ to: '/gestao/software/matriz' })}>
+      <Botao onPress={() => void navegar({ to: '/gestao/software/matriz' })}>
         Ver na matriz
+        <Icone icone={ArrowRight} />
       </Botao>
     </div>
   );
@@ -88,6 +99,7 @@ export function BaseDePacotes() {
   const [busca, definirBusca] = useState('');
   const [categoria, definirCategoria] = useState(TODOS);
   const [soDesatualizados, definirSoDesatualizados] = useState(false);
+  const [direcao, definirDirecao] = useState<DirecaoDaOrdenacao>('decrescente');
   const [editando, definirEditando] = useState<'novo' | null>(null);
   const [nasCategorias, definirNasCategorias] = useState(false);
   const administra = pacotes.data?.permite.administrar ?? false;
@@ -95,23 +107,24 @@ export function BaseDePacotes() {
   const agora = new Date();
 
   const termo = normalizarTexto(busca.trim());
-  const vistos = lista.filter(
-    (pacote) =>
-      (categoria === TODOS || pacote.categoria?.id === categoria) &&
-      (!soDesatualizados || (pacote.contas.desatualizadas ?? 0) > 0) &&
-      (!termo || normalizarTexto(pacote.nome).includes(termo)),
-  );
+  const vistos = lista
+    .filter(
+      (pacote) =>
+        (categoria === TODOS || pacote.categoria?.id === categoria) &&
+        (!soDesatualizados || (pacote.contas.desatualizadas ?? 0) > 0) &&
+        (!termo || normalizarTexto(pacote.nome).includes(termo)),
+    )
+    .sort(pelaSituacao(direcao));
   const quantosNa = (id: string) => lista.filter((pacote) => pacote.categoria?.id === id).length;
 
   return (
-    <div className={estilos.tela}>
+    <div className={estilos.tela} data-janela-inteira="">
       <CabecalhoDaPagina
         titulo="Base de pacotes"
         acoes={
           <>
-            <CampoDeTexto
+            <CampoDeBusca
               rotulo="Procurar na base"
-              type="search"
               value={busca}
               onChange={definirBusca}
               autoComplete="off"
@@ -139,6 +152,7 @@ export function BaseDePacotes() {
       />
       {pacotes.isError ? (
         <EstadoVazio
+          className={estilos.falha}
           titulo={pacotes.error.message}
           acao={<Botao onPress={() => void pacotes.refetch()}>Tentar de novo</Botao>}
         />
@@ -162,116 +176,121 @@ export function BaseDePacotes() {
               ))}
             </ControleSegmentado>
           </div>
-          <Tabela
-            rotulo="Base de pacotes"
-            carregando={pacotes.isPending}
-            aoAbrirLinha={(id) =>
-              void navegar({ to: '/gestao/software/pacotes/$id', params: { id: String(id) } })
-            }
-          >
-            <CabecalhoDaTabela>
-              <Coluna id="pacote" principal>
-                Pacote
-              </Coluna>
-              <Coluna id="versao" especie="codigo">
-                Versão-alvo
-              </Coluna>
-              <Coluna id="instalado">Instalado em</Coluna>
-              <Coluna id="situacao" especie="situacao">
-                Situação
-              </Coluna>
-              <Coluna id="ultima">Última distribuição</Coluna>
-              <Coluna id="abrir" rotuloOculto largura={40}>
-                Abrir
-              </Coluna>
-            </CabecalhoDaTabela>
-            <CorpoDaTabela
-              itens={vistos}
-              vazio={
-                lista.length > 0 ? (
-                  <EstadoVazio titulo="Nenhum pacote com esse filtro." />
-                ) : administra ? (
-                  <EstadoVazio
-                    titulo="Nenhum pacote na base ainda."
-                    descricao="Cadastre o instalador e o comando silencioso. Depois, distribua às máquinas com o agente do GLPI, que baixa e instala sozinho."
-                    acao={
-                      <Botao icone={Plus} onPress={() => definirEditando('novo')}>
-                        Novo pacote
-                      </Botao>
-                    }
-                  />
-                ) : (
-                  <EstadoVazio
-                    titulo="Nenhum pacote na base ainda."
-                    descricao="Quem administra o software cadastra os pacotes. Eles aparecem aqui para você distribuir."
-                  />
-                )
+          <div className={estilos.faixaDaTabela}>
+            <Tabela
+              rotulo="Base de pacotes"
+              className={estilos.tabela}
+              carregando={pacotes.isPending}
+              ordenacao={{ coluna: 'situacao', direcao }}
+              aoOrdenar={(nova) => definirDirecao(nova.direcao)}
+              aoAbrirLinha={(id) =>
+                void navegar({ to: '/gestao/software/pacotes/$id', params: { id: String(id) } })
               }
             >
-              {(pacote) => {
-                const { contas, ultimaDistribuicao } = pacote;
-                const situacao = situacaoDoPacote(pacote);
-                return (
-                  <Linha id={pacote.id}>
-                    <Celula>
-                      <span className={estilos.pacote}>
-                        <IconeDoPacote nome={pacote.nome} tamanho="p" />
-                        <span>
-                          <span className={estilos.nome}>{pacote.nome}</span>
-                          <span className={estilos.tipo}>{tipoETamanho(pacote)}</span>
-                        </span>
-                      </span>
-                    </Celula>
-                    <Celula>{pacote.versao ?? '—'}</Celula>
-                    <Celula>
-                      <span className={estilos.instalado}>
-                        <BarraDeSituacoes
-                          className={estilos.barra}
-                          partes={
-                            contas.naVersao === null
-                              ? [
-                                  { parte: 'ok', quantidade: contas.instalado },
-                                  { parte: 'neutra', quantidade: contas.sem },
-                                ]
-                              : [
-                                  { parte: 'ok', quantidade: contas.naVersao },
-                                  { parte: 'atencao', quantidade: contas.desatualizadas ?? 0 },
-                                  { parte: 'neutra', quantidade: contas.sem },
-                                ]
-                          }
-                        />
-                        <span className={estilos.numeros}>
-                          <b className={estilos.forte}>{contas.instalado}</b> de {contas.maquinas}
-                        </span>
-                      </span>
-                    </Celula>
-                    <Celula>
-                      <RotuloDeSituacao situacao={situacao.situacao}>
-                        {situacao.texto}
-                      </RotuloDeSituacao>
-                    </Celula>
-                    <Celula>
-                      {ultimaDistribuicao ? (
-                        <span>
-                          <span className={estilos.mono}>
-                            {momentoCurto(new Date(ultimaDistribuicao.criadaEm), agora, dataHora)}
+              <CabecalhoDaTabela>
+                <Coluna id="pacote" principal>
+                  Pacote
+                </Coluna>
+                <Coluna id="versao" especie="codigo">
+                  Versão-alvo
+                </Coluna>
+                <Coluna id="instalado">Instalado em</Coluna>
+                <Coluna id="situacao" especie="situacao" ordenavel>
+                  Situação
+                </Coluna>
+                <Coluna id="ultima">Última distribuição</Coluna>
+                <Coluna id="abrir" rotuloOculto largura={40}>
+                  Abrir
+                </Coluna>
+              </CabecalhoDaTabela>
+              <CorpoDaTabela
+                itens={vistos}
+                vazio={
+                  lista.length > 0 ? (
+                    <EstadoVazio titulo="Nenhum pacote com esse filtro." />
+                  ) : administra ? (
+                    <EstadoVazio
+                      titulo="Nenhum pacote na base ainda."
+                      descricao="Cadastre o instalador e o comando silencioso. Depois, distribua às máquinas com o agente do GLPI, que baixa e instala sozinho."
+                      acao={
+                        <Botao icone={Plus} onPress={() => definirEditando('novo')}>
+                          Novo pacote
+                        </Botao>
+                      }
+                    />
+                  ) : (
+                    <EstadoVazio
+                      titulo="Nenhum pacote na base ainda."
+                      descricao="Quem administra o software cadastra os pacotes. Eles aparecem aqui para você distribuir."
+                    />
+                  )
+                }
+              >
+                {(pacote) => {
+                  const { contas, ultimaDistribuicao } = pacote;
+                  const situacao = situacaoDoPacote(pacote);
+                  return (
+                    <Linha id={pacote.id}>
+                      <Celula>
+                        <span className={estilos.pacote}>
+                          <IconeDoPacote nome={pacote.nome} tamanho="p" />
+                          <span>
+                            <span className={estilos.nome}>{pacote.nome}</span>
+                            <span className={estilos.tipo}>{tipoETamanho(pacote)}</span>
                           </span>
-                          {` · ${ultimaDistribuicao.paraQuem}`}
                         </span>
-                      ) : (
-                        'Nunca distribuído'
-                      )}
-                    </Celula>
-                    <Celula>
-                      <span className={estilos.abrir}>
-                        <Icone icone={ChevronRight} />
-                      </span>
-                    </Celula>
-                  </Linha>
-                );
-              }}
-            </CorpoDaTabela>
-          </Tabela>
+                      </Celula>
+                      <Celula>{pacote.versao ?? '—'}</Celula>
+                      <Celula>
+                        <span className={estilos.instalado}>
+                          <BarraDeSituacoes
+                            className={estilos.barra}
+                            partes={
+                              contas.naVersao === null
+                                ? [
+                                    { parte: 'ok', quantidade: contas.instalado },
+                                    { parte: 'neutra', quantidade: contas.sem },
+                                  ]
+                                : [
+                                    { parte: 'ok', quantidade: contas.naVersao },
+                                    { parte: 'atencao', quantidade: contas.desatualizadas ?? 0 },
+                                    { parte: 'neutra', quantidade: contas.sem },
+                                  ]
+                            }
+                          />
+                          <span className={estilos.numeros}>
+                            <b className={estilos.forte}>{contas.instalado}</b> de {contas.maquinas}
+                          </span>
+                        </span>
+                      </Celula>
+                      <Celula>
+                        <RotuloDeSituacao situacao={situacao.situacao}>
+                          {situacao.texto}
+                        </RotuloDeSituacao>
+                      </Celula>
+                      <Celula>
+                        {ultimaDistribuicao ? (
+                          <span>
+                            <span className={estilos.mono}>
+                              {momentoCurto(new Date(ultimaDistribuicao.criadaEm), agora, dataHora)}
+                            </span>
+                            {` · ${ultimaDistribuicao.paraQuem}`}
+                          </span>
+                        ) : (
+                          'Nunca distribuído'
+                        )}
+                      </Celula>
+                      <Celula>
+                        <span className={estilos.abrir}>
+                          <Icone icone={ChevronRight} />
+                        </span>
+                      </Celula>
+                    </Linha>
+                  );
+                }}
+              </CorpoDaTabela>
+            </Tabela>
+          </div>
           {pacotes.data && lista.length > 0 && (
             <Pe pacotes={lista} maquinas={pacotes.data.maquinas} />
           )}

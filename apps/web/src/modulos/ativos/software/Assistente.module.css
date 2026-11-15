@@ -1,14 +1,14 @@
 /*
  * O assistente da distribuição (m03 a m05 e m08): o trilho dos passos à esquerda, no fundo afundado,
  * o passo no centro e o "Até agora" à direita, na superfície elevada. A tela ocupa a janela inteira,
- * até as bordas, por cima do respiro da janela, como as fichas do software.
+ * até as bordas, por cima do respiro da janela, como as fichas do software: a raiz pede a janela
+ * inteira (`data-janela-inteira`), e as colunas vão até o fim dela.
  */
 .assistente {
   --respiro: var(--respiro-da-janela, var(--esp-6));
 
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr) 330px;
-  min-height: calc(100% + 2 * var(--respiro));
   margin: calc(-1 * var(--respiro));
 }
 

@@ -222,7 +222,7 @@ export function FichaDoPacote() {
   }
 
   return (
-    <div className={dividida.tela}>
+    <div className={dividida.tela} data-janela-inteira="">
       <div className={`${dividida.lateral} ${estilos.lateral}`}>
         <Link to="/gestao/software" className={dividida.volta}>
           <Icone icone={ChevronLeft} tamanho={14} />
@@ -317,6 +317,7 @@ export function FichaDoPacote() {
           <Carimbo>Distribuições deste pacote</Carimbo>
           <Tabela
             rotulo="Distribuições deste pacote"
+            className={estilos.distribuicoes}
             aoAbrirLinha={(distribuicao) =>
               void navegar({
                 to: '/gestao/software/distribuicoes/$id',

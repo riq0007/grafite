@@ -124,6 +124,27 @@
   min-width: 0;
 }
 
+/*
+ * As distribuições como no m01: as linhas de 38 (na densidade Normal), as três primeiras colunas
+ * estreitas e o "Resultado" no resto. A tabela não é redimensionável, e a largura de cada coluna vai
+ * pelo cabeçalho dela, na ordem da tabela.
+ */
+.distribuicoes {
+  --altura-linha: calc(var(--altura-controle) + 2px);
+}
+
+.distribuicoes [role="columnheader"]:nth-child(1) {
+  width: 170px;
+}
+
+.distribuicoes [role="columnheader"]:nth-child(2) {
+  width: 130px;
+}
+
+.distribuicoes [role="columnheader"]:nth-child(3) {
+  width: 110px;
+}
+
 /* O comando à esquerda, com os pedaços sublinhados embaixo, e a frase à direita. */
 .comando {
   display: grid;

@@ -506,3 +506,92 @@ export const NoToque: Historia = {
     }
   },
 };
+
+/**
+ * Uma tela que ocupa a janela inteira, até as bordas, por cima do respiro, com o pé no fim, como
+ * as fichas, a matriz e a base do software.
+ */
+function TelaInteira({ abaixoDoCabecalho }: { abaixoDoCabecalho?: boolean }) {
+  const respiro = 'calc(-1 * var(--respiro-da-janela, var(--esp-6)))';
+  return (
+    <div
+      data-janela-inteira=""
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        // Abaixo do cabeçalho, a tela não sobe por cima dele: só os lados e o fim vão às bordas.
+        margin: abaixoDoCabecalho ? `0 ${respiro} ${respiro}` : respiro,
+        padding: 'var(--esp-6)',
+        background: 'var(--cor-superficie-afundada)',
+        ...texto,
+      }}
+    >
+      <span>Instalador de teste</span>
+      <span data-pe-da-tela="" style={{ marginTop: 'auto' }}>
+        Distribuir este pacote
+      </span>
+    </div>
+  );
+}
+
+const borda = (elemento: Element) => elemento.getBoundingClientRect();
+
+/**
+ * A tela que pede a janela inteira (`data-janela-inteira` na raiz dela) vai do topo ao fim da área
+ * que rola, e o pé dela fica no fim da janela; a tela comum continua do tamanho do que tem.
+ */
+export const TelaQueOcupaAJanelaInteira: Historia = {
+  args: {
+    abas: [{ ...ATIVO, conteudo: <TelaInteira /> }, LOCAL],
+    frente: ATIVO.id,
+    altura: 480,
+  },
+  play: async ({ canvasElement }) => {
+    const area = canvasElement.querySelector('[data-rolagem-da-janela]') as HTMLElement;
+    const tela = canvasElement.querySelector('[data-janela-inteira]') as HTMLElement;
+    const pe = canvasElement.querySelector('[data-pe-da-tela]') as HTMLElement;
+    await expect(Math.abs(borda(tela).top - borda(area).top)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(borda(tela).bottom - borda(area).bottom)).toBeLessThanOrEqual(1);
+    await expect(borda(area).bottom - borda(pe).bottom).toBeLessThanOrEqual(32);
+
+    // A aba do formulário, sem o pedido, fica do tamanho dele.
+    await userEvent.click(within(canvasElement).getByRole('tab', { name: 'Novo local' }));
+    const campo = await within(canvasElement).findByText('Nome do local');
+    await expect(borda(area).bottom - borda(campo).bottom).toBeGreaterThan(200);
+    const painel = campo.closest('[data-aba-da-janela]') as HTMLElement;
+    const ultimo = painel.lastElementChild as HTMLElement;
+    await expect(borda(ultimo).height).toBeLessThan(80);
+  },
+};
+
+/**
+ * O que a tela põe antes dela no painel, como o cabeçalho, fica do tamanho que tem; só a tela que
+ * pede a janela inteira cresce até o fim da área.
+ */
+export const TelaInteiraDepoisDoCabecalho: Historia = {
+  args: {
+    abas: [
+      {
+        ...ATIVO,
+        conteudo: (
+          <>
+            <header data-cabecalho-da-tela="" style={texto}>
+              Cabeçalho de exemplo
+            </header>
+            <TelaInteira abaixoDoCabecalho />
+          </>
+        ),
+      },
+    ],
+    frente: ATIVO.id,
+    altura: 480,
+  },
+  play: async ({ canvasElement }) => {
+    const area = canvasElement.querySelector('[data-rolagem-da-janela]') as HTMLElement;
+    const cabecalho = canvasElement.querySelector('[data-cabecalho-da-tela]') as HTMLElement;
+    const tela = canvasElement.querySelector('[data-janela-inteira]') as HTMLElement;
+    await expect(borda(cabecalho).height).toBeLessThan(40);
+    await expect(borda(tela).top - borda(cabecalho).bottom).toBeLessThanOrEqual(17);
+    await expect(Math.abs(borda(tela).bottom - borda(area).bottom)).toBeLessThanOrEqual(1);
+  },
+};

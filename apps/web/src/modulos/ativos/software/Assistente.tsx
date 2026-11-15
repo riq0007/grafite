@@ -367,7 +367,7 @@ export function NovaDistribuicao() {
     );
 
   return (
-    <div className={estilos.assistente}>
+    <div className={estilos.assistente} data-janela-inteira="">
       <Trilho passo={atual} subs={subs} nota={nota} aoVoltar={irPara} />
       <div className={estilos.centro}>{centro}</div>
       <AteAgora

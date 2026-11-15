@@ -204,7 +204,11 @@ export function Matriz() {
     ) : null;
 
   return (
-    <div className={estilos.matriz} data-com-painel={painel ? '' : undefined}>
+    <div
+      className={estilos.matriz}
+      data-janela-inteira=""
+      data-com-painel={painel ? '' : undefined}
+    >
       <div className={estilos.principal}>
         <CabecalhoDaPagina
           titulo={por === 'local' ? 'Software × locais' : 'Software × máquinas'}
