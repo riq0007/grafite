@@ -7,10 +7,7 @@ Sistema de gestão de ativos, operação e governança de TI com casca inspirada
 1. **Spec antes de código.**
    - Toda mudança nasce de uma change do OpenSpec (`openspec/changes/`), ligada a um subprojeto da spec mestre (`docs/superpowers/specs/2026-09-24-grafite-design.md`).
    - Se a implementação contradisser a spec, pare e atualize os artefatos antes.
-   - O conserto de uma linha vai direto, num commit, sem proposta, design e specs.
-2. **Teste antes do código no que tem lógica e não aparece na tela:** o isolamento entre organizações, as permissões, as regras de alerta, os cálculos, as migrations, a API e o coletor. Escreva o teste, veja falhar pelo motivo certo e só então implemente.
-   - Visual, CSS e texto ficam sem teste novo, sem medida em dois sistemas e sem conferência no `pnpm dev`: o usuário olha e relata.
-   - Em cada tarefa, rodam só os testes dos arquivos mexidos, o lint e o typecheck. A bateria inteira (unitários, histórias, pontas a ponta e regressão visual) roda uma vez, no fim da change, de preferência no CI do GitHub.
+2. **Teste antes do código** em tudo que tem lógica: escreva o teste, veja falhar pelo motivo certo e só então implemente.
 3. **Visual segue o `docs/ANTISLOP.md` (v3).**
    - Cores, espaçamentos, raios, sombras, materiais e movimento vêm só dos tokens em `packages/ui/src/tokens`. A verificação automática reprova cor literal fora deles.
    - Vidro fosco só em camadas sobrepostas. Animação só para mudança de estado, com no máximo 300 ms, fora as exceções nomeadas.
@@ -24,7 +21,7 @@ Sistema de gestão de ativos, operação e governança de TI com casca inspirada
 6. **Isolamento por organização é do banco.**
    - Toda tabela de negócio é criada com `orgScoped()` e tem RLS ativo e forçado. O teste-guarda reprova tabela sem RLS.
    - A aplicação conecta com o papel `grafite_app`, nunca com o dono das tabelas.
-7. **Uma sessão escreve, sem subagentes.** A mesma sessão escreve as specs e as changes, muda os componentes compartilhados (`packages/ui`, `packages/domain`, `packages/db` e o contrato da API) e implementa as tarefas, em sequência. Nenhuma pesquisa nem tarefa vai para um subagente. Uma segunda sessão, só de leitura, pode revisar o plano da change e um diff só, no fim dela (nenhum numa change só visual), e devolve os pontos à sessão que escreve. Como o trabalho anda: `docs/agentes.md`.
+7. **Uma sessão escreve, sem subagentes.** A mesma sessão escreve as specs e as changes, muda os componentes compartilhados (`packages/ui`, `packages/domain`, `packages/db` e o contrato da API) e implementa as tarefas, em sequência. Nenhuma pesquisa nem tarefa vai para um subagente. Uma segunda sessão, só de leitura, pode revisar o plano da change e o diff de cada tarefa antes do commit, e devolve os pontos à sessão que escreve. Como o trabalho anda: `docs/agentes.md`.
 8. **Um commit por tarefa.** Ao concluir uma tarefa de uma change (testes verdes e a verificação dela feita), commitar na hora, com a mensagem no padrão `tipo(escopo): assunto` e "Tarefa X.Y do <change>." no corpo. A change inteira não fica acumulada no índice para ser dividida no fim.
 
 ## Estrutura
