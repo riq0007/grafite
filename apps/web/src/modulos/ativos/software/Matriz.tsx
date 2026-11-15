@@ -69,6 +69,12 @@ function emLista(partes: readonly string[]): string {
 const naVersao = (celula: CelulaDaMaquina | undefined) =>
   celula?.situacao === 'na-versao' || celula?.situacao === 'instalado-sem-alvo';
 
+/** O que a conta do "Por local" diz: no pacote sem versão-alvo, com e sem o programa. */
+const daConta = (pacote: { versao: string | null }) =>
+  pacote.versao
+    ? { dentro: 'na versão-alvo', fora: 'fora da versão-alvo' }
+    : { dentro: 'com o programa', fora: 'sem o programa' };
+
 /** O que a célula mostra: a versão, "↓ <versão>" ou "Falta". */
 function textoDaCelula(celula: CelulaDaMaquina | undefined): string {
   if (!celula || celula.situacao === 'sem-o-programa') return 'Falta';
@@ -500,7 +506,7 @@ function BarraDaMarcacao({
     naFila > 0 &&
       (naFila === 1 ? '1 já tem o pedido na fila' : `${naFila} já têm o pedido na fila`),
     jaNaVersao > 0 &&
-      (jaNaVersao === 1 ? '1 já está na versão-alvo' : `${jaNaVersao} já estão na versão-alvo`),
+      `${jaNaVersao} ${jaNaVersao === 1 ? 'já está' : 'já estão'} ${daConta(pacote).dentro}`,
     semContato > 0 && (semContato === 1 ? '1 está sem contato' : `${semContato} estão sem contato`),
   ].filter((parte): parte is string => typeof parte === 'string');
   return (
@@ -605,7 +611,7 @@ function GradePorLocal({
                         className={estilos.celula}
                         data-estado={estado}
                         data-marcada={aberta || undefined}
-                        aria-label={`${local.nome} · ${pacote.nome}: ${quantas} de ${de} na versão-alvo${aberta ? ', aberta ao lado' : ''}`}
+                        aria-label={`${local.nome} · ${pacote.nome}: ${quantas} de ${de} ${daConta(pacote).dentro}${aberta ? ', aberta ao lado' : ''}`}
                         onPress={() => aoEscolher({ pacoteId: pacote.id, localId: local.id })}
                       >
                         {quantas} de {de}
@@ -660,6 +666,7 @@ function PainelDaCelula({
   const local = matriz.locais.find((um) => um.id === escolhida.localId);
   const pacote = matriz.pacotes.find((um) => um.id === escolhida.pacoteId);
   if (!local || !pacote) return null;
+  const conta = daConta(pacote);
   const celula = matriz.celulas.find(
     (uma) => uma.pacoteId === pacote.id && uma.localId === local.id,
   );
@@ -688,7 +695,9 @@ function PainelDaCelula({
       <hr className={estilos.separador} />
       <p className={estilos.total}>
         <span className={estilos.numeroGrande}>{celula?.naVersao ?? 0}</span>
-        <span>de {celula?.total ?? local.maquinas} na versão-alvo</span>
+        <span>
+          de {celula?.total ?? local.maquinas} {conta.dentro}
+        </span>
       </p>
       {doLocal.isError ? (
         <p role="alert" className={estilos.nota}>
@@ -702,8 +711,10 @@ function PainelDaCelula({
         <>
           {fora.length > 0 && (
             <>
-              <p className={estilos.legendaDoPainel}>{fora.length} fora da versão-alvo</p>
-              <ul className={estilos.fora} aria-label="Máquinas fora da versão-alvo">
+              <p className={estilos.legendaDoPainel}>
+                {fora.length} {conta.fora}
+              </p>
+              <ul className={estilos.fora} aria-label={`Máquinas ${conta.fora}`}>
                 {fora.map((maquina) => {
                   const daMaquina = celulas.get(maquina.id);
                   const rotulo = rotuloDaMaquina(maquina, daMaquina);
@@ -746,6 +757,7 @@ function PainelDaCelula({
         <Botao
           nivel="primario"
           icone={Rocket}
+          className={estilos.acaoDoPainel}
           isDisabled={!dados || fora.length === 0}
           onPress={() =>
             aoDistribuir(
@@ -758,7 +770,9 @@ function PainelDaCelula({
           Distribuir {nomeComVersao(pacote)}{' '}
           {fora.length === 1 ? 'a esta' : `a estas ${fora.length}`}
         </Botao>
-        <Botao onPress={() => aoAbrirLocal(local.id)}>Abrir a matriz do local {local.nome}</Botao>
+        <Botao className={estilos.acaoDoPainel} onPress={() => aoAbrirLocal(local.id)}>
+          Abrir a matriz do local {local.nome}
+        </Botao>
       </div>
     </aside>
   );

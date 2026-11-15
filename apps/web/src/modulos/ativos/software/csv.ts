@@ -1,11 +1,13 @@
 // O CSV do "Exportar" do software (change software-por-pacote): a distribuição e a matriz gravam no
 // navegador o que mostram. O separador é o ";" e o arquivo começa pelo BOM, que o Excel em
-// português abre com os acentos certos. A célula que começa como fórmula ganha o apóstrofo, para a
-// planilha não a executar.
+// português abre com os acentos certos. A célula que começa como fórmula, por "=", "+", "-", "@",
+// tabulação ou retorno de carro, ganha o apóstrofo, para a planilha não a executar. O BOM sai do
+// código U+FEFF, e não do caractere invisível, que uma edição pode perder sem ninguém ver.
 
 export type CelulaDoCsv = string | number | null;
 
-const FORMULA = /^[=+\-@]/;
+const FORMULA = /^[=+\-@\t\r]/;
+const BOM = String.fromCharCode(0xfeff);
 const PRECISA_DE_ASPAS = /[";\r\n]/;
 
 function celula(valor: CelulaDoCsv): string {
@@ -16,7 +18,7 @@ function celula(valor: CelulaDoCsv): string {
 
 /** As linhas em CSV, com o BOM, o ";" e o CRLF. */
 export function paraCsv(linhas: readonly (readonly CelulaDoCsv[])[]): string {
-  return `﻿${linhas.map((linha) => `${linha.map(celula).join(';')}\r\n`).join('')}`;
+  return `${BOM}${linhas.map((linha) => `${linha.map(celula).join(';')}\r\n`).join('')}`;
 }
 
 /** Grava o CSV no navegador, com o nome dado. */

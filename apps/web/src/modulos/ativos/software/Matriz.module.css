@@ -406,6 +406,14 @@
 
 .acoesDoPainel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--esp-2);
   margin-top: auto;
+}
+
+/* O nome longo do pacote quebra a linha do botão, sem passar da borda do painel. */
+.acoesDoPainel .acaoDoPainel {
+  padding-block: var(--esp-2);
+  white-space: normal;
+  text-align: center;
 }

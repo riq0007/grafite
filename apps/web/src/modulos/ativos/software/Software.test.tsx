@@ -1281,4 +1281,76 @@ describe('a matriz do software', () => {
       local: LOCAL.id,
     });
   });
+
+  it('no pacote sem versão, a célula e o painel do "Por local" contam quem tem o programa', async () => {
+    const OFFICE: Pacote = {
+      ...PACOTE,
+      id: '0199a6e0-0000-7000-8000-0000000000e3',
+      nome: 'Configuração do Office',
+      versao: null,
+    };
+    const maquinas = Array.from({ length: 18 }, (_, posicao) =>
+      naMatriz(`o${posicao + 1}`, `PC-FIN-${String(posicao + 1).padStart(2, '0')}`),
+    );
+    const porLocal: components['schemas']['MatrizPorLocal'] = {
+      por: 'local',
+      pacotes: [OFFICE],
+      locais: [{ ...LOCAL, maquinas: 18 }],
+      celulas: [{ pacoteId: OFFICE.id, localId: LOCAL.id, naVersao: 15, total: 18 }],
+    };
+    const doLocal: PorMaquina = {
+      por: 'maquina',
+      local: LOCAL,
+      pacotes: [OFFICE],
+      maquinas,
+      celulas: maquinas.map((maquina, posicao): PorMaquina['celulas'][number] => ({
+        pacoteId: OFFICE.id,
+        ativoId: maquina.id,
+        situacao: posicao < 15 ? 'instalado-sem-alvo' : 'sem-o-programa',
+        versao: posicao < 15 ? '16.0' : null,
+        distribuicao: null,
+      })),
+      ultimas: [],
+    };
+    abrir('/gestao/software/matriz?por=local', {
+      ...base(true),
+      'GET /api/software/matriz': (pedido) =>
+        Response.json(new URL(pedido.url).searchParams.get('por') === 'local' ? porLocal : doLocal),
+    });
+    const celula = await screen.findByRole('button', {
+      name: 'Financeiro · Configuração do Office: 15 de 18 com o programa',
+    });
+    expect(celula.textContent).toBe('15 de 18');
+    fireEvent.click(celula);
+    const painel = await screen.findByRole('complementary', { name: 'Sede · Financeiro' });
+    expect(within(painel).getByText('de 18 com o programa')).toBeTruthy();
+    expect(await within(painel).findByText('3 sem o programa')).toBeTruthy();
+    const sem = within(painel).getByRole('list', { name: 'Máquinas sem o programa' });
+    expect(
+      within(sem)
+        .getAllByRole('listitem')
+        .map((item) => item.firstChild?.textContent),
+    ).toEqual(['PC-FIN-16', 'PC-FIN-17', 'PC-FIN-18']);
+    expect(within(painel).getByText('15 com o programa:')).toBeTruthy();
+    expect(within(painel).queryByText(/versão-alvo/)).toBeNull();
+    expect(
+      within(painel).getByRole('button', { name: 'Distribuir Configuração do Office a estas 3' }),
+    ).toBeTruthy();
+
+    // No "Por máquina", a barra da marcação também diz "com o programa".
+    fireEvent.click(
+      within(painel).getByRole('button', { name: 'Abrir a matriz do local Financeiro' }),
+    );
+    const dePc = (numero: string) =>
+      screen.getByRole('button', {
+        name: new RegExp(`^PC-FIN-${numero} · Configuração do Office:`),
+      });
+    await screen.findByRole('heading', { name: /^Software × máquinas/ });
+    await waitFor(() => dePc('01'));
+    for (const numero of ['01', '16']) fireEvent.click(dePc(numero));
+    const barra = screen.getByRole('region', { name: '2 marcadas no Configuração do Office' });
+    expect(
+      within(barra).getByText('PC-FIN-01 e PC-FIN-16: 1 instala e 1 já está com o programa.'),
+    ).toBeTruthy();
+  });
 });
