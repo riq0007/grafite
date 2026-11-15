@@ -800,6 +800,14 @@ export {
 } from './salas/salas.ts';
 export { CATEGORIAS_DE_SOFTWARE_DE_FABRICA } from './software/categorias.ts';
 export {
+  codigoDaMensagem,
+  type ExplicacaoDoComando,
+  explicarOCodigoDeSaida,
+  explicarOComando,
+  type ParteDaFrase,
+  type TrechoDoComando,
+} from './software/comando.ts';
+export {
   aplicarPassoDoAgente,
   type CampoDoPacote,
   CODIGOS_DE_SUCESSO_PADRAO,

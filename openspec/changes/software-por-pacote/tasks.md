@@ -7,7 +7,7 @@
 ## 2. Domínio
 
 - [x] 2.1 As versões e o casamento (decisões 1 e 2): `compararVersoes`, com o "v" do começo, as letras ("8u401", "1.2.3a", "2.4.1-beta"), o pedaço que falta e os zeros à esquerda; `casaComOPacote`; a situação da máquina frente ao pacote, também sem a versão-alvo; e o corte da versão das barras. Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
-- [ ] 2.2 O comando e o código de saída (decisões 5 e 6): `explicarOComando`, com os pedaços e o resumo; `explicarOCodigoDeSaida`; e o código lido da mensagem "exit status". Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
+- [x] 2.2 O comando e o código de saída (decisões 5 e 6): `explicarOComando`, com os pedaços e o resumo; `explicarOCodigoDeSaida`; e o código lido da mensagem "exit status". Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.3 O quando e a volta do agente (decisões 7 e 8): `podeSeguir`; o próximo momento em que o pedido pode seguir (o dia marcado ou as próximas 22:00 no fuso); o `expiration` do CONTACT, em minutos, até uma hora depois desse momento e com o máximo de 24 horas; a conferência do dia de amanhã em diante e do fuso. Começa pelos testes unitários, com o horário de verão e a virada do dia. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.4 A conta do assistente e a ficha (decisões 4, 9, 10 e 13): o sem contato, a classe de cada máquina na ordem pulada, na fila e vai instalar, com os grupos por versão, o "Para quem", o tipo pela extensão, o monograma, a comparação com a base e a ordem "Frente à base". Começa pelos testes unitários, com a máquina sem contato já na versão-alvo. Verificar: esses testes, o lint e o typecheck.
 
