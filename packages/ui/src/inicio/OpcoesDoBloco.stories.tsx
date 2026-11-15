@@ -122,10 +122,10 @@ export const DesmarcarUmTipo: Historia = {
 
 /**
  * Com o mínimo de um, a última caixa marcada fica desabilitada, e a explicação diz por quê, ligada
- * ao grupo para o leitor de tela. Marcar outra entrega as duas, na ordem do bloco.
+ * ao grupo para o leitor de tela. Marcar outra entrega as duas, na ordem do bloco. Fica fora da
+ * regressão visual: o play termina num clique, e a captura não espera o play acabar.
  */
 export const UltimaCaixaMarcada: Historia = {
-  tags: ['captura'],
   args: { valores: { ...DE_FABRICA, tipos: ['fusor'], nivel: 30 } },
   play: async ({ args }) => {
     const painel = within(await gaveta());

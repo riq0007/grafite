@@ -43,9 +43,11 @@ export const TudoMudado: Historia = {
   },
 };
 
-/** A tabela de um link diz de onde veio e volta à tabela da conta. */
+/**
+ * A tabela de um link diz de onde veio e volta à tabela da conta. Fica fora da regressão visual: o
+ * play termina num clique, e a captura não espera o play acabar.
+ */
 export const DoLink: Historia = {
-  tags: ['captura'],
   render: (args) => <LinhaDaVisao estado="do-link" {...args} />,
   play: async ({ args, canvasElement }) => {
     const grupo = linha(canvasElement);
