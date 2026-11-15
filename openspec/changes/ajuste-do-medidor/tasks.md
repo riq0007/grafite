@@ -20,13 +20,21 @@
     - o `pnpm test:e2e` passou, com 192 testes na web e 7 no painel;
     - o `pnpm test:stories` deu 607 de 608. A que reprovou foi a "Tabela com prévia › Pagina Seguinte", uma das histórias instáveis sob carga, presa ao relógio. Sozinha, ela passou nos 3 testes do arquivo.
 
-- [ ] 1.2 Na "Larguras Que A Coleta Pede", pôr o `Medidor` compacto na caixa de 40 px, no lugar do `span` vazio (design, decisão 3).
+- [x] 1.2 Na "Larguras Que A Coleta Pede", pôr o `Medidor` compacto na caixa de 40 px, no lugar do `span` vazio (design, decisão 3).
   - Medir de novo a sobra das colunas no Windows e no contêiner do Playwright, com o `.grafite/revisao/medir-larguras-da-coleta.mjs`.
   - Ajustar o comentário da história. Se a sobra mudar, ajustar também as larguras e o limite, pela spec componentes-base.
 
   Verificar:
   - o `pnpm test:stories` passa;
   - a sobra dos Suprimentos fica a mesma da 4.4 da `ajustes-dos-tokens`: 17 px no Windows e 25 no Linux.
+
+  Feito em 14/11:
+  - o medidor da história é o compacto do toner preto a 100%, sem o número e sem as marcas, na caixa `inline-block` de 40 px, como a `.medidorNaCelula` da web. Ele aparece também na "Cabeçalhos na largura de fábrica", que usa o mesmo conteúdo;
+  - a sobra, medida no catálogo compilado, ficou a mesma da 4.4:
+    - no Windows, 22 px na Disponibilidade, 17 no Control iD, 17 nos Suprimentos e 4 nas Páginas;
+    - no contêiner do Playwright 1.63.0, 25, 19, 25 e 4;
+  - as larguras e o limite de 30 px ficam, e o comentário diz que os Suprimentos foram medidos com o medidor de verdade;
+  - o `pnpm test:stories` passou nos 608 testes, com os 4 do `ValorComposto.stories.tsx`, e o Biome e o typecheck do ui passaram.
 
 ## 2. Os cartuchos na ficha
 

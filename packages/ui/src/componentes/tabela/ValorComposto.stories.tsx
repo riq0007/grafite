@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
+import { Medidor } from '../dados/Medidor.tsx';
 import { RotuloDeSituacao } from '../situacao/RotuloDeSituacao.tsx';
 import { CabecalhoDaTabela, Celula, Coluna, CorpoDaTabela, Linha, Tabela } from './Tabela.tsx';
 import { ValorComposto } from './ValorComposto.tsx';
@@ -124,8 +125,22 @@ const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
 
 const idade = <time className="numero">há 59 min</time>;
 
-/** O lugar do medidor compacto da coluna dos suprimentos, que tem 40 px. */
-const medidor = <span style={{ display: 'inline-block', inlineSize: '40px' }} />;
+/**
+ * O medidor compacto da coluna dos suprimentos, sem o número e sem as marcas, na caixa de 40 px da
+ * célula, como na tabela dos ativos (change ajuste-do-medidor, design, decisão 3).
+ */
+const medidor = (
+  <span style={{ display: 'inline-block', inlineSize: '40px', flex: 'none' }}>
+    <Medidor
+      rotulo="Menor nível: Black Toner Cartridge"
+      valor={100}
+      tinta="preto"
+      tamanho="compacto"
+      marcas={[]}
+      semNumero
+    />
+  </span>
+);
 
 /** O conteúdo mais largo que cada coluna mostra no dia a dia, com a idade de até uma hora. */
 const O_QUE_A_COLETA_MOSTRA: Record<keyof typeof LARGURAS_DE_FABRICA, ReactNode> = {
@@ -185,7 +200,8 @@ export const LargurasQueAColetaPede: Historia = {
       // A coluna comporta o conteúdo e o cabeçalho, e a largura acompanha a maior das duas medidas,
       // sem sobrar 30 px ou mais. A idade foi para a fonte da interface (change ajustes-dos-tokens)
       // e estreitou o conteúdo, e as larguras de fábrica ficaram: a spec pede ao menos 210 px na
-      // "Disponibilidade". A mesma fonte mede alguns pixels a menos no Linux: no Windows sobram até
+      // "Disponibilidade". Os "Suprimentos" são medidos com o medidor de verdade (change
+      // ajuste-do-medidor). A mesma fonte mede alguns pixels a menos no Linux: no Windows sobram até
       // 22 px, na "Disponibilidade"; no Linux do CI, até 25, na "Disponibilidade" e nos "Suprimentos".
       const pede = Math.max(conteudo, O_QUE_O_CABECALHO_PEDE[coluna] ?? 0);
       await expect(pede).toBeLessThanOrEqual(largura);
