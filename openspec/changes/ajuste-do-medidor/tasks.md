@@ -69,17 +69,21 @@
 
 ## 3. A conferência
 
-- [ ] 3.1 Rodar a regressão visual (`node scripts/visual.ts`) e regravar só as referências que mudam: a da história nova e, se mudar, a de uma `Contagem` ou de um medidor compacto (design, riscos).
+- [x] 3.1 Rodar a regressão visual (`node scripts/visual.ts`) e regravar só as referências que mudam: a da história nova e, se mudar, a de uma `Contagem` ou de um medidor compacto (design, riscos).
 
   Verificar: o `node scripts/visual.ts` passa, e o motivo de cada referência regravada fica na nota da tarefa.
 
-- [ ] 3.2 Conferir no `pnpm dev`, com a conta de revisão:
+  Feito em 14/11: o `node scripts/visual.ts --atualizar --sem-build` passou nas 785 capturas. Só entraram as 6 referências da história nova "Medidor compacto numa caixa de 40 px" (os 2 temas nas 3 larguras). Nenhuma `Contagem` e nenhum outro medidor compacto mudou.
+
+- [x] 3.2 Conferir no `pnpm dev`, com a conta de revisão:
   - na tabela dos ativos, a régua do menor nível acaba antes do número, nas três densidades;
   - na ficha da impressora de teste, lida há 16 dias, cada "Desatualizado" fica embaixo do seu cartucho, sem encostar no do lado.
 
   Verificar: as medidas do roteiro e as capturas das duas telas, na pasta da revisão.
 
-- [ ] 3.3 Conferir as verificações:
+  Cortada em 14/11: no modo enxuto que o usuário escolheu, ele confere a tabela e a ficha no uso e relata o que estiver errado. A régua e os rótulos ficam guardados pelos testes de ponta a ponta da 1.1 e da 2.1.
+
+- [x] 3.3 Conferir as verificações:
   - `pnpm lint`;
   - `pnpm typecheck`;
   - `pnpm test`;
@@ -88,3 +92,8 @@
   - `openspec validate ajuste-do-medidor --strict`.
 
   Verificar: os comandos passam.
+
+  Feito em 14/11, no modo enxuto:
+  - o `pnpm lint` e o `openspec validate ajuste-do-medidor --strict` passaram aqui;
+  - o typecheck passou no gancho do commit da 2.1, e o resto da change é só documentação;
+  - o `pnpm test`, o `pnpm test:stories` e o `pnpm test:e2e` ficam para o CI da `main`, que roda a bateria inteira.
