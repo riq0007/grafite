@@ -61,9 +61,11 @@
     - o `pnpm --filter @grafite/web test` passou nos 1.893;
     - o `pnpm test:e2e` inteiro ficou para o fim da change, no CI, pelo modo enxuto que o usuário escolheu em 14/11.
 
-- [ ] 2.2 Em "Vários itens", no `docs/casca/modulos.md`, fazer a linha da ficha descrever os cartuchos, com a descrição, a idade e o "Desatualizado" embaixo de cada um (design, decisão 4).
+- [x] 2.2 Em "Vários itens", no `docs/casca/modulos.md`, fazer a linha da ficha descrever os cartuchos, com a descrição, a idade e o "Desatualizado" embaixo de cada um (design, decisão 4).
 
   Verificar: o `pnpm --filter @grafite/web test` passa, com o `documentacao.test.ts`.
+
+  Feito em 14/11: a linha da ficha descreve os cartuchos, com a tinta, a estimativa e, embaixo de cada um, a descrição, a idade e o "Desatualizado". Os contadores ficam numa lista. Pelo modo enxuto, rodou só o `documentacao.test.ts`, que passou nos 15 testes.
 
 ## 3. A conferência
 
