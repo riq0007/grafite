@@ -13,6 +13,7 @@ import { Importacoes } from '../ativos/importacao/Importacoes.tsx';
 import { FichaDoModelo } from '../ativos/modelos/FichaDoModelo.tsx';
 import { ModeloNovo } from '../ativos/modelos/ModeloNovo.tsx';
 import { Modelos } from '../ativos/modelos/Modelos.tsx';
+import { lerPedidoDoAssistente, NovaDistribuicao } from '../ativos/software/Assistente.tsx';
 import { BaseDePacotes } from '../ativos/software/BaseDePacotes.tsx';
 import { lerAbaDoSoftware, TelaDasDistribuicoes } from '../ativos/software/Distribuicoes.tsx';
 import { FichaDaDistribuicao } from '../ativos/software/FichaDaDistribuicao.tsx';
@@ -94,6 +95,14 @@ const distribuicoesDeSoftware = createRoute({
   getParentRoute: () => gestao,
   path: 'software/distribuicoes',
   component: TelaDasDistribuicoes,
+});
+
+// O assistente da distribuição: o endereço fixo vence o `$id` das distribuições.
+const distribuicaoNova = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/distribuicoes/nova',
+  validateSearch: lerPedidoDoAssistente,
+  component: NovaDistribuicao,
 });
 
 const distribuicaoDeSoftware = createRoute({
@@ -181,6 +190,7 @@ export const rotasDaGestao = gestao.addChildren([
   software,
   pacoteDeSoftware,
   distribuicoesDeSoftware,
+  distribuicaoNova,
   distribuicaoDeSoftware,
   catalogo.addChildren([
     inicioDoCatalogo,

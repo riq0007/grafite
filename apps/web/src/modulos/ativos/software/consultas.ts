@@ -4,7 +4,7 @@
 // chave que o evento `software.mudou` invalida. Os passos do agente não publicam evento: a ficha se
 // relê enquanto alguma máquina espera ou instala.
 import type { components } from '@grafite/api-client';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { consultar } from '../../../api/consultas.ts';
 import { useApi } from '../../../api/useApi.tsx';
 
@@ -92,6 +92,62 @@ export function useDistribuicoesDoAtivo(ativoId: string) {
         () => api.GET('/ativos/{id}/distribuicoes', { params: { path: { id: ativoId } } }),
         'carregar as distribuições do ativo',
       ),
+  });
+}
+
+/** O que o passo Máquinas do assistente escolheu (change software-por-pacote, design, decisão 10). */
+export type AlvoDoAssistente = components['schemas']['AlvoDaDistribuicao'];
+export type PreviaDaDistribuicao = components['schemas']['PreviaDaDistribuicao'];
+export type AlvosDaDistribuicao = components['schemas']['AlvosDaDistribuicao'];
+export type MaquinaDaPrevia = components['schemas']['MaquinaDaPrevia'];
+
+/** O alvo sem nada escolhido. */
+export const ALVO_VAZIO: AlvoDoAssistente = {
+  locais: [],
+  visoes: [],
+  ativoIds: [],
+  lista: '',
+  fora: [],
+};
+
+/** O alvo escolheu alguma coisa: um local, uma visão, uma máquina ou a lista colada. */
+export const alvoEscolhido = (alvo: AlvoDoAssistente) =>
+  alvo.locais.length > 0 ||
+  alvo.visoes.length > 0 ||
+  alvo.ativoIds.length > 0 ||
+  alvo.lista.trim() !== '';
+
+/** Os locais e as visões do passo Máquinas, com quantas máquinas cada um tem. */
+export function useAlvos(fuso: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_SOFTWARE, 'alvos', fuso],
+    queryFn: () =>
+      consultar(
+        () => api.GET('/software/distribuicoes/alvos', { params: { query: { fuso } } }),
+        'carregar os locais e as visões',
+      ),
+  });
+}
+
+/**
+ * A conta do assistente: cada máquina escolhida com a classe frente ao pacote. O fuso vai junto, para
+ * as datas dos filtros das visões.
+ */
+export function usePrevia(pacoteId: string | null, alvo: AlvoDoAssistente, fuso: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_SOFTWARE, 'previa', pacoteId, alvo, fuso],
+    queryFn: () =>
+      consultar(
+        () =>
+          api.POST('/software/distribuicoes/previa', {
+            body: { pacoteId: pacoteId ?? '', alvo: { ...alvo, fuso } },
+          }),
+        'contar as máquinas',
+      ),
+    enabled: pacoteId !== null && alvoEscolhido(alvo),
+    placeholderData: keepPreviousData,
   });
 }
 

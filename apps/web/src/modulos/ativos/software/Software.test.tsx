@@ -378,3 +378,83 @@ describe('a distribuição', () => {
     ]);
   });
 });
+
+describe('o assistente da distribuição', () => {
+  type DaPrevia = components['schemas']['MaquinaDaPrevia'];
+  const daPrevia = (
+    numero: number,
+    classe: DaPrevia['classe'],
+    extras: Partial<DaPrevia> = {},
+  ) => ({
+    id: `ativo-${numero}`,
+    rotulo: `Computador PAT-00${numero}`,
+    patrimonio: `PAT-00${numero}`,
+    hostname: null,
+    local: 'Financeiro',
+    classe,
+    versao: classe === 'pulada' ? '23.01' : null,
+    semContato: null,
+    emAndamento: null,
+    ...extras,
+  });
+  const PREVIA: components['schemas']['PreviaDaDistribuicao'] = {
+    maquinas: [
+      ...Array.from({ length: 12 }, (_, indice) => daPrevia(100 + indice, 'vai-instalar')),
+      ...Array.from({ length: 5 }, (_, indice) => daPrevia(200 + indice, 'pulada')),
+      daPrevia(300, 'na-fila', { semContato: { dias: 3, texto: 'Sem contato · há 3 dias' } }),
+    ],
+    naoAchados: [],
+    conta: {
+      vaoInstalar: 12,
+      puladas: 5,
+      naFila: 1,
+      primeiraVez: 12,
+      porVersao: [{ versao: null, quantas: 12 }],
+    },
+    paraQuem: 'Financeiro',
+  };
+
+  it('o pacote vem do endereço, o local marcado cobre o ramo e o "Até agora" faz a conta', async () => {
+    const pedidos: { alvo: { locais: string[] }; pacoteId: string }[] = [];
+    abrir(`/gestao/software/distribuicoes/nova?pacote=${PACOTE.id}`, {
+      ...base(true),
+      'GET /api/software/distribuicoes': () => Response.json({ distribuicoes: [] }),
+      'GET /api/software/distribuicoes/alvos': () =>
+        Response.json({
+          locais: [
+            { id: 'l-sede', nome: 'Sede', paiId: null, maquinas: 21, semContato: 1 },
+            { id: 'l-fin', nome: 'Financeiro', paiId: 'l-sede', maquinas: 18, semContato: 1 },
+            { id: 'l-com', nome: 'Comercial', paiId: 'l-sede', maquinas: 3, semContato: 0 },
+          ],
+          visoes: [],
+        }),
+      'POST /api/software/distribuicoes/previa': async (pedido) => {
+        pedidos.push(await pedido.json());
+        return Response.json(PREVIA);
+      },
+    });
+    const ateAgora = await screen.findByRole('complementary', { name: 'Até agora' });
+    expect(await within(ateAgora).findByText('7-Zip 23.01')).toBeTruthy();
+    expect(within(ateAgora).getByText('Marque locais, visões ou máquinas ao lado.')).toBeTruthy();
+    expect(screen.getByText('17 com agente em dia · 1 sem contato')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Financeiro' }));
+    expect(
+      await within(ateAgora).findByText('máquinas escolhidas, do local Financeiro'),
+    ).toBeTruthy();
+    expect(within(ateAgora).getByText('18')).toBeTruthy();
+    expect(within(ateAgora).getByText('Vão instalar')).toBeTruthy();
+    expect(within(ateAgora).getByText('12')).toBeTruthy();
+    expect(within(ateAgora).getByText('Já têm a 23.01 · puladas')).toBeTruthy();
+    expect(within(ateAgora).getByText('Computador PAT-00300 sem contato há 3 dias.')).toBeTruthy();
+    expect(pedidos.at(-1)).toMatchObject({ pacoteId: PACOTE.id, alvo: { locais: ['l-fin'] } });
+    expect(within(ateAgora).getByRole('button', { name: 'Quando instalar' })).toBeTruthy();
+
+    // A Sede cobre o Financeiro: ele fica marcado, sem desmarcar, e sai da lista do alvo.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Sede' }));
+    await waitFor(() => expect(pedidos.at(-1)?.alvo.locais).toEqual(['l-sede']));
+    const financeiro = screen.getByRole('checkbox', { name: 'Financeiro' }) as HTMLInputElement;
+    expect(financeiro.checked).toBe(true);
+    expect(financeiro.disabled).toBe(true);
+  });
+});

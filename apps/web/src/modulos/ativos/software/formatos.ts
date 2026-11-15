@@ -22,6 +22,12 @@ export function tipoETamanho(pacote: Pick<PacoteDeSoftware, 'tipo' | 'arquivo'>)
     : pacote.tipo.longo;
 }
 
+/** "Driver HP Universal 7.3": o nome do pacote com a versão, quando o nome ainda não a traz. */
+export const nomeComVersao = (pacote: { nome: string; versao: string | null }) =>
+  pacote.versao && !pacote.nome.includes(pacote.versao)
+    ? `${pacote.nome} ${pacote.versao}`
+    : pacote.nome;
+
 /** A cor da série do ícone do pacote, de 1 a 8, sempre a mesma para o mesmo nome. */
 export function serieDoPacote(nome: string): number {
   let soma = 0;

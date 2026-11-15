@@ -1,0 +1,471 @@
+/*
+ * O assistente da distribuição (m03 a m05 e m08): o trilho dos passos à esquerda, no fundo afundado,
+ * o passo no centro e o "Até agora" à direita, na superfície elevada. A tela ocupa a janela inteira,
+ * até as bordas, por cima do respiro da janela, como as fichas do software.
+ */
+.assistente {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 330px;
+  min-height: calc(100% + 2 * var(--respiro));
+  margin: calc(-1 * var(--respiro));
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* O trilho dos quatro passos, com o que já saiu hoje e a nota no pé. */
+.trilho {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-5);
+  border-right: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-afundada);
+}
+
+.tituloDoTrilho {
+  margin: 0 0 var(--esp-5);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.passos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passos > li {
+  position: relative;
+  padding-bottom: var(--esp-6);
+}
+
+/* A linha que liga a bola de um passo à do seguinte. */
+.passos > li:not(:last-child)::before {
+  position: absolute;
+  top: 28px;
+  bottom: 0;
+  left: 13px;
+  width: 2px;
+  background: var(--cor-linha-forte);
+  content: "";
+}
+
+.passo {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--esp-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: start;
+}
+
+/* O passo feito é um botão, que volta a ele. */
+button.passo {
+  cursor: pointer;
+  outline: none;
+}
+
+button.passo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.bola {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--cor-linha-forte);
+  border-radius: 50%;
+  background: var(--cor-superficie);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+[data-estado="feito"] .bola {
+  border-color: var(--cor-ok-borda);
+  background: var(--cor-ok-fundo);
+  color: var(--cor-ok);
+}
+
+[data-estado="agora"] .bola {
+  border-color: var(--cor-destaque);
+  background: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.textoDoPasso {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  font-size: var(--texto-legenda);
+}
+
+.textoDoPasso > b {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+[data-estado="depois"] .textoDoPasso {
+  color: var(--cor-texto-2);
+}
+
+.peDoTrilho {
+  display: grid;
+  margin-top: auto;
+}
+
+.hoje {
+  display: grid;
+  gap: var(--esp-1);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie);
+  font-size: var(--texto-dado);
+}
+
+.hoje ul {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hoje li {
+  display: grid;
+  gap: 2px;
+}
+
+.hoje b {
+  font-weight: var(--peso-forte);
+}
+
+.legendaForte {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.notaDoTrilho {
+  margin: var(--esp-3) 0 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+/* O passo no centro. */
+.centro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-6) var(--esp-4);
+}
+
+/* O cabeçalho do passo vem sem a linha de baixo, como no mockup. */
+.centro > [data-cabecalho-da-pagina] {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--esp-3);
+}
+
+.filtro {
+  flex: 1;
+  min-width: 200px;
+  max-width: 340px;
+}
+
+.quantosNoModo {
+  margin-left: var(--esp-2);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A caixa das escolhas: os locais em árvore, as visões, as achadas pela busca ou a lista colada. */
+.caixa {
+  overflow: hidden;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+}
+
+.linhas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.no {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 40px;
+  padding: 0 var(--esp-3) 0 calc(var(--esp-3) + var(--nivel, 0) * 22px);
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-dado);
+}
+
+.no[data-marcado] {
+  background: var(--cor-hover);
+}
+
+.abrir {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  cursor: pointer;
+  outline: none;
+}
+
+.abrir:hover {
+  background: var(--cor-hover);
+}
+
+.abrir:disabled {
+  cursor: default;
+}
+
+.contagem {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.quantas {
+  min-width: 3ch;
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* "Ver as máquinas uma a uma", no fim da caixa. */
+.umaAUma {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--esp-3);
+  border: 0;
+  border-bottom: 1px solid var(--cor-linha);
+  background: none;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-dado);
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+
+.umaAUma:hover {
+  background: var(--cor-hover);
+}
+
+.umaAUma > svg {
+  justify-self: center;
+  color: var(--cor-texto-2);
+}
+
+.abrir:focus-visible,
+.umaAUma:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.vazioDaCaixa {
+  margin: 0;
+  padding: var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.colar {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.acoesDaLista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+/* O passo Pacote: os pacotes ativos, um por linha. */
+.pacotes {
+  min-width: 0;
+}
+
+.opcaoDoPacote {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 56px;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+}
+
+.opcaoDoPacote[data-selected] {
+  border-color: var(--cor-destaque);
+  background: var(--cor-hover);
+}
+
+.textoDoPacote {
+  display: grid;
+  min-width: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.textoDoPacote > b {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* O "Até agora", com o pacote, a conta e o rodapé dos botões. */
+.ateAgora {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-5);
+  border-left: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-elevada);
+}
+
+.pacote {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.separador {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--cor-linha);
+}
+
+.total {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.numeroGrande {
+  font-size: calc(var(--texto-numeral) * 1.86);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.quadro {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.quadro > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+.quadro dd {
+  margin: 0;
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.aviso {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-atencao-borda);
+  border-radius: var(--raio-base);
+  background: var(--cor-atencao-fundo);
+  font-size: var(--texto-dado);
+}
+
+.aviso[data-tipo="info"] {
+  border-color: var(--cor-info-borda);
+  background: var(--cor-info-fundo);
+}
+
+.aviso > svg {
+  margin-top: 2px;
+}
+
+.aviso p {
+  margin: 0;
+}
+
+.aviso b {
+  font-weight: var(--peso-forte);
+}
+
+.rodape {
+  display: flex;
+  gap: var(--esp-2);
+  margin-top: auto;
+}
+
+.seguir {
+  flex: 1;
+  justify-content: center;
+}
+
+/* O passo feito sublinha o nome ao passar o cursor; no fim, pela ordem da especificidade. */
+button.passo:hover .textoDoPasso > b {
+  text-decoration: underline;
+}
