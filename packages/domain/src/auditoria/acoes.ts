@@ -229,6 +229,7 @@ export const ACOES_DA_AUDITORIA = {
   'pacote.inativado': 'Pacote de software inativado',
   'pacote.reativado': 'Pacote de software reativado',
   'pacote.arquivo-trocado': 'Arquivo do pacote trocado',
+  'categoria-de-software.criada': 'Categoria de software criada',
   'distribuicao.criada': 'Distribuição de software criada',
   'distribuicao.pedida-agora': 'Agentes acordados para a distribuição',
 } as const;

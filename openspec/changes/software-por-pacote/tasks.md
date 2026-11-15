@@ -2,7 +2,7 @@
 
 - [x] 1.1 A migration das categorias e do pacote (design, decisões 1, 3 e 4): `categorias_de_software` com `orgScoped()`, RLS e as 7 de fábrica em cada organização; no pacote, a `categoria_id`, o `nome_no_inventario` e o `nome_no_inventario_normalizado`, preenchido nos de hoje pelo nome, e quem guardou o arquivo e quando; os pacotes de hoje em Utilitários. Começa pelo teste da migration e do teste-guarda do RLS. Verificar: esses testes, o lint e o typecheck.
 - [x] 1.2 A migration do inventário, da distribuição e do agente (decisões 1, 6, 7, 8, 8a, 9 e 11): no software do ativo, o `nome_normalizado`, preenchido nos de hoje com o `lower`, o `translate`, o `regexp_replace` e o `btrim`, e o `do_sistema`; na distribuição, o `quando`, o `a_partir_de`, o `fuso` e o `para_quem`; na máquina, a situação `tirada`, o `codigo_de_saida`, a `chamada_em` e a `chamada_respondeu`; no agente, o `volta_ate`; no cadastro dos agentes, o `dias_sem_contato`, de 1 a 30, com 2 de fábrica. Começa pelo teste da migration. Verificar: esse teste, o lint e o typecheck.
-- [ ] 1.3 As 7 categorias na organização nova, junto com os perfis de fábrica (`pnpm grafite organizacao criar`). Começa pelo teste da criação. Verificar: esse teste, o lint e o typecheck.
+- [x] 1.3 As 7 categorias na organização nova, junto com os perfis de fábrica (`pnpm grafite organizacao criar`). Começa pelo teste da criação. Verificar: esse teste, o lint e o typecheck.
 
 ## 2. Domínio
 

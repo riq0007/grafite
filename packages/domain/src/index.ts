@@ -798,6 +798,7 @@ export {
   type SituacaoDaSalaNoMapa,
   situacaoDaSalaNoMapa,
 } from './salas/salas.ts';
+export { CATEGORIAS_DE_SOFTWARE_DE_FABRICA } from './software/categorias.ts';
 export {
   aplicarPassoDoAgente,
   type CampoDoPacote,

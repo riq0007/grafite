@@ -4,6 +4,7 @@
 import {
   atribuicoes,
   auditoria,
+  categoriasDeSoftware,
   contas,
   naOrganizacao,
   perfis,
@@ -90,6 +91,25 @@ describe('grafite organizacao criar', () => {
       tx.select({ fabrica: regrasDeAlerta.fabrica }).from(regrasDeAlerta),
     );
     expect(regras).toHaveLength(8);
+    // As categorias de software de fábrica também, na ordem (change software-por-pacote, design,
+    // decisão 3).
+    const categorias = await naOrganizacao(api.banco, org ?? '', (tx) =>
+      tx
+        .select({ nome: categoriasDeSoftware.nome, ordem: categoriasDeSoftware.ordem })
+        .from(categoriasDeSoftware)
+        .orderBy(categoriasDeSoftware.ordem),
+    );
+    expect(categorias).toEqual(
+      [
+        'Navegadores',
+        'Compactadores',
+        'Drivers',
+        'Escritório',
+        'Utilitários',
+        'Rede e segurança',
+        'Mídia',
+      ].map((nome, posicao) => ({ nome, ordem: posicao + 1 })),
+    );
     expect(pessoa).toMatchObject({
       nome: 'Ana Souza',
       email: 'ana@empresa.com',
@@ -127,6 +147,7 @@ describe('grafite organizacao criar', () => {
       'perfil.criado',
       'atribuicao.criada',
       ...Array.from({ length: 8 }, () => 'regra-de-alerta.criada'),
+      ...Array.from({ length: 7 }, () => 'categoria-de-software.criada'),
     ]);
     for (const registro of registros) {
       expect(registro).toMatchObject({
