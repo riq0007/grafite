@@ -23,17 +23,20 @@ export const MENSAGENS_DO_SOFTWARE = {
   semMaquinas: 'Escolha pelo menos uma máquina.',
   pacoteInativo: 'O pacote está inativo.',
   semAgente: (ativo: string) => `O ativo ${ativo} não tem o agente do GLPI ligado.`,
+  categoria: 'Escolha uma das categorias da base.',
 } as const;
 
 export interface DadosDoPacote {
   nome: string;
   versao: string | null;
   descricao: string | null;
+  /** O nome que liga o pacote ao inventário; vazio, vale o nome (design, decisão 1). */
+  nomeNoInventario: string | null;
   comando: string;
   codigosDeSucesso: number[];
 }
 
-export type CampoDoPacote = 'nome' | 'comando' | 'codigosDeSucesso';
+export type CampoDoPacote = 'nome' | 'nomeNoInventario' | 'comando' | 'codigosDeSucesso';
 
 const texto = (valor: unknown) => (typeof valor === 'string' ? valor.trim() : '');
 
@@ -53,11 +56,12 @@ function lerCodigos(valor: unknown): number[] | null {
   return codigos;
 }
 
-/** Confere o pacote pedido: o nome, o comando e os códigos de sucesso. */
+/** Confere o pacote pedido: o nome, o nome no inventário, o comando e os códigos de sucesso. */
 export function conferirPacote(pedido: {
   nome?: unknown;
   versao?: unknown;
   descricao?: unknown;
+  nomeNoInventario?: unknown;
   comando?: unknown;
   codigosDeSucesso?: unknown;
 }):
@@ -67,6 +71,8 @@ export function conferirPacote(pedido: {
   const nome = texto(pedido.nome);
   if (nome === '') erros.nome = MENSAGENS_DO_SOFTWARE.nome;
   else if (nome.length > 120) erros.nome = MENSAGENS_DO_SOFTWARE.nomeLongo;
+  const nomeNoInventario = texto(pedido.nomeNoInventario).replace(/\s+/g, ' ');
+  if (nomeNoInventario.length > 120) erros.nomeNoInventario = MENSAGENS_DO_SOFTWARE.nomeLongo;
   const comando = texto(pedido.comando);
   if (comando === '') erros.comando = MENSAGENS_DO_SOFTWARE.comando;
   else if (comando.length > 2000) erros.comando = MENSAGENS_DO_SOFTWARE.comandoLongo;
@@ -79,6 +85,7 @@ export function conferirPacote(pedido: {
       nome,
       versao: texto(pedido.versao) || null,
       descricao: texto(pedido.descricao) || null,
+      nomeNoInventario: nomeNoInventario || null,
       comando,
       codigosDeSucesso,
     },

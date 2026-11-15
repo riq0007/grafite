@@ -1,18 +1,29 @@
 // A base de software pela API (spec distribuicao-de-software, "Base de software"; change
 // distribuicao-de-software): a lista para quem distribui, e o cadastro, a edição, a inativação e o
 // envio do arquivo para quem administra o software, tudo na auditoria; e o arquivo inteiro, montado
-// das partes, para quem vê a base.
+// das partes, para quem vê a base. Na change software-por-pacote, o pacote ganha a categoria, o nome
+// no inventário, o tipo pela extensão e quem guardou o arquivo (design, decisões 1, 3 e 4).
 import { Readable } from 'node:stream';
 import { gunzipSync } from 'node:zlib';
-import { type Banco, naOrganizacao, pacotesDeSoftware, partesDosPacotes } from '@grafite/db';
+import {
+  type Banco,
+  categoriasDeSoftware,
+  contas,
+  naOrganizacao,
+  pacotesDeSoftware,
+  partesDosPacotes,
+  pessoas,
+  type Transacao,
+} from '@grafite/db';
 import {
   conferirPacote,
   LIMITE_DO_ARQUIVO_DO_PACOTE,
   MENSAGENS_DO_SOFTWARE,
   normalizarTexto,
   pode,
+  tipoDoPacote,
 } from '@grafite/domain';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { FastifyError, FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -21,7 +32,7 @@ import { type Armazenamento, chaveDaParteDoPacote } from '../arquivos/armazename
 import { BytesDoArquivo } from '../arquivos/esquemas.ts';
 import { nomeCodificado, nomeEmAscii } from '../ativos/arquivos-dos-campos.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
-import { violouUnicidade } from '../banco.ts';
+import { violouChaveEstrangeira, violouUnicidade } from '../banco.ts';
 import {
   conflito,
   dadosInvalidos,
@@ -38,9 +49,21 @@ export const PacoteDeSoftware = z
     nome: z.string(),
     versao: z.string().nullable(),
     descricao: z.string().nullable(),
+    categoria: z.object({ id: z.uuid(), nome: z.string() }).nullable(),
+    /** O nome que liga o pacote ao inventário; `null`, vale o nome. */
+    nomeNoInventario: z.string().nullable(),
     comando: z.string(),
     codigosDeSucesso: z.array(z.number()),
-    arquivo: z.object({ nome: z.string(), tamanho: z.number() }).nullable(),
+    /** O tipo pela extensão do arquivo: o longo da ficha e o curto das listas. */
+    tipo: z.object({ longo: z.string(), curto: z.string() }),
+    arquivo: z
+      .object({
+        nome: z.string(),
+        tamanho: z.number(),
+        guardadoEm: z.string().nullable(),
+        guardadoPor: z.object({ id: z.uuid(), nome: z.string() }).nullable(),
+      })
+      .nullable(),
     situacao: z.enum(['ativo', 'inativo']),
   })
   .meta({ id: 'PacoteDeSoftware' });
@@ -50,6 +73,10 @@ const PedidoDePacote = z
     nome: z.string(),
     versao: z.string().nullable().optional(),
     descricao: z.string().nullable().optional(),
+    /** A categoria; sem o campo, a edição mantém a de antes, e `null` tira. */
+    categoriaId: z.uuid({ error: MENSAGENS_DO_SOFTWARE.categoria }).nullable().optional(),
+    /** O nome no inventário; sem o campo, a edição mantém o de antes, e vazio volta ao nome. */
+    nomeNoInventario: z.string().nullable().optional(),
     comando: z.string(),
     /** Os códigos como texto, "0, 3010", ou a lista. */
     codigosDeSucesso: z.union([z.string(), z.array(z.number())]).optional(),
@@ -60,26 +87,75 @@ const ParametrosDoPacote = z.object({ id: z.uuid({ error: 'Pacote não encontrad
 
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
-type LinhaDoPacote = typeof pacotesDeSoftware.$inferSelect;
+/** O pacote com o nome da categoria e o de quem guardou o arquivo. */
+interface PacoteLido {
+  pacote: typeof pacotesDeSoftware.$inferSelect;
+  categoria: { id: string; nome: string } | null;
+  guardadoPor: string | null;
+}
 
-export const pacoteNaTela = (linha: LinhaDoPacote): z.infer<typeof PacoteDeSoftware> => ({
-  id: linha.id,
+const selecionarPacotes = (tx: Transacao) =>
+  tx
+    .select({
+      pacote: pacotesDeSoftware,
+      categoria: { id: categoriasDeSoftware.id, nome: categoriasDeSoftware.nome },
+      guardadoPor: pessoas.nome,
+    })
+    .from(pacotesDeSoftware)
+    .leftJoin(
+      categoriasDeSoftware,
+      and(
+        eq(categoriasDeSoftware.orgId, pacotesDeSoftware.orgId),
+        eq(categoriasDeSoftware.id, pacotesDeSoftware.categoriaId),
+      ),
+    )
+    .leftJoin(
+      contas,
+      and(
+        eq(contas.orgId, pacotesDeSoftware.orgId),
+        eq(contas.id, pacotesDeSoftware.arquivoGuardadoPor),
+      ),
+    )
+    .leftJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)));
+
+export const pacoteNaTela = ({
+  pacote: linha,
+  categoria,
+  guardadoPor,
+}: PacoteLido): z.infer<typeof PacoteDeSoftware> => {
+  const comArquivo = linha.nomeDoArquivo !== null && linha.tamanhoDoArquivo !== null;
+  return {
+    id: linha.id,
+    nome: linha.nome,
+    versao: linha.versao,
+    descricao: linha.descricao,
+    categoria,
+    nomeNoInventario: linha.nomeNoInventario,
+    comando: linha.comando,
+    codigosDeSucesso: linha.codigosDeSucesso,
+    tipo: tipoDoPacote(comArquivo ? linha.nomeDoArquivo : null),
+    arquivo:
+      linha.nomeDoArquivo && linha.tamanhoDoArquivo !== null
+        ? {
+            nome: linha.nomeDoArquivo,
+            tamanho: linha.tamanhoDoArquivo,
+            guardadoEm: linha.arquivoGuardadoEm?.toISOString() ?? null,
+            guardadoPor:
+              linha.arquivoGuardadoPor && guardadoPor
+                ? { id: linha.arquivoGuardadoPor, nome: guardadoPor }
+                : null,
+          }
+        : null,
+    situacao: linha.situacao,
+  };
+};
+
+/** O que a auditoria guarda do pacote: sem o SHA-512, com a categoria e o arquivo pelo nome. */
+const visaoDoPacote = ({ pacote: linha, categoria }: PacoteLido) => ({
   nome: linha.nome,
   versao: linha.versao,
-  descricao: linha.descricao,
-  comando: linha.comando,
-  codigosDeSucesso: linha.codigosDeSucesso,
-  arquivo:
-    linha.nomeDoArquivo && linha.tamanhoDoArquivo !== null
-      ? { nome: linha.nomeDoArquivo, tamanho: linha.tamanhoDoArquivo }
-      : null,
-  situacao: linha.situacao,
-});
-
-/** O que a auditoria guarda do pacote: sem o SHA-512, com o arquivo pelo nome. */
-const visaoDoPacote = (linha: LinhaDoPacote) => ({
-  nome: linha.nome,
-  versao: linha.versao,
+  categoria: categoria?.nome ?? null,
+  nomeNoInventario: linha.nomeNoInventario,
   comando: linha.comando,
   codigosDeSucesso: linha.codigosDeSucesso,
   arquivo: linha.nomeDoArquivo,
@@ -100,13 +176,19 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
 }> = async (app, { banco, agora, armazenamento }) => {
   const orgDa = (requisicao: FastifyRequest) => requisicao.organizacao?.id ?? '';
 
-  async function lerPacote(
-    tx: Parameters<Parameters<typeof naOrganizacao>[2]>[0],
-    id: string,
-  ): Promise<LinhaDoPacote> {
-    const [linha] = await tx.select().from(pacotesDeSoftware).where(eq(pacotesDeSoftware.id, id));
-    if (!linha) throw naoEncontrado('Pacote não encontrado.');
-    return linha;
+  async function lerPacote(tx: Transacao, id: string): Promise<PacoteLido> {
+    const [lido] = await selecionarPacotes(tx).where(eq(pacotesDeSoftware.id, id));
+    if (!lido) throw naoEncontrado('Pacote não encontrado.');
+    return lido;
+  }
+
+  /** A categoria pedida, que precisa ser uma das da organização. */
+  async function conferirCategoria(tx: Transacao, categoriaId: string) {
+    const [categoria] = await tx
+      .select({ id: categoriasDeSoftware.id })
+      .from(categoriasDeSoftware)
+      .where(eq(categoriasDeSoftware.id, categoriaId));
+    if (!categoria) throw dadosInvalidos({ categoriaId: MENSAGENS_DO_SOFTWARE.categoria });
   }
 
   app.get(
@@ -127,7 +209,7 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
     async (requisicao) => {
       const { acesso } = sessaoDa(requisicao);
       const linhas = await naOrganizacao(banco, orgDa(requisicao), (tx) =>
-        tx.select().from(pacotesDeSoftware).orderBy(asc(pacotesDeSoftware.nomeNormalizado)),
+        selecionarPacotes(tx).orderBy(asc(pacotesDeSoftware.nomeNormalizado)),
       );
       return {
         pacotes: linhas.map(pacoteNaTela),
@@ -149,43 +231,60 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
     const momento = agora();
     return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
       const antes = id ? await lerPacote(tx, id) : null;
+      // Sem o campo, a edição mantém o de antes: o cliente de antes desta change não os manda.
+      const nomeNoInventario =
+        pedido.nomeNoInventario === undefined && antes
+          ? antes.pacote.nomeNoInventario
+          : dados.nomeNoInventario;
+      const categoriaId =
+        pedido.categoriaId === undefined ? (antes?.pacote.categoriaId ?? null) : pedido.categoriaId;
+      if (categoriaId && categoriaId !== antes?.pacote.categoriaId) {
+        await conferirCategoria(tx, categoriaId);
+      }
       const valores = {
         ...dados,
+        nomeNoInventario,
+        categoriaId,
         nomeNormalizado: normalizarTexto(dados.nome),
-        nomeNoInventarioNormalizado: normalizarTexto(dados.nome),
+        nomeNoInventarioNormalizado: normalizarTexto(nomeNoInventario ?? dados.nome),
         atualizadoEm: momento,
       };
-      let linha: LinhaDoPacote | undefined;
+      let gravado: { id: string } | undefined;
       try {
-        [linha] = antes
+        [gravado] = antes
           ? await tx
               .update(pacotesDeSoftware)
               .set(valores)
-              .where(eq(pacotesDeSoftware.id, antes.id))
-              .returning()
+              .where(eq(pacotesDeSoftware.id, antes.pacote.id))
+              .returning({ id: pacotesDeSoftware.id })
           : await tx
               .insert(pacotesDeSoftware)
               .values({ orgId: orgDa(requisicao), ...valores, criadoEm: momento })
-              .returning();
+              .returning({ id: pacotesDeSoftware.id });
       } catch (erro) {
         if (violouUnicidade(erro, 'pacotes_de_software_nome_unico')) {
           throw conflito(MENSAGENS_DO_SOFTWARE.nomeRepetido, {
             nome: MENSAGENS_DO_SOFTWARE.nomeRepetido,
           });
         }
+        // A categoria removida enquanto o pacote era gravado.
+        if (violouChaveEstrangeira(erro, 'pacotes_de_software_categoria_fk')) {
+          throw dadosInvalidos({ categoriaId: MENSAGENS_DO_SOFTWARE.categoria });
+        }
         throw erro;
       }
-      if (!linha) throw new Error('O pacote não foi gravado.');
+      if (!gravado) throw new Error('O pacote não foi gravado.');
+      const depois = await lerPacote(tx, gravado.id);
       await registrarNaAuditoria(tx, {
         acao: antes ? 'pacote.alterado' : 'pacote.criado',
         ator: { tipo: 'conta', contaId },
-        alvo: { tipo: 'pacote', id: linha.id },
+        alvo: { tipo: 'pacote', id: gravado.id },
         ...(antes ? { antes: visaoDoPacote(antes) } : {}),
-        depois: visaoDoPacote(linha),
+        depois: visaoDoPacote(depois),
         origem: origemDa(requisicao),
         momento,
       });
-      return pacoteNaTela(linha);
+      return pacoteNaTela(depois);
     });
   }
 
@@ -236,17 +335,16 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
         const momento = agora();
         return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
           const antes = await lerPacote(tx, requisicao.params.id);
-          if (antes.situacao === situacao) return pacoteNaTela(antes);
-          const [depois] = await tx
+          if (antes.pacote.situacao === situacao) return pacoteNaTela(antes);
+          await tx
             .update(pacotesDeSoftware)
             .set({ situacao, atualizadoEm: momento })
-            .where(eq(pacotesDeSoftware.id, antes.id))
-            .returning();
-          if (!depois) throw new Error('O pacote sumiu.');
+            .where(eq(pacotesDeSoftware.id, antes.pacote.id));
+          const depois = await lerPacote(tx, antes.pacote.id);
           await registrarNaAuditoria(tx, {
             acao,
             ator: { tipo: 'conta', contaId },
-            alvo: { tipo: 'pacote', id: antes.id },
+            alvo: { tipo: 'pacote', id: antes.pacote.id },
             antes: visaoDoPacote(antes),
             depois: visaoDoPacote(depois),
             origem: origemDa(requisicao),
@@ -277,7 +375,7 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
     async (requisicao, resposta) => {
       const orgId = orgDa(requisicao);
       const { pacote, partes } = await naOrganizacao(banco, orgId, async (tx) => ({
-        pacote: await lerPacote(tx, requisicao.params.id),
+        pacote: (await lerPacote(tx, requisicao.params.id)).pacote,
         partes: await tx
           .select({ indice: partesDosPacotes.indice })
           .from(partesDosPacotes)
@@ -353,13 +451,14 @@ export const rotasDaBaseDeSoftware: FastifyPluginAsyncZod<{
         const momento = agora();
         const orgId = orgDa(requisicao);
         return naOrganizacao(banco, orgId, async (tx) => {
-          const antes = await lerPacote(tx, (requisicao.params as { id: string }).id);
+          const { pacote: antes } = await lerPacote(tx, (requisicao.params as { id: string }).id);
           const { partes } = await trocarArquivoDoPacote(tx, {
             orgId,
             pacoteId: antes.id,
             nome,
             arquivo,
             armazenamento,
+            contaId,
             momento,
           });
           const depois = await lerPacote(tx, antes.id);

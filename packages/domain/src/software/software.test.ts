@@ -26,6 +26,7 @@ describe('o pacote de software', () => {
         nome: '7-Zip 23.01',
         versao: '23.01',
         descricao: null,
+        nomeNoInventario: null,
         comando: 'msiexec /i "7z2301-x64.msi" /qn /norestart',
         codigosDeSucesso: CODIGOS_DE_SUCESSO_PADRAO,
       },
@@ -57,6 +58,19 @@ describe('o pacote de software', () => {
         codigosDeSucesso: MENSAGENS_DO_SOFTWARE.codigos,
       },
     });
+  });
+
+  it('o nome no inventário vem com os espaços juntados, até 120 caracteres', () => {
+    expect(
+      conferirPacote({ nome: 'VLC', nomeNoInventario: '  VLC   media player ', comando: 'x' }),
+    ).toMatchObject({ ok: true, dados: { nomeNoInventario: 'VLC media player' } });
+    expect(conferirPacote({ nome: 'VLC', nomeNoInventario: ' ', comando: 'x' })).toMatchObject({
+      ok: true,
+      dados: { nomeNoInventario: null },
+    });
+    expect(
+      conferirPacote({ nome: 'VLC', nomeNoInventario: 'v'.repeat(121), comando: 'x' }),
+    ).toEqual({ ok: false, erros: { nomeNoInventario: MENSAGENS_DO_SOFTWARE.nomeLongo } });
   });
 });
 

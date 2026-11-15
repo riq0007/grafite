@@ -12,3 +12,21 @@ export const CATEGORIAS_DE_SOFTWARE_DE_FABRICA = [
   'Rede e segurança',
   'Mídia',
 ] as const;
+
+export const MENSAGENS_DAS_CATEGORIAS = {
+  nome: 'Informe o nome da categoria.',
+  nomeLongo: 'Use até 40 caracteres.',
+  nomeRepetido: 'Já existe uma categoria com este nome.',
+  comPacotes: 'Tire os pacotes desta categoria antes de removê-la.',
+  ordem: 'A ordem precisa ter todas as categorias, uma vez cada.',
+} as const;
+
+/** O nome da categoria, de 1 a 40 caracteres, com os espaços juntados. */
+export function conferirNomeDaCategoria(
+  nome: unknown,
+): { ok: true; nome: string } | { ok: false; erro: string } {
+  const limpo = typeof nome === 'string' ? nome.replace(/\s+/g, ' ').trim() : '';
+  if (limpo === '') return { ok: false, erro: MENSAGENS_DAS_CATEGORIAS.nome };
+  if (limpo.length > 40) return { ok: false, erro: MENSAGENS_DAS_CATEGORIAS.nomeLongo };
+  return { ok: true, nome: limpo };
+}

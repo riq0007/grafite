@@ -93,6 +93,7 @@ beforeAll(async () => {
       nome: '7z2301-x64.msi',
       arquivo: ARQUIVO,
       armazenamento: api.armazenamento,
+      contaId: ana.id,
       momento: new Date(),
     });
     const [distribuicao] = await tx

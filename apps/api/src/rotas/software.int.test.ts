@@ -1,10 +1,11 @@
 // A base de software pela API (spec distribuicao-de-software, "Base de software"; change
 // distribuicao-de-software): o cadastro conferido, o nome repetido, a edição, a inativação, o
-// arquivo em partes gzip com os SHA-512 (a troca apaga as partes que sobram) e as permissões.
+// arquivo em partes gzip com os SHA-512 (a troca apaga as partes que sobram) e as permissões; e,
+// na change software-por-pacote, a categoria, o nome no inventário, o tipo e quem guardou o arquivo.
 import { createHash, randomBytes } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
-import { auditoria, naOrganizacao, partesDosPacotes } from '@grafite/db';
-import { asc, eq } from 'drizzle-orm';
+import { auditoria, naOrganizacao, pacotesDeSoftware, partesDosPacotes } from '@grafite/db';
+import { asc, desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   type ApiDeTeste,
@@ -25,6 +26,7 @@ let org = '';
 let cliente: ReturnType<typeof clienteDaApi>;
 const entradas: Record<string, Entrada> = {};
 let pacote = '';
+let ana = '';
 
 const como = (usuario: string) => entradas[usuario] ?? SEM_ENTRADA;
 const sha512 = (conteudo: Buffer) => createHash('sha512').update(conteudo).digest('hex');
@@ -66,8 +68,8 @@ beforeAll(async () => {
     nome: 'Distribui',
     permissoes: ['software.distribuir'],
   });
-  const ana = await criarConta(api, org, { usuario: 'ana', nome: 'Ana Souza' });
-  await atribuir(api, org, { perfilId: administra, contaId: ana.id });
+  ana = (await criarConta(api, org, { usuario: 'ana', nome: 'Ana Souza' })).id;
+  await atribuir(api, org, { perfilId: administra, contaId: ana });
   const bruno = await criarConta(api, org, { usuario: 'bruno', nome: 'Bruno Costa' });
   await atribuir(api, org, { perfilId: distribui, contaId: bruno.id });
   for (const usuario of ['ana', 'bruno']) entradas[usuario] = await cliente.entrar(usuario);
@@ -87,7 +89,10 @@ describe('os pacotes', () => {
     expect(r.statusCode, r.body).toBe(201);
     expect(r.json()).toMatchObject({
       nome: '7-Zip 23.01',
+      categoria: null,
+      nomeNoInventario: null,
       codigosDeSucesso: [0, 3010],
+      tipo: { longo: 'Só o comando', curto: 'Só o comando' },
       arquivo: null,
       situacao: 'ativo',
     });
@@ -109,11 +114,87 @@ describe('os pacotes', () => {
     });
   });
 
+  it('Nome no inventário vazio: casa pelo nome; a edição sem a categoria e o nome no inventário os mantém', async () => {
+    const normalizado = async () => {
+      const [linha] = await naOrganizacao(api.banco, org, (tx) =>
+        tx
+          .select({ nome: pacotesDeSoftware.nomeNoInventarioNormalizado })
+          .from(pacotesDeSoftware)
+          .where(eq(pacotesDeSoftware.id, pacote)),
+      );
+      return linha?.nome;
+    };
+    expect(await normalizado()).toBe('7-zip 23.01');
+    const categoria = await cliente.enviar('POST', '/software/categorias', como('ana'), {
+      nome: 'Compactadores',
+    });
+    const base = {
+      nome: '7-Zip 23.01',
+      versao: '23.01',
+      comando: 'msiexec /i "7z2301-x64.msi" /qn /norestart',
+    };
+    const comOsCampos = await cliente.enviar('PATCH', `/software/pacotes/${pacote}`, como('ana'), {
+      ...base,
+      categoriaId: categoria.json().id,
+      nomeNoInventario: '  7-Zip ',
+    });
+    expect(comOsCampos.statusCode, comOsCampos.body).toBe(200);
+    expect(comOsCampos.json()).toMatchObject({
+      categoria: { id: categoria.json().id, nome: 'Compactadores' },
+      nomeNoInventario: '7-Zip',
+    });
+    expect(await normalizado()).toBe('7-zip');
+    const [registro] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select()
+        .from(auditoria)
+        .where(eq(auditoria.acao, 'pacote.alterado'))
+        .orderBy(desc(auditoria.id))
+        .limit(1),
+    );
+    expect(registro).toMatchObject({
+      antes: { categoria: null, nomeNoInventario: null },
+      depois: { categoria: 'Compactadores', nomeNoInventario: '7-Zip' },
+    });
+
+    const semOsCampos = await cliente.enviar(
+      'PATCH',
+      `/software/pacotes/${pacote}`,
+      como('ana'),
+      base,
+    );
+    expect(semOsCampos.json()).toMatchObject({
+      categoria: { nome: 'Compactadores' },
+      nomeNoInventario: '7-Zip',
+    });
+    const vazios = await cliente.enviar('PATCH', `/software/pacotes/${pacote}`, como('ana'), {
+      ...base,
+      categoriaId: null,
+      nomeNoInventario: ' ',
+    });
+    expect(vazios.json()).toMatchObject({ categoria: null, nomeNoInventario: null });
+    expect(await normalizado()).toBe('7-zip 23.01');
+    const longo = await cliente.enviar('PATCH', `/software/pacotes/${pacote}`, como('ana'), {
+      ...base,
+      nomeNoInventario: 'x'.repeat(121),
+    });
+    expect(longo.statusCode).toBe(400);
+    expect(longo.json().campos).toEqual({ nomeNoInventario: 'Use até 120 caracteres.' });
+  });
+
   it('o arquivo vai em partes gzip de 8 MB, com os SHA-512; a troca apaga as partes que sobram', async () => {
     const arquivo = randomBytes(20 * 1024 * 1024);
     const r = await enviarArquivo('ana', pacote, '7z2301-x64.msi', arquivo);
     expect(r.statusCode, r.body).toBe(200);
-    expect(r.json().arquivo).toEqual({ nome: '7z2301-x64.msi', tamanho: arquivo.length });
+    expect(r.json()).toMatchObject({
+      tipo: { longo: 'Instalador MSI', curto: 'MSI' },
+      arquivo: {
+        nome: '7z2301-x64.msi',
+        tamanho: arquivo.length,
+        guardadoEm: api.relogio.agora().toISOString(),
+        guardadoPor: { id: ana, nome: 'Ana Souza' },
+      },
+    });
     const gravadas = await partes();
     expect(gravadas.map((parte) => parte.indice)).toEqual([0, 1, 2]);
     const juntas: Buffer[] = [];
@@ -138,7 +219,9 @@ describe('os pacotes', () => {
     expect(baixado.rawPayload.equals(arquivo)).toBe(true);
 
     const menor = Buffer.from('instalador pequeno');
-    expect((await enviarArquivo('ana', pacote, 'setup.exe', menor)).statusCode).toBe(200);
+    const trocado = await enviarArquivo('ana', pacote, 'setup.exe', menor);
+    expect(trocado.statusCode).toBe(200);
+    expect(trocado.json().tipo).toEqual({ longo: 'Instalador EXE', curto: 'EXE' });
     expect((await partes()).map((parte) => parte.indice)).toEqual([0]);
     expect(await api.armazenamento.abrir(chaveDaParteDoPacote(org, pacote, 2))).toBeNull();
     const registros = await naOrganizacao(api.banco, org, (tx) =>

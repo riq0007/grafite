@@ -30,9 +30,12 @@ const PACOTE: Pacote = {
   nome: '7-Zip 23.01',
   versao: '23.01',
   descricao: null,
+  categoria: null,
+  nomeNoInventario: null,
   comando: 'msiexec /i "7z2301-x64.msi" /qn /norestart',
   codigosDeSucesso: [0, 3010],
-  arquivo: { nome: '7z2301-x64.msi', tamanho: 1_572_864 },
+  tipo: { longo: 'Instalador MSI', curto: 'MSI' },
+  arquivo: { nome: '7z2301-x64.msi', tamanho: 1_572_864, guardadoEm: null, guardadoPor: null },
   situacao: 'ativo',
 };
 

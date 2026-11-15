@@ -104,6 +104,7 @@ import { rotasDoSegundoPasso } from './rotas/segundo-passo.ts';
 import { rotasDeSessao } from './rotas/sessao.ts';
 import { rotasDasSessoesDaConta } from './rotas/sessoes-da-conta.ts';
 import { rotasDaBaseDeSoftware } from './rotas/software.ts';
+import { rotasDasCategoriasDeSoftware } from './rotas/software-categorias.ts';
 import { rotasDosSoftwares } from './rotas/softwares.ts';
 import { rotasDasSolicitacoes } from './rotas/solicitacoes.ts';
 import { rotasDasTarefas } from './rotas/tarefas.ts';
@@ -393,6 +394,7 @@ export async function criarApp({
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
       await doAtivos.register(rotasDosSoftwares, { banco });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
+      await doAtivos.register(rotasDasCategoriasDeSoftware, { banco, agora });
       await doAtivos.register(rotasDasDistribuicoes, { banco, agora, acordar: acordarAgente });
     });
     // O módulo Cofre, opcional, só para a conta com os dois passos ativos (design do P6, decisão 7).

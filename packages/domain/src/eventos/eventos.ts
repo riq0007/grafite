@@ -300,6 +300,9 @@ export const EVENTO_DA_ACAO = {
   'pacote.reativado': 'software.mudou',
   'pacote.arquivo-trocado': 'software.mudou',
   'categoria-de-software.criada': 'software.mudou',
+  'categoria-de-software.renomeada': 'software.mudou',
+  'categoria-de-software.removida': 'software.mudou',
+  'categorias-de-software.ordenadas': 'software.mudou',
   'distribuicao.criada': 'software.mudou',
   'distribuicao.pedida-agora': null,
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;

@@ -28,6 +28,12 @@ export function violouVerificacao(erro: unknown, restricao: string): boolean {
   return original?.code === '23514' && original.constraint === restricao;
 }
 
+/** O erro de uma chave estrangeira do PostgreSQL, direto ou embrulhado pelo Drizzle, pelo nome. */
+export function violouChaveEstrangeira(erro: unknown, restricao: string): boolean {
+  const original = erroDoBanco(erro);
+  return original?.code === '23503' && original.constraint === restricao;
+}
+
 function erroDoBanco(erro: unknown) {
   const doBanco = (e: unknown) => e as { code?: string; constraint?: string } | null;
   return doBanco(erro)?.code ? doBanco(erro) : doBanco((erro as { cause?: unknown } | null)?.cause);

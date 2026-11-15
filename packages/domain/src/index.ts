@@ -807,7 +807,11 @@ export {
   textoFrenteABase,
   tipoDoPacote,
 } from './software/base.ts';
-export { CATEGORIAS_DE_SOFTWARE_DE_FABRICA } from './software/categorias.ts';
+export {
+  CATEGORIAS_DE_SOFTWARE_DE_FABRICA,
+  conferirNomeDaCategoria,
+  MENSAGENS_DAS_CATEGORIAS,
+} from './software/categorias.ts';
 export {
   codigoDaMensagem,
   type ExplicacaoDoComando,
