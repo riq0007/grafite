@@ -302,6 +302,19 @@ test.describe('os suprimentos das impressoras', () => {
     await expect(painel.getByText('Nenhuma condição informada.')).toBeVisible();
   });
 
+  // O medidor antes do número (spec impressoras-por-snmp, "Medidor na coluna dos suprimentos";
+  // change ajuste-do-medidor, design, decisão 1): a régua compacta cabe na caixa de 40 px.
+  test('na célula dos suprimentos, a régua do medidor acaba antes do número', async ({ page }) => {
+    await comSuprimentos(page, { daExpedicao: 8, doRh: 45 });
+    await page.goto('/ativos?visao=fabrica&colunas=ativo.rotulo,coleta.suprimentos,coleta.paginas');
+    const daImpressora = linha(page, 'HP LaserJet M404');
+    await expect(daImpressora).toContainText('8%');
+    const regua = await daImpressora.getByRole('meter', { name: /Menor nível/ }).boundingBox();
+    const numero = await daImpressora.getByText('8%', { exact: true }).boundingBox();
+    if (!regua || !numero) throw new Error('A régua ou o número não estão à vista.');
+    expect(regua.x + regua.width).toBeLessThanOrEqual(numero.x);
+  });
+
   test('a coluna Suprimentos filtrada até 20% traz só a impressora com pouco toner', async ({
     page,
   }) => {

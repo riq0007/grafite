@@ -1,6 +1,6 @@
 ## 1. O medidor compacto
 
-- [ ] 1.1 Escrever primeiro os testes da régua compacta (design, decisões 1 e 3):
+- [x] 1.1 Escrever primeiro os testes da régua compacta (design, decisões 1 e 3):
   - a história "Medidor compacto numa caixa de 40 px", no `Dados.stories.tsx`, com a marca `captura`: nas três densidades, a régua acaba dentro da caixa e antes do "8%";
   - no `coleta.spec.ts`, a régua do menor nível acaba antes do "8%" na tabela dos ativos.
 
@@ -11,6 +11,14 @@
   Verificar:
   - o `pnpm test:stories` e o `pnpm test:e2e` passam;
   - o `pnpm --filter @grafite/ui test` passa, com o `Medidor.test.tsx`.
+
+  Feito em 14/11:
+  - **antes do conserto:** a história reprovou com "expected 64 to be less than or equal to 40". No e2e, a régua acabava em 745,5 px, e o "8%" começava em 729,5: eram 16 px por cima do número, os 24 que passam da caixa menos os 8 do espaço da parte fixa;
+  - **com o `min-width: 40px` no compacto:** os dois passaram;
+  - **a verificação:**
+    - o `pnpm --filter @grafite/ui test` (2.151 testes), o `pnpm lint` e o `pnpm typecheck` passaram;
+    - o `pnpm test:e2e` passou, com 192 testes na web e 7 no painel;
+    - o `pnpm test:stories` deu 607 de 608. A que reprovou foi a "Tabela com prévia › Pagina Seguinte", uma das histórias instáveis sob carga, presa ao relógio. Sozinha, ela passou nos 3 testes do arquivo.
 
 - [ ] 1.2 Na "Larguras Que A Coleta Pede", pôr o `Medidor` compacto na caixa de 40 px, no lugar do `span` vazio (design, decisão 3).
   - Medir de novo a sobra das colunas no Windows e no contêiner do Playwright, com o `.grafite/revisao/medir-larguras-da-coleta.mjs`.

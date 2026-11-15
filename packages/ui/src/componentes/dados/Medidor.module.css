@@ -22,6 +22,14 @@
   padding-bottom: 0;
 }
 
+/*
+ * A régua compacta cabe na caixa de 40 px da célula da tabela, com o número logo depois dela (spec
+ * visualizacao-de-dados, "Medidor"; change ajuste-do-medidor, design, decisão 1).
+ */
+.medidor[data-tamanho="compacto"] .regua {
+  min-width: 40px;
+}
+
 /* A trilha é um poço: a superfície afundada com a linha fina. */
 .trilha {
   position: relative;

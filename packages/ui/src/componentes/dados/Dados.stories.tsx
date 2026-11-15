@@ -297,3 +297,51 @@ export const ReservaDoNumeroDoMedidor: Historia = {
     }
   },
 };
+
+const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
+
+/**
+ * O medidor compacto numa caixa de 40 px, com o número logo depois dela, como na célula dos
+ * suprimentos da tabela dos ativos (spec visualizacao-de-dados, "Medidor"; change
+ * ajuste-do-medidor, design, decisão 1): a régua acaba dentro da caixa e antes do número, nas três
+ * densidades. Exemplos.
+ */
+export const MedidorCompactoNumaCaixaDe40Px: Historia = {
+  name: 'Medidor compacto numa caixa de 40 px',
+  tags: ['captura'],
+  render: () => (
+    <div style={coluna}>
+      {DENSIDADES.map((densidade) => (
+        <div
+          key={densidade}
+          data-density={densidade}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--esp-2)' }}
+        >
+          <span data-caixa style={{ display: 'inline-block', inlineSize: '40px', flex: 'none' }}>
+            <Medidor
+              rotulo={`Toner preto, densidade ${densidade}`}
+              valor={8}
+              tinta="preto"
+              tamanho="compacto"
+              marcas={[]}
+              semNumero
+            />
+          </span>
+          <span className="numero">8%</span>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const densidade of DENSIDADES) {
+      const regua = within(canvasElement).getByRole('meter', {
+        name: `Toner preto, densidade ${densidade}`,
+      });
+      const caixa = regua.closest('[data-caixa]') as HTMLElement;
+      const numero = caixa.nextElementSibling as HTMLElement;
+      const fimDaRegua = regua.getBoundingClientRect().right;
+      await expect(fimDaRegua).toBeLessThanOrEqual(caixa.getBoundingClientRect().right);
+      await expect(fimDaRegua).toBeLessThanOrEqual(numero.getBoundingClientRect().left);
+    }
+  },
+};
