@@ -35,6 +35,7 @@ import {
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
 import { tarefasDaApi } from '../fila/tarefas.ts';
+import { TAREFA_DOS_AGENDADOS } from '../software/acordar.ts';
 
 const host = 'grafite.assistente-da-distribuicao.local';
 let api: ApiDeTeste;
@@ -113,7 +114,9 @@ beforeAll(async () => {
       chamados.push(ip);
       return ip !== IP_QUE_NAO_RESPONDE;
     },
-    tarefas: (contexto) => tarefasDaApi(contexto),
+    // Sem a periódica, que, na virada do quarto de hora, chamaria as máquinas antes da tarefa de agora.
+    tarefas: (contexto) =>
+      tarefasDaApi(contexto).filter(({ nome }) => nome !== TAREFA_DOS_AGENDADOS),
     intervaloDaFila: 0.5,
   });
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });

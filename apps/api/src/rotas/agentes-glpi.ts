@@ -6,7 +6,9 @@
 // servidor do GLPI faz, para o agente passar ao protocolo JSON (change prolog-do-agente-glpi).
 // O Deploy (spec distribuicao-de-software, "Deploy pelo agente do GLPI"; change
 // distribuicao-de-software, design, decisão 2) vem por GET no mesmo endereço, com a `action` na query,
-// e as partes do arquivo, no espelho `<endereço>/partes/<a>/<ab>/<sha512>`.
+// e as partes do arquivo, no espelho `<endereço>/partes/<a>/<ab>/<sha512>`. O CONTACT e o INVENTORY
+// dão o `expiration` que traz o agente de volta na hora do pedido que ainda não pode seguir (change
+// software-por-pacote, design, decisão 8).
 import { gunzipSync, inflateSync } from 'node:zlib';
 import { type Banco, naOrganizacao, partesDosPacotes } from '@grafite/db';
 import { eq } from 'drizzle-orm';
@@ -14,7 +16,14 @@ import type { FastifyInstance } from 'fastify';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { receberInventario, registrarContato, tokenEmVigor } from '../agentes/agentes.ts';
 import { type Armazenamento, chaveDaParteDoPacote } from '../arquivos/armazenamento.ts';
-import { gravarPassoDoDeploy, jobsDoAgente, lerPassoDoDeploy } from '../software/deploy.ts';
+import {
+  expirationDoAgente,
+  expirationNoProtocolo,
+  gravarPassoDoDeploy,
+  jobsDoAgente,
+  lerPassoDoDeploy,
+  marcarAVolta,
+} from '../software/deploy.ts';
 
 const LIMITE_DO_CORPO = 20 * 1024 * 1024;
 const TIPOS_DO_CORPO = [
@@ -26,7 +35,7 @@ const TIPOS_DO_CORPO = [
 ];
 const CORPO_GRANDE = Symbol('corpo descomprimido acima do limite');
 
-/** De quanto em quanto tempo o agente volta a falar, em horas. */
+/** De quanto em quanto tempo o agente volta a falar, em horas, no PROLOG. */
 export const PRAZO_DO_AGENTE_EM_HORAS = 24;
 
 /** As tarefas que o Grafite atende, e as do agente que ele desliga. */
@@ -131,25 +140,27 @@ export async function instalarAgentesDoGlpi(
         }
         const momento = agora();
         if (corpo.action === 'contact') {
-          await naOrganizacao(banco, orgId, (tx) =>
-            registrarContato(tx, {
+          const minutos = await naOrganizacao(banco, orgId, async (tx) => {
+            await registrarContato(tx, {
               orgId,
               deviceid,
               versao: texto(corpo.version),
               ip: requisicao.ip,
               momento,
-            }),
-          );
+            });
+            return marcarAVolta(tx, { deviceid, momento });
+          });
           return resposta.type('application/json').send({
             status: 'ok',
-            expiration: PRAZO_DO_AGENTE_EM_HORAS,
+            expiration: expirationNoProtocolo(minutos),
             tasks: TAREFAS,
             disabled: DESLIGADAS,
           });
         }
         if (corpo.action === 'inventory') {
-          await naOrganizacao(banco, orgId, (tx) =>
-            receberInventario(tx, {
+          // O mesmo `expiration` do CONTACT, por segurança: o agente só o lê no CONTACT.
+          const minutos = await naOrganizacao(banco, orgId, async (tx) => {
+            await receberInventario(tx, {
               orgId,
               deviceid,
               conteudo: corpo.content,
@@ -158,11 +169,12 @@ export async function instalarAgentesDoGlpi(
               ip: requisicao.ip,
               momento,
               avisar: (dados, mensagem) => requisicao.log.warn(dados, mensagem),
-            }),
-          );
+            });
+            return expirationDoAgente(tx, { deviceid, momento });
+          });
           return resposta
             .type('application/json')
-            .send({ status: 'ok', expiration: PRAZO_DO_AGENTE_EM_HORAS });
+            .send({ status: 'ok', expiration: expirationNoProtocolo(minutos) });
         }
         return recusa(400, 'Ação desconhecida do agente do GLPI.');
       },

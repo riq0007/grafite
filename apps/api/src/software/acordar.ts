@@ -1,8 +1,9 @@
 // O acordar dos agentes (spec distribuicao-de-software, "Acordar os agentes"; change
-// software-por-pacote, design, decisão 8a): o chamado pela porta 62354 do agente do GLPI e a tarefa
-// da fila que chama na hora as máquinas da distribuição de agora, ou a do "Tentar de novo". Só são
-// chamadas as que aguardam, com o pedido que pode seguir, o agente em contato e o IP, até 20 ao
-// mesmo tempo; cada chamado fica na máquina e no log dela.
+// software-por-pacote, design, decisão 8a): o chamado pela porta 62354 do agente do GLPI; a tarefa
+// da fila que chama na hora as máquinas da distribuição de agora, ou a do "Tentar de novo"; e a
+// periódica, que a cada 15 minutos chama as que não foram chamadas nas últimas 2 horas, o que cobre
+// a janela da noite e o dia marcado. Só são chamadas as que aguardam, com o pedido que pode seguir, o
+// agente em contato e o IP, até 20 ao mesmo tempo; cada chamado fica na máquina e no log dela.
 import {
   agentes,
   type Banco,
@@ -12,7 +13,7 @@ import {
   type Transacao,
 } from '@grafite/db';
 import { comALinha, linhaDoChamado, podeSeguir, semContato } from '@grafite/domain';
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
 import { FILA_DAS_FALHAS } from '../fila/falhas.ts';
@@ -34,6 +35,12 @@ export const acordarPeloHttp: AcordarAgente = async (ip) => {
 /** A tarefa que acorda, na hora, os agentes de uma distribuição ou de uma máquina dela. */
 export const TAREFA_DE_ACORDAR = 'software.acordar';
 
+/** A tarefa periódica, que acorda os agentes dos pedidos que passam a poder seguir. */
+export const TAREFA_DOS_AGENDADOS = 'software.acordar-agendados';
+
+/** Quanto tempo a máquina chamada espera até a tarefa periódica a chamar de novo. */
+const ESPERA_ENTRE_CHAMADOS = 2 * 60 * 60 * 1000;
+
 export const DadosDeAcordar = z.object({
   orgId: z.uuid(),
   distribuicaoId: z.uuid(),
@@ -52,8 +59,9 @@ export interface MaquinaParaChamar {
 }
 
 /**
- * As máquinas da distribuição (ou só a pedida) que aguardam, com o pedido que pode seguir no
- * momento, o agente em contato pelo prazo da organização e o IP.
+ * As máquinas que aguardam, com o pedido que pode seguir no momento, o agente em contato pelo prazo
+ * da organização e o IP: as de uma distribuição (ou só a pedida), ou as da organização que não foram
+ * chamadas desde o `chamadasAte`.
  */
 export async function maquinasParaChamar(
   tx: Transacao,
@@ -61,7 +69,13 @@ export async function maquinasParaChamar(
     momento,
     distribuicaoId,
     maquinaId,
-  }: { momento: Date; distribuicaoId: string; maquinaId?: string | undefined },
+    chamadasAte,
+  }: {
+    momento: Date;
+    distribuicaoId?: string | undefined;
+    maquinaId?: string | undefined;
+    chamadasAte?: Date | undefined;
+  },
 ): Promise<MaquinaParaChamar[]> {
   const { diasSemContato } = await lerCadastroDosAgentes(tx);
   const linhas = await tx
@@ -78,8 +92,14 @@ export async function maquinasParaChamar(
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
     .where(
       and(
-        eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId),
+        distribuicaoId ? eq(maquinasDasDistribuicoes.distribuicaoId, distribuicaoId) : undefined,
         maquinaId ? eq(maquinasDasDistribuicoes.id, maquinaId) : undefined,
+        chamadasAte
+          ? or(
+              isNull(maquinasDasDistribuicoes.chamadaEm),
+              lte(maquinasDasDistribuicoes.chamadaEm, chamadasAte),
+            )
+          : undefined,
         eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
         isNotNull(agentes.ip),
       ),
@@ -145,7 +165,15 @@ export async function chamarAgentes(
   };
 }
 
-/** As tarefas do software: o acordar na hora. */
+/** As organizações ativas, pela consulta que atravessa organizações só para as tarefas. */
+async function organizacoesAtivas(banco: Banco): Promise<string[]> {
+  const { rows } = await banco.execute<{ id: string }>(
+    sql`select id from app.organizacoes_para_tarefas() as t(id)`,
+  );
+  return rows.map((linha) => linha.id);
+}
+
+/** As tarefas do software: o acordar na hora e o periódico, de 15 em 15 minutos. */
 export function tarefasDoSoftware({
   banco,
   agora,
@@ -166,5 +194,28 @@ export function tarefasDoSoftware({
       if (feito.chamados > 0) log.info({ orgId, distribuicaoId, ...feito }, 'agentes chamados');
     },
   };
-  return [deAcordar as DefinicaoDeTarefa];
+  const dosAgendados: DefinicaoDeTarefa<unknown> = {
+    nome: TAREFA_DOS_AGENDADOS,
+    rotulo: 'Acordar os agentes dos pedidos que podem seguir',
+    rotina: {
+      nome: 'Chamado dos agentes',
+      descricao:
+        'Chama os agentes das máquinas com o pedido de software que pode seguir e que não foram chamadas nas últimas 2 horas.',
+    },
+    dados: z.unknown(),
+    agenda: { cron: '*/15 * * * *', fuso: 'America/Sao_Paulo' },
+    opcoes: { deadLetter: FILA_DAS_FALHAS },
+    async trabalho() {
+      const momento = agora();
+      const chamadasAte = new Date(momento.getTime() - ESPERA_ENTRE_CHAMADOS);
+      for (const orgId of await organizacoesAtivas(banco)) {
+        const maquinas = await naOrganizacao(banco, orgId, (tx) =>
+          maquinasParaChamar(tx, { momento, chamadasAte }),
+        );
+        const feito = await chamarAgentes(banco, orgId, maquinas, { acordar, momento });
+        if (feito.chamados > 0) log.info({ orgId, ...feito }, 'agentes dos agendados chamados');
+      }
+    },
+  };
+  return [deAcordar as DefinicaoDeTarefa, dosAgendados];
 }

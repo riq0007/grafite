@@ -1,7 +1,8 @@
-// O Deploy do agente do GLPI (spec distribuicao-de-software, "Deploy pelo agente do GLPI"; change
-// distribuicao-de-software, design, decisões 2 a 4): os jobs das máquinas que aguardam o agente,
-// com o arquivo em partes no espelho, e os passos que ele manda, que viram a situação, a etapa e o
-// log da máquina.
+// O Deploy do agente do GLPI (spec distribuicao-de-software, "Deploy pelo agente do GLPI" e
+// "Quando instalar"; changes distribuicao-de-software e software-por-pacote): os jobs das máquinas
+// que aguardam o agente e podem seguir, com o arquivo em partes no espelho; os passos que ele manda,
+// que viram a situação, a etapa, o código de saída e o log da máquina; e o `expiration` que traz o
+// agente de volta na hora do pedido que ainda não pode seguir (design, decisões 6 a 8).
 import {
   agentes,
   distribuicoes,
@@ -10,7 +11,13 @@ import {
   partesDosPacotes,
   type Transacao,
 } from '@grafite/db';
-import { aplicarPassoDoAgente } from '@grafite/domain';
+import {
+  aplicarPassoDoAgente,
+  codigoDaMensagem,
+  EXPIRATION_DE_FABRICA,
+  expirationDoContato,
+  podeSeguir,
+} from '@grafite/domain';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 
 /** Quantas linhas da saída do comando o agente manda no passo da execução. */
@@ -40,8 +47,9 @@ export interface JobDoDeploy {
 }
 
 /**
- * Os jobs das máquinas que aguardam o agente, que passam a "em andamento". Sem nenhum, `{}`, que o
- * agente lê como "nada a fazer". O job sem arquivo vai com a lista de arquivos vazia.
+ * Os jobs das máquinas que aguardam o agente, com o pedido que pode seguir no momento, que passam a
+ * "em andamento". Sem nenhum, `{}`, que o agente lê como "nada a fazer". O job sem arquivo vai com
+ * a lista de arquivos vazia.
  */
 export async function jobsDoAgente(
   tx: Transacao,
@@ -49,14 +57,21 @@ export async function jobsDoAgente(
 ): Promise<
   { jobs: JobDoDeploy[]; associatedFiles: Record<string, ArquivoDoDeploy> } | Record<string, never>
 > {
-  const linhas = await tx
-    .select({ id: maquinasDasDistribuicoes.id, pacote: pacotesDeSoftware })
+  const aguardando = await tx
+    .select({
+      id: maquinasDasDistribuicoes.id,
+      pacote: pacotesDeSoftware,
+      quando: distribuicoes.quando,
+      aPartirDe: distribuicoes.aPartirDe,
+      fuso: distribuicoes.fuso,
+    })
     .from(maquinasDasDistribuicoes)
     .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
     .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
     .innerJoin(pacotesDeSoftware, eq(pacotesDeSoftware.id, distribuicoes.pacoteId))
     .where(and(eq(agentes.deviceid, deviceid), eq(maquinasDasDistribuicoes.situacao, 'aguardando')))
     .orderBy(asc(distribuicoes.criadaEm));
+  const linhas = aguardando.filter((linha) => podeSeguir(linha, momento));
   if (linhas.length === 0) return {};
   const comArquivo = [
     ...new Set(
@@ -142,8 +157,8 @@ export function lerPassoDoDeploy(query: Record<string, unknown>): PassoDoDeploy 
 }
 
 /**
- * Grava o passo na máquina do job: a etapa, as linhas do log e a situação. O job desconhecido, ou
- * de outro agente, é ignorado.
+ * Grava o passo na máquina do job: a etapa, as linhas do log, a situação e o código de saída, da
+ * mensagem "exit status" da execução. O job desconhecido, ou de outro agente, é ignorado.
  */
 export async function gravarPassoDoDeploy(
   tx: Transacao,
@@ -162,7 +177,9 @@ export async function gravarPassoDoDeploy(
     log: linha.maquina.log,
   };
   let terminou = false;
+  let codigo: number | null = null;
   for (const msg of passo.mensagens.length > 0 ? passo.mensagens : [null]) {
+    codigo = codigoDaMensagem(msg) ?? codigo;
     const aplicado = aplicarPassoDoAgente(estado, {
       currentStep: passo.currentStep,
       status: passo.status,
@@ -178,7 +195,54 @@ export async function gravarPassoDoDeploy(
       etapa: estado.etapa,
       log: estado.log,
       atualizadaEm: momento,
+      ...(codigo !== null ? { codigoDeSaida: codigo } : {}),
       ...(terminou ? { terminadaEm: momento } : {}),
     })
     .where(eq(maquinasDasDistribuicoes.id, passo.uuid));
 }
+
+/**
+ * O `expiration` do agente, em minutos: até uma hora depois do próximo momento do pedido que
+ * aguarda e ainda não pode seguir, com o máximo de 24 horas, que é o de quem não tem pedido assim.
+ */
+export async function expirationDoAgente(
+  tx: Transacao,
+  { deviceid, momento }: { deviceid: string; momento: Date },
+): Promise<number> {
+  const pedidos = await tx
+    .select({
+      quando: distribuicoes.quando,
+      aPartirDe: distribuicoes.aPartirDe,
+      fuso: distribuicoes.fuso,
+    })
+    .from(maquinasDasDistribuicoes)
+    .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
+    .innerJoin(distribuicoes, eq(distribuicoes.id, maquinasDasDistribuicoes.distribuicaoId))
+    .where(
+      and(eq(agentes.deviceid, deviceid), eq(maquinasDasDistribuicoes.situacao, 'aguardando')),
+    );
+  return expirationDoContato(pedidos, momento);
+}
+
+/**
+ * O `expiration` do CONTACT, e o `volta_ate` do agente: o momento até o qual ele deve voltar, que é o
+ * contato mais o prazo dado (design, decisão 8).
+ */
+export async function marcarAVolta(
+  tx: Transacao,
+  { deviceid, momento }: { deviceid: string; momento: Date },
+): Promise<number> {
+  const minutos = await expirationDoAgente(tx, { deviceid, momento });
+  await tx
+    .update(agentes)
+    .set({ voltaAte: new Date(momento.getTime() + minutos * 60_000) })
+    .where(eq(agentes.deviceid, deviceid));
+  return minutos;
+}
+
+/**
+ * O `expiration` como o agente lê: o número sozinho é em horas, como as 24 de fábrica; o menor vai
+ * em minutos, com o "m" ("480m").
+ */
+export const expirationNoProtocolo = (minutos: number): number | string =>
+  minutos >= EXPIRATION_DE_FABRICA ? EXPIRATION_DE_FABRICA / 60 : `${minutos}m`;
