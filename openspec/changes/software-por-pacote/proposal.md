@@ -29,6 +29,7 @@ A change continua o subprojeto S6 da spec mestre (Distribuição de software), q
 - **A matriz do software** (m06 e m07): programas × máquinas de um local e programas × locais, com a versão de cada célula; marcar células leva ao assistente já no passo Quando.
 - **O software na ficha da máquina** (m09 a m11), na ficha de hoje: os mandados pelo Grafite; os instalados frente à base, com o que pede ação primeiro; "Instalar outro pacote nesta máquina"; e, sem contato, o aviso com a idade do inventário e a fila.
 - **A máquina sem contato:** o agente que não fala com o servidor há mais dias do que a organização ajusta (2 de fábrica) aparece "Sem contato" e entra na fila.
+- **A fila segura** (da revisão de 15/11/2026): o pacote inativado segura a fila até ser reativado; a máquina que já aguarda o mesmo pacote é pulada; a distribuição mostra só as máquinas do alcance da conta; e a pessoa da máquina aparece só para quem a vê.
 - **BREAKING** (só na tela): o botão "Pedir agora" sai da distribuição; o Grafite acorda os agentes sozinho.
 
 Fica fora:

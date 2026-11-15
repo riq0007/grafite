@@ -6,6 +6,8 @@ Os mockups `r3-11-software` (m01 a m12) foram todos aprovados. As decisões do u
 
 A aba Software da ficha (m09 a m11) entra na ficha de hoje e passa à moldura nova na change `ficha-sem-vao`.
 
+A revisão do lote das tarefas 1.1 a 4.7, em 15/11/2026, trouxe 7 pontos e um cuidado, que entram nas decisões 7, 10 a 14 e nas 15 a 17. Três deles o usuário decidiu por cartão: o pacote inativado segura a fila até ser reativado; a distribuição mostra só as máquinas do alcance da conta; e a máquina que já aguarda o mesmo pacote é pulada, com o motivo.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -126,7 +128,9 @@ A distribuição guarda:
 
 O `getJobs` entrega só as máquinas que aguardam e podem seguir, na ordem de criação. A que tem uma instalação em andamento recebe a próxima no contato seguinte.
 
-O "Escolher o dia" aceita de amanhã em diante (o m08 diz "a partir de quinta, 12/11"), com 22:00 de fábrica. O fuso que não existe no `Intl` do servidor é recusado com 400.
+O "Escolher o dia" aceita de amanhã até daqui a um ano (o m08 diz "a partir de quinta, 12/11"), com 22:00 de fábrica. O fuso que não existe no `Intl` do servidor é recusado com 400.
+
+O dia chega como o instante ISO 8601 com o fuso, o `z.iso.datetime({ offset: true })` na rota, e o `conferirQuando` confere a mesma forma antes do `new Date`: o texto sem o fuso viraria a hora do servidor, e o `Date` aceita formas que o Node inventa. O teto de um ano é pelo calendário do fuso de quem envia ("Escolha um dia até daqui a um ano."); o calendário da tela não passa dele.
 
 ### 8. O agente volta na hora certa
 
@@ -169,8 +173,13 @@ O passo Máquinas junta quatro escolhas:
 
 A API resolve a união numa rota de prévia, `POST /software/distribuicoes/previa`, e devolve cada máquina com a classe, nesta ordem de precedência:
 - **pulada:** já com a versão-alvo, mesmo sem contato;
+- **já aguarda:** com o mesmo pacote aguardando ou em andamento noutra distribuição, também pulada. Mandar de novo ao mesmo local, com a primeira ainda na fila, daria duas instalações seguidas;
 - **na fila:** sem contato;
 - **vai instalar:** com o agente em contato e sem a versão-alvo, com a versão de hoje ou nenhuma.
+
+A conta ganha o `jaAguardam`. O "Até agora" mostra "JÁ AGUARDAM ESTE PACOTE · PULADAS" só quando houver, e o Conferir põe essas máquinas num grupo próprio, "Seguem na outra distribuição". A criação sem nenhuma que entra recusa pelo motivo: "Todas as máquinas escolhidas já têm a versão <versão>.", "Todas as máquinas escolhidas já aguardam este pacote." ou, com os dois, "Todas as máquinas escolhidas já têm a versão <versão> ou já aguardam este pacote.". A auditoria guarda as `puladas` pela versão e as `jaAguardavam` à parte.
+
+A visão que deixou de valer, com a definição que o `lerDefinicaoDaVisao` não lê mais ou com um filtro que o `condicoesDosFiltros` recusa, fica fora dos alvos, em silêncio, para não derrubar o passo Máquinas inteiro com um 500. A prévia e a criação que a mandam pelo id recusam com 400 em `visoes`: "A visão <nome> deixou de valer. Refaça os filtros dela na tabela do Ativos."
 
 A permissão na prévia e na criação, que refaz a conta pela mesma regra:
 - a visão, a busca e a lista colada rodam com o escopo do `ativos.ver`; as máquinas fora dos locais com o `software.distribuir` ficam de fora em silêncio, e as da lista colada aparecem como "não achadas", para não dizer que existem;
@@ -194,7 +203,7 @@ A distribuição de antes desta change fica sem o "Para quem", e a tela mostra q
 
 ### 11. Tentar de novo e tirar da fila
 
-- **Tentar de novo:** a máquina que falhou volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>". Ela também é acordada, pela decisão 8a.
+- **Tentar de novo:** a máquina que falhou volta a "Aguardando o agente", sem a etapa e sem o código, e o log ganha a linha "Tentar de novo, por <nome>". Ela também é acordada, pela decisão 8a. Com o pacote inativo, a rota recusa com 409 e o `pacoteInativo` (decisão 17).
 - **Tirar da fila:** a máquina que aguarda passa à situação nova `tirada` ("Tirada da fila"), com o fim marcado.
 
 As duas vão para a auditoria e publicam `software.mudou`. O progresso conta as tiradas à parte ("1 tirada da fila").
@@ -207,6 +216,7 @@ A tela "Software × máquinas" fica em Gestão de ativos › Software, com o con
   - Marcar uma célula de outro pacote recomeça a marcação.
 - **Por local:** as colunas são os locais que têm máquinas com o agente, cada máquina contada no próprio local. A célula traz "N de M" na versão-alvo, com o fundo de todas, de parte ou de nenhuma.
   - O clique abre, à direita, as máquinas do local fora da versão-alvo, as que estão nela, a última distribuição, "Distribuir <pacote> <versão> a estas N" e "Abrir a matriz do local <local>".
+  - No pacote sem versão, a API já conta quem tem o programa (o `instalado-sem-alvo`); a tela troca "na versão-alvo" por "com o programa" e "fora da versão-alvo" por "sem o programa", na célula, no nome dela para o leitor de tela e no painel.
 
 O "Distribuir" da matriz abre o assistente no passo Quando, com o pacote e as máquinas escolhidos, a origem escrita ("Vindo da matriz do local Financeiro") e "Voltar à matriz" (m08).
 
@@ -237,11 +247,36 @@ O programa do sistema vem dos campos que o agente do GLPI manda, conferidos no r
 
 Contam como do sistema o `system_component`, o `update`, o `security_update`, o `hotfix` e o `system`, e também o `no_remove` verdadeiro (`true`, 1 ou "1") com o editor que tem "Microsoft". `softwares_dos_ativos` ganha o `do_sistema`, falso nos de hoje até o próximo inventário. Os testes usam um inventário escrito à mão com esses valores, sem nome de máquina nem de pessoa.
 
-A tabela mostra as 10 primeiras linhas e "Mostrar os outros N". "Instalar outro pacote nesta máquina" abre a camada do m10, com a busca dos pacotes ativos e a relação de cada um com a máquina ("ATUALIZA A 129", "NÃO INSTALADO" ou "JÁ NA VERSÃO", que não pode ser escolhido), e cria uma distribuição de uma máquina, agora ou na janela da noite.
+A tabela mostra as 10 primeiras linhas e "Mostrar os outros N". "Instalar outro pacote nesta máquina" abre a camada do m10, com a busca dos pacotes ativos e a relação de cada um com a máquina ("ATUALIZA A 129", "NÃO INSTALADO", "JÁ NA VERSÃO" ou "JÁ NA FILA", os dois últimos sem poder ser escolhidos), e cria uma distribuição de uma máquina, agora ou na janela da noite. O "JÁ NA FILA" vem do `naFila` de cada pacote, que a rota liga quando a máquina já o aguarda ou o instala (decisão 10); "JÁ NA VERSÃO" vem antes, como na ordem das classes.
 
 ### 14. Exportar
 
 O "Exportar" da distribuição e o da matriz gravam no navegador um CSV com o que a tela mostra, como a tabela do Ativos já faz.
+
+A célula que começa por "=", "+", "-" ou "@", e também por tabulação ou retorno de carro, que a planilha também lê como fórmula, ganha o apóstrofo. O BOM vai escrito como `﻿` no fonte, e não como o caractere invisível, que uma edição pode perder sem ninguém ver.
+
+### 15. A pessoa da máquina
+
+A distribuição aberta, o CSV dela e a dica da matriz por máquina mostram a pessoa responsável pela regra da ficha do ativo, o `veOResponsavel`: `pessoas.ver` no local de trabalho da pessoa, e a pessoa não anonimizada. Sem isso, o `pessoa` vem nulo, como o da máquina sem responsável.
+
+A busca do `/software/maquinas` acha pelo `pessoas.busca` só as pessoas que a conta vê: a condição da pessoa leva a situação e o alcance do `pessoas.ver` no SQL, e a conta sem o `pessoas.ver` não busca pela pessoa. Achar a máquina pelo nome da pessoa revelaria a ligação que a tela esconde.
+
+### 16. O alcance da distribuição
+
+Decisão do usuário de 15/11/2026, "Só as do alcance": a distribuição mostra e conta só as máquinas dos locais em que a conta tem `software.distribuir`, como a base, a matriz e a prévia já fazem. Entram no alcance:
+- a lista e a distribuição aberta: o progresso, a régua, as seções e o CSV;
+- as distribuições da ficha do pacote e a última da base.
+
+O resumo ganha o `foraDoAlcance`, as máquinas da distribuição fora desses locais, e a distribuição aberta diz "N máquinas em locais fora do seu alcance" quando há alguma. A distribuição sem nenhuma máquina no alcance fica fora da lista, e abri-la dá 404, como a que não existe: ela não tem o que mostrar, e o 404 não diz que ela existe. A condição vai no SQL, por um `exists` das máquinas no alcance, para o limite das 100 mais novas valer depois dela. O "Para quem" continua o gravado na criação, de todas as máquinas.
+
+### 17. O pacote inativado segura a fila
+
+Decisão do usuário de 15/11/2026, "Segurar até reativar": a TI inativa um pacote com defeito, e a fila dele não pode instalá-lo dias depois, na janela da noite ou na volta da máquina sem contato.
+- O `getJobs` (`jobsDoAgente`), o `expiration` do CONTACT (`expirationDoAgente`) e os chamados (`maquinasParaChamar`) só olham as máquinas que aguardam um pacote ativo. As máquinas do pacote inativo continuam em "Aguardando o agente", sem mudar nada no banco: a reativação retoma a entrega sozinha, no próximo contato em que o pedido pode seguir, e a `software.acordar-agendados` chama os agentes em até 15 minutos.
+- O "Tentar de novo" recusa com 409 e o `pacoteInativo` ("O pacote está inativo."); o "Tirar da fila" continua.
+- O resumo da distribuição e os mandados da ficha trazem a situação do pacote. A distribuição aberta avisa que as máquinas ficam na fila até o pacote ser reativado, troca o "quando segue" de cada uma por "Pacote inativado" e não oferece o "Tentar de novo"; na ficha, o mandado que aguarda ganha o rótulo "PACOTE INATIVADO", e o que falhou fica sem o "Tentar de novo".
+
+Alternativa recusada: tirar da fila as máquinas ao inativar. A TI perderia a fila ao reativar um pacote que inativou por engano ou só por um tempo.
 
 ## Risks / Trade-offs
 
@@ -250,3 +285,5 @@ O "Exportar" da distribuição e o da matriz gravam no navegador um CSV com o qu
 - **[O nome no inventário errado]** O pacote casa com nada, e todas as máquinas aparecem "Sem o programa" → o "Instalado em 0" da base e da ficha do pacote mostra o erro, e o nome no inventário fica na ficha do pacote, ao lado da categoria.
 - **[A conta pesada na base]** As contas cruzam todos os programas do inventário com os pacotes → uma consulta por tela, com o casamento no banco pelo `nome_normalizado` e um índice por organização e nome normalizado.
 - **[O fuso de quem enviou]** Uma máquina noutro fuso instala na noite de quem enviou → o fuso fica escrito no resumo ("hoje às 22:00, horário de Brasília").
+- **[A distribuição vista em parte]** Duas contas com alcances diferentes veem números diferentes da mesma distribuição → a linha "N máquinas em locais fora do seu alcance" diz que há mais, e o "Para quem" de todas fica no título.
+- **[O pacote inativado esquecido]** As máquinas ficam na fila para sempre → a distribuição aberta e a ficha dizem "Pacote inativado" em cada uma, e o "Tirar da fila" continua.

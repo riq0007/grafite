@@ -59,7 +59,7 @@ A ficha do ativo com softwares SHALL ter a aba "Software", para quem tem `ativos
 - a data do inventário que trouxe a lista.
 
 Para quem tem `software.distribuir` no local do ativo, a aba SHALL ter também:
-- **Mandados pelo Grafite:** um cartão por distribuição que chegou à máquina, com o pacote e a versão, a situação em rótulo ("FALHOU · 1603", com a borda de perigo; "CONCLUÍDA"; "INSTALANDO"; "NA FILA"; "TIRADA DA FILA"), o momento, quem mandou e, na que falhou, "Tentar de novo";
+- **Mandados pelo Grafite:** um cartão por distribuição que chegou à máquina, com o pacote e a versão, a situação em rótulo ("FALHOU · 1603", com a borda de perigo; "CONCLUÍDA"; "INSTALANDO"; "NA FILA"; "PACOTE INATIVADO", na que aguarda um pacote inativo, spec distribuicao-de-software, "Pacote inativado na fila"; "TIRADA DA FILA"), o momento, quem mandou e, na que falhou com o pacote ativo, "Tentar de novo";
 - na tabela, no lugar do editor (m09), a origem de cada programa ("GRAFITE · <nome>", quando o pacote dele chegou por uma distribuição concluída, "Veio com o Windows", nos do sistema, ou "Fora do Grafite") e a comparação com a base: "HÁ A <versão> NA BASE", "NA VERSÃO DA BASE", "NÃO ESTÁ NA BASE" ou "DO WINDOWS, NÃO SE DISTRIBUI", para os programas do sistema;
 - a ordem "Frente à base · ação primeiro", nessa sequência e pelo nome dentro de cada uma;
 - "Instalar outro pacote nesta máquina".
@@ -70,11 +70,12 @@ A tabela SHALL mostrar as 10 primeiras linhas e "Mostrar os outros N".
 - "ATUALIZA A <versão>", com a versão do inventário cortada no tamanho da versão-alvo, como nas barras da ficha do pacote, ou "ATUALIZA A INSTALADA", quando o inventário não traz a versão;
 - "NÃO INSTALADO";
 - "JÁ INSTALADO", no pacote sem versão-alvo que a máquina já tem;
-- "JÁ NA VERSÃO", que não pode ser escolhido.
+- "JÁ NA VERSÃO", que não pode ser escolhido;
+- "JÁ NA FILA", no pacote que a máquina já aguarda ou instala noutra distribuição, que também não pode ser escolhido.
 
 A lista SHALL rolar sozinha, com a busca e as ações sempre à vista, e o pacote que a busca esconde SHALL deixar de estar escolhido. A camada SHALL ter "Vai direto para esta máquina", o quando (Agora ou Janela da noite), "Cancelar", que o Esc também faz, e "Instalar o <pacote> <versão> nesta máquina", que cria a distribuição de uma máquina (spec distribuicao-de-software). Na máquina sem contato, o aviso SHALL dizer que o pedido fica na fila até ela voltar. Ao fechar, o foco SHALL voltar ao botão que a abriu ou, quando o primeiro mandado leva o botão dos instalados para os mandados, ao botão que fica no lugar dele.
 
-Com o agente sem contato (Requirement "Agente sem contato"), a aba SHALL ter o aviso com a idade do inventário ("lido há 3 dias, em 08/11 às 09:12") e "Esperando a máquina voltar", com os pedidos que aguardam, cada um com o rótulo "NA FILA" e "Tirar da fila". O cabeçalho da ficha SHALL mostrar "SEM CONTATO · HÁ N DIAS" ao lado do uso.
+Com o agente sem contato (Requirement "Agente sem contato"), a aba SHALL ter o aviso com a idade do inventário ("lido há 3 dias, em 08/11 às 09:12") e "Esperando a máquina voltar", com os pedidos que aguardam, cada um com o rótulo "NA FILA", ou "PACOTE INATIVADO", e "Tirar da fila". O cabeçalho da ficha SHALL mostrar "SEM CONTATO · HÁ N DIAS" ao lado do uso.
 
 Sem nenhum software, a aba SHALL dizer que o agente ainda não mandou a lista.
 
@@ -93,6 +94,10 @@ Sem nenhum software, a aba SHALL dizer que o agente ainda não mandou a lista.
 #### Scenario: Primeiro mandado
 - **WHEN** a técnica instala o primeiro pacote numa máquina sem mandados, pelo botão dos instalados
 - **THEN** o botão passa aos "Mandados pelo Grafite", e o foco vai com ele
+
+#### Scenario: Pacote que já aguarda a máquina
+- **WHEN** a PC-FIN-17 aguarda o Google Chrome 131 na janela da noite, e a técnica abre "Instalar outro pacote nesta máquina"
+- **THEN** o Chrome vem com "JÁ NA FILA" e não pode ser escolhido
 
 ## ADDED Requirements
 
