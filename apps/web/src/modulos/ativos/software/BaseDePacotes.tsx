@@ -1,7 +1,8 @@
 // A base de pacotes (spec distribuicao-de-software, "Tela da base"; change software-por-pacote, m12):
 // as abas por categoria, com "Todos" e quantos pacotes cada uma tem; "Procurar na base"; "Só os
 // desatualizados"; e, para quem administra o software, "Novo pacote" e "Categorias…". A tabela vem
-// com os mais desatualizados primeiro, e o pé diz quantas instalações estão abaixo da versão-alvo.
+// com os mais desatualizados primeiro, cada linha abre a ficha do pacote, e o pé diz quantas
+// instalações estão abaixo da versão-alvo.
 import { normalizarTexto } from '@grafite/domain';
 import {
   Botao,
@@ -14,6 +15,7 @@ import {
   ControleSegmentado,
   CorpoDaTabela,
   EstadoVazio,
+  Icone,
   Linha,
   RotuloDeSituacao,
   Segmento,
@@ -21,7 +23,8 @@ import {
   Tabela,
   useDataHora,
 } from '@grafite/ui';
-import { ListFilter, Plus, Tags } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { ChevronRight, ListFilter, Plus, Tags } from 'lucide-react';
 import { useState } from 'react';
 import estilos from './BaseDePacotes.module.css';
 import { Categorias } from './Categorias.tsx';
@@ -77,6 +80,7 @@ export function BaseDePacotes() {
   const pacotes = usePacotes();
   const categorias = useCategorias();
   const dataHora = useDataHora();
+  const navegar = useNavigate();
   const [busca, definirBusca] = useState('');
   const [categoria, definirCategoria] = useState(TODOS);
   const [soDesatualizados, definirSoDesatualizados] = useState(false);
@@ -154,7 +158,13 @@ export function BaseDePacotes() {
               ))}
             </ControleSegmentado>
           </div>
-          <Tabela rotulo="Base de pacotes" carregando={pacotes.isPending}>
+          <Tabela
+            rotulo="Base de pacotes"
+            carregando={pacotes.isPending}
+            aoAbrirLinha={(id) =>
+              void navegar({ to: '/gestao/software/pacotes/$id', params: { id: String(id) } })
+            }
+          >
             <CabecalhoDaTabela>
               <Coluna id="pacote" principal>
                 Pacote
@@ -167,6 +177,9 @@ export function BaseDePacotes() {
                 Situação
               </Coluna>
               <Coluna id="ultima">Última distribuição</Coluna>
+              <Coluna id="abrir" rotuloOculto largura={40}>
+                Abrir
+              </Coluna>
             </CabecalhoDaTabela>
             <CorpoDaTabela
               itens={vistos}
@@ -244,6 +257,11 @@ export function BaseDePacotes() {
                       ) : (
                         'Nunca distribuído'
                       )}
+                    </Celula>
+                    <Celula>
+                      <span className={estilos.abrir}>
+                        <Icone icone={ChevronRight} />
+                      </span>
                     </Celula>
                   </Linha>
                 );

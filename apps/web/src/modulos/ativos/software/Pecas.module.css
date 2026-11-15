@@ -95,3 +95,11 @@
   font-family: var(--fonte-mono);
   font-variant-numeric: tabular-nums;
 }
+
+/* Os rótulos do resultado de uma distribuição, que quebram para baixo na coluna estreita. */
+.resultado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}

@@ -29,7 +29,7 @@
 Visual, sem teste novo: o usuário confere na tela. Cada tarefa ajusta os testes que já existem dos arquivos que mexe e roda esses testes, o lint e o typecheck.
 
 - [x] 4.1 A base de pacotes (m12), com as abas, a busca, "Só os desatualizados", a tabela, o pé e "Categorias…"; o formulário do pacote com a categoria, o nome no inventário e a dica da versão (decisão 2).
-- [ ] 4.2 A ficha do pacote (m01): a coluna da esquerda, os quatro números, "O que a instalação faz", as barras e as distribuições.
+- [x] 4.2 A ficha do pacote (m01): a coluna da esquerda, os quatro números, "O que a instalação faz", as barras e as distribuições.
 - [ ] 4.3 A distribuição aberta (m02): a lista à esquerda, o número com a régua, "Precisa de você", "Na fila" (com o chamado sem resposta e até quando o agente volta), "Em andamento", as concluídas, o log pelo nome, "Exportar", "Tentar de novo" e "Tirar da fila"; o "Pedir agora" sai.
 - [ ] 4.4 O assistente, primeira parte (m03): o trilho com "Já enviado hoje", o passo Pacote e o passo Máquinas, com as quatro abas e o "Até agora".
 - [ ] 4.5 O assistente, segunda parte (m04, m05 e m08): o passo Quando, com a faixa das 24 horas; o Conferir; a entrada pela matriz; o envio; e o passo 37 da ponta a ponta da pilha no assistente novo.

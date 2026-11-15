@@ -16,6 +16,7 @@ import { Modelos } from '../ativos/modelos/Modelos.tsx';
 import { BaseDePacotes } from '../ativos/software/BaseDePacotes.tsx';
 import { lerAbaDoSoftware, TelaDasDistribuicoes } from '../ativos/software/Distribuicoes.tsx';
 import { FichaDaDistribuicao } from '../ativos/software/FichaDaDistribuicao.tsx';
+import { FichaDoPacote } from '../ativos/software/FichaDoPacote.tsx';
 import { FichaDoTipo } from '../ativos/tipos/FichaDoTipo.tsx';
 import { TipoNovo } from '../ativos/tipos/TipoNovo.tsx';
 import { Tipos } from '../ativos/tipos/Tipos.tsx';
@@ -68,9 +69,9 @@ const compararBackups = createRoute({
   component: CompararBackups,
 });
 
-// A distribuição de software (change distribuicao-de-software): a base de pacotes e as
-// distribuições, cada uma na tela dela (change software-por-pacote); o endereço antigo da aba das
-// distribuições leva à tela delas.
+// A distribuição de software (change distribuicao-de-software): a base de pacotes, a ficha de cada
+// pacote e as distribuições, cada uma na tela dela (change software-por-pacote); o endereço antigo
+// da aba das distribuições leva à tela delas.
 const software = createRoute({
   getParentRoute: () => gestao,
   path: 'software',
@@ -81,6 +82,12 @@ const software = createRoute({
     }
   },
   component: BaseDePacotes,
+});
+
+const pacoteDeSoftware = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/pacotes/$id',
+  component: FichaDoPacote,
 });
 
 const distribuicoesDeSoftware = createRoute({
@@ -172,6 +179,7 @@ export const rotasDaGestao = gestao.addChildren([
   backupsDoControlId,
   compararBackups,
   software,
+  pacoteDeSoftware,
   distribuicoesDeSoftware,
   distribuicaoDeSoftware,
   catalogo.addChildren([

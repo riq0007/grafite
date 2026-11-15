@@ -173,6 +173,69 @@ describe('a base de software', () => {
   });
 });
 
+describe('a ficha do pacote', () => {
+  const FICHA_DO_PACOTE: components['schemas']['FichaDoPacote'] = {
+    pacote: { ...PACOTE, nomeNoInventario: '7-Zip' },
+    partes: 1,
+    contas: NA_BASE.contas,
+    versoes: [
+      { versao: '23.01', estado: 'alvo', quantas: 41 },
+      { versao: '22.01', estado: 'abaixo', quantas: 3 },
+    ],
+    distribuicoes: [
+      {
+        id: 'd1',
+        criadaEm: '2026-10-28T12:00:00.000Z',
+        paraQuem: 'Financeiro',
+        maquinas: 18,
+        resultado: {
+          concluidas: 14,
+          emAndamento: 2,
+          aguardando: 1,
+          falharam: 1,
+          tiradas: 0,
+          semContato: 1,
+        },
+      },
+    ],
+    permite: { administrar: true },
+  };
+
+  it('a linha da base abre a ficha frente ao inventário, e "Inativar" grava', async () => {
+    let inativo = false;
+    const roteador = abrir('/gestao/software', {
+      ...base(true),
+      [`GET /api/software/pacotes/${PACOTE.id}`]: () =>
+        Response.json(
+          inativo
+            ? {
+                ...FICHA_DO_PACOTE,
+                pacote: { ...FICHA_DO_PACOTE.pacote, situacao: 'inativo' },
+              }
+            : FICHA_DO_PACOTE,
+        ),
+      [`POST /api/software/pacotes/${PACOTE.id}/inativacao`]: () => {
+        inativo = true;
+        return Response.json({ ...PACOTE, situacao: 'inativo' });
+      },
+    });
+    const tabela = await screen.findByRole('grid', { name: 'Base de pacotes' });
+    fireEvent.click(await within(tabela).findByText('7-Zip 23.01'));
+    await waitFor(() =>
+      expect(roteador.state.location.pathname).toBe(`/gestao/software/pacotes/${PACOTE.id}`),
+    );
+    expect(await screen.findByText('Sem o 7-Zip')).toBeTruthy();
+    expect(screen.getByText('7-Zip 22.01 · abaixo do alvo')).toBeTruthy();
+    const distribuicoes = screen.getByRole('grid', { name: 'Distribuições deste pacote' });
+    // A que aguarda está sem contato: ganha o rótulo dela, e nenhuma fica em "aguardando".
+    expect(within(distribuicoes).getByText('1 sem contato')).toBeTruthy();
+    expect(within(distribuicoes).queryByText(/aguardando/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Inativar' }));
+    await waitFor(() => expect(avisos()).toContain('Pacote inativado.'));
+    expect(await screen.findByRole('button', { name: 'Reativar' })).toBeTruthy();
+  });
+});
+
 describe('a distribuição', () => {
   it('Distribuição para as máquinas: escolhe pela busca e abre a ficha', async () => {
     let corpo: unknown;
