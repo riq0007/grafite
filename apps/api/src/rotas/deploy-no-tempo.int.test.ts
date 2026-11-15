@@ -29,7 +29,6 @@ const HORA = 60 * MINUTO;
 let api: ApiDeTeste;
 let org = '';
 const maquinas: Record<string, string> = {};
-const chamados: string[] = [];
 
 const naOrg = <T>(fazer: Parameters<typeof naOrganizacao<T>>[2]) =>
   naOrganizacao(api.banco, org, fazer);
@@ -66,9 +65,14 @@ const agente = (deviceid: string) =>
     return linha;
   });
 
-/** Uma volta da tarefa periódica, com o chamado simulado: o 10.8.0.13 não responde. */
+/**
+ * Uma volta da tarefa periódica, com o chamado simulado: o 10.8.0.13 não responde. O banco é o de
+ * todos os arquivos dos testes, e a tarefa passa por todas as organizações dele: a volta devolve
+ * só os IPs das máquinas desta que ficaram com o chamado do momento, lidos do banco pela
+ * organização, e confere que o agente de cada uma recebeu o chamado.
+ */
 async function chamarOsAgendados() {
-  chamados.length = 0;
+  const chamados: string[] = [];
   const [tarefa] = tarefasDoSoftware({
     banco: api.banco,
     armazenamento: api.armazenamento,
@@ -86,7 +90,18 @@ async function chamarOsAgendados() {
     tentativa: 0,
     sinal: new AbortController().signal,
   });
-  return [...chamados].sort();
+  const momento = api.relogio.agora();
+  const marcadas = await naOrg((tx) =>
+    tx
+      .select({ ip: agentes.ip })
+      .from(maquinasDasDistribuicoes)
+      .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
+      .where(eq(maquinasDasDistribuicoes.chamadaEm, momento)),
+  );
+  const ips = marcadas.map(({ ip }) => ip ?? '').sort();
+  // Contém, e não igual: os agentes das outras organizações do banco também são chamados.
+  expect(chamados).toEqual(expect.arrayContaining(ips));
+  return ips;
 }
 
 beforeAll(async () => {
