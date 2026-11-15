@@ -21927,6 +21927,9 @@
               }
             ]
           },
+          "diasSemContato": {
+            "type": "number"
+          },
           "tipos": {
             "type": "array",
             "items": {
@@ -21971,6 +21974,7 @@
         "required": [
           "tipoId",
           "localId",
+          "diasSemContato",
           "tipos",
           "locais"
         ]
@@ -44609,6 +44613,9 @@
               }
             ]
           },
+          "diasSemContato": {
+            "type": "number"
+          },
           "tipos": {
             "type": "array",
             "items": {
@@ -44655,6 +44662,7 @@
         "required": [
           "tipoId",
           "localId",
+          "diasSemContato",
           "tipos",
           "locais"
         ],
@@ -74187,7 +74195,7 @@
         }
       },
       "put": {
-        "summary": "Escolher tipo e local dos computadores cadastrados pelo agente",
+        "summary": "Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato",
         "requestBody": {
           "required": true,
           "content": {
@@ -74218,6 +74226,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "diasSemContato": {
+                    "type": "number"
                   }
                 },
                 "required": [

@@ -1,4 +1,8 @@
+// O cadastro dos agentes do GLPI pela API (spec inventario-pelo-agente): o tipo e o local dos
+// computadores que o agente cadastra e, na change software-por-pacote, o prazo do sem contato, de
+// 1 a 30 dias, que a edição sem o campo mantém (design, decisão 9).
 import { type Banco, cadastroDosAgentes, locais, naOrganizacao, tiposDeAtivo } from '@grafite/db';
+import { MENSAGEM_DO_PRAZO_DO_SEM_CONTATO, prazoDoSemContatoValido } from '@grafite/domain';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -24,6 +28,8 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
         summary: 'Configuração do cadastro automático pelo GLPI Agent',
         response: {
           200: Cadastro.extend({
+            /** O prazo do sem contato, em dias. */
+            diasSemContato: z.number(),
             tipos: z.array(z.object({ id: z.uuid(), nome: z.string() })),
             locais: z.array(z.object({ id: z.uuid(), nome: z.string() })),
           }).meta({ id: 'CadastroDosAgentes' }),
@@ -56,14 +62,21 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
     {
       config: { permissao: 'coletores.administrar' },
       schema: {
-        summary: 'Escolher tipo e local dos computadores cadastrados pelo agente',
-        body: Cadastro,
+        summary:
+          'Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato',
+        body: Cadastro.extend({
+          /** De 1 a 30 dias; sem o campo, fica o de antes. */
+          diasSemContato: z.number().optional(),
+        }),
         response: { 204: z.null(), ...PROBLEMAS },
       },
     },
     async (requisicao, resposta) => {
       const { contaId } = sessaoDa(requisicao);
-      const { tipoId } = requisicao.body;
+      const { tipoId, diasSemContato } = requisicao.body;
+      if (diasSemContato !== undefined && !prazoDoSemContatoValido(diasSemContato)) {
+        throw dadosInvalidos({ diasSemContato: MENSAGEM_DO_PRAZO_DO_SEM_CONTATO });
+      }
       const localId = tipoId ? requisicao.body.localId : null;
       const orgId = requisicao.organizacao?.id ?? '';
       await naOrganizacao(banco, orgId, async (tx) => {
@@ -82,17 +95,22 @@ export const rotasDoCadastroDosAgentes: FastifyPluginAsyncZod<{
             throw dadosInvalidos({ localId: 'Escolha um local ativo desta organização.' });
         }
         const antes = await lerCadastroDosAgentes(tx);
-        if (antes.tipoId === tipoId && antes.localId === localId) return;
+        const dias = diasSemContato ?? antes.diasSemContato;
+        if (antes.tipoId === tipoId && antes.localId === localId && antes.diasSemContato === dias)
+          return;
         await tx
           .insert(cadastroDosAgentes)
-          .values({ orgId, tipoId, localId })
-          .onConflictDoUpdate({ target: cadastroDosAgentes.orgId, set: { tipoId, localId } });
+          .values({ orgId, tipoId, localId, diasSemContato: dias })
+          .onConflictDoUpdate({
+            target: cadastroDosAgentes.orgId,
+            set: { tipoId, localId, diasSemContato: dias },
+          });
         await registrarNaAuditoria(tx, {
           acao: 'agentes.cadastro-configurado',
           ator: { tipo: 'conta', contaId },
           alvo: { tipo: 'cadastro-dos-agentes', id: null },
           antes,
-          depois: { tipoId, localId },
+          depois: { tipoId, localId, diasSemContato: dias },
           origem: origemDa(requisicao),
           momento: agora(),
         });

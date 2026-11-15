@@ -1,5 +1,11 @@
 import { cadastroDosAgentes, locais, type Transacao, tiposDeAtivo } from '@grafite/db';
-import { camposDoAtivo, type InventarioDoAgente, lerValor, SEM_ACESSO } from '@grafite/domain';
+import {
+  camposDoAtivo,
+  type InventarioDoAgente,
+  lerValor,
+  PRAZO_DO_SEM_CONTATO,
+  SEM_ACESSO,
+} from '@grafite/domain';
 import { eq } from 'drizzle-orm';
 import { lerArvore } from '../arvore.ts';
 import { camposDaOrganizacao, gravarAtivo, lerTipoDoAtivo } from '../ativos/escrita.ts';
@@ -7,10 +13,17 @@ import { lerAtivo } from '../ativos/leitura.ts';
 import { dadosInvalidos } from '../problemas.ts';
 import { modeloDoInventario } from './modelo.ts';
 
-/** Tipo nulo conserva o recebimento e a ligação manual, sem criar computadores. */
+/**
+ * Tipo nulo conserva o recebimento e a ligação manual, sem criar computadores. O prazo do sem
+ * contato, em dias, vale para todos os agentes (change software-por-pacote, design, decisão 9).
+ */
 export async function lerCadastroDosAgentes(tx: Transacao) {
   const [linha] = await tx.select().from(cadastroDosAgentes);
-  return { tipoId: linha?.tipoId ?? null, localId: linha?.localId ?? null };
+  return {
+    tipoId: linha?.tipoId ?? null,
+    localId: linha?.localId ?? null,
+    diasSemContato: linha?.diasSemContato ?? PRAZO_DO_SEM_CONTATO.deFabrica,
+  };
 }
 
 /** O savepoint preserva o recebimento quando um cadastro é recusado pelo motor de campos. */

@@ -6,6 +6,17 @@ import { compararVersoes, type SituacaoFrenteAoPacote, versaoCortada } from './v
 
 const DIA = 86_400_000;
 
+/** O prazo do sem contato da organização, em dias: duas voltas do contato diário de fábrica. */
+export const PRAZO_DO_SEM_CONTATO = { minimo: 1, maximo: 30, deFabrica: 2 } as const;
+
+export const MENSAGEM_DO_PRAZO_DO_SEM_CONTATO = 'Use de 1 a 30 dias.';
+
+/** O prazo em dias inteiros, de 1 a 30. */
+export const prazoDoSemContatoValido = (dias: number): boolean =>
+  Number.isInteger(dias) &&
+  dias >= PRAZO_DO_SEM_CONTATO.minimo &&
+  dias <= PRAZO_DO_SEM_CONTATO.maximo;
+
 /**
  * O agente sem contato: o último contato passou do prazo da organização, em dias. Os dias contam
  * inteiros ("há 3 dias").

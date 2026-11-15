@@ -828,7 +828,10 @@ export {
   type ContaDoAssistente,
   classeNoAssistente,
   contaDoAssistente,
+  MENSAGEM_DO_PRAZO_DO_SEM_CONTATO,
+  PRAZO_DO_SEM_CONTATO,
   paraQuem,
+  prazoDoSemContatoValido,
   semContato,
   textoDoSemContato,
 } from './software/maquinas.ts';

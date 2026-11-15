@@ -12,7 +12,7 @@ import {
   tiposDeAtivo,
 } from '@grafite/db';
 import { normalizarTexto } from '@grafite/domain';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   type ApiDeTeste,
@@ -104,6 +104,7 @@ describe('a configuração do cadastro pelo agente', () => {
     expect(r.json()).toEqual({
       tipoId: null,
       localId: null,
+      diasSemContato: 2,
       tipos: [{ id: tipo, nome: 'Computador' }],
       locais: [{ id: local, nome: 'Entrada' }],
     });
@@ -147,6 +148,47 @@ describe('a configuração do cadastro pelo agente', () => {
       tipoId: null,
       localId: null,
     });
+  });
+
+  it('Prazo maior: o prazo do sem contato vai de 1 a 30 dias, com a auditoria; sem o campo, fica', async () => {
+    const r = await cliente.enviar('PUT', '/agentes/cadastro', entrada, {
+      tipoId: null,
+      localId: null,
+      diasSemContato: 4,
+    });
+    expect(r.statusCode, r.body).toBe(204);
+    expect((await cliente.consultar('/agentes/cadastro', entrada)).json()).toMatchObject({
+      tipoId: null,
+      diasSemContato: 4,
+    });
+    const [registro] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select()
+        .from(auditoria)
+        .where(eq(auditoria.acao, 'agentes.cadastro-configurado'))
+        .orderBy(desc(auditoria.id))
+        .limit(1),
+    );
+    expect(registro).toMatchObject({
+      antes: { diasSemContato: 2 },
+      depois: { diasSemContato: 4 },
+    });
+
+    expect((await configurar(tipo, local)).statusCode).toBe(204);
+    expect((await cliente.consultar('/agentes/cadastro', entrada)).json()).toMatchObject({
+      tipoId: tipo,
+      diasSemContato: 4,
+    });
+    for (const diasSemContato of [0, 31, 2.5]) {
+      const recusado = await cliente.enviar('PUT', '/agentes/cadastro', entrada, {
+        tipoId: null,
+        localId: null,
+        diasSemContato,
+      });
+      expect(recusado.statusCode).toBe(400);
+      expect(recusado.json().campos).toEqual({ diasSemContato: 'Use de 1 a 30 dias.' });
+    }
+    expect((await configurar(null)).statusCode).toBe(204);
   });
 });
 

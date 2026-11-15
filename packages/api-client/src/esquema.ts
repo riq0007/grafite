@@ -28599,7 +28599,7 @@ export interface paths {
                 };
             };
         };
-        /** Escolher tipo e local dos computadores cadastrados pelo agente */
+        /** Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato */
         put: {
             parameters: {
                 query?: never;
@@ -28612,6 +28612,7 @@ export interface paths {
                     "application/json": {
                         tipoId: string | null;
                         localId: string | null;
+                        diasSemContato?: number;
                     };
                 };
             };
@@ -34737,6 +34738,7 @@ export interface components {
         CadastroDosAgentesInput: {
             tipoId: string | null;
             localId: string | null;
+            diasSemContato: number;
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -39147,6 +39149,7 @@ export interface components {
         CadastroDosAgentes: {
             tipoId: string | null;
             localId: string | null;
+            diasSemContato: number;
             tipos: {
                 /** Format: uuid */
                 id: string;
