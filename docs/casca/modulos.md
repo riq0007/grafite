@@ -1435,7 +1435,8 @@ Um módulo opcional começa ligado em toda organização. Desligá-lo não apaga
       });
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
-      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, acordar: acordarAgente });
+      await doAtivos.register(rotasDasCategoriasDeSoftware, { banco, agora });
+      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, fila });
     });
 ```
 
