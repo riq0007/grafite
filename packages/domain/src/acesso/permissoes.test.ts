@@ -64,6 +64,9 @@ describe('catálogo de permissões', () => {
       ['salas.administrar', 'organizacao'],
       ['paineis.ver', 'organizacao'],
       ['paineis.administrar', 'organizacao'],
+      ['chamados.ver', 'local'],
+      ['chamados.atender', 'local'],
+      ['chamados.configurar', 'organizacao'],
     ]);
   });
 
@@ -135,6 +138,33 @@ describe('catálogo de permissões', () => {
           'Registrar e alterar as solicitações, pedir ao fornecedor, entregar, concluir, cancelar e mudar a situação',
         escopo: 'local',
         inclui: ['solicitacoes.ver'],
+      },
+    ]);
+  });
+
+  it('tem as permissões dos chamados, na área Chamados, com o ver incluído no atender', () => {
+    expect(PERMISSOES.filter((p) => p.area === 'Chamados')).toEqual([
+      {
+        chave: 'chamados.ver',
+        area: 'Chamados',
+        descricao: 'Ver os chamados, com as notas internas',
+        escopo: 'local',
+        inclui: [],
+      },
+      {
+        chave: 'chamados.atender',
+        area: 'Chamados',
+        descricao: 'Abrir, assumir, passar, responder e resolver os chamados',
+        escopo: 'local',
+        inclui: ['chamados.ver'],
+      },
+      {
+        chave: 'chamados.configurar',
+        area: 'Chamados',
+        descricao:
+          'Configurar os tipos de chamado, o formulário, as respostas prontas e o horário da TI',
+        escopo: 'organizacao',
+        inclui: [],
       },
     ]);
   });

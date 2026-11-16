@@ -27,6 +27,7 @@ describe('as permissões na ficha do perfil', () => {
       'Software',
       'Salas',
       'Painéis',
+      'Chamados',
     ]);
     expect(AREAS[0]?.permissoes.map(({ chave }) => chave)).toEqual([
       'pessoas.ver',

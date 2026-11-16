@@ -3972,7 +3972,10 @@
                     "salas.ver",
                     "salas.administrar",
                     "paineis.ver",
-                    "paineis.administrar"
+                    "paineis.administrar",
+                    "chamados.ver",
+                    "chamados.atender",
+                    "chamados.configurar"
                   ]
                 },
                 "organizacao": {
@@ -8875,7 +8878,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           }
@@ -9199,7 +9205,10 @@
               "salas.ver",
               "salas.administrar",
               "paineis.ver",
-              "paineis.administrar"
+              "paineis.administrar",
+              "chamados.ver",
+              "chamados.atender",
+              "chamados.configurar"
             ]
           },
           "organizacao": {
@@ -19821,7 +19830,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           },
@@ -20069,7 +20081,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           },
@@ -27200,7 +27215,10 @@
                     "salas.ver",
                     "salas.administrar",
                     "paineis.ver",
-                    "paineis.administrar"
+                    "paineis.administrar",
+                    "chamados.ver",
+                    "chamados.atender",
+                    "chamados.configurar"
                   ]
                 },
                 "organizacao": {
@@ -32269,7 +32287,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           }
@@ -32605,7 +32626,10 @@
               "salas.ver",
               "salas.administrar",
               "paineis.ver",
-              "paineis.administrar"
+              "paineis.administrar",
+              "chamados.ver",
+              "chamados.atender",
+              "chamados.configurar"
             ]
           },
           "organizacao": {
@@ -43580,7 +43604,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           },
@@ -43833,7 +43860,10 @@
                 "salas.ver",
                 "salas.administrar",
                 "paineis.ver",
-                "paineis.administrar"
+                "paineis.administrar",
+                "chamados.ver",
+                "chamados.atender",
+                "chamados.configurar"
               ]
             }
           },
