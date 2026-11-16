@@ -305,6 +305,15 @@ export {
   type TituloDoFormulario,
 } from './chamados/formulario.ts';
 export {
+  type ChamadoQueNotifica,
+  type ContaQueRecebeATriagem,
+  destinoDoChamado,
+  notificacaoDoPassado,
+  notificacoesDaAbertura,
+  notificacoesDaTriagem,
+  ORIGEM_DOS_CHAMADOS,
+} from './chamados/notificacoes.ts';
+export {
   type ConferenciaDoHorario,
   conferirHorario,
   DIAS_DA_SEMANA_DO_HORARIO,

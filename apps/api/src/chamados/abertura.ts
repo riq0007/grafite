@@ -8,8 +8,9 @@
 // - os locais, da pessoa e do ativo ligado, e o alcance de quem abre;
 // - o atendimento, o número da organização e o prazo do tipo em minutos;
 // - o chamado, com a primeira resposta dada, o evento de abertura, sem o resumo pronto, os anexos
-//   tomados pelos campos, a auditoria e o `chamados.mudaram`.
-// A solicitação gerada pelo tipo e os avisos chegam nas tarefas 4.18 e 4.8.
+//   tomados pelos campos, a auditoria e o `chamados.mudaram`;
+// - as notificações de quem recebe o chamado pelo tipo ou da triagem (tarefa 4.8).
+// A solicitação gerada pelo tipo chega na tarefa 4.18.
 import {
   ativos,
   chamados,
@@ -38,6 +39,7 @@ import {
   MENSAGEM_DO_LOCAL_INATIVO,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
   normalizarTexto,
+  notificacoesDaAbertura,
   podeEm,
   prazoEmMinutos,
   recusaDeQuemAbre,
@@ -47,10 +49,13 @@ import {
 } from '@grafite/domain';
 import { eq, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
+import { carregarAcessosDaOrganizacao } from '../acesso/acesso.ts';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { recusaDosTiposAceitos } from '../ativos/escrita.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
+import type { EnviarTarefa } from '../fila/tarefas.ts';
+import { notificar } from '../notificacoes/notificar.ts';
 import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { publicoDoChamado } from './alcance.ts';
@@ -240,11 +245,18 @@ async function nomeDaConta(tx: Transacao, contaId: string): Promise<string> {
   return linha?.nome ?? '';
 }
 
-/** Abre o chamado e devolve o número, a situação e quem atende. */
+/**
+ * Abre o chamado e devolve o número, a situação e quem atende. Com a fila, as notificações vão
+ * também pelo e-mail e pelo push.
+ */
 export async function abrirChamado(
   tx: Transacao,
   pedido: PedidoDeAbertura,
-  { requisicao, momento }: { requisicao: FastifyRequest; momento: Date },
+  {
+    requisicao,
+    momento,
+    enviar,
+  }: { requisicao: FastifyRequest; momento: Date; enviar?: EnviarTarefa },
 ): Promise<ChamadoAberto> {
   const { acesso, contaId } = sessaoDa(requisicao);
   const arvore = await lerArvore(tx);
@@ -394,5 +406,30 @@ export async function abrirChamado(
     momento,
     saida: { publico: publicoDoChamado(doChamado) },
   });
+
+  // As notificações: a de quem recebe o chamado pelo tipo, ou as da triagem, fora quem abriu. As
+  // contas da organização só são lidas para a triagem.
+  const contasQueAtendem =
+    atendimento.situacao === 'triagem'
+      ? (await carregarAcessosDaOrganizacao(tx)).map((conta) => ({
+          id: conta.id,
+          alcance: alcance(conta.acesso, 'chamados.atender', arvore),
+        }))
+      : [];
+  await notificar(
+    tx,
+    notificacoesDaAbertura(
+      {
+        numero,
+        titulo,
+        situacao: atendimento.situacao,
+        responsavelId: atendimento.atende,
+        locais: doChamado,
+      },
+      { abertoPor: contaId, contas: contasQueAtendem },
+    ),
+    momento,
+    enviar ? { enviar } : {},
+  );
   return { numero, situacao: atendimento.situacao, responsavel };
 }

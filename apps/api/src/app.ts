@@ -443,7 +443,7 @@ export async function criarApp({
       await dosChamados.register(rotasDasRespostasProntas, { banco, agora });
       await dosChamados.register(rotasDoHorarioDaTi, { banco, agora });
       await dosChamados.register(rotasDosAnexosDosChamados, { banco, agora, armazenamento });
-      await dosChamados.register(rotasDosChamados, { banco, agora });
+      await dosChamados.register(rotasDosChamados, { banco, agora, fila });
     });
     // O módulo Painéis, opcional: os painéis das VMs e a verificação (change painel-de-dashboards).
     await escopo.register(async (dosPaineis) => {

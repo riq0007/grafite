@@ -458,6 +458,8 @@ Os dois respeitam o alcance da conta. O grupo é "Chamados", com no máximo 8 re
 
 As rotas entram no OpenAPI pelo Zod, e o cliente tipado sai do `contrato:gerar`. As três permissões entram no catálogo do domínio, na área "Chamados". O perfil Administrador, que tem todas por definição, passa a tê-las sem mudança no perfil.
 
+A leitura que serve a quem atende e a quem configura, como as sugestões do Ativo e do Local (4.8) e a busca da pessoa (4.22), tem duas rotas, uma por permissão, porque cada rota pede uma permissão só: a da gaveta, com `chamados.atender`, e a da prévia do colaborador, com `chamados.configurar`, em `/chamados/tipos/`. As duas dão o mesmo, só com o que a conta vê.
+
 As rotas ficam num bloco próprio em `apps/api/src/app.ts`, com o `exigirModuloLigado` do módulo `chamados`, como os outros módulos opcionais. Fora do bloco, a busca segue a regra dos módulos desligados (spec modulos-da-organizacao), e a tarefa do prazo pula a organização com o módulo desligado, pelo `modulosDesligados`.
 
 ### 19. O que o plano põe e o mockup não mostra

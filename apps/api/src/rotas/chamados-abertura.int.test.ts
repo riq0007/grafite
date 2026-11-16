@@ -15,6 +15,7 @@ import {
   horarioDaTi,
   mensagensDosChamados,
   naOrganizacao,
+  notificacoes,
   numeracaoDosChamados,
   tiposDeChamado,
 } from '@grafite/db';
@@ -29,7 +30,7 @@ import {
   resumoDasRespostas,
   rotuloDoAtivo,
 } from '@grafite/domain';
-import { asc, count, eq } from 'drizzle-orm';
+import { asc, count, desc, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { criarAtivoDoTipo, criarModelo, criarTipo, desligarModulos } from '../../test/alertas.ts';
 import {
@@ -608,6 +609,107 @@ describe('a abertura pela TI', () => {
           .set({ modo: 'corridas', resolucaoValor: 24, resolucaoUnidade: 'h' })
           .where(eq(tiposDeChamado.id, tipoDe('Outro'))),
       );
+    }
+  });
+});
+
+describe('as notificações da abertura', () => {
+  // Fábio atende a organização inteira, como Ana; Gil atendia Jundiaí, e a conta dele está inativa.
+  beforeAll(async () => {
+    const atende = await criarPerfil(api, org, {
+      nome: 'Atende também',
+      permissoes: ['chamados.atender'],
+    });
+    contasDe.fabio = (await criarConta(api, org, { usuario: 'fabio', nome: 'Fábio Lima' })).id;
+    contasDe.gil = (await criarConta(api, org, { usuario: 'gil', nome: 'Gil Rocha' })).id;
+    await atribuir(api, org, { perfilId: atende, contaId: conta('fabio') });
+    await atribuir(api, org, { perfilId: atende, contaId: conta('gil'), localId: id('jundiai') });
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .update(contas)
+        .set({ situacao: 'inativa' })
+        .where(eq(contas.id, conta('gil'))),
+    );
+  });
+
+  /** Quem recebeu a notificação do chamado, pelo usuário, com o título dela. */
+  const notificadosDo = (numero: number) =>
+    naOrganizacao(api.banco, org, async (tx) => {
+      const linhas = await tx
+        .select({ contaId: notificacoes.contaId, titulo: notificacoes.titulo })
+        .from(notificacoes)
+        .where(eq(notificacoes.destino, `/chamados/${numero}`));
+      const usuarioDa = (contaId: string) =>
+        Object.entries(contasDe).find(([, deUsuario]) => deUsuario === contaId)?.[0] ?? contaId;
+      return Object.fromEntries(linhas.map(({ contaId, titulo }) => [usuarioDa(contaId), titulo]));
+    });
+
+  const cadeira = (pessoa: string) => ({ ...relato(pessoa), titulo: 'Cadeira quebrada' });
+
+  it('Chamado para a triagem: avisa cada conta ativa que atende os locais dele, fora quem abriu', async () => {
+    const r = await abrir('ana', cadeira('marina'));
+    expect(r.statusCode, r.body).toBe(201);
+    const { numero } = r.json();
+    const titulo = `Chamado #${numero} na triagem: Cadeira quebrada`;
+    // Diego e Elisa atendem Jundiaí, e Fábio, a organização; Ana abriu, Bruno atende Campinas,
+    // Carla só vê, e a conta de Gil está inativa.
+    expect(await notificadosDo(numero)).toEqual({ diego: titulo, elisa: titulo, fabio: titulo });
+    const [deDiego] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select()
+        .from(notificacoes)
+        .where(eq(notificacoes.contaId, conta('diego')))
+        .orderBy(desc(notificacoes.criadaEm), desc(notificacoes.id))
+        .limit(1),
+    );
+    expect(deDiego).toMatchObject({
+      severidade: 'info',
+      titulo,
+      descricao: null,
+      origem: 'Chamados',
+      destino: `/chamados/${numero}`,
+      alertaId: null,
+      criadaEm: AGORA,
+    });
+  });
+
+  it('o chamado de Campinas avisa quem atende Campinas, e o sem local, quem atende a organização', async () => {
+    const deCampinas = await abrir('bruno', cadeira('paulo'));
+    expect(deCampinas.statusCode, deCampinas.body).toBe(201);
+    const numero = deCampinas.json().numero;
+    const titulo = `Chamado #${numero} na triagem: Cadeira quebrada`;
+    expect(await notificadosDo(numero)).toEqual({ ana: titulo, fabio: titulo });
+
+    const semLocal = await abrir('ana', cadeira('rita'));
+    expect(semLocal.statusCode, semLocal.body).toBe(201);
+    const outro = semLocal.json().numero;
+    expect(await notificadosDo(outro)).toEqual({
+      fabio: `Chamado #${outro} na triagem: Cadeira quebrada`,
+    });
+  });
+
+  it('Passado pelo atendimento do tipo: avisa só quem recebe o chamado, e nunca quem abriu', async () => {
+    await atendimentoDoTipo('Outro', { atendePorPadrao: conta('diego'), semNinguem: 'triagem' });
+    try {
+      const passado = await abrir('ana', cadeira('marina'));
+      expect(passado.json()).toMatchObject({
+        situacao: 'em-atendimento',
+        responsavel: { id: conta('diego') },
+      });
+      const numero = passado.json().numero;
+      expect(await notificadosDo(numero)).toEqual({
+        diego: `Chamado #${numero} com você: Cadeira quebrada`,
+      });
+
+      // Diego abre e recebe o chamado por atender o tipo; Elisa abre com o "Fica comigo".
+      const peloTipo = await abrir('diego', cadeira('marina'));
+      expect(peloTipo.json()).toMatchObject({ responsavel: { id: conta('diego') } });
+      expect(await notificadosDo(peloTipo.json().numero)).toEqual({});
+      const ficaComigo = await abrir('elisa', { ...cadeira('marina'), ficaComigo: true });
+      expect(ficaComigo.json()).toMatchObject({ responsavel: { id: conta('elisa') } });
+      expect(await notificadosDo(ficaComigo.json().numero)).toEqual({});
+    } finally {
+      await atendimentoDoTipo('Outro', { atendePorPadrao: null, semNinguem: 'triagem' });
     }
   });
 });
