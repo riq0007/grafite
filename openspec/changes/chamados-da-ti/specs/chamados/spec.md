@@ -534,7 +534,7 @@ Cada registro SHALL ter o "antes → depois" do que mudou. O alvo SHALL ser o ch
 
 Os eventos em tempo real (spec eventos-em-tempo-real) SHALL ser:
 - `chamados.mudaram`, quando um chamado abre, muda ou ganha uma mensagem, a quem vê os chamados nos locais dele, os de antes e os de depois;
-- `chamados.ajustes.mudaram`, quando um tipo, o formulário, uma resposta pronta ou o horário da TI muda, a quem tem uma das permissões dos chamados. Como o horário muda os relógios dos chamados abertos, as telas dos chamados SHALL se atualizar também com ele.
+- `ajustes-dos-chamados.mudaram`, quando um tipo, o formulário, uma resposta pronta ou o horário da TI muda, a quem tem uma das permissões dos chamados. Como o horário muda os relógios dos chamados abertos, as telas dos chamados SHALL se atualizar também com ele.
 
 Os eventos SHALL NOT levar o título, o texto nem o nome da pessoa.
 

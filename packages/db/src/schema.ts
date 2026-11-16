@@ -695,6 +695,11 @@ export const eventos = orgScoped(
     permissao: text('permissao'),
     /** Os locais dos registros, com `null` para o registro sem local. */
     locais: uuid('locais').array(),
+    /**
+     * Quem tem uma das permissões, em algum escopo, sem os locais (change chamados-da-ti, design,
+     * decisão 13).
+     */
+    permissoes: text('permissoes').array(),
     contas: uuid('contas').array(),
     sessoes: uuid('sessoes').array(),
   },
@@ -703,13 +708,14 @@ export const eventos = orgScoped(
     check('eventos_tipo_valido', sql`${t.tipo} ~ '^[a-z-]+[.][a-z-]+$'`),
     check(
       'eventos_publico_valido',
-      sql`(${t.todas} or ${t.permissao} is not null or ${t.contas} is not null
-          or ${t.sessoes} is not null)
+      sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
+          or ${t.contas} is not null or ${t.sessoes} is not null)
         and (${t.locais} is null or ${t.permissao} is not null)`,
     ),
     check(
       'eventos_publico_curto',
       sql`coalesce(cardinality(${t.locais}), 0) <= 8
+        and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
         and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
     ),

@@ -38,6 +38,8 @@ export const TIPOS_DE_EVENTO = [
   'paineis.mudaram',
   'diretorio.mudou',
   'software.mudou',
+  'chamados.mudaram',
+  'ajustes-dos-chamados.mudaram',
 ] as const;
 
 export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
@@ -48,12 +50,15 @@ export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
  * - `permissao`: quem tem a permissão, em algum escopo; com `locais`, só quem a tem no ramo de um
  *   deles (o local de antes e o de depois da mudança), e `null` é o registro sem local, que só a
  *   organização inteira alcança;
+ * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
+ *   design, decisão 13);
  * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
  */
 export interface PublicoDoEvento {
   todas?: boolean;
   permissao?: Permissao;
   locais?: readonly (string | null)[];
+  permissoes?: readonly Permissao[];
   contas?: readonly string[];
   sessoes?: readonly string[];
 }
@@ -323,7 +328,8 @@ export type TipoComPublicoDado =
   | 'solicitacoes.mudaram'
   | 'ordens.mudaram'
   | 'metas.mudaram'
-  | 'controlid.mudaram';
+  | 'controlid.mudaram'
+  | 'chamados.mudaram';
 
 /** As ações auditadas cujo evento precisa do público dado por quem grava, como as das pessoas. */
 export type AcaoComPublicoDado = {
@@ -339,8 +345,9 @@ export type AcaoComPublicoDado = {
  * alertas, que depende do local dos ativos deles e, na regra, alcança quem vê alertas, o das
  * notificações, que são as contas notificadas ou a que leu, o do estoque, que são os locais da
  * movimentação, a origem e o destino, ou o do mínimo, o das solicitações, que são os locais
- * dela, os de antes e os de depois da mudança, o das OS, que é o local guardado na abertura, e o
- * das metas, que é quem vê o indicador: os alertas, as OS ou o estoque.
+ * dela, os de antes e os de depois da mudança, o das OS, que é o local guardado na abertura, o
+ * das metas, que é quem vê o indicador: os alertas, as OS ou o estoque, e o dos chamados, que são
+ * os locais dele, os de antes e os de depois.
  */
 export function publicoDerivado(
   tipo: TipoDeEvento,
@@ -375,6 +382,10 @@ export function publicoDerivado(
       return { permissao: 'diretorio.administrar' };
     case 'software.mudou':
       return { permissao: 'software.distribuir' };
+    // Os tipos, o formulário, as respostas prontas e o horário da TI: quem tem uma das permissões
+    // dos chamados (change chamados-da-ti, design, decisão 13).
+    case 'ajustes-dos-chamados.mudaram':
+      return { permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'] };
     case 'pessoas.mudaram':
     case 'preferencias.mudaram':
     case 'ativos.mudaram':
@@ -388,6 +399,7 @@ export function publicoDerivado(
     case 'ordens.mudaram':
     case 'metas.mudaram':
     case 'controlid.mudaram':
+    case 'chamados.mudaram':
       return null;
   }
 }
@@ -407,10 +419,11 @@ export function podeReceber(
   arvore: Pick<ArvoreDeLocais, 'ancestrais'>,
 ): boolean {
   if (evento.orgId !== conexao.orgId) return false;
-  const { todas, permissao, locais, contas, sessoes } = evento.publico;
+  const { todas, permissao, locais, permissoes, contas, sessoes } = evento.publico;
   if (todas) return true;
   if (sessoes?.includes(conexao.sessaoId)) return true;
   if (contas?.includes(conexao.contaId)) return true;
+  if (permissoes?.some((chave) => pode(conexao.acesso, chave))) return true;
   if (!permissao) return false;
   if (locais === undefined) return pode(conexao.acesso, permissao);
   return locais.some((localId) => podeEm(conexao.acesso, permissao, localId, arvore));

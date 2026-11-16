@@ -102,6 +102,8 @@ describe('tipos de evento', () => {
       'paineis.mudaram',
       'diretorio.mudou',
       'software.mudou',
+      'chamados.mudaram',
+      'ajustes-dos-chamados.mudaram',
     ]);
   });
 
@@ -243,6 +245,12 @@ describe('publicoDerivado', () => {
     });
   });
 
+  it('manda os ajustes dos chamados a quem tem uma das permissões dos chamados (change chamados-da-ti)', () => {
+    expect(
+      publicoDerivado('ajustes-dos-chamados.mudaram', { tipo: 'tipo-de-chamado', id: 't1' }),
+    ).toEqual({ permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'] });
+  });
+
   it('deixa a quem grava o público das pessoas e das preferências', () => {
     expect(publicoDerivado('pessoas.mudaram', { tipo: 'pessoa', id: 'joao' })).toBeNull();
     expect(publicoDerivado('preferencias.mudaram', { tipo: 'conta', id: 'c1' })).toBeNull();
@@ -261,6 +269,8 @@ describe('publicoDerivado', () => {
     // O da meta é quem vê o indicador: os alertas, as OS ou o estoque (change
     // p4f-indicadores-da-operacao).
     expect(publicoDerivado('metas.mudaram', { tipo: 'indicador', id: 'i1' })).toBeNull();
+    // O dos chamados são os locais dele, os de antes e os de depois (change chamados-da-ti).
+    expect(publicoDerivado('chamados.mudaram', { tipo: 'chamado', id: 'c1' })).toBeNull();
   });
 });
 
@@ -295,6 +305,21 @@ describe('podeReceber', () => {
       true,
     );
     expect(podeReceber(tarefas, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
+  });
+
+  it('entrega a quem tem uma das permissões, em qualquer escopo', () => {
+    const ajustes = evento(
+      { permissoes: ['chamados.ver', 'chamados.configurar'] },
+      { tipo: 'ajustes-dos-chamados.mudaram', alvo: { tipo: 'tipo-de-chamado', id: 't1' } },
+    );
+    expect(podeReceber(ajustes, conexao(acessoCom({ 'chamados.ver': ['exp'] })), ARVORE)).toBe(
+      true,
+    );
+    expect(podeReceber(ajustes, conexao(acessoCom({ 'chamados.configurar': true })), ARVORE)).toBe(
+      true,
+    );
+    expect(podeReceber(ajustes, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
+    expect(podeReceber(ajustes, conexao(SEM_PERMISSOES), ARVORE)).toBe(false);
   });
 
   it.each([

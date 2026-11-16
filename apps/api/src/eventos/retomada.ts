@@ -31,6 +31,7 @@ export function eventoDaLinha(linha: typeof eventos.$inferSelect): EventoDeSaida
       ...(linha.todas ? { todas: true } : {}),
       ...(linha.permissao ? { permissao: linha.permissao as Permissao } : {}),
       ...(linha.locais ? { locais: linha.locais } : {}),
+      ...(linha.permissoes ? { permissoes: linha.permissoes as Permissao[] } : {}),
       ...(linha.contas ? { contas: linha.contas } : {}),
       ...(linha.sessoes ? { sessoes: linha.sessoes } : {}),
     },

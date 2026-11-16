@@ -112,6 +112,23 @@ describe('eventos', () => {
     ).rejects.toThrow(/check constraint/);
   });
 
+  it('os locais valem só com a permissão de uma só, e não com as permissões', async () => {
+    await expect(
+      emTransacao(app, orgA, (c) =>
+        gravarEvento(c, orgA, { permissao: null, contas: null, permissoes: ['pessoas.ver'] }),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it('recusa mais de 8 permissões', async () => {
+    const nove = Array.from({ length: 9 }, (_, i) => `area-${i}.ver`);
+    await expect(
+      emTransacao(app, orgA, (c) =>
+        gravarEvento(c, orgA, { permissao: null, locais: null, contas: null, permissoes: nove }),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
   it('recusa o tipo fora do formato assunto.verbo', async () => {
     await expect(
       emTransacao(app, orgA, (c) => gravarEvento(c, orgA, { tipo: 'Pessoas mudaram' })),
@@ -182,5 +199,22 @@ describe('eventos', () => {
     );
     const [aviso] = await avisosAte(1);
     expect(JSON.parse(aviso ?? '{}')).toMatchObject({ alvo: null, publico: { todas: true } });
+  });
+
+  it('o evento de uma das permissões vale sem as outras partes, e o aviso as leva', async () => {
+    await emTransacao(app, orgA, (c) =>
+      gravarEvento(c, orgA, {
+        tipo: 'ajustes-dos-chamados.mudaram',
+        alvo_tipo: 'tipo-de-chamado',
+        permissao: null,
+        locais: null,
+        contas: null,
+        permissoes: ['chamados.ver', 'chamados.configurar'],
+      }),
+    );
+    const [aviso] = await avisosAte(1);
+    expect(JSON.parse(aviso ?? '{}').publico).toEqual({
+      permissoes: ['chamados.ver', 'chamados.configurar'],
+    });
   });
 });

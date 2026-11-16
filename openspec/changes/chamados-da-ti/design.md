@@ -149,7 +149,7 @@ A API manda o relógio guardado, o prazo copiado e o horário da TI. A web recal
 
 **A mudança do horário.** Ela fecha, na mesma transação, os relógios que estão contando no horário da TI: `contado_s += segundosNoHorario(relogio_desde, agora, horario antigo)` e `relogio_desde = agora`. Os de horas corridas não mudam. Assim, o tempo já contado não muda com o horário novo. O fechamento não sobe a `versao` (decisão 4).
 
-Por isso, só a trava da linha separa o fechamento de uma ação que mexe no relógio ao mesmo tempo, como esperar ou resolver. O fechamento trava a linha do horário e os chamados que vai fechar (`FOR UPDATE`), e cada ação trava o chamado antes de ler o horário. Assim, uma espera pela outra, e o tempo não é contado duas vezes nem com o horário errado. Como ele muda os relógios guardados, a web relê os chamados ao receber o `chamados.ajustes.mudaram` (decisão 13).
+Por isso, só a trava da linha separa o fechamento de uma ação que mexe no relógio ao mesmo tempo, como esperar ou resolver. O fechamento trava a linha do horário e os chamados que vai fechar (`FOR UPDATE`), e cada ação trava o chamado antes de ler o horário. Assim, uma espera pela outra, e o tempo não é contado duas vezes nem com o horário errado. Como ele muda os relógios guardados, a web relê os chamados ao receber o `ajustes-dos-chamados.mudaram` (decisão 13).
 
 Alternativa recusada: guardar o vencimento. Ele muda com o horário da TI e para com o relógio, e teria de ser recalculado a cada mudança. O relógio guardado é o que não muda.
 
@@ -373,11 +373,22 @@ As notificações seguem a `notificar()`, com a origem "Chamados", e o e-mail e 
 | Evento | Quando |
 |---|---|
 | `chamados.mudaram` | toda mudança e mensagem do chamado, ao `publicoDoChamado` |
-| `chamados.ajustes.mudaram` | os tipos, o formulário, as respostas prontas e o horário, a quem tem uma das três permissões |
+| `ajustes-dos-chamados.mudaram` | os tipos, o formulário, as respostas prontas e o horário, a quem tem uma das três permissões |
 
-Os dois entram na tabela de tipos de evento da plataforma (`eventos/tipos.ts`), com o teste de lá.
+Os dois entram nos tipos de evento da plataforma (os `TIPOS_DE_EVENTO`, em `packages/domain/src/eventos/eventos.ts`), com o teste de lá, e na cópia da lista no contrato de módulo (`docs/casca/modulos.md`).
+- **O nome dos ajustes** tem um ponto só, porque o banco aceita o tipo no formato `assunto.verbo` (o CHECK `eventos_tipo_valido`).
+- **O público do `chamados.mudaram`** é dado por quem grava, como o das OS. O dos ajustes sai do tipo, pelo `publicoDerivado`: as três permissões dos chamados.
 
-A web declara, no registro do módulo, as consultas que cada evento atualiza. O `chamados.ajustes.mudaram` atualiza também as consultas dos chamados, porque a mudança do horário fecha os relógios (decisão 3). O campo de escrever guarda o rascunho num estado próprio, fora da consulta, para não o perder.
+**O público "uma das permissões".** O público dos eventos aceitava uma permissão só (o `permissao`), e os ajustes vão a quem tem uma das três. Ele ganha o `permissoes`: quem tem uma delas, em qualquer escopo, sem os locais, que seguem só com o `permissao`. A mudança passa por:
+- o `PublicoDoEvento` e o `podeReceber`, no domínio;
+- a coluna `permissoes text[]` dos eventos, com os CHECKs do público (ela vale como uma das partes, e são no máximo 8 permissões), e o aviso do gatilho (`app.avisar_evento`), que a leva na carga, numa migration;
+- a gravação (`registrarEvento`) e a retomada (`eventoDaLinha`), na API. O distribuidor não muda: sem os locais, ele não lê a árvore.
+
+Alternativas recusadas:
+- o `todas`, que mandaria os ajustes a quem não tem nenhuma das permissões dos chamados, contra a spec;
+- dois eventos, um por permissão, que chegariam duas vezes a quem tem as duas.
+
+A web declara, no registro do módulo, as consultas que cada evento atualiza. O `ajustes-dos-chamados.mudaram` atualiza também as consultas dos chamados, porque a mudança do horário fecha os relógios (decisão 3). O campo de escrever guarda o rascunho num estado próprio, fora da consulta, para não o perder.
 
 ### 14. A primeira tela e o dock
 

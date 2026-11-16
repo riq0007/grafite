@@ -375,7 +375,7 @@ Com o movimento reduzido, nada SHALL se mover.
 
 ### Requirement: Telas atualizadas e módulo desligado
 
-As telas dos chamados SHALL se atualizar sozinhas quando chegam os eventos `chamados.mudaram` e `chamados.ajustes.mudaram`, sem uma ação do usuário e sem perder o que se escreve no campo de escrever. O `chamados.ajustes.mudaram` SHALL atualizar também os chamados abertos na tela, porque o horário da TI muda os prazos deles.
+As telas dos chamados SHALL se atualizar sozinhas quando chegam os eventos `chamados.mudaram` e `ajustes-dos-chamados.mudaram`, sem uma ação do usuário e sem perder o que se escreve no campo de escrever. O `ajustes-dos-chamados.mudaram` SHALL atualizar também os chamados abertos na tela, porque o horário da TI muda os prazos deles.
 
 Com o módulo desligado, o endereço de uma tela dos chamados SHALL dizer "O módulo Chamados está desligado nesta organização.", e a primeira tela ao entrar SHALL ser o Início.
 

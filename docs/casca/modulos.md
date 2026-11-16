@@ -1792,6 +1792,8 @@ export const TIPOS_DE_EVENTO = [
   'paineis.mudaram',
   'diretorio.mudou',
   'software.mudou',
+  'chamados.mudaram',
+  'ajustes-dos-chamados.mudaram',
 ] as const;
 ```
 

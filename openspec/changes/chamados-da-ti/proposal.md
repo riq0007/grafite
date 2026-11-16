@@ -94,6 +94,7 @@ Fica fora:
 - `ordens-de-servico`: a OS aberta pelo chamado, ligada a ele.
 - `solicitacoes`: a solicitação aberta pelo chamado ("Pedir toner" e o tipo que gera uma solicitação), ligada a ele.
 - `arquivos-e-imagens`: os anexos dos chamados, enviados antes da gravação e entregues pelo chamado dono.
+- `eventos-em-tempo-real`: os dois tipos de evento dos chamados na tabela dos tipos, o dos ajustes com o público de uma das permissões.
 
 ## Impact
 
