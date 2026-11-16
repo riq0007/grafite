@@ -45,6 +45,8 @@ export interface ChamadoNosPrazos {
   numero: number;
   titulo: string;
   situacao: SituacaoDoChamado;
+  /** A versão, que a tela manda nas ações (tarefa 4.12). */
+  versao: number;
   abertoEm: string;
   tipo: { id: string; nome: string; icone: string };
   /** Quem pediu, com o caminho do local de trabalho. */
@@ -115,6 +117,7 @@ export async function prazosDosChamados(
       numero: chamados.numero,
       titulo: chamados.titulo,
       situacao: chamados.situacao,
+      versao: chamados.versao,
       abertoEm: chamados.abertoEm,
       locais: chamados.locais,
       semLocal: chamados.semLocal,
@@ -220,6 +223,7 @@ export async function prazosDosChamados(
       numero: linha.numero,
       titulo: linha.titulo,
       situacao: linha.situacao,
+      versao: linha.versao,
       abertoEm: linha.abertoEm.toISOString(),
       tipo: linha.tipo,
       pessoa: {

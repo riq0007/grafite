@@ -633,14 +633,16 @@ describe('GET /chamados/:numero', () => {
         especie: 'evento',
         conta: 'ana',
         evento: 'passou',
-        dados: { de: conta('ana'), para: conta('diego') },
+        // O desde num formato que esta versão não grava fica de fora.
+        dados: { de: conta('ana'), para: conta('diego'), desde: 'ontem' },
         em: '08:30',
       },
       {
         especie: 'evento',
         conta: 'ana',
         evento: 'assumiu',
-        dados: { de: conta('diego') },
+        // Desde quando o chamado estava com Diego, que o assumir guarda.
+        dados: { de: conta('diego'), desde: as('08:30').toISOString() },
         em: '09:10',
       },
       // O código que esta versão não lê, gravado por uma versão mais nova, com os dados num formato
@@ -664,6 +666,7 @@ describe('GET /chamados/:numero', () => {
         evento: 'abertura',
         de: null,
         para: null,
+        desde: null,
       },
       {
         especie: 'mensagem',
@@ -689,6 +692,7 @@ describe('GET /chamados/:numero', () => {
         evento: 'passou',
         de: { conta: conta('ana'), nome: 'Ana Souza' },
         para: { conta: conta('diego'), nome: 'Diego Ramos' },
+        desde: null,
       },
       {
         especie: 'evento',
@@ -698,6 +702,7 @@ describe('GET /chamados/:numero', () => {
         evento: 'assumiu',
         de: { conta: conta('diego'), nome: 'Diego Ramos' },
         para: null,
+        desde: iso('08:30'),
       },
     ];
     expect((await lerFicha(1042, 'ana')).conversa).toEqual(esperada);

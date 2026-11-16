@@ -101,6 +101,10 @@ const incluirChamados = (lista: ChamadoDoQuadro[]) =>
 
 const antigo = (numero: number, abertoEm: string) => ({ numero, abertoEm });
 
+/** As versões dos abertos que a conta vê: nenhuma ação passou por eles, todos estão na 1. */
+const naVersao1 = (...numeros: number[]) =>
+  Object.fromEntries(numeros.map((numero) => [String(numero), 1]));
+
 /** Onde a conta atende: a organização inteira ou as raízes dos ramos. */
 const atende = (...locais: string[]) => ({
   organizacao: false,
@@ -440,6 +444,23 @@ describe('o quadro', () => {
       // O de Hugo, que não tem coluna, conta só no total; o #1029 foi ontem em São Paulo.
       resolvidosHoje: [1026, 1027, 1028, 1035, 1039],
       contandoSoOsLocaisQueVe: false,
+      versoes: naVersao1(
+        1030,
+        1031,
+        1032,
+        1033,
+        1034,
+        1036,
+        1037,
+        1038,
+        1040,
+        1041,
+        1042,
+        1043,
+        1044,
+        1045,
+        1046,
+      ),
     });
   });
 
@@ -509,6 +530,7 @@ describe('o quadro', () => {
       ],
       resolvidosHoje: [1039],
       contandoSoOsLocaisQueVe: true,
+      versoes: naVersao1(1034, 1036, 1037, 1040, 1043, 1044, 1046),
     });
   });
 
@@ -595,6 +617,7 @@ describe('o quadro', () => {
       ],
       resolvidosHoje: [1026, 1027, 1028, 1035],
       contandoSoOsLocaisQueVe: true,
+      versoes: naVersao1(1030, 1031, 1032, 1033, 1038, 1041, 1045, 1046),
     });
   });
 

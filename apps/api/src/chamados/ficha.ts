@@ -34,6 +34,7 @@ import {
   type Formulario,
   type HorarioDaTi,
   lerPrazoDoChamado,
+  momentoLido,
   type OrigemDoChamado,
   type PrazoDoChamado,
   podeEm,
@@ -126,6 +127,8 @@ export type ItemDaConversa =
       evento: EventoDaFicha;
       de: ContaNaFicha | null;
       para: ContaNaFicha | null;
+      /** O `desde` do `assumiu` e do `desfez`; nulo nos outros. */
+      desde: string | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -416,6 +419,7 @@ export async function fichaDoChamado(
           evento: linha.evento,
           de: contaNoEvento(doEvento(linha.dados, 'de')),
           para: contaNoEvento(doEvento(linha.dados, 'para')),
+          desde: momentoLido(linha.dados?.desde)?.toISOString() ?? null,
         },
       });
       continue;

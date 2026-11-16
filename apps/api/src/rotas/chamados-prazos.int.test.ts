@@ -517,6 +517,7 @@ describe('a lista dos prazos', () => {
       numero: 1033,
       titulo: 'Switch Rack 2 sem link na porta 3',
       situacao: 'em-atendimento',
+      versao: 1,
       abertoEm: iso('2026-10-02T04:20:00Z'),
       tipo: { id: id('rede'), nome: 'Rede e internet', icone: 'globo' },
       pessoa: { id: id('sandra'), nome: 'Sandra Vieira', local: 'Campinas › Administrativo' },

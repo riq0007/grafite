@@ -221,6 +221,7 @@ export {
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
   ACOES_DO_CHAMADO,
+  type AcaoComVersao,
   type AcaoDoChamado,
   type CelulaDaAcao,
   type ChamadoParaAcao,
@@ -281,6 +282,15 @@ export {
   textoDosAbertos,
 } from './chamados/carga.ts';
 export {
+  type AntesDoAssumir,
+  antesDoAssumir,
+  desdeDeQuemAtende,
+  desdeNaTriagem,
+  EVENTOS_QUE_SOBEM_A_VERSAO,
+  type EventoNaConversa,
+  momentoLido,
+} from './chamados/desde.ts';
+export {
   TIPOS_DE_CHAMADO_DE_FABRICA,
   type TipoDeChamadoDeFabrica,
 } from './chamados/fabrica.ts';
@@ -305,11 +315,13 @@ export {
   type TituloDoFormulario,
 } from './chamados/formulario.ts';
 export {
+  type AcaoQueNotifica,
   type ChamadoQueNotifica,
   type ContaQueRecebeATriagem,
   destinoDoChamado,
   notificacaoDoPassado,
   notificacoesDaAbertura,
+  notificacoesDaAcao,
   notificacoesDaTriagem,
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';

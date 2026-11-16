@@ -52,34 +52,39 @@ const BRUNO: ContaQueRecebe = {
 
 /** A primeira resposta da TI, ontem às 17:22. */
 const RESPONDIDO = new Date('2026-11-16T17:22:00-03:00');
+/** O #1042 caiu na triagem hoje às 07:40, na abertura. */
+const NA_TRIAGEM_DESDE = new Date('2026-11-17T07:40:00-03:00');
 
 /** O #1042, de Marina Lopes, em Jundiaí, na triagem, ainda sem a primeira resposta da TI. */
 const NA_TRIAGEM: ChamadoParaAcao = {
   numero: 1042,
   situacao: 'triagem',
   responsavel: null,
+  desde: NA_TRIAGEM_DESDE,
   pessoa: 'Marina Lopes',
   locais: [JUNDIAI],
   semLocal: false,
   versao: 1,
   primeiraRespostaEm: null,
 };
-/** O #1033, estourado, em atendimento com Renato. */
+/** O #1033, estourado, em atendimento com Renato desde ontem às 15:05. */
 const COM_RENATO: ChamadoParaAcao = {
   ...NA_TRIAGEM,
   numero: 1033,
   situacao: 'em-atendimento',
   responsavel: RENATO.id,
+  desde: new Date('2026-11-16T15:05:00-03:00'),
   pessoa: 'Sérgio Lima',
   versao: 4,
   primeiraRespostaEm: RESPONDIDO,
 };
-/** O #1041, aguardando Fernanda desde 09:21, com Diego. */
+/** O #1041, aguardando Fernanda desde 09:21, com Diego desde 08:50. */
 const AGUARDANDO: ChamadoParaAcao = {
   ...NA_TRIAGEM,
   numero: 1041,
   situacao: 'aguardando',
   responsavel: DIEGO.id,
+  desde: new Date('2026-11-17T08:50:00-03:00'),
   pessoa: 'Fernanda Rocha',
   versao: 3,
   primeiraRespostaEm: RESPONDIDO,
@@ -90,15 +95,17 @@ const RESOLVIDO: ChamadoParaAcao = {
   numero: 1035,
   situacao: 'resolvido',
   responsavel: ANA.id,
+  desde: new Date('2026-11-16T10:12:00-03:00'),
   versao: 6,
   primeiraRespostaEm: RESPONDIDO,
 };
-/** O #1038, o Wi-Fi da Sala Atlântico, com Diego: o local de Jundiaí da pessoa e o do ativo. */
+/** O #1038, o Wi-Fi da Sala Atlântico, com Diego desde 08:05: o local de Jundiaí da pessoa e o do ativo. */
 const WIFI: ChamadoParaAcao = {
   ...NA_TRIAGEM,
   numero: 1038,
   situacao: 'em-atendimento',
   responsavel: DIEGO.id,
+  desde: new Date('2026-11-17T08:05:00-03:00'),
   pessoa: 'Paulo Nunes',
   locais: [JUNDIAI, SALA_ATLANTICO],
   versao: 2,
@@ -116,7 +123,13 @@ describe('assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: null } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'assumiu',
+          dados: { de: null, desde: '2026-11-17T10:40:00.000Z' },
+        },
+      ],
     });
   });
 
@@ -128,7 +141,13 @@ describe('assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: RENATO.id } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'assumiu',
+          dados: { de: RENATO.id, desde: '2026-11-16T18:05:00.000Z' },
+        },
+      ],
     });
   });
 
@@ -140,7 +159,13 @@ describe('assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: DIEGO.id } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'assumiu',
+          dados: { de: DIEGO.id, desde: '2026-11-17T11:50:00.000Z' },
+        },
+      ],
     });
   });
 
@@ -290,6 +315,71 @@ describe('devolver à triagem', () => {
   });
 });
 
+describe('a versão que a tela mostra', () => {
+  // Diego passou o #1038 a Renato às 09:12: a versão subiu de 2 para 3. Ana age pelo quadro de antes.
+  const PASSADO_A_RENATO: ChamadoParaAcao = {
+    ...WIFI,
+    responsavel: RENATO.id,
+    desde: new Date('2026-11-17T09:12:00-03:00'),
+    versao: 3,
+  };
+
+  it('o assumir, o passar e o devolver com a versão de antes são recusados', () => {
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'assumir', versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'assumir' }),
+    );
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'passar', para: DIEGO, versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'passar' }),
+    );
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'devolver', versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'devolver' }),
+    );
+  });
+
+  it('com a versão de agora, ou sem a versão, decide pela matriz', () => {
+    const assumido = {
+      aceita: true,
+      situacao: 'em-atendimento',
+      responsavel: ANA.id,
+      relogio: 'segue',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'assumiu',
+          dados: { de: RENATO.id, desde: '2026-11-17T12:12:00.000Z' },
+        },
+      ],
+    };
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'assumir', versao: 3 })).toEqual(assumido);
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'assumir' })).toEqual(assumido);
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'devolver', versao: 3 })).toMatchObject({
+      aceita: true,
+      situacao: 'triagem',
+      responsavel: null,
+    });
+    expect(
+      decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'passar', para: DIEGO, versao: 3 }),
+    ).toMatchObject({ aceita: true, responsavel: DIEGO.id });
+  });
+
+  it('a versão confere antes de quem age e da célula', () => {
+    // Bruno não atende Jundiaí, o resolvido não se devolve, e o #1038 já está com Renato: a tela de
+    // antes vê primeiro que o chamado mudou.
+    const doBruno: QuemAge = { id: BRUNO.id, alcance: BRUNO.alcance };
+    expect(decidirAcao(PASSADO_A_RENATO, doBruno, { acao: 'assumir', versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'assumir' }),
+    );
+    expect(decidirAcao(RESOLVIDO, ANA, { acao: 'devolver', versao: 5 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'devolver' }),
+    );
+    expect(decidirAcao(PASSADO_A_RENATO, ANA, { acao: 'passar', para: RENATO, versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'passar' }),
+    );
+  });
+});
+
 describe('quem age', () => {
   it('quem não atende os locais do chamado não age nele, nem no que está com ela', () => {
     // Renato perdeu o `chamados.atender` com o #1033 ainda com ele.
@@ -313,7 +403,7 @@ describe('quem age', () => {
     expect(
       decidirDesfazer({ ...assumidoPorDiego, responsavel: DIEGO.id }, renatoSemPermissao, {
         versao: 2,
-        antes: { situacao: 'triagem', responsavel: null },
+        antes: { situacao: 'triagem', responsavel: null, desde: NA_TRIAGEM_DESDE },
       }),
     ).toEqual(recusa({ motivo: 'voce-nao-atende', local: 'Jundiaí' }));
   });
@@ -325,6 +415,7 @@ describe('desfazer o assumir', () => {
     ...NA_TRIAGEM,
     situacao: 'em-atendimento',
     responsavel: ANA.id,
+    desde: new Date('2026-11-17T09:40:00-03:00'),
     versao: 2,
   };
 
@@ -333,7 +424,7 @@ describe('desfazer o assumir', () => {
     expect(
       decidirDesfazer(ASSUMIDO, ANA, {
         versao: 2,
-        antes: { situacao: 'triagem', responsavel: null },
+        antes: { situacao: 'triagem', responsavel: null, desde: NA_TRIAGEM_DESDE },
       }),
     ).toEqual({
       aceita: true,
@@ -342,7 +433,13 @@ describe('desfazer o assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: null } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'desfez',
+          dados: { para: null, desde: '2026-11-17T10:40:00.000Z' },
+        },
+      ],
     });
   });
 
@@ -352,7 +449,7 @@ describe('desfazer o assumir', () => {
     expect(
       decidirDesfazer(assumidoDeRenato, ANA, {
         versao: 5,
-        antes: { situacao: 'em-atendimento', responsavel: RENATO },
+        antes: { situacao: 'em-atendimento', responsavel: RENATO, desde: COM_RENATO.desde },
       }),
     ).toEqual({
       aceita: true,
@@ -361,13 +458,19 @@ describe('desfazer o assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: RENATO.id } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'desfez',
+          dados: { para: RENATO.id, desde: '2026-11-16T18:05:00.000Z' },
+        },
+      ],
     });
     const assumidoDoAguardando = { ...AGUARDANDO, responsavel: ANA.id, versao: 4 };
     expect(
       decidirDesfazer(assumidoDoAguardando, ANA, {
         versao: 4,
-        antes: { situacao: 'aguardando', responsavel: DIEGO },
+        antes: { situacao: 'aguardando', responsavel: DIEGO, desde: AGUARDANDO.desde },
       }),
     ).toEqual({
       aceita: true,
@@ -376,7 +479,13 @@ describe('desfazer o assumir', () => {
       relogio: 'segue',
       sobeAVersao: true,
       cumpreAPrimeiraResposta: false,
-      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: DIEGO.id } }],
+      conversa: [
+        {
+          especie: 'evento',
+          evento: 'desfez',
+          dados: { para: DIEGO.id, desde: '2026-11-17T11:50:00.000Z' },
+        },
+      ],
     });
   });
 
@@ -385,9 +494,32 @@ describe('desfazer o assumir', () => {
     expect(
       decidirDesfazer({ ...ASSUMIDO, versao: 3 }, ANA, {
         versao: 2,
-        antes: { situacao: 'triagem', responsavel: null },
+        antes: { situacao: 'triagem', responsavel: null, desde: NA_TRIAGEM_DESDE },
       }),
     ).toEqual(recusa({ motivo: 'mudou' }));
+  });
+
+  it('com a versão que não bate, é recusado antes de conferir quem desfaz', () => {
+    // Renato perdeu o `chamados.atender`, e o #1042 mudou depois do assumir dele.
+    const renatoSemPermissao: QuemAge = { id: RENATO.id, alcance: null };
+    expect(
+      decidirDesfazer({ ...ASSUMIDO, responsavel: RENATO.id, versao: 3 }, renatoSemPermissao, {
+        versao: 2,
+        antes: { situacao: 'triagem', responsavel: null, desde: NA_TRIAGEM_DESDE },
+      }),
+    ).toEqual(recusa({ motivo: 'mudou' }));
+  });
+
+  it('sem o assumir de quem desfaz no último evento que sobe a versão, é recusado', () => {
+    // O `antesDoAssumir` dá nulo: Diego passou o chamado a Ana, e a versão na tela dela é a de agora.
+    expect(decidirDesfazer(ASSUMIDO, ANA, { versao: 2, antes: null })).toEqual(
+      recusa({ motivo: 'mudou' }),
+    );
+    // Quem age confere antes.
+    const doBruno: QuemAge = { id: BRUNO.id, alcance: BRUNO.alcance };
+    expect(decidirDesfazer(ASSUMIDO, doBruno, { versao: 2, antes: null })).toEqual(
+      recusa({ motivo: 'voce-nao-atende', local: 'Jundiaí' }),
+    );
   });
 
   it('para quem deixou de atender os locais, é recusado', () => {
@@ -395,7 +527,11 @@ describe('desfazer o assumir', () => {
     expect(
       decidirDesfazer(assumidoDeRenato, ANA, {
         versao: 5,
-        antes: { situacao: 'em-atendimento', responsavel: { ...RENATO, ativa: false } },
+        antes: {
+          situacao: 'em-atendimento',
+          responsavel: { ...RENATO, ativa: false },
+          desde: COM_RENATO.desde,
+        },
       }),
     ).toEqual(recusa({ motivo: 'nao-atende', nome: 'Renato Alves', local: 'Jundiaí' }));
   });
@@ -403,8 +539,12 @@ describe('desfazer o assumir', () => {
   it('o estado de antes que o assumir não deixa é recusado', () => {
     const desfazer = (
       chamado: ChamadoParaAcao,
-      antes: Parameters<typeof decidirDesfazer>[2]['antes'],
-    ) => decidirDesfazer(chamado, ANA, { versao: chamado.versao, antes });
+      antes: Omit<NonNullable<Parameters<typeof decidirDesfazer>[2]['antes']>, 'desde'>,
+    ) =>
+      decidirDesfazer(chamado, ANA, {
+        versao: chamado.versao,
+        antes: { ...antes, desde: NA_TRIAGEM_DESDE },
+      });
     const mudou = recusa({ motivo: 'mudou' });
     // A triagem não tem ninguém, e o atendimento e o aguardando têm alguém.
     expect(desfazer(ASSUMIDO, { situacao: 'triagem', responsavel: RENATO })).toEqual(mudou);
@@ -486,7 +626,11 @@ describe('enviar e esperar a resposta', () => {
       sobeAVersao: true,
       cumpreAPrimeiraResposta: true,
       conversa: [
-        { especie: 'evento', evento: 'assumiu', dados: { de: null } },
+        {
+          especie: 'evento',
+          evento: 'assumiu',
+          dados: { de: null, desde: '2026-11-17T10:40:00.000Z' },
+        },
         { especie: 'mensagem', texto: MENSAGEM },
         { especie: 'evento', evento: 'aguardando', dados: {} },
       ],
@@ -892,6 +1036,13 @@ describe('a matriz', () => {
     }
   });
 
+  it('o assumir, o passar e o devolver não mexem no relógio, que a rota deles não lê (tarefa 4.12)', () => {
+    for (const { acao, partida, celula } of celulas) {
+      if ('recusa' in celula || !['assumir', 'passar', 'devolver'].includes(acao)) continue;
+      expect(celula.relogio, `${acao} em ${partida}`).toBe('segue');
+    }
+  });
+
   it('deixa ninguém na triagem e alguém no atendimento e no aguardando', () => {
     const temAlguem = (partida: SituacaoDoChamado, fica: QuemFica) => {
       if (fica === 'ninguem') return false;
@@ -1007,6 +1158,15 @@ describe('mensagemDaRecusaDaAcao', () => {
     );
     expect(frase(1042, { motivo: 'mudou' })).toBe(
       'O chamado mudou depois. Confira antes de desfazer.',
+    );
+    expect(frase(1038, { motivo: 'versao', acao: 'assumir' })).toBe(
+      'O chamado #1038 mudou. Confira antes de assumir.',
+    );
+    expect(frase(1038, { motivo: 'versao', acao: 'passar' })).toBe(
+      'O chamado #1038 mudou. Confira antes de passar.',
+    );
+    expect(frase(1038, { motivo: 'versao', acao: 'devolver' })).toBe(
+      'O chamado #1038 mudou. Confira antes de devolver.',
     );
   });
 

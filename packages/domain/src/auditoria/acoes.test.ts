@@ -157,6 +157,10 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('respostas-prontas.ordenadas')).toBe('Respostas prontas reordenadas');
     expect(rotuloDaAcao('horario-da-ti.alterado')).toBe('Horário da TI alterado');
     expect(rotuloDaAcao('chamado.aberto')).toBe('Chamado aberto');
+    expect(rotuloDaAcao('chamado.assumido')).toBe('Chamado assumido');
+    expect(rotuloDaAcao('chamado.assumir-desfeito')).toBe('Assumir desfeito');
+    expect(rotuloDaAcao('chamado.passado')).toBe('Chamado passado');
+    expect(rotuloDaAcao('chamado.devolvido')).toBe('Chamado devolvido à triagem');
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

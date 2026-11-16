@@ -147,6 +147,11 @@ export interface ChamadoParaAcao {
   situacao: SituacaoDoChamado;
   /** A conta de quem atende, ou nulo, na triagem e no resolvido da triagem. */
   responsavel: string | null;
+  /**
+   * Desde quando o chamado está com quem atende (o `responsavel_desde`) ou, sem ninguém, desde quando
+   * está na triagem (`desdeNaTriagem`): o assumir o guarda no evento, para o "estava há 2 h na triagem".
+   */
+  desde: Date;
   /** O nome da pessoa que pediu, que o aguardando cita. */
   pessoa: string;
   /** Os locais do chamado, na ordem dele: o da pessoa e o do ativo. */
@@ -175,14 +180,21 @@ export const LIMITES_DA_CONVERSA = { mensagem: 4000, feito: 2000, anexos: 5 } as
 export type TextoDaAcao = 'mensagem' | 'nota' | 'feito';
 
 /**
+ * As ações que a tela faz com a versão que mostra, do quadro, dos prazos e da ficha: a versão que o
+ * chamado não tem mais é recusada antes de tudo, e duas pessoas não passam o mesmo chamado sem saber.
+ */
+export type AcaoComVersao = 'assumir' | 'passar' | 'devolver';
+
+/**
  * O pedido da ação. Como a conta escolhida do passar, o que só uma ação usa vem nele: o número de
  * anexos da mensagem, da espera e da nota; a cópia do formulário e as respostas do chamado, no
- * resolver; e quem resolveu, como a conta está agora, no reabrir.
+ * resolver; e quem resolveu, como a conta está agora, no reabrir. A versão do assumir, do passar e
+ * do devolver é a que a tela mostra, quando ela a manda.
  */
 export type PedidoDeAcao =
-  | { acao: 'assumir' }
-  | { acao: 'passar'; para: ContaQueRecebe }
-  | { acao: 'devolver' }
+  | { acao: 'assumir'; versao?: number }
+  | { acao: 'passar'; para: ContaQueRecebe; versao?: number }
+  | { acao: 'devolver'; versao?: number }
   | { acao: 'mensagem' | 'esperar' | 'nota'; texto: string; anexos: number }
   | { acao: 'retomar' }
   | {
@@ -201,21 +213,24 @@ export interface PedidoDeDesfazer {
   /** A versão que o assumir deixou. */
   versao: number;
   /**
-   * A situação e quem estava com o chamado antes do assumir: o `de` do evento e, com ele nulo, a
-   * triagem; a conta, como está agora.
+   * A situação, quem estava com o chamado e desde quando, antes do assumir: o `de` e o `desde` do
+   * evento e, com o `de` nulo, a triagem; a conta, como está agora (`antesDoAssumir`). Nulo, quando o
+   * último evento que sobe a versão não é o assumir de quem desfaz.
    */
-  antes: { situacao: SituacaoDoChamado; responsavel: ContaQueRecebe | null };
+  antes: { situacao: SituacaoDoChamado; responsavel: ContaQueRecebe | null; desde: Date } | null;
 }
 
 /**
  * O evento da conversa, com as contas nos dados; quem agiu é o autor dele. A espera, a retomada e a
- * resolução não têm dados: a pessoa vem do chamado.
+ * resolução não têm dados: a pessoa vem do chamado. O `desde` do assumir, em ISO, é desde quando o
+ * chamado estava na triagem, ou com quem estava; o do desfazer é o do assumir que ele desfaz, e o
+ * chamado volta à triagem, ou a quem estava com ele, desde então.
  */
 export type EventoDaAcao =
-  | { evento: 'assumiu'; dados: { de: string | null } }
+  | { evento: 'assumiu'; dados: { de: string | null; desde: string } }
   | { evento: 'passou'; dados: { de: string | null; para: string } }
   | { evento: 'devolveu'; dados: { de: string } }
-  | { evento: 'desfez'; dados: { para: string | null } }
+  | { evento: 'desfez'; dados: { para: string | null; desde: string } }
   | { evento: 'aguardando' | 'retomou' | 'resolveu'; dados: Record<string, never> }
   | { evento: 'reabriu'; dados: { para: string | null } };
 
@@ -251,6 +266,8 @@ export type RecusaDaAcao =
   | { motivo: 'voce-nao-atende'; local: string | null }
   | { motivo: 'nao-atende'; nome: string; local: string | null }
   | { motivo: 'mudou' }
+  /** A tela mostrava a versão de antes de outra ação. */
+  | { motivo: 'versao'; acao: AcaoComVersao }
   /** O campo é o nome no resumo do primeiro campo só da TI obrigatório e vazio. */
   | { motivo: 'campo-da-ti'; campo: string }
   | { motivo: 'sem-texto'; texto: TextoDaAcao }
@@ -353,8 +370,17 @@ function campoDaTiQueFalta(
   );
 }
 
+/** A versão que a tela mandou e o chamado não tem mais: a recusa, antes de tudo. */
+function recusaDaVersao(chamado: ChamadoParaAcao, pedido: PedidoDeAcao): RecusaDaAcao | null {
+  if (!('versao' in pedido) || pedido.versao === undefined || pedido.versao === chamado.versao) {
+    return null;
+  }
+  return { motivo: 'versao', acao: pedido.acao };
+}
+
 /**
- * Decide a ação pela matriz. Quem age precisa atender os locais do chamado, antes de qualquer
+ * Decide a ação pela matriz. A versão que a tela mandou confere primeiro: a tela que mostra o
+ * chamado de antes vê que ele mudou. Quem age precisa atender os locais do chamado, antes de qualquer
  * célula. Assumir o chamado que já está com quem assume e passar a quem já o atende são recusados;
  * a conta escolhida precisa estar ativa e atender os locais. A versão sobe, e o evento entra, só
  * quando a situação ou quem atende muda: esperar no chamado que já aguarda vale como a mensagem.
@@ -364,11 +390,14 @@ export function decidirAcao(
   quemAge: QuemAge,
   pedido: PedidoDeAcao,
 ): DecisaoDaAcao {
+  const daVersao = recusaDaVersao(chamado, pedido);
+  if (daVersao) return recusada(daVersao);
   const daConta = recusaDeQuemAge(quemAge, chamado);
   if (daConta) return recusada(daConta);
   const celula = MATRIZ_DAS_ACOES[pedido.acao][chamado.situacao];
   if ('recusa' in celula) return recusada(recusaDaCelula(celula.recusa, chamado));
   const de = chamado.responsavel;
+  const assumiu = evento({ evento: 'assumiu', dados: { de, desde: chamado.desde.toISOString() } });
   let situacao: SituacaoDoChamado = celula.chega;
   let escolhida: string | null = null;
   let quemResolveu: string | null = null;
@@ -376,7 +405,7 @@ export function decidirAcao(
   switch (pedido.acao) {
     case 'assumir':
       if (de === quemAge.id) return recusada({ motivo: 'ja-esta-com-voce' });
-      conversa.push(evento({ evento: 'assumiu', dados: { de } }));
+      conversa.push(assumiu);
       break;
     case 'passar': {
       const { para } = pedido;
@@ -409,9 +438,7 @@ export function decidirAcao(
       const lido = lerAMensagem(pedido, 'mensagem');
       if ('recusa' in lido) return recusada(lido.recusa);
       // Na triagem, quem espera assume antes de escrever.
-      if (chamado.situacao === 'triagem') {
-        conversa.push(evento({ evento: 'assumiu', dados: { de } }));
-      }
+      if (chamado.situacao === 'triagem') conversa.push(assumiu);
       conversa.push({ especie: 'mensagem', texto: lido.texto });
       if (chamado.situacao !== 'aguardando') {
         conversa.push(evento({ evento: 'aguardando', dados: {} }));
@@ -461,20 +488,23 @@ export function decidirAcao(
 
 /**
  * Desfaz o assumir, se nada que muda a situação ou quem atende aconteceu depois: a versão é a que o
- * assumir deixou, o chamado continua com quem desfaz, e o estado de antes é um dos que o assumir
- * deixa (a triagem sem ninguém, ou o atendimento e o aguardando com outra conta). A conta de antes
- * precisa atender os locais agora. Como o assumir não mexe no relógio, o desfazer também não.
+ * assumir deixou, e ela confere primeiro, como a das outras ações; o último evento que sobe a versão
+ * é o assumir de quem desfaz (`antes` lido); o chamado continua com quem desfaz, e o estado de antes
+ * é um dos que o assumir deixa (a triagem sem ninguém, ou o atendimento e o aguardando com outra
+ * conta). A conta de antes precisa atender os locais agora. Como o assumir não mexe no relógio, o
+ * desfazer também não; o chamado volta à triagem, ou à conta de antes, desde quando estava antes.
  */
 export function decidirDesfazer(
   chamado: ChamadoParaAcao,
   quemAge: QuemAge,
   { versao, antes }: PedidoDeDesfazer,
 ): DecisaoDaAcao {
+  if (chamado.versao !== versao) return recusada({ motivo: 'mudou' });
   const daConta = recusaDeQuemAge(quemAge, chamado);
   if (daConta) return recusada(daConta);
+  if (antes === null) return recusada({ motivo: 'mudou' });
   const celula = MATRIZ_DAS_ACOES.assumir[antes.situacao];
   const assumidoDaquele =
-    chamado.versao === versao &&
     chamado.responsavel === quemAge.id &&
     'chega' in celula &&
     celula.chega === chamado.situacao &&
@@ -493,7 +523,7 @@ export function decidirDesfazer(
     relogio: 'segue',
     sobeAVersao: true,
     cumpreAPrimeiraResposta: false,
-    conversa: [evento({ evento: 'desfez', dados: { para } })],
+    conversa: [evento({ evento: 'desfez', dados: { para, desde: antes.desde.toISOString() } })],
   };
 }
 
@@ -560,6 +590,8 @@ export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): st
       return `${nomeCurto(recusa.nome)} não atende ${dosChamados(recusa.local)}.`;
     case 'mudou':
       return 'O chamado mudou depois. Confira antes de desfazer.';
+    case 'versao':
+      return `O chamado #${numero} mudou. Confira antes de ${recusa.acao}.`;
     case 'campo-da-ti':
       return `Preencha ${recusa.campo} antes de resolver.`;
     case 'sem-texto':

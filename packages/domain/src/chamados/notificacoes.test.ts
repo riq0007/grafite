@@ -5,6 +5,7 @@ import {
   destinoDoChamado,
   notificacaoDoPassado,
   notificacoesDaAbertura,
+  notificacoesDaAcao,
   notificacoesDaTriagem,
   ORIGEM_DOS_CHAMADOS,
 } from './notificacoes.ts';
@@ -131,5 +132,36 @@ describe('notificacoesDaAbertura', () => {
       'conta-ana': 'Chamado #1043 na triagem: Impressora manchando',
       'conta-fabio': 'Chamado #1043 na triagem: Impressora manchando',
     });
+  });
+});
+
+describe('notificacoesDaAcao', () => {
+  it('Passar o chamado: avisa só a conta escolhida', () => {
+    expect(
+      notificacoesDaAcao(chamado(), { acao: 'passar', para: 'conta-renato' }, 'conta-ana'),
+    ).toEqual([notificacaoDoPassado(chamado(), 'conta-renato')]);
+  });
+
+  it('quem passa o chamado a si mesmo não é avisado', () => {
+    expect(
+      notificacoesDaAcao(chamado(), { acao: 'passar', para: 'conta-ana' }, 'conta-ana'),
+    ).toEqual([]);
+  });
+
+  it('Devolver à triagem: avisa quem atende os locais, fora quem devolveu', () => {
+    const novas = notificacoesDaAcao(
+      chamado(),
+      { acao: 'devolver', contas: CONTAS },
+      'conta-fabio',
+    );
+    expect(titulosPorConta(novas)).toEqual({
+      'conta-ana': 'Chamado #1043 na triagem: Impressora manchando',
+      'conta-diego': 'Chamado #1043 na triagem: Impressora manchando',
+    });
+  });
+
+  it('o assumir e o desfazer não avisam ninguém', () => {
+    expect(notificacoesDaAcao(chamado(), { acao: 'assumir' }, 'conta-diego')).toEqual([]);
+    expect(notificacoesDaAcao(chamado(), { acao: 'desfazer' }, 'conta-diego')).toEqual([]);
   });
 });

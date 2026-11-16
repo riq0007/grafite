@@ -27758,6 +27758,390 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/assumir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assumir o chamado: ele fica com quem assume */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/passar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Passar o chamado a uma conta que atende os locais dele */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoPassarDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/devolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devolver o chamado à triagem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/desfazer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desfazer o assumir, se nada mudou o chamado depois dele */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoDesfazerDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -35041,6 +35425,9 @@ export interface components {
                 };
             }[];
             resolvidosHoje: number[];
+            versoes: {
+                [key: string]: number;
+            };
             contandoSoOsLocaisQueVe: boolean;
         };
         PrazosDosChamadosInput: {
@@ -35050,6 +35437,7 @@ export interface components {
                 titulo: string;
                 /** @enum {string} */
                 situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                versao: number;
                 /** Format: date-time */
                 abertoEm: string;
                 tipo: {
@@ -35294,6 +35682,7 @@ export interface components {
                     conta: string;
                     nome: string;
                 } | null;
+                desde: string | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -35312,6 +35701,28 @@ export interface components {
                 texto: string;
                 esperaAResposta: boolean;
             }[];
+        };
+        PedidoDaAcaoDoChamadoInput: {
+            versao?: number;
+        };
+        PedidoDoPassarDoChamadoInput: {
+            /** Format: uuid */
+            para: string;
+            versao?: number;
+        };
+        PedidoDoDesfazerDoChamadoInput: {
+            versao: number;
+        };
+        ChamadoDepoisDaAcaoInput: {
+            numero: number;
+            versao: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
         };
         AnexoEnviadoInput: {
             /** Format: uuid */
@@ -40190,6 +40601,9 @@ export interface components {
                 };
             }[];
             resolvidosHoje: number[];
+            versoes: {
+                [key: string]: number;
+            };
             contandoSoOsLocaisQueVe: boolean;
         };
         PrazosDosChamados: {
@@ -40199,6 +40613,7 @@ export interface components {
                 titulo: string;
                 /** @enum {string} */
                 situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                versao: number;
                 /** Format: date-time */
                 abertoEm: string;
                 tipo: {
@@ -40443,6 +40858,7 @@ export interface components {
                     conta: string;
                     nome: string;
                 } | null;
+                desde: string | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -40461,6 +40877,28 @@ export interface components {
                 texto: string;
                 esperaAResposta: boolean;
             }[];
+        };
+        PedidoDaAcaoDoChamado: {
+            versao?: number;
+        };
+        PedidoDoPassarDoChamado: {
+            /** Format: uuid */
+            para: string;
+            versao?: number;
+        };
+        PedidoDoDesfazerDoChamado: {
+            versao: number;
+        };
+        ChamadoDepoisDaAcao: {
+            numero: number;
+            versao: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
         };
         AnexoEnviado: {
             /** Format: uuid */

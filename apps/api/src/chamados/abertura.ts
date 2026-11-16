@@ -14,7 +14,6 @@
 import {
   ativos,
   chamados,
-  contas,
   locais,
   mensagensDosChamados,
   modelos,
@@ -49,7 +48,6 @@ import {
 } from '@grafite/domain';
 import { eq, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
-import { carregarAcessosDaOrganizacao } from '../acesso/acesso.ts';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { recusaDosTiposAceitos } from '../ativos/escrita.ts';
@@ -62,7 +60,7 @@ import { publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
-import { lerContaQueAtende } from './quem-atende.ts';
+import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
 
 export const RECUSAS_DA_ABERTURA = {
   semPessoa: 'Escolha quem pediu.',
@@ -235,16 +233,6 @@ async function proximoNumero(tx: Transacao): Promise<number> {
   return linha.ultimo;
 }
 
-/** O nome de agora da pessoa da conta que atende. */
-async function nomeDaConta(tx: Transacao, contaId: string): Promise<string> {
-  const [linha] = await tx
-    .select({ nome: pessoas.nome })
-    .from(contas)
-    .innerJoin(pessoas, eq(pessoas.id, contas.pessoaId))
-    .where(eq(contas.id, contaId));
-  return linha?.nome ?? '';
-}
-
 /**
  * Abre o chamado e devolve o número, a situação e quem atende. Com a fila, as notificações vão
  * também pelo e-mail e pelo push.
@@ -410,12 +398,7 @@ export async function abrirChamado(
   // As notificações: a de quem recebe o chamado pelo tipo, ou as da triagem, fora quem abriu. As
   // contas da organização só são lidas para a triagem.
   const contasQueAtendem =
-    atendimento.situacao === 'triagem'
-      ? (await carregarAcessosDaOrganizacao(tx)).map((conta) => ({
-          id: conta.id,
-          alcance: alcance(conta.acesso, 'chamados.atender', arvore),
-        }))
-      : [];
+    atendimento.situacao === 'triagem' ? await contasDaTriagem(tx, arvore) : [];
   await notificar(
     tx,
     notificacoesDaAbertura(

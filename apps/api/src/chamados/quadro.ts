@@ -1,7 +1,8 @@
 // O quadro dos chamados (spec chamados, "Carga de cada pessoa"; spec modulo-chamados, "Início dos
 // chamados" e "Quem está com o quê"; change chamados-da-ti, design, decisão 7, e tarefa 4.9): a
 // triagem, as colunas das pessoas da TI e de quem não atende mais e os resolvidos hoje, pelo
-// `cargaDasPessoas` do domínio, só com os chamados que a conta que olha vê, no dia do fuso dela.
+// `cargaDasPessoas` do domínio, só com os chamados que a conta que olha vê, no dia do fuso dela; e a
+// versão de cada aberto, que a tela manda nas ações (tarefa 4.12).
 import { chamados, contas, pessoas, type Transacao } from '@grafite/db';
 import {
   type Acesso,
@@ -35,6 +36,8 @@ export interface QuadroDosChamados {
   })[];
   resolvidosHoje: number[];
   contandoSoOsLocaisQueVe: boolean;
+  /** A versão de cada aberto que a conta vê, pelo número. */
+  versoes: Record<string, number>;
 }
 
 interface MaisAntigoNoQuadro {
@@ -85,6 +88,7 @@ export async function quadroDosChamados(
       resolvidoPor: chamados.resolvidoPor,
       locais: chamados.locais,
       semLocal: chamados.semLocal,
+      versao: chamados.versao,
     })
     .from(chamados)
     .where(
@@ -148,5 +152,11 @@ export async function quadroDosChamados(
     })),
     resolvidosHoje: carga.resolvidosHoje,
     contandoSoOsLocaisQueVe: carga.contandoSoOsLocaisQueVe,
+    // A consulta já lê só os chamados que a conta vê.
+    versoes: Object.fromEntries(
+      lidos
+        .filter((chamado) => chamado.situacao !== 'resolvido')
+        .map((chamado) => [chamado.numero, chamado.versao]),
+    ),
   };
 }

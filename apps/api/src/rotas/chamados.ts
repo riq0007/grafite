@@ -1,9 +1,10 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.11): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.12): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
-// quem abre e para a prévia do colaborador de quem configura; e o quadro, a lista dos prazos e a
-// ficha do chamado, com `chamados.ver`. As regras ficam em `chamados/abertura.ts`,
-// `chamados/sugestoes.ts`, `chamados/quadro.ts`, `chamados/prazos.ts` e `chamados/ficha.ts`;
-// aqui, o formato do pedido e da resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
+// quem abre e para a prévia do colaborador de quem configura; o quadro, a lista dos prazos e a ficha
+// do chamado, com `chamados.ver`; e as ações que mudam quem atende, com `chamados.atender`. As
+// regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
+// `chamados/prazos.ts`, `chamados/ficha.ts` e `chamados/acoes.ts`; aqui, o formato do pedido e da
+// resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
 // deles é recusado pela abertura, com as outras recusas dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
@@ -19,11 +20,17 @@ import {
   SITUACOES_DA_SOLICITACAO,
   SITUACOES_DO_CHAMADO,
 } from '@grafite/domain';
+import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
+import {
+  mudarQuemAtende,
+  type PedidoQueMudaQuemAtende,
+  RECUSAS_DAS_ACOES,
+} from '../chamados/acoes.ts';
 import { NumeroDoChamado } from '../chamados/alcance.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
@@ -143,6 +150,11 @@ const QuadroDosChamados = z
     ),
     /** Todos os resolvidos hoje que a conta vê, para a contagem do Início. */
     resolvidosHoje: z.array(z.int()),
+    /**
+     * A versão de cada chamado aberto que a conta vê, pelo número: a tela a manda no assumir, no
+     * passar e no devolver, e o chamado que mudou depois é recusado com o `chamado-mudou`.
+     */
+    versoes: z.record(z.string(), z.int()),
     /** Se a tela diz "Contando só os chamados dos locais que você vê.". */
     contandoSoOsLocaisQueVe: z.boolean(),
   })
@@ -175,6 +187,8 @@ const ChamadoNosPrazos = z.object({
   numero: z.int(),
   titulo: z.string(),
   situacao: z.enum(SITUACOES_DO_CHAMADO),
+  /** A versão, que a tela manda no assumir, no passar e no devolver. */
+  versao: z.int(),
   abertoEm: z.iso.datetime(),
   tipo: z.object({ id: z.uuid(), nome: z.string(), icone: z.string() }),
   /** Quem pediu, com o caminho do local de trabalho, como "Jundiaí › Financeiro". */
@@ -252,6 +266,11 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
     de: ContaDoEvento,
     /** Para quem ele foi, no `passou`, ou voltou, no `desfez` e no `reabriu`; nulo na triagem. */
     para: ContaDoEvento,
+    /**
+     * No `assumiu`, desde quando o chamado estava na triagem, ou com quem estava, para o "estava há
+     * 2 h na triagem"; no `desfez`, o de antes, que ele devolve; nulo nos outros.
+     */
+    desde: z.iso.datetime().nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),
@@ -350,6 +369,50 @@ const FichaDoChamado = z
     ),
   })
   .meta({ id: 'FichaDoChamado' });
+
+/**
+ * A versão que a tela mostra, do quadro, dos prazos ou da ficha. Ela só é comparada com a do
+ * chamado: a que não existe dá o `chamado-mudou`, como a velha.
+ */
+const VersaoDoChamado = z.int({ error: RECUSAS_DAS_ACOES.versaoInvalida });
+
+const PedidoDaAcao = z
+  .object({
+    /** A versão que a tela mostra; a que o chamado não tem mais é recusada com o `chamado-mudou`. */
+    versao: VersaoDoChamado.optional(),
+  })
+  .meta({ id: 'PedidoDaAcaoDoChamado' });
+
+const PedidoDoPassar = z
+  .object({
+    /** A conta que recebe o chamado: ativa, e que atende todos os locais dele. */
+    para: z.uuid({
+      error: (problema) =>
+        problema.input === undefined
+          ? RECUSAS_DAS_ACOES.semConta
+          : RECUSAS_DAS_ACOES.contaNaoEncontrada,
+    }),
+    versao: VersaoDoChamado.optional(),
+  })
+  .meta({ id: 'PedidoDoPassarDoChamado' });
+
+const PedidoDoDesfazer = z
+  .object({
+    /** A versão que o assumir devolveu; a que o chamado não tem mais é recusada. */
+    versao: VersaoDoChamado,
+  })
+  .meta({ id: 'PedidoDoDesfazerDoChamado' });
+
+const ChamadoDepoisDaAcao = z
+  .object({
+    numero: z.int(),
+    /** A versão depois da ação; a do assumir é a que o "Desfazer" do aviso manda. */
+    versao: z.int(),
+    situacao: z.enum(SITUACOES_DO_CHAMADO),
+    /** Com quem o chamado ficou, ou nulo, na triagem. */
+    responsavel: z.object({ id: z.uuid(), nome: z.string() }).nullable(),
+  })
+  .meta({ id: 'ChamadoDepoisDaAcao' });
 
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
@@ -478,5 +541,80 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
           agora: agora(),
         }),
       ),
+  );
+
+  // As ações que mudam quem atende (tarefa 4.12), com `chamados.atender`, cada uma com o pedido dela.
+  const mudar = (requisicao: FastifyRequest, numero: number, pedido: PedidoQueMudaQuemAtende) =>
+    naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+      mudarQuemAtende(tx, numero, pedido, {
+        requisicao,
+        momento: agora(),
+        ...(fila?.rodando() ? { enviar: (...dados) => fila.enviar(...dados) } : {}),
+      }),
+    );
+  const DA_ACAO = {
+    config: { permissao: 'chamados.atender' },
+    params: z.object({ numero: NumeroDoChamado }),
+    response: { 200: ChamadoDepoisDaAcao, ...PROBLEMAS },
+  } as const;
+
+  app.post(
+    '/chamados/:numero/assumir',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Assumir o chamado: ele fica com quem assume',
+        params: DA_ACAO.params,
+        body: PedidoDaAcao,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      mudar(requisicao, requisicao.params.numero, { acao: 'assumir', ...requisicao.body }),
+  );
+
+  app.post(
+    '/chamados/:numero/passar',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Passar o chamado a uma conta que atende os locais dele',
+        params: DA_ACAO.params,
+        body: PedidoDoPassar,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      mudar(requisicao, requisicao.params.numero, { acao: 'passar', ...requisicao.body }),
+  );
+
+  app.post(
+    '/chamados/:numero/devolver',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Devolver o chamado à triagem',
+        params: DA_ACAO.params,
+        body: PedidoDaAcao,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      mudar(requisicao, requisicao.params.numero, { acao: 'devolver', ...requisicao.body }),
+  );
+
+  app.post(
+    '/chamados/:numero/desfazer',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Desfazer o assumir, se nada mudou o chamado depois dele',
+        params: DA_ACAO.params,
+        body: PedidoDoDesfazer,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      mudar(requisicao, requisicao.params.numero, { acao: 'desfazer', ...requisicao.body }),
   );
 };
