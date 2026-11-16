@@ -220,6 +220,17 @@ export {
 } from './campos/tipos.ts';
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
+  type AlcanceDeQuemAtende,
+  type Atendimento,
+  atendeOChamado,
+  type ContaQueAtendePorPadrao,
+  decidirAtendimento,
+  type LocaisDoChamado,
+  type PedidoDeAtendimento,
+  SEM_NINGUEM,
+  type SemNinguem,
+} from './chamados/atendimento.ts';
+export {
   type CampoDoFormulario,
   type ClausulaDaCondicao,
   type ConferenciaDoFormulario,
@@ -248,6 +259,7 @@ export {
   type ModoDoPrazo,
   minutosDoPrazo,
   momentoEmQueAlcanca,
+  noHorarioDaTi,
   type PedidoDoHorario,
   type PrazoDoChamado,
   type PrazoDoTipo,

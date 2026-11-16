@@ -244,6 +244,8 @@ Os mockups usam o Phosphor, mas o Grafite usa o lucide.
 
 Com "Cai na triagem", o chamado vai à triagem. Com "Fica com <pessoa> mesmo assim", vai à pessoa fora do horário, e à triagem nos outros dois casos, porque a pessoa não pode atender. O LEIA dos mockups explica a triagem do #1038, do #1040 e do #1042 assim: os três abriram antes das 08:00.
 
+**No domínio.** O `decidirAtendimento` (`packages/domain/src/chamados/atendimento.ts`) recebe quem abre com o "Fica comigo", a conta de quem atende por padrão (se está ativa e o alcance de `chamados.atender` dela), o "Se não houver ninguém", os locais do chamado, o horário da TI e o momento, e devolve a triagem ou quem atende. Quem abre com o "Fica comigo" chega conferido: a abertura recusa antes quem não atende os locais. A conta atende o chamado pelo `atendeOChamado`, que é o `atendeASolicitacao` (decisão 5). O horário é o `noHorarioDaTi`, do `prazo.ts`: num dia do horário, do início até antes do fim, no fuso dele; às 18:00 já é fora.
+
 **Quem não atende mais.** O chamado guarda quem atende, e a leitura confere a cada vez se essa conta ainda está ativa e atende os locais dele. Quando não, a leitura a marca "não atende mais os chamados": o quadro abre a coluna dela depois das outras, e a tarefa do prazo avisa quem atende os locais, como na triagem. O chamado não muda até alguém o assumir ou passar. Assim, a desativação de uma conta e a troca de um perfil não precisam saber dos chamados. A troca do ativo, que é dos chamados, recusa os locais novos que quem atende não atende.
 
 ### 8. A conversa e o resumo

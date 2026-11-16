@@ -6,6 +6,7 @@ import {
   type HorarioDaTi,
   minutosDoPrazo,
   momentoEmQueAlcanca,
+  noHorarioDaTi,
   type PedidoDoHorario,
   prazoEmMinutos,
   segundosNoHorario,
@@ -377,5 +378,23 @@ describe('momentoEmQueAlcanca', () => {
     expect(
       momentoEmQueAlcanca(new Date('2026-10-30T17:00:00-04:00'), 2 * HORA, 'horario', NOVA_YORK),
     ).toEqual(new Date('2026-11-02T09:00:00-05:00'));
+  });
+});
+
+describe('noHorarioDaTi', () => {
+  it('vale do início até antes do fim, nos dias do horário', () => {
+    expect(noHorarioDaTi(sp('2026-11-17T07:59'), PADRAO)).toBe(false);
+    expect(noHorarioDaTi(sp('2026-11-17T08:00'), PADRAO)).toBe(true);
+    expect(noHorarioDaTi(new Date('2026-11-17T17:59:59-03:00'), PADRAO)).toBe(true);
+    expect(noHorarioDaTi(sp('2026-11-17T18:00'), PADRAO)).toBe(false);
+    // O sábado está fora do padrão e dentro do horário que o inclui.
+    expect(noHorarioDaTi(sp('2026-11-21T10:00'), PADRAO)).toBe(false);
+    expect(noHorarioDaTi(sp('2026-11-21T10:00'), { ...PADRAO, dias: [6] })).toBe(true);
+  });
+
+  it('lê a hora no fuso do horário', () => {
+    // 09:00 em São Paulo são 07:00 em Nova York, no horário padrão de lá.
+    expect(noHorarioDaTi(sp('2026-11-17T09:00'), NOVA_YORK)).toBe(false);
+    expect(noHorarioDaTi(sp('2026-11-17T11:00'), NOVA_YORK)).toBe(true);
   });
 });

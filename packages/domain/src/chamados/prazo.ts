@@ -263,3 +263,15 @@ export function momentoEmQueAlcanca(
   }
   throw new RangeError('O tempo que falta não cabe no horário da TI.');
 }
+
+/**
+ * Se o momento cai no horário da TI: num dia do horário, do início até antes do fim, no relógio do
+ * fuso dele. No horário das 08:00 às 18:00, às 18:00 já é fora.
+ */
+export function noHorarioDaTi(momento: Date, horario: HorarioDaTi): boolean {
+  const dia = diaDoCalendario(meiaNoiteDoDia(momento, horario.fuso));
+  if (!horario.dias.includes(dia.semana)) return false;
+  const janela = janelaDoDia(dia, horario);
+  const instante = momento.getTime();
+  return janela.inicio <= instante && instante < janela.fim;
+}
