@@ -321,16 +321,21 @@ A rota da conversa junta os alertas do ativo ligado abertos entre a abertura do 
 
 ### 10. Os anexos
 
-**O envio, antes da gravação.** Cada anexo é enviado sozinho, com o corpo em `application/octet-stream`, como os campos de arquivo de hoje, e as regras de "Arquivos aceitos" (até 25 MB). O envio pede `chamados.atender` em algum local e grava o arquivo em `arquivos`, com o `enviado_por`, e a linha sem dono em `anexos_dos_chamados`.
+**O envio, antes da gravação.** Cada anexo é enviado sozinho, pelo `POST /chamados/anexos`, com o corpo em `application/octet-stream`, como os campos de arquivo de hoje, e as regras de "Arquivos aceitos" (até 25 MB). O envio pede `chamados.atender` em algum local e grava o arquivo em `arquivos`, com o `enviado_por`, e a linha sem dono em `anexos_dos_chamados`. Ele devolve o id do arquivo, que a gravação toma, com o nome guardado, o tipo conferido e o tamanho. O envio não vai para a auditoria nem dá evento: o que muda o chamado é a gravação.
 
-**A gravação toma os anexos.** A mensagem, a nota, a abertura e o campo da TI tomam os anexos por um UPDATE só, na mesma transação: só as linhas sem dono, do arquivo enviado pela mesma conta e não removido, passam ao chamado, com a mensagem ou o campo. Se o número de linhas tomadas não bate com o de ids, a gravação é recusada com "O anexo não foi encontrado. Envie o arquivo de novo.", e a transação volta. O `arquivo_id` único impede o mesmo arquivo em dois donos. O campo Anexo do formulário guarda nas respostas os ids que tomou.
+**A gravação toma os anexos.** A mensagem, a nota, a abertura e o campo da TI tomam os anexos pelo `tomarAnexos` (`apps/api/src/chamados/anexos.ts`), na mesma transação. Ele trava as linhas sem dono dos ids pedidos e, num comando à parte, toma-as por um UPDATE só: passam ao chamado, com a mensagem ou o campo, só as do arquivo enviado pela mesma conta e não removido. Se o número de linhas tomadas não bate com o de ids, a gravação é recusada com "O anexo não foi encontrado. Envie o arquivo de novo." (400, na chave dos anexos da mensagem ou na do campo), e a transação volta. A trava antes da conferência do arquivo fecha duas corridas:
+- a segunda gravação com o mesmo anexo espera a primeira e não o acha mais sem dono;
+- a gravação que espera a manutenção relê o arquivo, já removido, e recusa.
 
-**A manutenção.** A manutenção diária marca `removido_em` nos anexos sem dono enviados há mais de 24 h. O anexo que sai de um campo só da TI, trocado ou tirado, ganha o `removido_em` na mesma transação, como o arquivo trocado de um campo do ativo. O apagamento do conteúdo segue o de hoje.
+O `arquivo_id` único impede o mesmo arquivo em dois donos. O campo Anexo do formulário guarda nas respostas os ids que tomou.
 
-**A entrega.** A rota do anexo confere que ele é do chamado pedido e que a conta vê o chamado:
-- o anexo da mensagem e o de um campo que a pessoa vê, a quem vê o chamado;
-- o da nota e o de um campo só da TI, só com `chamados.ver`, que nesta change é o único jeito de ver um chamado;
-- o sem dono, só a quem o enviou.
+**A manutenção.** A manutenção diária marca `removido_em` nos anexos sem dono enviados há mais de 24 h, antes de apagar os arquivos removidos, e o conteúdo deles sai na mesma volta. Ela trava as linhas dos anexos antes, como a gravação: o anexo que uma gravação tomou primeiro fica de fora. A linha sem dono já removida fica na tabela, porque o papel da aplicação não apaga o anexo, e o filtro é o `removido_em` do arquivo. O anexo que sai de um campo só da TI, trocado ou tirado, ganha o `removido_em` na mesma transação, como o arquivo trocado de um campo do ativo. O apagamento do conteúdo segue o de hoje.
+
+**A entrega.** Sempre para baixar, com o nome original, como o arquivo de um campo do ativo:
+- `GET /chamados/:numero/anexos/:arquivo` confere que a conta vê o chamado, e o que ela não vê responde como inexistente, e que o anexo é dele:
+  - o anexo da mensagem e o de um campo que a pessoa vê, a quem vê o chamado;
+  - o da nota e o de um campo só da TI, só com `chamados.ver`, que nesta change é o único jeito de ver um chamado;
+- `GET /chamados/anexos/:arquivo` entrega o sem dono só a quem o enviou, para a tela mostrá-lo antes da gravação.
 
 Quando o chat (17) e a aba (20) derem à pessoa a leitura do próprio chamado, a entrega dela recusa os anexos da nota e dos campos só da TI.
 
