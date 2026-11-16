@@ -421,6 +421,13 @@
       "when": 1794712341217,
       "tag": "0059_casamento_do_software",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794799038241,
+      "tag": "0060_chamados",
+      "breakpoints": true
     }
   ]
 }

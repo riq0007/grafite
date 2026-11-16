@@ -3887,3 +3887,350 @@ export const maquinasDasDistribuicoes = orgScoped(
     ),
   ],
 );
+
+/** Os ícones dos tipos de chamado, os mesmos do domínio (change chamados-da-ti, decisão 6). */
+export const ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO = [
+  'gota',
+  'notebook',
+  'impressora',
+  'cadeado',
+  'janela',
+  'globo',
+  'telefone',
+  'reticencias',
+  'setas',
+  'computador',
+  'torre',
+  'fone',
+  'chave',
+  'caixa',
+  'camera',
+  'wi-fi',
+] as const;
+
+/** As situações do tipo de chamado, as mesmas do domínio. */
+export const SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO = ['rascunho', 'em-uso', 'inativo'] as const;
+
+/** As unidades e os modos de contar o prazo, os mesmos do domínio. */
+export const UNIDADES_DO_PRAZO_NO_BANCO = ['min', 'h', 'd'] as const;
+export const MODOS_DO_PRAZO_NO_BANCO = ['corridas', 'horario'] as const;
+
+/** O que o tipo faz quando não há ninguém para atender e a solicitação que ele gera. */
+export const SEM_NINGUEM_NO_BANCO = ['triagem', 'fica'] as const;
+export const SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO = ['nao', 'toner', 'equipamento'] as const;
+
+/** As situações e as origens do chamado e as espécies da conversa, as mesmas do domínio. */
+export const SITUACOES_DO_CHAMADO_NO_BANCO = [
+  'triagem',
+  'em-atendimento',
+  'aguardando',
+  'resolvido',
+] as const;
+export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti'] as const;
+export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as const;
+
+/**
+ * O documento JSON com o tipo e o tamanho conferidos; o conteúdo, quem confere é o domínio. O teto
+ * conta os bytes do texto e só serve de rede: fica acima do pior caso que o domínio aceita, como
+ * 20 respostas de 4.000 caracteres de até 6 bytes cada no texto do JSON, perto de 480 KB.
+ */
+const documentoAte = (coluna: unknown, limite: number) =>
+  sql`jsonb_typeof(${coluna}) = 'object' and octet_length(${coluna}::text) <= ${sql.raw(String(limite))}`;
+
+/**
+ * O tipo de chamado (spec tipos-de-chamado; change chamados-da-ti, design, decisões 1, 2 e 6): o
+ * nome, único sem acento e maiúsculas, o ícone e a frase para o colaborador, que só o Rascunho do
+ * "Novo tipo" deixa vazia; a situação e a ordem; o prazo da resposta e da resolução, com o modo de
+ * contar; quem atende por padrão e o que acontece sem ninguém; o que acontece depois; quem vê; o
+ * formulário, que o domínio confere; e a origem da cópia. O papel da aplicação apaga o Rascunho
+ * descartado, e o tipo com chamados não sai.
+ */
+export const tiposDeChamado = orgScoped(
+  'tipos_de_chamado',
+  {
+    nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    icone: text('icone', { enum: ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO }).notNull(),
+    frase: text('frase'),
+    situacao: text('situacao', { enum: SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO }).notNull(),
+    ordem: integer('ordem').notNull(),
+    respostaValor: integer('resposta_valor').notNull(),
+    respostaUnidade: text('resposta_unidade', { enum: UNIDADES_DO_PRAZO_NO_BANCO }).notNull(),
+    resolucaoValor: integer('resolucao_valor').notNull(),
+    resolucaoUnidade: text('resolucao_unidade', { enum: UNIDADES_DO_PRAZO_NO_BANCO }).notNull(),
+    modo: text('modo', { enum: MODOS_DO_PRAZO_NO_BANCO }).notNull(),
+    atendePorPadrao: uuid('atende_por_padrao'),
+    semNinguem: text('sem_ninguem', { enum: SEM_NINGUEM_NO_BANCO }).notNull(),
+    podeVirarOs: boolean('pode_virar_os').notNull().default(false),
+    geraSolicitacao: text('gera_solicitacao', {
+      enum: SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO,
+    }).notNull(),
+    tipoDeAtivoDoEquipamento: uuid('tipo_de_ativo_do_equipamento'),
+    pedeOAtivo: boolean('pede_o_ativo').notNull().default(false),
+    apareceParaOColaborador: boolean('aparece_para_o_colaborador').notNull().default(true),
+    soATiAbre: boolean('so_a_ti_abre').notNull().default(false),
+    formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
+    duplicadoDe: uuid('duplicado_de'),
+    criadoEm: momento('criado_em').notNull().defaultNow(),
+    criadoPor: uuid('criado_por'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'tipos_de_chamado_atende_por_padrao_fk',
+      columns: [t.orgId, t.atendePorPadrao],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_tipo_de_ativo_fk',
+      columns: [t.orgId, t.tipoDeAtivoDoEquipamento],
+      foreignColumns: [tiposDeAtivo.orgId, tiposDeAtivo.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_duplicado_de_fk',
+      columns: [t.orgId, t.duplicadoDe],
+      foreignColumns: [t.orgId, t.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_criado_por_fk',
+      columns: [t.orgId, t.criadoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    unique('tipos_de_chamado_nome_unico').on(t.orgId, t.nomeNormalizado),
+    check('tipos_de_chamado_nome_valido', sql`length(trim(${t.nome})) between 1 and 40`),
+    check(
+      'tipos_de_chamado_frase_valida',
+      sql`(${t.frase} is null and ${t.situacao} = 'rascunho')
+        or (${t.frase} is not null and length(trim(${t.frase})) between 1 and 80)`,
+    ),
+    check(
+      'tipos_de_chamado_icone_valido',
+      sql`${t.icone} in (${lista(ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO)})`,
+    ),
+    check(
+      'tipos_de_chamado_situacao_valida',
+      sql`${t.situacao} in (${lista(SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO)})`,
+    ),
+    check(
+      'tipos_de_chamado_prazo_valido',
+      sql`${t.respostaValor} between 1 and 999 and ${t.resolucaoValor} between 1 and 999
+        and ${t.respostaUnidade} in (${lista(UNIDADES_DO_PRAZO_NO_BANCO)})
+        and ${t.resolucaoUnidade} in (${lista(UNIDADES_DO_PRAZO_NO_BANCO)})
+        and ${t.modo} in (${lista(MODOS_DO_PRAZO_NO_BANCO)})`,
+    ),
+    // "Fica com <pessoa> mesmo assim" precisa de quem atende por padrão.
+    check(
+      'tipos_de_chamado_atendimento_valido',
+      sql`${t.semNinguem} in (${lista(SEM_NINGUEM_NO_BANCO)})
+        and (${t.semNinguem} <> 'fica' or ${t.atendePorPadrao} is not null)`,
+    ),
+    // O Equipamento leva o tipo de ativo pedido, e o Toner pede o ativo.
+    check(
+      'tipos_de_chamado_solicitacao_coerente',
+      sql`${t.geraSolicitacao} in (${lista(SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO)})
+        and (${t.geraSolicitacao} = 'equipamento') = (${t.tipoDeAtivoDoEquipamento} is not null)
+        and (${t.geraSolicitacao} <> 'toner' or ${t.pedeOAtivo})`,
+    ),
+    check('tipos_de_chamado_formulario_valido', documentoAte(t.formulario, 524288)),
+  ],
+);
+
+/**
+ * O chamado (spec chamados; change chamados-da-ti, design, decisões 1, 3, 4 e 5): o número
+ * sequencial na organização, o tipo, o título, a pessoa que pediu, a origem e quem abriu; o
+ * formulário da abertura e as respostas; o ativo ligado e os locais em que ele vale para ver e para
+ * atender; a situação e quem atende; o prazo copiado em minutos e o relógio guardado; a resolução;
+ * a OS e a solicitação; e a versão, que sobe nas ações que mudam a situação ou quem atende. Quem
+ * atende e o relógio seguem a tabela da spec, e as checagens são implicações, para a situação
+ * desconhecida ficar com a checagem da situação. O papel da aplicação não apaga (migration 0060).
+ */
+export const chamados = orgScoped(
+  'chamados',
+  {
+    numero: integer('numero').notNull(),
+    tipoId: uuid('tipo_id').notNull(),
+    titulo: text('titulo').notNull(),
+    tituloNormalizado: text('titulo_normalizado').notNull(),
+    pessoaId: uuid('pessoa_id').notNull(),
+    origem: text('origem', { enum: ORIGENS_DO_CHAMADO_NO_BANCO }).notNull(),
+    abertoPor: uuid('aberto_por'),
+    abertoEm: momento('aberto_em').notNull().defaultNow(),
+    formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
+    respostas: jsonb('respostas').$type<Record<string, unknown>>().notNull().default({}),
+    ativoId: uuid('ativo_id'),
+    locais: uuid('locais').array().notNull().default(sql`'{}'::uuid[]`),
+    semLocal: boolean('sem_local').notNull().default(false),
+    situacao: text('situacao', { enum: SITUACOES_DO_CHAMADO_NO_BANCO }).notNull(),
+    responsavelId: uuid('responsavel_id'),
+    responsavelDesde: momento('responsavel_desde'),
+    prazo: jsonb('prazo').$type<Record<string, unknown>>().notNull(),
+    contadoS: integer('contado_s').notNull().default(0),
+    relogioDesde: momento('relogio_desde'),
+    primeiraRespostaEm: momento('primeira_resposta_em'),
+    estouroAvisadoEm: momento('estouro_avisado_em'),
+    resolvidoEm: momento('resolvido_em'),
+    resolvidoPor: uuid('resolvido_por'),
+    osId: uuid('os_id'),
+    solicitacaoId: uuid('solicitacao_id'),
+    versao: integer('versao').notNull().default(1),
+  },
+  (t) => [
+    foreignKey({
+      name: 'chamados_tipo_fk',
+      columns: [t.orgId, t.tipoId],
+      foreignColumns: [tiposDeChamado.orgId, tiposDeChamado.id],
+    }),
+    foreignKey({
+      name: 'chamados_pessoa_fk',
+      columns: [t.orgId, t.pessoaId],
+      foreignColumns: [pessoas.orgId, pessoas.id],
+    }),
+    foreignKey({
+      name: 'chamados_aberto_por_fk',
+      columns: [t.orgId, t.abertoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_ativo_fk',
+      columns: [t.orgId, t.ativoId],
+      foreignColumns: [ativos.orgId, ativos.id],
+    }),
+    foreignKey({
+      name: 'chamados_responsavel_fk',
+      columns: [t.orgId, t.responsavelId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_resolvido_por_fk',
+      columns: [t.orgId, t.resolvidoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_os_fk',
+      columns: [t.orgId, t.osId],
+      foreignColumns: [ordensDeServico.orgId, ordensDeServico.id],
+    }),
+    foreignKey({
+      name: 'chamados_solicitacao_fk',
+      columns: [t.orgId, t.solicitacaoId],
+      foreignColumns: [solicitacoes.orgId, solicitacoes.id],
+    }),
+    unique('chamados_numero_unico').on(t.orgId, t.numero),
+    // Uma OS sai de um chamado só; uma solicitação junta os chamados que pedem o mesmo toner.
+    unique('chamados_os_unica').on(t.orgId, t.osId),
+    // Os abertos de cada situação, para o quadro, a triagem e os prazos.
+    index('chamados_situacao_idx').on(t.orgId, t.situacao),
+    // Os abertos e os do último ano de cada tipo.
+    index('chamados_tipo_idx').on(t.orgId, t.tipoId, t.abertoEm),
+    index('chamados_pessoa_idx').on(t.orgId, t.pessoaId),
+    index('chamados_ativo_idx').on(t.orgId, t.ativoId).where(sql`${t.ativoId} is not null`),
+    index('chamados_solicitacao_idx')
+      .on(t.orgId, t.solicitacaoId)
+      .where(sql`${t.solicitacaoId} is not null`),
+    // Os resolvidos hoje, na carga de cada pessoa.
+    index('chamados_resolvido_idx')
+      .on(t.orgId, t.resolvidoEm)
+      .where(sql`${t.resolvidoEm} is not null`),
+    index('chamados_locais_idx').using('gin', t.locais),
+    check('chamados_numero_valido', sql`${t.numero} >= 1`),
+    check('chamados_titulo_valido', sql`length(trim(${t.titulo})) between 1 and 120`),
+    check('chamados_origem_valida', sql`${t.origem} in (${lista(ORIGENS_DO_CHAMADO_NO_BANCO)})`),
+    check(
+      'chamados_situacao_valida',
+      sql`${t.situacao} in (${lista(SITUACOES_DO_CHAMADO_NO_BANCO)})`,
+    ),
+    check('chamados_contado_valido', sql`${t.contadoS} >= 0`),
+    check('chamados_versao_valida', sql`${t.versao} >= 1`),
+    // A TI abre em nome da pessoa, que já falou com ela: quem abriu e a primeira resposta vêm na
+    // abertura (spec chamados, "Abrir um chamado pela TI").
+    check(
+      'chamados_abertura_coerente',
+      sql`${t.origem} <> 'ti' or (${t.abertoPor} is not null and ${t.primeiraRespostaEm} is not null)`,
+    ),
+    // Ninguém atende na triagem; alguém atende no atendimento e no aguardando, sempre.
+    check(
+      'chamados_atendimento_coerente',
+      sql`(${t.responsavelId} is null) = (${t.responsavelDesde} is null)
+        and (${t.situacao} <> 'triagem' or ${t.responsavelId} is null)
+        and (${t.situacao} not in ('em-atendimento', 'aguardando') or ${t.responsavelId} is not null)`,
+    ),
+    // O relógio conta na triagem e no atendimento e para no aguardando e no resolvido.
+    check(
+      'chamados_relogio_coerente',
+      sql`(${t.situacao} not in ('triagem', 'em-atendimento') or ${t.relogioDesde} is not null)
+        and (${t.situacao} not in ('aguardando', 'resolvido') or ${t.relogioDesde} is null)`,
+    ),
+    // O resolvido tem quem resolveu e quando; o reaberto os perde.
+    check(
+      'chamados_resolucao_coerente',
+      sql`(${t.resolvidoEm} is null) = (${t.resolvidoPor} is null)
+        and (${t.situacao} <> 'resolvido' or ${t.resolvidoEm} is not null)
+        and (${t.situacao} = 'resolvido' or ${t.resolvidoEm} is null)`,
+    ),
+    check('chamados_formulario_valido', documentoAte(t.formulario, 524288)),
+    check('chamados_respostas_validas', documentoAte(t.respostas, 1048576)),
+    check('chamados_prazo_valido', documentoAte(t.prazo, 1024)),
+  ],
+);
+
+/**
+ * A conversa de cada chamado (spec chamados, "Conversa do chamado"; change chamados-da-ti, design,
+ * decisões 1 e 8): a mensagem para a pessoa, de uma conta ou da pessoa, pelo chat; a nota interna,
+ * de uma conta; e o evento, com o código e os dados, da conta que agiu. Nenhum evento desta change
+ * é do sistema: o chat e a aba trazem os autores deles junto com as origens novas. O papel da
+ * aplicação só inclui e lê (migration 0060).
+ */
+export const mensagensDosChamados = orgScoped(
+  'mensagens_dos_chamados',
+  {
+    chamadoId: uuid('chamado_id').notNull(),
+    especie: text('especie', { enum: ESPECIES_DA_CONVERSA_NO_BANCO }).notNull(),
+    autorConta: uuid('autor_conta'),
+    autorPessoa: uuid('autor_pessoa'),
+    texto: text('texto'),
+    evento: text('evento'),
+    dados: jsonb('dados').$type<Record<string, unknown>>(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'mensagens_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'mensagens_dos_chamados_autor_conta_fk',
+      columns: [t.orgId, t.autorConta],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'mensagens_dos_chamados_autor_pessoa_fk',
+      columns: [t.orgId, t.autorPessoa],
+      foreignColumns: [pessoas.orgId, pessoas.id],
+    }),
+    index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
+    check(
+      'mensagens_dos_chamados_especie_valida',
+      sql`${t.especie} in (${lista(ESPECIES_DA_CONVERSA_NO_BANCO)})`,
+    ),
+    check(
+      'mensagens_dos_chamados_autoria_valida',
+      sql`(${t.especie} <> 'mensagem' or num_nonnulls(${t.autorConta}, ${t.autorPessoa}) = 1)
+        and (${t.especie} <> 'nota' or (${t.autorConta} is not null and ${t.autorPessoa} is null))
+        and (${t.especie} <> 'evento' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
+    ),
+    check(
+      'mensagens_dos_chamados_conteudo_valido',
+      sql`(${t.especie} not in ('mensagem', 'nota') or (${t.texto} is not null
+          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null and ${t.dados} is null))
+        and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null))`,
+    ),
+    check(
+      'mensagens_dos_chamados_evento_valido',
+      sql`${t.evento} is null or ${t.evento} ~ '^[a-z][a-z-]{0,39}$'`,
+    ),
+    check(
+      'mensagens_dos_chamados_dados_validos',
+      sql`${t.dados} is null or (${documentoAte(t.dados, 1048576)})`,
+    ),
+  ],
+);

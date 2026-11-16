@@ -33,8 +33,8 @@ Os mockups `r3-16-chamados-ti` (m01 a m12) foram aprovados em 14/11/2026. A pré
 Todas com `orgScoped()`, RLS ativo e forçado, e as chaves estrangeiras em `(org_id, id)`.
 
 - **`tipos_de_chamado`:**
-  - a identificação: `nome`, `nome_normalizado` (único), `icone` e `frase`;
-  - a situação e a ordem: `situacao` (`rascunho`, `em_uso` ou `inativo`), `ordem`;
+  - a identificação: `nome`, `nome_normalizado` (único), `icone` e `frase`, que só o Rascunho do "Novo tipo" deixa vazia;
+  - a situação e a ordem: `situacao` (`rascunho`, `em-uso` ou `inativo`, com o hífen das situações das solicitações e das OS), `ordem`;
   - o prazo: `resposta_valor`, `resposta_unidade`, `resolucao_valor`, `resolucao_unidade` (`min`, `h` ou `d`) e `modo` (`corridas` ou `horario`);
   - o atendimento: `atende_por_padrao` (conta, opcional) e `sem_ninguem` (`triagem` ou `fica`);
   - o que acontece depois: `pode_virar_os`, `gera_solicitacao` (`nao`, `toner` ou `equipamento`), `tipo_de_ativo_do_equipamento` e `pede_o_ativo`;
@@ -47,18 +47,19 @@ Todas com `orgScoped()`, RLS ativo e forçado, e as chaves estrangeiras em `(org
   - quem e de onde: `pessoa_id`, `origem` (`ti`; o chat e a aba entram nas changes deles), `aberto_por` e `aberto_em`;
   - o formulário: `formulario` (a cópia da abertura) e `respostas`, em jsonb;
   - o ativo e o alcance: `ativo_id`, `locais uuid[]` e `sem_local`;
-  - o atendimento: `situacao` (`triagem`, `em_atendimento`, `aguardando` ou `resolvido`), `responsavel_id` e `responsavel_desde`;
+  - o atendimento: `situacao` (`triagem`, `em-atendimento`, `aguardando` ou `resolvido`), `responsavel_id` e `responsavel_desde`. Os CHECKs seguem a tabela da spec: ninguém na triagem, alguém no atendimento e no aguardando, e o relógio contando só na triagem e no atendimento;
   - o prazo (decisão 3): o `prazo` jsonb, com o modo, os minutos da resposta e da resolução e o valor e a unidade do tipo, só para o texto; `contado_s`; `relogio_desde`; `primeira_resposta_em`; `estouro_avisado_em`;
   - a resolução: `resolvido_em` e `resolvido_por`;
   - as ligações: `os_id` (única) e `solicitacao_id`;
   - a concorrência: `versao` (decisão 4).
 - **`mensagens_dos_chamados`:**
   - `chamado_id` e `especie` (`mensagem`, `nota` ou `evento`);
-  - a autoria: `autor_conta` ou `autor_pessoa`. A pessoa escreve a partir do chat; o CHECK aceita uma das duas;
-  - o conteúdo: `texto`, e `evento` e `dados` jsonb, no evento;
+  - a autoria: `autor_conta` ou `autor_pessoa`. A pessoa escreve a partir do chat; o CHECK aceita uma das duas na mensagem e só a conta na nota e no evento. Nenhum evento desta change é do sistema: cada um é de quem agiu. O chat e a aba, que já mudam a lista das origens, trazem na mesma migration os autores que precisarem;
+  - o conteúdo: `texto`, na mensagem e na nota, e `evento` e `dados` jsonb, no evento (decisão 8);
   - o momento: `criada_em`.
 
-  Não há UPDATE nem DELETE pelo papel da aplicação: só o INSERT tem política.
+  O papel da aplicação perde o UPDATE e o DELETE nela (`REVOKE`), como no histórico das OS.
+- **Os documentos JSON** (o formulário, as respostas, o prazo e os dados do evento) têm o tipo conferido no banco e um teto em bytes que só serve de rede, acima do pior caso que o domínio aceita: 512 KB no formulário, 1 MB nas respostas e nos dados e 1 KB no prazo. As 20 respostas de 4.000 caracteres, com até 6 bytes cada no texto do JSON, ficam perto de 480 KB.
 - **`anexos_dos_chamados`:** `arquivo_id` (único), com o arquivo na tabela `arquivos` de hoje, e o dono: `chamado_id` e `mensagem_id` ou `campo_id` (decisão 10). O CHECK aceita três formas: sem dono (os três nulos), o da mensagem (o chamado e a mensagem) e o do campo (o chamado e o id do campo).
 - **`numeracao_dos_chamados`:** o contador por organização, como o das OS.
 - **`respostas_prontas`:** `rotulo` e `rotulo_normalizado` (único), `texto`, `espera_a_resposta`, `tipos uuid[]` (vazio para todos) e `ordem`.
@@ -224,9 +225,9 @@ Com "Cai na triagem", o chamado vai à triagem. Com "Fica com <pessoa> mesmo ass
 
 A conversa é uma tabela só, ordenada pelo `criada_em` e pelo id (uuidv7).
 
-O evento tem um `codigo`, como `assumiu`, `passou`, `aguardando`, `retomou`, `resolveu`, `reabriu`, `virou_os`, `solicitacao`, `ativo` e `abertura`, e os `dados`: as contas, a OS e a solicitação. A web monta a frase, para o nome atual das pessoas aparecer, como nas OS.
+O evento tem o código na coluna `evento`, como `assumiu`, `passou`, `aguardando`, `retomou`, `resolveu`, `reabriu`, `virou-os`, `solicitacao`, `ativo` e `abertura`, e os `dados`: as contas, a OS e a solicitação. A web monta a frase, para o nome atual das pessoas aparecer, como nas OS.
 
-A abertura guarda o resumo pronto, porque ele usa o formulário da abertura.
+A abertura guarda o resumo pronto nos `dados`, porque ele usa o formulário da abertura.
 
 Os alertas do ativo entram na leitura (decisão 9), e não na tabela.
 

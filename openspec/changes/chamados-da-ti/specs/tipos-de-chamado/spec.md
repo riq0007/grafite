@@ -109,7 +109,16 @@ A lista dos tipos SHALL marcar só a exceção, com o selo "Só a TI abre".
 
 ### Requirement: Rascunho, duplicar e descartar
 
-"Novo tipo" SHALL criar um Rascunho, sem campos no formulário. "Duplicar" SHALL criar um Rascunho com tudo do tipo de origem, inclusive o formulário, e o nome "<nome> (cópia)". A tela SHALL dizer "Duplicado de <nome>." e marcar a origem na lista com "copiado daqui".
+"Novo tipo" SHALL criar um Rascunho com:
+- o nome "Novo tipo";
+- o ícone das reticências e nenhuma frase, que "Criar o tipo" pede;
+- o prazo "Responde em 1 h e resolve em 1 dia, no horário da TI", sem quem atende por padrão, e "Cai na triagem";
+- as chaves desligadas, fora "Aparece para o colaborador";
+- nenhum campo no formulário.
+
+"Duplicar" SHALL criar um Rascunho com tudo do tipo de origem, inclusive o formulário, e o nome "<nome> (cópia)". A tela SHALL dizer "Duplicado de <nome>." e marcar a origem na lista com "copiado daqui".
+
+Quando o nome já existe, o Rascunho SHALL ganhar o número seguinte, como "Novo tipo 2" e "Toner (cópia 2)". O nome de origem SHALL ser cortado para o nome do Rascunho caber nos 40 caracteres.
 
 O "Duplicar" por quem não atende as solicitações em todos os locais SHALL criar o Rascunho com o "Gera uma Solicitação" desligado (requisito "O que acontece depois"). A tela SHALL dizer também "O 'Gera uma Solicitação' veio desligado: só quem atende as solicitações em todos os locais o liga.".
 
@@ -124,6 +133,10 @@ O Rascunho:
 #### Scenario: Equipamento novo a partir do Computador
 - **WHEN** quem configura duplica o Computador, troca o nome para "Equipamento novo" e cria o tipo
 - **THEN** o Equipamento novo fica Em uso, com o formulário copiado do Computador, e a lista passa de 9 para 10 tipos
+
+#### Scenario: Duplicar de novo
+- **WHEN** quem configura duplica o Toner, com o "Toner (cópia)" ainda em Rascunho
+- **THEN** o Rascunho novo se chama "Toner (cópia 2)"
 
 #### Scenario: Duplicar sem atender as solicitações
 - **WHEN** Bruno, com `chamados.configurar` e com `solicitacoes.atender` só em Campinas, duplica o Toner, que gera a solicitação de Toner
