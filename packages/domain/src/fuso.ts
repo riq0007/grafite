@@ -4,12 +4,20 @@
 
 const formatos = new Map<string, Intl.DateTimeFormat>();
 
-/** O formato que lê o relógio do fuso, guardado por fuso; `null` no fuso que o Intl não conhece. */
+/**
+ * O formato que lê o relógio do fuso; `null` no fuso que o Intl não conhece. Ele fica guardado pelo
+ * nome que o Intl devolve (`resolvedOptions().timeZone`), e não pelo texto pedido: o Intl aceita o
+ * mesmo fuso em qualquer caixa ("america/sao_paulo"), e o fuso pode vir da consulta. Guardado pelo
+ * texto, cada jeito novo de escrevê-lo ficaria na memória; pelo nome, fica no máximo um formato por
+ * nome que o Intl conhece. O pedido escrito de outro jeito monta o formato de novo, e ele toma o
+ * lugar do guardado com o mesmo nome.
+ */
 function formatoDo(fuso: string): Intl.DateTimeFormat | null {
   const guardado = formatos.get(fuso);
   if (guardado) return guardado;
+  let formato: Intl.DateTimeFormat;
   try {
-    const formato = new Intl.DateTimeFormat('en-US', {
+    formato = new Intl.DateTimeFormat('en-US', {
       timeZone: fuso,
       hourCycle: 'h23',
       year: 'numeric',
@@ -19,11 +27,11 @@ function formatoDo(fuso: string): Intl.DateTimeFormat | null {
       minute: '2-digit',
       second: '2-digit',
     });
-    formatos.set(fuso, formato);
-    return formato;
   } catch {
     return null;
   }
+  formatos.set(formato.resolvedOptions().timeZone, formato);
+  return formato;
 }
 
 /** Se o fuso existe no Intl do servidor (e do navegador). */
