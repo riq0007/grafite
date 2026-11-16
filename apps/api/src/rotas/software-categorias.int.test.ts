@@ -40,7 +40,10 @@ const acoes = () =>
 beforeAll(async () => {
   api = await abrirApi();
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });
-  const outra = await criarOrganizacao(api, { nome: 'Outra', enderecos: ['grafite.outra.local'] });
+  const outra = await criarOrganizacao(api, {
+    nome: 'Outra',
+    enderecos: ['grafite.categorias-outra.local'],
+  });
   daOutra = await naOrganizacao(api.banco, outra, async (tx) => {
     const [linha] = await tx
       .insert(categoriasDeSoftware)
