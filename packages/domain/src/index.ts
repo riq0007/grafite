@@ -276,6 +276,10 @@ export {
   textoDosAbertos,
 } from './chamados/carga.ts';
 export {
+  TIPOS_DE_CHAMADO_DE_FABRICA,
+  type TipoDeChamadoDeFabrica,
+} from './chamados/fabrica.ts';
+export {
   type CampoDoFormulario,
   type ClausulaDaCondicao,
   type ConferenciaDoFormulario,

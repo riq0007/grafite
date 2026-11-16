@@ -9,12 +9,14 @@ O chamado (spec chamados) SHALL poder ter uma solicitação, de dois jeitos.
 - sem ela, SHALL abrir o registro do Toner com:
   - a pessoa do chamado como quem pediu;
   - a impressora;
-  - um item da cor mais baixa na última leitura válida dos suprimentos, ou o preto sem a leitura, com a quantidade 1.
+  - um item da cor do chamado, com a quantidade 1.
+
+A cor do chamado é a respondida no formulário: a da primeira escolha única, na ordem dos campos, cuja opção tem o nome de uma cor de consumível (Preto, Ciano, Magenta, Amarelo ou Colorido), sem diferença de maiúsculas nem de acentos, quando a impressora usa um consumível dessa cor. Sem ela, é a cor mais baixa na última leitura válida dos suprimentos e, sem a leitura, o preto.
 
 Quem atende pode mudar o registro antes de gravar.
 
 **O tipo que gera uma solicitação** (spec tipos-de-chamado), na abertura do chamado, na mesma transação:
-- **Toner:** como o "Pedir toner", com a impressora do chamado e o item da cor mais baixa, sem abrir o registro;
+- **Toner:** como o "Pedir toner", com a impressora do chamado e o item da cor do chamado, sem abrir o registro;
 - **Equipamento:**
   - o tipo de ativo do tipo de chamado e a quantidade 1;
   - o motivo "Chamado #<número>: <título>";
@@ -34,6 +36,10 @@ A solicitação SHALL mostrar os chamados ligados a ela, como "Do chamado #1042"
 #### Scenario: Toner pelo chamado sem pendente
 - **WHEN** Ana usa "Pedir toner" no #1042, com a PAT-00139, cujo preto está a 8% e o ciano a 40%, sem solicitação pendente, e grava
 - **THEN** a solicitação nasce Aberta, pedida por Marina Lopes, com 1 preto para a PAT-00139 e ligada ao #1042, e a conversa ganha "Pediu toner: solicitação 5"
+
+#### Scenario: Toner com a cor respondida
+- **WHEN** Ana abre um chamado de Toner para Marina Lopes, com a PAT-00139, cujo preto está a 8% e o ciano a 40%, responde "Ciano" em "Qual cor acabou?", e não há solicitação pendente
+- **THEN** a solicitação gerada leva 1 ciano para a PAT-00139, e não o preto, que está mais baixo
 
 #### Scenario: Equipamento gerado pelo tipo
 - **WHEN** Ana abre um chamado de "Equipamento novo", que gera a solicitação de Equipamento de "Notebook", para Marina Lopes, do Financeiro

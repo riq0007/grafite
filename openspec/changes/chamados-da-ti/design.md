@@ -222,6 +222,22 @@ Os formulários de fábrica:
 | Outro | Conte o que aconteceu (Texto longo, obrigatório); Onde você está? (Local); Uma foto ajuda (Anexo) | o relato, cortado em 120 caracteres |
 | Troca de equipamento | Qual equipamento? (Ativo, obrigatório); Por quê? (Texto longo, obrigatório) | "Troca de equipamento NB-0231" |
 
+Nos formulários de fábrica:
+- **Os ids** dos campos e das opções são fixos e legíveis, como `problema` e `nao-liga`. A migration e o `organizacao criar` os gravam iguais em toda organização.
+- **O nome no resumo** é curto, no molde do m04 ("Problema: Manchando, na borda · Ativo: PAT-00139"):
+  - "Ativo" nos campos Ativo;
+  - "Problema" no "O que está acontecendo?";
+  - "Detalhes" no "Quer contar mais?";
+  - "Local" no "Onde você está?";
+  - "Foto" no "Uma foto ajuda";
+  - "Pedido" no "O que você precisa?";
+  - "Motivo" no "Por quê?";
+  - "Cor", "Programa", "Telefone" e "Relato" nos outros.
+
+  Os campos que só aparecem por uma condição vão depois da vírgula, no resumo, e os só da TI ficam fora dele. Os dois ficam com o rótulo.
+- **Os campos Ativo** aceitam qualquer tipo de ativo, porque os tipos são de cada organização. A TI os restringe depois.
+- **O título** sai do campo da coluna "Título": a cor, o problema, o pedido, o programa ou o equipamento. Ele começa pelo nome do tipo, fora o Acesso e senha, a Rede e internet e o Outro. O Outro não tem campo, e o título é o relato.
+
 A 19 (a aba) é a dona das palavras que o colaborador vê. Ela pode trocar os formulários de fábrica por uma migration dela, só nas organizações em que a TI ainda não mudou o tipo. As peças próprias da aba ficam com ela:
 - o diagnóstico da rede;
 - o "Meu computador";
@@ -325,7 +341,10 @@ A OS e a solicitação mostram os chamados delas por uma consulta, "Do chamado #
 
 "Virar OS" e "Pedir toner" chamam as funções de abertura e de registro de hoje (`ordens/abertura.ts` e o registro das solicitações), na mesma transação da ligação, para as regras e as recusas serem as delas.
 
-A cor mais baixa do toner sai da última leitura válida dos suprimentos (P2b). Sem a leitura, o item é o preto.
+A cor do toner é a do chamado (spec solicitacoes), que o `corDoToner` do domínio decide para o "Pedir toner" e para a solicitação gerada pelo tipo:
+- a respondida no formulário, pela primeira escolha única, na ordem dos campos, cuja opção tem o nome de uma cor de consumível, sem diferença de maiúsculas nem de acentos, quando a impressora usa um consumível dessa cor. O texto da opção, e não o id, vale também no formulário que a TI monta, cujos ids são aleatórios;
+- sem ela, a cor mais baixa na última leitura válida dos suprimentos (P2b);
+- sem a leitura, o preto.
 
 **A solicitação gerada pelo tipo.** A abertura chama o registro das solicitações dentro de um ponto de salvamento (a transação aninhada do Drizzle, um `savepoint`). Uma recusa do registro volta só o ponto de salvamento: o chamado abre, e a conversa ganha o evento "A solicitação não foi gerada: <motivo>". O motivo tem texto próprio nos casos conhecidos (sem local, impressora sem consumíveis, tipo de ativo inativado e local inativado) e é a recusa do registro nos outros. Conferir antes, no lugar do ponto de salvamento, repetiria as regras do registro e se afastaria delas com o tempo.
 
