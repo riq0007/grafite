@@ -285,11 +285,13 @@ Sair com mudanças sem salvar SHALL pedir confirmação.
 - **à esquerda, "Campos":** os 11 tipos de campo em botões com ícone. O clique acrescenta o campo no fim, e o arraste o põe na linha de encaixe, como "Solte o campo 'Número' aqui";
 - **no meio, os campos:**
   - cada um com a alça, o ícone, o rótulo em peso forte e os selos;
-  - o "Título do chamado" fixo no alto, com o exemplo das respostas;
+  - o "Título do chamado" fixo no alto, com o exemplo das respostas e o seletor da resposta que dá o título, só com os campos de Escolha única, de Texto curto e de Ativo que a pessoa vê;
   - o campo escolhido aberto no lugar, com o rótulo, o nome no resumo, as opções, com "Acrescentar", os tipos de ativo, "Obrigatório", "Só a TI vê", a condição, "Apagar a resposta se o campo sumir" e "Remover o campo";
 - **à direita, a prévia do colaborador,** menor que a real, com a nota "menor que a real; a marca tracejada é só do editor" e a marca do campo condicional, como "aparece só quando for Manchando".
 
-A condição SHALL ser escrita como frase, com cada parte num seletor: "Mostrar 'Onde as manchas aparecem?' quando 'O que está acontecendo?' for 'Manchando'", com "e quando…" e "ou quando…" e o que cada resposta faz.
+A condição SHALL ser escrita como frase, com cada parte num seletor: "Mostrar 'Onde as manchas aparecem?' quando 'O que está acontecendo?' for 'Manchando'", com "e quando…" e "ou quando…" e o que cada resposta faz. O seletor do campo SHALL listar só o que a condição aceita (spec tipos-de-chamado, requisito "Condição de um campo"): os campos anteriores que servem, e, no campo que a pessoa vê, só os que ela também vê.
+
+Cada recusa do formulário SHALL aparecer junto do que ela recusa, e a do "Pede o ativo", junto do primeiro campo Ativo.
 
 O teclado SHALL mover um campo pelo menu dele, com "Subir" e "Descer".
 

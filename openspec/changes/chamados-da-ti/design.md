@@ -69,7 +69,7 @@ Todas com `orgScoped()`, RLS ativo e forçado, e as chaves estrangeiras em `(org
 
 ### 2. O formulário em JSON, com ids estáveis
 
-O formulário é um documento validado por um esquema Zod do domínio (`packages/domain/src/chamados/formulario.ts`):
+O formulário é um documento conferido pelo domínio (`packages/domain/src/chamados/formulario.ts`), à mão, como a configuração dos campos do ativo (`campos/configuracao.ts`): o pacote do domínio não tem dependências, e o Zod fica na borda da API.
 
 ```ts
 {
@@ -78,9 +78,14 @@ O formulário é um documento validado por um esquema Zod do domínio (`packages
 }
 ```
 
-Cada campo tem um id curto e estável, de 1 a 40 letras sem acento, números, `-` ou `_`, gerado na criação e nunca reaproveitado. O banco confere esse formato no anexo do campo. Também tem o tipo, o rótulo, o nome no resumo, `obrigatorio`, `soDaTi`, `apagarSeSumir`, as opções e a condição:
-- **as opções** têm id e texto;
-- **a condição** é uma lista de cláusulas `{ campoId, opcaoId | valor, juncao: 'e' | 'ou' }`.
+Cada campo tem um id curto e estável, de 1 a 40 letras sem acento, números, `-` ou `_`, gerado na criação e nunca reaproveitado. O banco confere esse formato no anexo do campo. Quem gera é o construtor da web, com o `idDoFormulario` do domínio, para a condição poder citar o campo novo antes da gravação. O tipo de "Novo tipo" nasce sem campos, o duplicado copia os ids e os tipos de fábrica têm ids fixos, então todo pedido chega com os ids. Também tem o tipo, o rótulo, o nome no resumo (nulo quando vazio), `obrigatorio`, `soDaTi`, `apagarSeSumir` (ligado por padrão, como no m10), as opções, os tipos de ativo e a condição:
+- **as opções** têm id, no mesmo formato, e texto. Só a Escolha única e as Várias opções as guardam;
+- **os tipos de ativo** são os ids dos tipos aceitos no campo Ativo, ou nenhum, para qualquer tipo. Se existem e estão ativos, quem confere é a API;
+- **a condição** é uma lista de até 5 cláusulas `{ campoId, opcaoId | valor, juncao: 'e' | 'ou' }`: a opção na Escolha única e nas Várias opções, o `valor` sim ou não no Sim ou não, e a junção com a cláusula anterior, que a primeira não tem.
+
+`conferirFormulario(pedido, { pedeOAtivo })` devolve o formulário conferido, só com as chaves conhecidas, ou os erros por chave, para a tela mostrá-los no lugar: `formulario`, `campos`, `campos.<id>`, `campos.<id>.rotulo`, `campos.<id>.nomeNoResumo`, `campos.<id>.opcoes`, `campos.<id>.opcoes.<id da opção>`, `campos.<id>.tiposDeAtivo`, `campos.<id>.condicao` e `pedeOAtivo`.
+- **O que outro usa:** a recusa de remover um campo ou uma opção de que outro depende, ou o campo do título, vai na chave do que saiu (`campos.<id>` ou `campos.<id>.opcoes.<id da opção>`). Assim, o construtor confere o formulário com o campo tirado antes de tirá-lo, pela mesma função. A do "Só a TI vê" no campo do título vai na chave do campo (`campos.<id>`), e a do campo que a pessoa vê com a condição sobre um campo só da TI, na condição dele.
+- **O que a tela não monta** recebe a recusa geral do formulário: o id que falta, fora do formato ou repetido, o tipo de campo desconhecido, a condição sobre o próprio campo ou sobre um tipo de campo que não serve, a sexta cláusula, a junção que não é "e" nem "ou" e o título num tipo de campo que não serve. Como o tipo de campo não muda depois de acrescentado (spec tipos-de-chamado, "Formulário do tipo"), nada que a tela produz cai nela.
 
 As respostas são um mapa do id do campo para a resposta.
 

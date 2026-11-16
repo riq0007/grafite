@@ -220,6 +220,24 @@ export {
 } from './campos/tipos.ts';
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
+  type CampoDoFormulario,
+  type ClausulaDaCondicao,
+  type ConferenciaDoFormulario,
+  conferirFormulario,
+  type Formulario,
+  ID_DO_FORMULARIO,
+  idDoFormulario,
+  type JuncaoDaCondicao,
+  MAXIMO_DE_CAMPOS_DO_FORMULARIO,
+  MAXIMO_DE_CLAUSULAS_DA_CONDICAO,
+  type OpcaoDoCampo,
+  RECUSA_DO_FORMULARIO,
+  ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO,
+  TIPOS_DE_CAMPO_DO_CHAMADO,
+  type TipoDeCampoDoChamado,
+  type TituloDoFormulario,
+} from './chamados/formulario.ts';
+export {
   type AcessoAoSegredo,
   alcancaOSegredo,
   DURACAO_DA_LIBERACAO_DO_COFRE,

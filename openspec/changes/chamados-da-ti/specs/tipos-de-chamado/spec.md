@@ -75,7 +75,7 @@ As recusas SHALL ser:
 O tipo SHALL ter três chaves, cada uma com "Ligado" ou "Desligado" escrito:
 - **"Pode virar OS":** o chamado do tipo com o ativo ligado vira uma OS (spec ordens-de-servico, requisito "OS pelo chamado");
 - **"Gera uma Solicitação":** a abertura do chamado registra uma solicitação de Toner ou de Equipamento, este com o tipo de ativo pedido (spec solicitacoes, requisito "Solicitação pelo chamado");
-- **"Pede o ativo":** o formulário SHALL ter um campo Ativo obrigatório que a pessoa vê, e o primeiro campo Ativo é o ativo ligado do chamado.
+- **"Pede o ativo":** o primeiro campo Ativo do formulário SHALL ser obrigatório, sem condição e sem o "Só a TI vê", e a resposta dele é o ativo ligado do chamado. Assim, todo chamado do tipo nasce com o ativo.
 
 A solicitação de Toner SHALL pedir "Pede o ativo" ligado.
 
@@ -84,12 +84,17 @@ A solicitação gerada pelo tipo é registrada sem pedir a permissão das solici
 As recusas SHALL ser:
 - "Escolha o tipo de ativo do equipamento.";
 - "O Toner precisa do ativo: ligue 'Pede o ativo'.";
-- "Pede o ativo: inclua no formulário um campo Ativo obrigatório.";
+- "Pede o ativo: inclua no formulário um campo Ativo obrigatório.", sem campo Ativo;
+- "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'.";
 - "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.".
 
 #### Scenario: Pede o ativo sem o campo
-- **WHEN** quem configura liga "Pede o ativo" num tipo cujo formulário não tem campo Ativo obrigatório
+- **WHEN** quem configura liga "Pede o ativo" num tipo cujo formulário não tem campo Ativo
 - **THEN** a gravação é recusada com "Pede o ativo: inclua no formulário um campo Ativo obrigatório."
+
+#### Scenario: Pede o ativo com o Ativo condicional
+- **WHEN** quem configura liga "Pede o ativo" num tipo cujo primeiro campo Ativo aparece só quando "O que está acontecendo?" for "Não imprime"
+- **THEN** a gravação é recusada com "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'."
 
 #### Scenario: Gerar a solicitação sem atendê-las
 - **WHEN** Bruno, com `chamados.configurar` e `solicitacoes.atender` só em Campinas, liga o "Gera uma Solicitação" de Equipamento num tipo
@@ -186,7 +191,7 @@ Depois de criados, os tipos de fábrica SHALL ser como os outros: a TI os muda, 
 O formulário SHALL ter até 20 campos, em ordem. A TI muda a ordem arrastando os campos. Cada campo SHALL ter:
 - **o rótulo,** de 1 a 80 caracteres, único no formulário;
 - **o nome no resumo,** de até 30 caracteres, que vale o rótulo sem o "?" quando vazio;
-- **o tipo de campo:**
+- **o tipo de campo,** escolhido ao acrescentar o campo, e que não muda depois:
 
   | Tipo de campo | Resposta |
   |---|---|
@@ -224,8 +229,10 @@ O título do chamado SHALL ser o primeiro item da lista, fixo, com o selo "Autom
 As recusas SHALL ser:
 - "Escreva o rótulo.", "Use até 80 caracteres." e "Já existe um campo com esse rótulo.", no rótulo;
 - "Use até 30 caracteres.", no nome no resumo;
-- "Inclua ao menos 2 opções.", "Use até 12 opções.", "Use até 60 caracteres." e "Essa opção já existe.", nas opções;
-- "O formulário tem no máximo 20 campos.".
+- "Inclua ao menos 2 opções.", "Use até 12 opções.", "Escreva a opção.", "Use até 60 caracteres." e "Essa opção já existe.", nas opções;
+- "Escolha os tipos da lista.", nos tipos de ativo do campo Ativo;
+- "O formulário tem no máximo 20 campos.";
+- "O formulário não pôde ser lido. Recarregue a página e tente de novo.", no que a tela não monta, como o campo repetido ou de um tipo que não existe.
 
 #### Scenario: Campo só da TI
 - **WHEN** o formulário da Impressora tem o "Contador de páginas" com "Só a TI vê"
@@ -241,10 +248,11 @@ Um campo SHALL poder ter uma condição, escrita como frase: "Mostrar '<campo>' 
 
 A condição:
 - **depende** de um campo anterior, de Escolha única, Várias opções ou Sim ou não. Nas Várias opções, "for" vale "tiver";
+- **no campo que a pessoa vê,** depende só de campos que ela também vê. Ela nunca responde o que só a TI vê, e o campo nunca apareceria;
 - **cresce** com "e quando…" e "ou quando…", até 5 partes. As partes com "e" se juntam antes das com "ou";
 - **mostra** o que cada resposta faz: com qual opção o campo aparece, e com quais some.
 
-A chave "Apagar a resposta se o campo sumir" SHALL decidir o que o campo guarda enquanto o formulário é preenchido:
+A chave "Apagar a resposta se o campo sumir", ligada por padrão, SHALL decidir o que o campo guarda enquanto o formulário é preenchido:
 - ligada, o campo que some perde a resposta;
 - desligada, ele a mostra de novo quando volta.
 
@@ -253,7 +261,8 @@ A resposta de um campo escondido SHALL NOT seguir com o chamado, com a chave lig
 As recusas SHALL ser:
 - "'<campo>' depende de '<outro>', que precisa vir antes.", ao mover os campos;
 - "'<campo>' depende deste campo. Mude a condição antes.", ao remover o campo de que outro depende;
-- "'<campo>' depende desta opção. Mude a condição antes.", ao remover a opção de uma condição.
+- "'<campo>' depende desta opção. Mude a condição antes.", ao remover a opção de uma condição;
+- "'<campo>' aparece para a pessoa e depende de '<outro>', que só a TI vê.", na condição do campo que a pessoa vê.
 
 #### Scenario: Só quando for Manchando
 - **WHEN** "Onde as manchas aparecem?" tem a condição "quando 'O que está acontecendo?' for 'Manchando'", e a pessoa escolhe "Atolando"
@@ -263,13 +272,17 @@ As recusas SHALL ser:
 - **WHEN** quem configura arrasta "Onde as manchas aparecem?" para antes de "O que está acontecendo?"
 - **THEN** a mudança é recusada com "'Onde as manchas aparecem?' depende de 'O que está acontecendo?', que precisa vir antes."
 
+#### Scenario: Condição sobre um campo só da TI
+- **WHEN** quem configura acrescenta à Impressora o "Número do contrato", que a pessoa vê, com a condição "quando 'Contrato de manutenção' for 'Sim'"
+- **THEN** a gravação é recusada com "'Número do contrato' aparece para a pessoa e depende de 'Contrato de manutenção', que só a TI vê."
+
 ### Requirement: Título montado das respostas
 
 O título do chamado SHALL sair das respostas, sem um campo de título.
 
 O item fixo "Título do chamado" SHALL ter:
 - **"Começar pelo nome do tipo"**, com "Ligado" ou "Desligado";
-- **a resposta que dá o título:** um campo de Escolha única, de Texto curto ou de Ativo, ou nenhum.
+- **a resposta que dá o título:** um campo de Escolha única, de Texto curto ou de Ativo que a pessoa vê, ou nenhum. A pessoa lê o título do próprio chamado, e ele nunca mostra o que só a TI vê.
 
 O título SHALL ser:
 - o nome do tipo, quando a chave está ligada;
@@ -286,7 +299,7 @@ Todo título montado com mais de 120 caracteres SHALL ser cortado em 120, com as
 
 O item SHALL mostrar o exemplo do título, como "Das respostas: 'Impressora manchando'".
 
-Remover o campo que dá o título SHALL ser recusado com "O título usa este campo. Escolha outro no Título do chamado.".
+Remover o campo que dá o título SHALL ser recusado com "O título usa este campo. Escolha outro no Título do chamado.". Ligar nele o "Só a TI vê" SHALL ser recusado com "O título usa este campo. Ele não pode ser 'Só a TI vê'.".
 
 #### Scenario: Impressora manchando
 - **WHEN** a Impressora começa pelo nome do tipo e tira o título de "O que está acontecendo?", e a pessoa escolhe "Manchando"
@@ -303,6 +316,10 @@ Remover o campo que dá o título SHALL ser recusado com "O título usa este cam
 #### Scenario: Sigla no começo da opção
 - **WHEN** a Rede e internet começa pelo nome e tira o título de uma opção "VPN não conecta"
 - **THEN** o título é "Rede e internet VPN não conecta"
+
+#### Scenario: Título de um campo só da TI
+- **WHEN** quem configura liga "Só a TI vê" em "O que está acontecendo?", que dá o título da Impressora
+- **THEN** a gravação é recusada com "O título usa este campo. Ele não pode ser 'Só a TI vê'."
 
 ### Requirement: Respostas do formulário
 
