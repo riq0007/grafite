@@ -378,6 +378,45 @@ describe('a versão que a tela mostra', () => {
       recusa({ motivo: 'versao', acao: 'passar' }),
     );
   });
+
+  it('o retomar, o resolver e o reabrir também conferem a versão (tarefa 4.14)', () => {
+    const SEM_CAMPOS: Formulario = { titulo: { comecaPeloTipo: true, campoId: null }, campos: [] };
+    const resolver = (versao: number): PedidoDeAcao => ({
+      acao: 'resolver',
+      feito: 'Troquei o cabo.',
+      formulario: SEM_CAMPOS,
+      respostas: {},
+      versao,
+    });
+    const ANA_QUE_RESOLVEU: ContaQueRecebe = {
+      id: ANA.id,
+      nome: 'Ana Souza',
+      ativa: true,
+      alcance: 'organizacao',
+    };
+    // A tela de antes mostra a versão anterior de cada um.
+    expect(decidirAcao(AGUARDANDO, ANA, { acao: 'retomar', versao: 2 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'retomar' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, resolver(3))).toEqual(
+      recusa({ motivo: 'versao', acao: 'resolver' }),
+    );
+    expect(
+      decidirAcao(RESOLVIDO, ANA, { acao: 'reabrir', quemResolveu: ANA_QUE_RESOLVEU, versao: 5 }),
+    ).toEqual(recusa({ motivo: 'versao', acao: 'reabrir' }));
+    // Com a versão de agora, decidem pela matriz.
+    expect(decidirAcao(AGUARDANDO, ANA, { acao: 'retomar', versao: 3 })).toMatchObject({
+      aceita: true,
+      situacao: 'em-atendimento',
+    });
+    expect(decidirAcao(COM_RENATO, ANA, resolver(4))).toMatchObject({
+      aceita: true,
+      situacao: 'resolvido',
+    });
+    expect(
+      decidirAcao(RESOLVIDO, ANA, { acao: 'reabrir', quemResolveu: ANA_QUE_RESOLVEU, versao: 6 }),
+    ).toMatchObject({ aceita: true, situacao: 'em-atendimento', responsavel: ANA.id });
+  });
 });
 
 describe('quem age', () => {
@@ -967,6 +1006,24 @@ describe('reabrir', () => {
       naTriagem,
     );
   });
+
+  it('resolvido, sem a conta de quem resolveu, volta Na triagem (tarefa 4.14)', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, { acao: 'reabrir', quemResolveu: null })).toEqual({
+      aceita: true,
+      situacao: 'triagem',
+      responsavel: null,
+      relogio: 'volta',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'reabriu', dados: { para: null } }],
+    });
+  });
+
+  it('fora do resolvido, sem quem resolveu, a célula recusa antes', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, { acao: 'reabrir', quemResolveu: null })).toEqual(
+      recusa({ motivo: 'nao-resolvido' }),
+    );
+  });
 });
 
 describe('os textos da conversa', () => {
@@ -1161,6 +1218,15 @@ describe('mensagemDaRecusaDaAcao', () => {
     );
     expect(frase(1038, { motivo: 'versao', acao: 'devolver' })).toBe(
       'O chamado #1038 mudou. Confira antes de devolver.',
+    );
+    expect(frase(1041, { motivo: 'versao', acao: 'retomar' })).toBe(
+      'O chamado #1041 mudou. Confira antes de retomar.',
+    );
+    expect(frase(1033, { motivo: 'versao', acao: 'resolver' })).toBe(
+      'O chamado #1033 mudou. Confira antes de resolver.',
+    );
+    expect(frase(1035, { motivo: 'versao', acao: 'reabrir' })).toBe(
+      'O chamado #1035 mudou. Confira antes de reabrir.',
     );
   });
 

@@ -180,30 +180,30 @@ export const LIMITES_DA_CONVERSA = { mensagem: 4000, feito: 2000, anexos: 5 } as
 export type TextoDaAcao = 'mensagem' | 'nota' | 'feito';
 
 /**
- * As ações que a tela faz com a versão que mostra, do quadro, dos prazos e da ficha: a versão que o
- * chamado não tem mais é recusada antes de tudo, e duas pessoas não passam o mesmo chamado sem saber.
+ * As ações que a tela faz com a versão que mostra, pelos botões do quadro, dos prazos e da ficha: a
+ * versão que o chamado não tem mais é recusada antes de tudo, e duas pessoas não agem no mesmo
+ * chamado sem saber. A mensagem, a espera e a nota, do campo de escrever, não a levam.
  */
-export type AcaoComVersao = 'assumir' | 'passar' | 'devolver';
+export type AcaoComVersao = 'assumir' | 'passar' | 'devolver' | 'retomar' | 'resolver' | 'reabrir';
 
 /**
  * O pedido da ação. Como a conta escolhida do passar, o que só uma ação usa vem nele: o número de
  * anexos da mensagem, da espera e da nota; a cópia do formulário e as respostas do chamado, no
- * resolver; e quem resolveu, como a conta está agora, no reabrir. A versão do assumir, do passar e
- * do devolver é a que a tela mostra, quando ela a manda.
+ * resolver; e quem resolveu, como a conta está agora, no reabrir, ou nulo, sem a conta. A versão das
+ * ações dos botões é a que a tela mostra, quando ela a manda.
  */
 export type PedidoDeAcao =
-  | { acao: 'assumir'; versao?: number }
+  | { acao: 'assumir' | 'devolver' | 'retomar'; versao?: number }
   | { acao: 'passar'; para: ContaQueRecebe; versao?: number }
-  | { acao: 'devolver'; versao?: number }
   | { acao: 'mensagem' | 'esperar' | 'nota'; texto: string; anexos: number }
-  | { acao: 'retomar' }
   | {
       acao: 'resolver';
       feito: string;
       formulario: Formulario;
       respostas: Readonly<Record<string, unknown>>;
+      versao?: number;
     }
-  | { acao: 'reabrir'; quemResolveu: ContaQueRecebe };
+  | { acao: 'reabrir'; quemResolveu: ContaQueRecebe | null; versao?: number };
 
 /**
  * O desfazer do assumir: a versão, que o cliente manda, e o estado de antes, que a rota lê do evento
@@ -460,8 +460,12 @@ export function decidirAcao(
       break;
     }
     case 'reabrir':
-      if (recusaDeQuemRecebe(pedido.quemResolveu, chamado)) situacao = 'triagem';
-      else quemResolveu = pedido.quemResolveu.id;
+      // Sem a conta de quem resolveu, como sem quem atende os locais, o chamado volta à triagem.
+      if (pedido.quemResolveu === null || recusaDeQuemRecebe(pedido.quemResolveu, chamado)) {
+        situacao = 'triagem';
+      } else {
+        quemResolveu = pedido.quemResolveu.id;
+      }
       conversa.push(evento({ evento: 'reabriu', dados: { para: quemResolveu } }));
       break;
   }

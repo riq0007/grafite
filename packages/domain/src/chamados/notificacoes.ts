@@ -1,7 +1,7 @@
 // As notificações dos chamados (spec chamados, "Notificações dos chamados"; change chamados-da-ti,
 // design, decisão 12): o chamado passado a uma conta e o que cai na triagem, na severidade
-// Informação, com a origem "Chamados" e o endereço do chamado. Quem abre ou assume não é avisado do
-// próprio ato.
+// Informação, com a origem "Chamados" e o endereço do chamado. Quem abre, assume ou reabre não é
+// avisado do próprio ato.
 import type { NovaNotificacao } from '../notificacoes/notificacoes.ts';
 import type { SituacaoDoChamado } from './acoes.ts';
 import { type AlcanceDeQuemAtende, atendeOChamado, type LocaisDoChamado } from './atendimento.ts';
@@ -82,17 +82,24 @@ export function notificacoesDaAbertura(
 
 /**
  * A ação do atendimento, como as notificações a leem: o passar, com a conta escolhida; o devolver,
- * com as contas e o alcance de `chamados.atender` delas; o assumir, o desfazer e a conversa.
+ * com as contas e o alcance de `chamados.atender` delas; o reabrir, com quem recebe o chamado, quem o
+ * resolveu, ou, na triagem, com as contas; e as que não avisam ninguém.
  */
 export type AcaoQueNotifica =
   | { acao: 'passar'; para: string }
   | { acao: 'devolver'; contas: readonly ContaQueRecebeATriagem[] }
-  | { acao: 'assumir' | 'desfazer' | 'mensagem' | 'esperar' | 'nota' };
+  | { acao: 'reabrir'; para: string }
+  | { acao: 'reabrir'; para: null; contas: readonly ContaQueRecebeATriagem[] }
+  | {
+      acao: 'assumir' | 'desfazer' | 'mensagem' | 'esperar' | 'nota' | 'retomar' | 'resolver';
+    };
 
 /**
  * As notificações das ações do atendimento: o passar avisa a conta escolhida, fora quem passa a si
- * mesmo; o devolver avisa quem atende os locais, fora quem devolveu; o assumir, o desfazer, a
- * mensagem, a espera e a nota não avisam ninguém.
+ * mesmo; o devolver avisa quem atende os locais, fora quem devolveu; o reabrir avisa quem resolveu,
+ * a quem o chamado volta, fora quando é ela que reabre, ou, na triagem, quem atende os locais, fora
+ * quem reabriu. O assumir, o desfazer, a mensagem, a espera, a nota, o retomar e o resolver não
+ * avisam ninguém: quem atende não muda, ou é quem age, e nada cai na triagem.
  */
 export function notificacoesDaAcao(
   chamado: Pick<ChamadoQueNotifica, 'numero' | 'titulo' | 'locais'>,
@@ -104,11 +111,16 @@ export function notificacoesDaAcao(
       return acao.para === quemAge ? [] : [notificacaoDoPassado(chamado, acao.para)];
     case 'devolver':
       return notificacoesDaTriagem(chamado, acao.contas, { fora: quemAge });
+    case 'reabrir':
+      if (acao.para === null) return notificacoesDaTriagem(chamado, acao.contas, { fora: quemAge });
+      return acao.para === quemAge ? [] : [notificacaoDoPassado(chamado, acao.para)];
     case 'assumir':
     case 'desfazer':
     case 'mensagem':
     case 'esperar':
     case 'nota':
+    case 'retomar':
+    case 'resolver':
       return [];
   }
 }

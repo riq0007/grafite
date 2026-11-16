@@ -170,4 +170,34 @@ describe('notificacoesDaAcao', () => {
       expect(notificacoesDaAcao(chamado(), { acao }, 'conta-diego'), acao).toEqual([]);
     }
   });
+
+  it('o retomar e o resolver não avisam ninguém (tarefa 4.14)', () => {
+    for (const acao of ['retomar', 'resolver'] as const) {
+      expect(notificacoesDaAcao(chamado(), { acao }, 'conta-diego'), acao).toEqual([]);
+    }
+  });
+
+  it('Reaberto por outra pessoa: o chamado que volta a quem resolveu avisa essa conta', () => {
+    expect(
+      notificacoesDaAcao(chamado(), { acao: 'reabrir', para: 'conta-ana' }, 'conta-diego'),
+    ).toEqual([notificacaoDoPassado(chamado(), 'conta-ana')]);
+  });
+
+  it('quem reabre o que resolveu não é avisado', () => {
+    expect(
+      notificacoesDaAcao(chamado(), { acao: 'reabrir', para: 'conta-ana' }, 'conta-ana'),
+    ).toEqual([]);
+  });
+
+  it('o reaberto que cai na triagem avisa quem atende os locais, fora quem reabriu', () => {
+    const novas = notificacoesDaAcao(
+      chamado(),
+      { acao: 'reabrir', para: null, contas: CONTAS },
+      'conta-fabio',
+    );
+    expect(titulosPorConta(novas)).toEqual({
+      'conta-ana': 'Chamado #1043 na triagem: Impressora manchando',
+      'conta-diego': 'Chamado #1043 na triagem: Impressora manchando',
+    });
+  });
 });

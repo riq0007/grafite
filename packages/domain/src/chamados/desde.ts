@@ -79,8 +79,9 @@ export function desdeNaTriagem(abertoEm: Date, conversa: readonly EventoNaConver
 
 /**
  * Desde quando quem atende está com o chamado depois da ação: sem ninguém, nulo, e a triagem conta
- * pela conversa; no desfazer, o de antes do assumir, que o evento dele guarda; com a mesma conta, o
- * de antes; com outra, agora.
+ * pela conversa; no desfazer, o de antes do assumir, que o evento dele guarda; no reabrir, agora,
+ * mesmo com a conta que já estava com o resolvido, para o tempo resolvido não contar; com a mesma
+ * conta, o de antes; com outra, agora.
  */
 export function desdeDeQuemAtende(
   chamado: Pick<ChamadoParaAcao, 'responsavel' | 'desde'>,
@@ -89,9 +90,9 @@ export function desdeDeQuemAtende(
 ): Date | null {
   if (mudanca.responsavel === null) return null;
   for (const entrada of mudanca.conversa) {
-    if (entrada.especie === 'evento' && entrada.evento === 'desfez') {
-      return new Date(entrada.dados.desde);
-    }
+    if (entrada.especie !== 'evento') continue;
+    if (entrada.evento === 'desfez') return new Date(entrada.dados.desde);
+    if (entrada.evento === 'reabriu') return agora;
   }
   return mudanca.responsavel === chamado.responsavel ? chamado.desde : agora;
 }

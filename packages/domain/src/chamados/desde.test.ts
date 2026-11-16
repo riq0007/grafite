@@ -163,6 +163,17 @@ describe('desdeDeQuemAtende', () => {
       ),
     ).toEqual(COM_RENATO.desde);
   });
+
+  it('no reabrir, é agora, mesmo com a conta que já estava com o resolvido (tarefa 4.14)', () => {
+    // Ana resolveu o #1035 ontem, com ela desde as 10:12, e o reabre: ele volta a ela agora.
+    expect(
+      desdeDeQuemAtende(
+        { responsavel: ANA, desde: new Date('2026-11-16T10:12:00-03:00') },
+        depois(ANA, [{ especie: 'evento', evento: 'reabriu', dados: { para: ANA } }]),
+        AGORA,
+      ),
+    ).toEqual(AGORA);
+  });
 });
 
 describe('antesDoAssumir', () => {

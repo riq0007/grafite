@@ -1,20 +1,21 @@
 // As ações do atendimento (spec chamados, "Ações do atendimento", "Situação e quem atende",
-// "Conversa do chamado" e "Notificações dos chamados"; change chamados-da-ti, design, decisões 3, 4 e
-// 10, e tarefas 4.12 e 4.13), gravadas por um lugar só, o `agirNoChamado`, numa transação:
+// "Conversa do chamado" e "Notificações dos chamados"; change chamados-da-ti, design, decisões 3, 4,
+// 10 e 12, e tarefas 4.12 a 4.14), gravadas por um lugar só, o `agirNoChamado`, numa transação:
 // - o chamado, travado (`for update`) e lido para o domínio, com os locais pelo caminho, a pessoa
 //   pelo nome e o desde: o de quem atende ou, sem ninguém, o da triagem, pelos eventos da conversa;
-// - a conta escolhida do passar e, no desfazer, o estado de antes do assumir, do último evento que
-//   sobe a versão, com a conta de antes como está agora;
+// - o que só uma ação usa: a conta escolhida do passar; no desfazer, o estado de antes do assumir,
+//   do último evento que sobe a versão, com a conta de antes como está agora; no resolver, a cópia do
+//   formulário e as respostas; e, no reabrir, quem resolveu, como a conta está agora;
 // - a decisão do domínio, com a versão primeiro: a recusa da versão e o "mudou" do desfazer saem
 //   como o `chamado-mudou`; a do texto e a dos anexos, como o 400 no campo, como as do formulário; e
 //   as outras, como o conflito da abertura;
 // - o horário da TI, só quando a ação para ou volta o relógio, lido depois da trava do chamado: a
 //   troca do horário que travou o chamado antes já fechou o relógio dele pelo horário antigo, e a
 //   ação conta desde a troca pelo novo (decisão 3);
-// - o chamado, com o relógio, a primeira resposta e a versão, que sobe só quando a situação ou quem
-//   atende muda; a conversa, uma linha por vez, na ordem da mudança, com os anexos tomados para a
-//   mensagem ou a nota; a auditoria, com o `chamados.mudaram`, das ações que mudam a situação ou quem
-//   atende, e só o `chamados.mudaram` das outras; e as notificações.
+// - o chamado, com o relógio, a primeira resposta, a resolução e a versão, que sobe só quando a
+//   situação ou quem atende muda; a conversa, uma linha por vez, na ordem da mudança, com os anexos
+//   tomados para a mensagem ou a nota; a auditoria, com o `chamados.mudaram`, das ações que mudam a
+//   situação ou quem atende, e só o `chamados.mudaram` das outras; e as notificações.
 import { chamados, mensagensDosChamados, pessoas, type Transacao } from '@grafite/db';
 import {
   type AcaoDaAuditoria,
@@ -52,16 +53,19 @@ import { chamadoMudou, conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { chamadoNaoEncontrado, publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
+import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
 
 /**
- * O pedido de cada rota, depois do schema: a versão que a tela mostra e a conta escolhida, nas ações
- * que mudam quem atende; o texto e os ids dos anexos, já conferidos como UUID, na conversa.
+ * O pedido de cada rota, depois do schema: a versão que a tela mostra, nas ações dos botões, com a
+ * conta escolhida do passar e o "O que foi feito" do resolver; o texto e os ids dos anexos, já
+ * conferidos como UUID, na conversa.
  */
 export type PedidoDoAtendimento =
-  | { acao: 'assumir' | 'devolver'; versao?: number | undefined }
+  | { acao: 'assumir' | 'devolver' | 'retomar' | 'reabrir'; versao?: number | undefined }
   | { acao: 'passar'; para: string; versao?: number | undefined }
+  | { acao: 'resolver'; feito: string; versao?: number | undefined }
   | { acao: 'desfazer'; versao: number }
   | {
       acao: 'mensagem' | 'esperar' | 'nota';
@@ -95,6 +99,9 @@ const NA_AUDITORIA = {
   devolver: 'chamado.devolvido',
   desfazer: 'chamado.assumir-desfeito',
   esperar: 'chamado.aguardando',
+  retomar: 'chamado.retomado',
+  resolver: 'chamado.resolvido',
+  reabrir: 'chamado.reaberto',
   mensagem: null,
   nota: null,
 } as const satisfies Record<AcaoDoAtendimento, AcaoDaAuditoria | null>;
@@ -122,6 +129,7 @@ async function travarOChamado(
       contadoS: chamados.contadoS,
       relogioDesde: chamados.relogioDesde,
       primeiraRespostaEm: chamados.primeiraRespostaEm,
+      resolvidoPor: chamados.resolvidoPor,
       pessoa: pessoas.nome,
     })
     .from(chamados)
@@ -152,13 +160,34 @@ const eventosDoChamado = (tx: Transacao, chamadoId: string): Promise<EventoNaCon
     )
     .orderBy(asc(mensagensDosChamados.criadaEm), asc(mensagensDosChamados.id));
 
-/** A decisão do domínio, com a conta escolhida do passar e o estado de antes do desfazer. */
+/** A cópia do formulário da abertura e as respostas do chamado já travado, que só o resolver lê. */
+async function formularioDoChamado(tx: Transacao, chamadoId: string) {
+  const [linha] = await tx
+    .select({ formulario: chamados.formulario, respostas: chamados.respostas })
+    .from(chamados)
+    .where(eq(chamados.id, chamadoId));
+  if (!linha) throw chamadoNaoEncontrado();
+  return { formulario: formularioDa(linha), respostas: linha.respostas };
+}
+
+/**
+ * A decisão do domínio, com a conta escolhida do passar, o estado de antes do desfazer, o formulário
+ * do resolver e quem resolveu, no reabrir.
+ */
 async function decidir(
   tx: Transacao,
   chamado: ChamadoParaAcao,
   quemAge: QuemAge,
   pedido: PedidoDoAtendimento,
-  { eventos, arvore }: { eventos: readonly EventoNaConversa[]; arvore: ArvoreDeLocais },
+  {
+    eventos,
+    arvore,
+    lido,
+  }: {
+    eventos: readonly EventoNaConversa[];
+    arvore: ArvoreDeLocais;
+    lido: { id: string; resolvidoPor: string | null };
+  },
 ): Promise<DecisaoDaAcao> {
   switch (pedido.acao) {
     case 'passar': {
@@ -176,7 +205,25 @@ async function decidir(
     }
     case 'assumir':
     case 'devolver':
+    case 'retomar':
       return decidirAcao(chamado, quemAge, { acao: pedido.acao, versao: pedido.versao });
+    case 'resolver':
+      return decidirAcao(chamado, quemAge, {
+        acao: 'resolver',
+        feito: pedido.feito,
+        ...(await formularioDoChamado(tx, lido.id)),
+        versao: pedido.versao,
+      });
+    case 'reabrir': {
+      // O chamado que não está resolvido não tem quem resolveu, e a célula o recusa antes.
+      const quemResolveu =
+        lido.resolvidoPor === null ? null : await lerContaQueAtende(tx, lido.resolvidoPor, arvore);
+      return decidirAcao(chamado, quemAge, {
+        acao: 'reabrir',
+        quemResolveu,
+        versao: pedido.versao,
+      });
+    }
     case 'mensagem':
     case 'esperar':
     case 'nota':
@@ -190,7 +237,8 @@ async function decidir(
 
 /**
  * A recusa da versão e o "mudou" do desfazer pedem que a tela releia o chamado; a do texto e a dos
- * anexos aparecem no campo, como as do formulário; o resto conflita.
+ * anexos aparecem no campo, como as do formulário: o "O que foi feito" no `feito`, e a mensagem e a
+ * nota no `texto`; o resto conflita, como o campo só da TI vazio, que se preenche na ficha.
  */
 function problemaDaRecusa(numero: number, recusa: RecusaDaAcao) {
   const frase = mensagemDaRecusaDaAcao(numero, recusa);
@@ -200,7 +248,7 @@ function problemaDaRecusa(numero: number, recusa: RecusaDaAcao) {
       return chamadoMudou(frase);
     case 'sem-texto':
     case 'texto-longo':
-      return dadosInvalidos({ texto: frase });
+      return dadosInvalidos({ [recusa.texto === 'feito' ? 'feito' : 'texto']: frase });
     case 'anexos-demais':
       return dadosInvalidos({ anexos: frase });
     default:
@@ -211,6 +259,30 @@ function problemaDaRecusa(numero: number, recusa: RecusaDaAcao) {
 /** A situação e quem atende, pelo nome, como a auditoria os mostra. */
 const naAuditoria = (situacao: SituacaoDoChamado, responsavel: string | null) =>
   responsavel === null ? { situacao } : { situacao, responsavel };
+
+/**
+ * A ação como as notificações a leem: as contas da triagem só quando o chamado cai nela, pelo
+ * devolver ou pelo reabrir de quem não atende mais; o reabrir, com quem recebe o chamado.
+ */
+async function comoNotifica(
+  tx: Transacao,
+  pedido: PedidoDoAtendimento,
+  responsavel: string | null,
+  arvore: ArvoreDeLocais,
+): Promise<AcaoQueNotifica> {
+  switch (pedido.acao) {
+    case 'passar':
+      return { acao: 'passar', para: pedido.para };
+    case 'devolver':
+      return { acao: 'devolver', contas: await contasDaTriagem(tx, arvore) };
+    case 'reabrir':
+      return responsavel === null
+        ? { acao: 'reabrir', para: null, contas: await contasDaTriagem(tx, arvore) }
+        : { acao: 'reabrir', para: responsavel };
+    default:
+      return { acao: pedido.acao };
+  }
+}
 
 /**
  * Grava a conversa da ação na ordem da mudança, uma linha por vez: o id vem do `uuidv7()` do banco,
@@ -275,7 +347,7 @@ export async function agirNoChamado(
     primeiraRespostaEm: lido.primeiraRespostaEm,
   };
   const quemAge = { id: contaId, alcance: alcance(acesso, 'chamados.atender', arvore) };
-  const decisao = await decidir(tx, chamado, quemAge, pedido, { eventos, arvore });
+  const decisao = await decidir(tx, chamado, quemAge, pedido, { eventos, arvore, lido });
   if (!decisao.aceita) throw problemaDaRecusa(lido.numero, decisao.recusa);
 
   // O horário só entra quando o relógio para ou volta, lido depois da trava do chamado (decisão 3).
@@ -292,6 +364,17 @@ export async function agirNoChamado(
           momento,
           await lerHorarioDaTi(tx),
         );
+  // A resolução segue a situação, como o CHECK pede: o chamado que chega a Resolvido grava quem
+  // resolveu, quem age, e quando; o que sai dele a limpa, com a marca do estouro, para o reaberto que
+  // passar do prazo ser avisado de novo (decisão 12); o que fica nele não muda. Hoje a matriz recusa
+  // tudo no resolvido, fora o reabrir, e o "fica" protege quem resolveu de uma ação que passe por aqui
+  // sem mudar a situação (revisão da 4.14).
+  const resolucao =
+    decisao.situacao === 'resolvido' && lido.situacao !== 'resolvido'
+      ? { resolvidoEm: momento, resolvidoPor: contaId }
+      : decisao.situacao !== 'resolvido' && lido.situacao === 'resolvido'
+        ? { resolvidoEm: null, resolvidoPor: null, estouroAvisadoEm: null }
+        : {};
   const versao = decisao.sobeAVersao ? lido.versao + 1 : lido.versao;
   await tx
     .update(chamados)
@@ -301,6 +384,7 @@ export async function agirNoChamado(
       responsavelDesde: desdeDeQuemAtende(chamado, decisao, momento),
       ...relogio,
       ...(decisao.cumpreAPrimeiraResposta ? { primeiraRespostaEm: momento } : {}),
+      ...resolucao,
       versao,
     })
     .where(eq(chamados.id, lido.id));
@@ -337,15 +421,13 @@ export async function agirNoChamado(
     });
   }
 
-  const comoNotifica: AcaoQueNotifica =
-    pedido.acao === 'passar'
-      ? { acao: 'passar', para: pedido.para }
-      : pedido.acao === 'devolver'
-        ? { acao: 'devolver', contas: await contasDaTriagem(tx, arvore) }
-        : { acao: pedido.acao };
   await notificar(
     tx,
-    notificacoesDaAcao({ numero: lido.numero, titulo: lido.titulo, locais }, comoNotifica, contaId),
+    notificacoesDaAcao(
+      { numero: lido.numero, titulo: lido.titulo, locais },
+      await comoNotifica(tx, pedido, decisao.responsavel, arvore),
+      contaId,
+    ),
     momento,
     enviar ? { enviar } : {},
   );

@@ -122,11 +122,11 @@ A resposta pronta que espera a resposta (requisito "Respostas prontas") SHALL va
 
 **Assumir** SHALL dar o retorno "Você assumiu o #1042." com "Desfazer". **Desfazer** SHALL voltar o chamado à situação e a quem estava com ele antes, se nenhuma ação que mude a situação ou quem atende, nem a troca do ativo, aconteceu depois do assumir. A mensagem, a nota, o título e os campos da TI SHALL NOT impedir o desfazer.
 
-**Resolver** SHALL pedir "O que foi feito", de 1 a 2.000 caracteres, que vai à conversa como mensagem para a pessoa, e guardar quem resolveu e quando.
+**Resolver** SHALL pedir "O que foi feito", de 1 a 2.000 caracteres, que vai à conversa como mensagem para a pessoa, e guardar quem resolveu e quando. Quem resolveu SHALL ser quem age, mesmo no chamado que está com outra pessoa: é a ela que o chamado volta ao ser reaberto. **Reabrir** SHALL limpar quem resolveu e quando.
 
 A primeira mensagem para a pessoa SHALL cumprir o prazo da primeira resposta (requisito "Prazo do chamado"): a mensagem, com ou sem esperar a resposta, e o "O que foi feito" da resolução. A nota SHALL NOT cumpri-lo.
 
-Cada ação SHALL gravar um evento na conversa, com quem fez e quando, como "Ana assumiu · 09:40" e "Aguardando Fernanda · 09:21 · o relógio parou". O evento do assumir SHALL dizer há quanto tempo o chamado estava na triagem, ou com quem estava, como "Ana Souza assumiu o chamado · 09:40 · estava há 2 h na triagem". O desfazer SHALL devolver também esse tempo: o chamado volta à triagem, ou a quem estava com ele, desde quando estava antes do assumir. A mensagem e a nota SHALL entrar na conversa como elas mesmas, sem evento. No chamado que já aguarda, "Enviar e esperar a resposta" SHALL valer como a mensagem, sem evento, porque nem a situação nem quem atende mudam, e o relógio segue parado desde a espera.
+Cada ação SHALL gravar um evento na conversa, com quem fez e quando, como "Ana assumiu · 09:40" e "Aguardando Fernanda · 09:21 · o relógio parou". O evento do assumir SHALL dizer há quanto tempo o chamado estava na triagem, ou com quem estava, como "Ana Souza assumiu o chamado · 09:40 · estava há 2 h na triagem". O desfazer SHALL devolver também esse tempo: o chamado volta à triagem, ou a quem estava com ele, desde quando estava antes do assumir. No chamado reaberto, esse tempo SHALL contar da reabertura, e não de antes da resolução. A mensagem e a nota SHALL entrar na conversa como elas mesmas, sem evento. No chamado que já aguarda, "Enviar e esperar a resposta" SHALL valer como a mensagem, sem evento, porque nem a situação nem quem atende mudam, e o relógio segue parado desde a espera.
 
 A ação que grava mais de uma entrada SHALL gravá-las nesta ordem:
 - "Enviar e esperar a resposta" na triagem: o assumir, a mensagem e a espera;
@@ -143,7 +143,7 @@ As recusas SHALL ser:
 - "O chamado #1042 não está aguardando.", ao retomar;
 - "O chamado #1042 não está resolvido.", ao reabrir;
 - "O chamado mudou depois. Confira antes de desfazer.", no desfazer depois de outra ação;
-- "O chamado #1042 mudou. Confira antes de assumir.", e o mesmo com "passar" e "devolver", na ação feita pela tela que mostrava o chamado de antes de outra ação que mudou a situação ou quem atende, ou da troca do ativo. Assim, duas pessoas não passam o mesmo chamado ao mesmo tempo sem saber;
+- "O chamado #1042 mudou. Confira antes de assumir.", e o mesmo com "passar", "devolver", "retomar", "resolver" e "reabrir", na ação feita pela tela que mostrava o chamado de antes de outra ação que mudou a situação ou quem atende, ou da troca do ativo. Assim, duas pessoas não agem no mesmo chamado ao mesmo tempo sem saber, como ao passar o mesmo chamado ou ao resolver o que a outra acabou de assumir;
 - "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio que a condição dele mostra, o primeiro na ordem do formulário, com o nome no resumo dele ou, sem ele, o rótulo sem o "?";
 - "Escreva o que foi feito." e "Use até 2.000 caracteres.", na resolução.
 
@@ -500,11 +500,11 @@ Virar OS e pedir toner SHALL NOT mudar a situação do chamado. Num chamado reso
 ### Requirement: Notificações dos chamados
 
 Os chamados SHALL notificar pela notificação da plataforma (spec notificacoes), com a origem "Chamados" e o endereço do chamado:
-- **o chamado passado a uma conta,** por outra pessoa ou pelo atendimento do tipo, a essa conta, na severidade Informação: "Chamado #1043 com você: Impressora manchando";
-- **o chamado que cai na triagem,** a cada conta que atende os locais dele, fora quem abriu ou devolveu, na severidade Informação: "Chamado #1043 na triagem: Impressora manchando";
+- **o chamado passado a uma conta,** por outra pessoa ou pelo atendimento do tipo, e o reaberto por outra pessoa, que volta a quem o resolveu, a essa conta, na severidade Informação: "Chamado #1043 com você: Impressora manchando";
+- **o chamado que cai na triagem,** a cada conta que atende os locais dele, fora quem abriu, devolveu ou reabriu, na severidade Informação: "Chamado #1043 na triagem: Impressora manchando";
 - **o prazo estourado** (requisito "Prazo estourado"), na severidade Atenção.
 
-Quem assume ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu.
+Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar: quem atende não muda, e nada cai na triagem.
 
 #### Scenario: Passado a Renato
 - **WHEN** Ana passa o #1038 a Renato
@@ -513,6 +513,10 @@ Quem assume ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do pró
 #### Scenario: Desfazer sem aviso
 - **WHEN** Ana assume o #1033, que estava com Renato, e desfaz
 - **THEN** o #1033 volta a Renato, e nem Renato nem Ana recebem a notificação
+
+#### Scenario: Reaberto por outra pessoa
+- **WHEN** Diego reabre o #1035, que Ana resolveu
+- **THEN** o #1035 volta a Ana, que recebe "Chamado #1035 com você", com o título dele, e Diego não recebe nada
 
 ### Requirement: Permissões, auditoria e eventos dos chamados
 

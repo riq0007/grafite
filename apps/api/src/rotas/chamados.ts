@@ -1,8 +1,8 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.13): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.14): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
 // quem abre e para a prévia do colaborador de quem configura; o quadro, a lista dos prazos e a ficha
-// do chamado, com `chamados.ver`; e as ações do atendimento, as que mudam quem atende e a conversa,
-// com `chamados.atender`. As
+// do chamado, com `chamados.ver`; e as ações do atendimento, as que mudam quem atende, a conversa, o
+// fim e a volta, com `chamados.atender`. As
 // regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
 // `chamados/prazos.ts`, `chamados/ficha.ts` e `chamados/acoes.ts`; aqui, o formato do pedido e da
 // resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
@@ -401,6 +401,18 @@ const PedidoDoDesfazer = z
   })
   .meta({ id: 'PedidoDoDesfazerDoChamado' });
 
+const PedidoDoResolver = z
+  .object({
+    /**
+     * O que foi feito, que vai à pessoa, sem os espaços das pontas, com até 2.000 caracteres: o vazio
+     * e o longo são recusados pelo domínio, no campo `feito`.
+     */
+    feito: z.string().default(''),
+    /** A versão que a tela mostra; a que o chamado não tem mais é recusada com o `chamado-mudou`. */
+    versao: VersaoDoChamado.optional(),
+  })
+  .meta({ id: 'PedidoDoResolverDoChamado' });
+
 /** O id de um anexo, como o envio o devolveu. */
 const IdDoAnexo = z.uuid();
 
@@ -564,7 +576,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       ),
   );
 
-  // As ações do atendimento (tarefas 4.12 e 4.13), com `chamados.atender`, cada uma com o pedido
+  // As ações do atendimento (tarefas 4.12 a 4.14), com `chamados.atender`, cada uma com o pedido
   // dela, gravadas pelo `agirNoChamado`.
   const agir = (requisicao: FastifyRequest, numero: number, pedido: PedidoDoAtendimento) =>
     naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
@@ -665,4 +677,51 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       (requisicao) => agir(requisicao, requisicao.params.numero, { acao, ...requisicao.body }),
     );
   }
+
+  // O fim e a volta (tarefa 4.14): retomar o que aguarda a pessoa, resolver com o que foi feito e
+  // reabrir o resolvido, com a versão que a tela mostra.
+  app.post(
+    '/chamados/:numero/retomar',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Retomar o chamado que aguarda a pessoa: ele volta ao atendimento',
+        params: DA_ACAO.params,
+        body: PedidoDaAcao,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      agir(requisicao, requisicao.params.numero, { acao: 'retomar', ...requisicao.body }),
+  );
+
+  app.post(
+    '/chamados/:numero/resolver',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Resolver o chamado, com o que foi feito, que vai à pessoa',
+        params: DA_ACAO.params,
+        body: PedidoDoResolver,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      agir(requisicao, requisicao.params.numero, { acao: 'resolver', ...requisicao.body }),
+  );
+
+  app.post(
+    '/chamados/:numero/reabrir',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Reabrir o chamado resolvido: ele volta a quem resolveu, ou à triagem',
+        params: DA_ACAO.params,
+        body: PedidoDaAcao,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      agir(requisicao, requisicao.params.numero, { acao: 'reabrir', ...requisicao.body }),
+  );
 };
