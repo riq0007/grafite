@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
   conferirHorario,
   type DiaDaSemana,
@@ -376,6 +376,129 @@ describe('momentoEmQueAlcanca', () => {
     expect(momentoEmQueAlcanca(sp('2026-11-17T09:40'), 10 * MINUTO, 'horario', horario)).toEqual(
       sp('2027-01-24T08:01'),
     );
+  });
+
+  it('o maior prazo numa janela de um minuto vence sem andar o caminho todo dia a dia', () => {
+    // O prazo de 999 dias copiado de um horário de dia inteiro, com o horário trocado depois para
+    // um minuto por dia útil, das 10:00 às 10:01: 1.438.560 janelas, 287.712 semanas.
+    const horario: HorarioDaTi = { ...PADRAO, inicio: 10 * 60, fim: 10 * 60 + 1 };
+    // O primeiro ano e a última semana leem o relógio do fuso pouco mais de mil vezes; andar dia a
+    // dia o caminho todo leria milhões, e o teste para na leitura a mais.
+    const LEITURAS = 2_000;
+    const original = Intl.DateTimeFormat.prototype.formatToParts;
+    let leituras = 0;
+    const espiao = vi
+      .spyOn(Intl.DateTimeFormat.prototype, 'formatToParts')
+      .mockImplementation(function (this: Intl.DateTimeFormat, data) {
+        leituras += 1;
+        if (leituras > LEITURAS) {
+          throw new Error(`O vencimento leu o relógio do fuso mais de ${LEITURAS} vezes.`);
+        }
+        return original.call(this, data);
+      });
+    try {
+      // A última janela é a da sexta-feira da semana 287.712, às 10:01 em São Paulo (13:01 em UTC).
+      expect(
+        momentoEmQueAlcanca(sp('2026-11-16T08:00'), 999 * 24 * HORA, 'horario', horario),
+      ).toEqual(new Date(Date.UTC(2026, 10, 16 + 287_711 * 7 + 4, 13, 1)));
+    } finally {
+      espiao.mockRestore();
+    }
+  });
+
+  it('depois do primeiro ano, pula as semanas e acerta a hora com o horário de verão', () => {
+    // 999 janelas das 08:00 às 18:00 em Nova York, desde a segunda, 16/11/2026, às 08:00 (UTC−5):
+    // 199 semanas e 4 janelas. A última é a da quinta, 12/09/2030, que acaba às 18:00 no horário
+    // de verão (UTC−4), como o vencimento andado dia a dia.
+    expect(
+      momentoEmQueAlcanca(
+        new Date('2026-11-16T08:00:00-05:00'),
+        999 * 10 * HORA,
+        'horario',
+        NOVA_YORK,
+      ),
+    ).toEqual(new Date('2030-09-12T18:00:00-04:00'));
+  });
+
+  it('no primeiro ano, a janela que o horário de verão encurta conta como foi', () => {
+    // Todos os dias, das 00:00 às 23:59, em Nova York, desde a segunda, 01/03/2027: 21 janelas.
+    // No domingo, 14/03, o relógio pula das 02:00 para as 03:00, e a janela tem 1 h a menos: a
+    // última hora fica para a segunda, 22/03, e não para o fim do domingo, 21/03.
+    const horario: HorarioDaTi = {
+      ...NOVA_YORK,
+      dias: [1, 2, 3, 4, 5, 6, 7],
+      inicio: 0,
+      fim: 1439,
+    };
+    expect(
+      momentoEmQueAlcanca(
+        new Date('2027-03-01T00:00:00-05:00'),
+        21 * 1439 * MINUTO,
+        'horario',
+        horario,
+      ),
+    ).toEqual(new Date('2027-03-22T01:00:00-04:00'));
+  });
+
+  it('a última semana anda além dos 7 dias quando o horário de verão encurta uma janela', () => {
+    // Todos os dias, das 00:00 às 23:59, em Nova York, desde a segunda, 02/03/2026: o primeiro ano,
+    // de 53 semanas, conta as duas trocas de 2026, que se anulam, e falta uma semana de janelas.
+    // Nela, o domingo, 14/03/2027, tem 1 h a menos, e a última hora fica para a segunda, 15/03.
+    const horario: HorarioDaTi = {
+      ...NOVA_YORK,
+      dias: [1, 2, 3, 4, 5, 6, 7],
+      inicio: 0,
+      fim: 1439,
+    };
+    expect(
+      momentoEmQueAlcanca(
+        new Date('2026-03-02T00:00:00-05:00'),
+        54 * 7 * 1439 * MINUTO,
+        'horario',
+        horario,
+      ),
+    ).toEqual(new Date('2027-03-15T01:00:00-04:00'));
+  });
+
+  it('o vencimento de dentro do primeiro ano conta a troca do meio do caminho', () => {
+    // Todos os dias, das 00:00 às 23:59, em Nova York, desde a segunda, 09/03/2026: 52 semanas de
+    // janelas. No domingo, 01/11/2026, a 34ª semana, o relógio volta das 02:00 para a 01:00, e a
+    // janela tem 1 h a mais: a última janela, a do domingo, 07/03/2027, acaba 1 h mais cedo.
+    const horario: HorarioDaTi = {
+      ...NOVA_YORK,
+      dias: [1, 2, 3, 4, 5, 6, 7],
+      inicio: 0,
+      fim: 1439,
+    };
+    expect(
+      momentoEmQueAlcanca(
+        new Date('2026-03-09T00:00:00-04:00'),
+        52 * 7 * 1439 * MINUTO,
+        'horario',
+        horario,
+      ),
+    ).toEqual(new Date('2027-03-07T22:59:00-05:00'));
+  });
+
+  it('a troca na última semana do primeiro ano conta, também no vencimento que passa dele', () => {
+    // Todos os dias, das 00:00 às 23:59, em Nova York, desde a segunda, 02/11/2026: 54 semanas de
+    // janelas. O primeiro ano conta as duas trocas de 2027: a de 14/03, com 1 h a menos, e a do
+    // domingo, 07/11, o último dia dele, com 1 h a mais. Elas se anulam, e a última janela, a do
+    // domingo, 14/11/2027, acaba às 23:59, como no vencimento andado dia a dia.
+    const horario: HorarioDaTi = {
+      ...NOVA_YORK,
+      dias: [1, 2, 3, 4, 5, 6, 7],
+      inicio: 0,
+      fim: 1439,
+    };
+    expect(
+      momentoEmQueAlcanca(
+        new Date('2026-11-02T00:00:00-05:00'),
+        54 * 7 * 1439 * MINUTO,
+        'horario',
+        horario,
+      ),
+    ).toEqual(new Date('2027-11-14T23:59:00-05:00'));
   });
 
   it('com o horário mudado depois da abertura, o prazo copiado conta até o fim novo', () => {

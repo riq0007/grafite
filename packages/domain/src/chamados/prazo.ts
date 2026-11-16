@@ -296,11 +296,21 @@ export function segundosNoHorario(
  */
 const SEGUNDOS_NO_MAIOR_PRAZO = MAIOR_PRAZO_EM_MINUTOS * 60;
 
+/** Os dias que o vencimento anda um a um, no horário da TI, antes de pular semanas: 53 semanas. */
+const DIAS_ANDADOS_UM_A_UM = 53 * 7;
+
+/**
+ * O teto da última semana, depois das semanas puladas: a janela que o horário de verão encurta
+ * pede a seguinte, e um horário conferido nunca passa dele.
+ */
+const DIAS_NA_ULTIMA_SEMANA = 3 * 7;
+
 /**
  * O momento em que o relógio, contando desde `desde`, completa os segundos que faltam: em horas
- * corridas, a soma; no horário da TI, andando pelas janelas dos dias do horário. O tempo que acaba
- * no fim de uma janela vence no fim dela. O tempo que não é de um prazo (sem número ou maior que o
- * maior prazo) e o horário sem janela são recusados, porque o laço andaria para sempre.
+ * corridas, a soma; no horário da TI, andando pelas janelas dos dias do horário, dia a dia no
+ * primeiro ano e, depois dele, pelas semanas inteiras de uma vez, com a última dia a dia. O tempo
+ * que acaba no fim de uma janela vence no fim dela. O tempo que não é de um prazo (sem número ou
+ * maior que o maior prazo) e o horário sem janela são recusados, porque o laço andaria para sempre.
  */
 export function momentoEmQueAlcanca(
   desde: Date,
@@ -314,26 +324,39 @@ export function momentoEmQueAlcanca(
   if (segundosQueFaltam <= 0) return new Date(desde.getTime());
   if (modo === 'corridas') return new Date(desde.getTime() + segundosQueFaltam * 1000);
   const comprimento = (horario.fim - horario.inicio) * 60_000;
-  if (!horario.dias.some(ehDiaDaSemana) || !(comprimento > 0)) {
+  const diasDoHorario = new Set(horario.dias.filter(ehDiaDaSemana));
+  if (diasDoHorario.size === 0 || !(comprimento > 0)) {
     throw new RangeError('O horário da TI não tem janela.');
   }
   let falta = segundosQueFaltam * 1000;
   const cursor = desde.getTime();
-  const primeiro = meiaNoiteDoDia(desde, horario.fuso);
-  // Toda semana tem um dia do horário, e cada um conta uma janela inteira, fora o primeiro e os
-  // que o horário de verão encurta. O teto dá o dobro dessas semanas: um horário conferido nunca
-  // chega a ele, e o que chegasse é recusado, em vez de travar o processo.
-  const teto = primeiro + 14 * (Math.ceil(falta / comprimento) + 2) * MS_POR_DIA;
-  for (let dia = primeiro; dia <= teto; dia += MS_POR_DIA) {
-    const doCalendario = diaDoCalendario(dia);
-    if (!horario.dias.includes(doCalendario.semana)) continue;
-    const janela = janelaDoDia(doCalendario, horario);
-    if (janela.fim <= cursor) continue;
-    const comeco = Math.max(janela.inicio, cursor);
-    const cabe = janela.fim - comeco;
-    if (cabe >= falta) return new Date(comeco + falta);
-    falta -= cabe;
-  }
+  let dia = meiaNoiteDoDia(desde, horario.fuso);
+  // Anda dia a dia pelas janelas até antes do dia `ate` e devolve o vencimento, se chega a ele.
+  const andarAte = (ate: number): Date | null => {
+    for (; dia < ate; dia += MS_POR_DIA) {
+      const doCalendario = diaDoCalendario(dia);
+      if (!diasDoHorario.has(doCalendario.semana)) continue;
+      const janela = janelaDoDia(doCalendario, horario);
+      if (janela.fim <= cursor) continue;
+      const comeco = Math.max(janela.inicio, cursor);
+      const cabe = janela.fim - comeco;
+      if (cabe >= falta) return new Date(comeco + falta);
+      falta -= cabe;
+    }
+    return null;
+  };
+  // O primeiro ano anda dia a dia, exato também com o horário de verão.
+  const noPrimeiroAno = andarAte(dia + DIAS_ANDADOS_UM_A_UM * MS_POR_DIA);
+  if (noPrimeiroAno) return noPrimeiroAno;
+  // Depois dele, as semanas inteiras de uma vez, deixando a última para andar dia a dia: toda
+  // semana tem cada dia do horário uma vez, com a janela inteira, fora o horário de verão, que nas
+  // semanas puladas só muda a hora de um vencimento que já passa de um ano.
+  const porSemana = diasDoHorario.size * comprimento;
+  const semanas = Math.ceil(falta / porSemana) - 1;
+  dia += semanas * 7 * MS_POR_DIA;
+  falta -= semanas * porSemana;
+  const naUltimaSemana = andarAte(dia + DIAS_NA_ULTIMA_SEMANA * MS_POR_DIA);
+  if (naUltimaSemana) return naUltimaSemana;
   throw new RangeError('O tempo que falta não cabe no horário da TI.');
 }
 
