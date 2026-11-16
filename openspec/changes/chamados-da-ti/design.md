@@ -206,7 +206,10 @@ O público dos eventos é o `publicoDoChamado`, igual ao `publicoDaOrdem`, com o
 
 ### 6. Os tipos de fábrica, numa lista só
 
-`TIPOS_DE_CHAMADO_DE_FABRICA` (domínio) traz os 9 tipos com o formulário de cada um. O `organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria. A migration os grava nas organizações que já existem, como a `0057_categorias_de_software`. O texto da migration sai de um gerador conferido por um teste contra a lista do domínio, para os dois não se afastarem.
+`TIPOS_DE_CHAMADO_DE_FABRICA` (domínio) traz os 9 tipos com o formulário de cada um. O `organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria. A migration os grava nas organizações que já existem, como a `0057_categorias_de_software`. O texto da migration sai de um gerador conferido por um teste contra a lista do domínio, para os dois não se afastarem:
+- **O gerador** é o `sqlDosTiposDeFabrica`, no `apps/api/src/chamados/fabrica.ts`, com as tabelas e as colunas tiradas do schema. Ele fica na API porque o `@grafite/db` não depende do domínio. O `linhasDosTiposDeFabrica`, ao lado, dá as mesmas linhas ao `organizacao criar`.
+- **A `0062_tipos_de_chamado_de_fabrica`** é o texto dele, e o teste ao lado do gerador a confere. Depois de solta numa versão, a 0062 não muda. Quando a lista mudar, o teste da igualdade e o `sqlDosTiposDeFabrica` saem, e a change que mudar a lista decide se as organizações que já existem recebem algo, numa migration nova: uma versão nova não recria os tipos de fábrica (spec tipos-de-chamado).
+- **O teste da migration**, no `@grafite/db`, roda a 0062 sobre duas organizações de antes e confere os tipos gravados com os valores da spec. Ele segue cobrindo a 0062 depois que o teste da igualdade sair.
 
 Os formulários de fábrica:
 

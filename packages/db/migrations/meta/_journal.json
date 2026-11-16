@@ -435,6 +435,13 @@
       "when": 1794799912314,
       "tag": "0061_apoio_dos_chamados",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1794830787650,
+      "tag": "0062_tipos_de_chamado_de_fabrica",
+      "breakpoints": true
     }
   ]
 }

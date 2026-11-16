@@ -1397,6 +1397,12 @@ Cada organização pode desligar um módulo opcional, para usar só o que precis
 ```ts
 // packages/domain/src/modulos/modulos.ts (trecho)
 export const MODULOS_OPCIONAIS = [
+  {
+    id: 'chamados',
+    nome: 'Chamados',
+    descricao:
+      'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
+  },
   { id: 'ativos', nome: 'Ativos', descricao: 'O catálogo, o cadastro e a lista dos ativos.' },
   {
     id: 'cofre',

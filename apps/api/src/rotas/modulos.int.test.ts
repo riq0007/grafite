@@ -62,6 +62,14 @@ describe('módulos opcionais', () => {
     expect(r.statusCode).toBe(200);
     expect(r.json()).toEqual({
       modulos: [
+        // O módulo da change chamados-da-ti, o primeiro da lista.
+        {
+          id: 'chamados',
+          nome: 'Chamados',
+          descricao:
+            'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
+          ligado: true,
+        },
         {
           id: 'ativos',
           nome: 'Ativos',
@@ -111,7 +119,9 @@ describe('módulos opcionais', () => {
   it('desliga o Ativos, com a auditoria e o evento, e a repetida não grava nada', async () => {
     const r = await ligar(false);
     expect(r.statusCode).toBe(200);
-    expect(r.json().modulos[0]).toMatchObject({ id: 'ativos', ligado: false });
+    const modulos: { id: string; ligado: boolean }[] = r.json().modulos;
+    expect(modulos.find(({ id }) => id === 'ativos')).toMatchObject({ ligado: false });
+    expect(modulos.filter(({ ligado }) => !ligado).map(({ id }) => id)).toEqual(['ativos']);
     expect(await auditoriaDaRequisicao(api, org, r)).toMatchObject([
       { acao: 'modulo.desligado', alvoTipo: 'modulo', dados: { modulo: 'Ativos' } },
     ]);
