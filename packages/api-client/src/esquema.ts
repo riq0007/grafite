@@ -27509,6 +27509,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/quadro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O quadro: a triagem, a carga de cada pessoa da TI e os resolvidos hoje */
+        get: {
+            parameters: {
+                query: {
+                    fuso: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuadroDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -34700,6 +34783,39 @@ export interface components {
                 motivo: "responsavel" | "local";
             }[];
         };
+        QuadroDosChamadosInput: {
+            triagem: {
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+            };
+            colunas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                naoAtendeMais: boolean;
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+                pedacos: {
+                    total: number;
+                    cheios: number;
+                };
+                resolvidosHoje: number[];
+                atende: {
+                    organizacao: boolean;
+                    locais: string[];
+                };
+            }[];
+            resolvidosHoje: number[];
+            contandoSoOsLocaisQueVe: boolean;
+        };
         AnexoEnviadoInput: {
             /** Format: uuid */
             id: string;
@@ -39545,6 +39661,39 @@ export interface components {
                 /** @enum {string} */
                 motivo: "responsavel" | "local";
             }[];
+        };
+        QuadroDosChamados: {
+            triagem: {
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+            };
+            colunas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                naoAtendeMais: boolean;
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+                pedacos: {
+                    total: number;
+                    cheios: number;
+                };
+                resolvidosHoje: number[];
+                atende: {
+                    organizacao: boolean;
+                    locais: string[];
+                };
+            }[];
+            resolvidosHoje: number[];
+            contandoSoOsLocaisQueVe: boolean;
         };
         AnexoEnviado: {
             /** Format: uuid */

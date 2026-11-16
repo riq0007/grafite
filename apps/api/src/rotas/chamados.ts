@@ -1,11 +1,13 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 e 4.8): a abertura pela
-// TI, com `chamados.atender`, e as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
-// quem abre e para a prévia do colaborador de quem configura. As regras ficam em
-// `chamados/abertura.ts` e `chamados/sugestoes.ts`; aqui, o formato do pedido e da resposta. A
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.9): a abertura pela
+// TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
+// quem abre e para a prévia do colaborador de quem configura; e o quadro, com `chamados.ver`. As
+// regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts` e `chamados/quadro.ts`; aqui, o
+// formato do pedido e da resposta. A
 // pessoa e o tipo da abertura chegam como ids, e o vazio deles é recusado pela abertura, com as
 // outras recusas dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
+  fusoReconhecido,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
   RECUSA_DO_FORMULARIO,
   SITUACOES_DO_CHAMADO,
@@ -15,6 +17,7 @@ import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
+import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { RespostaDeProblema } from '../problemas.ts';
@@ -83,6 +86,50 @@ const SugestoesDoChamado = z
   })
   .meta({ id: 'SugestoesDoChamado' });
 
+const FUSO_DESCONHECIDO = 'Fuso horário desconhecido.';
+
+const PedidoDoQuadro = z.object({
+  /** O fuso de quem olha, que diz o que é hoje. */
+  fuso: z
+    .string({ error: FUSO_DESCONHECIDO })
+    .refine(fusoReconhecido, { error: FUSO_DESCONHECIDO }),
+});
+
+/** O aberto há mais tempo, pela abertura: "mais antigo #1041, há 17 h". */
+const MaisAntigo = z.object({ numero: z.int(), abertoEm: z.iso.datetime() }).nullable();
+
+const QuadroDosChamados = z
+  .object({
+    /** A coluna "Sem responsável". */
+    triagem: z.object({ abertos: z.array(z.int()), maisAntigo: MaisAntigo }),
+    /** As pessoas da TI pelo nome, e depois as colunas de quem não atende mais, também pelo nome. */
+    colunas: z.array(
+      z.object({
+        conta: z.uuid(),
+        nome: z.string(),
+        /** A coluna dos chamados que a conta não atende mais; a mesma conta pode ter as duas. */
+        naoAtendeMais: z.boolean(),
+        /** Os Em atendimento e os Aguardando o colaborador, pelo número. */
+        abertos: z.array(z.int()),
+        maisAntigo: MaisAntigo,
+        /** A barra: tantos pedaços quanto a carga cheia, um cheio por chamado. */
+        pedacos: z.object({ total: z.int(), cheios: z.int() }),
+        resolvidosHoje: z.array(z.int()),
+        /**
+         * Onde a conta atende os chamados agora: a organização inteira ou as raízes dos ramos, como
+         * no acesso da sessão. A tela confere por ele, com a árvore, a coluna que não recebe o
+         * chamado arrastado ("Renato não atende Jundiaí").
+         */
+        atende: z.object({ organizacao: z.boolean(), locais: z.array(z.uuid()) }),
+      }),
+    ),
+    /** Todos os resolvidos hoje que a conta vê, para a contagem do Início. */
+    resolvidosHoje: z.array(z.int()),
+    /** Se a tela diz "Contando só os chamados dos locais que você vê.". */
+    contandoSoOsLocaisQueVe: z.boolean(),
+  })
+  .meta({ id: 'QuadroDosChamados' });
+
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
 export const rotasDosChamados: FastifyPluginAsyncZod<{
@@ -149,4 +196,25 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
         ),
     );
   }
+
+  app.get(
+    '/chamados/quadro',
+    {
+      config: { permissao: 'chamados.ver' },
+      schema: {
+        summary: 'O quadro: a triagem, a carga de cada pessoa da TI e os resolvidos hoje',
+        querystring: PedidoDoQuadro,
+        response: { 200: QuadroDosChamados, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        quadroDosChamados(tx, {
+          acesso: sessaoDa(requisicao).acesso,
+          arvore: await lerArvore(tx),
+          fuso: requisicao.query.fuso,
+          agora: agora(),
+        }),
+      ),
+  );
 };

@@ -665,6 +665,7 @@ export {
   nomeNormalizadoDoFornecedor,
   validarFornecedor,
 } from './fornecedores/fornecedor.ts';
+export { comecoDoDia } from './fuso.ts';
 export {
   type AtivoNoIndice,
   type CampoDoCasamento,

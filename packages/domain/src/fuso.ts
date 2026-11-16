@@ -84,3 +84,12 @@ export function instanteNoFuso(data: string, hora: string, fuso: string): Date {
   const [horas = 0, minutos = 0] = hora.split(':').map(Number);
   return instanteDoRelogio(ano, mes, dia, horas, minutos, fuso);
 }
+
+/**
+ * O começo do dia do momento no relógio do fuso: a meia-noite, ou a hora que o verão deixa no lugar
+ * dela. Os resolvidos hoje do quadro dos chamados contam a partir dele.
+ */
+export function comecoDoDia(momento: Date, fuso: string): Date {
+  const { ano, mes, dia } = relogioDoFuso(momento, fuso);
+  return instanteDoRelogio(ano, mes, dia, 0, 0, fuso);
+}
