@@ -26825,6 +26825,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/horario-da-ti": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O horário da TI, ou o padrão enquanto a organização não grava o dela */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HorarioDaTi"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Gravar o horário da TI, com os relógios que contam no horário fechados */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoHorarioDaTiInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HorarioDaTi"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -33949,6 +34099,20 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
+        HorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
         TipoDeChamadoInput: {
             /** Format: uuid */
             id: string;
@@ -38736,6 +38900,20 @@ export interface components {
         };
         AvisoDeTeste: {
             aparelhos: number;
+        };
+        HorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
         };
         TipoDeChamado: {
             /** Format: uuid */

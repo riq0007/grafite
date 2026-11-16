@@ -58,6 +58,7 @@ import { rotasDasAtribuicoes } from './rotas/atribuicoes.ts';
 import { rotasDaAuditoria } from './rotas/auditoria.ts';
 import { rotasDosCampos } from './rotas/campos.ts';
 import { rotasDosCanais } from './rotas/canais.ts';
+import { rotasDoHorarioDaTi } from './rotas/chamados-horario.ts';
 import { rotasDasRespostasProntas } from './rotas/chamados-respostas-prontas.ts';
 import { rotasDosTiposDeChamado } from './rotas/chamados-tipos.ts';
 import { rotasDoCofre } from './rotas/cofre.ts';
@@ -438,6 +439,7 @@ export async function criarApp({
       exigirModuloLigado(dosChamados, { banco, modulo: 'chamados' });
       await dosChamados.register(rotasDosTiposDeChamado, { banco, agora });
       await dosChamados.register(rotasDasRespostasProntas, { banco, agora });
+      await dosChamados.register(rotasDoHorarioDaTi, { banco, agora });
     });
     // O módulo Painéis, opcional: os painéis das VMs e a verificação (change painel-de-dashboards).
     await escopo.register(async (dosPaineis) => {

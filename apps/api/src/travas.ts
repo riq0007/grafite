@@ -6,7 +6,12 @@
 import type { Transacao } from '@grafite/db';
 import { sql } from 'drizzle-orm';
 
-export type Trava = 'acessos' | 'locais' | 'respostas-prontas' | `pacote:${string}`;
+export type Trava =
+  | 'acessos'
+  | 'locais'
+  | 'respostas-prontas'
+  | 'horario-da-ti'
+  | `pacote:${string}`;
 
 /** Espera a trava na organização da transação. Toda leitura que decide vem depois dela. */
 export async function travar(tx: Transacao, trava: Trava) {
