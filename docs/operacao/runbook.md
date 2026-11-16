@@ -611,27 +611,44 @@ O agente do GLPI que já está nas máquinas manda o inventário também ao Graf
 
 O agente aparece na lista no primeiro contato, com o IP e o horário. O inventário é ligado a um ativo ativo pela série ou hostname únicos. Para cadastrar computadores que não existem, configure **Cadastro automático de computadores** em **Administração › Agentes**, escolhendo um tipo com Inventário de hardware e, se necessário, um local de entrada. O cadastro ocorre no primeiro inventário completo. A opção **Ligar** continua disponível para revisão manual.
 
-Os campos de identificação, rede e hardware ficam com a origem "Agente do GLPI", e os campos travados não mudam. Os softwares aparecem na aba Softwares da ficha. Veja [o guia do agente](agente-glpi.md) para distribuição da raiz, teste pelo serviço e diagnóstico.
+Os campos de identificação, rede e hardware ficam com a origem "Agente do GLPI", e os campos travados não mudam. Os programas aparecem na aba Software da ficha, frente à base de pacotes. Veja [o guia do agente](agente-glpi.md) para distribuição da raiz, teste pelo serviço e diagnóstico.
 
-O caminho foi verificado com o agente do GLPI 1.21, o oficial: o primeiro contato (o PROLOG, que o Grafite responde como o servidor do GLPI), o inventário, a distribuição até "Concluída" e o "Pedir agora".
+O caminho foi verificado com o agente do GLPI 1.21, o oficial: o primeiro contato (o PROLOG, que o Grafite responde como o servidor do GLPI), o inventário, a distribuição até "Concluída" e o chamado pela porta 62354.
+
+**Agente sem contato:** o agente que não fala com o servidor há mais dias do que o prazo da organização aparece "Sem contato", e as distribuições esperam a máquina dele voltar, na fila. O prazo é de 2 dias de fábrica. Para mudar, use o "Mudar…" do "Prazo do sem contato", no cabeçalho de **Administração › Agentes**, de 1 a 30 dias.
 
 ### Distribuição de software
 
 O mesmo agente instala os pacotes da base do Grafite, pela tarefa Deploy dele, que vem na instalação padrão do agente para Windows. Nada novo vai para as máquinas.
 
-1. **Cadastre o pacote** em Ativos › Software, com a permissão "Administrar a base de software":
+1. **Cadastre o pacote** em **Gestão de ativos › Software › Base de pacotes**, com a permissão "Administrar a base de software":
    - o arquivo, até 512 MB;
    - o comando silencioso, que roda como o sistema, na pasta do arquivo, como `msiexec /i "7z2301-x64.msi" /qn /norestart`;
-   - os códigos de sucesso, de fábrica 0 e 3010 (o sucesso que pede reiniciar).
-2. **Distribua** pelo "Distribuir" do pacote, escolhendo as máquinas com o agente ligado. Cada máquina começa em "Aguardando o agente".
-3. **O agente pega a tarefa no próximo contato,** em até 24 horas. Ele baixa o arquivo em partes pelo mesmo endereço, confere cada parte, roda o comando e manda cada passo, que vai para o log da máquina.
-   - Para não esperar, use "Pedir agora" na ficha da distribuição. O Grafite chama o agente de cada máquina que aguarda, na porta 62354, e diz quantos responderam.
-   - O agente atende os servidores do `server` dele. Se o Grafite chega às máquinas por outro IP, acrescente esse IP ao `httpd-trust` do agente.
-   - A porta 62354 precisa estar liberada no firewall das máquinas para o servidor do Grafite. O MSI do agente a libera com `ADD_FIREWALL_EXCEPTION=1`.
-   - Os agentes que não respondem pegam a tarefa no próximo contato.
-4. **Acompanhe** em Ativos › Software › Distribuições: o progresso em texto e, na ficha, a situação, a etapa e o log de cada máquina. A ficha do ativo mostra as distribuições dele na aba Softwares.
+   - os códigos de sucesso, de fábrica 0 e 3010 (o sucesso que pede reiniciar);
+   - a categoria, das que a TI cria em "Categorias…", na base;
+   - o nome no inventário, que liga o pacote aos programas que o agente acha nas máquinas.
+2. **Distribua** pelo "Distribuir este pacote", na ficha do pacote, com a permissão "Distribuir software às máquinas". O assistente tem quatro passos:
+   - **Pacote:** qual distribuir;
+   - **Máquinas:** por local, por visão, pela busca ou pela lista colada;
+   - **Quando:** agora, na janela da noite (das 22h às 6h, que repete nas noites seguintes até instalar) ou num dia marcado, até daqui a um ano;
+   - **Conferir:** quantas máquinas vão instalar; quantas são puladas, por já terem a versão ou por já aguardarem o pacote noutra distribuição; e quantas estão sem contato e esperam na fila.
+3. **O Grafite chama o agente de cada máquina** na porta 62354, para ele pegar o pedido sem esperar o contato diário:
+   - ao criar a distribuição para agora, e no "Tentar de novo" de um pedido que já pode seguir;
+   - a cada 15 minutos, as máquinas cujo pedido já pode seguir: a janela da noite, a partir das 22:00, e o dia marcado. Cada máquina é chamada no máximo uma vez a cada 2 horas, e o log dela diz "Chamado às 22:00" ou "Chamado às 22:00, sem resposta".
 
-Um comando que sai com um código fora dos de sucesso deixa a máquina em "Falhou", com a saída do comando no log. Para tentar de novo, distribua outra vez às máquinas que falharam.
+   O agente baixa o arquivo em partes pelo mesmo endereço, confere cada parte, roda o comando e manda cada passo, que vai para o log da máquina.
+   - A porta 62354 precisa estar liberada no firewall das máquinas para o servidor do Grafite. O MSI do agente a libera com `ADD_FIREWALL_EXCEPTION=1`.
+   - O agente atende os servidores do `server` dele. Se o Grafite chega às máquinas por outro IP, acrescente esse IP ao `httpd-trust` do agente.
+   - O agente que não responde ao chamado pega o pedido no próximo contato. Com um pedido esperando a noite ou o dia marcado, o Grafite pede que o agente volte na primeira hora depois do início, em vez das 24 horas de sempre. A distribuição diz até quando ele volta.
+4. **Acompanhe** em **Gestão de ativos › Software › Distribuições**. A distribuição aberta mostra:
+   - o progresso;
+   - em "Precisa de você", as que falharam, com o código de saída explicado e "Tentar de novo", e as sem contato, com "Tirar da fila";
+   - as em andamento, com a etapa, e as concluídas;
+   - o log de cada máquina, que abre pelo nome dela, e o "Exportar".
+
+   A **Matriz**, no mesmo menu, mostra cada pacote em cada máquina, ou por local. A aba Software da ficha da máquina mostra os instalados frente à base e o "Instalar outro pacote nesta máquina".
+
+Um comando que sai com um código fora dos de sucesso deixa a máquina em "Falhou", com a saída do comando no log. O "Tentar de novo" põe a máquina de volta na fila. Um pacote inativado segura a fila dele: nenhuma máquina o instala até ele ser reativado.
 
 ## Coletor
 

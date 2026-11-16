@@ -52,5 +52,5 @@ Cada tarefa começa pelos testes, que reprovam pelo motivo certo, e vai à revis
 
 ## 6. Documentação e fim
 
-- [ ] 6.1 A documentação: a linha do S6 na spec mestre, o runbook (a porta 62354 acorda o agente no "Agora" e na janela da noite), o contrato de módulo, se mudar, e o `docs/mapa.md`. Verificar: o `scripts/mapa.test.ts` e o lint.
+- [x] 6.1 A documentação: a linha do S6 na spec mestre, o runbook (a porta 62354 acorda o agente no "Agora" e na janela da noite), o contrato de módulo, se mudar, e o `docs/mapa.md`. Verificar: o `scripts/mapa.test.ts` e o lint.
 - [ ] 6.2 A bateria inteira no CI do PR; o aviso ao usuário de que o "480m" do `expiration` se confere num agente de verdade, na VM, antes da release; e o arquivamento, com o "Muda junto com" do `docs/mapa.md` recalculado.

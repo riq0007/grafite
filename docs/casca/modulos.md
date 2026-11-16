@@ -49,7 +49,7 @@ A casca decide como o menu abre:
 - **Toque:** abre no primeiro toque.
 - **Celular:** abre num painel que sobe de baixo.
 
-A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importações, do software e dos backups do Control iD, cada item com a permissão dele. A lista das seções, a mesma da janela do catálogo, monta os filhos:
+A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importações e dos submenus do software e do Control iD, cada item com a permissão dele. A lista das seções, a mesma da janela do catálogo, monta os filhos do catálogo:
 
 ```ts
 // apps/web/src/modulos/gestao/modulo.ts (trecho)
@@ -60,8 +60,16 @@ A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importa�
       filhos: SECOES_DO_CATALOGO.map((secao) => ({ rotulo: secao.nome, destino: secao.endereco })),
     },
     { rotulo: 'Importações', destino: '/gestao/importacoes', permissoes: ['ativos.editar'] },
-    // A base de software e as distribuições às máquinas (change distribuicao-de-software).
-    { rotulo: 'Software', destino: '/gestao/software', permissoes: ['software.distribuir'] },
+    // A base de software, as distribuições às máquinas e a matriz (change software-por-pacote).
+    {
+      rotulo: 'Software',
+      permissoes: ['software.distribuir'],
+      filhos: [
+        { rotulo: 'Base de pacotes', destino: '/gestao/software' },
+        { rotulo: 'Distribuições', destino: '/gestao/software/distribuicoes' },
+        { rotulo: 'Matriz', destino: '/gestao/software/matriz' },
+      ],
+    },
     // Os backups dos controles de acesso (change p5a-backup-do-control-id).
     {
       rotulo: 'Control iD',
