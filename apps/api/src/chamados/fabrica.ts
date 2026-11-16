@@ -1,15 +1,16 @@
 // Os tipos de chamado de fábrica no banco (spec tipos-de-chamado, "Tipos de fábrica"; change
 // chamados-da-ti, design, decisão 6): as linhas que saem da lista do domínio, Em uso e na ordem
-// dela, e o texto da migration que as grava nas organizações que já existiam. As tabelas e as
-// colunas vêm do schema, e o teste ao lado confere a migration contra a lista, para as duas não se
-// afastarem.
-import { organizacoes, tiposDeChamado } from '@grafite/db';
+// dela, a gravação delas na organização nova, pelo `organizacao criar`, e o texto da migration que
+// as grava nas organizações que já existiam. As tabelas e as colunas vêm do schema, e o teste ao
+// lado confere a migration contra a lista, para as duas não se afastarem.
+import { organizacoes, type Transacao, tiposDeChamado } from '@grafite/db';
 import {
   normalizarTexto,
   TIPOS_DE_CHAMADO_DE_FABRICA,
   type TipoDeChamadoDeFabrica,
 } from '@grafite/domain';
-import { getTableColumns, getTableName } from 'drizzle-orm';
+import { getTableColumns, getTableName, sql } from 'drizzle-orm';
+import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
 
 /**
  * A linha de um tipo de fábrica, sem a organização. Quem atende por padrão e o tipo de ativo do
@@ -50,6 +51,42 @@ export function linhasDosTiposDeFabrica(
   tipos: readonly TipoDeChamadoDeFabrica[] = TIPOS_DE_CHAMADO_DE_FABRICA,
 ): LinhaDoTipoDeFabrica[] {
   return tipos.map((tipo, posicao) => linha(tipo, posicao + 1));
+}
+
+/**
+ * Grava os tipos de fábrica na organização do contexto, que o `organizacao criar` acabou de criar,
+ * com uma `tipo-de-chamado.criado` por tipo na auditoria, na ordem.
+ */
+export async function criarTiposDeFabrica(
+  tx: Transacao,
+  { ator, momento }: { ator: Ator; momento: Date },
+): Promise<number> {
+  const criados = await tx
+    .insert(tiposDeChamado)
+    .values(
+      linhasDosTiposDeFabrica().map((de) => ({
+        ...de,
+        orgId: sql`app.current_org()`,
+        formulario: { ...de.formulario },
+        criadoEm: momento,
+      })),
+    )
+    .returning({
+      id: tiposDeChamado.id,
+      nome: tiposDeChamado.nome,
+      situacao: tiposDeChamado.situacao,
+      ordem: tiposDeChamado.ordem,
+    });
+  for (const tipo of criados.sort((a, b) => a.ordem - b.ordem)) {
+    await registrarNaAuditoria(tx, {
+      acao: 'tipo-de-chamado.criado',
+      ator,
+      alvo: { tipo: 'tipo-de-chamado', id: tipo.id },
+      depois: { nome: tipo.nome, situacao: tipo.situacao, ordem: tipo.ordem },
+      momento,
+    });
+  }
+  return criados.length;
 }
 
 const aspas = (nome: string) => `"${nome}"`;

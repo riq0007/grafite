@@ -312,6 +312,8 @@ export const EVENTO_DA_ACAO = {
   'distribuicao.pedida-agora': null,
   'distribuicao.maquina-tentada-de-novo': 'software.mudou',
   'distribuicao.maquina-tirada-da-fila': 'software.mudou',
+  // Os chamados: os ajustes, a quem tem uma das permissões dos chamados
+  'tipo-de-chamado.criado': 'ajustes-dos-chamados.mudaram',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

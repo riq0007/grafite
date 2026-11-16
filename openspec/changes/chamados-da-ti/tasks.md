@@ -22,7 +22,7 @@
 ## 3. Sementes
 
 - [x] 3.1 Os 9 tipos nas organizações que já existem: a migration gerada da lista do domínio, com o teste que confere a migration contra a lista, e o módulo Chamados nos módulos opcionais, ligado nas organizações que já existem. Começa por esse teste e pelo teste da migration. Verificar: esses testes, o lint e o typecheck.
-- [ ] 3.2 Os 9 tipos na organização nova: o `pnpm grafite organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria; o teste do comando e o passo 5 do ponta a ponta da pilha contam os 9. Começa pelo teste do comando. Verificar: esse teste, o lint e o typecheck.
+- [x] 3.2 Os 9 tipos na organização nova: o `pnpm grafite organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria; o teste do comando e o passo 5 do ponta a ponta da pilha contam os 9. Começa pelo teste do comando. Verificar: esse teste, o lint e o typecheck.
 
 ## 4. API
 

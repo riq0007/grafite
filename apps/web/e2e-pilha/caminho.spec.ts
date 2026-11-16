@@ -6,7 +6,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, gunzipSync } from 'node:zlib';
 import { auditoria, criarBanco, naOrganizacao } from '@grafite/db';
-import { CATEGORIAS_DE_SOFTWARE_DE_FABRICA, REGRAS_DE_FABRICA } from '@grafite/domain';
+import {
+  CATEGORIAS_DE_SOFTWARE_DE_FABRICA,
+  REGRAS_DE_FABRICA,
+  TIPOS_DE_CHAMADO_DE_FABRICA,
+} from '@grafite/domain';
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import pg from 'pg';
 import { decifrarPush } from '../../api/test/canais.ts';
@@ -354,10 +358,14 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
 
   // 5. A auditoria registrou o caminho. O comando no servidor grava a organização, o endereço, o
   // perfil Administrador, a pessoa, a conta, a atribuição do perfil, as regras de fábrica dos
-  // alertas e as categorias de fábrica do software numa transação só, no mesmo instante; o resto
-  // vem na ordem do caminho.
+  // alertas, as categorias de fábrica do software e os tipos de chamado de fábrica numa transação
+  // só, no mesmo instante; o resto vem na ordem do caminho.
   const acoes = await acoesDaAuditoria();
-  const doComando = 6 + REGRAS_DE_FABRICA.length + CATEGORIAS_DE_SOFTWARE_DE_FABRICA.length;
+  const doComando =
+    6 +
+    REGRAS_DE_FABRICA.length +
+    CATEGORIAS_DE_SOFTWARE_DE_FABRICA.length +
+    TIPOS_DE_CHAMADO_DE_FABRICA.length;
   expect(acoes.slice(0, doComando).sort()).toEqual([
     'atribuicao.criada',
     ...CATEGORIAS_DE_SOFTWARE_DE_FABRICA.map(() => 'categoria-de-software.criada'),
@@ -367,6 +375,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     'perfil.criado',
     'pessoa.criada',
     ...REGRAS_DE_FABRICA.map(() => 'regra-de-alerta.criada'),
+    ...TIPOS_DE_CHAMADO_DE_FABRICA.map(() => 'tipo-de-chamado.criado'),
   ]);
   const caminho = [
     'sessao.iniciada',

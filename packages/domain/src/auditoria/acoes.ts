@@ -238,6 +238,8 @@ export const ACOES_DA_AUDITORIA = {
   // As máquinas da distribuição (change software-por-pacote)
   'distribuicao.maquina-tentada-de-novo': 'Máquina da distribuição tentada de novo',
   'distribuicao.maquina-tirada-da-fila': 'Máquina tirada da fila da distribuição',
+  // Os chamados (change chamados-da-ti)
+  'tipo-de-chamado.criado': 'Tipo de chamado criado',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

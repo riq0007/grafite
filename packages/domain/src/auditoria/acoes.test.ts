@@ -141,6 +141,10 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('visao.removida')).toBe('Visão removida');
   });
 
+  it('cobrem as ações dos chamados', () => {
+    expect(rotuloDaAcao('tipo-de-chamado.criado')).toBe('Tipo de chamado criado');
+  });
+
   it('dá a própria chave para a ação desconhecida', () => {
     expect(rotuloDaAcao('ativo.excluido')).toBe('ativo.excluido');
     expect(acaoConhecida('ativo.excluido')).toBe(false);

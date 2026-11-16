@@ -1,8 +1,9 @@
 // `pnpm grafite organizacao criar` (design do F2a, decisão 11; do F2b, decisão 8): a organização,
 // os endereços, a pessoa, a primeira conta, o perfil Administrador, atribuído a ela, as regras de
-// fábrica dos alertas (design do P3a, decisão 4) e as categorias de software de fábrica (change
-// software-por-pacote, design, decisão 3), numa transação só, com a auditoria feita pelo comando no
-// servidor. A senha temporária aparece uma vez, na saída, e só o hash dela fica no banco.
+// fábrica dos alertas (design do P3a, decisão 4), as categorias de software de fábrica (change
+// software-por-pacote, design, decisão 3) e os tipos de chamado de fábrica (change chamados-da-ti,
+// design, decisão 6), numa transação só, com a auditoria feita pelo comando no servidor. A senha
+// temporária aparece uma vez, na saída, e só o hash dela fica no banco.
 import { type Banco, enderecosDeAcesso, naOrganizacao, organizacoes } from '@grafite/db';
 import { normalizarUsuario, validarUsuario } from '@grafite/domain';
 import { eq, sql } from 'drizzle-orm';
@@ -12,6 +13,7 @@ import { gerarHashDaSenha } from '../acesso/senhas.ts';
 import { garantirRegrasDeFabrica } from '../alertas/fabrica.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouUnicidade } from '../banco.ts';
+import { criarTiposDeFabrica } from '../chamados/fabrica.ts';
 import { garantirCategoriasDeFabrica } from '../software/categorias.ts';
 import { atribuirAdministrador, semearAdministrador } from './administrador.ts';
 import { criarPessoaEConta } from './conta.ts';
@@ -101,6 +103,7 @@ export async function criarOrganizacao(
       await atribuirAdministrador(tx, conta.id, { ator: ATOR, momento });
       await garantirRegrasDeFabrica(tx, { ator: ATOR, momento });
       await garantirCategoriasDeFabrica(tx, { ator: ATOR, momento });
+      await criarTiposDeFabrica(tx, { ator: ATOR, momento });
     });
   } catch (erro) {
     if (violouUnicidade(erro)) throw new ErroDoComando(1, 'Um dos endereços já está em uso.');
