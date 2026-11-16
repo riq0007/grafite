@@ -1,13 +1,22 @@
-// As ações do atendimento (spec chamados, "Ações do atendimento" e "Situação e quem atende"; change
-// chamados-da-ti, design, decisão 4): a matriz situação × ação, a mudança que a rota aplica, com o
-// efeito no relógio e os eventos da conversa, e a recusa com a frase da spec. As ações que mudam
-// quem atende: assumir, passar, devolver à triagem e o desfazer do assumir.
+// As ações do atendimento (spec chamados, "Ações do atendimento", "Situação e quem atende" e
+// "Conversa do chamado"; change chamados-da-ti, design, decisão 4): a matriz situação × ação, a
+// mudança que a rota aplica, com o efeito no relógio, a primeira resposta e a conversa, na ordem, e
+// a recusa com a frase da spec. As ações que mudam quem atende (assumir, passar, devolver à triagem
+// e o desfazer do assumir) e as da conversa e do fim (a mensagem, a espera, a nota, retomar,
+// resolver e reabrir).
+import { lerTexto } from '../campos/textos.ts';
+import { vazio } from '../campos/tipos.ts';
 import { nomeCurto } from '../pessoas/pessoa.ts';
 import {
   type AlcanceDeQuemAtende,
   atendeOChamado,
   type ContaQueAtendePorPadrao,
 } from './atendimento.ts';
+import type { CampoDoFormulario, Formulario } from './formulario.ts';
+import { type HorarioDaTi, segundosNoHorario } from './prazo.ts';
+import { camposVisiveis, respostaDe } from './respostas.ts';
+import type { RelogioDoChamado } from './situacao-do-prazo.ts';
+import { nomeNoResumo } from './titulo-e-resumo.ts';
 
 /** As situações do chamado, na ordem da tela, com os textos do banco. */
 export const SITUACOES_DO_CHAMADO = [
@@ -18,18 +27,36 @@ export const SITUACOES_DO_CHAMADO = [
 ] as const;
 export type SituacaoDoChamado = (typeof SITUACOES_DO_CHAMADO)[number];
 
-/** As ações da matriz. */
-export const ACOES_DO_CHAMADO = ['assumir', 'passar', 'devolver'] as const;
+/** As ações da matriz, na ordem da tabela da spec. */
+export const ACOES_DO_CHAMADO = [
+  'assumir',
+  'passar',
+  'devolver',
+  'mensagem',
+  'esperar',
+  'nota',
+  'retomar',
+  'resolver',
+  'reabrir',
+] as const;
 export type AcaoDoChamado = (typeof ACOES_DO_CHAMADO)[number];
 
 /** O que a ação faz com o relógio: segue como estava, para ou volta a contar. */
 export type EfeitoNoRelogio = 'segue' | 'para' | 'volta';
 
-/** Com quem o chamado fica: quem age, a conta escolhida ou ninguém. */
-export type QuemFica = 'quem-age' | 'escolhida' | 'ninguem';
+/**
+ * Com quem o chamado fica: quem age, a conta escolhida, ninguém, a mesma conta de antes ou quem
+ * resolveu.
+ */
+export type QuemFica = 'quem-age' | 'escolhida' | 'ninguem' | 'mesma' | 'quem-resolveu';
 
 /** A recusa da célula, que vale para toda conta. */
-export type RecusaDaCelula = 'resolvido' | 'ja-na-triagem' | 'aguardando';
+export type RecusaDaCelula =
+  | 'resolvido'
+  | 'ja-na-triagem'
+  | 'aguardando'
+  | 'nao-aguardando'
+  | 'nao-resolvido';
 
 /** Uma célula da matriz: a situação de chegada, com quem o chamado fica e o relógio, ou a recusa. */
 export type CelulaDaAcao =
@@ -58,6 +85,43 @@ export const MATRIZ_DAS_ACOES: Readonly<
     aguardando: { recusa: 'aguardando' },
     resolvido: { recusa: 'resolvido' },
   },
+  mensagem: {
+    triagem: { chega: 'triagem', fica: 'mesma', relogio: 'segue' },
+    'em-atendimento': { chega: 'em-atendimento', fica: 'mesma', relogio: 'segue' },
+    aguardando: { chega: 'aguardando', fica: 'mesma', relogio: 'segue' },
+    resolvido: { recusa: 'resolvido' },
+  },
+  esperar: {
+    triagem: { chega: 'aguardando', fica: 'quem-age', relogio: 'para' },
+    'em-atendimento': { chega: 'aguardando', fica: 'mesma', relogio: 'para' },
+    aguardando: { chega: 'aguardando', fica: 'mesma', relogio: 'segue' },
+    resolvido: { recusa: 'resolvido' },
+  },
+  nota: {
+    triagem: { chega: 'triagem', fica: 'mesma', relogio: 'segue' },
+    'em-atendimento': { chega: 'em-atendimento', fica: 'mesma', relogio: 'segue' },
+    aguardando: { chega: 'aguardando', fica: 'mesma', relogio: 'segue' },
+    resolvido: { recusa: 'resolvido' },
+  },
+  retomar: {
+    triagem: { recusa: 'nao-aguardando' },
+    'em-atendimento': { recusa: 'nao-aguardando' },
+    aguardando: { chega: 'em-atendimento', fica: 'mesma', relogio: 'volta' },
+    resolvido: { recusa: 'resolvido' },
+  },
+  resolver: {
+    triagem: { chega: 'resolvido', fica: 'mesma', relogio: 'para' },
+    'em-atendimento': { chega: 'resolvido', fica: 'mesma', relogio: 'para' },
+    aguardando: { chega: 'resolvido', fica: 'mesma', relogio: 'segue' },
+    resolvido: { recusa: 'resolvido' },
+  },
+  reabrir: {
+    triagem: { recusa: 'nao-resolvido' },
+    'em-atendimento': { recusa: 'nao-resolvido' },
+    aguardando: { recusa: 'nao-resolvido' },
+    // Quem resolveu e não atende mais os locais deixa o chamado na triagem (`decidirAcao`).
+    resolvido: { chega: 'em-atendimento', fica: 'quem-resolveu', relogio: 'volta' },
+  },
 };
 
 /** Um local do chamado, com o nome que as recusas citam. */
@@ -70,7 +134,7 @@ export interface LocalDoChamado {
 export interface ChamadoParaAcao {
   numero: number;
   situacao: SituacaoDoChamado;
-  /** A conta de quem atende, ou nulo, na triagem. */
+  /** A conta de quem atende, ou nulo, na triagem e no resolvido da triagem. */
   responsavel: string | null;
   /** O nome da pessoa que pediu, que o aguardando cita. */
   pessoa: string;
@@ -78,6 +142,8 @@ export interface ChamadoParaAcao {
   locais: readonly LocalDoChamado[];
   semLocal: boolean;
   versao: number;
+  /** Quando a TI escreveu à pessoa pela primeira vez, ou nulo, com a primeira resposta pendente. */
+  primeiraRespostaEm: Date | null;
 }
 
 /** Quem age, com o alcance de `chamados.atender` da conta. */
@@ -86,15 +152,35 @@ export interface QuemAge {
   alcance: AlcanceDeQuemAtende;
 }
 
-/** A conta que recebe o chamado, como está agora: a escolhida ou a de antes do assumir. */
+/** A conta que recebe o chamado, como está agora: a escolhida, a de antes do assumir ou quem resolveu. */
 export interface ContaQueRecebe extends ContaQueAtendePorPadrao {
   nome: string;
 }
 
+/** Os tetos da conversa: a mensagem e a nota, o "O que foi feito" da resolução e os anexos. */
+export const LIMITES_DA_CONVERSA = { mensagem: 4000, feito: 2000, anexos: 5 } as const;
+
+/** O texto que a ação escreve: a mensagem para a pessoa, a nota ou o "O que foi feito". */
+export type TextoDaAcao = 'mensagem' | 'nota' | 'feito';
+
+/**
+ * O pedido da ação. Como a conta escolhida do passar, o que só uma ação usa vem nele: o número de
+ * anexos da mensagem, da espera e da nota; a cópia do formulário e as respostas do chamado, no
+ * resolver; e quem resolveu, como a conta está agora, no reabrir.
+ */
 export type PedidoDeAcao =
   | { acao: 'assumir' }
   | { acao: 'passar'; para: ContaQueRecebe }
-  | { acao: 'devolver' };
+  | { acao: 'devolver' }
+  | { acao: 'mensagem' | 'esperar' | 'nota'; texto: string; anexos: number }
+  | { acao: 'retomar' }
+  | {
+      acao: 'resolver';
+      feito: string;
+      formulario: Formulario;
+      respostas: Readonly<Record<string, unknown>>;
+    }
+  | { acao: 'reabrir'; quemResolveu: ContaQueRecebe };
 
 /**
  * O desfazer do assumir: a versão, que o cliente manda, e o estado de antes, que a rota lê do evento
@@ -110,12 +196,22 @@ export interface PedidoDeDesfazer {
   antes: { situacao: SituacaoDoChamado; responsavel: ContaQueRecebe | null };
 }
 
-/** O evento da conversa, com as contas nos dados; quem agiu é o autor dele. */
+/**
+ * O evento da conversa, com as contas nos dados; quem agiu é o autor dele. A espera, a retomada e a
+ * resolução não têm dados: a pessoa vem do chamado.
+ */
 export type EventoDaAcao =
   | { evento: 'assumiu'; dados: { de: string | null } }
   | { evento: 'passou'; dados: { de: string | null; para: string } }
   | { evento: 'devolveu'; dados: { de: string } }
-  | { evento: 'desfez'; dados: { para: string | null } };
+  | { evento: 'desfez'; dados: { para: string | null } }
+  | { evento: 'aguardando' | 'retomou' | 'resolveu'; dados: Record<string, never> }
+  | { evento: 'reabriu'; dados: { para: string | null } };
+
+/** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
+export type EntradaDaConversa =
+  | { especie: 'mensagem' | 'nota'; texto: string }
+  | ({ especie: 'evento' } & EventoDaAcao);
 
 /** O que a rota aplica no chamado. */
 export interface MudancaDoChamado {
@@ -123,8 +219,12 @@ export interface MudancaDoChamado {
   /** A conta de quem atende depois, ou nulo, na triagem. */
   responsavel: string | null;
   relogio: EfeitoNoRelogio;
+  /** Sobe quando a situação ou quem atende muda, e só aí a ação grava o evento dela. */
   sobeAVersao: boolean;
-  eventos: readonly EventoDaAcao[];
+  /** A ação escreve à pessoa, e a primeira resposta faltava: a rota grava o momento dela. */
+  cumpreAPrimeiraResposta: boolean;
+  /** O que a rota grava na conversa, nesta ordem. */
+  conversa: readonly EntradaDaConversa[];
 }
 
 /** Por que a ação não acontece; `mensagemDaRecusaDaAcao` escreve a frase. */
@@ -132,18 +232,27 @@ export type RecusaDaAcao =
   | { motivo: 'resolvido' }
   | { motivo: 'ja-na-triagem' }
   | { motivo: 'aguardando'; pessoa: string }
+  | { motivo: 'nao-aguardando' }
+  | { motivo: 'nao-resolvido' }
   | { motivo: 'ja-esta-com-voce' }
   | { motivo: 'ja-esta-com'; nome: string }
   /** O local é o primeiro do chamado fora do alcance; nulo, a organização inteira. */
   | { motivo: 'voce-nao-atende'; local: string | null }
   | { motivo: 'nao-atende'; nome: string; local: string | null }
-  | { motivo: 'mudou' };
+  | { motivo: 'mudou' }
+  /** O campo é o nome no resumo do primeiro campo só da TI obrigatório e vazio. */
+  | { motivo: 'campo-da-ti'; campo: string }
+  | { motivo: 'sem-texto'; texto: TextoDaAcao }
+  | { motivo: 'texto-longo'; texto: TextoDaAcao }
+  | { motivo: 'anexos-demais' };
 
 export type DecisaoDaAcao =
   | ({ aceita: true } & MudancaDoChamado)
   | { aceita: false; recusa: RecusaDaAcao };
 
 const recusada = (recusa: RecusaDaAcao): DecisaoDaAcao => ({ aceita: false, recusa });
+
+const evento = (doEvento: EventoDaAcao): EntradaDaConversa => ({ especie: 'evento', ...doEvento });
 
 const idsDosLocais = (chamado: ChamadoParaAcao) => ({
   locais: chamado.locais.map((local) => local.id),
@@ -180,10 +289,49 @@ function recusaDaCelula(recusa: RecusaDaCelula, chamado: ChamadoParaAcao): Recus
     : { motivo: recusa };
 }
 
+const limiteDoTexto = (texto: TextoDaAcao): number =>
+  texto === 'feito' ? LIMITES_DA_CONVERSA.feito : LIMITES_DA_CONVERSA.mensagem;
+
+type Lido = { texto: string } | { recusa: RecusaDaAcao };
+
+/** O texto sem os espaços das pontas e contado em caracteres, como o dos campos, ou a recusa. */
+function lerOTexto(texto: string, de: TextoDaAcao): Lido {
+  const lido = lerTexto(texto, limiteDoTexto(de));
+  if (!lido.ok) return { recusa: { motivo: 'texto-longo', texto: de } };
+  if (lido.valor === null) return { recusa: { motivo: 'sem-texto', texto: de } };
+  return { texto: lido.valor };
+}
+
+/** A mensagem ou a nota: o texto e, depois, os anexos. */
+function lerAMensagem(pedido: { texto: string; anexos: number }, de: 'mensagem' | 'nota'): Lido {
+  const lido = lerOTexto(pedido.texto, de);
+  if ('recusa' in lido || pedido.anexos <= LIMITES_DA_CONVERSA.anexos) return lido;
+  return { recusa: { motivo: 'anexos-demais' } };
+}
+
+/**
+ * O primeiro campo só da TI obrigatório, vazio e mostrado pela condição, na ordem do formulário. Os
+ * da pessoa passaram pela conferência da abertura.
+ */
+function campoDaTiQueFalta(
+  formulario: Formulario,
+  respostas: Readonly<Record<string, unknown>>,
+): CampoDoFormulario | undefined {
+  const visiveis = camposVisiveis(formulario, respostas);
+  return formulario.campos.find(
+    (campo) =>
+      campo.soDaTi &&
+      campo.obrigatorio &&
+      visiveis.has(campo.id) &&
+      vazio(respostaDe(respostas, campo.id)),
+  );
+}
+
 /**
  * Decide a ação pela matriz. Quem age precisa atender os locais do chamado, antes de qualquer
  * célula. Assumir o chamado que já está com quem assume e passar a quem já o atende são recusados;
- * a conta escolhida precisa estar ativa e atender os locais.
+ * a conta escolhida precisa estar ativa e atender os locais. A versão sobe, e o evento entra, só
+ * quando a situação ou quem atende muda: esperar no chamado que já aguarda vale como a mensagem.
  */
 export function decidirAcao(
   chamado: ChamadoParaAcao,
@@ -195,12 +343,14 @@ export function decidirAcao(
   const celula = MATRIZ_DAS_ACOES[pedido.acao][chamado.situacao];
   if ('recusa' in celula) return recusada(recusaDaCelula(celula.recusa, chamado));
   const de = chamado.responsavel;
+  let situacao: SituacaoDoChamado = celula.chega;
   let escolhida: string | null = null;
-  let evento: EventoDaAcao;
+  let quemResolveu: string | null = null;
+  const conversa: EntradaDaConversa[] = [];
   switch (pedido.acao) {
     case 'assumir':
       if (de === quemAge.id) return recusada({ motivo: 'ja-esta-com-voce' });
-      evento = { evento: 'assumiu', dados: { de } };
+      conversa.push(evento({ evento: 'assumiu', dados: { de } }));
       break;
     case 'passar': {
       const { para } = pedido;
@@ -214,27 +364,72 @@ export function decidirAcao(
       const naoRecebe = recusaDeQuemRecebe(para, chamado);
       if (naoRecebe) return recusada(naoRecebe);
       escolhida = para.id;
-      evento = { evento: 'passou', dados: { de, para: para.id } };
+      conversa.push(evento({ evento: 'passou', dados: { de, para: para.id } }));
       break;
     }
     case 'devolver':
       // A matriz só devolve o chamado em atendimento, que o banco garante com alguém.
       if (de === null) throw new Error(`O chamado #${chamado.numero} em atendimento sem ninguém.`);
-      evento = { evento: 'devolveu', dados: { de } };
+      conversa.push(evento({ evento: 'devolveu', dados: { de } }));
+      break;
+    case 'mensagem':
+    case 'nota': {
+      const lido = lerAMensagem(pedido, pedido.acao);
+      if ('recusa' in lido) return recusada(lido.recusa);
+      conversa.push({ especie: pedido.acao, texto: lido.texto });
+      break;
+    }
+    case 'esperar': {
+      const lido = lerAMensagem(pedido, 'mensagem');
+      if ('recusa' in lido) return recusada(lido.recusa);
+      // Na triagem, quem espera assume antes de escrever.
+      if (chamado.situacao === 'triagem') {
+        conversa.push(evento({ evento: 'assumiu', dados: { de } }));
+      }
+      conversa.push({ especie: 'mensagem', texto: lido.texto });
+      if (chamado.situacao !== 'aguardando') {
+        conversa.push(evento({ evento: 'aguardando', dados: {} }));
+      }
+      break;
+    }
+    case 'retomar':
+      conversa.push(evento({ evento: 'retomou', dados: {} }));
+      break;
+    case 'resolver': {
+      const falta = campoDaTiQueFalta(pedido.formulario, pedido.respostas);
+      if (falta) return recusada({ motivo: 'campo-da-ti', campo: nomeNoResumo(falta) });
+      const lido = lerOTexto(pedido.feito, 'feito');
+      if ('recusa' in lido) return recusada(lido.recusa);
+      conversa.push(
+        { especie: 'mensagem', texto: lido.texto },
+        evento({ evento: 'resolveu', dados: {} }),
+      );
+      break;
+    }
+    case 'reabrir':
+      if (recusaDeQuemRecebe(pedido.quemResolveu, chamado)) situacao = 'triagem';
+      else quemResolveu = pedido.quemResolveu.id;
+      conversa.push(evento({ evento: 'reabriu', dados: { para: quemResolveu } }));
       break;
   }
   const quemFicaComEle: Record<QuemFica, string | null> = {
     'quem-age': quemAge.id,
     escolhida,
     ninguem: null,
+    mesma: de,
+    'quem-resolveu': quemResolveu,
   };
+  const responsavel = quemFicaComEle[celula.fica];
   return {
     aceita: true,
-    situacao: celula.chega,
-    responsavel: quemFicaComEle[celula.fica],
+    situacao,
+    responsavel,
     relogio: celula.relogio,
-    sobeAVersao: true,
-    eventos: [evento],
+    sobeAVersao: situacao !== chamado.situacao || responsavel !== de,
+    cumpreAPrimeiraResposta:
+      chamado.primeiraRespostaEm === null &&
+      conversa.some((entrada) => entrada.especie === 'mensagem'),
+    conversa,
   };
 }
 
@@ -271,12 +466,50 @@ export function decidirDesfazer(
     responsavel: para,
     relogio: 'segue',
     sobeAVersao: true,
-    eventos: [{ evento: 'desfez', dados: { para } }],
+    cumpreAPrimeiraResposta: false,
+    conversa: [evento({ evento: 'desfez', dados: { para } })],
   };
+}
+
+/** O relógio guardado do chamado, como a ação o muda. */
+export type RelogioDaAcao = Pick<RelogioDoChamado, 'prazo' | 'contadoS' | 'relogioDesde'>;
+
+/**
+ * O relógio guardado depois da ação. Parar soma o tempo que o relógio contou desde que voltou a
+ * contar, no modo do prazo, e o deixa parado; voltar recomeça agora, do que já estava contado;
+ * seguir não muda nada. A matriz só para o relógio que conta e só volta o parado, como os CHECKs do
+ * banco pedem: o contrário é um erro do programa.
+ */
+export function relogioDepois(
+  relogio: RelogioDaAcao,
+  efeito: EfeitoNoRelogio,
+  agora: Date,
+  horario: HorarioDaTi,
+): Pick<RelogioDoChamado, 'contadoS' | 'relogioDesde'> {
+  const { contadoS, relogioDesde } = relogio;
+  switch (efeito) {
+    case 'segue':
+      return { contadoS, relogioDesde };
+    case 'para':
+      if (relogioDesde === null) throw new Error('O relógio já está parado.');
+      return {
+        contadoS: contadoS + segundosNoHorario(relogioDesde, agora, relogio.prazo.modo, horario),
+        relogioDesde: null,
+      };
+    case 'volta':
+      if (relogioDesde !== null) throw new Error('O relógio já está contando.');
+      return { contadoS, relogioDesde: agora };
+  }
 }
 
 const dosChamados = (local: string | null) =>
   local === null ? 'os chamados da organização inteira' : `os chamados de ${local}`;
+
+const ESCREVA: Readonly<Record<TextoDaAcao, string>> = {
+  mensagem: 'Escreva a mensagem.',
+  nota: 'Escreva a nota.',
+  feito: 'Escreva o que foi feito.',
+};
 
 /** A frase da recusa, com o primeiro nome da pessoa e das contas. */
 export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): string {
@@ -287,6 +520,10 @@ export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): st
       return `O chamado #${numero} já está na triagem.`;
     case 'aguardando':
       return `O chamado #${numero} está aguardando ${nomeCurto(recusa.pessoa)}. Passe a outra pessoa ou retome antes de devolver.`;
+    case 'nao-aguardando':
+      return `O chamado #${numero} não está aguardando.`;
+    case 'nao-resolvido':
+      return `O chamado #${numero} não está resolvido.`;
     case 'ja-esta-com-voce':
       return `O chamado #${numero} já está com você.`;
     case 'ja-esta-com':
@@ -297,5 +534,13 @@ export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): st
       return `${nomeCurto(recusa.nome)} não atende ${dosChamados(recusa.local)}.`;
     case 'mudou':
       return 'O chamado mudou depois. Confira antes de desfazer.';
+    case 'campo-da-ti':
+      return `Preencha ${recusa.campo} antes de resolver.`;
+    case 'sem-texto':
+      return ESCREVA[recusa.texto];
+    case 'texto-longo':
+      return `Use até ${limiteDoTexto(recusa.texto).toLocaleString('pt-BR')} caracteres.`;
+    case 'anexos-demais':
+      return `Anexe até ${LIMITES_DA_CONVERSA.anexos} arquivos.`;
   }
 }

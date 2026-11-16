@@ -124,9 +124,13 @@ A resposta pronta que espera a resposta (requisito "Respostas prontas") SHALL va
 
 **Resolver** SHALL pedir "O que foi feito", de 1 a 2.000 caracteres, que vai à conversa como mensagem para a pessoa, e guardar quem resolveu e quando.
 
-A primeira mensagem para a pessoa, com ou sem esperar a resposta, SHALL cumprir o prazo da primeira resposta (requisito "Prazo do chamado").
+A primeira mensagem para a pessoa SHALL cumprir o prazo da primeira resposta (requisito "Prazo do chamado"): a mensagem, com ou sem esperar a resposta, e o "O que foi feito" da resolução. A nota SHALL NOT cumpri-lo.
 
-Cada ação SHALL gravar um evento na conversa, com quem fez e quando, como "Ana assumiu · 09:40" e "Aguardando Fernanda · 09:21 · o relógio parou". A mensagem e a nota SHALL entrar na conversa como elas mesmas, sem evento.
+Cada ação SHALL gravar um evento na conversa, com quem fez e quando, como "Ana assumiu · 09:40" e "Aguardando Fernanda · 09:21 · o relógio parou". A mensagem e a nota SHALL entrar na conversa como elas mesmas, sem evento. No chamado que já aguarda, "Enviar e esperar a resposta" SHALL valer como a mensagem, sem evento, porque nem a situação nem quem atende mudam, e o relógio segue parado desde a espera.
+
+A ação que grava mais de uma entrada SHALL gravá-las nesta ordem:
+- "Enviar e esperar a resposta" na triagem: o assumir, a mensagem e a espera;
+- Resolver: o "O que foi feito" e a resolução.
 
 As recusas SHALL ser:
 - "O chamado #1042 está resolvido.", em toda ação num chamado resolvido, fora reabrir, também na mensagem e na nota;
@@ -139,7 +143,7 @@ As recusas SHALL ser:
 - "O chamado #1042 não está aguardando.", ao retomar;
 - "O chamado #1042 não está resolvido.", ao reabrir;
 - "O chamado mudou depois. Confira antes de desfazer.", no desfazer depois de outra ação;
-- "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio que a condição dele mostra;
+- "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio que a condição dele mostra, o primeiro na ordem do formulário, com o nome no resumo dele ou, sem ele, o rótulo sem o "?";
 - "Escreva o que foi feito." e "Use até 2.000 caracteres.", na resolução.
 
 Na recusa pelos locais, o local SHALL ser o primeiro do chamado que a conta não atende. No chamado da organização inteira, a frase SHALL dizer "os chamados da organização inteira". Nas frases, a pessoa e as contas SHALL aparecer pelo primeiro nome, como "Fernanda" e "Bruno"; a pessoa anonimizada, pelo nome inteiro, que tem o código.
@@ -166,7 +170,11 @@ Na recusa pelos locais, o local SHALL ser o primeiro do chamado que a conta não
 
 #### Scenario: Esperar a resposta na triagem
 - **WHEN** Ana usa "Enviar e esperar a resposta" no #1040, de Paulo Nunes, que está na triagem
-- **THEN** o #1040 passa a Aguardando o colaborador com Ana, o relógio para, e a conversa ganha "Ana assumiu" e "Aguardando Paulo"
+- **THEN** o #1040 passa a Aguardando o colaborador com Ana, o relógio para, e a conversa ganha "Ana assumiu", a mensagem e "Aguardando Paulo"
+
+#### Scenario: Esperar de novo
+- **WHEN** Ana usa "Enviar e esperar a resposta" no #1041, que aguarda Fernanda desde 09:21
+- **THEN** a mensagem entra na conversa sem evento, e o quadro do prazo continua dizendo "Parou às 09:21"
 
 #### Scenario: Passar o chamado que aguarda
 - **WHEN** Ana passa a Diego o #1041, que aguarda Fernanda desde 09:21
@@ -183,6 +191,10 @@ Na recusa pelos locais, o local SHALL ser o primeiro do chamado que a conta não
 #### Scenario: Reabrir
 - **WHEN** Ana reabre o #1035, que ela resolveu com 3 h contadas de 8 h
 - **THEN** o #1035 volta a Em atendimento com Ana, e o relógio volta a contar das 3 h
+
+#### Scenario: Reabrir o que foi resolvido por quem não atende mais
+- **WHEN** Ana reabre o #1035, que Renato resolveu, e a conta de Renato foi desativada
+- **THEN** o #1035 volta Na triagem, sem ninguém, e o relógio volta a contar
 
 ### Requirement: Conversa do chamado
 
@@ -217,7 +229,7 @@ Os alertas do ativo ligado abertos depois da abertura do chamado SHALL aparecer 
 
 Nesta versão, a mensagem para a pessoa SHALL ficar no chamado. O chat e a aba dos colaboradores a entregam nas changes seguintes.
 
-As recusas SHALL ser "Escreva a mensagem.", "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos arquivos e dos anexos.
+As recusas SHALL ser "Escreva a mensagem." (na nota, "Escreva a nota."), "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos arquivos e dos anexos. A mensagem, a nota e o "O que foi feito" SHALL perder os espaços das pontas e ser contados em caracteres, como os textos dos campos.
 
 #### Scenario: Nota interna
 - **WHEN** Ana grava a nota "A pasta é do Comercial, e não do Financeiro" no #1041

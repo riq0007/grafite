@@ -229,7 +229,9 @@ export {
   decidirAcao,
   decidirDesfazer,
   type EfeitoNoRelogio,
+  type EntradaDaConversa,
   type EventoDaAcao,
+  LIMITES_DA_CONVERSA,
   type LocalDoChamado,
   MATRIZ_DAS_ACOES,
   type MudancaDoChamado,
@@ -240,8 +242,11 @@ export {
   type QuemFica,
   type RecusaDaAcao,
   type RecusaDaCelula,
+  type RelogioDaAcao,
+  relogioDepois,
   SITUACOES_DO_CHAMADO,
   type SituacaoDoChamado,
+  type TextoDaAcao,
 } from './chamados/acoes.ts';
 export {
   type AlcanceDeQuemAtende,

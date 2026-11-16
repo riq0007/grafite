@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ACOES_DO_CHAMADO,
   type ChamadoParaAcao,
   type ContaQueRecebe,
   decidirAcao,
   decidirDesfazer,
+  LIMITES_DA_CONVERSA,
+  MATRIZ_DAS_ACOES,
   mensagemDaRecusaDaAcao,
+  type PedidoDeAcao,
   type QuemAge,
+  type QuemFica,
   type RecusaDaAcao,
+  relogioDepois,
+  SITUACOES_DO_CHAMADO,
+  type SituacaoDoChamado,
 } from './acoes.ts';
+import { conferirFormulario, type Formulario } from './formulario.ts';
+import { HORARIO_DA_TI_PADRAO, type PrazoDoChamado } from './prazo.ts';
 
 const JUNDIAI = { id: 'local-jundiai', nome: 'Jundiaí' };
 const SALA_ATLANTICO = { id: 'local-sala-atlantico', nome: 'Sala Atlântico' };
@@ -39,7 +49,10 @@ const BRUNO: ContaQueRecebe = {
   alcance: RAMO_DE_CAMPINAS,
 };
 
-/** O #1042, de Marina Lopes, em Jundiaí, na triagem. */
+/** A primeira resposta da TI, ontem às 17:22. */
+const RESPONDIDO = new Date('2026-11-16T17:22:00-03:00');
+
+/** O #1042, de Marina Lopes, em Jundiaí, na triagem, ainda sem a primeira resposta da TI. */
 const NA_TRIAGEM: ChamadoParaAcao = {
   numero: 1042,
   situacao: 'triagem',
@@ -48,6 +61,7 @@ const NA_TRIAGEM: ChamadoParaAcao = {
   locais: [JUNDIAI],
   semLocal: false,
   versao: 1,
+  primeiraRespostaEm: null,
 };
 /** O #1033, estourado, em atendimento com Renato. */
 const COM_RENATO: ChamadoParaAcao = {
@@ -57,6 +71,7 @@ const COM_RENATO: ChamadoParaAcao = {
   responsavel: RENATO.id,
   pessoa: 'Sérgio Lima',
   versao: 4,
+  primeiraRespostaEm: RESPONDIDO,
 };
 /** O #1041, aguardando Fernanda desde 09:21, com Diego. */
 const AGUARDANDO: ChamadoParaAcao = {
@@ -66,6 +81,7 @@ const AGUARDANDO: ChamadoParaAcao = {
   responsavel: DIEGO.id,
   pessoa: 'Fernanda Rocha',
   versao: 3,
+  primeiraRespostaEm: RESPONDIDO,
 };
 /** O #1035, resolvido por Ana. */
 const RESOLVIDO: ChamadoParaAcao = {
@@ -74,6 +90,7 @@ const RESOLVIDO: ChamadoParaAcao = {
   situacao: 'resolvido',
   responsavel: ANA.id,
   versao: 6,
+  primeiraRespostaEm: RESPONDIDO,
 };
 /** O #1038, o Wi-Fi da Sala Atlântico, com Diego: o local de Jundiaí da pessoa e o do ativo. */
 const WIFI: ChamadoParaAcao = {
@@ -84,6 +101,7 @@ const WIFI: ChamadoParaAcao = {
   pessoa: 'Paulo Nunes',
   locais: [JUNDIAI, SALA_ATLANTICO],
   versao: 2,
+  primeiraRespostaEm: RESPONDIDO,
 };
 
 const recusa = (motivo: RecusaDaAcao) => ({ aceita: false, recusa: motivo });
@@ -96,7 +114,8 @@ describe('assumir', () => {
       responsavel: ANA.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'assumiu', dados: { de: null } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: null } }],
     });
   });
 
@@ -107,7 +126,8 @@ describe('assumir', () => {
       responsavel: ANA.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'assumiu', dados: { de: RENATO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: RENATO.id } }],
     });
   });
 
@@ -118,7 +138,8 @@ describe('assumir', () => {
       responsavel: ANA.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'assumiu', dados: { de: DIEGO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'assumiu', dados: { de: DIEGO.id } }],
     });
   });
 
@@ -147,7 +168,8 @@ describe('passar', () => {
       responsavel: DIEGO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'passou', dados: { de: null, para: DIEGO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'passou', dados: { de: null, para: DIEGO.id } }],
     });
   });
 
@@ -159,7 +181,8 @@ describe('passar', () => {
       responsavel: RENATO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'passou', dados: { de: DIEGO.id, para: RENATO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'passou', dados: { de: DIEGO.id, para: RENATO.id } }],
     });
   });
 
@@ -171,7 +194,8 @@ describe('passar', () => {
       responsavel: RENATO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'passou', dados: { de: DIEGO.id, para: RENATO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'passou', dados: { de: DIEGO.id, para: RENATO.id } }],
     });
   });
 
@@ -227,7 +251,8 @@ describe('passar', () => {
       responsavel: DIEGO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'passou', dados: { de: null, para: DIEGO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'passou', dados: { de: null, para: DIEGO.id } }],
     });
   });
 });
@@ -246,7 +271,8 @@ describe('devolver à triagem', () => {
       responsavel: null,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'devolveu', dados: { de: RENATO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'devolveu', dados: { de: RENATO.id } }],
     });
   });
 
@@ -278,6 +304,10 @@ describe('quem age', () => {
     expect(decidirAcao(RESOLVIDO, doBruno, { acao: 'assumir' })).toEqual(
       recusa({ motivo: 'voce-nao-atende', local: 'Jundiaí' }),
     );
+    // Também na conversa: a nota de quem não atende os locais é recusada.
+    expect(
+      decidirAcao(NA_TRIAGEM, doBruno, { acao: 'nota', texto: 'Vou olhar.', anexos: 0 }),
+    ).toEqual(recusa({ motivo: 'voce-nao-atende', local: 'Jundiaí' }));
     const assumidoPorDiego = { ...NA_TRIAGEM, situacao: 'em-atendimento' as const, versao: 2 };
     expect(
       decidirDesfazer({ ...assumidoPorDiego, responsavel: DIEGO.id }, renatoSemPermissao, {
@@ -310,7 +340,8 @@ describe('desfazer o assumir', () => {
       responsavel: null,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'desfez', dados: { para: null } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: null } }],
     });
   });
 
@@ -328,7 +359,8 @@ describe('desfazer o assumir', () => {
       responsavel: RENATO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'desfez', dados: { para: RENATO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: RENATO.id } }],
     });
     const assumidoDoAguardando = { ...AGUARDANDO, responsavel: ANA.id, versao: 4 };
     expect(
@@ -342,7 +374,8 @@ describe('desfazer o assumir', () => {
       responsavel: DIEGO.id,
       relogio: 'segue',
       sobeAVersao: true,
-      eventos: [{ evento: 'desfez', dados: { para: DIEGO.id } }],
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'desfez', dados: { para: DIEGO.id } }],
     });
   });
 
@@ -390,6 +423,569 @@ describe('desfazer o assumir', () => {
   });
 });
 
+const MENSAGEM =
+  'Não achei uma pasta com esse nome na sua conta. Confirme o nome exato, por favor.';
+const NOTA = 'Sem resposta até as 14h, ligar para o ramal 2231.';
+const FEITO = 'Troquei o cilindro e imprimi a página de teste.';
+
+describe('enviar a mensagem', () => {
+  const enviar: PedidoDeAcao = { acao: 'mensagem', texto: MENSAGEM, anexos: 1 };
+
+  it('na triagem, fica na triagem, cumpre a primeira resposta, e a versão não sobe', () => {
+    expect(decidirAcao(NA_TRIAGEM, ANA, enviar)).toEqual({
+      aceita: true,
+      situacao: 'triagem',
+      responsavel: null,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: true,
+      conversa: [{ especie: 'mensagem', texto: MENSAGEM }],
+    });
+  });
+
+  it('em atendimento, fica com quem atende, e o relógio segue contando', () => {
+    // Ana escreve no #1033, que está com Renato e já teve a primeira resposta.
+    expect(decidirAcao(COM_RENATO, ANA, enviar)).toEqual({
+      aceita: true,
+      situacao: 'em-atendimento',
+      responsavel: RENATO.id,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'mensagem', texto: MENSAGEM }],
+    });
+  });
+
+  it('aguardando, segue aguardando, e o relógio segue parado', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, enviar)).toEqual({
+      aceita: true,
+      situacao: 'aguardando',
+      responsavel: DIEGO.id,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'mensagem', texto: MENSAGEM }],
+    });
+  });
+
+  it('resolvido, é recusada', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, enviar)).toEqual(recusa({ motivo: 'resolvido' }));
+  });
+});
+
+describe('enviar e esperar a resposta', () => {
+  const esperar: PedidoDeAcao = { acao: 'esperar', texto: MENSAGEM, anexos: 0 };
+
+  it('na triagem, passa a Aguardando com quem enviou, com o assumir, a mensagem e a espera, e o relógio para', () => {
+    expect(decidirAcao(NA_TRIAGEM, ANA, esperar)).toEqual({
+      aceita: true,
+      situacao: 'aguardando',
+      responsavel: ANA.id,
+      relogio: 'para',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: true,
+      conversa: [
+        { especie: 'evento', evento: 'assumiu', dados: { de: null } },
+        { especie: 'mensagem', texto: MENSAGEM },
+        { especie: 'evento', evento: 'aguardando', dados: {} },
+      ],
+    });
+  });
+
+  it('em atendimento, passa a Aguardando com quem atendia, e o relógio para', () => {
+    // Ana escreve no #1033, de Renato, e o chamado continua com ele.
+    expect(decidirAcao(COM_RENATO, ANA, esperar)).toEqual({
+      aceita: true,
+      situacao: 'aguardando',
+      responsavel: RENATO.id,
+      relogio: 'para',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [
+        { especie: 'mensagem', texto: MENSAGEM },
+        { especie: 'evento', evento: 'aguardando', dados: {} },
+      ],
+    });
+  });
+
+  it('aguardando, vale como a mensagem: sem evento, sem subir a versão, e o relógio segue parado', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, esperar)).toEqual({
+      aceita: true,
+      situacao: 'aguardando',
+      responsavel: DIEGO.id,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'mensagem', texto: MENSAGEM }],
+    });
+  });
+
+  it('resolvido, é recusado', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, esperar)).toEqual(recusa({ motivo: 'resolvido' }));
+  });
+});
+
+describe('nota interna', () => {
+  const nota: PedidoDeAcao = { acao: 'nota', texto: NOTA, anexos: 0 };
+
+  it('na triagem, fica na triagem, sem cumprir a primeira resposta e sem subir a versão', () => {
+    expect(decidirAcao(NA_TRIAGEM, ANA, nota)).toEqual({
+      aceita: true,
+      situacao: 'triagem',
+      responsavel: null,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'nota', texto: NOTA }],
+    });
+  });
+
+  it('em atendimento, fica com quem atende', () => {
+    expect(decidirAcao(COM_RENATO, ANA, nota)).toEqual({
+      aceita: true,
+      situacao: 'em-atendimento',
+      responsavel: RENATO.id,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'nota', texto: NOTA }],
+    });
+  });
+
+  it('aguardando, segue aguardando', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, nota)).toEqual({
+      aceita: true,
+      situacao: 'aguardando',
+      responsavel: DIEGO.id,
+      relogio: 'segue',
+      sobeAVersao: false,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'nota', texto: NOTA }],
+    });
+  });
+
+  it('resolvido, é recusada', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, nota)).toEqual(recusa({ motivo: 'resolvido' }));
+  });
+});
+
+describe('retomar', () => {
+  const retomar: PedidoDeAcao = { acao: 'retomar' };
+
+  it('na triagem, é recusado', () => {
+    expect(decidirAcao(NA_TRIAGEM, ANA, retomar)).toEqual(recusa({ motivo: 'nao-aguardando' }));
+  });
+
+  it('em atendimento, é recusado', () => {
+    expect(decidirAcao(COM_RENATO, ANA, retomar)).toEqual(recusa({ motivo: 'nao-aguardando' }));
+  });
+
+  it('aguardando, volta a Em atendimento com quem atendia, e o relógio volta a contar', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, retomar)).toEqual({
+      aceita: true,
+      situacao: 'em-atendimento',
+      responsavel: DIEGO.id,
+      relogio: 'volta',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'retomou', dados: {} }],
+    });
+  });
+
+  it('resolvido, é recusado', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, retomar)).toEqual(recusa({ motivo: 'resolvido' }));
+  });
+});
+
+describe('resolver', () => {
+  /** Confere o pedido pelo `conferirFormulario`, para o formulário ficar como a API o grava. */
+  function formularioCom(campos: Record<string, unknown>[]): Formulario {
+    const conferencia = conferirFormulario(
+      { titulo: { comecaPeloTipo: true, campoId: null }, campos },
+      { pedeOAtivo: false },
+    );
+    if (!conferencia.ok) throw new Error(JSON.stringify(conferencia.erros));
+    return conferencia.formulario;
+  }
+
+  const PROBLEMA = {
+    id: 'problema',
+    tipo: 'escolha-unica',
+    rotulo: 'O que está acontecendo?',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'manchando', texto: 'Manchando' },
+      { id: 'nao-imprime', texto: 'Não imprime' },
+    ],
+  };
+  const CONTADOR = {
+    id: 'contador',
+    tipo: 'numero',
+    rotulo: 'Contador de páginas',
+    obrigatorio: true,
+    soDaTi: true,
+  };
+  /** Só aparece com as manchas. */
+  const CILINDRO = {
+    id: 'cilindro',
+    tipo: 'sim-ou-nao',
+    rotulo: 'Trocou o cilindro?',
+    obrigatorio: true,
+    soDaTi: true,
+    condicao: [{ campoId: 'problema', opcaoId: 'manchando' }],
+  };
+  const OBSERVACAO = {
+    id: 'observacao',
+    tipo: 'texto-curto',
+    rotulo: 'Observação da TI',
+    soDaTi: true,
+  };
+
+  /** A Impressora, com os campos só da TI obrigatórios: o Contador de páginas e o cilindro. */
+  const IMPRESSORA = formularioCom([PROBLEMA, CONTADOR, CILINDRO, OBSERVACAO]);
+
+  const resolver = (
+    respostas: Record<string, unknown> = { problema: 'nao-imprime', contador: 48210 },
+    feito = FEITO,
+    formulario = IMPRESSORA,
+  ): PedidoDeAcao => ({ acao: 'resolver', feito, formulario, respostas });
+
+  it('na triagem, passa a Resolvido sem ninguém, com o "O que foi feito" e a resolução, e o relógio para', () => {
+    // O "O que foi feito" escreve a Marina, e cumpre a primeira resposta que faltava.
+    expect(decidirAcao(NA_TRIAGEM, ANA, resolver())).toEqual({
+      aceita: true,
+      situacao: 'resolvido',
+      responsavel: null,
+      relogio: 'para',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: true,
+      conversa: [
+        { especie: 'mensagem', texto: FEITO },
+        { especie: 'evento', evento: 'resolveu', dados: {} },
+      ],
+    });
+  });
+
+  it('em atendimento, passa a Resolvido com quem atendia, e o relógio para', () => {
+    expect(decidirAcao(COM_RENATO, ANA, resolver())).toEqual({
+      aceita: true,
+      situacao: 'resolvido',
+      responsavel: RENATO.id,
+      relogio: 'para',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [
+        { especie: 'mensagem', texto: FEITO },
+        { especie: 'evento', evento: 'resolveu', dados: {} },
+      ],
+    });
+  });
+
+  it('aguardando, passa a Resolvido com quem atendia, e o relógio segue parado', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, resolver())).toEqual({
+      aceita: true,
+      situacao: 'resolvido',
+      responsavel: DIEGO.id,
+      relogio: 'segue',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [
+        { especie: 'mensagem', texto: FEITO },
+        { especie: 'evento', evento: 'resolveu', dados: {} },
+      ],
+    });
+  });
+
+  it('resolvido, é recusado', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, resolver())).toEqual(recusa({ motivo: 'resolvido' }));
+  });
+
+  it('com o campo só da TI obrigatório vazio, é recusado pelo nome dele', () => {
+    expect(decidirAcao(COM_RENATO, ANA, resolver({ problema: 'nao-imprime' }))).toEqual(
+      recusa({ motivo: 'campo-da-ti', campo: 'Contador de páginas' }),
+    );
+  });
+
+  it('o campo que a condição esconde não impede, e o "Não" é uma resposta', () => {
+    const resolvido = { aceita: true, situacao: 'resolvido' };
+    expect(
+      decidirAcao(COM_RENATO, ANA, resolver({ problema: 'manchando', contador: 48210 })),
+    ).toEqual(recusa({ motivo: 'campo-da-ti', campo: 'Trocou o cilindro' }));
+    expect(
+      decidirAcao(
+        COM_RENATO,
+        ANA,
+        resolver({ problema: 'manchando', contador: 48210, cilindro: false }),
+      ),
+    ).toMatchObject(resolvido);
+    // Sem as manchas, o cilindro não aparece, e a resposta guardada dele não conta.
+    expect(
+      decidirAcao(COM_RENATO, ANA, resolver({ problema: 'nao-imprime', contador: 48210 })),
+    ).toMatchObject(resolvido);
+  });
+
+  it('recusa o primeiro campo na ordem do formulário, pelo nome no resumo, e só os da TI', () => {
+    // Os dois campos da TI estão vazios: o Contador vem antes.
+    expect(decidirAcao(COM_RENATO, ANA, resolver({ problema: 'manchando' }))).toEqual(
+      recusa({ motivo: 'campo-da-ti', campo: 'Contador de páginas' }),
+    );
+    // O campo da pessoa sem resposta não impede: a abertura já o conferiu.
+    expect(decidirAcao(COM_RENATO, ANA, resolver({ contador: 48210 }))).toMatchObject({
+      aceita: true,
+    });
+    const comNome = formularioCom([
+      PROBLEMA,
+      CONTADOR,
+      { ...CILINDRO, nomeNoResumo: 'Cilindro' },
+      OBSERVACAO,
+    ]);
+    expect(
+      decidirAcao(
+        COM_RENATO,
+        ANA,
+        resolver({ problema: 'manchando', contador: 48210 }, FEITO, comNome),
+      ),
+    ).toEqual(recusa({ motivo: 'campo-da-ti', campo: 'Cilindro' }));
+  });
+
+  it('pede o "O que foi feito", de 1 a 2.000 caracteres, depois dos campos', () => {
+    expect(decidirAcao(COM_RENATO, ANA, resolver(undefined, ' \n '))).toEqual(
+      recusa({ motivo: 'sem-texto', texto: 'feito' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, resolver(undefined, 'a'.repeat(2001)))).toEqual(
+      recusa({ motivo: 'texto-longo', texto: 'feito' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, resolver(undefined, 'a'.repeat(2000)))).toMatchObject({
+      aceita: true,
+    });
+    expect(decidirAcao(COM_RENATO, ANA, resolver({ problema: 'nao-imprime' }, ''))).toEqual(
+      recusa({ motivo: 'campo-da-ti', campo: 'Contador de páginas' }),
+    );
+  });
+});
+
+describe('reabrir', () => {
+  /** Ana, que resolveu o #1035, como a conta está agora. */
+  const ANA_QUE_RESOLVEU: ContaQueRecebe = {
+    id: ANA.id,
+    nome: 'Ana Souza',
+    ativa: true,
+    alcance: 'organizacao',
+  };
+  const reabrir = (quemResolveu: ContaQueRecebe = ANA_QUE_RESOLVEU): PedidoDeAcao => ({
+    acao: 'reabrir',
+    quemResolveu,
+  });
+
+  it('na triagem, é recusado', () => {
+    expect(decidirAcao(NA_TRIAGEM, ANA, reabrir())).toEqual(recusa({ motivo: 'nao-resolvido' }));
+  });
+
+  it('em atendimento, é recusado', () => {
+    expect(decidirAcao(COM_RENATO, ANA, reabrir())).toEqual(recusa({ motivo: 'nao-resolvido' }));
+  });
+
+  it('aguardando, é recusado', () => {
+    expect(decidirAcao(AGUARDANDO, ANA, reabrir())).toEqual(recusa({ motivo: 'nao-resolvido' }));
+  });
+
+  it('resolvido, volta a Em atendimento com quem resolveu, e o relógio volta a contar', () => {
+    expect(decidirAcao(RESOLVIDO, ANA, reabrir())).toEqual({
+      aceita: true,
+      situacao: 'em-atendimento',
+      responsavel: ANA.id,
+      relogio: 'volta',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'reabriu', dados: { para: ANA.id } }],
+    });
+    // Quem reabre não importa: Diego reabre o que Ana resolveu, e o chamado volta a ela.
+    const doDiego: QuemAge = { id: DIEGO.id, alcance: DIEGO.alcance };
+    expect(decidirAcao(RESOLVIDO, doDiego, reabrir())).toMatchObject({
+      situacao: 'em-atendimento',
+      responsavel: ANA.id,
+    });
+  });
+
+  it('resolvido por quem não atende mais os locais, volta Na triagem, e o relógio volta a contar', () => {
+    const naTriagem = {
+      aceita: true,
+      situacao: 'triagem',
+      responsavel: null,
+      relogio: 'volta',
+      sobeAVersao: true,
+      cumpreAPrimeiraResposta: false,
+      conversa: [{ especie: 'evento', evento: 'reabriu', dados: { para: null } }],
+    };
+    expect(decidirAcao(RESOLVIDO, ANA, reabrir({ ...RENATO, ativa: false }))).toEqual(naTriagem);
+    expect(decidirAcao(RESOLVIDO, ANA, reabrir({ ...RENATO, alcance: RAMO_DE_CAMPINAS }))).toEqual(
+      naTriagem,
+    );
+  });
+});
+
+describe('os textos da conversa', () => {
+  it('perdem os espaços das pontas e são contados em caracteres, e não em unidades do UTF-16', () => {
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: `  ${NOTA}\n`, anexos: 0 }),
+    ).toMatchObject({ conversa: [{ especie: 'nota', texto: NOTA }] });
+    // O emoji conta um caractere, com duas unidades do UTF-16.
+    const cheio = '👍'.repeat(LIMITES_DA_CONVERSA.mensagem);
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: cheio, anexos: 0 }),
+    ).toMatchObject({ aceita: true });
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: `${cheio}!`, anexos: 0 }),
+    ).toEqual(recusa({ motivo: 'texto-longo', texto: 'mensagem' }));
+  });
+
+  it('pedem o texto na mensagem, na espera e na nota, de até 4.000 caracteres', () => {
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: ' \n ', anexos: 0 })).toEqual(
+      recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 2 })).toEqual(
+      recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: '', anexos: 0 })).toEqual(
+      recusa({ motivo: 'sem-texto', texto: 'nota' }),
+    );
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: 'a'.repeat(4001), anexos: 0 }),
+    ).toEqual(recusa({ motivo: 'texto-longo', texto: 'nota' }));
+  });
+
+  it('aceitam até 5 anexos', () => {
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: MENSAGEM, anexos: 5 }),
+    ).toMatchObject({ aceita: true });
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: MENSAGEM, anexos: 6 })).toEqual(
+      recusa({ motivo: 'anexos-demais' }),
+    );
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: NOTA, anexos: 6 })).toEqual(
+      recusa({ motivo: 'anexos-demais' }),
+    );
+  });
+});
+
+describe('a matriz', () => {
+  const contando = (situacao: SituacaoDoChamado) =>
+    situacao === 'triagem' || situacao === 'em-atendimento';
+  const celulas = ACOES_DO_CHAMADO.flatMap((acao) =>
+    SITUACOES_DO_CHAMADO.map((partida) => ({
+      acao,
+      partida,
+      celula: MATRIZ_DAS_ACOES[acao][partida],
+    })),
+  );
+
+  it('deixa o relógio como o banco pede: contando na triagem e no atendimento, parado depois', () => {
+    for (const { acao, partida, celula } of celulas) {
+      if ('recusa' in celula) continue;
+      const antes = contando(partida);
+      // Só para o relógio que conta, e só volta o parado.
+      if (celula.relogio === 'para') expect(antes, `${acao} em ${partida}`).toBe(true);
+      if (celula.relogio === 'volta') expect(antes, `${acao} em ${partida}`).toBe(false);
+      const depois = celula.relogio === 'segue' ? antes : celula.relogio === 'volta';
+      // O reabrir que cai na triagem também conta, como o atendimento.
+      expect(depois, `${acao} em ${partida}`).toBe(contando(celula.chega));
+    }
+  });
+
+  it('deixa ninguém na triagem e alguém no atendimento e no aguardando', () => {
+    const temAlguem = (partida: SituacaoDoChamado, fica: QuemFica) => {
+      if (fica === 'ninguem') return false;
+      if (fica === 'mesma') return partida === 'em-atendimento' || partida === 'aguardando';
+      return true;
+    };
+    for (const { acao, partida, celula } of celulas) {
+      if ('recusa' in celula || celula.chega === 'resolvido') continue;
+      expect(temAlguem(partida, celula.fica), `${acao} em ${partida}`).toBe(
+        celula.chega !== 'triagem',
+      );
+    }
+  });
+});
+
+describe('relogioDepois', () => {
+  /** O instante no relógio de São Paulo; terça, 17/11/2026, é o dia dos mockups. */
+  const sp = (dataHora: string) => new Date(`${dataHora}:00-03:00`);
+  const NO_HORARIO: PrazoDoChamado = {
+    modo: 'horario',
+    respostaMin: 30,
+    resolucaoMin: 480,
+    resposta: { valor: 30, unidade: 'min' },
+    resolucao: { valor: 8, unidade: 'h' },
+  };
+  const CORRIDAS: PrazoDoChamado = { ...NO_HORARIO, modo: 'corridas' };
+
+  it('parar soma o tempo do relógio desde que ele voltou a contar e o deixa parado', () => {
+    // O #1042, aberto às 07:40, para às 09:40: conta 1 h 40 min, das 08:00.
+    expect(
+      relogioDepois(
+        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T07:40') },
+        'para',
+        sp('2026-11-17T09:40'),
+        HORARIO_DA_TI_PADRAO,
+      ),
+    ).toEqual({ contadoS: 6000, relogioDesde: null });
+    // Em horas corridas, todo o tempo conta: 8 h 20 min desde 01:20.
+    expect(
+      relogioDepois(
+        { prazo: CORRIDAS, contadoS: 600, relogioDesde: sp('2026-11-17T01:20') },
+        'para',
+        sp('2026-11-17T09:40'),
+        HORARIO_DA_TI_PADRAO,
+      ),
+    ).toEqual({ contadoS: 600 + 30000, relogioDesde: null });
+  });
+
+  it('voltar recomeça agora, do que já estava contado', () => {
+    // O #1035, reaberto às 10:00 com 3 h contadas.
+    expect(
+      relogioDepois(
+        { prazo: NO_HORARIO, contadoS: 10800, relogioDesde: null },
+        'volta',
+        sp('2026-11-17T10:00'),
+        HORARIO_DA_TI_PADRAO,
+      ),
+    ).toEqual({ contadoS: 10800, relogioDesde: sp('2026-11-17T10:00') });
+  });
+
+  it('seguir não muda nada, contando ou parado', () => {
+    const agora = sp('2026-11-17T09:40');
+    const contando = { prazo: NO_HORARIO, contadoS: 120, relogioDesde: sp('2026-11-17T09:00') };
+    expect(relogioDepois(contando, 'segue', agora, HORARIO_DA_TI_PADRAO)).toEqual({
+      contadoS: 120,
+      relogioDesde: sp('2026-11-17T09:00'),
+    });
+    const parado = { prazo: NO_HORARIO, contadoS: 8160, relogioDesde: null };
+    expect(relogioDepois(parado, 'segue', agora, HORARIO_DA_TI_PADRAO)).toEqual({
+      contadoS: 8160,
+      relogioDesde: null,
+    });
+  });
+
+  it('parar o relógio parado e voltar o que conta são erros do programa', () => {
+    const agora = sp('2026-11-17T09:40');
+    expect(() =>
+      relogioDepois(
+        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: null },
+        'para',
+        agora,
+        HORARIO_DA_TI_PADRAO,
+      ),
+    ).toThrow('O relógio já está parado.');
+    expect(() =>
+      relogioDepois(
+        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T09:00') },
+        'volta',
+        agora,
+        HORARIO_DA_TI_PADRAO,
+      ),
+    ).toThrow('O relógio já está contando.');
+  });
+});
+
 describe('mensagemDaRecusaDaAcao', () => {
   it('escreve as frases da spec, com o primeiro nome', () => {
     const frase = (numero: number, motivo: RecusaDaAcao) => mensagemDaRecusaDaAcao(numero, motivo);
@@ -411,6 +1007,26 @@ describe('mensagemDaRecusaDaAcao', () => {
     expect(frase(1042, { motivo: 'mudou' })).toBe(
       'O chamado mudou depois. Confira antes de desfazer.',
     );
+  });
+
+  it('escreve as recusas da conversa e do fim', () => {
+    const frase = (numero: number, motivo: RecusaDaAcao) => mensagemDaRecusaDaAcao(numero, motivo);
+    expect(frase(1042, { motivo: 'nao-aguardando' })).toBe('O chamado #1042 não está aguardando.');
+    expect(frase(1042, { motivo: 'nao-resolvido' })).toBe('O chamado #1042 não está resolvido.');
+    expect(frase(1042, { motivo: 'campo-da-ti', campo: 'Contador de páginas' })).toBe(
+      'Preencha Contador de páginas antes de resolver.',
+    );
+    expect(frase(1042, { motivo: 'sem-texto', texto: 'mensagem' })).toBe('Escreva a mensagem.');
+    expect(frase(1042, { motivo: 'sem-texto', texto: 'nota' })).toBe('Escreva a nota.');
+    expect(frase(1042, { motivo: 'sem-texto', texto: 'feito' })).toBe('Escreva o que foi feito.');
+    expect(frase(1042, { motivo: 'texto-longo', texto: 'mensagem' })).toBe(
+      'Use até 4.000 caracteres.',
+    );
+    expect(frase(1042, { motivo: 'texto-longo', texto: 'nota' })).toBe('Use até 4.000 caracteres.');
+    expect(frase(1042, { motivo: 'texto-longo', texto: 'feito' })).toBe(
+      'Use até 2.000 caracteres.',
+    );
+    expect(frase(1042, { motivo: 'anexos-demais' })).toBe('Anexe até 5 arquivos.');
   });
 
   it('no chamado da organização inteira, diz "os chamados da organização inteira"', () => {

@@ -53,8 +53,11 @@ const ehOpcao = (campo: CampoDoFormulario) =>
 const seJunta = (campo: CampoDoFormulario) =>
   ehOpcao(campo) || campo.tipo === 'texto-curto' || campo.tipo === 'texto-longo';
 
-/** O nome no resumo ou, sem ele, o rótulo sem o "?". */
-const nomeNoResumo = (campo: CampoDoFormulario) =>
+/**
+ * O nome no resumo ou, sem ele, o rótulo sem o "?". O resumo o usa, e a recusa do resolver também
+ * (`acoes.ts`).
+ */
+export const nomeNoResumo = (campo: CampoDoFormulario): string =>
   campo.nomeNoResumo ?? campo.rotulo.replace(/\?+$/u, '').trimEnd();
 
 const textoDaOpcao = (campo: CampoDoFormulario, id: unknown) =>
