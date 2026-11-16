@@ -364,6 +364,7 @@ export {
   MENSAGENS_DA_RESPOSTA_PRONTA,
   type PedidoDaRespostaPronta,
   type RespostaProntaConferida,
+  textoDaRespostaPronta,
 } from './chamados/respostas-prontas.ts';
 export {
   compararPrazos,

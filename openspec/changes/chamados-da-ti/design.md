@@ -206,6 +206,15 @@ O público dos eventos é o `publicoDoChamado`, igual ao `publicoDaOrdem`, com o
 
 **O ativo no chamado.** A leitura manda o rótulo, o patrimônio e o caminho do local do ativo ligado a toda conta que vê o chamado, como a pessoa: os locais do chamado já têm o do ativo. O atalho da ficha do ativo aparece só a quem tem `ativos.ver` no local dele, e os alertas, só a quem tem `alertas.ver` (decisão 9).
 
+O resumo da seção "Ativo ligado" (spec modulo-chamados, "Chamado aberto") também vai pela ficha do chamado a quem o vê, e não pelas rotas dos Ativos, que pedem `ativos.ver`. Assim, quem atende sem `ativos.ver`, como o Diego, vê o toner da impressora do chamado que atende: a spec só põe condição no saldo e na solicitação. O resumo vai com o Ativos ligado (tarefa 4.25) e tem:
+- a situação em texto: a disponibilidade, como "Online há 12 dias", e o pior suprimento, como "Toner crítico";
+- os suprimentos, cada um com o nome, o nível e a situação;
+- o total de páginas e, quando as leituras do contador a dão, a média por mês;
+- as OS do ativo no ano, como "2 concluídas, nenhuma aberta" (m04), só a quem tem `ordens.ver` no local dele;
+- o saldo do toner compatível, só a quem tem `estoque.ver`, e a solicitação pendente da impressora, só a quem a vê com `solicitacoes.ver`, como "CF258A: 3 de 6, abaixo do mínimo; a solicitação 4 está Aberta".
+
+Os valores coletados saem das mesmas leituras da lista dos ativos (`disponibilidadeDosAtivos`, `suprimentosDosAtivos` e `lerContador`). O que é restrito, como o IP no motivo da disponibilidade, vai só a quem tem `ativos.restritos` no local do ativo. As OS, o saldo e a solicitação vão, com o Operação desligado, como a quem não os vê.
+
 ### 6. Os tipos de fábrica, numa lista só
 
 `TIPOS_DE_CHAMADO_DE_FABRICA` (domínio) traz os 9 tipos com o formulário de cada um. O `organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria. A migration os grava nas organizações que já existem, como a `0057_categorias_de_software`. O texto da migration sai de um gerador conferido por um teste contra a lista do domínio, para os dois não se afastarem:
@@ -316,6 +325,18 @@ O evento tem o código na coluna `evento`, como `assumiu`, `passou`, `devolveu`,
 A abertura não guarda o resumo pronto. A leitura do chamado o monta pelo `resumoDasRespostas`, da cópia do formulário e das respostas que o chamado guarda desde a abertura, com os nomes de agora dos ativos, dos locais e das pessoas. As respostas do Ativo, do Local e da Pessoa guardam o id: com o resumo pronto, a pessoa anonimizada ficaria nele com o nome, e a spec manda a anonimização trocar a referência à pessoa, e não o texto livre (spec chamados, "Quem vê e quem atende os chamados").
 
 Os alertas do ativo entram na leitura (decisão 9), e não na tabela.
+
+**A ficha.** O `GET /chamados/:numero`, com `chamados.ver`, lê o chamado inteiro numa resposta, para a tela não montar a ficha de várias consultas:
+- **o cabeçalho:** o número, o título, a situação, a versão, a origem, a abertura, o tipo, a pessoa e o ativo ligado, com o resumo da seção "Ativo ligado" (decisão 5, "O ativo no chamado", que chega com a tarefa 4.25), quem atende, desde quando e se não atende mais os chamados, pela mesma conta das colunas do quadro, e o `permite.atender`, se a conta atende todos os locais do chamado, como o das OS;
+- **o prazo:** o relógio guardado, como na lista dos prazos, o horário da TI e o momento em que o relógio parou, lido da conversa: o do primeiro `aguardando` ou `resolveu` depois da última volta do relógio (a abertura, o `retomou` ou o `reabriu`), porque o resolvido que veio do aguardando parou na espera. Com o relógio contando, ele é nulo;
+- **a OS e a solicitação,** com a situação, só a quem as vê: a OS com `ordens.ver` no local dela, e a solicitação com `solicitacoes.ver` num dos locais dela, como nas listas delas. A quem não as vê, elas vêm nulas;
+- **as respostas:** o formulário copiado, as respostas guardadas, o que elas citam pelo id (os ativos, com o rótulo e o patrimônio, os locais, pelo caminho, e as pessoas), com os nomes de agora, os anexos de cada campo e o resumo, montado desses nomes;
+- **a conversa:** as mensagens, as notas e os eventos, na ordem da tabela, com os nomes de agora e os anexos de cada mensagem e de cada nota, e os alertas do ativo (decisão 9), na hora em que abriram. O evento traz quem agiu e as contas dos dados, o `de` e o `para`, com o nome; o que não tem uma delas a traz nula. O evento de um código que esta versão não lê, como o gravado por uma versão mais nova antes do `voltar` da operação, fica de fora da ficha, em vez de derrubá-la;
+- **as respostas prontas** do tipo do chamado, na ordem da lista delas (as sem tipos e as que têm o tipo), com o `{nome}` trocado pelo primeiro nome da pessoa (`nomeCurto`). A lista das respostas prontas é só de quem configura, e quem atende as lê aqui.
+
+Os anexos vão com o id do arquivo, o nome, o tipo e o tamanho, como o envio os devolve, e o arquivo removido não vai. A tela os baixa pelo `GET /chamados/:numero/anexos/:arquivo` (decisão 10).
+
+Com um módulo opcional desligado na organização, a ficha leva o que é dele como a quem não o vê, como o cartão dos compatíveis da ficha do ativo e os ativos da ficha do fornecedor: sem os alertas, com o Alertas desligado; sem a OS e a solicitação, com o Operação; e sem o atalho do ativo, com o Ativos. O ativo ligado e os ativos das respostas continuam no cabeçalho e no resumo, porque são do chamado.
 
 ### 9. Os alertas do ativo, lidos na hora
 

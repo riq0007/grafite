@@ -1,10 +1,10 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.10): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.11): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
-// quem abre e para a prévia do colaborador de quem configura; e o quadro e a lista dos prazos, com
-// `chamados.ver`. As regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`,
-// `chamados/quadro.ts` e `chamados/prazos.ts`; aqui, o formato do pedido e da resposta. A
-// pessoa e o tipo da abertura chegam como ids, e o vazio deles é recusado pela abertura, com as
-// outras recusas dos campos, para a gaveta mostrá-las juntas.
+// quem abre e para a prévia do colaborador de quem configura; e o quadro, a lista dos prazos e a
+// ficha do chamado, com `chamados.ver`. As regras ficam em `chamados/abertura.ts`,
+// `chamados/sugestoes.ts`, `chamados/quadro.ts`, `chamados/prazos.ts` e `chamados/ficha.ts`;
+// aqui, o formato do pedido e da resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
+// deles é recusado pela abertura, com as outras recusas dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
   fusoReconhecido,
@@ -12,7 +12,11 @@ import {
   MENSAGENS_DO_TIPO_DE_CHAMADO,
   MODOS_DO_PRAZO,
   nomeDoFuso,
+  ORIGENS_DO_CHAMADO,
   RECUSA_DO_FORMULARIO,
+  SEVERIDADES_DO_ALERTA,
+  SITUACOES_DA_ORDEM,
+  SITUACOES_DA_SOLICITACAO,
   SITUACOES_DO_CHAMADO,
 } from '@grafite/domain';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -20,6 +24,9 @@ import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
+import { NumeroDoChamado } from '../chamados/alcance.ts';
+import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
+import { FormularioDeChamado } from '../chamados/formulario.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
@@ -141,6 +148,28 @@ const QuadroDosChamados = z
   })
   .meta({ id: 'QuadroDosChamados' });
 
+/**
+ * O relógio guardado, de onde a web recalcula a situação a cada minuto, com o horário da TI; nulo
+ * com o prazo estragado.
+ */
+const RelogioDoChamado = z
+  .object({
+    /** O prazo copiado do tipo na abertura, em minutos, com o valor e a unidade do tipo. */
+    prazo: z.object({
+      modo: z.enum(MODOS_DO_PRAZO),
+      respostaMin: z.int(),
+      resolucaoMin: z.int(),
+      resposta: ValorDoPrazo,
+      resolucao: ValorDoPrazo,
+    }),
+    /** Os segundos contados até a última parada. */
+    contadoS: z.int(),
+    /** O instante em que o relógio voltou a contar, ou nulo, com ele parado. */
+    relogioDesde: z.iso.datetime().nullable(),
+    primeiraRespostaEm: z.iso.datetime().nullable(),
+  })
+  .nullable();
+
 /** Um chamado aberto na lista dos prazos, com o que a lista e o painel mostram. */
 const ChamadoNosPrazos = z.object({
   numero: z.int(),
@@ -162,27 +191,7 @@ const ChamadoNosPrazos = z.object({
     .nullable(),
   locais: z.array(z.uuid()),
   semLocal: z.boolean(),
-  /**
-   * O relógio guardado, de onde a web recalcula a situação a cada minuto, com o horário da TI; nulo
-   * com o prazo estragado.
-   */
-  relogio: z
-    .object({
-      /** O prazo copiado do tipo na abertura, em minutos, com o valor e a unidade do tipo. */
-      prazo: z.object({
-        modo: z.enum(MODOS_DO_PRAZO),
-        respostaMin: z.int(),
-        resolucaoMin: z.int(),
-        resposta: ValorDoPrazo,
-        resolucao: ValorDoPrazo,
-      }),
-      /** Os segundos contados até a última parada. */
-      contadoS: z.int(),
-      /** O instante em que o relógio voltou a contar, ou nulo, com ele parado. */
-      relogioDesde: z.iso.datetime().nullable(),
-      primeiraRespostaEm: z.iso.datetime().nullable(),
-    })
-    .nullable(),
+  relogio: RelogioDoChamado,
   /** O grupo no momento da leitura, no dia do fuso de quem olha; nulo com o prazo estragado. */
   grupo: z.enum(GRUPOS_DO_PRAZO).nullable(),
   /** A última mensagem, de quem pediu ou da TI, com o começo do texto, até 280 caracteres. */
@@ -198,6 +207,149 @@ const PrazosDosChamados = z
     chamados: z.array(ChamadoNosPrazos),
   })
   .meta({ id: 'PrazosDosChamados' });
+
+/** O anexo, para a tela baixá-lo pelo `GET /chamados/:numero/anexos/:arquivo`. */
+const AnexoDaFicha = z.object({
+  /** O id do arquivo. */
+  id: z.uuid(),
+  nome: z.string(),
+  tipo: z.string(),
+  bytes: z.int(),
+});
+
+/** Quem escreveu ou agiu: uma conta, ou a pessoa que pediu, com o nome de agora. */
+const AutorNaConversa = z.object({
+  tipo: z.enum(['conta', 'pessoa']),
+  id: z.uuid(),
+  nome: z.string(),
+});
+
+/** Uma conta dos dados do evento, com o nome de agora; nula quando o evento não a tem. */
+const ContaDoEvento = z.object({ conta: z.uuid(), nome: z.string() }).nullable();
+
+const EscritoNaConversa = z.object({
+  id: z.uuid(),
+  em: z.iso.datetime(),
+  autor: AutorNaConversa,
+  texto: z.string(),
+  anexos: z.array(AnexoDaFicha),
+});
+
+/**
+ * A conversa na ordem: a mensagem para a pessoa, a nota interna, o evento, de que a web monta a
+ * frase com os nomes de agora, e o alerta do ativo ligado, na hora em que abriu.
+ */
+const ItemDaConversa = z.discriminatedUnion('especie', [
+  EscritoNaConversa.extend({ especie: z.literal('mensagem') }),
+  EscritoNaConversa.extend({ especie: z.literal('nota') }),
+  z.object({
+    especie: z.literal('evento'),
+    id: z.uuid(),
+    em: z.iso.datetime(),
+    autor: AutorNaConversa,
+    evento: z.enum(EVENTOS_DA_FICHA),
+    /** De quem o chamado saiu, no `assumiu`, no `passou` e no `devolveu`. */
+    de: ContaDoEvento,
+    /** Para quem ele foi, no `passou`, ou voltou, no `desfez` e no `reabriu`; nulo na triagem. */
+    para: ContaDoEvento,
+  }),
+  z.object({
+    especie: z.literal('alerta'),
+    id: z.uuid(),
+    em: z.iso.datetime(),
+    texto: z.string(),
+    severidade: z.enum(SEVERIDADES_DO_ALERTA),
+  }),
+]);
+
+const FichaDoChamado = z
+  .object({
+    numero: z.int(),
+    titulo: z.string(),
+    situacao: z.enum(SITUACOES_DO_CHAMADO),
+    /** A versão, que sobe nas ações que mudam a situação ou quem atende. */
+    versao: z.int(),
+    origem: z.enum(ORIGENS_DO_CHAMADO),
+    abertoEm: z.iso.datetime(),
+    tipo: z.object({ id: z.uuid(), nome: z.string(), icone: z.string() }),
+    /**
+     * Quem pediu, com o caminho do local de trabalho. O atalho da ficha e os contatos vão a quem tem
+     * `pessoas.ver` no local dela; a anonimizada vem com o nome anonimizado, sem os dois.
+     */
+    pessoa: z.object({
+      id: z.uuid(),
+      nome: z.string(),
+      local: z.string().nullable(),
+      abrir: z.boolean(),
+      contatos: z
+        .object({ email: z.string().nullable(), telefone: z.string().nullable() })
+        .nullable(),
+    }),
+    /**
+     * Quem atende, desde quando, e se não atende mais os chamados: a conta inativa ou fora de um dos
+     * locais do chamado, como no quadro.
+     */
+    responsavel: z
+      .object({
+        conta: z.uuid(),
+        nome: z.string(),
+        desde: z.iso.datetime(),
+        naoAtendeMais: z.boolean(),
+      })
+      .nullable(),
+    /** O ativo ligado, a toda conta que vê o chamado; o atalho, a quem tem `ativos.ver` no local dele. */
+    ativo: z
+      .object({
+        id: z.uuid(),
+        rotulo: z.string(),
+        patrimonio: z.string().nullable(),
+        local: z.string().nullable(),
+        abrir: z.boolean(),
+      })
+      .nullable(),
+    locais: z.array(z.uuid()),
+    semLocal: z.boolean(),
+    /** Se a conta atende todos os locais do chamado. */
+    permite: z.object({ atender: z.boolean() }),
+    relogio: RelogioDoChamado,
+    /** O momento em que o relógio parou, o "Parou às 09:21"; nulo com ele contando. */
+    parouEm: z.iso.datetime().nullable(),
+    horario: HorarioDaTiLido,
+    /** A OS do chamado, a quem a vê. */
+    os: z
+      .object({ id: z.uuid(), numero: z.int(), situacao: z.enum(SITUACOES_DA_ORDEM) })
+      .nullable(),
+    /** A solicitação do chamado, a quem a vê. */
+    solicitacao: z
+      .object({ id: z.uuid(), numero: z.int(), situacao: z.enum(SITUACOES_DA_SOLICITACAO) })
+      .nullable(),
+    /** O formulário copiado na abertura e as respostas guardadas, pelo id de cada campo. */
+    formulario: FormularioDeChamado,
+    respostas: z.record(z.string(), z.unknown()),
+    /** O que as respostas citam pelo id, com os nomes de agora, na ordem do formulário. */
+    citados: z.object({
+      ativos: z.array(
+        z.object({ id: z.uuid(), rotulo: z.string(), patrimonio: z.string().nullable() }),
+      ),
+      locais: z.array(z.object({ id: z.uuid(), caminho: z.string() })),
+      pessoas: z.array(z.object({ id: z.uuid(), nome: z.string() })),
+    }),
+    /** Os anexos dos campos Anexo, com o id do campo, na ordem das respostas. */
+    anexosDosCampos: z.array(AnexoDaFicha.extend({ campo: z.string() })),
+    /** A linha da abertura, montada das respostas que a pessoa vê, com os nomes de agora. */
+    resumo: z.string(),
+    conversa: z.array(ItemDaConversa),
+    /** As respostas prontas do tipo, na ordem, com o `{nome}` trocado pelo primeiro nome da pessoa. */
+    respostasProntas: z.array(
+      z.object({
+        id: z.uuid(),
+        rotulo: z.string(),
+        texto: z.string(),
+        esperaAResposta: z.boolean(),
+      }),
+    ),
+  })
+  .meta({ id: 'FichaDoChamado' });
 
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
@@ -303,6 +455,26 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
           acesso: sessaoDa(requisicao).acesso,
           arvore: await lerArvore(tx),
           fuso: requisicao.query.fuso,
+          agora: agora(),
+        }),
+      ),
+  );
+
+  app.get(
+    '/chamados/:numero',
+    {
+      config: { permissao: 'chamados.ver' },
+      schema: {
+        summary: 'A ficha do chamado, com o prazo, as respostas, a conversa e as respostas prontas',
+        params: z.object({ numero: NumeroDoChamado }),
+        response: { 200: FichaDoChamado, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        fichaDoChamado(tx, requisicao.params.numero, {
+          acesso: sessaoDa(requisicao).acesso,
+          arvore: await lerArvore(tx),
           agora: agora(),
         }),
       ),

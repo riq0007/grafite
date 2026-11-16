@@ -4,6 +4,7 @@ import {
   MAXIMO_DE_RESPOSTAS_PRONTAS,
   MENSAGENS_DA_RESPOSTA_PRONTA,
   type PedidoDaRespostaPronta,
+  textoDaRespostaPronta,
 } from './respostas-prontas.ts';
 
 const ACESSO = '0193a1b2-0000-7000-8000-000000000001';
@@ -93,5 +94,30 @@ describe('conferirRespostaPronta', () => {
       limite: 'A organização já tem 100 respostas prontas.',
       naoEncontrada: 'Resposta pronta não encontrada.',
     });
+  });
+});
+
+describe('textoDaRespostaPronta', () => {
+  it('o {nome} vira o primeiro nome da pessoa, em cada vez que aparece', () => {
+    expect(textoDaRespostaPronta('Oi, {nome}! Pode mandar um print do erro?', 'Marina Rocha')).toBe(
+      'Oi, Marina! Pode mandar um print do erro?',
+    );
+    expect(
+      textoDaRespostaPronta('{nome}, o toner foi trocado. {nome}, confira.', ' Rita  Moraes '),
+    ).toBe('Rita, o toner foi trocado. Rita, confira.');
+  });
+
+  it('a pessoa anonimizada fica com o nome inteiro, que tem o código', () => {
+    expect(textoDaRespostaPronta('Oi, {nome}!', 'Pessoa anonimizada 7KQ2')).toBe(
+      'Oi, Pessoa anonimizada 7KQ2!',
+    );
+  });
+
+  it('só o {nome} exato muda, e o nome entra como foi escrito', () => {
+    expect(textoDaRespostaPronta('Oi! {Nome}, { nome } e {nomes}.', 'Marina Rocha')).toBe(
+      'Oi! {Nome}, { nome } e {nomes}.',
+    );
+    // O nome não é um padrão da troca: o "$&" fica como está.
+    expect(textoDaRespostaPronta('Oi, {nome}!', 'Jo$&o Silva')).toBe('Oi, Jo$&o!');
   });
 });

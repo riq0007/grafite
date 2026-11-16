@@ -27675,6 +27675,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A ficha do chamado, com o prazo, as respostas, a conversa e as respostas prontas */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FichaDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -35025,6 +35108,211 @@ export interface components {
                 } | null;
             }[];
         };
+        FichaDoChamadoInput: {
+            numero: number;
+            titulo: string;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            versao: number;
+            /** @enum {string} */
+            origem: "ti";
+            /** Format: date-time */
+            abertoEm: string;
+            tipo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                icone: string;
+            };
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+                abrir: boolean;
+                contatos: {
+                    email: string | null;
+                    telefone: string | null;
+                } | null;
+            };
+            responsavel: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                /** Format: date-time */
+                desde: string;
+                naoAtendeMais: boolean;
+            } | null;
+            ativo: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: string | null;
+                abrir: boolean;
+            } | null;
+            locais: string[];
+            semLocal: boolean;
+            permite: {
+                atender: boolean;
+            };
+            relogio: {
+                prazo: {
+                    /** @enum {string} */
+                    modo: "corridas" | "horario";
+                    respostaMin: number;
+                    resolucaoMin: number;
+                    resposta: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                    resolucao: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                };
+                contadoS: number;
+                relogioDesde: string | null;
+                primeiraRespostaEm: string | null;
+            } | null;
+            parouEm: string | null;
+            horario: components["schemas"]["HorarioDaTiInput"];
+            os: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            } | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+            respostas: {
+                [key: string]: unknown;
+            };
+            citados: {
+                ativos: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                }[];
+                locais: {
+                    /** Format: uuid */
+                    id: string;
+                    caminho: string;
+                }[];
+                pessoas: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                }[];
+            };
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            resumo: string;
+            conversa: ({
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "mensagem";
+            } | {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "nota";
+            } | {
+                /** @constant */
+                especie: "evento";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                /** @enum {string} */
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu";
+                de: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                para: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+            } | {
+                /** @constant */
+                especie: "alerta";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                texto: string;
+                /** @enum {string} */
+                severidade: "critico" | "atencao" | "info";
+            })[];
+            respostasProntas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                texto: string;
+                esperaAResposta: boolean;
+            }[];
+        };
         AnexoEnviadoInput: {
             /** Format: uuid */
             id: string;
@@ -39967,6 +40255,211 @@ export interface components {
                     em: string;
                     texto: string;
                 } | null;
+            }[];
+        };
+        FichaDoChamado: {
+            numero: number;
+            titulo: string;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            versao: number;
+            /** @enum {string} */
+            origem: "ti";
+            /** Format: date-time */
+            abertoEm: string;
+            tipo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                icone: string;
+            };
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+                abrir: boolean;
+                contatos: {
+                    email: string | null;
+                    telefone: string | null;
+                } | null;
+            };
+            responsavel: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                /** Format: date-time */
+                desde: string;
+                naoAtendeMais: boolean;
+            } | null;
+            ativo: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: string | null;
+                abrir: boolean;
+            } | null;
+            locais: string[];
+            semLocal: boolean;
+            permite: {
+                atender: boolean;
+            };
+            relogio: {
+                prazo: {
+                    /** @enum {string} */
+                    modo: "corridas" | "horario";
+                    respostaMin: number;
+                    resolucaoMin: number;
+                    resposta: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                    resolucao: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                };
+                contadoS: number;
+                relogioDesde: string | null;
+                primeiraRespostaEm: string | null;
+            } | null;
+            parouEm: string | null;
+            horario: components["schemas"]["HorarioDaTi"];
+            os: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            } | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+            formulario: components["schemas"]["FormularioDeChamado"];
+            respostas: {
+                [key: string]: unknown;
+            };
+            citados: {
+                ativos: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                }[];
+                locais: {
+                    /** Format: uuid */
+                    id: string;
+                    caminho: string;
+                }[];
+                pessoas: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                }[];
+            };
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            resumo: string;
+            conversa: ({
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "mensagem";
+            } | {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "nota";
+            } | {
+                /** @constant */
+                especie: "evento";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                /** @enum {string} */
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu";
+                de: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                para: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+            } | {
+                /** @constant */
+                especie: "alerta";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                texto: string;
+                /** @enum {string} */
+                severidade: "critico" | "atencao" | "info";
+            })[];
+            respostasProntas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                texto: string;
+                esperaAResposta: boolean;
             }[];
         };
         AnexoEnviado: {

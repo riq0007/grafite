@@ -3,7 +3,8 @@
 // API os lê na transação: os Em uso e os Inativos da organização. O Rascunho fica de fora, porque o
 // descartado deixaria a resposta presa a um tipo que não existe, e ela sumiria de todos os
 // chamados. O rótulo repetido, quem acha é o índice único do banco; o limite de 100, a API, que
-// conta as respostas depois da trava.
+// conta as respostas depois da trava. A ficha do chamado (tarefa 4.11) as lê com o `{nome}` trocado.
+import { nomeCurto } from '../pessoas/pessoa.ts';
 import { normalizarTexto } from '../texto.ts';
 
 /** As respostas prontas de uma organização. */
@@ -93,4 +94,14 @@ export function conferirRespostaPronta(
       tipos,
     },
   };
+}
+
+/**
+ * O texto da resposta pronta para o chamado: cada `{nome}` vira o primeiro nome da pessoa
+ * (`nomeCurto`), e a anonimizada fica com o nome inteiro. O nome entra como foi escrito, sem os
+ * padrões do `replace`.
+ */
+export function textoDaRespostaPronta(texto: string, nomeDaPessoa: string): string {
+  const nome = nomeCurto(nomeDaPessoa);
+  return texto.replaceAll('{nome}', () => nome);
 }

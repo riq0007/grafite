@@ -25,6 +25,7 @@ import {
   alcance,
   type ErrosDaPessoa,
   limparPessoa,
+  NOME_DA_PESSOA_ANONIMIZADA,
   normalizarTexto,
   podeEm,
   SITUACOES_DO_LOCAL,
@@ -752,7 +753,8 @@ export const rotasDasPessoas: FastifyPluginAsyncZod<{ banco: Banco; agora: () =>
             .where(eq(arquivos.id, atual.pessoa.fotoId));
           camposApagados.push('foto');
         }
-        const nome = `Pessoa anonimizada ${aleatoriosCrockford(4)}`;
+        // O começo que o `nomeCurto` reconhece, para as frases dos chamados levarem o nome inteiro.
+        const nome = `${NOME_DA_PESSOA_ANONIMIZADA} ${aleatoriosCrockford(4)}`;
         const [pessoa] = await tx
           .update(pessoas)
           .set({
