@@ -241,6 +241,10 @@ export const ACOES_DA_AUDITORIA = {
   // Os chamados (change chamados-da-ti)
   'tipo-de-chamado.criado': 'Tipo de chamado criado',
   'tipos-de-chamado.ordenados': 'Tipos de chamado reordenados',
+  'tipo-de-chamado.alterado': 'Tipo de chamado alterado',
+  'tipo-de-chamado.inativado': 'Tipo de chamado inativado',
+  'tipo-de-chamado.reativado': 'Tipo de chamado reativado',
+  'tipo-de-chamado.descartado': 'Tipo de chamado descartado',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

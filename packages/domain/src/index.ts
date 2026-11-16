@@ -327,6 +327,14 @@ export {
   type ValorDoPrazo,
 } from './chamados/prazo.ts';
 export {
+  AVISO_DA_SOLICITACAO_NO_DUPLICAR,
+  NOVO_TIPO_DE_CHAMADO,
+  nomeDaCopia,
+  nomeDoNovoTipo,
+  type RascunhoDoTipoDeChamado,
+  solicitacaoDoDuplicado,
+} from './chamados/rascunho.ts';
+export {
   type ConferenciaDasRespostas,
   camposVisiveis,
   conferirRespostas,

@@ -22,7 +22,7 @@ import {
   pessoas,
 } from '@grafite/db';
 import { normalizarTexto, type Permissao, type TipoDeLocal, textoDeBusca } from '@grafite/domain';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import pg from 'pg';
 import { inject } from 'vitest';
@@ -545,4 +545,20 @@ export function auditoriaDaRequisicao(
   return naOrganizacao(api.banco, orgId, (tx) =>
     tx.select().from(auditoria).where(eq(auditoria.codigoDeRastreio, codigo)),
   );
+}
+
+/**
+ * Espera até `quantas` transações deste banco estarem paradas, esperando uma trava. A consulta vai
+ * pelo papel da aplicação, o único que enxerga a espera das conexões dela.
+ */
+export async function esperarNaTrava(api: ApiDeTeste, quantas = 1) {
+  for (let tentativa = 0; tentativa < 250; tentativa += 1) {
+    const { rows } = await api.banco.execute<{ esperando: number }>(
+      sql`select count(*)::int as esperando from pg_stat_activity
+        where wait_event_type = 'Lock' and datname = current_database()`,
+    );
+    if ((rows[0]?.esperando ?? 0) >= quantas) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(`As ${quantas} transações não chegaram a esperar a trava.`);
 }

@@ -55,6 +55,11 @@ export const MENSAGENS_DO_TIPO_DE_CHAMADO = {
     "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.",
   /** A ordem que a tela manda, com todos os tipos da organização. */
   ordem: 'A ordem precisa ter todos os tipos, uma vez cada.',
+  naoEncontrado: 'Tipo de chamado não encontrado.',
+  /** "Criar o tipo" e "Descartar" no tipo que já saiu do Rascunho. */
+  naoERascunho: 'Este tipo não é mais um rascunho.',
+  /** Inativar e reativar o Rascunho, que só entra em uso pelo "Criar o tipo". */
+  rascunho: "O rascunho entra em uso pelo 'Criar o tipo'.",
 } as const;
 
 const LIMITE_DO_NOME = 40;

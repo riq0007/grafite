@@ -193,18 +193,23 @@ describe('grafite organizacao criar', () => {
       ...Array.from({ length: 7 }, () => 'categoria-de-software.criada'),
       ...Array.from({ length: 9 }, () => 'tipo-de-chamado.criado'),
     ]);
-    // A criação de cada tipo de fábrica, na ordem, com o nome, a situação e a posição.
+    // A criação de cada tipo de fábrica, na ordem, com a visão do tipo das gravações da API: tudo
+    // o que a lista do domínio põe, fora o formulário, Em uso e na posição dele.
     expect(
       registros
         .filter((registro) => registro.acao === 'tipo-de-chamado.criado')
         .map(({ alvoTipo, alvoId, antes, depois }) => ({ alvoTipo, alvoId, antes, depois })),
     ).toEqual(
-      tipos.map(({ id, nome, ordem }) => ({
-        alvoTipo: 'tipo-de-chamado',
-        alvoId: id,
-        antes: null,
-        depois: { nome, situacao: 'em-uso', ordem },
-      })),
+      tipos.map(({ id, ordem }, posicao) => {
+        const { formulario: _formulario, ...deFabrica } =
+          TIPOS_DE_CHAMADO_DE_FABRICA[posicao] ?? {};
+        return {
+          alvoTipo: 'tipo-de-chamado',
+          alvoId: id,
+          antes: null,
+          depois: { ...deFabrica, situacao: 'em-uso', ordem },
+        };
+      }),
     );
     for (const registro of registros) {
       expect(registro).toMatchObject({

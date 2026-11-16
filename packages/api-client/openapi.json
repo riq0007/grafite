@@ -10177,6 +10177,160 @@
           "tipos"
         ]
       },
+      "PedidoDoTipoDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string"
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prazo": {
+            "type": "object",
+            "properties": {
+              "modo": {
+                "type": "string",
+                "enum": [
+                  "corridas",
+                  "horario"
+                ]
+              },
+              "resposta": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ]
+              },
+              "resolucao": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ]
+              }
+            },
+            "required": [
+              "modo",
+              "resposta",
+              "resolucao"
+            ]
+          },
+          "atendePorPadrao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semNinguem": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "fica"
+            ]
+          },
+          "podeVirarOs": {
+            "type": "boolean"
+          },
+          "geraSolicitacao": {
+            "type": "string",
+            "enum": [
+              "nao",
+              "toner",
+              "equipamento"
+            ]
+          },
+          "tipoDeAtivoDoEquipamento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "apareceParaOColaborador": {
+            "type": "boolean"
+          },
+          "soATiAbre": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nome",
+          "icone",
+          "frase",
+          "prazo",
+          "atendePorPadrao",
+          "semNinguem",
+          "podeVirarOs",
+          "geraSolicitacao",
+          "tipoDeAtivoDoEquipamento",
+          "pedeOAtivo",
+          "apareceParaOColaborador",
+          "soATiAbre"
+        ]
+      },
+      "TipoDeChamadoDuplicadoInput": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "$ref": "#/components/schemas/TipoDeChamadoInput"
+          },
+          "solicitacaoDesligada": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tipo",
+          "solicitacaoDesligada"
+        ]
+      },
       "PessoaDoSegredoInput": {
         "type": "object",
         "properties": {
@@ -33853,6 +34007,165 @@
         },
         "required": [
           "tipos"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoTipoDeChamado": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string"
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prazo": {
+            "type": "object",
+            "properties": {
+              "modo": {
+                "type": "string",
+                "enum": [
+                  "corridas",
+                  "horario"
+                ]
+              },
+              "resposta": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ],
+                "additionalProperties": false
+              },
+              "resolucao": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "modo",
+              "resposta",
+              "resolucao"
+            ],
+            "additionalProperties": false
+          },
+          "atendePorPadrao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semNinguem": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "fica"
+            ]
+          },
+          "podeVirarOs": {
+            "type": "boolean"
+          },
+          "geraSolicitacao": {
+            "type": "string",
+            "enum": [
+              "nao",
+              "toner",
+              "equipamento"
+            ]
+          },
+          "tipoDeAtivoDoEquipamento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "apareceParaOColaborador": {
+            "type": "boolean"
+          },
+          "soATiAbre": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nome",
+          "icone",
+          "frase",
+          "prazo",
+          "atendePorPadrao",
+          "semNinguem",
+          "podeVirarOs",
+          "geraSolicitacao",
+          "tipoDeAtivoDoEquipamento",
+          "pedeOAtivo",
+          "apareceParaOColaborador",
+          "soATiAbre"
+        ],
+        "additionalProperties": false
+      },
+      "TipoDeChamadoDuplicado": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "$ref": "#/components/schemas/TipoDeChamado"
+          },
+          "solicitacaoDesligada": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tipo",
+          "solicitacaoDesligada"
         ],
         "additionalProperties": false
       },
@@ -74055,6 +74368,71 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Criar um Rascunho de tipo de chamado, com os padrões do \"Novo tipo\"",
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/chamados/tipos/ordem": {
@@ -74125,6 +74503,541 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}/duplicacao": {
+      "post": {
+        "summary": "Duplicar um tipo de chamado como Rascunho, com o formulário",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamadoDuplicado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}": {
+      "put": {
+        "summary": "Salvar o tipo de chamado, na situação em que ele está",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoTipoDeChamadoInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Descartar o Rascunho de tipo de chamado",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}/criacao": {
+      "post": {
+        "summary": "Criar o tipo: o Rascunho passa a Em uso, com as conferências da gravação",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoTipoDeChamadoInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}/inativacao": {
+      "post": {
+        "summary": "Inativar o tipo de chamado; os chamados dele seguem até resolvidos",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}/reativacao": {
+      "post": {
+        "summary": "Reativar o tipo de chamado, com as conferências da gravação",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "Default Response",
             "content": {
               "application/json": {

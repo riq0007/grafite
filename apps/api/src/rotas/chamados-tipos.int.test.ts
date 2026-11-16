@@ -12,7 +12,7 @@ import {
   tiposDeChamado,
 } from '@grafite/db';
 import { TIPOS_DE_CHAMADO_DE_FABRICA } from '@grafite/domain';
-import { asc, eq, like, sql } from 'drizzle-orm';
+import { asc, eq, like } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { criarTipo, desligarModulos } from '../../test/alertas.ts';
 import {
@@ -24,6 +24,7 @@ import {
   criarOrganizacao,
   criarPerfil,
   type Entrada,
+  esperarNaTrava,
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
 import { criarTiposDeFabrica } from '../chamados/fabrica.ts';
@@ -121,23 +122,6 @@ const eventosGravados = () =>
   naOrganizacao(api.banco, org, (tx) =>
     tx.select({ tipo: eventos.tipo, permissoes: eventos.permissoes }).from(eventos),
   );
-
-/**
- * Espera até uma transação deste banco estar parada, esperando uma trava. A consulta vai pelo
- * papel da aplicação, o único que enxerga a espera das conexões dela, como no teste das
- * preferências.
- */
-async function esperarNaTrava() {
-  for (let tentativa = 0; tentativa < 250; tentativa += 1) {
-    const { rows } = await api.banco.execute<{ esperando: number }>(
-      sql`select count(*)::int as esperando from pg_stat_activity
-        where wait_event_type = 'Lock' and datname = current_database()`,
-    );
-    if ((rows[0]?.esperando ?? 0) >= 1) return;
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-  throw new Error('A ordem não chegou a esperar a trava.');
-}
 
 beforeAll(async () => {
   api = await abrirApi();
@@ -354,7 +338,7 @@ describe('a ordem dos tipos', () => {
     await linhasPresas;
     const pedido = ordenar(antes.map(({ id }) => id));
     try {
-      await esperarNaTrava();
+      await esperarNaTrava(api);
     } finally {
       soltar();
       await segurando;

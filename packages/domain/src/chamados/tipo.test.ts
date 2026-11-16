@@ -180,8 +180,9 @@ describe('as listas do tipo de chamado', () => {
     expect(SOLICITACOES_DO_TIPO_DE_CHAMADO).toEqual(['nao', 'toner', 'equipamento']);
   });
 
-  // A da ordem é só da API, como a das categorias de software: a tela manda sempre todos os tipos.
-  it('guarda as frases das recusas da spec e a da ordem', () => {
+  // As da ordem, do tipo que não existe e do rascunho são só da API, para a tela que ficou para
+  // trás: a ordem manda todos os tipos, e só o Rascunho mostra "Criar o tipo" e "Descartar".
+  it('guarda as frases das recusas da spec e as da API', () => {
     expect(M).toEqual({
       nome: 'Escreva o nome.',
       nomeLongo: 'Use até 40 caracteres.',
@@ -197,6 +198,9 @@ describe('as listas do tipo de chamado', () => {
       solicitacaoSemAlcance:
         "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.",
       ordem: 'A ordem precisa ter todos os tipos, uma vez cada.',
+      naoEncontrado: 'Tipo de chamado não encontrado.',
+      naoERascunho: 'Este tipo não é mais um rascunho.',
+      rascunho: "O rascunho entra em uso pelo 'Criar o tipo'.",
     });
   });
 });

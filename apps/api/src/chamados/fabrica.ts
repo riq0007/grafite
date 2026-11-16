@@ -11,6 +11,7 @@ import {
 } from '@grafite/domain';
 import { getTableColumns, getTableName, sql } from 'drizzle-orm';
 import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
+import { lerTiposDeChamado, visaoDoTipoDeChamado } from './tipos.ts';
 
 /**
  * A linha de um tipo de fábrica, sem a organização. Quem atende por padrão e o tipo de ativo do
@@ -55,34 +56,28 @@ export function linhasDosTiposDeFabrica(
 
 /**
  * Grava os tipos de fábrica na organização do contexto, que o `organizacao criar` acabou de criar,
- * com uma `tipo-de-chamado.criado` por tipo na auditoria, na ordem.
+ * com uma `tipo-de-chamado.criado` por tipo na auditoria, na ordem, com a visão do tipo que as
+ * gravações da API também registram.
  */
 export async function criarTiposDeFabrica(
   tx: Transacao,
   { ator, momento }: { ator: Ator; momento: Date },
 ): Promise<number> {
-  const criados = await tx
-    .insert(tiposDeChamado)
-    .values(
-      linhasDosTiposDeFabrica().map((de) => ({
-        ...de,
-        orgId: sql`app.current_org()`,
-        formulario: { ...de.formulario },
-        criadoEm: momento,
-      })),
-    )
-    .returning({
-      id: tiposDeChamado.id,
-      nome: tiposDeChamado.nome,
-      situacao: tiposDeChamado.situacao,
-      ordem: tiposDeChamado.ordem,
-    });
-  for (const tipo of criados.sort((a, b) => a.ordem - b.ordem)) {
+  await tx.insert(tiposDeChamado).values(
+    linhasDosTiposDeFabrica().map((de) => ({
+      ...de,
+      orgId: sql`app.current_org()`,
+      formulario: { ...de.formulario },
+      criadoEm: momento,
+    })),
+  );
+  const criados = await lerTiposDeChamado(tx, momento);
+  for (const tipo of criados) {
     await registrarNaAuditoria(tx, {
       acao: 'tipo-de-chamado.criado',
       ator,
       alvo: { tipo: 'tipo-de-chamado', id: tipo.id },
-      depois: { nome: tipo.nome, situacao: tipo.situacao, ordem: tipo.ordem },
+      depois: visaoDoTipoDeChamado(tipo),
       momento,
     });
   }
