@@ -53,6 +53,8 @@ export const MENSAGENS_DO_TIPO_DE_CHAMADO = {
   tonerSemAtivo: "O Toner precisa do ativo: ligue 'Pede o ativo'.",
   solicitacaoSemAlcance:
     "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.",
+  /** A ordem que a tela manda, com todos os tipos da organização. */
+  ordem: 'A ordem precisa ter todos os tipos, uma vez cada.',
 } as const;
 
 const LIMITE_DO_NOME = 40;

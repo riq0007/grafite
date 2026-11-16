@@ -4281,8 +4281,8 @@ export const respostasProntas = orgScoped(
   ],
 );
 
-/** Os dias da semana do horário da TI, de segunda (1) a domingo (7). */
-const DIAS_DA_SEMANA = [1, 2, 3, 4, 5, 6, 7] as const;
+/** Os dias da semana do horário da TI, de segunda (1) a domingo (7), os mesmos do domínio. */
+export const DIAS_DA_SEMANA_NO_BANCO = [1, 2, 3, 4, 5, 6, 7] as const;
 
 /**
  * O horário da TI (spec chamados, "Horário da TI"; change chamados-da-ti, design, decisões 1 e 3):
@@ -4307,7 +4307,7 @@ export const horarioDaTi = orgScoped(
       sql`cardinality(${t.dias}) between 1 and 7
         and ${t.dias} <@ '{1,2,3,4,5,6,7}'::smallint[]
         and ${sql.join(
-          DIAS_DA_SEMANA.map(
+          DIAS_DA_SEMANA_NO_BANCO.map(
             (dia) =>
               sql`cardinality(array_positions(${t.dias}, ${sql.raw(String(dia))}::smallint)) <= 1`,
           ),

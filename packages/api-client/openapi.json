@@ -9938,6 +9938,245 @@
           "aparelhos"
         ]
       },
+      "TipoDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string",
+            "enum": [
+              "gota",
+              "notebook",
+              "impressora",
+              "cadeado",
+              "janela",
+              "globo",
+              "telefone",
+              "reticencias",
+              "setas",
+              "computador",
+              "torre",
+              "fone",
+              "chave",
+              "caixa",
+              "camera",
+              "wi-fi"
+            ]
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "rascunho",
+              "em-uso",
+              "inativo"
+            ]
+          },
+          "ordem": {
+            "type": "number"
+          },
+          "prazo": {
+            "type": "object",
+            "properties": {
+              "modo": {
+                "type": "string",
+                "enum": [
+                  "corridas",
+                  "horario"
+                ]
+              },
+              "resposta": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ]
+              },
+              "resolucao": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ]
+              }
+            },
+            "required": [
+              "modo",
+              "resposta",
+              "resolucao"
+            ]
+          },
+          "atendePorPadrao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semNinguem": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "fica"
+            ]
+          },
+          "podeVirarOs": {
+            "type": "boolean"
+          },
+          "geraSolicitacao": {
+            "type": "string",
+            "enum": [
+              "nao",
+              "toner",
+              "equipamento"
+            ]
+          },
+          "tipoDeAtivoDoEquipamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "apareceParaOColaborador": {
+            "type": "boolean"
+          },
+          "soATiAbre": {
+            "type": "boolean"
+          },
+          "campos": {
+            "type": "number"
+          },
+          "duplicadoDe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "abertos": {
+            "type": "number"
+          },
+          "noUltimoAno": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "icone",
+          "frase",
+          "situacao",
+          "ordem",
+          "prazo",
+          "atendePorPadrao",
+          "semNinguem",
+          "podeVirarOs",
+          "geraSolicitacao",
+          "tipoDeAtivoDoEquipamento",
+          "pedeOAtivo",
+          "apareceParaOColaborador",
+          "soATiAbre",
+          "campos",
+          "duplicadoDe",
+          "abertos",
+          "noUltimoAno"
+        ]
+      },
+      "ListaDosTiposDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "tipos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TipoDeChamadoInput"
+            }
+          }
+        },
+        "required": [
+          "tipos"
+        ]
+      },
       "PessoaDoSegredoInput": {
         "type": "object",
         "properties": {
@@ -33368,6 +33607,252 @@
         },
         "required": [
           "aparelhos"
+        ],
+        "additionalProperties": false
+      },
+      "TipoDeChamado": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string",
+            "enum": [
+              "gota",
+              "notebook",
+              "impressora",
+              "cadeado",
+              "janela",
+              "globo",
+              "telefone",
+              "reticencias",
+              "setas",
+              "computador",
+              "torre",
+              "fone",
+              "chave",
+              "caixa",
+              "camera",
+              "wi-fi"
+            ]
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "rascunho",
+              "em-uso",
+              "inativo"
+            ]
+          },
+          "ordem": {
+            "type": "number"
+          },
+          "prazo": {
+            "type": "object",
+            "properties": {
+              "modo": {
+                "type": "string",
+                "enum": [
+                  "corridas",
+                  "horario"
+                ]
+              },
+              "resposta": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ],
+                "additionalProperties": false
+              },
+              "resolucao": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "number"
+                  },
+                  "unidade": {
+                    "type": "string",
+                    "enum": [
+                      "min",
+                      "h",
+                      "d"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "unidade"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "modo",
+              "resposta",
+              "resolucao"
+            ],
+            "additionalProperties": false
+          },
+          "atendePorPadrao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semNinguem": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "fica"
+            ]
+          },
+          "podeVirarOs": {
+            "type": "boolean"
+          },
+          "geraSolicitacao": {
+            "type": "string",
+            "enum": [
+              "nao",
+              "toner",
+              "equipamento"
+            ]
+          },
+          "tipoDeAtivoDoEquipamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "apareceParaOColaborador": {
+            "type": "boolean"
+          },
+          "soATiAbre": {
+            "type": "boolean"
+          },
+          "campos": {
+            "type": "number"
+          },
+          "duplicadoDe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "abertos": {
+            "type": "number"
+          },
+          "noUltimoAno": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "icone",
+          "frase",
+          "situacao",
+          "ordem",
+          "prazo",
+          "atendePorPadrao",
+          "semNinguem",
+          "podeVirarOs",
+          "geraSolicitacao",
+          "tipoDeAtivoDoEquipamento",
+          "pedeOAtivo",
+          "apareceParaOColaborador",
+          "soATiAbre",
+          "campos",
+          "duplicadoDe",
+          "abertos",
+          "noUltimoAno"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDosTiposDeChamado": {
+        "type": "object",
+        "properties": {
+          "tipos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TipoDeChamado"
+            }
+          }
+        },
+        "required": [
+          "tipos"
         ],
         "additionalProperties": false
       },
@@ -73483,6 +73968,163 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos": {
+      "get": {
+        "summary": "Os tipos de chamado, na ordem, com os abertos e os do último ano",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDosTiposDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/ordem": {
+      "put": {
+        "summary": "Ordenar os tipos de chamado, com todos, uma vez cada",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  }
+                },
+                "required": [
+                  "ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDosTiposDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {

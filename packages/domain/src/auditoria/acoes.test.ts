@@ -143,6 +143,7 @@ describe('ações da auditoria', () => {
 
   it('cobrem as ações dos chamados', () => {
     expect(rotuloDaAcao('tipo-de-chamado.criado')).toBe('Tipo de chamado criado');
+    expect(rotuloDaAcao('tipos-de-chamado.ordenados')).toBe('Tipos de chamado reordenados');
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

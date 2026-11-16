@@ -25498,6 +25498,174 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos de chamado, na ordem, com os abertos e os do último ano */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDosTiposDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ordenar os tipos de chamado, com todos, uma vez cada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDosTiposDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -32622,6 +32790,56 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
+        TipoDeChamadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        ListaDosTiposDeChamadoInput: {
+            tipos: components["schemas"]["TipoDeChamadoInput"][];
+        };
         PessoaDoSegredoInput: {
             /** Format: uuid */
             id: string;
@@ -37266,6 +37484,56 @@ export interface components {
         };
         AvisoDeTeste: {
             aparelhos: number;
+        };
+        TipoDeChamado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        ListaDosTiposDeChamado: {
+            tipos: components["schemas"]["TipoDeChamado"][];
         };
         PessoaDoSegredo: {
             /** Format: uuid */

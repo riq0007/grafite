@@ -35,6 +35,7 @@ export {
   consumiveis,
   consumiveisDosModelos,
   contas,
+  DIAS_DA_SEMANA_NO_BANCO,
   diretorios,
   distribuicoes,
   doisPassos,

@@ -27,6 +27,17 @@ export const SITUACOES_DO_CHAMADO = [
 ] as const;
 export type SituacaoDoChamado = (typeof SITUACOES_DO_CHAMADO)[number];
 
+/**
+ * As origens do chamado, com os textos do banco. Nesta change, todo chamado nasce da TI; o chat e a
+ * aba trazem as origens deles.
+ */
+export const ORIGENS_DO_CHAMADO = ['ti'] as const;
+export type OrigemDoChamado = (typeof ORIGENS_DO_CHAMADO)[number];
+
+/** As espécies da conversa: a mensagem para a pessoa, a nota interna e o evento. */
+export const ESPECIES_DA_CONVERSA = ['mensagem', 'nota', 'evento'] as const;
+export type EspecieDaConversa = (typeof ESPECIES_DA_CONVERSA)[number];
+
 /** As ações da matriz, na ordem da tabela da spec. */
 export const ACOES_DO_CHAMADO = [
   'assumir',
@@ -210,7 +221,7 @@ export type EventoDaAcao =
 
 /** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
 export type EntradaDaConversa =
-  | { especie: 'mensagem' | 'nota'; texto: string }
+  | { especie: Exclude<EspecieDaConversa, 'evento'>; texto: string }
   | ({ especie: 'evento' } & EventoDaAcao);
 
 /** O que a rota aplica no chamado. */

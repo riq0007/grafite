@@ -199,6 +199,7 @@ describe('tipos de evento', () => {
     ['ordem.encerrada', 'ordens.mudaram'],
     ['meta-de-indicador.alterada', 'metas.mudaram'],
     ['tipo-de-chamado.criado', 'ajustes-dos-chamados.mudaram'],
+    ['tipos-de-chamado.ordenados', 'ajustes-dos-chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],

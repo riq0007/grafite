@@ -240,6 +240,7 @@ export const ACOES_DA_AUDITORIA = {
   'distribuicao.maquina-tirada-da-fila': 'Máquina tirada da fila da distribuição',
   // Os chamados (change chamados-da-ti)
   'tipo-de-chamado.criado': 'Tipo de chamado criado',
+  'tipos-de-chamado.ordenados': 'Tipos de chamado reordenados',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

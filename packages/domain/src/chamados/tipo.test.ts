@@ -180,7 +180,8 @@ describe('as listas do tipo de chamado', () => {
     expect(SOLICITACOES_DO_TIPO_DE_CHAMADO).toEqual(['nao', 'toner', 'equipamento']);
   });
 
-  it('guarda as frases das recusas da spec', () => {
+  // A da ordem é só da API, como a das categorias de software: a tela manda sempre todos os tipos.
+  it('guarda as frases das recusas da spec e a da ordem', () => {
     expect(M).toEqual({
       nome: 'Escreva o nome.',
       nomeLongo: 'Use até 40 caracteres.',
@@ -195,6 +196,7 @@ describe('as listas do tipo de chamado', () => {
       tonerSemAtivo: "O Toner precisa do ativo: ligue 'Pede o ativo'.",
       solicitacaoSemAlcance:
         "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.",
+      ordem: 'A ordem precisa ter todos os tipos, uma vez cada.',
     });
   });
 });
