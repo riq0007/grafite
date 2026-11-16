@@ -134,16 +134,16 @@ A cópia guarda também o valor e a unidade do tipo, só para o texto ("Prazo do
 - `contado_s`: os segundos contados até a última parada, inteiros, arredondados para baixo a cada fechamento. O segundo, e não o minuto, para cada parada e retomada não perder até um minuto;
 - `relogio_desde`: o instante em que o relógio voltou a contar, ou nulo, parado.
 
-O domínio (`packages/domain/src/chamados/prazo.ts`) calcula:
+O domínio calcula, no `packages/domain/src/chamados/prazo.ts` e, a situação, no `situacao-do-prazo.ts`:
 - **`segundosNoHorario(de, ate, modo, horario)`:** em horas corridas, a diferença. No horário da TI, a soma das sobreposições com as janelas de cada dia, no fuso do horário. O dia e a hora locais saem do `Intl.DateTimeFormat` com o `timeZone`, pelo `fuso.ts` do domínio, que o `software/quando.ts` também usa, e valem também com o horário de verão. As janelas ficam guardadas por fuso, dia e horas, porque a lista dos prazos calcula as mesmas para centenas de chamados;
 - **`momentoEmQueAlcanca(desde, segundosQueFaltam, modo, horario)`:** anda pelas janelas até completar o tempo. O tempo que acaba no fim de uma janela vence no fim dela, e não no começo da seguinte. Como ela roda na API e na tarefa de cada minuto, um laço preso pararia o processo inteiro. Por isso, recusa com um `RangeError` o tempo que não é de um prazo (sem número, infinito ou maior que 999 dias de 24 h, o maior prazo do tipo) e o horário sem dia ou sem janela. O laço ainda tem um teto, de 14 dias por janela que o tempo pede, mais 28, que um horário conferido nunca alcança;
-- **`situacaoDoPrazo(chamado, horario, agora)`:**
-  - o contado e o que resta;
-  - o vencimento ou o relógio parado;
-  - o texto curto ("vence em 2 h", "estourado há 20 min" e "relógio parado"), arredondado para baixo: as horas inteiras a partir de 1 h, os minutos inteiros de 1 min a 1 h e "menos de 1 min" abaixo dele;
-  - o grupo: estourado, até 2 h, hoje, depois de hoje ou parado.
-
-  O "hoje" e o "até as 11:40" saem no fuso da conta que olha.
+- **`situacaoDoPrazo(relogio, horario, agora, fuso)`,** no `situacao-do-prazo.ts`, com o relógio guardado do chamado (o `prazo`, o `contadoS`, o `relogioDesde` e o `primeiraRespostaEm`) e o fuso da conta que olha:
+  - o contado, o prazo da resolução e o que resta, em segundos do relógio: as barras dos prazos usam esses, e o quadro do parado diz "restam 1 h 44 min" ou, com o que resta negativo, "passou 20 min do prazo";
+  - o vencimento, o momento em que o contado alcança o prazo da resolução (`momentoEmQueAlcanca` desde o `relogioDesde`, com o que restava nele), ou nulo, com o relógio parado. O chamado que volta a contar já depois do prazo, reaberto ou retomado, vence nessa volta: o tempo parado não conta como estouro. A mudança do horário, que fecha os relógios, faz o mesmo com os estourados que contam no horário: o "estourado há" recomeça dela, sem um aviso novo, porque a marca do estouro só se limpa na reabertura;
+  - o texto curto ("vence em 2 h", "estourado há 20 min" e "relógio parado"), arredondado para baixo: os dias inteiros a partir de 48 h, as horas inteiras de 1 h a 48 h, os minutos inteiros de 1 min a 1 h e "menos de 1 min" abaixo dele. Os dias vêm porque, no relógio comum, a sexta à tarde chega a 63 h até a segunda, e o chamado esquecido, a centenas de horas. A distância é a do relógio comum, entre agora e o vencimento, como no "venceu às 09:20" do painel dos prazos e nos grupos: no horário da TI, o chamado com 1 h restante às 17:30 "vence em 15 h" e fica em "Vence depois de hoje", em vez de dizer "vence em 1 h" num grupo do dia seguinte. O estouro começa no vencimento;
+  - o grupo: estourado; até 2 h, com o vencimento até agora mais 2 h; hoje, no dia de agora; depois de hoje; ou parado. O dia sai no fuso da conta que olha, como o "até as 11:40" da tela;
+  - a primeira resposta pendente: o momento em que o contado alcança o prazo dela e se ele já passou ("Responder até 08:30" ou "Resposta atrasada desde 08:30"). Com o relógio parado, ela já foi dada, porque esperar a resposta e resolver mandam mensagem à pessoa;
+- **`compararPrazos(a, b)`:** a ordem da lista dos prazos e das colunas do quadro: pelo vencimento, com os estourados à frente, e os parados por último, pelo que resta. O empate fica com quem ordena, como pelo número.
 
 A API manda o relógio guardado, o prazo copiado e o horário da TI. A web recalcula a cada minuto pela mesma função, sem pedir de novo ao servidor, como a idade das leituras. A lista dos prazos ordena no servidor pela mesma função: com as centenas de chamados em aberto de uma organização, a conta em memória custa menos que uma consulta com as janelas em SQL.
 

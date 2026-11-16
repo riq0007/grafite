@@ -148,7 +148,7 @@ O chamado aberto SHALL ter, no cabeçalho:
 - à direita, o quadro do prazo:
   - "Prazo do tipo, 8 h, no horário da TI";
   - a situação em destaque, em mono;
-  - o detalhe: "Abriu às 07:40 · conta das 08:00 · vence às 16:00" ou "Parou às 09:21 · restam 1 h 44 min";
+  - o detalhe: "Abriu às 07:40 · conta das 08:00 · vence às 16:00", "Parou às 09:21 · restam 1 h 44 min" ou, parado depois do prazo, "Parou às 09:40 · passou 20 min do prazo", no tempo do relógio;
   - com a primeira resposta pendente, "Responder até 08:30", ou "Resposta atrasada desde 08:30".
 
 A conversa SHALL ficar numa coluna central, sem balão:

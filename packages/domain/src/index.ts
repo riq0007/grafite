@@ -266,6 +266,15 @@ export {
   responder,
 } from './chamados/respostas.ts';
 export {
+  compararPrazos,
+  GRUPOS_DO_PRAZO,
+  type GrupoDoPrazo,
+  type PrimeiraRespostaPendente,
+  type RelogioDoChamado,
+  type SituacaoDoPrazo,
+  situacaoDoPrazo,
+} from './chamados/situacao-do-prazo.ts';
+export {
   type AtivoDasRespostas,
   type ContextoDasRespostas,
   resumoDasRespostas,

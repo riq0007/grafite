@@ -257,7 +257,7 @@ O relógio SHALL:
 
 O prazo da primeira resposta SHALL valer até a primeira mensagem da TI para a pessoa. O chamado aberto pela TI SHALL nascer com ele cumprido.
 
-O tempo contado SHALL ser o do relógio, e não a idade do chamado, contado ao segundo. O vencimento SHALL ser o momento em que o tempo contado alcança o prazo. Com o relógio parado, o chamado SHALL NOT ter vencimento e SHALL mostrar o que resta.
+O tempo contado SHALL ser o do relógio, e não a idade do chamado, contado ao segundo. O vencimento SHALL ser o momento em que o tempo contado alcança o prazo. Com o relógio parado, o chamado SHALL NOT ter vencimento e SHALL mostrar o que resta do prazo ou, se já passou dele, quanto passou, no tempo do relógio.
 
 Uma mudança no prazo do tipo SHALL valer só para os chamados abertos depois dela. Uma mudança no horário da TI SHALL valer daí em diante: o tempo já contado e o prazo em minutos dos chamados abertos SHALL NOT mudar.
 
@@ -267,9 +267,16 @@ O prazo de um chamado em aberto SHALL ser dito em texto:
 - "relógio parado".
 
 O texto SHALL arredondar para baixo:
-- a partir de 1 h, em horas inteiras;
+- a partir de 48 h, em dias inteiros, como "vence em 2 dias";
+- de 1 h a 48 h, em horas inteiras;
 - de 1 min a 1 h, em minutos inteiros;
 - abaixo de 1 min, "menos de 1 min", como em "vence em menos de 1 min".
+
+O texto SHALL dizer a distância no relógio comum, de agora até o vencimento, e não o tempo do prazo que resta. No horário da TI, o chamado que vence no dia seguinte diz quanto falta até lá. O chamado SHALL estar estourado a partir do vencimento.
+
+O chamado reaberto ou retomado que já tinha passado do prazo SHALL vencer quando o relógio volta a contar.
+
+Enquanto a primeira resposta não for dada, o chamado SHALL ter também o momento em que o tempo contado alcança o prazo dela, e se esse momento já passou.
 
 #### Scenario: Horas corridas
 - **WHEN** o #1033, de Rede e internet, com 8 h corridas, abriu às 01:20, e são 09:40
@@ -279,9 +286,21 @@ O texto SHALL arredondar para baixo:
 - **WHEN** o #1042, de Impressora, com 8 h no horário da TI das 8h às 18h, abriu às 07:40, e são 09:40
 - **THEN** o tempo contado é 1 h 40 min, das 08:00, o vencimento é às 16:00, e o prazo diz "vence em 6 h"
 
+#### Scenario: Parado depois do prazo
+- **WHEN** o #1033, estourado há 20 min, passa a Aguardando Sandra às 09:40
+- **THEN** o chamado fica sem vencimento, e o quadro do prazo diz "Relógio parado · Parou às 09:40 · passou 20 min do prazo"
+
 #### Scenario: Relógio parado
 - **WHEN** o #1041, de Acesso e senha, com 4 h no horário da TI, tem 2 h 16 min contadas e passou a Aguardando o colaborador às 09:21
 - **THEN** o chamado não tem vencimento, e o quadro do prazo diz "Relógio parado · Parou às 09:21 · restam 1 h 44 min"
+
+#### Scenario: Vencimento no dia seguinte
+- **WHEN** um chamado de Impressora, com 8 h no horário da TI das 8h às 18h, tem 1 h de prazo restante às 17:30
+- **THEN** o vencimento é no dia seguinte às 08:30, e o prazo diz "vence em 15 h"
+
+#### Scenario: Primeira resposta atrasada
+- **WHEN** o #1042, de Impressora, com 30 min para a primeira resposta no horário da TI, abriu às 07:40, ninguém da TI escreveu a Marina, e são 09:40
+- **THEN** a primeira resposta está atrasada desde as 08:30
 
 #### Scenario: Dia útil
 - **WHEN** um tipo resolve em 3 dias úteis, no horário da TI das 8h às 18h de segunda a sexta, e o chamado abre na sexta às 17:00
