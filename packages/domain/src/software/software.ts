@@ -23,17 +23,30 @@ export const MENSAGENS_DO_SOFTWARE = {
   semMaquinas: 'Escolha pelo menos uma máquina.',
   pacoteInativo: 'O pacote está inativo.',
   semAgente: (ativo: string) => `O ativo ${ativo} não tem o agente do GLPI ligado.`,
+  todasNaVersao: (versao: string) => `Todas as máquinas escolhidas já têm a versão ${versao}.`,
+  todasJaAguardam: 'Todas as máquinas escolhidas já aguardam este pacote.',
+  todasNaVersaoOuJaAguardam: (versao: string) =>
+    `Todas as máquinas escolhidas já têm a versão ${versao} ou já aguardam este pacote.`,
+  jaAguardaNoutra: 'A máquina já aguarda este pacote noutra distribuição.',
+  visaoQueDeixouDeValer: (visao: string) =>
+    `A visão ${visao} deixou de valer. Refaça os filtros dela na tabela do Ativos.`,
+  categoria: 'Escolha uma das categorias da base.',
+  maquinaNaoEncontrada: 'Máquina da distribuição não encontrada.',
+  soAQueFalhou: 'Só a máquina que falhou pode ser tentada de novo.',
+  soAQueAguarda: 'Só a máquina que aguarda o agente sai da fila.',
 } as const;
 
 export interface DadosDoPacote {
   nome: string;
   versao: string | null;
   descricao: string | null;
+  /** O nome que liga o pacote ao inventário; vazio, vale o nome (design, decisão 1). */
+  nomeNoInventario: string | null;
   comando: string;
   codigosDeSucesso: number[];
 }
 
-export type CampoDoPacote = 'nome' | 'comando' | 'codigosDeSucesso';
+export type CampoDoPacote = 'nome' | 'nomeNoInventario' | 'comando' | 'codigosDeSucesso';
 
 const texto = (valor: unknown) => (typeof valor === 'string' ? valor.trim() : '');
 
@@ -53,11 +66,12 @@ function lerCodigos(valor: unknown): number[] | null {
   return codigos;
 }
 
-/** Confere o pacote pedido: o nome, o comando e os códigos de sucesso. */
+/** Confere o pacote pedido: o nome, o nome no inventário, o comando e os códigos de sucesso. */
 export function conferirPacote(pedido: {
   nome?: unknown;
   versao?: unknown;
   descricao?: unknown;
+  nomeNoInventario?: unknown;
   comando?: unknown;
   codigosDeSucesso?: unknown;
 }):
@@ -67,6 +81,8 @@ export function conferirPacote(pedido: {
   const nome = texto(pedido.nome);
   if (nome === '') erros.nome = MENSAGENS_DO_SOFTWARE.nome;
   else if (nome.length > 120) erros.nome = MENSAGENS_DO_SOFTWARE.nomeLongo;
+  const nomeNoInventario = texto(pedido.nomeNoInventario).replace(/\s+/g, ' ');
+  if (nomeNoInventario.length > 120) erros.nomeNoInventario = MENSAGENS_DO_SOFTWARE.nomeLongo;
   const comando = texto(pedido.comando);
   if (comando === '') erros.comando = MENSAGENS_DO_SOFTWARE.comando;
   else if (comando.length > 2000) erros.comando = MENSAGENS_DO_SOFTWARE.comandoLongo;
@@ -79,6 +95,7 @@ export function conferirPacote(pedido: {
       nome,
       versao: texto(pedido.versao) || null,
       descricao: texto(pedido.descricao) || null,
+      nomeNoInventario: nomeNoInventario || null,
       comando,
       codigosDeSucesso,
     },
@@ -90,6 +107,7 @@ export const SITUACOES_DA_MAQUINA_NO_BANCO = [
   'em-andamento',
   'concluida',
   'falhou',
+  'tirada',
 ] as const;
 export type SituacaoDaMaquina = (typeof SITUACOES_DA_MAQUINA_NO_BANCO)[number];
 
@@ -102,6 +120,7 @@ export const SITUACOES_DA_MAQUINA: Record<
   'em-andamento': { texto: 'Em andamento', tipo: 'info' },
   concluida: { texto: 'Concluída', tipo: 'sucesso' },
   falhou: { texto: 'Falhou', tipo: 'critico' },
+  tirada: { texto: 'Tirada da fila', tipo: 'neutra' },
 };
 
 /** As etapas do Deploy do agente em pt-BR, pelo `currentStep`. */
@@ -117,6 +136,11 @@ const FIM_COM_SUCESSO = 'job successfully completed';
 
 const TERMINADAS: readonly SituacaoDaMaquina[] = ['concluida', 'falhou'];
 
+/** O log da máquina com a linha no fim, só com as últimas linhas. */
+export function comALinha(log: readonly string[], linha: string): string[] {
+  return [...log, linha].slice(-LINHAS_DO_LOG);
+}
+
 /**
  * O passo do `setStatus` do agente na máquina: a etapa, a linha do log e a situação. O "ko" faz
  * falhar, a mensagem final de sucesso conclui, e a máquina terminada não muda mais.
@@ -130,8 +154,7 @@ export function aplicarPassoDoAgente(
     : atual.etapa;
   const onde = passo.currentStep ? etapa : passo.status ? 'Fim' : etapa;
   const partes = [passo.status, passo.msg].filter((parte): parte is string => !!parte);
-  const linha = `${onde ?? 'Agente'}: ${partes.join(', ')}`;
-  const log = [...atual.log, linha].slice(-LINHAS_DO_LOG);
+  const log = comALinha(atual.log, `${onde ?? 'Agente'}: ${partes.join(', ')}`);
   if (TERMINADAS.includes(atual.situacao)) {
     return { situacao: atual.situacao, etapa: atual.etapa, log, terminou: false };
   }
@@ -144,12 +167,19 @@ export function aplicarPassoDoAgente(
   return { situacao, etapa, log, terminou: TERMINADAS.includes(situacao) };
 }
 
-/** O progresso da distribuição: "2 de 3 concluídas, 1 falhou". */
+/** A linha do log da máquina tentada de novo: "Tentar de novo, por Ana Souza". */
+export function linhaDoTentarDeNovo(nome: string): string {
+  return `Tentar de novo, por ${nome}`;
+}
+
+/** O progresso da distribuição: "2 de 3 concluídas, 1 falhou, 1 tirada da fila". */
 export function progressoDaDistribuicao(situacoes: readonly SituacaoDaMaquina[]): string {
   const total = situacoes.length;
   const concluidas = situacoes.filter((situacao) => situacao === 'concluida').length;
   const falhas = situacoes.filter((situacao) => situacao === 'falhou').length;
-  const base = `${concluidas} de ${total} ${total === 1 ? 'concluída' : 'concluídas'}`;
-  if (falhas === 0) return base;
-  return `${base}, ${falhas} ${falhas === 1 ? 'falhou' : 'falharam'}`;
+  const tiradas = situacoes.filter((situacao) => situacao === 'tirada').length;
+  const partes = [`${concluidas} de ${total} ${total === 1 ? 'concluída' : 'concluídas'}`];
+  if (falhas > 0) partes.push(`${falhas} ${falhas === 1 ? 'falhou' : 'falharam'}`);
+  if (tiradas > 0) partes.push(`${tiradas} ${tiradas === 1 ? 'tirada' : 'tiradas'} da fila`);
+  return partes.join(', ');
 }

@@ -1,8 +1,9 @@
 // O protocolo do agente do GLPI pela API (spec inventario-pelo-agente; change
 // inventario-pelo-agente-glpi): o CONTACT com a tarefa e o prazo; o INVENTORY comprimido pelo zlib
 // e pelo gzip, ligado ao ativo pela série, com os valores do inventário (o campo travado fica) e os
-// softwares; o inventário parcial sem softwares; a máquina sem ativo; e as recusas do token e do
-// corpo fora do protocolo.
+// softwares, com o nome normalizado e o do sistema (change software-por-pacote, decisão 13); o
+// inventário parcial sem softwares; a máquina sem ativo; e as recusas do token e do corpo fora do
+// protocolo.
 import { deflateSync, gzipSync } from 'node:zlib';
 import {
   agentes,
@@ -37,8 +38,30 @@ const INVENTARIO = {
   antivirus: [{ name: 'Windows Defender', enabled: true, uptodate: true }],
   networks: [{ ipaddress: '10.0.5.21' }],
   softwares: [
-    { name: 'Microsoft Office Professional Plus 2019', version: '16.0', publisher: 'Microsoft' },
-    { name: '7-Zip 23.01 (x64)', version: '23.01', publisher: 'Igor Pavlov' },
+    {
+      name: 'Microsoft Office Professional Plus 2019',
+      version: '16.0',
+      publisher: 'Microsoft',
+      system_category: 'application',
+    },
+    {
+      name: '7-Zip 23.01 (x64)',
+      version: '23.01',
+      publisher: 'Igor Pavlov',
+      system_category: 'application',
+    },
+    {
+      name: 'Microsoft Edge',
+      version: '131.0.2903.70',
+      publisher: 'Microsoft Corporation',
+      system_category: 'application',
+      no_remove: 1,
+    },
+    {
+      name: 'Atualização  de Segurança (KB5034441)',
+      publisher: 'Microsoft Corporation',
+      system_category: 'security_update',
+    },
   ],
   versionclient: 'GLPI-Agent_v1.7.3',
 };
@@ -230,7 +253,35 @@ describe('o protocolo do agente', () => {
     );
     expect(softwares.map(({ nome }) => nome).sort()).toEqual([
       '7-Zip 23.01 (x64)',
+      'Atualização de Segurança (KB5034441)',
+      'Microsoft Edge',
       'Microsoft Office Professional Plus 2019',
+    ]);
+  });
+
+  it('Edge do Windows: cada software tem o nome normalizado, e o do sistema fica marcado', async () => {
+    const softwares = await naOrg((tx) =>
+      tx
+        .select({
+          nome: softwaresDosAtivos.nome,
+          nomeNormalizado: softwaresDosAtivos.nomeNormalizado,
+          doSistema: softwaresDosAtivos.doSistema,
+        })
+        .from(softwaresDosAtivos),
+    );
+    expect(softwares.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))).toEqual([
+      { nome: '7-Zip 23.01 (x64)', nomeNormalizado: '7-zip 23.01 (x64)', doSistema: false },
+      {
+        nome: 'Atualização de Segurança (KB5034441)',
+        nomeNormalizado: 'atualizacao de seguranca (kb5034441)',
+        doSistema: true,
+      },
+      { nome: 'Microsoft Edge', nomeNormalizado: 'microsoft edge', doSistema: true },
+      {
+        nome: 'Microsoft Office Professional Plus 2019',
+        nomeNormalizado: 'microsoft office professional plus 2019',
+        doSistema: false,
+      },
     ]);
   });
 
@@ -246,7 +297,7 @@ describe('o protocolo do agente', () => {
     );
     expect(r.statusCode, r.body).toBe(200);
     const softwares = await naOrg((tx) => tx.select().from(softwaresDosAtivos));
-    expect(softwares).toHaveLength(2);
+    expect(softwares).toHaveLength(4);
     const alteracoes = await naOrg((tx) =>
       tx.select().from(auditoria).where(eq(auditoria.acao, 'ativo.alterado')),
     );

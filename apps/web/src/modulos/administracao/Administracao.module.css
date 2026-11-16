@@ -115,8 +115,12 @@
   font-size: var(--texto-corpo);
 }
 
-/* O prazo da confiança nos aparelhos e o "Mudar…" ao lado (change aparelho-confiavel). */
-.prazoDaConfianca {
+/*
+ * O prazo da confiança nos aparelhos e o "Mudar…" ao lado (change aparelho-confiavel); e o prazo do
+ * sem contato dos agentes, do mesmo jeito (change software-por-pacote).
+ */
+.prazoDaConfianca,
+.prazoDoSemContato {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

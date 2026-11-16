@@ -1,0 +1,132 @@
+/*
+ * A base de pacotes (m12): as abas por categoria, a tabela e o pé com as instalações abaixo da
+ * versão-alvo. A raiz pede a janela inteira (`data-janela-inteira`) e vai até as bordas, por cima do
+ * respiro da janela; o cabeçalho, as categorias e o pé são faixas de borda a borda, com o respiro
+ * por dentro, e o pé fica no fim.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+.tela > [data-cabecalho-da-pagina] {
+  padding: var(--esp-4) var(--respiro);
+}
+
+.busca {
+  width: 280px;
+}
+
+.categorias {
+  padding: var(--esp-3) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.falha {
+  margin-inline: var(--respiro);
+}
+
+/* As abas com o texto menor e mais leve, como no m12; a escolhida, no peso forte. */
+.categorias label {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-normal);
+}
+
+.categorias label[data-selected] {
+  font-weight: var(--peso-forte);
+}
+
+/* A faixa da tabela, com o respiro dos lados, como o `.tab-b` do m12; a tabela fica no alto dela. */
+.faixaDaTabela {
+  min-width: 0;
+  padding-inline: var(--respiro);
+}
+
+/* As linhas de 46 e o cabeçalho de 40, na densidade Normal. */
+.tabela {
+  --altura-linha: calc(var(--altura-controle) + 10px);
+}
+
+.tabela [role="columnheader"] {
+  height: calc(var(--altura-controle) + 4px);
+}
+
+.quantos {
+  margin-left: var(--esp-2);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.pacote {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.nome {
+  display: block;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.tipo {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.instalado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.barra {
+  width: 150px;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O "N de M" do "Instalado em" fica na mono, como no m12: a exceção nomeada à regra das quantidades
+   do ANTISLOP, por decisão do usuário de 15/11/2026. */
+.numeros {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}
+
+.abrir {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+.pe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--respiro);
+  border-top: 1px solid var(--cor-linha);
+  font-size: var(--texto-dado);
+}
+
+.pe > :last-child:not(:first-child):is(button, a) {
+  margin-left: auto;
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

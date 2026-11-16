@@ -168,3 +168,67 @@
   background-color: var(--cor-destaque);
   color: var(--cor-sobre-destaque);
 }
+
+/*
+ * A busca de uma lista (CampoDeBusca): a caixa é a do campo, com a lupa e o fim dentro dela, e a
+ * entrada sem borda própria. O anel do foco fica na caixa inteira.
+ */
+.busca {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.busca:hover {
+  border-color: var(--cor-texto-2);
+}
+
+.busca:focus-within {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.busca > svg {
+  flex: none;
+}
+
+.entradaDaBusca {
+  flex: 1;
+  min-width: 0;
+  min-height: calc(var(--altura-controle) - 2px);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-justa);
+  outline: none;
+}
+
+.entradaDaBusca::placeholder {
+  color: var(--cor-texto-2);
+  opacity: 1;
+}
+
+/* O "x" do Chromium no campo de busca: nenhum token o pinta, e o mockup não tem. */
+.entradaDaBusca::-webkit-search-cancel-button,
+.entradaDaBusca::-webkit-search-decoration {
+  appearance: none;
+}
+
+.fimDaBusca {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  white-space: nowrap;
+}

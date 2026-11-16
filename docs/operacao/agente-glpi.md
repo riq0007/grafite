@@ -28,7 +28,7 @@ Uma máquina que já aparecia como **Sem ativo** pode ser cadastrada no próximo
 & 'C:\Program Files\GLPI-Agent\glpi-agent.bat' --force --tasks=inventory --full-inventory-postpone=0
 ```
 
-Na lista de agentes, **Último contato** confirma a comunicação; **Último inventário** confirma o envio dos dados. Antes do inventário, o IP pode ser o endereço da conexão; depois, o IP do inventário tem preferência. A ficha mostra fabricante e modelo, IP, MAC, UUID, último usuário informado, última inicialização, hardware e sistema quando enviados. A aba **Softwares** mostra os programas recebidos. Campos travados e manuais são preservados. O usuário informado não altera o responsável, e a configuração de local vale só para novos cadastros.
+Na lista de agentes, **Último contato** confirma a comunicação; **Último inventário** confirma o envio dos dados. Antes do inventário, o IP pode ser o endereço da conexão; depois, o IP do inventário tem preferência. A ficha mostra fabricante e modelo, IP, MAC, UUID, último usuário informado, última inicialização, hardware e sistema quando enviados. A aba **Software** mostra os programas recebidos, frente à base de pacotes. Campos travados e manuais são preservados. O usuário informado não altera o responsável, e a configuração de local vale só para novos cadastros.
 
 ## Diagnóstico
 

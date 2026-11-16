@@ -3,6 +3,7 @@ import { Download, SlidersHorizontal } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { BotaoDeIcone } from '../../icones/Icone.tsx';
+import { corDoToken } from '../../teste/corDoToken.ts';
 import { Botao } from '../botao/Botao.tsx';
 import { CampoDeTexto } from '../campo/CampoDeTexto.tsx';
 import { Checkbox } from '../escolhas/Checkbox.tsx';
@@ -160,5 +161,85 @@ export const PopoverAbertoPorFora: Historia = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(corpoDe(canvasElement).queryByRole('dialog')).toBeNull());
     await expect(args.aoMudarAberto).toHaveBeenCalledWith(false);
+  },
+};
+
+/** Os programas de uma tabela, para a camada ter o que esconder. */
+const LINHAS_DE_FUNDO = [
+  'Adobe Acrobat Reader',
+  'AnyDesk',
+  'Google Chrome',
+  'Microsoft Office',
+  'Notepad++',
+  'SumatraPDF',
+  'VLC',
+];
+
+/** A camada opaca, aberta sobre uma tabela, presa ao cabeçalho da seção (m10). */
+function CamadaOpaca() {
+  const ancora = useRef<HTMLDivElement>(null);
+  const [aberto, definirAberto] = useState(true);
+  return (
+    <div style={{ display: 'grid', alignContent: 'start', minHeight: 380 }}>
+      <div
+        ref={ancora}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+      >
+        <span>Mandados pelo Grafite</span>
+        <Botao onPress={() => definirAberto(true)}>Instalar outro pacote</Botao>
+      </div>
+      {LINHAS_DE_FUNDO.map((nome) => (
+        <p
+          key={nome}
+          style={{
+            margin: 0,
+            padding: 'var(--esp-2) 0',
+            borderBottom: '1px solid var(--cor-linha)',
+          }}
+        >
+          {nome}
+        </p>
+      ))}
+      <Popover
+        titulo="Instalar outro pacote"
+        ocultarTitulo
+        opaco
+        ancora={ancora}
+        aberto={aberto}
+        aoMudarAberto={definirAberto}
+      >
+        <div style={{ display: 'grid', gap: 'var(--esp-3)', padding: 'var(--esp-2)' }}>
+          <CampoDeTexto rotulo="Pacote" />
+          <Checkbox>Só os desatualizados</Checkbox>
+        </div>
+      </Popover>
+    </div>
+  );
+}
+
+/**
+ * Com o `opaco`, o painel usa o material sólido, sem o vidro: a tabela por baixo não aparece. A
+ * captura guarda a camada na regressão visual.
+ */
+export const PopoverOpaco: Historia = {
+  tags: ['captura'],
+  render: () => <CamadaOpaca />,
+  play: async ({ canvasElement }) => {
+    const dialogo = await corpoDe(canvasElement).findByRole('dialog', {
+      name: 'Instalar outro pacote',
+    });
+    const painel = dialogo.parentElement;
+    if (!painel) throw new Error('O painel do popover não apareceu.');
+    // Com a transparência normal, qualquer que seja o sistema: sem o atributo, o CSS segue o
+    // sistema, que pode pedir a reduzida e deixar o vidro sólido também.
+    const raiz = document.documentElement;
+    raiz.setAttribute('data-transparency', 'normal');
+    try {
+      const solido = corDoToken('--cor-material-solido');
+      await expect(getComputedStyle(painel).backdropFilter).toBe('none');
+      await expect(getComputedStyle(painel).backgroundColor).toBe(solido);
+    } finally {
+      raiz.removeAttribute('data-transparency');
+    }
   },
 };

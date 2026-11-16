@@ -52,8 +52,16 @@ export const gestao = definirModulo({
       filhos: SECOES_DO_CATALOGO.map((secao) => ({ rotulo: secao.nome, destino: secao.endereco })),
     },
     { rotulo: 'Importações', destino: '/gestao/importacoes', permissoes: ['ativos.editar'] },
-    // A base de software e as distribuições às máquinas (change distribuicao-de-software).
-    { rotulo: 'Software', destino: '/gestao/software', permissoes: ['software.distribuir'] },
+    // A base de software, as distribuições às máquinas e a matriz (change software-por-pacote).
+    {
+      rotulo: 'Software',
+      permissoes: ['software.distribuir'],
+      filhos: [
+        { rotulo: 'Base de pacotes', destino: '/gestao/software' },
+        { rotulo: 'Distribuições', destino: '/gestao/software/distribuicoes' },
+        { rotulo: 'Matriz', destino: '/gestao/software/matriz' },
+      ],
+    },
     // Os backups dos controles de acesso (change p5a-backup-do-control-id).
     {
       rotulo: 'Control iD',

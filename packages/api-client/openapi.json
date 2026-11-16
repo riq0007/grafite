@@ -12426,6 +12426,54 @@
           "senha"
         ]
       },
+      "OutraDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "quando"
+        ]
+      },
       "ResumoDaDistribuicaoInput": {
         "type": "object",
         "properties": {
@@ -12450,12 +12498,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ]
           },
           "criadaPor": {
@@ -12464,11 +12520,47 @@
           "criadaEm": {
             "type": "string"
           },
+          "paraQuem": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ]
+          },
           "maquinas": {
             "type": "number"
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           }
         },
         "required": [
@@ -12476,8 +12568,26 @@
           "pacote",
           "criadaPor",
           "criadaEm",
+          "paraQuem",
+          "quando",
           "maquinas",
-          "progresso"
+          "progresso",
+          "foraDoAlcance"
+        ]
+      },
+      "SemContatoDoAgenteInput": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "number"
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dias",
+          "texto"
         ]
       },
       "MaquinaDaDistribuicaoInput": {
@@ -12512,6 +12622,12 @@
               "patrimonio"
             ]
           },
+          "pessoa": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "situacao": {
             "type": "object",
             "properties": {
@@ -12521,7 +12637,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {
@@ -12544,6 +12661,69 @@
             ]
           },
           "etapa": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "number"
+                  },
+                  "explicacao": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "numero",
+                  "explicacao"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chamada": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "em": {
+                    "type": "string"
+                  },
+                  "respondeu": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "em",
+                  "respondeu"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "voltaAte": {
             "type": [
               "string",
               "null"
@@ -12572,17 +12752,33 @@
               "string",
               "null"
             ]
+          },
+          "aguardaNoutra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "ativo",
+          "pessoa",
           "situacao",
           "etapa",
+          "codigo",
+          "semContato",
+          "chamada",
+          "voltaAte",
           "log",
           "enviadaEm",
           "atualizadaEm",
-          "terminadaEm"
+          "terminadaEm",
+          "aguardaNoutra"
         ]
       },
       "FichaDaDistribuicaoInput": {
@@ -12609,12 +12805,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ]
           },
           "criadaPor": {
@@ -12623,11 +12827,47 @@
           "criadaEm": {
             "type": "string"
           },
+          "paraQuem": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ]
+          },
           "maquinas": {
             "type": "number"
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           },
           "maquinasDaDistribuicao": {
             "type": "array",
@@ -12641,84 +12881,12 @@
           "pacote",
           "criadaPor",
           "criadaEm",
+          "paraQuem",
+          "quando",
           "maquinas",
           "progresso",
+          "foraDoAlcance",
           "maquinasDaDistribuicao"
-        ]
-      },
-      "DistribuicaoDoAtivoInput": {
-        "type": "object",
-        "properties": {
-          "distribuicaoId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "pacote": {
-            "type": "object",
-            "properties": {
-              "nome": {
-                "type": "string"
-              },
-              "versao": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            },
-            "required": [
-              "nome",
-              "versao"
-            ]
-          },
-          "situacao": {
-            "type": "object",
-            "properties": {
-              "chave": {
-                "type": "string",
-                "enum": [
-                  "aguardando",
-                  "em-andamento",
-                  "concluida",
-                  "falhou"
-                ]
-              },
-              "texto": {
-                "type": "string"
-              },
-              "tipo": {
-                "type": "string",
-                "enum": [
-                  "neutra",
-                  "info",
-                  "sucesso",
-                  "critico"
-                ]
-              }
-            },
-            "required": [
-              "chave",
-              "texto",
-              "tipo"
-            ]
-          },
-          "criadaEm": {
-            "type": "string"
-          },
-          "terminadaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "distribuicaoId",
-          "pacote",
-          "situacao",
-          "criadaEm",
-          "terminadaEm"
         ]
       },
       "MaquinaParaDistribuirInput": {
@@ -12758,6 +12926,16 @@
               "nome",
               "ultimoContato"
             ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -12765,7 +12943,317 @@
           "rotulo",
           "patrimonio",
           "local",
-          "agente"
+          "agente",
+          "semContato"
+        ]
+      },
+      "AlvoDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "default": [],
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "visoes": {
+            "default": [],
+            "maxItems": 150,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "ativoIds": {
+            "default": [],
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "lista": {
+            "default": "",
+            "type": "string",
+            "maxLength": 200000
+          },
+          "fora": {
+            "default": [],
+            "maxItems": 10000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "fuso": {
+            "type": "string"
+          }
+        }
+      },
+      "MaquinaDaPreviaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "classe": {
+            "type": "string",
+            "enum": [
+              "pulada",
+              "ja-aguarda",
+              "na-fila",
+              "vai-instalar"
+            ]
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emAndamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "pacote": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pacote"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "hostname",
+          "local",
+          "classe",
+          "versao",
+          "semContato",
+          "emAndamento",
+          "outra"
+        ]
+      },
+      "PreviaDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaquinaDaPreviaInput"
+            }
+          },
+          "naoAchados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conta": {
+            "type": "object",
+            "properties": {
+              "vaoInstalar": {
+                "type": "number"
+              },
+              "puladas": {
+                "type": "number"
+              },
+              "jaAguardam": {
+                "type": "number"
+              },
+              "naFila": {
+                "type": "number"
+              },
+              "primeiraVez": {
+                "type": "number"
+              },
+              "porVersao": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "versao": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantas": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "versao",
+                    "quantas"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "vaoInstalar",
+              "puladas",
+              "jaAguardam",
+              "naFila",
+              "primeiraVez",
+              "porVersao"
+            ]
+          },
+          "paraQuem": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "maquinas",
+          "naoAchados",
+          "conta",
+          "paraQuem"
+        ]
+      },
+      "AlvosDaDistribuicaoInput": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "paiId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maquinas": {
+                  "type": "number"
+                },
+                "semContato": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "paiId",
+                "maquinas",
+                "semContato"
+              ]
+            }
+          },
+          "visoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "compartilhada": {
+                  "type": "boolean"
+                },
+                "maquinas": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "deixouDeValer": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "compartilhada",
+                "maquinas",
+                "deixouDeValer"
+              ]
+            }
+          }
+        },
+        "required": [
+          "locais",
+          "visoes"
         ]
       },
       "CadastroDosDoisPassosInput": {
@@ -20810,6 +21298,36 @@
               "null"
             ]
           },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "comando": {
             "type": "string"
           },
@@ -20818,6 +21336,21 @@
             "items": {
               "type": "number"
             }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ]
           },
           "arquivo": {
             "anyOf": [
@@ -20829,11 +21362,43 @@
                   },
                   "tamanho": {
                     "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
                   "nome",
-                  "tamanho"
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
                 ]
               },
               {
@@ -20854,8 +21419,11 @@
           "nome",
           "versao",
           "descricao",
+          "categoria",
+          "nomeNoInventario",
           "comando",
           "codigosDeSucesso",
+          "tipo",
           "arquivo",
           "situacao"
         ]
@@ -20873,6 +21441,24 @@
             ]
           },
           "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoriaId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
             "type": [
               "string",
               "null"
@@ -20900,10 +21486,647 @@
           "comando"
         ]
       },
-      "SoftwaresDoAtivoInput": {
+      "ContasDoPacoteInput": {
         "type": "object",
         "properties": {
-          "softwares": {
+          "maquinas": {
+            "type": "number"
+          },
+          "instalado": {
+            "type": "number"
+          },
+          "naVersao": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desatualizadas": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sem": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "maquinas",
+          "instalado",
+          "naVersao",
+          "desatualizadas",
+          "sem"
+        ]
+      },
+      "PacoteNaBaseInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comando": {
+            "type": "string"
+          },
+          "codigosDeSucesso": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ]
+          },
+          "arquivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "tamanho": {
+                    "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacoteInput"
+          },
+          "ultimaDistribuicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "criadaEm": {
+                    "type": "string"
+                  },
+                  "paraQuem": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "criadaEm",
+                  "paraQuem"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "versao",
+          "descricao",
+          "categoria",
+          "nomeNoInventario",
+          "comando",
+          "codigosDeSucesso",
+          "tipo",
+          "arquivo",
+          "situacao",
+          "contas",
+          "ultimaDistribuicao"
+        ]
+      },
+      "DistribuicaoDoPacoteInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "paraQuem": {
+            "type": "string"
+          },
+          "maquinas": {
+            "type": "number"
+          },
+          "resultado": {
+            "type": "object",
+            "properties": {
+              "concluidas": {
+                "type": "number"
+              },
+              "emAndamento": {
+                "type": "number"
+              },
+              "aguardando": {
+                "type": "number"
+              },
+              "falharam": {
+                "type": "number"
+              },
+              "tiradas": {
+                "type": "number"
+              },
+              "semContato": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "concluidas",
+              "emAndamento",
+              "aguardando",
+              "falharam",
+              "tiradas",
+              "semContato"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "paraQuem",
+          "maquinas",
+          "resultado"
+        ]
+      },
+      "FichaDoPacoteInput": {
+        "type": "object",
+        "properties": {
+          "pacote": {
+            "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+          },
+          "partes": {
+            "type": "number"
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacoteInput"
+          },
+          "versoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "alvo",
+                        "abaixo",
+                        "acima"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "versao",
+                "estado",
+                "quantas"
+              ]
+            }
+          },
+          "distribuicoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistribuicaoDoPacoteInput"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "administrar": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "administrar"
+            ]
+          }
+        },
+        "required": [
+          "pacote",
+          "partes",
+          "contas",
+          "versoes",
+          "distribuicoes",
+          "permite"
+        ]
+      },
+      "MatrizPorMaquinaInput": {
+        "type": "object",
+        "properties": {
+          "por": {
+            "type": "string",
+            "const": "maquina"
+          },
+          "local": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              },
+              "caminho": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome",
+              "caminho"
+            ]
+          },
+          "pacotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+            }
+          },
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hostname": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "pessoa": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "semContato": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "rotulo",
+                "patrimonio",
+                "hostname",
+                "pessoa",
+                "semContato"
+              ]
+            }
+          },
+          "celulas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "ativoId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "situacao": {
+                  "type": "string",
+                  "enum": [
+                    "na-versao",
+                    "desatualizada",
+                    "sem-o-programa",
+                    "instalado-sem-alvo"
+                  ]
+                },
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "distribuicao": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "aguardando",
+                            "em-andamento",
+                            "falhou"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "codigo": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "situacao",
+                        "texto",
+                        "codigo"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "pacoteId",
+                "ativoId",
+                "situacao",
+                "versao",
+                "distribuicao"
+              ]
+            }
+          },
+          "ultimas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "distribuicaoId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "criadaEm": {
+                  "type": "string"
+                },
+                "criadaPor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pacoteId",
+                "distribuicaoId",
+                "criadaEm",
+                "criadaPor"
+              ]
+            }
+          }
+        },
+        "required": [
+          "por",
+          "local",
+          "pacotes",
+          "maquinas",
+          "celulas",
+          "ultimas"
+        ]
+      },
+      "MatrizPorLocalInput": {
+        "type": "object",
+        "properties": {
+          "por": {
+            "type": "string",
+            "const": "local"
+          },
+          "pacotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+            }
+          },
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "caminho": {
+                  "type": "string"
+                },
+                "maquinas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "caminho",
+                "maquinas"
+              ]
+            }
+          },
+          "celulas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "localId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "naVersao": {
+                  "type": "number"
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "pacoteId",
+                "localId",
+                "naVersao",
+                "total"
+              ]
+            }
+          }
+        },
+        "required": [
+          "por",
+          "pacotes",
+          "locais",
+          "celulas"
+        ]
+      },
+      "SoftwareDaMaquinaInput": {
+        "type": "object",
+        "properties": {
+          "instalados": {
             "type": "array",
             "items": {
               "type": "object",
@@ -20928,13 +22151,104 @@
                     "string",
                     "null"
                   ]
+                },
+                "doSistema": {
+                  "type": "boolean"
+                },
+                "base": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "comparacao": {
+                          "type": "string",
+                          "enum": [
+                            "ha-na-base",
+                            "na-versao",
+                            "sem-versao-alvo",
+                            "fora-da-base",
+                            "do-windows"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "pacote": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "nome": {
+                                  "type": "string"
+                                },
+                                "versao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nome",
+                                "versao"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "origem": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "distribuicaoId": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "por": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "distribuicaoId",
+                                "por"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "comparacao",
+                        "texto",
+                        "pacote",
+                        "origem"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
                 "nome",
                 "versao",
                 "editor",
-                "instaladoEm"
+                "instaladoEm",
+                "doSistema",
+                "base"
               ]
             }
           },
@@ -20943,11 +22257,287 @@
               "string",
               "null"
             ]
+          },
+          "agente": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimoContato": {
+                    "type": "string"
+                  },
+                  "semContato": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/SemContatoDoAgenteInput"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "ultimoContato",
+                  "semContato"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distribuir": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "mandados": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "distribuicaoId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "maquinaId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "pacote": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "nome": {
+                              "type": "string"
+                            },
+                            "versao": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "situacao": {
+                              "type": "string",
+                              "enum": [
+                                "ativo",
+                                "inativo"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nome",
+                            "versao",
+                            "situacao"
+                          ]
+                        },
+                        "paraQuem": {
+                          "type": "string"
+                        },
+                        "situacao": {
+                          "type": "object",
+                          "properties": {
+                            "chave": {
+                              "type": "string",
+                              "enum": [
+                                "aguardando",
+                                "em-andamento",
+                                "concluida",
+                                "falhou",
+                                "tirada"
+                              ]
+                            },
+                            "texto": {
+                              "type": "string"
+                            },
+                            "tipo": {
+                              "type": "string",
+                              "enum": [
+                                "neutra",
+                                "info",
+                                "sucesso",
+                                "critico"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "chave",
+                            "texto",
+                            "tipo"
+                          ]
+                        },
+                        "codigo": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "numero": {
+                                  "type": "number"
+                                },
+                                "explicacao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "numero",
+                                "explicacao"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "etapa": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "criadaEm": {
+                          "type": "string"
+                        },
+                        "criadaPor": {
+                          "type": "string"
+                        },
+                        "enviadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "terminadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "aguardaNoutra": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/OutraDistribuicaoInput"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "distribuicaoId",
+                        "maquinaId",
+                        "pacote",
+                        "paraQuem",
+                        "situacao",
+                        "codigo",
+                        "etapa",
+                        "criadaEm",
+                        "criadaPor",
+                        "enviadaEm",
+                        "terminadaEm",
+                        "aguardaNoutra"
+                      ]
+                    }
+                  },
+                  "pacotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "pacote": {
+                          "$ref": "#/components/schemas/PacoteDeSoftwareInput"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "na-versao",
+                            "desatualizada",
+                            "sem-o-programa",
+                            "instalado-sem-alvo"
+                          ]
+                        },
+                        "versao": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "naFila": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "pacote",
+                        "situacao",
+                        "versao",
+                        "naFila"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "mandados",
+                  "pacotes"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
-          "softwares",
-          "inventariadoEm"
+          "instalados",
+          "inventariadoEm",
+          "agente",
+          "distribuir"
+        ]
+      },
+      "CategoriaDeSoftwareInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "ordem": {
+            "type": "number"
+          },
+          "pacotes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "ordem",
+          "pacotes"
+        ]
+      },
+      "PedidoDeCategoriaInput": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome"
         ]
       },
       "CampoNoTipoInput": {
@@ -21365,6 +22955,23 @@
           "doTipo"
         ]
       },
+      "PedidoDaPreviaInput": {
+        "type": "object",
+        "properties": {
+          "pacoteId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicaoInput"
+          }
+        },
+        "required": [
+          "pacoteId",
+          "alvo"
+        ]
+      },
       "PedidoDeDistribuicaoInput": {
         "type": "object",
         "properties": {
@@ -21373,19 +22980,46 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "ativoIds": {
-            "maxItems": 500,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-            }
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicaoInput"
+          },
+          "quando": {
+            "default": "agora",
+            "type": "string",
+            "enum": [
+              "agora",
+              "noite",
+              "dia"
+            ]
+          },
+          "aPartirDe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuso": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "pacoteId",
-          "ativoIds"
+          "alvo"
         ]
       },
       "ContasConvidaveisInput": {
@@ -21443,6 +23077,9 @@
               }
             ]
           },
+          "diasSemContato": {
+            "type": "number"
+          },
           "tipos": {
             "type": "array",
             "items": {
@@ -21487,6 +23124,7 @@
         "required": [
           "tipoId",
           "localId",
+          "diasSemContato",
           "tipos",
           "locais"
         ]
@@ -34292,6 +35930,56 @@
         ],
         "additionalProperties": false
       },
+      "OutraDistribuicao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "quando"
+        ],
+        "additionalProperties": false
+      },
       "ResumoDaDistribuicao": {
         "type": "object",
         "properties": {
@@ -34316,12 +36004,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ],
             "additionalProperties": false
           },
@@ -34331,11 +36027,48 @@
           "criadaEm": {
             "type": "string"
           },
+          "paraQuem": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ],
+            "additionalProperties": false
+          },
           "maquinas": {
             "type": "number"
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           }
         },
         "required": [
@@ -34343,8 +36076,27 @@
           "pacote",
           "criadaPor",
           "criadaEm",
+          "paraQuem",
+          "quando",
           "maquinas",
-          "progresso"
+          "progresso",
+          "foraDoAlcance"
+        ],
+        "additionalProperties": false
+      },
+      "SemContatoDoAgente": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "number"
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dias",
+          "texto"
         ],
         "additionalProperties": false
       },
@@ -34381,6 +36133,12 @@
             ],
             "additionalProperties": false
           },
+          "pessoa": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "situacao": {
             "type": "object",
             "properties": {
@@ -34390,7 +36148,8 @@
                   "aguardando",
                   "em-andamento",
                   "concluida",
-                  "falhou"
+                  "falhou",
+                  "tirada"
                 ]
               },
               "texto": {
@@ -34419,6 +36178,71 @@
               "null"
             ]
           },
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "number"
+                  },
+                  "explicacao": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "numero",
+                  "explicacao"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgente"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chamada": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "em": {
+                    "type": "string"
+                  },
+                  "respondeu": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "em",
+                  "respondeu"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "voltaAte": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "log": {
             "type": "array",
             "items": {
@@ -34442,17 +36266,33 @@
               "string",
               "null"
             ]
+          },
+          "aguardaNoutra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicao"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "ativo",
+          "pessoa",
           "situacao",
           "etapa",
+          "codigo",
+          "semContato",
+          "chamada",
+          "voltaAte",
           "log",
           "enviadaEm",
           "atualizadaEm",
-          "terminadaEm"
+          "terminadaEm",
+          "aguardaNoutra"
         ],
         "additionalProperties": false
       },
@@ -34480,12 +36320,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "situacao": {
+                "type": "string",
+                "enum": [
+                  "ativo",
+                  "inativo"
+                ]
               }
             },
             "required": [
               "id",
               "nome",
-              "versao"
+              "versao",
+              "situacao"
             ],
             "additionalProperties": false
           },
@@ -34495,11 +36343,48 @@
           "criadaEm": {
             "type": "string"
           },
+          "paraQuem": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "object",
+            "properties": {
+              "chave": {
+                "type": "string",
+                "enum": [
+                  "agora",
+                  "noite",
+                  "dia"
+                ]
+              },
+              "aPartirDe": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fuso": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chave",
+              "aPartirDe",
+              "fuso"
+            ],
+            "additionalProperties": false
+          },
           "maquinas": {
             "type": "number"
           },
           "progresso": {
             "type": "string"
+          },
+          "foraDoAlcance": {
+            "type": "number"
           },
           "maquinasDaDistribuicao": {
             "type": "array",
@@ -34513,87 +36398,12 @@
           "pacote",
           "criadaPor",
           "criadaEm",
+          "paraQuem",
+          "quando",
           "maquinas",
           "progresso",
+          "foraDoAlcance",
           "maquinasDaDistribuicao"
-        ],
-        "additionalProperties": false
-      },
-      "DistribuicaoDoAtivo": {
-        "type": "object",
-        "properties": {
-          "distribuicaoId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "pacote": {
-            "type": "object",
-            "properties": {
-              "nome": {
-                "type": "string"
-              },
-              "versao": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            },
-            "required": [
-              "nome",
-              "versao"
-            ],
-            "additionalProperties": false
-          },
-          "situacao": {
-            "type": "object",
-            "properties": {
-              "chave": {
-                "type": "string",
-                "enum": [
-                  "aguardando",
-                  "em-andamento",
-                  "concluida",
-                  "falhou"
-                ]
-              },
-              "texto": {
-                "type": "string"
-              },
-              "tipo": {
-                "type": "string",
-                "enum": [
-                  "neutra",
-                  "info",
-                  "sucesso",
-                  "critico"
-                ]
-              }
-            },
-            "required": [
-              "chave",
-              "texto",
-              "tipo"
-            ],
-            "additionalProperties": false
-          },
-          "criadaEm": {
-            "type": "string"
-          },
-          "terminadaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "distribuicaoId",
-          "pacote",
-          "situacao",
-          "criadaEm",
-          "terminadaEm"
         ],
         "additionalProperties": false
       },
@@ -34635,6 +36445,16 @@
               "ultimoContato"
             ],
             "additionalProperties": false
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgente"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -34642,7 +36462,333 @@
           "rotulo",
           "patrimonio",
           "local",
-          "agente"
+          "agente",
+          "semContato"
+        ],
+        "additionalProperties": false
+      },
+      "AlvoDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "default": [],
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "visoes": {
+            "default": [],
+            "maxItems": 150,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "ativoIds": {
+            "default": [],
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "lista": {
+            "default": "",
+            "type": "string",
+            "maxLength": 200000
+          },
+          "fora": {
+            "default": [],
+            "maxItems": 10000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "fuso": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "locais",
+          "visoes",
+          "ativoIds",
+          "lista",
+          "fora"
+        ],
+        "additionalProperties": false
+      },
+      "MaquinaDaPrevia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "classe": {
+            "type": "string",
+            "enum": [
+              "pulada",
+              "ja-aguarda",
+              "na-fila",
+              "vai-instalar"
+            ]
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "semContato": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemContatoDoAgente"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emAndamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "pacote": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pacote"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutraDistribuicao"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "hostname",
+          "local",
+          "classe",
+          "versao",
+          "semContato",
+          "emAndamento",
+          "outra"
+        ],
+        "additionalProperties": false
+      },
+      "PreviaDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaquinaDaPrevia"
+            }
+          },
+          "naoAchados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conta": {
+            "type": "object",
+            "properties": {
+              "vaoInstalar": {
+                "type": "number"
+              },
+              "puladas": {
+                "type": "number"
+              },
+              "jaAguardam": {
+                "type": "number"
+              },
+              "naFila": {
+                "type": "number"
+              },
+              "primeiraVez": {
+                "type": "number"
+              },
+              "porVersao": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "versao": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantas": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "versao",
+                    "quantas"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "vaoInstalar",
+              "puladas",
+              "jaAguardam",
+              "naFila",
+              "primeiraVez",
+              "porVersao"
+            ],
+            "additionalProperties": false
+          },
+          "paraQuem": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "maquinas",
+          "naoAchados",
+          "conta",
+          "paraQuem"
+        ],
+        "additionalProperties": false
+      },
+      "AlvosDaDistribuicao": {
+        "type": "object",
+        "properties": {
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "paiId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maquinas": {
+                  "type": "number"
+                },
+                "semContato": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "paiId",
+                "maquinas",
+                "semContato"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "visoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "compartilhada": {
+                  "type": "boolean"
+                },
+                "maquinas": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "deixouDeValer": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "compartilhada",
+                "maquinas",
+                "deixouDeValer"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "locais",
+          "visoes"
         ],
         "additionalProperties": false
       },
@@ -42963,6 +45109,37 @@
               "null"
             ]
           },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "comando": {
             "type": "string"
           },
@@ -42971,6 +45148,22 @@
             "items": {
               "type": "number"
             }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ],
+            "additionalProperties": false
           },
           "arquivo": {
             "anyOf": [
@@ -42982,11 +45175,44 @@
                   },
                   "tamanho": {
                     "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
                   "nome",
-                  "tamanho"
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
                 ],
                 "additionalProperties": false
               },
@@ -43008,8 +45234,11 @@
           "nome",
           "versao",
           "descricao",
+          "categoria",
+          "nomeNoInventario",
           "comando",
           "codigosDeSucesso",
+          "tipo",
           "arquivo",
           "situacao"
         ],
@@ -43028,6 +45257,24 @@
             ]
           },
           "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoriaId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
             "type": [
               "string",
               "null"
@@ -43056,10 +45303,668 @@
         ],
         "additionalProperties": false
       },
-      "SoftwaresDoAtivo": {
+      "ContasDoPacote": {
         "type": "object",
         "properties": {
-          "softwares": {
+          "maquinas": {
+            "type": "number"
+          },
+          "instalado": {
+            "type": "number"
+          },
+          "naVersao": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "desatualizadas": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sem": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "maquinas",
+          "instalado",
+          "naVersao",
+          "desatualizadas",
+          "sem"
+        ],
+        "additionalProperties": false
+      },
+      "PacoteNaBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "versao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nomeNoInventario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comando": {
+            "type": "string"
+          },
+          "codigosDeSucesso": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "longo": {
+                "type": "string"
+              },
+              "curto": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "longo",
+              "curto"
+            ],
+            "additionalProperties": false
+          },
+          "arquivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "tamanho": {
+                    "type": "number"
+                  },
+                  "guardadoEm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "guardadoPor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "tamanho",
+                  "guardadoEm",
+                  "guardadoPor"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "ativo",
+              "inativo"
+            ]
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacote"
+          },
+          "ultimaDistribuicao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "criadaEm": {
+                    "type": "string"
+                  },
+                  "paraQuem": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "criadaEm",
+                  "paraQuem"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "versao",
+          "descricao",
+          "categoria",
+          "nomeNoInventario",
+          "comando",
+          "codigosDeSucesso",
+          "tipo",
+          "arquivo",
+          "situacao",
+          "contas",
+          "ultimaDistribuicao"
+        ],
+        "additionalProperties": false
+      },
+      "DistribuicaoDoPacote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "paraQuem": {
+            "type": "string"
+          },
+          "maquinas": {
+            "type": "number"
+          },
+          "resultado": {
+            "type": "object",
+            "properties": {
+              "concluidas": {
+                "type": "number"
+              },
+              "emAndamento": {
+                "type": "number"
+              },
+              "aguardando": {
+                "type": "number"
+              },
+              "falharam": {
+                "type": "number"
+              },
+              "tiradas": {
+                "type": "number"
+              },
+              "semContato": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "concluidas",
+              "emAndamento",
+              "aguardando",
+              "falharam",
+              "tiradas",
+              "semContato"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "criadaEm",
+          "paraQuem",
+          "maquinas",
+          "resultado"
+        ],
+        "additionalProperties": false
+      },
+      "FichaDoPacote": {
+        "type": "object",
+        "properties": {
+          "pacote": {
+            "$ref": "#/components/schemas/PacoteDeSoftware"
+          },
+          "partes": {
+            "type": "number"
+          },
+          "contas": {
+            "$ref": "#/components/schemas/ContasDoPacote"
+          },
+          "versoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "estado": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "alvo",
+                        "abaixo",
+                        "acima"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quantas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "versao",
+                "estado",
+                "quantas"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "distribuicoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistribuicaoDoPacote"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "administrar": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "administrar"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "pacote",
+          "partes",
+          "contas",
+          "versoes",
+          "distribuicoes",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
+      "MatrizPorMaquina": {
+        "type": "object",
+        "properties": {
+          "por": {
+            "type": "string",
+            "const": "maquina"
+          },
+          "local": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              },
+              "caminho": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome",
+              "caminho"
+            ],
+            "additionalProperties": false
+          },
+          "pacotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PacoteDeSoftware"
+            }
+          },
+          "maquinas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hostname": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "pessoa": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "semContato": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SemContatoDoAgente"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "rotulo",
+                "patrimonio",
+                "hostname",
+                "pessoa",
+                "semContato"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "celulas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "ativoId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "situacao": {
+                  "type": "string",
+                  "enum": [
+                    "na-versao",
+                    "desatualizada",
+                    "sem-o-programa",
+                    "instalado-sem-alvo"
+                  ]
+                },
+                "versao": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "distribuicao": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "aguardando",
+                            "em-andamento",
+                            "falhou"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "codigo": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "situacao",
+                        "texto",
+                        "codigo"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "pacoteId",
+                "ativoId",
+                "situacao",
+                "versao",
+                "distribuicao"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "ultimas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "distribuicaoId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "criadaEm": {
+                  "type": "string"
+                },
+                "criadaPor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pacoteId",
+                "distribuicaoId",
+                "criadaEm",
+                "criadaPor"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "por",
+          "local",
+          "pacotes",
+          "maquinas",
+          "celulas",
+          "ultimas"
+        ],
+        "additionalProperties": false
+      },
+      "MatrizPorLocal": {
+        "type": "object",
+        "properties": {
+          "por": {
+            "type": "string",
+            "const": "local"
+          },
+          "pacotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PacoteDeSoftware"
+            }
+          },
+          "locais": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "caminho": {
+                  "type": "string"
+                },
+                "maquinas": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "caminho",
+                "maquinas"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "celulas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pacoteId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "localId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "naVersao": {
+                  "type": "number"
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "pacoteId",
+                "localId",
+                "naVersao",
+                "total"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "por",
+          "pacotes",
+          "locais",
+          "celulas"
+        ],
+        "additionalProperties": false
+      },
+      "SoftwareDaMaquina": {
+        "type": "object",
+        "properties": {
+          "instalados": {
             "type": "array",
             "items": {
               "type": "object",
@@ -43084,13 +45989,107 @@
                     "string",
                     "null"
                   ]
+                },
+                "doSistema": {
+                  "type": "boolean"
+                },
+                "base": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "comparacao": {
+                          "type": "string",
+                          "enum": [
+                            "ha-na-base",
+                            "na-versao",
+                            "sem-versao-alvo",
+                            "fora-da-base",
+                            "do-windows"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "pacote": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "nome": {
+                                  "type": "string"
+                                },
+                                "versao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nome",
+                                "versao"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "origem": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "distribuicaoId": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "por": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "distribuicaoId",
+                                "por"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "comparacao",
+                        "texto",
+                        "pacote",
+                        "origem"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
                 "nome",
                 "versao",
                 "editor",
-                "instaladoEm"
+                "instaladoEm",
+                "doSistema",
+                "base"
               ],
               "additionalProperties": false
             }
@@ -43100,11 +46099,296 @@
               "string",
               "null"
             ]
+          },
+          "agente": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimoContato": {
+                    "type": "string"
+                  },
+                  "semContato": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/SemContatoDoAgente"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "ultimoContato",
+                  "semContato"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distribuir": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "mandados": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "distribuicaoId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "maquinaId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "pacote": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "nome": {
+                              "type": "string"
+                            },
+                            "versao": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "situacao": {
+                              "type": "string",
+                              "enum": [
+                                "ativo",
+                                "inativo"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nome",
+                            "versao",
+                            "situacao"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "paraQuem": {
+                          "type": "string"
+                        },
+                        "situacao": {
+                          "type": "object",
+                          "properties": {
+                            "chave": {
+                              "type": "string",
+                              "enum": [
+                                "aguardando",
+                                "em-andamento",
+                                "concluida",
+                                "falhou",
+                                "tirada"
+                              ]
+                            },
+                            "texto": {
+                              "type": "string"
+                            },
+                            "tipo": {
+                              "type": "string",
+                              "enum": [
+                                "neutra",
+                                "info",
+                                "sucesso",
+                                "critico"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "chave",
+                            "texto",
+                            "tipo"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "codigo": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "numero": {
+                                  "type": "number"
+                                },
+                                "explicacao": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "numero",
+                                "explicacao"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "etapa": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "criadaEm": {
+                          "type": "string"
+                        },
+                        "criadaPor": {
+                          "type": "string"
+                        },
+                        "enviadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "terminadaEm": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "aguardaNoutra": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/OutraDistribuicao"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "distribuicaoId",
+                        "maquinaId",
+                        "pacote",
+                        "paraQuem",
+                        "situacao",
+                        "codigo",
+                        "etapa",
+                        "criadaEm",
+                        "criadaPor",
+                        "enviadaEm",
+                        "terminadaEm",
+                        "aguardaNoutra"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "pacotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "pacote": {
+                          "$ref": "#/components/schemas/PacoteDeSoftware"
+                        },
+                        "situacao": {
+                          "type": "string",
+                          "enum": [
+                            "na-versao",
+                            "desatualizada",
+                            "sem-o-programa",
+                            "instalado-sem-alvo"
+                          ]
+                        },
+                        "versao": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "naFila": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "pacote",
+                        "situacao",
+                        "versao",
+                        "naFila"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "mandados",
+                  "pacotes"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
-          "softwares",
-          "inventariadoEm"
+          "instalados",
+          "inventariadoEm",
+          "agente",
+          "distribuir"
+        ],
+        "additionalProperties": false
+      },
+      "CategoriaDeSoftware": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "ordem": {
+            "type": "number"
+          },
+          "pacotes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "ordem",
+          "pacotes"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeCategoria": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome"
         ],
         "additionalProperties": false
       },
@@ -43543,6 +46827,24 @@
         ],
         "additionalProperties": false
       },
+      "PedidoDaPrevia": {
+        "type": "object",
+        "properties": {
+          "pacoteId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicao"
+          }
+        },
+        "required": [
+          "pacoteId",
+          "alvo"
+        ],
+        "additionalProperties": false
+      },
       "PedidoDeDistribuicao": {
         "type": "object",
         "properties": {
@@ -43551,19 +46853,47 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "ativoIds": {
-            "maxItems": 500,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-            }
+          "alvo": {
+            "$ref": "#/components/schemas/AlvoDaDistribuicao"
+          },
+          "quando": {
+            "default": "agora",
+            "type": "string",
+            "enum": [
+              "agora",
+              "noite",
+              "dia"
+            ]
+          },
+          "aPartirDe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuso": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "pacoteId",
-          "ativoIds"
+          "alvo",
+          "quando"
         ],
         "additionalProperties": false
       },
@@ -43624,6 +46954,9 @@
               }
             ]
           },
+          "diasSemContato": {
+            "type": "number"
+          },
           "tipos": {
             "type": "array",
             "items": {
@@ -43670,6 +47003,7 @@
         "required": [
           "tipoId",
           "localId",
+          "diasSemContato",
           "tipos",
           "locais"
         ],
@@ -58885,88 +62219,9 @@
         }
       }
     },
-    "/ativos/{id}/softwares": {
-      "get": {
-        "summary": "Os softwares instalados no ativo, do último inventário do agente",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SoftwaresDoAtivo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problema"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problema"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problema"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problema"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/software/pacotes": {
       "get": {
-        "summary": "A base de software da organização, pelo nome",
+        "summary": "A base de software frente ao inventário das máquinas da conta, com as mais desatualizadas primeiro",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -58978,8 +62233,11 @@
                     "pacotes": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/PacoteDeSoftware"
+                        "$ref": "#/components/schemas/PacoteNaBase"
                       }
+                    },
+                    "maquinas": {
+                      "type": "number"
                     },
                     "permite": {
                       "type": "object",
@@ -58996,6 +62254,7 @@
                   },
                   "required": [
                     "pacotes",
+                    "maquinas",
                     "permite"
                   ],
                   "additionalProperties": false
@@ -59151,7 +62410,292 @@
         }
       }
     },
+    "/software/matriz": {
+      "get": {
+        "summary": "A matriz do software: os pacotes ativos frente às máquinas de um local, ou frente aos locais, nos locais em que a conta distribui",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "local",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "maquina",
+              "type": "string",
+              "enum": [
+                "maquina",
+                "local"
+              ]
+            },
+            "in": "query",
+            "name": "por",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/MatrizPorMaquina"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MatrizPorLocal"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ativos/{id}/software": {
+      "get": {
+        "summary": "O software da máquina: os instalados do último inventário e, para quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoftwareDaMaquina"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/software/pacotes/{id}": {
+      "get": {
+        "summary": "A ficha do pacote: as contas, as barras das versões e as distribuições",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDoPacote"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "summary": "Editar um pacote de software",
         "requestBody": {
@@ -59624,9 +63168,474 @@
         }
       }
     },
+    "/software/categorias": {
+      "get": {
+        "summary": "As categorias da base de software, na ordem",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categorias": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoriaDeSoftware"
+                      }
+                    }
+                  },
+                  "required": [
+                    "categorias"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar uma categoria no fim da ordem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeCategoriaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriaDeSoftware"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/categorias/{id}": {
+      "patch": {
+        "summary": "Renomear uma categoria",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeCategoriaInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriaDeSoftware"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remover uma categoria sem pacotes",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/categorias/ordem": {
+      "put": {
+        "summary": "Ordenar as categorias, com todas, uma vez cada",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  }
+                },
+                "required": [
+                  "ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categorias": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoriaDeSoftware"
+                      }
+                    }
+                  },
+                  "required": [
+                    "categorias"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/software/maquinas": {
       "get": {
-        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui",
+        "summary": "As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa que a conta vê",
         "parameters": [
           {
             "schema": {
@@ -59657,6 +63666,180 @@
                     "maquinas"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/distribuicoes/alvos": {
+      "get": {
+        "summary": "Os locais e as visões do passo Máquinas do assistente, com as máquinas de cada um",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "fuso",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlvosDaDistribuicao"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/software/distribuicoes/previa": {
+      "post": {
+        "summary": "A prévia do assistente: as máquinas escolhidas, cada uma com a classe frente ao pacote, e os não achados da lista",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDaPreviaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviaDaDistribuicao"
                 }
               }
             }
@@ -59813,7 +63996,7 @@
         }
       },
       "post": {
-        "summary": "Distribuir um pacote às máquinas com o agente do GLPI ligado",
+        "summary": "Distribuir um pacote às máquinas do alvo com o agente do GLPI ligado, agora, na janela da noite ou a partir de um dia",
         "requestBody": {
           "required": true,
           "content": {
@@ -59987,9 +64170,9 @@
         }
       }
     },
-    "/software/distribuicoes/{id}/agora": {
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tentar-de-novo": {
       "post": {
-        "summary": "Acordar os agentes das máquinas que aguardam a distribuição",
+        "summary": "Tentar de novo a máquina que falhou: ela volta a aguardar o agente, que é acordado se o pedido pode seguir",
         "parameters": [
           {
             "schema": {
@@ -60000,6 +64183,16 @@
             "in": "path",
             "name": "id",
             "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "maquinaId",
+            "required": true
           }
         ],
         "responses": {
@@ -60008,24 +64201,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "acordados": {
-                      "type": "number"
-                    },
-                    "total": {
-                      "type": "number"
-                    },
-                    "mensagem": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "acordados",
-                    "total",
-                    "mensagem"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/MaquinaDaDistribuicao"
                 }
               }
             }
@@ -60093,9 +64269,9 @@
         }
       }
     },
-    "/ativos/{id}/distribuicoes": {
-      "get": {
-        "summary": "As distribuições de software do ativo, da mais nova para a mais antiga",
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tirar-da-fila": {
+      "post": {
+        "summary": "Tirar da fila a máquina que aguarda o agente: ela não recebe mais o pedido, com o fim marcado",
         "parameters": [
           {
             "schema": {
@@ -60106,6 +64282,16 @@
             "in": "path",
             "name": "id",
             "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "maquinaId",
+            "required": true
           }
         ],
         "responses": {
@@ -60114,19 +64300,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "distribuicoes": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/DistribuicaoDoAtivo"
-                      }
-                    }
-                  },
-                  "required": [
-                    "distribuicoes"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/MaquinaDaDistribuicao"
                 }
               }
             }
@@ -72646,7 +76820,7 @@
         }
       },
       "put": {
-        "summary": "Escolher tipo e local dos computadores cadastrados pelo agente",
+        "summary": "Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato",
         "requestBody": {
           "required": true,
           "content": {
@@ -72677,12 +76851,11 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "diasSemContato": {
+                    "type": "number"
                   }
-                },
-                "required": [
-                  "tipoId",
-                  "localId"
-                ]
+                }
               }
             }
           }

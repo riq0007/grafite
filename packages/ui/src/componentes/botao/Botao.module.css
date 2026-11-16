@@ -81,6 +81,13 @@
   background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
 }
 
+/* O alternável ligado: a borda do destaque e o visto no lugar do ícone dizem o estado. */
+.alternavel[data-selected] {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-superficie-elevada);
+  font-weight: var(--peso-forte);
+}
+
 /* Carregando: o rótulo some sem sair do layout, e o indicador ocupa o centro. */
 .botao[data-pending] {
   cursor: progress;

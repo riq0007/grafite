@@ -799,13 +799,71 @@ export {
   situacaoDaSalaNoMapa,
 } from './salas/salas.ts';
 export {
+  COMPARACOES_COM_A_BASE,
+  type ComparacaoComABase,
+  type ContasDoPacote,
+  contasDoPacote,
+  frenteABase,
+  monograma,
+  ordenarFrenteABase,
+  type PacoteDaBase,
+  textoFrenteABase,
+  tipoDoPacote,
+  type VersaoDaFicha,
+} from './software/base.ts';
+export {
+  CATEGORIAS_DE_SOFTWARE_DE_FABRICA,
+  conferirNomeDaCategoria,
+  MENSAGENS_DAS_CATEGORIAS,
+} from './software/categorias.ts';
+export {
+  codigoDaMensagem,
+  type ExplicacaoDoComando,
+  explicarOCodigoDeSaida,
+  explicarOComando,
+  type ParteDaFrase,
+  type TrechoDoComando,
+} from './software/comando.ts';
+export {
+  type ClasseNoAssistente,
+  type ContaDoAssistente,
+  classeNoAssistente,
+  contaDoAssistente,
+  itensDaListaColada,
+  LIMITE_DA_LISTA_COLADA,
+  MENSAGEM_DA_LISTA_COLADA,
+  MENSAGEM_DO_PRAZO_DO_SEM_CONTATO,
+  PRAZO_DO_SEM_CONTATO,
+  paraQuem,
+  prazoDoSemContatoValido,
+  recusaSemNenhumaQueEntra,
+  semContato,
+  textoDoSemContato,
+} from './software/maquinas.ts';
+export {
+  conferirQuando,
+  EXPIRATION_DE_FABRICA,
+  expirationDoContato,
+  fusoValido,
+  instanteNoFuso,
+  JANELA_DA_NOITE,
+  linhaDoChamado,
+  MENSAGENS_DO_QUANDO,
+  type PedidoNoTempo,
+  podeSeguir,
+  proximoMomento,
+  type QuandoDaDistribuicao,
+} from './software/quando.ts';
+export {
   aplicarPassoDoAgente,
   type CampoDoPacote,
   CODIGOS_DE_SUCESSO_PADRAO,
+  comALinha,
   conferirPacote,
   type DadosDoPacote,
   LIMITE_DO_ARQUIVO_DO_PACOTE,
   LINHAS_DO_LOG,
+  linhaDoTentarDeNovo,
   MENSAGENS_DO_SOFTWARE,
   progressoDaDistribuicao,
   SITUACOES_DA_MAQUINA,
@@ -813,6 +871,17 @@ export {
   type SituacaoDaMaquina,
   TAMANHO_DA_PARTE_DO_PACOTE,
 } from './software/software.ts';
+export {
+  casaComOPacote,
+  compararVersoes,
+  estadoDaVersao,
+  ordemDasVersoes,
+  type SituacaoFrenteAoPacote,
+  situacaoFrenteAoPacote,
+  temVersaoAlvo,
+  versaoCortada,
+  versaoMaisAlta,
+} from './software/versoes.ts';
 export {
   atendeASolicitacao,
   type CompativelParaSugestao,

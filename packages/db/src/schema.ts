@@ -3555,9 +3555,18 @@ export const cadastroDosAgentes = orgScoped(
   {
     tipoId: uuid('tipo_id'),
     localId: uuid('local_id'),
+    /**
+     * Os dias sem falar com o servidor depois dos quais o agente fica "Sem contato" (change
+     * software-por-pacote, design, decisão 9): duas voltas do contato diário, de fábrica.
+     */
+    diasSemContato: integer('dias_sem_contato').notNull().default(2),
   },
   (t) => [
     unique('cadastro_dos_agentes_organizacao_unica').on(t.orgId),
+    check(
+      'cadastro_dos_agentes_dias_sem_contato_valido',
+      sql`${t.diasSemContato} between 1 and 30`,
+    ),
     foreignKey({
       name: 'cadastro_dos_agentes_tipo_fk',
       columns: [t.orgId, t.tipoId],
@@ -3620,6 +3629,11 @@ export const agentes = orgScoped(
     primeiroContato: momento('primeiro_contato').notNull().defaultNow(),
     ultimoContato: momento('ultimo_contato').notNull().defaultNow(),
     ultimoInventario: momento('ultimo_inventario'),
+    /**
+     * Até quando o agente deve voltar: o último contato mais o `expiration` dado nele (change
+     * software-por-pacote, design, decisão 8).
+     */
+    voltaAte: momento('volta_ate'),
     pendenciaCadastro: jsonb('pendencia_cadastro').$type<{
       motivo: (typeof MOTIVOS_DA_PENDENCIA_DO_AGENTE)[number];
       campos: string[];
@@ -3638,12 +3652,18 @@ export const agentes = orgScoped(
   ],
 );
 
-/** Os softwares instalados no ativo, do último inventário completo do agente. */
+/**
+ * Os softwares instalados no ativo, do último inventário completo do agente, com o nome normalizado,
+ * que casa com o nome no inventário do pacote, e o "do sistema", que não se distribui (change
+ * software-por-pacote, design, decisões 1 e 13).
+ */
 export const softwaresDosAtivos = orgScoped(
   'softwares_dos_ativos',
   {
     ativoId: uuid('ativo_id').notNull(),
     nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    doSistema: boolean('do_sistema').notNull().default(false),
     versao: text('versao'),
     editor: text('editor'),
     instaladoEm: date('instalado_em', { mode: 'string' }),
@@ -3656,13 +3676,41 @@ export const softwaresDosAtivos = orgScoped(
       foreignColumns: [ativos.orgId, ativos.id],
     }),
     index('softwares_dos_ativos_ativo_idx').on(t.orgId, t.ativoId, t.nome),
+    // O casamento com o nome no inventário do pacote, pela igualdade e pelo começo do nome, na
+    // ordem dos bytes (change software-por-pacote, design, decisão 1).
+    index('softwares_dos_ativos_nome_normalizado_idx').on(
+      t.orgId,
+      sql`(${t.nomeNormalizado} collate "C")`,
+    ),
     check('softwares_dos_ativos_nome_valido', textoAte(t.nome, 500)),
   ],
 );
 
 /**
- * A base de software (spec distribuicao-de-software; change distribuicao-de-software): o pacote com
- * o comando, os códigos de sucesso e o arquivo, guardado em partes no armazenamento.
+ * As categorias da base de software (spec distribuicao-de-software, "Categorias da base"; change
+ * software-por-pacote, design, decisão 3): a TI cria, renomeia, ordena e remove as dela, e cada
+ * organização começa com as 7 de fábrica. A categoria com pacotes não sai, pela chave do pacote.
+ */
+export const categoriasDeSoftware = orgScoped(
+  'categorias_de_software',
+  {
+    nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    ordem: integer('ordem').notNull(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('categorias_de_software_nome_unico').on(t.orgId, t.nomeNormalizado),
+    check('categorias_de_software_nome_valido', sql`length(trim(${t.nome})) between 1 and 40`),
+  ],
+);
+
+/**
+ * A base de software (spec distribuicao-de-software; changes distribuicao-de-software e
+ * software-por-pacote): o pacote com o comando, os códigos de sucesso e o arquivo, guardado em partes
+ * no armazenamento, com quem o guardou e quando; a categoria, que pode faltar; e o nome no
+ * inventário, que liga o pacote aos programas do inventário pelo normalizado, gravado com o nome
+ * quando o nome no inventário fica vazio.
  */
 export const pacotesDeSoftware = orgScoped(
   'pacotes_de_software',
@@ -3676,13 +3724,29 @@ export const pacotesDeSoftware = orgScoped(
     nomeDoArquivo: text('nome_do_arquivo'),
     tamanhoDoArquivo: bigint('tamanho_do_arquivo', { mode: 'number' }),
     sha512DoArquivo: text('sha512_do_arquivo'),
+    arquivoGuardadoEm: momento('arquivo_guardado_em'),
+    arquivoGuardadoPor: uuid('arquivo_guardado_por'),
+    categoriaId: uuid('categoria_id'),
+    nomeNoInventario: text('nome_no_inventario'),
+    nomeNoInventarioNormalizado: text('nome_no_inventario_normalizado').notNull(),
     situacao: situacaoDoCadastro(),
     criadoEm: momento('criado_em').notNull().defaultNow(),
     atualizadoEm: momento('atualizado_em').notNull().defaultNow(),
   },
   (t) => [
+    foreignKey({
+      name: 'pacotes_de_software_categoria_fk',
+      columns: [t.orgId, t.categoriaId],
+      foreignColumns: [categoriasDeSoftware.orgId, categoriasDeSoftware.id],
+    }),
+    foreignKey({
+      name: 'pacotes_de_software_guardado_por_fk',
+      columns: [t.orgId, t.arquivoGuardadoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
     unique('pacotes_de_software_nome_unico').on(t.orgId, t.nomeNormalizado),
     check('pacotes_de_software_nome_valido', sql`length(trim(${t.nome})) between 1 and 120`),
+    check('pacotes_de_software_nome_no_inventario_valido', textoAte(t.nomeNoInventario, 120)),
     check('pacotes_de_software_comando_valido', sql`length(trim(${t.comando})) between 1 and 2000`),
     check('pacotes_de_software_versao_valida', textoAte(t.versao, 60)),
     check('pacotes_de_software_descricao_valida', textoAte(t.descricao, 2000)),
@@ -3719,15 +3783,36 @@ export const partesDosPacotes = orgScoped(
   ],
 );
 
-/** A distribuição de um pacote às máquinas, com quem criou. */
+/** Quando a distribuição pode seguir: agora, na janela da noite ou a partir de um dia e hora. */
+export const QUANDOS_DA_DISTRIBUICAO = ['agora', 'noite', 'dia'] as const;
+
+/**
+ * A distribuição de um pacote às máquinas, com quem criou, o quando, o momento do dia marcado, o fuso
+ * de quem enviou e o "para quem" (change software-por-pacote, design, decisões 7 e 10). As de antes
+ * da change são de agora, sem o fuso e sem o "para quem".
+ */
 export const distribuicoes = orgScoped(
   'distribuicoes',
   {
     pacoteId: uuid('pacote_id').notNull(),
     criadaPor: uuid('criada_por').notNull(),
     criadaEm: momento('criada_em').notNull().defaultNow(),
+    quando: text('quando', { enum: QUANDOS_DA_DISTRIBUICAO }).notNull().default('agora'),
+    aPartirDe: momento('a_partir_de'),
+    fuso: text('fuso'),
+    paraQuem: text('para_quem'),
   },
   (t) => [
+    check('distribuicoes_quando_valido', sql`${t.quando} in (${lista(QUANDOS_DA_DISTRIBUICAO)})`),
+    check(
+      'distribuicoes_a_partir_de_valido',
+      sql`(${t.quando} = 'dia') = (${t.aPartirDe} is not null)`,
+    ),
+    check(
+      'distribuicoes_fuso_valido',
+      sql`(${t.quando} = 'agora' or ${t.fuso} is not null) and ${textoAte(t.fuso, 64)}`,
+    ),
+    check('distribuicoes_para_quem_valido', textoAte(t.paraQuem, 200)),
     foreignKey({
       name: 'distribuicoes_pacote_fk',
       columns: [t.orgId, t.pacoteId],
@@ -3747,9 +3832,14 @@ export const SITUACOES_DA_MAQUINA_NA_DISTRIBUICAO = [
   'em-andamento',
   'concluida',
   'falhou',
+  'tirada',
 ] as const;
 
-/** Cada máquina da distribuição: o ativo e o agente, a situação, a etapa e o log do agente. */
+/**
+ * Cada máquina da distribuição: o ativo e o agente, a situação, a etapa e o log do agente, o código
+ * de saída da instalação e o último chamado pela porta do agente, com a resposta (change
+ * software-por-pacote, design, decisões 6, 8a e 11). O código é do tamanho do DWORD do Windows.
+ */
 export const maquinasDasDistribuicoes = orgScoped(
   'maquinas_das_distribuicoes',
   {
@@ -3764,8 +3854,15 @@ export const maquinasDasDistribuicoes = orgScoped(
     enviadaEm: momento('enviada_em'),
     atualizadaEm: momento('atualizada_em'),
     terminadaEm: momento('terminada_em'),
+    codigoDeSaida: bigint('codigo_de_saida', { mode: 'number' }),
+    chamadaEm: momento('chamada_em'),
+    chamadaRespondeu: boolean('chamada_respondeu'),
   },
   (t) => [
+    check(
+      'maquinas_das_distribuicoes_chamada_valida',
+      sql`(${t.chamadaEm} is null) = (${t.chamadaRespondeu} is null)`,
+    ),
     foreignKey({
       name: 'maquinas_das_distribuicoes_distribuicao_fk',
       columns: [t.orgId, t.distribuicaoId],

@@ -1,0 +1,55 @@
+/* As categorias da base, numa gaveta: a lista na ordem das abas e a criação no fim. */
+.categorias {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.categoria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 48px;
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.nome {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.quantos {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.acoes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+.renomear,
+.nova {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-2);
+}

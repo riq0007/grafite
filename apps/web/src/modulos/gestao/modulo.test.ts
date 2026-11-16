@@ -24,8 +24,12 @@ const IMPORTACOES = {
 };
 const SOFTWARE = {
   rotulo: 'Software',
-  destino: '/gestao/software',
   permissoes: ['software.distribuir'],
+  filhos: [
+    { rotulo: 'Base de pacotes', destino: '/gestao/software' },
+    { rotulo: 'Distribuições', destino: '/gestao/software/distribuicoes' },
+    { rotulo: 'Matriz', destino: '/gestao/software/matriz' },
+  ],
 };
 const CONTROL_ID = {
   rotulo: 'Control iD',
@@ -59,6 +63,10 @@ describe('a Gestão de ativos no registro', () => {
 
   it('Quem edita ativos: o menu mostra só Importações', () => {
     expect(daConta('ativos.ver', 'ativos.editar')[0]?.menu).toEqual([IMPORTACOES]);
+  });
+
+  it('Técnico do software: o menu mostra o Software, com a Base de pacotes, as Distribuições e a Matriz', () => {
+    expect(daConta('software.distribuir')[0]?.menu).toEqual([SOFTWARE]);
   });
 
   it('Técnico do Control iD: o menu mostra só o Control iD, com Backups e Comparar backups', () => {

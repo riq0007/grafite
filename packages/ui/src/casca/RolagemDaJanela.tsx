@@ -36,7 +36,7 @@ export function RolagemDaJanela({ children, comBarra, ref }: PropsDaRolagemDaJan
       data-com-barra={comBarra || undefined}
       tabIndex={-1}
     >
-      <div>{children}</div>
+      <div className={estilos.conteudo}>{children}</div>
     </div>
   );
 }

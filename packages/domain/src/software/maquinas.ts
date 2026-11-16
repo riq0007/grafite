@@ -1,0 +1,172 @@
+// As máquinas no assistente da distribuição (spec distribuicao-de-software, "Assistente da
+// distribuição"; spec inventario-pelo-agente, "Agente sem contato"; change software-por-pacote,
+// design, decisões 9 e 10): o sem contato pelo prazo da organização, a classe de cada máquina, na
+// ordem pulada, já aguarda, na fila e vai instalar, a conta do "Conferir", a recusa sem nenhuma que
+// entra, o "Para quem" e a lista colada.
+import { normalizarTexto } from '../texto.ts';
+import { MENSAGENS_DO_SOFTWARE } from './software.ts';
+import { compararVersoes, type SituacaoFrenteAoPacote, versaoCortada } from './versoes.ts';
+
+const DIA = 86_400_000;
+
+/** O prazo do sem contato da organização, em dias: duas voltas do contato diário de fábrica. */
+export const PRAZO_DO_SEM_CONTATO = { minimo: 1, maximo: 30, deFabrica: 2 } as const;
+
+export const MENSAGEM_DO_PRAZO_DO_SEM_CONTATO = 'Use de 1 a 30 dias.';
+
+/** O prazo em dias inteiros, de 1 a 30. */
+export const prazoDoSemContatoValido = (dias: number): boolean =>
+  Number.isInteger(dias) &&
+  dias >= PRAZO_DO_SEM_CONTATO.minimo &&
+  dias <= PRAZO_DO_SEM_CONTATO.maximo;
+
+/**
+ * O agente sem contato: o último contato passou do prazo da organização, em dias. Os dias contam
+ * inteiros ("há 3 dias").
+ */
+export function semContato(
+  ultimoContato: Date,
+  momento: Date,
+  prazoEmDias: number,
+): { semContato: boolean; dias: number } {
+  const passou = momento.getTime() - ultimoContato.getTime();
+  return { semContato: passou > prazoEmDias * DIA, dias: Math.max(0, Math.floor(passou / DIA)) };
+}
+
+/** "Sem contato · há 3 dias". */
+export function textoDoSemContato(dias: number): string {
+  return `Sem contato · há ${dias} ${dias === 1 ? 'dia' : 'dias'}`;
+}
+
+export type ClasseNoAssistente = 'pulada' | 'ja-aguarda' | 'na-fila' | 'vai-instalar';
+
+/**
+ * A classe da máquina no assistente, nesta precedência: pulada, já na versão-alvo, mesmo sem
+ * contato; já aguarda, com o mesmo pacote aguardando ou em andamento noutra distribuição, também
+ * pulada; na fila, sem contato; e vai instalar. O pacote sem versão-alvo não pula ninguém pela
+ * versão.
+ */
+export function classeNoAssistente(maquina: {
+  situacao: SituacaoFrenteAoPacote;
+  semContato: boolean;
+  jaAguarda?: boolean;
+}): ClasseNoAssistente {
+  if (maquina.situacao === 'na-versao') return 'pulada';
+  if (maquina.jaAguarda) return 'ja-aguarda';
+  return maquina.semContato ? 'na-fila' : 'vai-instalar';
+}
+
+/**
+ * A recusa da distribuição em que nenhuma máquina entra, pelo motivo das puladas: a versão-alvo, a
+ * outra distribuição em que elas já aguardam o pacote, ou os dois.
+ */
+export function recusaSemNenhumaQueEntra(
+  { puladas, jaAguardam }: { puladas: number; jaAguardam: number },
+  versaoAlvo: string | null,
+): string {
+  if (jaAguardam === 0) return MENSAGENS_DO_SOFTWARE.todasNaVersao(versaoAlvo ?? '');
+  if (puladas === 0 || versaoAlvo === null) return MENSAGENS_DO_SOFTWARE.todasJaAguardam;
+  return MENSAGENS_DO_SOFTWARE.todasNaVersaoOuJaAguardam(versaoAlvo);
+}
+
+export interface ContaDoAssistente {
+  /** A classe de cada máquina, na ordem em que vieram. */
+  classes: ClasseNoAssistente[];
+  vaoInstalar: number;
+  puladas: number;
+  /** As que já aguardam o mesmo pacote noutra distribuição, também puladas. */
+  jaAguardam: number;
+  naFila: number;
+  /** As que vão instalar sem ter o programa. */
+  primeiraVez: number;
+  /** As que vão instalar com o programa, pela versão de hoje cortada no tamanho da versão-alvo, da
+   * mais nova para a mais velha; a sem versão no inventário vai no fim. */
+  porVersao: { versao: string | null; quantas: number }[];
+}
+
+/** A conta do "Até agora" e do "Conferir" ("Atualizam da 7.2 · 5", "Instalam pela primeira vez"). */
+export function contaDoAssistente(
+  maquinas: readonly {
+    situacao: SituacaoFrenteAoPacote;
+    versao: string | null;
+    semContato: boolean;
+    jaAguarda?: boolean;
+  }[],
+  versaoAlvo: string | null,
+): ContaDoAssistente {
+  const classes = maquinas.map(classeNoAssistente);
+  const grupos = new Map<string | null, number>();
+  let primeiraVez = 0;
+  maquinas.forEach((maquina, posicao) => {
+    if (classes[posicao] !== 'vai-instalar') return;
+    if (maquina.situacao === 'sem-o-programa') {
+      primeiraVez++;
+      return;
+    }
+    const versao = versaoCortada(maquina.versao, versaoAlvo);
+    grupos.set(versao, (grupos.get(versao) ?? 0) + 1);
+  });
+  const porVersao = [...grupos].map(([versao, quantas]) => ({ versao, quantas }));
+  porVersao.sort((a, b) => {
+    if (a.versao === null) return 1;
+    if (b.versao === null) return -1;
+    return compararVersoes(b.versao, a.versao);
+  });
+  const contar = (classe: ClasseNoAssistente) => classes.filter((de) => de === classe).length;
+  return {
+    classes,
+    vaoInstalar: contar('vai-instalar'),
+    puladas: contar('pulada'),
+    jaAguardam: contar('ja-aguarda'),
+    naFila: contar('na-fila'),
+    primeiraVez,
+    porVersao,
+  };
+}
+
+/**
+ * O "Para quem" da distribuição: o nome da máquina, quando é uma só; o local mais fundo que contém
+ * todas, pelo caminho de cada uma desde a raiz; "N locais", quando não há esse local; e "N máquinas",
+ * quando elas não têm local.
+ */
+export function paraQuem(
+  maquinas: readonly { nome: string; locais: readonly { id: string; nome: string }[] }[],
+): string {
+  const [primeira, ...outras] = maquinas;
+  if (!primeira) return '0 máquinas';
+  if (outras.length === 0) return primeira.nome;
+  let comum = primeira.locais.length;
+  for (const maquina of outras) {
+    let posicao = 0;
+    while (posicao < comum && maquina.locais[posicao]?.id === primeira.locais[posicao]?.id)
+      posicao++;
+    comum = posicao;
+  }
+  const local = primeira.locais[comum - 1];
+  if (local) return local.nome;
+  const distintos = new Set(maquinas.flatMap(({ locais }) => locais.at(-1)?.id ?? []));
+  return distintos.size > 1 ? `${distintos.size} locais` : `${maquinas.length} máquinas`;
+}
+
+/** Quantos itens a lista colada do assistente aceita. */
+export const LIMITE_DA_LISTA_COLADA = 2000;
+
+export const MENSAGEM_DA_LISTA_COLADA = 'Cole até 2.000 máquinas de uma vez.';
+
+/**
+ * Os itens da lista colada: nomes, patrimônios ou hostnames, um por linha ou separados por vírgula,
+ * ponto e vírgula ou tabulação, sem os vazios e sem repetir pelo texto normalizado, na ordem da
+ * primeira vez.
+ */
+export function itensDaListaColada(texto: string): string[] {
+  const vistos = new Set<string>();
+  const itens: string[] = [];
+  for (const bruto of texto.split(/[\r\n,;\t]+/)) {
+    const item = bruto.replace(/\s+/g, ' ').trim();
+    const chave = normalizarTexto(item);
+    if (chave === '' || vistos.has(chave)) continue;
+    vistos.add(chave);
+    itens.push(item);
+  }
+  return itens;
+}

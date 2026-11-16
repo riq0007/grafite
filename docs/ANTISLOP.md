@@ -535,6 +535,7 @@ No Grafite (v2):
 - **Instrument Sans** na interface;
 - **JetBrains Mono** só no que se lê caractere por caractere: os identificadores (patrimônio, série, IP, MAC e códigos), os horários, com ou sem a data, e o código, como o log e o comando (v3);
 - **as quantidades** (contagens, medidas, percentuais, moeda e os números das tabelas, dos medidores e dos indicadores), com ou sem vírgula, as datas sem hora e a idade da leitura de um valor coletado, como "há 2 min", na Instrument Sans, com algarismos tabulares (v3);
+- uma exceção nomeada às quantidades: o "Instalado em" da base de pacotes do Software ("38 de 47") fica na JetBrains Mono, com algarismos tabulares, como no mockup aprovado, por decisão do usuário de 15/11/2026;
 - algarismos tabulares em qualquer número que se compara em coluna;
 - fontes servidas pelo próprio sistema.
 

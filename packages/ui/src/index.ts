@@ -115,6 +115,10 @@ export {
 } from './componentes/aviso/RegiaoDeAvisos.tsx';
 export { Botao, type NivelDoBotao, type PropsDoBotao } from './componentes/botao/Botao.tsx';
 export {
+  BotaoAlternavel,
+  type PropsDoBotaoAlternavel,
+} from './componentes/botao/BotaoAlternavel.tsx';
+export {
   BuscaComSugestoes,
   type PropsDaBusca,
   type SugeridasDaBusca,
@@ -124,6 +128,7 @@ export {
   type PropsDoCabecalhoDaPagina,
 } from './componentes/cabecalho/CabecalhoDaPagina.tsx';
 export { AreaDeTexto } from './componentes/campo/AreaDeTexto.tsx';
+export { CampoDeBusca, type PropsDoCampoDeBusca } from './componentes/campo/CampoDeBusca.tsx';
 export { CampoDeData, type PropsDoCampoDeData } from './componentes/campo/CampoDeData.tsx';
 export { CampoDeSenha, type PropsDoCampoDeSenha } from './componentes/campo/CampoDeSenha.tsx';
 export { CampoDeTexto, type PropsDoCampoDeTexto } from './componentes/campo/CampoDeTexto.tsx';

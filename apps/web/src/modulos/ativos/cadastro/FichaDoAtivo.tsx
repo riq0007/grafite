@@ -43,6 +43,8 @@ import { EscolherLoginDoControle } from '../controlid/LoginDoControle.tsx';
 import { DisponibilidadeNaFicha, rotuloDaDisponibilidade } from '../disponibilidade.tsx';
 import { buscaDasEtiquetas } from '../etiquetas/endereco.ts';
 import { ReferenciaAoModelo } from '../modelos/ReferenciaAoModelo.tsx';
+import { useSoftwareDaMaquina } from '../software/consultas.ts';
+import { SoftwareDaMaquina } from '../software/SoftwareDaMaquina.tsx';
 import { SuprimentosNaFicha, textoDosSuprimentos } from '../suprimentos.tsx';
 import { buscaDaAba, buscaDoCartao } from './abas.ts';
 import type { SituacaoDaCapacidade } from './cartoes.ts';
@@ -52,7 +54,6 @@ import { ImagemDoAtivo } from './ImagemDoAtivo.tsx';
 import { imagensDoAtivo } from './imagens.ts';
 import { LigadosDoAtivo } from './LigadosDoAtivo.tsx';
 import { SegredosDoAtivo } from './SegredosDoAtivo.tsx';
-import { SoftwaresDoAtivo } from './SoftwaresDoAtivo.tsx';
 import { situacaoDoAtivo } from './situacao.ts';
 
 /**
@@ -102,6 +103,13 @@ export function FichaDoAtivo() {
     },
     [consultas],
   );
+  // O "Sem contato" do cabeçalho, nos tipos com o inventário do agente (change software-por-pacote).
+  const comInventario =
+    tipos.data?.tipos
+      .find((candidato) => candidato.id === ativo.data?.tipo.id)
+      ?.capacidades.includes('hardware.inventario') ?? false;
+  const software = useSoftwareDaMaquina(id, comInventario);
+  const semContato = software.data?.agente?.semContato ?? null;
 
   const falha = ativo.error ?? tipos.error ?? campos.error;
   if (falha) {
@@ -156,6 +164,9 @@ export function FichaDoAtivo() {
             <MiniaturaDeAtivo tipo={ficha.tipo.icone} {...imagensDoAtivo(ficha, 128)} />
             {ficha.rotulo}
             <RotuloDeSituacao situacao={situacao.tipo}>{situacao.texto}</RotuloDeSituacao>
+            {semContato && (
+              <RotuloDeSituacao situacao="atencao">{semContato.texto}</RotuloDeSituacao>
+            )}
             {ficha.patrimonio && <span className={estilos.patrimonio}>{ficha.patrimonio}</span>}
           </span>
         }
@@ -270,14 +281,22 @@ export function FichaDoAtivo() {
             rotulo: ligados.data ? `Ligados (${quantosLigados(ligados.data)})` : 'Ligados',
             conteudo: <LigadosDoAtivo ficha={ficha} />,
           },
-          // Os softwares do agente do GLPI, nos tipos com o inventário de hardware
-          // (change inventario-pelo-agente-glpi).
-          ...(tipo.capacidades.includes('hardware.inventario')
+          // O software da máquina, nos tipos com o inventário de hardware (changes
+          // inventario-pelo-agente-glpi e software-por-pacote); o endereço continua `aba=softwares`.
+          ...(comInventario
             ? [
                 {
                   id: 'softwares',
-                  rotulo: 'Softwares',
-                  conteudo: <SoftwaresDoAtivo ativoId={ficha.id} />,
+                  rotulo: 'Software',
+                  conteudo: (
+                    <SoftwareDaMaquina
+                      maquina={{
+                        id: ficha.id,
+                        rotulo: ficha.rotulo,
+                        pessoa: ficha.responsavel?.nome ?? null,
+                      }}
+                    />
+                  ),
                 },
               ]
             : []),

@@ -14703,89 +14703,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/ativos/{id}/softwares": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Os softwares instalados no ativo, do último inventário do agente */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SoftwaresDoAtivo"];
-                    };
-                };
-                /** @description Default Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-                /** @description Default Response */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Problema"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/software/pacotes": {
         parameters: {
             query?: never;
@@ -14793,7 +14710,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** A base de software da organização, pelo nome */
+        /** A base de software frente ao inventário das máquinas da conta, com as mais desatualizadas primeiro */
         get: {
             parameters: {
                 query?: never;
@@ -14810,7 +14727,8 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            pacotes: components["schemas"]["PacoteDeSoftware"][];
+                            pacotes: components["schemas"]["PacoteNaBase"][];
+                            maquinas: number;
                             permite: {
                                 administrar: boolean;
                             };
@@ -14959,6 +14877,191 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/software/matriz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A matriz do software: os pacotes ativos frente às máquinas de um local, ou frente aos locais, nos locais em que a conta distribui */
+        get: {
+            parameters: {
+                query?: {
+                    local?: string;
+                    por?: "maquina" | "local";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MatrizPorMaquina"] | components["schemas"]["MatrizPorLocal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ativos/{id}/software": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O software da máquina: os instalados do último inventário e, para quem distribui no local dela, a base, a origem, os mandados e os pacotes para instalar */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SoftwareDaMaquina"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/software/pacotes/{id}": {
         parameters: {
             query?: never;
@@ -14966,7 +15069,83 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** A ficha do pacote: as contas, as barras das versões e as distribuições */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FichaDoPacote"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -15418,6 +15597,444 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/software/categorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As categorias da base de software, na ordem */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            categorias: components["schemas"]["CategoriaDeSoftware"][];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Criar uma categoria no fim da ordem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeCategoriaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CategoriaDeSoftware"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/categorias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remover uma categoria sem pacotes */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Renomear uma categoria */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeCategoriaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CategoriaDeSoftware"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/software/categorias/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ordenar as categorias, com todas, uma vez cada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            categorias: components["schemas"]["CategoriaDeSoftware"][];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/software/maquinas": {
         parameters: {
             query?: never;
@@ -15425,7 +16042,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui */
+        /** As máquinas com o agente do GLPI ligado, nos locais em que a conta distribui e vê, pelo nome, pelo patrimônio, pelo hostname ou pela pessoa que a conta vê */
         get: {
             parameters: {
                 query?: {
@@ -15506,6 +16123,192 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/distribuicoes/alvos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os locais e as visões do passo Máquinas do assistente, com as máquinas de cada um */
+        get: {
+            parameters: {
+                query?: {
+                    fuso?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlvosDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/software/distribuicoes/previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A prévia do assistente: as máquinas escolhidas, cada uma com a classe frente ao pacote, e os não achados da lista */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaPreviaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreviaDaDistribuicao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -15597,7 +16400,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Distribuir um pacote às máquinas com o agente do GLPI ligado */
+        /** Distribuir um pacote às máquinas do alvo com o agente do GLPI ligado, agora, na janela da noite ou a partir de um dia */
         post: {
             parameters: {
                 query?: never;
@@ -15774,7 +16577,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/software/distribuicoes/{id}/agora": {
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tentar-de-novo": {
         parameters: {
             query?: never;
             header?: never;
@@ -15783,13 +16586,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Acordar os agentes das máquinas que aguardam a distribuição */
+        /** Tentar de novo a máquina que falhou: ela volta a aguardar o agente, que é acordado se o pedido pode seguir */
         post: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
                     id: string;
+                    maquinaId: string;
                 };
                 cookie?: never;
             };
@@ -15801,11 +16605,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            acordados: number;
-                            total: number;
-                            mensagem: string;
-                        };
+                        "application/json": components["schemas"]["MaquinaDaDistribuicao"];
                     };
                 };
                 /** @description Default Response */
@@ -15870,20 +16670,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/ativos/{id}/distribuicoes": {
+    "/software/distribuicoes/{id}/maquinas/{maquinaId}/tirar-da-fila": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** As distribuições de software do ativo, da mais nova para a mais antiga */
-        get: {
+        get?: never;
+        put?: never;
+        /** Tirar da fila a máquina que aguarda o agente: ela não recebe mais o pedido, com o fim marcado */
+        post: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
                     id: string;
+                    maquinaId: string;
                 };
                 cookie?: never;
             };
@@ -15895,9 +16698,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            distribuicoes: components["schemas"]["DistribuicaoDoAtivo"][];
-                        };
+                        "application/json": components["schemas"]["MaquinaDaDistribuicao"];
                     };
                 };
                 /** @description Default Response */
@@ -15956,8 +16757,6 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -28084,7 +28883,7 @@ export interface paths {
                 };
             };
         };
-        /** Escolher tipo e local dos computadores cadastrados pelo agente */
+        /** Escolher tipo e local dos computadores cadastrados pelo agente, e o prazo do sem contato */
         put: {
             parameters: {
                 query?: never;
@@ -28095,8 +28894,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        tipoId: string | null;
-                        localId: string | null;
+                        tipoId?: string | null;
+                        localId?: string | null;
+                        diasSemContato?: number;
                     };
                 };
             };
@@ -32325,6 +33125,17 @@ export interface components {
             dn: string;
             senha: string;
         };
+        OutraDistribuicaoInput: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
+        };
         ResumoDaDistribuicaoInput: {
             /** Format: uuid */
             id: string;
@@ -32333,11 +33144,25 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
+        };
+        SemContatoDoAgenteInput: {
+            dias: number;
+            texto: string;
         };
         MaquinaDaDistribuicaoInput: {
             /** Format: uuid */
@@ -32348,18 +33173,30 @@ export interface components {
                 rotulo: string;
                 patrimonio: string | null;
             };
+            pessoa: string | null;
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";
             };
             etapa: string | null;
+            codigo: {
+                numero: number;
+                explicacao: string | null;
+            } | null;
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            chamada: {
+                em: string;
+                respondeu: boolean;
+            } | null;
+            voltaAte: string | null;
             log: string[];
             enviadaEm: string | null;
             atualizadaEm: string | null;
             terminadaEm: string | null;
+            aguardaNoutra: components["schemas"]["OutraDistribuicaoInput"] | null;
         };
         FichaDaDistribuicaoInput: {
             /** Format: uuid */
@@ -32369,29 +33206,22 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicaoInput"][];
-        };
-        DistribuicaoDoAtivoInput: {
-            /** Format: uuid */
-            distribuicaoId: string;
-            pacote: {
-                nome: string;
-                versao: string | null;
-            };
-            situacao: {
-                /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
-                texto: string;
-                /** @enum {string} */
-                tipo: "neutra" | "info" | "sucesso" | "critico";
-            };
-            criadaEm: string;
-            terminadaEm: string | null;
         };
         MaquinaParaDistribuirInput: {
             /** Format: uuid */
@@ -32403,6 +33233,70 @@ export interface components {
                 nome: string;
                 ultimoContato: string;
             };
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+        };
+        AlvoDaDistribuicaoInput: {
+            /** @default [] */
+            locais: string[];
+            /** @default [] */
+            visoes: string[];
+            /** @default [] */
+            ativoIds: string[];
+            /** @default  */
+            lista: string;
+            /** @default [] */
+            fora: string[];
+            fuso?: string;
+        };
+        MaquinaDaPreviaInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            hostname: string | null;
+            local: string | null;
+            /** @enum {string} */
+            classe: "pulada" | "ja-aguarda" | "na-fila" | "vai-instalar";
+            versao: string | null;
+            semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            emAndamento: {
+                pacote: string;
+            } | null;
+            outra: components["schemas"]["OutraDistribuicaoInput"] | null;
+        };
+        PreviaDaDistribuicaoInput: {
+            maquinas: components["schemas"]["MaquinaDaPreviaInput"][];
+            naoAchados: string[];
+            conta: {
+                vaoInstalar: number;
+                puladas: number;
+                jaAguardam: number;
+                naFila: number;
+                primeiraVez: number;
+                porVersao: {
+                    versao: string | null;
+                    quantas: number;
+                }[];
+            };
+            paraQuem: string;
+        };
+        AlvosDaDistribuicaoInput: {
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                paiId: string | null;
+                maquinas: number;
+                semContato: number;
+            }[];
+            visoes: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                compartilhada: boolean;
+                maquinas: number | null;
+                deixouDeValer: boolean;
+            }[];
         };
         CadastroDosDoisPassosInput: {
             chave: string;
@@ -33993,11 +34887,27 @@ export interface components {
             nome: string;
             versao: string | null;
             descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
             comando: string;
             codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
             arquivo: {
                 nome: string;
                 tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
             } | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
@@ -34006,17 +34916,230 @@ export interface components {
             nome: string;
             versao?: string | null;
             descricao?: string | null;
+            categoriaId?: string | null;
+            nomeNoInventario?: string | null;
             comando: string;
             codigosDeSucesso?: string | number[];
         };
-        SoftwaresDoAtivoInput: {
-            softwares: {
+        ContasDoPacoteInput: {
+            maquinas: number;
+            instalado: number;
+            naVersao: number | null;
+            desatualizadas: number | null;
+            sem: number;
+        };
+        PacoteNaBaseInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            versao: string | null;
+            descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
+            comando: string;
+            codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
+            arquivo: {
+                nome: string;
+                tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
+            } | null;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+            contas: components["schemas"]["ContasDoPacoteInput"];
+            ultimaDistribuicao: {
+                /** Format: uuid */
+                id: string;
+                criadaEm: string;
+                paraQuem: string;
+            } | null;
+        };
+        DistribuicaoDoPacoteInput: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            paraQuem: string;
+            maquinas: number;
+            resultado: {
+                concluidas: number;
+                emAndamento: number;
+                aguardando: number;
+                falharam: number;
+                tiradas: number;
+                semContato: number;
+            };
+        };
+        FichaDoPacoteInput: {
+            pacote: components["schemas"]["PacoteDeSoftwareInput"];
+            partes: number;
+            contas: components["schemas"]["ContasDoPacoteInput"];
+            versoes: {
+                versao: string | null;
+                estado: ("alvo" | "abaixo" | "acima") | null;
+                quantas: number;
+            }[];
+            distribuicoes: components["schemas"]["DistribuicaoDoPacoteInput"][];
+            permite: {
+                administrar: boolean;
+            };
+        };
+        MatrizPorMaquinaInput: {
+            /** @constant */
+            por: "maquina";
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+            };
+            pacotes: components["schemas"]["PacoteDeSoftwareInput"][];
+            maquinas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                hostname: string | null;
+                pessoa: string | null;
+                semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                ativoId: string;
+                /** @enum {string} */
+                situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                versao: string | null;
+                distribuicao: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    situacao: "aguardando" | "em-andamento" | "falhou";
+                    texto: string;
+                    codigo: number | null;
+                } | null;
+            }[];
+            ultimas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                distribuicaoId: string;
+                criadaEm: string;
+                criadaPor: string;
+            }[];
+        };
+        MatrizPorLocalInput: {
+            /** @constant */
+            por: "local";
+            pacotes: components["schemas"]["PacoteDeSoftwareInput"][];
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+                maquinas: number;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                localId: string;
+                naVersao: number;
+                total: number;
+            }[];
+        };
+        SoftwareDaMaquinaInput: {
+            instalados: {
                 nome: string;
                 versao: string | null;
                 editor: string | null;
                 instaladoEm: string | null;
+                doSistema: boolean;
+                base: {
+                    /** @enum {string} */
+                    comparacao: "ha-na-base" | "na-versao" | "sem-versao-alvo" | "fora-da-base" | "do-windows";
+                    texto: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    } | null;
+                    origem: {
+                        /** Format: uuid */
+                        distribuicaoId: string;
+                        por: string;
+                    } | null;
+                } | null;
             }[];
             inventariadoEm: string | null;
+            agente: {
+                ultimoContato: string;
+                semContato: components["schemas"]["SemContatoDoAgenteInput"] | null;
+            } | null;
+            distribuir: {
+                mandados: {
+                    /** Format: uuid */
+                    distribuicaoId: string;
+                    /** Format: uuid */
+                    maquinaId: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                        /** @enum {string} */
+                        situacao: "ativo" | "inativo";
+                    };
+                    paraQuem: string;
+                    situacao: {
+                        /** @enum {string} */
+                        chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
+                        texto: string;
+                        /** @enum {string} */
+                        tipo: "neutra" | "info" | "sucesso" | "critico";
+                    };
+                    codigo: {
+                        numero: number;
+                        explicacao: string | null;
+                    } | null;
+                    etapa: string | null;
+                    criadaEm: string;
+                    criadaPor: string;
+                    enviadaEm: string | null;
+                    terminadaEm: string | null;
+                    aguardaNoutra: components["schemas"]["OutraDistribuicaoInput"] | null;
+                }[];
+                pacotes: {
+                    pacote: components["schemas"]["PacoteDeSoftwareInput"];
+                    /** @enum {string} */
+                    situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                    versao: string | null;
+                    naFila: boolean;
+                }[];
+            } | null;
+        };
+        CategoriaDeSoftwareInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            ordem: number;
+            pacotes: number;
+        };
+        PedidoDeCategoriaInput: {
+            nome: string;
         };
         CampoNoTipoInput: {
             /** Format: uuid */
@@ -34106,10 +35229,22 @@ export interface components {
             fabricantes: string[];
             doTipo: string[];
         };
+        PedidoDaPreviaInput: {
+            /** Format: uuid */
+            pacoteId: string;
+            alvo: components["schemas"]["AlvoDaDistribuicaoInput"];
+        };
         PedidoDeDistribuicaoInput: {
             /** Format: uuid */
             pacoteId: string;
-            ativoIds: string[];
+            alvo: components["schemas"]["AlvoDaDistribuicaoInput"];
+            /**
+             * @default agora
+             * @enum {string}
+             */
+            quando: "agora" | "noite" | "dia";
+            aPartirDe?: string | null;
+            fuso?: string | null;
         };
         ContasConvidaveisInput: {
             contas: {
@@ -34121,6 +35256,7 @@ export interface components {
         CadastroDosAgentesInput: {
             tipoId: string | null;
             localId: string | null;
+            diasSemContato: number;
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -36634,6 +37770,17 @@ export interface components {
             dn: string;
             senha: string;
         };
+        OutraDistribuicao: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
+        };
         ResumoDaDistribuicao: {
             /** Format: uuid */
             id: string;
@@ -36642,11 +37789,25 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
+        };
+        SemContatoDoAgente: {
+            dias: number;
+            texto: string;
         };
         MaquinaDaDistribuicao: {
             /** Format: uuid */
@@ -36657,18 +37818,30 @@ export interface components {
                 rotulo: string;
                 patrimonio: string | null;
             };
+            pessoa: string | null;
             situacao: {
                 /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
+                chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
                 texto: string;
                 /** @enum {string} */
                 tipo: "neutra" | "info" | "sucesso" | "critico";
             };
             etapa: string | null;
+            codigo: {
+                numero: number;
+                explicacao: string | null;
+            } | null;
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            chamada: {
+                em: string;
+                respondeu: boolean;
+            } | null;
+            voltaAte: string | null;
             log: string[];
             enviadaEm: string | null;
             atualizadaEm: string | null;
             terminadaEm: string | null;
+            aguardaNoutra: components["schemas"]["OutraDistribuicao"] | null;
         };
         FichaDaDistribuicao: {
             /** Format: uuid */
@@ -36678,29 +37851,22 @@ export interface components {
                 id: string;
                 nome: string;
                 versao: string | null;
+                /** @enum {string} */
+                situacao: "ativo" | "inativo";
             };
             criadaPor: string;
             criadaEm: string;
+            paraQuem: string;
+            quando: {
+                /** @enum {string} */
+                chave: "agora" | "noite" | "dia";
+                aPartirDe: string | null;
+                fuso: string | null;
+            };
             maquinas: number;
             progresso: string;
+            foraDoAlcance: number;
             maquinasDaDistribuicao: components["schemas"]["MaquinaDaDistribuicao"][];
-        };
-        DistribuicaoDoAtivo: {
-            /** Format: uuid */
-            distribuicaoId: string;
-            pacote: {
-                nome: string;
-                versao: string | null;
-            };
-            situacao: {
-                /** @enum {string} */
-                chave: "aguardando" | "em-andamento" | "concluida" | "falhou";
-                texto: string;
-                /** @enum {string} */
-                tipo: "neutra" | "info" | "sucesso" | "critico";
-            };
-            criadaEm: string;
-            terminadaEm: string | null;
         };
         MaquinaParaDistribuir: {
             /** Format: uuid */
@@ -36712,6 +37878,70 @@ export interface components {
                 nome: string;
                 ultimoContato: string;
             };
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+        };
+        AlvoDaDistribuicao: {
+            /** @default [] */
+            locais: string[];
+            /** @default [] */
+            visoes: string[];
+            /** @default [] */
+            ativoIds: string[];
+            /** @default  */
+            lista: string;
+            /** @default [] */
+            fora: string[];
+            fuso?: string;
+        };
+        MaquinaDaPrevia: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            hostname: string | null;
+            local: string | null;
+            /** @enum {string} */
+            classe: "pulada" | "ja-aguarda" | "na-fila" | "vai-instalar";
+            versao: string | null;
+            semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            emAndamento: {
+                pacote: string;
+            } | null;
+            outra: components["schemas"]["OutraDistribuicao"] | null;
+        };
+        PreviaDaDistribuicao: {
+            maquinas: components["schemas"]["MaquinaDaPrevia"][];
+            naoAchados: string[];
+            conta: {
+                vaoInstalar: number;
+                puladas: number;
+                jaAguardam: number;
+                naFila: number;
+                primeiraVez: number;
+                porVersao: {
+                    versao: string | null;
+                    quantas: number;
+                }[];
+            };
+            paraQuem: string;
+        };
+        AlvosDaDistribuicao: {
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                paiId: string | null;
+                maquinas: number;
+                semContato: number;
+            }[];
+            visoes: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                compartilhada: boolean;
+                maquinas: number | null;
+                deixouDeValer: boolean;
+            }[];
         };
         CadastroDosDoisPassos: {
             chave: string;
@@ -38302,11 +39532,27 @@ export interface components {
             nome: string;
             versao: string | null;
             descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
             comando: string;
             codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
             arquivo: {
                 nome: string;
                 tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
             } | null;
             /** @enum {string} */
             situacao: "ativo" | "inativo";
@@ -38315,17 +39561,230 @@ export interface components {
             nome: string;
             versao?: string | null;
             descricao?: string | null;
+            categoriaId?: string | null;
+            nomeNoInventario?: string | null;
             comando: string;
             codigosDeSucesso?: string | number[];
         };
-        SoftwaresDoAtivo: {
-            softwares: {
+        ContasDoPacote: {
+            maquinas: number;
+            instalado: number;
+            naVersao: number | null;
+            desatualizadas: number | null;
+            sem: number;
+        };
+        PacoteNaBase: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            versao: string | null;
+            descricao: string | null;
+            categoria: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            nomeNoInventario: string | null;
+            comando: string;
+            codigosDeSucesso: number[];
+            tipo: {
+                longo: string;
+                curto: string;
+            };
+            arquivo: {
+                nome: string;
+                tamanho: number;
+                guardadoEm: string | null;
+                guardadoPor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                } | null;
+            } | null;
+            /** @enum {string} */
+            situacao: "ativo" | "inativo";
+            contas: components["schemas"]["ContasDoPacote"];
+            ultimaDistribuicao: {
+                /** Format: uuid */
+                id: string;
+                criadaEm: string;
+                paraQuem: string;
+            } | null;
+        };
+        DistribuicaoDoPacote: {
+            /** Format: uuid */
+            id: string;
+            criadaEm: string;
+            paraQuem: string;
+            maquinas: number;
+            resultado: {
+                concluidas: number;
+                emAndamento: number;
+                aguardando: number;
+                falharam: number;
+                tiradas: number;
+                semContato: number;
+            };
+        };
+        FichaDoPacote: {
+            pacote: components["schemas"]["PacoteDeSoftware"];
+            partes: number;
+            contas: components["schemas"]["ContasDoPacote"];
+            versoes: {
+                versao: string | null;
+                estado: ("alvo" | "abaixo" | "acima") | null;
+                quantas: number;
+            }[];
+            distribuicoes: components["schemas"]["DistribuicaoDoPacote"][];
+            permite: {
+                administrar: boolean;
+            };
+        };
+        MatrizPorMaquina: {
+            /** @constant */
+            por: "maquina";
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+            };
+            pacotes: components["schemas"]["PacoteDeSoftware"][];
+            maquinas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                hostname: string | null;
+                pessoa: string | null;
+                semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                ativoId: string;
+                /** @enum {string} */
+                situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                versao: string | null;
+                distribuicao: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    situacao: "aguardando" | "em-andamento" | "falhou";
+                    texto: string;
+                    codigo: number | null;
+                } | null;
+            }[];
+            ultimas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                distribuicaoId: string;
+                criadaEm: string;
+                criadaPor: string;
+            }[];
+        };
+        MatrizPorLocal: {
+            /** @constant */
+            por: "local";
+            pacotes: components["schemas"]["PacoteDeSoftware"][];
+            locais: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                caminho: string;
+                maquinas: number;
+            }[];
+            celulas: {
+                /** Format: uuid */
+                pacoteId: string;
+                /** Format: uuid */
+                localId: string;
+                naVersao: number;
+                total: number;
+            }[];
+        };
+        SoftwareDaMaquina: {
+            instalados: {
                 nome: string;
                 versao: string | null;
                 editor: string | null;
                 instaladoEm: string | null;
+                doSistema: boolean;
+                base: {
+                    /** @enum {string} */
+                    comparacao: "ha-na-base" | "na-versao" | "sem-versao-alvo" | "fora-da-base" | "do-windows";
+                    texto: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                    } | null;
+                    origem: {
+                        /** Format: uuid */
+                        distribuicaoId: string;
+                        por: string;
+                    } | null;
+                } | null;
             }[];
             inventariadoEm: string | null;
+            agente: {
+                ultimoContato: string;
+                semContato: components["schemas"]["SemContatoDoAgente"] | null;
+            } | null;
+            distribuir: {
+                mandados: {
+                    /** Format: uuid */
+                    distribuicaoId: string;
+                    /** Format: uuid */
+                    maquinaId: string;
+                    pacote: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        versao: string | null;
+                        /** @enum {string} */
+                        situacao: "ativo" | "inativo";
+                    };
+                    paraQuem: string;
+                    situacao: {
+                        /** @enum {string} */
+                        chave: "aguardando" | "em-andamento" | "concluida" | "falhou" | "tirada";
+                        texto: string;
+                        /** @enum {string} */
+                        tipo: "neutra" | "info" | "sucesso" | "critico";
+                    };
+                    codigo: {
+                        numero: number;
+                        explicacao: string | null;
+                    } | null;
+                    etapa: string | null;
+                    criadaEm: string;
+                    criadaPor: string;
+                    enviadaEm: string | null;
+                    terminadaEm: string | null;
+                    aguardaNoutra: components["schemas"]["OutraDistribuicao"] | null;
+                }[];
+                pacotes: {
+                    pacote: components["schemas"]["PacoteDeSoftware"];
+                    /** @enum {string} */
+                    situacao: "na-versao" | "desatualizada" | "sem-o-programa" | "instalado-sem-alvo";
+                    versao: string | null;
+                    naFila: boolean;
+                }[];
+            } | null;
+        };
+        CategoriaDeSoftware: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            ordem: number;
+            pacotes: number;
+        };
+        PedidoDeCategoria: {
+            nome: string;
         };
         CampoNoTipo: {
             /** Format: uuid */
@@ -38415,10 +39874,22 @@ export interface components {
             fabricantes: string[];
             doTipo: string[];
         };
+        PedidoDaPrevia: {
+            /** Format: uuid */
+            pacoteId: string;
+            alvo: components["schemas"]["AlvoDaDistribuicao"];
+        };
         PedidoDeDistribuicao: {
             /** Format: uuid */
             pacoteId: string;
-            ativoIds: string[];
+            alvo: components["schemas"]["AlvoDaDistribuicao"];
+            /**
+             * @default agora
+             * @enum {string}
+             */
+            quando: "agora" | "noite" | "dia";
+            aPartirDe?: string | null;
+            fuso?: string | null;
         };
         ContasConvidaveis: {
             contas: {
@@ -38430,6 +39901,7 @@ export interface components {
         CadastroDosAgentes: {
             tipoId: string | null;
             localId: string | null;
+            diasSemContato: number;
             tipos: {
                 /** Format: uuid */
                 id: string;

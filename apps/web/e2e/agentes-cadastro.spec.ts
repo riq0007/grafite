@@ -61,6 +61,7 @@ test('configura o cadastro dos computadores e mostra IP e último contato', asyn
       await rota.fulfill({
         json: {
           ...configuracao,
+          diasSemContato: 2,
           tipos: [{ id: tipo, nome: 'Computador' }],
           locais: [{ id: local, nome: 'Entrada de equipamentos' }],
         },
@@ -110,7 +111,9 @@ test('orienta como habilitar o cadastro quando não há tipo elegível', async (
     rota.fulfill({ json: { endereco: null, agentes: [] } }),
   );
   await page.route('**/api/agentes/cadastro', (rota) =>
-    rota.fulfill({ json: { tipoId: null, localId: null, tipos: [], locais: [] } }),
+    rota.fulfill({
+      json: { tipoId: null, localId: null, diasSemContato: 2, tipos: [], locais: [] },
+    }),
   );
   await page.goto('/administracao/agentes');
   await expect(page.getByRole('link', { name: 'Tipos de ativo' })).toHaveAttribute(

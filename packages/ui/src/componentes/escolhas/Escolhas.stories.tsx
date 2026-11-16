@@ -142,6 +142,25 @@ export const RadiosPeloTeclado: Historia = {
   },
 };
 
+/**
+ * Com o `ocultarRotulo`, a lista diz o que é, e o nome do grupo vai só para o leitor de tela, como
+ * os pacotes da camada do m10.
+ */
+export const GrupoComORotuloEscondido: Historia = {
+  render: () => (
+    <GrupoDeRadios rotulo="Pacotes ativos" ocultarRotulo defaultValue="chrome">
+      <Radio value="chrome">Google Chrome 131</Radio>
+      <Radio value="zip">7-Zip 24.08</Radio>
+    </GrupoDeRadios>
+  ),
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    await expect(tela.getByRole('radiogroup', { name: 'Pacotes ativos' })).toBeInTheDocument();
+    await expect(tela.queryByText('Pacotes ativos')).toBeNull();
+    await expect(tela.getByRole('radio', { name: 'Google Chrome 131' })).toBeChecked();
+  },
+};
+
 /** Espaço liga e desliga o interruptor. */
 /** A explicação fica embaixo do nome e é anunciada com o interruptor. */
 export const InterruptorComDescricao: Historia = {

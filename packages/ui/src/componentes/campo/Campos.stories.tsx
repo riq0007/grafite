@@ -7,6 +7,7 @@ import { BuscaComSugestoes } from '../busca/BuscaComSugestoes.tsx';
 import { Gaveta } from '../modal/Gaveta.tsx';
 import { type OpcaoDeSelecao, Selecao } from '../selecao/Selecao.tsx';
 import { AreaDeTexto } from './AreaDeTexto.tsx';
+import { CampoDeBusca } from './CampoDeBusca.tsx';
 import { CampoDeTexto } from './CampoDeTexto.tsx';
 import { Formulario } from './Formulario.tsx';
 import { LinhaDeCampos } from './LinhaDeCampos.tsx';
@@ -376,5 +377,40 @@ export const LinhaNumaGaveta: Historia = {
     });
     const { patrimonio, serie } = camposDaLinha(within(gaveta));
     await expect(arranjoDe(patrimonio, serie)).toBe('um abaixo do outro');
+  },
+};
+
+function BuscaDePacotes() {
+  const [busca, definirBusca] = useState('');
+  return (
+    <div style={{ display: 'flex', gap: 'var(--esp-3)', maxWidth: 520 }}>
+      <CampoDeBusca
+        rotulo="Procurar na base"
+        value={busca}
+        onChange={definirBusca}
+        fim={busca ? '1 pacote na base' : '2 pacotes na base'}
+      />
+      <Botao>Ver na matriz</Botao>
+    </div>
+  );
+}
+
+/**
+ * A busca de uma lista: a lupa e o texto dentro da caixa, na altura do botão ao lado, e o fim à
+ * direita. O texto da caixa é também o nome para o leitor de tela.
+ */
+export const BuscaDaLista: Historia = {
+  render: () => <BuscaDePacotes />,
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const campo = tela.getByRole('searchbox', { name: 'Procurar na base' });
+    await expect(campo).toHaveAttribute('placeholder', 'Procurar na base');
+    await expect(tela.getByText('2 pacotes na base')).toBeVisible();
+    await userEvent.type(campo, 'chr');
+    await expect(campo).toHaveValue('chr');
+    await expect(tela.getByText('1 pacote na base')).toBeVisible();
+    const caixa = campo.parentElement as HTMLElement;
+    const botao = tela.getByRole('button', { name: 'Ver na matriz' });
+    await expect(caixa.getBoundingClientRect().height).toBe(botao.getBoundingClientRect().height);
   },
 };

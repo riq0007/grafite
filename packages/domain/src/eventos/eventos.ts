@@ -299,8 +299,14 @@ export const EVENTO_DA_ACAO = {
   'pacote.inativado': 'software.mudou',
   'pacote.reativado': 'software.mudou',
   'pacote.arquivo-trocado': 'software.mudou',
+  'categoria-de-software.criada': 'software.mudou',
+  'categoria-de-software.renomeada': 'software.mudou',
+  'categoria-de-software.removida': 'software.mudou',
+  'categorias-de-software.ordenadas': 'software.mudou',
   'distribuicao.criada': 'software.mudou',
   'distribuicao.pedida-agora': null,
+  'distribuicao.maquina-tentada-de-novo': 'software.mudou',
+  'distribuicao.maquina-tirada-da-fila': 'software.mudou',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

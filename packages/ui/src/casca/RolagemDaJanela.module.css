@@ -18,6 +18,17 @@
   outline: none;
 }
 
+/*
+ * Com a tela que pede a janela inteira no painel visível (AbasDaJanela, `data-janela-inteira`), o
+ * conteúdo enche ao menos a altura da área, numa linha só, que o painel ocupa até o fim. Sem ela, o
+ * conteúdo continua um bloco do tamanho do que tem, com os filhos empilhados no alto.
+ */
+.conteudo:has(> :not([hidden]) > [data-janela-inteira]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
+}
+
 .rolagem[data-mais-acima] {
   --esmaecer-em-cima: var(--faixa-de-cima-da-janela);
 }

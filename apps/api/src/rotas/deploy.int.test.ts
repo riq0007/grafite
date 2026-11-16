@@ -1,7 +1,8 @@
 // O Deploy do agente do GLPI pela API (spec distribuicao-de-software, "Deploy pelo agente do GLPI";
 // change distribuicao-de-software): o agente simulado faz o que o Deploy dele faz, por GET, com os
 // argumentos na query string: o `getConfig`, o `getJobs`, as partes no espelho, conferidas pelo
-// SHA-512 e montadas pelo gunzip, e o `setStatus` de cada passo. Uma máquina conclui, a outra falha.
+// SHA-512 e montadas pelo gunzip, e o `setStatus` de cada passo, com o código de saída (change
+// software-por-pacote). Uma máquina conclui, a outra falha.
 import { createHash, randomBytes } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import {
@@ -83,6 +84,7 @@ beforeAll(async () => {
         orgId: org,
         nome: '7-Zip 23.01',
         nomeNormalizado: normalizarTexto('7-Zip 23.01'),
+        nomeNoInventarioNormalizado: normalizarTexto('7-Zip 23.01'),
         comando: 'msiexec /i "7z2301-x64.msi" /qn',
       })
       .returning({ id: pacotesDeSoftware.id });
@@ -92,6 +94,7 @@ beforeAll(async () => {
       nome: '7z2301-x64.msi',
       arquivo: ARQUIVO,
       armazenamento: api.armazenamento,
+      contaId: ana.id,
       momento: new Date(),
     });
     const [distribuicao] = await tx
@@ -206,7 +209,11 @@ describe('o Deploy do agente', () => {
     expect((await passo({ status: 'ok', msg: 'job successfully completed' })).json()).toEqual({});
 
     const concluida = await maquina(maquinas.recepcao ?? '');
-    expect(concluida).toMatchObject({ situacao: 'concluida', etapa: 'Executando' });
+    expect(concluida).toMatchObject({
+      situacao: 'concluida',
+      etapa: 'Executando',
+      codigoDeSaida: 0,
+    });
     expect(concluida?.terminadaEm).not.toBeNull();
     expect(concluida?.log).toEqual([
       'Agente: job received',
@@ -222,8 +229,16 @@ describe('o Deploy do agente', () => {
     expect(outra.json()).toEqual({});
   });
 
-  it('Instalação que falhou: o status "ko" leva a "Falhou", com a etapa e a mensagem', async () => {
+  it('Instalação que falhou: o status "ko" leva a "Falhou", com a etapa, o código e a mensagem', async () => {
     await pedir(`http://${host}${ENDERECO}`, { action: 'getJobs', machineid: 'financeiro-2024' });
+    await pedir(`http://${host}${ENDERECO}`, {
+      action: 'setStatus',
+      machineid: 'financeiro-2024',
+      part: 'job',
+      uuid: maquinas.financeiro ?? '',
+      actionnum: '0',
+      msg: ['Erro fatal.', "exit status: `1603'"],
+    });
     await pedir(`http://${host}${ENDERECO}`, {
       action: 'setStatus',
       machineid: 'financeiro-2024',
@@ -237,7 +252,12 @@ describe('o Deploy do agente', () => {
     expect(await maquina(maquinas.financeiro ?? '')).toMatchObject({
       situacao: 'falhou',
       etapa: 'Executando',
-      log: ['Executando: ko, action #1 processing failure'],
+      codigoDeSaida: 1603,
+      log: [
+        'Executando: Erro fatal.',
+        "Executando: exit status: `1603'",
+        'Executando: ko, action #1 processing failure',
+      ],
     });
   });
 

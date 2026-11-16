@@ -49,7 +49,7 @@ A casca decide como o menu abre:
 - **Toque:** abre no primeiro toque.
 - **Celular:** abre num painel que sobe de baixo.
 
-A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importações, do software e dos backups do Control iD, cada item com a permissão dele. A lista das seções, a mesma da janela do catálogo, monta os filhos:
+A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importações e dos submenus do software e do Control iD, cada item com a permissão dele. A lista das seções, a mesma da janela do catálogo, monta os filhos do catálogo:
 
 ```ts
 // apps/web/src/modulos/gestao/modulo.ts (trecho)
@@ -60,8 +60,16 @@ A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importa�
       filhos: SECOES_DO_CATALOGO.map((secao) => ({ rotulo: secao.nome, destino: secao.endereco })),
     },
     { rotulo: 'Importações', destino: '/gestao/importacoes', permissoes: ['ativos.editar'] },
-    // A base de software e as distribuições às máquinas (change distribuicao-de-software).
-    { rotulo: 'Software', destino: '/gestao/software', permissoes: ['software.distribuir'] },
+    // A base de software, as distribuições às máquinas e a matriz (change software-por-pacote).
+    {
+      rotulo: 'Software',
+      permissoes: ['software.distribuir'],
+      filhos: [
+        { rotulo: 'Base de pacotes', destino: '/gestao/software' },
+        { rotulo: 'Distribuições', destino: '/gestao/software/distribuicoes' },
+        { rotulo: 'Matriz', destino: '/gestao/software/matriz' },
+      ],
+    },
     // Os backups dos controles de acesso (change p5a-backup-do-control-id).
     {
       rotulo: 'Control iD',
@@ -1027,6 +1035,19 @@ A área que rola de um módulo não declara barra nenhuma: a folha base do `@gra
 
 Nos testes de ponta a ponta o navegador esconde as barras, como o celular, e vale a do sistema; as histórias do catálogo rodam com as barras à vista.
 
+## A tela na janela inteira
+
+A tela que vai do topo ao fim da janela, com o pé preso embaixo, põe `data-janela-inteira` na raiz dela, no painel da aba. São exemplos as fichas, a matriz e a base do Software (change software-por-pacote, design, decisão 18).
+- **O que a casca faz:**
+  - o painel ocupa ao menos a altura da área que rola;
+  - a raiz cresce até o fim da área;
+  - o que a tela puser antes da raiz no painel, como o cabeçalho, fica do tamanho que tem.
+- **O que a raiz faz:**
+  - organiza o resto, como uma grade com o meio em `1fr` e o pé no fim;
+  - pode ir por cima do respiro, até as bordas, com a margem negativa de `--respiro-da-janela`.
+- **Conteúdo maior que a janela:** a área rola, como em qualquer tela.
+- **A tela sem o atributo:** continua do tamanho do que tem, com o que ela põe empilhado no alto.
+
 ## Permissões
 
 O que cada conta pode fazer vem dos perfis dela, num local e no que está dentro dele ou na organização inteira (design do F2b, decisões 2 e 4). O módulo declara as permissões dele no catálogo, mostra só o que a conta pode usar e deixa a API decidir cada registro.
@@ -1434,9 +1455,9 @@ Um módulo opcional começa ligado em toda organização. Desligá-lo não apaga
         chaveDoisPassos,
       });
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
-      await doAtivos.register(rotasDosSoftwares, { banco });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
-      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, acordar: acordarAgente });
+      await doAtivos.register(rotasDasCategoriasDeSoftware, { banco, agora });
+      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, fila });
     });
 ```
 

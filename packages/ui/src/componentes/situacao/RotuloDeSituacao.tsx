@@ -37,16 +37,26 @@ export interface PropsDoRotuloDeSituacao {
   situacao: Situacao;
   children: ReactNode;
   className?: string;
+  /**
+   * Sem o ícone, nos rótulos juntos de uma contagem ("14 concluídas", "1 falhou"), em que o texto já
+   * diz a situação de cada um.
+   */
+  semIcone?: boolean;
 }
 
 /** Situação em uma linha só: o texto informa, o ícone e a cor reforçam. */
-export function RotuloDeSituacao({ situacao, children, className }: PropsDoRotuloDeSituacao) {
+export function RotuloDeSituacao({
+  situacao,
+  children,
+  className,
+  semIcone,
+}: PropsDoRotuloDeSituacao) {
   return (
     <span
       data-situacao={situacao}
       className={[estilos.rotulo, className].filter(Boolean).join(' ')}
     >
-      <Icone icone={ICONES_DAS_SITUACOES[situacao]} tamanho={12} />
+      {!semIcone && <Icone icone={ICONES_DAS_SITUACOES[situacao]} tamanho={12} />}
       {children}
     </span>
   );

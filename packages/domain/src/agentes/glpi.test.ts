@@ -80,12 +80,19 @@ describe('a leitura do inventário do agente do GLPI', () => {
       'software.antivirus': 'Windows Defender (ativo, desatualizado)',
     });
     expect(lido.softwares).toEqual([
-      { nome: '7-Zip 23.01 (x64)', versao: '23.01', editor: 'Igor Pavlov', instaladoEm: null },
+      {
+        nome: '7-Zip 23.01 (x64)',
+        versao: '23.01',
+        editor: 'Igor Pavlov',
+        instaladoEm: null,
+        doSistema: false,
+      },
       {
         nome: 'Microsoft Office Professional Plus 2019',
         versao: '16.0.10827',
         editor: 'Microsoft Corporation',
         instaladoEm: '2024-03-02',
+        doSistema: false,
       },
     ]);
   });
@@ -110,7 +117,69 @@ describe('a leitura do inventário do agente do GLPI', () => {
       softwares: [{ name: 'Velho', install_date: '02/03/2024' }],
     });
     expect(lido.softwares).toEqual([
-      { nome: 'Velho', versao: null, editor: null, instaladoEm: null },
+      { nome: 'Velho', versao: null, editor: null, instaladoEm: null, doSistema: false },
+    ]);
+  });
+
+  it('o system_category marca o do sistema: o componente, as atualizações e o app da loja do sistema', () => {
+    const categorias = {
+      system_component: true,
+      update: true,
+      security_update: true,
+      hotfix: true,
+      system: true,
+      application: false,
+      store: false,
+      developer: false,
+      enterprise: false,
+      none: false,
+    };
+    const lido = lerInventarioDoGlpi({
+      softwares: [
+        ...Object.keys(categorias).map((categoria) => ({
+          name: `Programa ${categoria}`,
+          system_category: categoria,
+        })),
+        { name: 'Programa sem categoria' },
+      ],
+    });
+    expect(
+      Object.fromEntries(
+        (lido.softwares ?? []).map(({ nome, doSistema }) => [nome.slice(9), doSistema]),
+      ),
+    ).toEqual({ ...categorias, 'sem categoria': false });
+  });
+
+  it('Edge do Windows: o no_remove verdadeiro, com o editor da Microsoft, marca o do sistema', () => {
+    const lido = lerInventarioDoGlpi({
+      softwares: [
+        {
+          name: 'Microsoft Edge',
+          publisher: 'Microsoft Corporation',
+          system_category: 'application',
+          no_remove: 1,
+        },
+        {
+          name: 'Microsoft Edge WebView2 Runtime',
+          publisher: 'Microsoft Corporation',
+          no_remove: true,
+        },
+        {
+          name: 'Microsoft Update Health Tools',
+          publisher: 'Microsoft Corporation',
+          no_remove: '1',
+        },
+        { name: 'Agente de backup', publisher: 'Outro editor', no_remove: 1 },
+        { name: 'Programa sem editor', no_remove: 1 },
+        { name: 'Microsoft Teams', publisher: 'Microsoft Corporation', no_remove: 0 },
+        { name: 'Microsoft Visual C++ 2015', publisher: 'Microsoft Corporation', no_remove: false },
+        { name: 'Microsoft OneDrive', publisher: 'Microsoft Corporation', no_remove: '0' },
+      ],
+    });
+    expect(lido.softwares?.filter(({ doSistema }) => doSistema).map(({ nome }) => nome)).toEqual([
+      'Microsoft Edge',
+      'Microsoft Edge WebView2 Runtime',
+      'Microsoft Update Health Tools',
     ]);
   });
 });

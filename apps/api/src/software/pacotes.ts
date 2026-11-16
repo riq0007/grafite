@@ -32,7 +32,7 @@ export function partesDoArquivo(
 
 /**
  * Troca o arquivo do pacote: grava as partes novas no armazenamento e no banco, apaga as que sobram
- * e guarda o nome, o tamanho e o SHA-512 no pacote.
+ * e guarda o nome, o tamanho, o SHA-512, quem guardou e quando no pacote.
  */
 export async function trocarArquivoDoPacote(
   tx: Transacao,
@@ -42,6 +42,7 @@ export async function trocarArquivoDoPacote(
     nome,
     arquivo,
     armazenamento,
+    contaId,
     momento,
   }: {
     orgId: string;
@@ -49,6 +50,8 @@ export async function trocarArquivoDoPacote(
     nome: string;
     arquivo: Buffer;
     armazenamento: Armazenamento;
+    /** Quem guardou o arquivo; `null`, fora de uma conta. */
+    contaId: string | null;
     momento: Date;
   },
 ): Promise<{ sha512: string; partes: number }> {
@@ -84,6 +87,8 @@ export async function trocarArquivoDoPacote(
       nomeDoArquivo: nome,
       tamanhoDoArquivo: arquivo.length,
       sha512DoArquivo: doArquivo,
+      arquivoGuardadoEm: momento,
+      arquivoGuardadoPor: contaId,
       atualizadoEm: momento,
     })
     .where(eq(pacotesDeSoftware.id, pacoteId));

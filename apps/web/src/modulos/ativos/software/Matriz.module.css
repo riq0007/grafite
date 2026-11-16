@@ -1,0 +1,418 @@
+/*
+ * A matriz do software (m06 e m07): o cabeçalho e a linha dos filtros, a grade dos pacotes frente
+ * às máquinas ou aos locais, com as células grandes, a barra das marcadas e, no "Por local", o
+ * painel da célula à direita. A tela ocupa a janela inteira, até as bordas, como o assistente.
+ */
+.matriz {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: calc(-1 * var(--respiro));
+}
+
+.matriz[data-com-painel] {
+  grid-template-columns: minmax(0, 1fr) 330px;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.principal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-6) var(--esp-4);
+}
+
+/* A linha dos filtros, de borda a borda, com a legenda à direita. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-3);
+  margin-inline: calc(-1 * var(--esp-6));
+  padding: var(--esp-3) var(--esp-6);
+  border-block: 1px solid var(--cor-linha);
+}
+
+.escolhaDoLocal,
+.filtro {
+  width: 240px;
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-4);
+  min-height: var(--altura-controle);
+  margin: 0 0 0 auto;
+  padding: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-legenda);
+  list-style: none;
+}
+
+.legenda > li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.legenda i {
+  display: inline-block;
+  width: 22px;
+  height: 14px;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: calc(var(--raio-controle) / 2);
+}
+
+.legenda i[data-estado="ok"],
+.legenda i[data-estado="todas"] {
+  border-color: var(--cor-ok-borda);
+  background: var(--cor-ok-fundo);
+}
+
+.legenda i[data-estado="velha"],
+.legenda i[data-estado="parte"] {
+  border-color: var(--cor-atencao-borda);
+  background: var(--cor-atencao-fundo);
+}
+
+.legenda i[data-estado="falta"] {
+  border-style: dashed;
+}
+
+.legenda i[data-estado="nenhuma"] {
+  background: var(--cor-superficie-2);
+}
+
+/* A grade: rola de lado quando as colunas não cabem. */
+.rolagem {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.grade {
+  --coluna: 64px;
+
+  width: 100%;
+  min-width: calc(250px + var(--colunas, 1) * (var(--coluna) + 3px));
+  border-collapse: separate;
+  border-spacing: calc(var(--esp-1) * 0.75);
+  table-layout: fixed;
+}
+
+.grade[data-por="local"] {
+  --coluna: 88px;
+}
+
+.grade td {
+  padding: 0;
+}
+
+.canto,
+.pacote {
+  width: 250px;
+  padding: 0;
+  font-weight: var(--peso-normal);
+  text-align: left;
+}
+
+.nomeDoPacote {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-3);
+  height: 64px;
+}
+
+.textoDoPacote {
+  min-width: 0;
+  font-size: var(--texto-dado);
+}
+
+.tituloDoPacote {
+  display: block;
+  overflow: hidden;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contaDoPacote {
+  display: block;
+  color: var(--cor-texto);
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O nome da máquina girado, lido de baixo para cima. */
+.maquina {
+  height: 58px;
+  padding: 0 0 var(--esp-1);
+  color: var(--cor-texto);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.maquina > span {
+  display: block;
+  margin: 0 auto;
+  font-family: var(--fonte-mono);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.maquina[data-marcada] > span {
+  font-weight: var(--peso-forte);
+}
+
+.cabecaDoLocal {
+  height: 54px;
+  padding: 0 0 var(--esp-1);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.cabecaDoLocal > small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+}
+
+.cabecaDoLocal[data-escolhido] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* A célula: o botão da biblioteca com a cara da célula, o estado no fundo, na borda e no texto. */
+.grade td .celula[data-estado] {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  height: 64px;
+  padding: 0 var(--esp-1);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-normal);
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.grade td .celula[data-estado="ok"],
+.grade td .celula[data-estado="todas"] {
+  border-color: var(--cor-ok-borda);
+  background: var(--cor-ok-fundo);
+}
+
+.grade td .celula[data-estado="velha"],
+.grade td .celula[data-estado="parte"] {
+  border-color: var(--cor-atencao-borda);
+  background: var(--cor-atencao-fundo);
+}
+
+.grade td .celula[data-estado="falta"] {
+  border-style: dashed;
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.grade td .celula[data-estado="nenhuma"] {
+  background: var(--cor-superficie-2);
+}
+
+.grade td .celula[data-estado][data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.grade td .celula[data-estado][data-marcada] {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 1px;
+}
+
+/* A barra das marcadas, presa ao pé da janela enquanto a grade rola. */
+.barra {
+  position: sticky;
+  bottom: var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-4);
+  margin-top: auto;
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-destaque);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-elevada);
+}
+
+.quantasMarcadas {
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.textoDaBarra {
+  display: grid;
+  flex: 1;
+  gap: var(--esp-1);
+  min-width: 0;
+  font-size: var(--texto-dado);
+}
+
+.textoDaBarra > b {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.acoesDaBarra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+/* O painel da célula do "Por local" (m07), na superfície elevada. */
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-5);
+  border-left: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-elevada);
+}
+
+.pacoteDoPainel {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.textoDoPainel {
+  display: grid;
+  min-width: 0;
+}
+
+.tipoDoPainel {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.separador {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--cor-linha);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.numeroGrande {
+  font-size: calc(var(--texto-numeral) * 1.86);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.legendaDoPainel {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fora {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fora > li {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: 36px;
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-dado);
+}
+
+.fora > li > :last-child {
+  margin-left: auto;
+}
+
+.nomeDaMaquina {
+  font-family: var(--fonte-mono);
+  font-weight: var(--peso-forte);
+}
+
+.dado {
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.dado > b {
+  font-weight: var(--peso-forte);
+}
+
+.acoesDoPainel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-2);
+  margin-top: auto;
+}
+
+/* O nome longo do pacote quebra a linha do botão, sem passar da borda do painel. */
+.acoesDoPainel .acaoDoPainel {
+  padding-block: var(--esp-2);
+  white-space: normal;
+  text-align: center;
+}

@@ -55,7 +55,7 @@ function abrir(servidor: ServidorDeTeste) {
       roteador={roteador}
       sessao={sessaoAtiva(naOrganizacao('coletores.administrar'), {
         'GET /api/agentes/cadastro': () =>
-          Response.json({ tipoId: null, localId: null, tipos: [], locais: [] }),
+          Response.json({ tipoId: null, localId: null, diasSemContato: 2, tipos: [], locais: [] }),
         'GET /api/locais': () => Response.json({ locais: [], permite: { cadastrarNaRaiz: false } }),
         ...servidor,
       })}
@@ -204,6 +204,7 @@ describe('o cadastro automático dos computadores', () => {
       'GET /api/agentes/cadastro': () =>
         Response.json({
           ...configuracao,
+          diasSemContato: 2,
           tipos: [{ id: TIPO, nome: 'Computador' }],
           locais: [{ id: LOCAL, nome: 'Entrada' }],
         }),
@@ -245,6 +246,7 @@ describe('o cadastro automático dos computadores', () => {
         Response.json({
           tipoId: null,
           localId: null,
+          diasSemContato: 2,
           tipos: [{ id: TIPO, nome: 'Computador' }],
           locais: [],
         }),
@@ -266,5 +268,100 @@ describe('o cadastro automático dos computadores', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar cadastro automático' }));
     expect(await screen.findByText('O tipo foi inativado. Escolha outro.')).toBeTruthy();
     expect(avisos()).not.toContain('Configuração do cadastro salva.');
+  });
+});
+
+// O prazo do sem contato (spec inventario-pelo-agente, "Agente sem contato"; change
+// software-por-pacote, decisão 9): de 1 a 30 dias, com 2 de fábrica, no cabeçalho da tela, como o
+// prazo da confiança nos Perfis, e mudado pelo diálogo, que manda só o prazo.
+describe('o prazo do sem contato', () => {
+  const cadastroGravado = {
+    tipoId: TIPO,
+    localId: LOCAL,
+    diasSemContato: 2,
+    tipos: [{ id: TIPO, nome: 'Computador' }],
+    locais: [{ id: LOCAL, nome: 'Entrada' }],
+  };
+  async function abrirODialogo() {
+    fireEvent.click(await screen.findByRole('button', { name: 'Mudar…' }));
+    return screen.findByRole('dialog', { name: 'Prazo do sem contato' });
+  }
+
+  it('mostra o prazo gravado e salva o novo pelo diálogo, só com o prazo', async () => {
+    let gravado = cadastroGravado;
+    const corpos: unknown[] = [];
+    abrir({
+      'GET /api/agentes': () => Response.json({ endereco: null, agentes: [] }),
+      'GET /api/agentes/cadastro': () => Response.json(gravado),
+      'PUT /api/agentes/cadastro': async (pedido) => {
+        const corpo = await pedido.json();
+        corpos.push(corpo);
+        gravado = { ...gravado, ...corpo };
+        return new Response(null, { status: 204 });
+      },
+    });
+    expect(await screen.findByText('Prazo do sem contato: 2 dias')).toBeTruthy();
+    const dialogo = await abrirODialogo();
+    const campo = within(dialogo).getByRole('textbox', { name: 'Dias' }) as HTMLInputElement;
+    expect(campo.value).toBe('2');
+    fireEvent.change(campo, { target: { value: '4' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(corpos).toEqual([{ diasSemContato: 4 }]));
+    await waitFor(() => expect(avisos()).toContain('Prazo do sem contato salvo.'));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Prazo do sem contato' })).toBeNull(),
+    );
+    expect(await screen.findByText('Prazo do sem contato: 4 dias')).toBeTruthy();
+  });
+
+  it('fora de 1 a 30 dias, mostra o erro no campo e não manda nada', async () => {
+    const corpos: unknown[] = [];
+    abrir({
+      'GET /api/agentes': () => Response.json({ endereco: null, agentes: [] }),
+      'GET /api/agentes/cadastro': () => Response.json(cadastroGravado),
+      'PUT /api/agentes/cadastro': async (pedido) => {
+        corpos.push(await pedido.json());
+        return new Response(null, { status: 204 });
+      },
+    });
+    const dialogo = await abrirODialogo();
+    const campo = within(dialogo).getByRole('textbox', { name: 'Dias' });
+    for (const valor of ['0', '31', '1.5', 'dois', '']) {
+      fireEvent.change(campo, { target: { value: valor } });
+      fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+      expect(await within(dialogo).findByText('Use de 1 a 30 dias.')).toBeTruthy();
+    }
+    expect(corpos).toEqual([]);
+  });
+
+  it('a falha do servidor aparece no diálogo, que fica aberto com o valor', async () => {
+    abrir({
+      'GET /api/agentes': () => Response.json({ endereco: null, agentes: [] }),
+      'GET /api/agentes/cadastro': () => Response.json(cadastroGravado),
+      'PUT /api/agentes/cadastro': () =>
+        Response.json(
+          {
+            type: 'urn:grafite:problema:erro-interno',
+            title: 'Erro interno',
+            status: 500,
+            detail: 'Erro interno.',
+            codigoDeRastreio: 'ABCD-1234',
+          },
+          { status: 500 },
+        ),
+    });
+    const dialogo = await abrirODialogo();
+    fireEvent.change(within(dialogo).getByRole('textbox', { name: 'Dias' }), {
+      target: { value: '5' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }));
+    const falha = await within(dialogo).findByRole('alert');
+    expect(falha.textContent).toContain(
+      'Não foi possível salvar o prazo do sem contato. Informe à TI o código ABCD-1234.',
+    );
+    expect((within(dialogo).getByRole('textbox', { name: 'Dias' }) as HTMLInputElement).value).toBe(
+      '5',
+    );
+    expect(avisos()).not.toContain('Prazo do sem contato salvo.');
   });
 });

@@ -69,11 +69,7 @@ import { rotasDaConta } from './rotas/conta.ts';
 import { rotasDasContas } from './rotas/contas.ts';
 import { rotasDoControlId } from './rotas/controlid.ts';
 import { rotasDoDiretorio } from './rotas/diretorio.ts';
-import {
-  type AcordarAgente,
-  acordarPeloHttp,
-  rotasDasDistribuicoes,
-} from './rotas/distribuicoes.ts';
+import { rotasDasDistribuicoes } from './rotas/distribuicoes.ts';
 import { rotasDosDoisPassos } from './rotas/dois-passos.ts';
 import { rotasDoEstoque } from './rotas/estoque.ts';
 import { type IntervalosDosEventos, rotasDosEventos } from './rotas/eventos.ts';
@@ -104,11 +100,12 @@ import { rotasDoSegundoPasso } from './rotas/segundo-passo.ts';
 import { rotasDeSessao } from './rotas/sessao.ts';
 import { rotasDasSessoesDaConta } from './rotas/sessoes-da-conta.ts';
 import { rotasDaBaseDeSoftware } from './rotas/software.ts';
-import { rotasDosSoftwares } from './rotas/softwares.ts';
+import { rotasDasCategoriasDeSoftware } from './rotas/software-categorias.ts';
 import { rotasDasSolicitacoes } from './rotas/solicitacoes.ts';
 import { rotasDasTarefas } from './rotas/tarefas.ts';
 import { rotasDosTiposDeAtivo } from './rotas/tipos-de-ativo.ts';
 import { rotasDasVisoes } from './rotas/visoes.ts';
+import { type AcordarAgente, acordarPeloHttp } from './software/acordar.ts';
 
 // As mensagens padrão do Zod em pt-BR, para o campo que não tiver uma mensagem própria.
 z.config(z.locales.ptBR());
@@ -278,6 +275,7 @@ export async function criarApp({
       return fila.enviar(...argumentos);
     },
     canais: canaisQueEnviam(ambiente, canais),
+    acordar: acordarAgente,
   };
   const fila: FilaDeTarefas | undefined =
     opcoesDaFila &&
@@ -391,9 +389,9 @@ export async function criarApp({
         chaveDoisPassos,
       });
       await doAtivos.register(rotasDoAcessoRemoto, { banco, agora, prazo: prazoDoAcessoRemoto });
-      await doAtivos.register(rotasDosSoftwares, { banco });
       await doAtivos.register(rotasDaBaseDeSoftware, { banco, agora, armazenamento });
-      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, acordar: acordarAgente });
+      await doAtivos.register(rotasDasCategoriasDeSoftware, { banco, agora });
+      await doAtivos.register(rotasDasDistribuicoes, { banco, agora, fila });
     });
     // O módulo Cofre, opcional, só para a conta com os dois passos ativos (design do P6, decisão 7).
     await escopo.register(async (doCofre) => {

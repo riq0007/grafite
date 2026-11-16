@@ -229,8 +229,15 @@ export const ACOES_DA_AUDITORIA = {
   'pacote.inativado': 'Pacote de software inativado',
   'pacote.reativado': 'Pacote de software reativado',
   'pacote.arquivo-trocado': 'Arquivo do pacote trocado',
+  'categoria-de-software.criada': 'Categoria de software criada',
+  'categoria-de-software.renomeada': 'Categoria de software renomeada',
+  'categoria-de-software.removida': 'Categoria de software removida',
+  'categorias-de-software.ordenadas': 'Categorias de software reordenadas',
   'distribuicao.criada': 'Distribuição de software criada',
   'distribuicao.pedida-agora': 'Agentes acordados para a distribuição',
+  // As máquinas da distribuição (change software-por-pacote)
+  'distribuicao.maquina-tentada-de-novo': 'Máquina da distribuição tentada de novo',
+  'distribuicao.maquina-tirada-da-fila': 'Máquina tirada da fila da distribuição',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

@@ -1,4 +1,4 @@
-import { createRoute, Outlet } from '@tanstack/react-router';
+import { createRoute, Outlet, redirect } from '@tanstack/react-router';
 import { raiz } from '../../rotas/raiz.tsx';
 import { Catalogo, InicioDoCatalogo } from '../ativos/Catalogo.tsx';
 import { CampoNovo } from '../ativos/campos/CampoNovo.tsx';
@@ -13,8 +13,12 @@ import { Importacoes } from '../ativos/importacao/Importacoes.tsx';
 import { FichaDoModelo } from '../ativos/modelos/FichaDoModelo.tsx';
 import { ModeloNovo } from '../ativos/modelos/ModeloNovo.tsx';
 import { Modelos } from '../ativos/modelos/Modelos.tsx';
+import { lerPedidoDoAssistente, NovaDistribuicao } from '../ativos/software/Assistente.tsx';
+import { BaseDePacotes } from '../ativos/software/BaseDePacotes.tsx';
+import { lerAbaDoSoftware, TelaDasDistribuicoes } from '../ativos/software/Distribuicoes.tsx';
 import { FichaDaDistribuicao } from '../ativos/software/FichaDaDistribuicao.tsx';
-import { lerAbaDoSoftware, Software } from '../ativos/software/Software.tsx';
+import { FichaDoPacote } from '../ativos/software/FichaDoPacote.tsx';
+import { lerPedidoDaMatriz, Matriz } from '../ativos/software/Matriz.tsx';
 import { FichaDoTipo } from '../ativos/tipos/FichaDoTipo.tsx';
 import { TipoNovo } from '../ativos/tipos/TipoNovo.tsx';
 import { Tipos } from '../ativos/tipos/Tipos.tsx';
@@ -67,18 +71,53 @@ const compararBackups = createRoute({
   component: CompararBackups,
 });
 
-// A distribuição de software (change distribuicao-de-software).
+// A distribuição de software (change distribuicao-de-software): a base de pacotes, a ficha de cada
+// pacote e as distribuições, cada uma na tela dela (change software-por-pacote); o endereço antigo
+// da aba das distribuições leva à tela delas.
 const software = createRoute({
   getParentRoute: () => gestao,
   path: 'software',
   validateSearch: lerAbaDoSoftware,
-  component: Software,
+  beforeLoad: ({ search }) => {
+    if (search.aba === 'distribuicoes') {
+      throw redirect({ to: '/gestao/software/distribuicoes', replace: true });
+    }
+  },
+  component: BaseDePacotes,
+});
+
+const pacoteDeSoftware = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/pacotes/$id',
+  component: FichaDoPacote,
+});
+
+const distribuicoesDeSoftware = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/distribuicoes',
+  component: TelaDasDistribuicoes,
+});
+
+// O assistente da distribuição: o endereço fixo vence o `$id` das distribuições.
+const distribuicaoNova = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/distribuicoes/nova',
+  validateSearch: lerPedidoDoAssistente,
+  component: NovaDistribuicao,
 });
 
 const distribuicaoDeSoftware = createRoute({
   getParentRoute: () => gestao,
   path: 'software/distribuicoes/$id',
   component: FichaDaDistribuicao,
+});
+
+// A matriz do software: por máquina de um local ou por local.
+const matrizDoSoftware = createRoute({
+  getParentRoute: () => gestao,
+  path: 'software/matriz',
+  validateSearch: lerPedidoDaMatriz,
+  component: Matriz,
 });
 
 const catalogo = createRoute({
@@ -158,7 +197,11 @@ export const rotasDaGestao = gestao.addChildren([
   backupsDoControlId,
   compararBackups,
   software,
+  pacoteDeSoftware,
+  distribuicoesDeSoftware,
+  distribuicaoNova,
   distribuicaoDeSoftware,
+  matrizDoSoftware,
   catalogo.addChildren([
     inicioDoCatalogo,
     tipos,

@@ -1,0 +1,232 @@
+/*
+ * A aba Software da ficha da máquina (m09 e m11): o aviso do sem contato, a fila do que espera a
+ * máquina voltar, os cartões do que o Grafite mandou e a tabela dos instalados frente à base.
+ */
+.aba {
+  display: grid;
+  gap: var(--esp-5);
+  min-width: 0;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.nota {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+/* O carimbo da seção à esquerda e a ação ou a busca à direita. */
+.cabecaDaSecao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.cabecaDaSecao > :first-child {
+  flex: 1;
+}
+
+.busca {
+  width: 220px;
+}
+
+/* A fila do sem contato: o pacote, desde quando, o rótulo e "Tirar da fila". */
+.fila {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila > li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-elevada);
+  font-size: var(--texto-dado);
+}
+
+.textoDaFila {
+  display: grid;
+  min-width: 0;
+}
+
+.textoDaFila > b {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* Os cartões dos mandados, três por linha; o que falhou ganha a borda de perigo. */
+.mandados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mandados > li {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-elevada);
+  font-size: var(--texto-dado);
+}
+
+.mandados > li[data-falhou] {
+  border-color: var(--cor-critico-borda);
+}
+
+.mandados > li > b {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.linhaDoMandado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.explicacao {
+  color: var(--cor-texto-2);
+}
+
+.porQuem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.mostrar {
+  justify-self: start;
+}
+
+/*
+ * A camada do "Instalar outro pacote nesta máquina" (m10): a busca com quantos pacotes a base tem,
+ * os pacotes na largura toda, com a relação de cada um com a máquina, o "Vai direto para esta
+ * máquina" e o quando.
+ */
+.camada {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: min(100%, 560px);
+  padding: var(--esp-1);
+  font-size: var(--texto-dado);
+}
+
+/*
+ * A lista rola sozinha, até cinco pacotes à vista: a busca e as ações ficam sempre à vista. O
+ * respiro de 3 px deixa o anel do foco da opção dentro da área que rola.
+ */
+.listaDaCamada {
+  max-height: calc(56px * 5 + var(--esp-2) * 4 + 6px);
+  margin: -3px;
+  padding: 3px;
+  overflow: auto;
+}
+
+/* Cada pacote é um cartão de ponta a ponta, sem a bolinha: a escolha é a borda de destaque (m10). */
+.opcoes label.opcao {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  justify-self: stretch;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 56px;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+}
+
+.opcoes label.opcao [data-parte="bolinha"] {
+  display: none;
+}
+
+.opcoes label.opcao[data-selected] {
+  padding: calc(var(--esp-2) - 1px) calc(var(--esp-3) - 1px);
+  border: 2px solid var(--cor-destaque);
+  background: var(--cor-superficie-2);
+}
+
+.opcoes label.opcao[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.textoDaOpcao {
+  display: grid;
+  min-width: 0;
+}
+
+.nomeDaOpcao {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.vai {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.recusa {
+  margin: 0;
+  color: var(--cor-critico-forte);
+}
+
+.acoesDaCamada {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+/* "QUANDO" ao lado dos segmentos, como o carimbo das seções (m10). */
+.rotuloDoQuando {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fimDaCamada {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+.tecla {
+  margin-left: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+}

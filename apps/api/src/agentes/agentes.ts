@@ -11,6 +11,7 @@ import {
   lerInventarioDoGlpi,
   lerValor,
   nomeDoDeviceid,
+  normalizarTexto,
   SEM_ACESSO,
 } from '@grafite/domain';
 import { eq, isNull, sql } from 'drizzle-orm';
@@ -150,9 +151,11 @@ async function trocarSoftwares(
         orgId,
         ativoId,
         nome: software.nome.slice(0, 500),
+        nomeNormalizado: normalizarTexto(software.nome.slice(0, 500)),
         versao: software.versao,
         editor: software.editor,
         instaladoEm: software.instaladoEm,
+        doSistema: software.doSistema,
         inventariadoEm: momento,
       })),
     );

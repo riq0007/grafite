@@ -1,0 +1,341 @@
+// A base de software frente ao inventário (spec distribuicao-de-software, "Pacote frente ao
+// inventário"; change software-por-pacote, design, decisões 1, 2 e 10): as máquinas da conta, que
+// são os ativos ativos com o agente ligado nos locais em que ela distribui; as versões dos programas
+// de cada uma que casam com cada pacote, com o casamento no banco; e as distribuições dos pacotes,
+// com o "Para quem", só as com alguma máquina no alcance da conta e contadas nele (decisão 16).
+import {
+  agentes,
+  ativos,
+  distribuicoes,
+  maquinasDasDistribuicoes,
+  pacotesDeSoftware,
+  softwaresDosAtivos,
+  type Transacao,
+} from '@grafite/db';
+import { type Acesso, alcance, type SituacaoDaMaquina, semContato } from '@grafite/domain';
+import { and, count, desc, eq, exists, inArray, type SQL, sql } from 'drizzle-orm';
+import { lerCadastroDosAgentes } from '../agentes/cadastro.ts';
+import { lerArvore } from '../arvore.ts';
+import {
+  type AlcanceDaDistribuicao,
+  comMaquinaNoAlcance,
+  doAtivoDaMaquina,
+  maquinaNoAlcance,
+  noAlcance,
+} from './alcance.ts';
+
+const programa = sql`${softwaresDosAtivos.nomeNormalizado}`;
+const doPacote = sql`${pacotesDeSoftware.nomeNoInventarioNormalizado}`;
+
+/**
+ * O programa do inventário que casa com o nome no inventário do pacote: igual a ele, ou começando
+ * por ele seguido de um espaço e de um algarismo ou de "(". A faixa em bytes, de "nome" até
+ * "nome!", que o índice percorre, contém os dois casos; o `starts_with` e o caractere seguinte
+ * conferem dentro dela, sem o `LIKE`, porque o nome pode ter "%" e "_".
+ */
+const casaNoBanco = sql`(${programa} collate "C") >= (${doPacote} collate "C")
+  and (${programa} collate "C") < ((${doPacote} || '!') collate "C")
+  and (${programa} = ${doPacote}
+    or (starts_with(${programa}, ${doPacote} || ' ')
+      and substr(${programa}, char_length(${doPacote}) + 2, 1) ~ '[0-9(]'))`;
+
+/** As máquinas da conta, como condição sobre `ativos`; `null` quando ela não distribui em lugar nenhum. */
+async function maquinasDaConta(tx: Transacao, acesso: Acesso): Promise<SQL | null> {
+  const doDistribuir = alcance(acesso, 'software.distribuir', await lerArvore(tx));
+  if (doDistribuir === null) return null;
+  const condicoes = [
+    eq(ativos.situacao, 'ativo'),
+    exists(
+      tx
+        .select({ um: sql`1` })
+        .from(agentes)
+        .where(and(eq(agentes.orgId, ativos.orgId), eq(agentes.ativoId, ativos.id))),
+    ),
+  ];
+  if (doDistribuir !== 'organizacao') condicoes.push(inArray(ativos.localId, [...doDistribuir]));
+  return and(...condicoes) ?? null;
+}
+
+/**
+ * Quantas máquinas a conta tem e, de cada pacote (ou só do pedido), as versões dos programas que
+ * casam com ele em cada máquina dela que tem o programa.
+ */
+export async function instalacoesNaConta(
+  tx: Transacao,
+  acesso: Acesso,
+  pacoteId?: string,
+): Promise<{ maquinas: number; porPacote: Map<string, (string | null)[][]> }> {
+  const daConta = await maquinasDaConta(tx, acesso);
+  if (!daConta) return { maquinas: 0, porPacote: new Map() };
+  const [total] = await tx.select({ quantas: count() }).from(ativos).where(daConta);
+  const linhas = await tx
+    .select({
+      pacoteId: pacotesDeSoftware.id,
+      ativoId: softwaresDosAtivos.ativoId,
+      versao: softwaresDosAtivos.versao,
+    })
+    .from(pacotesDeSoftware)
+    .innerJoin(
+      softwaresDosAtivos,
+      and(eq(softwaresDosAtivos.orgId, pacotesDeSoftware.orgId), casaNoBanco),
+    )
+    .innerJoin(
+      ativos,
+      and(eq(ativos.orgId, softwaresDosAtivos.orgId), eq(ativos.id, softwaresDosAtivos.ativoId)),
+    )
+    .where(and(daConta, pacoteId ? eq(pacotesDeSoftware.id, pacoteId) : undefined));
+  const porMaquina = new Map<string, Map<string, (string | null)[]>>();
+  for (const linha of linhas) {
+    const doPacote = porMaquina.get(linha.pacoteId) ?? new Map<string, (string | null)[]>();
+    porMaquina.set(linha.pacoteId, doPacote);
+    doPacote.set(linha.ativoId, [...(doPacote.get(linha.ativoId) ?? []), linha.versao]);
+  }
+  return {
+    maquinas: total?.quantas ?? 0,
+    porPacote: new Map([...porMaquina].map(([id, maquinas]) => [id, [...maquinas.values()]])),
+  };
+}
+
+/** As versões dos programas que casam com o pacote em cada máquina dada que tem o programa. */
+export async function versoesDoPacoteNasMaquinas(
+  tx: Transacao,
+  pacoteId: string,
+  ativoIds: readonly string[],
+): Promise<Map<string, (string | null)[]>> {
+  const porMaquina = new Map<string, (string | null)[]>();
+  if (ativoIds.length === 0) return porMaquina;
+  const linhas = await tx
+    .select({ ativoId: softwaresDosAtivos.ativoId, versao: softwaresDosAtivos.versao })
+    .from(pacotesDeSoftware)
+    .innerJoin(
+      softwaresDosAtivos,
+      and(eq(softwaresDosAtivos.orgId, pacotesDeSoftware.orgId), casaNoBanco),
+    )
+    .where(
+      and(eq(pacotesDeSoftware.id, pacoteId), inArray(softwaresDosAtivos.ativoId, [...ativoIds])),
+    );
+  for (const { ativoId, versao } of linhas) {
+    porMaquina.set(ativoId, [...(porMaquina.get(ativoId) ?? []), versao]);
+  }
+  return porMaquina;
+}
+
+/**
+ * As versões dos programas que casam com cada pacote ativo, em cada máquina dada que tem o programa:
+ * pela id do pacote e, nele, pela id do ativo.
+ */
+export async function versoesDosPacotesNasMaquinas(
+  tx: Transacao,
+  ativoIds: readonly string[],
+): Promise<Map<string, Map<string, (string | null)[]>>> {
+  const porPacote = new Map<string, Map<string, (string | null)[]>>();
+  if (ativoIds.length === 0) return porPacote;
+  const linhas = await tx
+    .select({
+      pacoteId: pacotesDeSoftware.id,
+      ativoId: softwaresDosAtivos.ativoId,
+      versao: softwaresDosAtivos.versao,
+    })
+    .from(pacotesDeSoftware)
+    .innerJoin(
+      softwaresDosAtivos,
+      and(eq(softwaresDosAtivos.orgId, pacotesDeSoftware.orgId), casaNoBanco),
+    )
+    .where(
+      and(
+        eq(pacotesDeSoftware.situacao, 'ativo'),
+        inArray(softwaresDosAtivos.ativoId, [...ativoIds]),
+      ),
+    );
+  for (const { pacoteId, ativoId, versao } of linhas) {
+    const doPacote = porPacote.get(pacoteId) ?? new Map<string, (string | null)[]>();
+    porPacote.set(pacoteId, doPacote);
+    doPacote.set(ativoId, [...(doPacote.get(ativoId) ?? []), versao]);
+  }
+  return porPacote;
+}
+
+/**
+ * O "Para quem" da distribuição; a de antes da change software-por-pacote diz quantas máquinas ela
+ * tem, todas, também as de fora do alcance da conta (design, decisão 16).
+ */
+export const paraQuemNaTela = (paraQuem: string | null, maquinas: number): string =>
+  paraQuem ?? `${maquinas} ${maquinas === 1 ? 'máquina' : 'máquinas'}`;
+
+/** As máquinas da distribuição em cada situação, para os rótulos do resultado. */
+export interface ResultadoDaDistribuicao {
+  concluidas: number;
+  emAndamento: number;
+  aguardando: number;
+  falharam: number;
+  tiradas: number;
+}
+
+const CAMPO_DA_SITUACAO: Record<SituacaoDaMaquina, keyof ResultadoDaDistribuicao> = {
+  concluida: 'concluidas',
+  'em-andamento': 'emAndamento',
+  aguardando: 'aguardando',
+  falhou: 'falharam',
+  tirada: 'tiradas',
+};
+
+const semNenhuma = (): ResultadoDaDistribuicao => ({
+  concluidas: 0,
+  emAndamento: 0,
+  aguardando: 0,
+  falharam: 0,
+  tiradas: 0,
+});
+
+/** As máquinas de uma distribuição: as do alcance, em cada situação, e quantas ficam fora dele. */
+interface MaquinasNoAlcance {
+  resultado: ResultadoDaDistribuicao;
+  foraDoAlcance: number;
+}
+
+/** As máquinas de cada distribuição, pelo alcance da conta (design, decisão 16). */
+async function situacoesDas(tx: Transacao, ids: readonly string[], escopo: AlcanceDaDistribuicao) {
+  const porDistribuicao = new Map<string, MaquinasNoAlcance>();
+  if (ids.length === 0) return porDistribuicao;
+  const linhas = await tx
+    .select({
+      distribuicaoId: maquinasDasDistribuicoes.distribuicaoId,
+      situacao: maquinasDasDistribuicoes.situacao,
+      localId: ativos.localId,
+      quantas: count(),
+    })
+    .from(maquinasDasDistribuicoes)
+    .innerJoin(ativos, doAtivoDaMaquina)
+    .where(inArray(maquinasDasDistribuicoes.distribuicaoId, [...ids]))
+    .groupBy(
+      maquinasDasDistribuicoes.distribuicaoId,
+      maquinasDasDistribuicoes.situacao,
+      ativos.localId,
+    );
+  for (const { distribuicaoId, situacao, localId, quantas } of linhas) {
+    const maquinas = porDistribuicao.get(distribuicaoId) ?? {
+      resultado: semNenhuma(),
+      foraDoAlcance: 0,
+    };
+    if (noAlcance(escopo, localId)) maquinas.resultado[CAMPO_DA_SITUACAO[situacao]] += quantas;
+    else maquinas.foraDoAlcance += quantas;
+    porDistribuicao.set(distribuicaoId, maquinas);
+  }
+  return porDistribuicao;
+}
+
+const somaDas = (resultado: ResultadoDaDistribuicao) =>
+  Object.values(resultado).reduce((soma, quantas) => soma + quantas, 0);
+
+/** Todas as máquinas da distribuição, no alcance e fora dele, para o "Para quem" da antiga. */
+const todasAsMaquinas = (maquinas: MaquinasNoAlcance | undefined) =>
+  maquinas ? somaDas(maquinas.resultado) + maquinas.foraDoAlcance : 0;
+
+/**
+ * A última distribuição de cada pacote com alguma máquina no alcance, com o "Para quem", pela id do
+ * pacote.
+ */
+export async function ultimasDistribuicoes(
+  tx: Transacao,
+  escopo: AlcanceDaDistribuicao,
+): Promise<Map<string, { id: string; criadaEm: string; paraQuem: string }>> {
+  const linhas = await tx
+    .selectDistinctOn([distribuicoes.pacoteId], {
+      id: distribuicoes.id,
+      pacoteId: distribuicoes.pacoteId,
+      criadaEm: distribuicoes.criadaEm,
+      paraQuem: distribuicoes.paraQuem,
+    })
+    .from(distribuicoes)
+    .where(comMaquinaNoAlcance(tx, escopo))
+    .orderBy(distribuicoes.pacoteId, desc(distribuicoes.criadaEm), desc(distribuicoes.id));
+  const situacoes = await situacoesDas(
+    tx,
+    linhas.filter(({ paraQuem }) => paraQuem === null).map(({ id }) => id),
+    escopo,
+  );
+  return new Map(
+    linhas.map((linha) => [
+      linha.pacoteId,
+      {
+        id: linha.id,
+        criadaEm: linha.criadaEm.toISOString(),
+        paraQuem: paraQuemNaTela(linha.paraQuem, todasAsMaquinas(situacoes.get(linha.id))),
+      },
+    ]),
+  );
+}
+
+/** Quantas distribuições a ficha do pacote mostra, das mais novas. */
+const DISTRIBUICOES_NA_FICHA = 50;
+
+/**
+ * Das que aguardam em cada distribuição, nos locais do alcance, quantas têm o agente sem contato
+ * pelo prazo da organização.
+ */
+async function semContatoDas(
+  tx: Transacao,
+  ids: readonly string[],
+  momento: Date,
+  escopo: AlcanceDaDistribuicao,
+) {
+  const porDistribuicao = new Map<string, number>();
+  if (ids.length === 0) return porDistribuicao;
+  const { diasSemContato } = await lerCadastroDosAgentes(tx);
+  const linhas = await tx
+    .select({
+      distribuicaoId: maquinasDasDistribuicoes.distribuicaoId,
+      ultimoContato: agentes.ultimoContato,
+    })
+    .from(maquinasDasDistribuicoes)
+    .innerJoin(agentes, eq(agentes.id, maquinasDasDistribuicoes.agenteId))
+    .innerJoin(ativos, doAtivoDaMaquina)
+    .where(
+      and(
+        inArray(maquinasDasDistribuicoes.distribuicaoId, [...ids]),
+        eq(maquinasDasDistribuicoes.situacao, 'aguardando'),
+        maquinaNoAlcance(escopo),
+      ),
+    );
+  for (const { distribuicaoId, ultimoContato } of linhas) {
+    if (!semContato(ultimoContato, momento, diasSemContato).semContato) continue;
+    porDistribuicao.set(distribuicaoId, (porDistribuicao.get(distribuicaoId) ?? 0) + 1);
+  }
+  return porDistribuicao;
+}
+
+/**
+ * As distribuições do pacote com alguma máquina no alcance, da mais nova para a mais antiga, com o
+ * resultado de cada uma nas máquinas do alcance.
+ */
+export async function distribuicoesDoPacote(
+  tx: Transacao,
+  pacoteId: string,
+  momento: Date,
+  escopo: AlcanceDaDistribuicao,
+) {
+  const linhas = await tx
+    .select({
+      id: distribuicoes.id,
+      criadaEm: distribuicoes.criadaEm,
+      paraQuem: distribuicoes.paraQuem,
+    })
+    .from(distribuicoes)
+    .where(and(eq(distribuicoes.pacoteId, pacoteId), comMaquinaNoAlcance(tx, escopo)))
+    .orderBy(desc(distribuicoes.criadaEm), desc(distribuicoes.id))
+    .limit(DISTRIBUICOES_NA_FICHA);
+  const ids = linhas.map(({ id }) => id);
+  const situacoes = await situacoesDas(tx, ids, escopo);
+  const longe = await semContatoDas(tx, ids, momento, escopo);
+  return linhas.map((linha) => {
+    const maquinas = situacoes.get(linha.id);
+    const resultado = maquinas?.resultado ?? semNenhuma();
+    return {
+      id: linha.id,
+      criadaEm: linha.criadaEm.toISOString(),
+      paraQuem: paraQuemNaTela(linha.paraQuem, todasAsMaquinas(maquinas)),
+      maquinas: somaDas(resultado),
+      resultado: { ...resultado, semContato: longe.get(linha.id) ?? 0 },
+    };
+  });
+}
