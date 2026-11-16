@@ -265,7 +265,9 @@ const recusada = (recusa: RecusaDaAcao): DecisaoDaAcao => ({ aceita: false, recu
 
 const evento = (doEvento: EventoDaAcao): EntradaDaConversa => ({ especie: 'evento', ...doEvento });
 
-const idsDosLocais = (chamado: ChamadoParaAcao) => ({
+type LocaisComNome = Pick<ChamadoParaAcao, 'locais' | 'semLocal'>;
+
+const idsDosLocais = (chamado: LocaisComNome) => ({
   locais: chamado.locais.map((local) => local.id),
   semLocal: chamado.semLocal,
 });
@@ -274,7 +276,7 @@ const idsDosLocais = (chamado: ChamadoParaAcao) => ({
  * O local que a recusa cita: o primeiro do chamado fora do alcance. Sem alcance, o primeiro do
  * chamado; com todos os locais no alcance, o que falta é a organização inteira (nulo).
  */
-function localDeFora(alcance: AlcanceDeQuemAtende, chamado: ChamadoParaAcao): string | null {
+function localDeFora(alcance: AlcanceDeQuemAtende, chamado: LocaisComNome): string | null {
   const fora =
     alcance === null || alcance === 'organizacao'
       ? chamado.locais[0]
@@ -285,6 +287,19 @@ function localDeFora(alcance: AlcanceDeQuemAtende, chamado: ChamadoParaAcao): st
 function recusaDeQuemAge(quemAge: QuemAge, chamado: ChamadoParaAcao): RecusaDaAcao | null {
   if (atendeOChamado(quemAge.alcance, idsDosLocais(chamado))) return null;
   return { motivo: 'voce-nao-atende', local: localDeFora(quemAge.alcance, chamado) };
+}
+
+/**
+ * A recusa da abertura de quem não atende os locais do chamado (spec chamados, "Abrir um chamado
+ * pela TI"), com o alcance de `chamados.atender` de quem abre: a mesma frase de quem age, "Você não
+ * atende os chamados de <local>.", ou nulo, quando atende.
+ */
+export function recusaDeQuemAbre(
+  alcance: AlcanceDeQuemAtende,
+  chamado: LocaisComNome,
+): string | null {
+  if (atendeOChamado(alcance, idsDosLocais(chamado))) return null;
+  return `Você não atende ${dosChamados(localDeFora(alcance, chamado))}.`;
 }
 
 /** Só a conta ativa que atende todos os locais do chamado o recebe. */

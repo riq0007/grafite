@@ -210,6 +210,7 @@ describe('tipos de evento', () => {
     ['resposta-pronta.removida', 'ajustes-dos-chamados.mudaram'],
     ['respostas-prontas.ordenadas', 'ajustes-dos-chamados.mudaram'],
     ['horario-da-ti.alterado', 'ajustes-dos-chamados.mudaram'],
+    ['chamado.aberto', 'chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],

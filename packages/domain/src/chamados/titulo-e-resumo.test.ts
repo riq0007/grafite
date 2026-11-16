@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type CampoDoFormulario, conferirFormulario, type Formulario } from './formulario.ts';
 import {
   type ContextoDasRespostas,
+  conferirTituloDoChamado,
   resumoDasRespostas,
   tituloDasRespostas,
 } from './titulo-e-resumo.ts';
@@ -689,5 +690,36 @@ describe('resumoDasRespostas', () => {
     expect(
       resumoDasRespostas(formulario, JSON.parse('{"toString": "Teste"}'), doTipo('Outro')),
     ).toBe('toString: Teste');
+  });
+});
+
+describe('o título que quem abre escreve', () => {
+  it('fica numa linha só, sem os espaços das pontas', () => {
+    expect(conferirTituloDoChamado('  Notebook da recepção   não liga\n ')).toEqual({
+      ok: true,
+      titulo: 'Notebook da recepção não liga',
+    });
+  });
+
+  it('vazio, ou só com espaços, pede o título', () => {
+    expect(conferirTituloDoChamado('')).toEqual({ ok: false, erro: 'Escreva o título.' });
+    expect(conferirTituloDoChamado(' \n\t ')).toEqual({ ok: false, erro: 'Escreva o título.' });
+  });
+
+  it('conta os caracteres, e não as unidades do UTF-16, até 120', () => {
+    const noLimite = '🖨'.repeat(120);
+    expect(conferirTituloDoChamado(noLimite)).toEqual({ ok: true, titulo: noLimite });
+    expect(conferirTituloDoChamado(`${noLimite}a`)).toEqual({
+      ok: false,
+      erro: 'Use até 120 caracteres.',
+    });
+  });
+
+  it('conta depois de juntar os espaços', () => {
+    const titulo = `${'a'.repeat(60)}     ${'b'.repeat(59)}`;
+    expect(conferirTituloDoChamado(titulo)).toEqual({
+      ok: true,
+      titulo: `${'a'.repeat(60)} ${'b'.repeat(59)}`,
+    });
   });
 });

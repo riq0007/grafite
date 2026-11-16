@@ -17,7 +17,6 @@ import {
   alcance,
   conferirFormulario,
   conferirTipoDeChamado,
-  type Formulario,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
   MODOS_DO_PRAZO,
   NOVO_TIPO_DE_CHAMADO,
@@ -43,6 +42,7 @@ import {
   conferirTiposDeAtivoDoFormulario,
   contarAbertos,
   FormularioDeChamado,
+  formularioDa,
 } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { lerContaQueAtende } from '../chamados/quem-atende.ts';
@@ -177,10 +177,6 @@ async function lerLinhaDoTipo(
   if (!linha) throw naoEncontrado(M.naoEncontrado);
   return linha;
 }
-
-/** O formulário gravado no tipo: a API grava sempre o formulário conferido. */
-const formularioDa = (linha: Pick<LinhaDoTipo, 'formulario'>) =>
-  linha.formulario as unknown as Formulario;
 
 /** O formulário do tipo como a tela o lê, com o "Pede o ativo" e os abertos de agora. */
 async function formularioDoTipo(

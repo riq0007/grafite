@@ -325,6 +325,8 @@ export const EVENTO_DA_ACAO = {
   'resposta-pronta.removida': 'ajustes-dos-chamados.mudaram',
   'respostas-prontas.ordenadas': 'ajustes-dos-chamados.mudaram',
   'horario-da-ti.alterado': 'ajustes-dos-chamados.mudaram',
+  // Os chamados: a quem os vê nos locais deles, os de antes e os de depois
+  'chamado.aberto': 'chamados.mudaram',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

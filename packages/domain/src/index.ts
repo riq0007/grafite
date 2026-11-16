@@ -247,6 +247,7 @@ export {
   type RecusaDaAcao,
   type RecusaDaCelula,
   type RelogioDaAcao,
+  recusaDeQuemAbre,
   relogioDepois,
   SITUACOES_DO_CHAMADO,
   type SituacaoDoChamado,
@@ -382,6 +383,7 @@ export {
 export {
   type AtivoDasRespostas,
   type ContextoDasRespostas,
+  conferirTituloDoChamado,
   resumoDasRespostas,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';

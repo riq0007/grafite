@@ -120,6 +120,22 @@ function camposQueAPessoaVe(formulario: Formulario, respostas: Respostas): Campo
   return formulario.campos.filter((campo) => visiveis.has(campo.id) && !campo.soDaTi);
 }
 
+/**
+ * O título que quem abre ou atende escreve (spec chamados, "Abrir um chamado pela TI"): numa linha
+ * só, como o montado, sem os espaços das pontas e de 1 a 120 caracteres, contados em caracteres, e
+ * não nas unidades do UTF-16 que o `.max` do Zod conta.
+ */
+export function conferirTituloDoChamado(
+  pedido: string,
+): { ok: true; titulo: string } | { ok: false; erro: string } {
+  const titulo = umaLinha(pedido);
+  if (titulo === '') return { ok: false, erro: 'Escreva o título.' };
+  if ([...titulo].length > LIMITE_DO_TITULO) {
+    return { ok: false, erro: `Use até ${LIMITE_DO_TITULO} caracteres.` };
+  }
+  return { ok: true, titulo };
+}
+
 /** O título com mais de 120 caracteres, cortado em 120, sem o espaço antes das reticências. */
 function cortar(titulo: string): string {
   const letras = [...titulo];

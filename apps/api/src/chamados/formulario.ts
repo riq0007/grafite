@@ -51,6 +51,13 @@ export const FormularioDeChamado = z
   })
   .meta({ id: 'FormularioDeChamado' });
 
+/**
+ * O formulário gravado no tipo ou copiado no chamado: a API grava sempre o formulário conferido, e
+ * a abertura copia o do tipo.
+ */
+export const formularioDa = (linha: { formulario: Record<string, unknown> }) =>
+  linha.formulario as unknown as Formulario;
+
 /** Os chamados do tipo em aberto, de todos os locais: cada um mantém o formulário com que abriu. */
 export async function contarAbertos(tx: Transacao, tipoId: string): Promise<number> {
   const [contagem] = await tx

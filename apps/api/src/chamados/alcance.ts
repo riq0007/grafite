@@ -3,13 +3,14 @@
 // organização inteira pede a permissão na organização inteira. O que a conta não vê responde como o
 // que não existe, em toda rota que chega a um chamado pelo número.
 import { chamados, type Transacao } from '@grafite/db';
-import { alcance, veOChamado } from '@grafite/domain';
+import { alcance, type LocaisDoChamado, veOChamado } from '@grafite/domain';
 import { eq } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { naoEncontrado } from '../problemas.ts';
+import { publicoDosLocais } from '../solicitacoes/registro.ts';
 
 const NAO_ENCONTRADO = 'Chamado não encontrado.';
 
@@ -40,3 +41,12 @@ export async function chamadoQueAContaVe(
   if (!veOChamado(ve, chamado)) throw chamadoNaoEncontrado();
   return chamado;
 }
+
+/**
+ * O público dos eventos do chamado (design, decisão 5): quem o vê nos locais dele, os de antes e os
+ * de depois de uma mudança, e, no da organização inteira, quem o vê na organização.
+ */
+export const publicoDoChamado = (...todos: LocaisDoChamado[]) => ({
+  permissao: 'chamados.ver' as const,
+  locais: publicoDosLocais(...todos),
+});

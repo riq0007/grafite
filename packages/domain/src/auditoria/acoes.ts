@@ -251,6 +251,7 @@ export const ACOES_DA_AUDITORIA = {
   'resposta-pronta.removida': 'Resposta pronta removida',
   'respostas-prontas.ordenadas': 'Respostas prontas reordenadas',
   'horario-da-ti.alterado': 'Horário da TI alterado',
+  'chamado.aberto': 'Chamado aberto',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

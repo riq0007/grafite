@@ -12,6 +12,7 @@ import {
   type QuemAge,
   type QuemFica,
   type RecusaDaAcao,
+  recusaDeQuemAbre,
   relogioDepois,
   SITUACOES_DO_CHAMADO,
   type SituacaoDoChamado,
@@ -1043,6 +1044,40 @@ describe('mensagemDaRecusaDaAcao', () => {
       mensagemDaRecusaDaAcao(1041, { motivo: 'aguardando', pessoa: 'Pessoa anonimizada 7KQ2' }),
     ).toBe(
       'O chamado #1041 está aguardando Pessoa anonimizada 7KQ2. Passe a outra pessoa ou retome antes de devolver.',
+    );
+  });
+});
+
+describe('quem abre o chamado', () => {
+  const nos = (locais: { id: string; nome: string }[], semLocal = false) => ({ locais, semLocal });
+
+  it('quem atende todos os locais abre', () => {
+    expect(recusaDeQuemAbre('organizacao', nos([JUNDIAI, CAMPINAS]))).toBeNull();
+    expect(recusaDeQuemAbre('organizacao', nos([], true))).toBeNull();
+    expect(recusaDeQuemAbre(RAMO_DE_JUNDIAI, nos([JUNDIAI, SALA_ATLANTICO]))).toBeNull();
+  });
+
+  it('quem não atende um dos locais recebe a frase com o primeiro fora do alcance', () => {
+    expect(recusaDeQuemAbre(RAMO_DE_CAMPINAS, nos([JUNDIAI]))).toBe(
+      'Você não atende os chamados de Jundiaí.',
+    );
+    expect(recusaDeQuemAbre(RAMO_DE_JUNDIAI, nos([JUNDIAI, CAMPINAS]))).toBe(
+      'Você não atende os chamados de Campinas.',
+    );
+  });
+
+  it('o chamado da organização inteira pede a organização', () => {
+    expect(recusaDeQuemAbre(RAMO_DE_JUNDIAI, nos([JUNDIAI], true))).toBe(
+      'Você não atende os chamados da organização inteira.',
+    );
+  });
+
+  it('sem alcance, a frase cita o primeiro local, ou a organização', () => {
+    expect(recusaDeQuemAbre(null, nos([CAMPINAS, JUNDIAI]))).toBe(
+      'Você não atende os chamados de Campinas.',
+    );
+    expect(recusaDeQuemAbre(null, nos([], true))).toBe(
+      'Você não atende os chamados da organização inteira.',
     );
   });
 });

@@ -27247,6 +27247,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir um chamado em nome de uma pessoa, com o tipo e as respostas */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeAberturaDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAberto"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -34371,6 +34465,56 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
+        FormularioDeChamadoInput: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
+        PedidoDeAberturaDoChamadoInput: {
+            pessoa?: string | null;
+            tipo?: string | null;
+            titulo?: string | null;
+            respostas?: {
+                [key: string]: unknown;
+            };
+            /** @default true */
+            ficaComigo: boolean;
+        };
+        ChamadoAbertoInput: {
+            numero: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
         AnexoEnviadoInput: {
             /** Format: uuid */
             id: string;
@@ -34459,36 +34603,6 @@ export interface components {
             texto: string;
             esperaAResposta: boolean;
             tipos: string[];
-        };
-        FormularioDeChamadoInput: {
-            titulo: {
-                comecaPeloTipo: boolean;
-                campoId: string | null;
-            };
-            campos: {
-                id: string;
-                /** @enum {string} */
-                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
-                rotulo: string;
-                nomeNoResumo: string | null;
-                obrigatorio: boolean;
-                soDaTi: boolean;
-                apagarSeSumir: boolean;
-                opcoes: {
-                    id: string;
-                    texto: string;
-                }[];
-                tiposDeAtivo: string[];
-                condicao: ({
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    opcaoId: string;
-                } | {
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    valor: boolean;
-                })[];
-            }[];
         };
         ListaDosTiposDeChamadoInput: {
             tipos: components["schemas"]["TipoDeChamadoInput"][];
@@ -39180,6 +39294,56 @@ export interface components {
         AvisoDeTeste: {
             aparelhos: number;
         };
+        FormularioDeChamado: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
+        PedidoDeAberturaDoChamado: {
+            pessoa?: string | null;
+            tipo?: string | null;
+            titulo?: string | null;
+            respostas?: {
+                [key: string]: unknown;
+            };
+            /** @default true */
+            ficaComigo: boolean;
+        };
+        ChamadoAberto: {
+            numero: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
         AnexoEnviado: {
             /** Format: uuid */
             id: string;
@@ -39268,36 +39432,6 @@ export interface components {
             texto: string;
             esperaAResposta: boolean;
             tipos: string[];
-        };
-        FormularioDeChamado: {
-            titulo: {
-                comecaPeloTipo: boolean;
-                campoId: string | null;
-            };
-            campos: {
-                id: string;
-                /** @enum {string} */
-                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
-                rotulo: string;
-                nomeNoResumo: string | null;
-                obrigatorio: boolean;
-                soDaTi: boolean;
-                apagarSeSumir: boolean;
-                opcoes: {
-                    id: string;
-                    texto: string;
-                }[];
-                tiposDeAtivo: string[];
-                condicao: ({
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    opcaoId: string;
-                } | {
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    valor: boolean;
-                })[];
-            }[];
         };
         ListaDosTiposDeChamado: {
             tipos: components["schemas"]["TipoDeChamado"][];
