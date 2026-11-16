@@ -277,7 +277,7 @@ O texto SHALL arredondar para baixo:
 
 A organização SHALL ter um horário da TI, com:
 - os dias da semana, ao menos um;
-- a hora de início e a de fim, a mesma em todos os dias;
+- a hora de início e a de fim, das 00:00 às 23:59, as mesmas em todos os dias;
 - o fuso;
 - a carga cheia: o número de chamados abertos que enche a barra de carga de uma pessoa, um inteiro de 1 a 20.
 
@@ -367,7 +367,7 @@ Quem tem `chamados.configurar` SHALL cadastrar as respostas prontas, até 100 na
 - o rótulo, de 1 a 60 caracteres, único na organização;
 - o texto, de 1 a 2.000 caracteres, em que `{nome}` vira o primeiro nome da pessoa do chamado;
 - "Espera a resposta": ligado, mandar a resposta põe o chamado em Aguardando o colaborador;
-- os tipos em que ela aparece, ou todos;
+- os tipos em que ela aparece, entre os Em uso e os Inativos, ou todos;
 - a ordem.
 
 Quem atende SHALL usar uma resposta pronta no campo de escrever, e mudar o texto antes de mandar.
@@ -375,6 +375,7 @@ Quem atende SHALL usar uma resposta pronta no campo de escrever, e mudar o texto
 As recusas SHALL ser:
 - "Escreva o rótulo.", "Use até 60 caracteres." e "Já existe uma resposta pronta com esse rótulo.", no rótulo;
 - "Escreva o texto." e "Use até 2.000 caracteres.", no texto;
+- "Escolha os tipos da lista.", nos tipos;
 - "A organização já tem 100 respostas prontas.".
 
 #### Scenario: Pedir o print

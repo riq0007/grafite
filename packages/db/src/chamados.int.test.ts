@@ -3,7 +3,10 @@
 // atendimento" e "Conversa do chamado"; change chamados-da-ti, design, decisão 1): o tipo, com o
 // nome único sem acento, o prazo, o atendimento e o que acontece depois, e o Rascunho que se
 // descarta; o chamado, que o papel da aplicação não apaga, com quem atende e o relógio coerentes com
-// a situação; e a conversa, que o papel da aplicação só inclui e lê. Todas isoladas pela organização.
+// a situação; e a conversa, que o papel da aplicação só inclui e lê. E o apoio (spec chamados,
+// "Horário da TI" e "Respostas prontas"; spec arquivos-e-imagens, "Anexos dos chamados"; design,
+// decisão 10): a numeração, as respostas prontas, o horário da TI e os anexos, que nascem sem dono e
+// passam ao chamado. Todas isoladas pela organização.
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
@@ -232,17 +235,23 @@ afterAll(async () => {
 });
 
 describe('isolamento', () => {
-  it('os tipos, os chamados e a conversa têm o RLS ativo e forçado', async () => {
+  it('as tabelas dos chamados têm o RLS ativo e forçado', async () => {
     const { rows } = await dono.query(
       `select relname as tabela, relrowsecurity as ativo, relforcerowsecurity as forcado
          from pg_class
-        where relname in ('tipos_de_chamado', 'chamados', 'mensagens_dos_chamados')
+        where relname in ('tipos_de_chamado', 'chamados', 'mensagens_dos_chamados',
+                          'numeracao_dos_chamados', 'respostas_prontas', 'horario_da_ti',
+                          'anexos_dos_chamados')
           and relkind = 'r'
         order by relname`,
     );
     expect(rows).toEqual([
+      { tabela: 'anexos_dos_chamados', ativo: true, forcado: true },
       { tabela: 'chamados', ativo: true, forcado: true },
+      { tabela: 'horario_da_ti', ativo: true, forcado: true },
       { tabela: 'mensagens_dos_chamados', ativo: true, forcado: true },
+      { tabela: 'numeracao_dos_chamados', ativo: true, forcado: true },
+      { tabela: 'respostas_prontas', ativo: true, forcado: true },
       { tabela: 'tipos_de_chamado', ativo: true, forcado: true },
     ]);
   });
@@ -801,6 +810,271 @@ describe('conversa dos chamados', () => {
     });
     expect(
       await consultar(orgA, 'select id from mensagens_dos_chamados where id = $1', [id]),
+    ).toEqual([]);
+  });
+});
+
+describe('numeração dos chamados', () => {
+  it('é uma linha por organização, a partir de 1', async () => {
+    expect(await recusada(incluir('numeracao_dos_chamados', orgA, { ultimo: 0 }))).toBe(
+      'numeracao_dos_chamados_ultimo_valido',
+    );
+    await incluir('numeracao_dos_chamados', orgA, { ultimo: 1 });
+    expect(await recusada(incluir('numeracao_dos_chamados', orgA, { ultimo: 2 }))).toBe(
+      'numeracao_dos_chamados_org_unica',
+    );
+    const daOutra = await incluir('numeracao_dos_chamados', orgB, { ultimo: 1041 });
+    expect(
+      await consultar(orgA, 'select id from numeracao_dos_chamados where id = $1', [daOutra]),
+    ).toEqual([]);
+  });
+});
+
+describe('respostas prontas', () => {
+  const resposta = (org: string, colunas: Record<string, unknown> = {}) => {
+    const rotulo = unico('Resposta ');
+    return incluir('respostas_prontas', org, {
+      rotulo,
+      rotulo_normalizado: rotulo.toLowerCase(),
+      texto: 'Oi, {nome}! Pode mandar um print do erro?',
+      ordem: 1,
+      ...colunas,
+    });
+  };
+
+  it('grava o rótulo único sem acento, o texto, a espera e os tipos, ou todos', async () => {
+    const id = await resposta(orgA, {
+      rotulo: 'Pedir o print do erro',
+      rotulo_normalizado: 'pedir o print do erro',
+    });
+    expect(
+      await consultar(
+        orgA,
+        'select espera_a_resposta, tipos from respostas_prontas where id = $1',
+        [id],
+      ),
+    ).toEqual([{ espera_a_resposta: false, tipos: [] }]);
+    expect(
+      await recusada(
+        resposta(orgA, {
+          rotulo: 'Pedir o print do êrro',
+          rotulo_normalizado: 'pedir o print do erro',
+        }),
+      ),
+    ).toBe('respostas_prontas_rotulo_unico');
+    await resposta(orgB, {
+      rotulo: 'Pedir o print do erro',
+      rotulo_normalizado: 'pedir o print do erro',
+    });
+    const doTipo = await resposta(orgA, { espera_a_resposta: true, tipos: [tipoDeA] });
+    expect(
+      await consultar(
+        orgA,
+        'select espera_a_resposta, tipos from respostas_prontas where id = $1',
+        [doTipo],
+      ),
+    ).toEqual([{ espera_a_resposta: true, tipos: [tipoDeA] }]);
+  });
+
+  it('confere o rótulo, de 1 a 60 caracteres, e o texto, de 1 a 2.000', async () => {
+    expect(await recusada(resposta(orgA, { rotulo: '  ' }))).toBe(
+      'respostas_prontas_rotulo_valido',
+    );
+    expect(await recusada(resposta(orgA, { rotulo: 'a'.repeat(61) }))).toBe(
+      'respostas_prontas_rotulo_valido',
+    );
+    expect(await recusada(resposta(orgA, { texto: ' ' }))).toBe('respostas_prontas_texto_valido');
+    expect(await recusada(resposta(orgA, { texto: 'a'.repeat(2001) }))).toBe(
+      'respostas_prontas_texto_valido',
+    );
+    await resposta(orgA, { rotulo: 'a'.repeat(60), texto: 'a'.repeat(2000) });
+  });
+
+  it('cada organização vê só as próprias respostas', async () => {
+    const id = await resposta(orgB);
+    expect(await consultar(orgA, 'select id from respostas_prontas where id = $1', [id])).toEqual(
+      [],
+    );
+  });
+});
+
+describe('horário da TI', () => {
+  let orgC = '';
+
+  beforeAll(async () => {
+    orgC = await criarOrganizacao('Organização C dos chamados');
+  });
+
+  const horario = (org: string, colunas: Record<string, unknown> = {}) =>
+    incluir('horario_da_ti', org, {
+      dias: [1, 2, 3, 4, 5],
+      inicio: 480,
+      fim: 1080,
+      fuso: 'America/Sao_Paulo',
+      carga_cheia: 5,
+      ...colunas,
+    });
+
+  it('é uma linha por organização', async () => {
+    await horario(orgA);
+    expect(await recusada(horario(orgA, { dias: [1, 2, 3, 4, 5, 6] }))).toBe(
+      'horario_da_ti_org_unica',
+    );
+    const daOutra = await horario(orgB, { dias: [1, 2, 3, 4, 5, 6, 7], inicio: 0, fim: 1439 });
+    expect(await consultar(orgA, 'select id from horario_da_ti where id = $1', [daOutra])).toEqual(
+      [],
+    );
+  });
+
+  it('os dias de 1 a 7, ao menos um e sem repetir', async () => {
+    for (const dias of [[], [0], [8], [1, 1], [1, null]]) {
+      expect(await recusada(horario(orgC, { dias }))).toBe('horario_da_ti_dias_validos');
+    }
+  });
+
+  it('as horas em minutos do dia, das 00:00 às 23:59, com o início antes do fim', async () => {
+    // O fim não chega à meia-noite (24:00), que um campo de hora não escreve.
+    for (const [inicio, fim] of [
+      [600, 600],
+      [1080, 480],
+      [-1, 480],
+      [480, 1440],
+    ]) {
+      expect(await recusada(horario(orgC, { inicio, fim }))).toBe('horario_da_ti_horas_validas');
+    }
+  });
+
+  it('o fuso e a carga cheia, de 1 a 20', async () => {
+    expect(await recusada(horario(orgC, { fuso: ' ' }))).toBe('horario_da_ti_fuso_valido');
+    expect(await recusada(horario(orgC, { fuso: 'a'.repeat(65) }))).toBe(
+      'horario_da_ti_fuso_valido',
+    );
+    expect(await recusada(horario(orgC, { carga_cheia: 0 }))).toBe(
+      'horario_da_ti_carga_cheia_valida',
+    );
+    expect(await recusada(horario(orgC, { carga_cheia: 21 }))).toBe(
+      'horario_da_ti_carga_cheia_valida',
+    );
+    await horario(orgC, { dias: [7], carga_cheia: 20 });
+  });
+});
+
+describe('anexos dos chamados', () => {
+  let doA = '';
+  let outroDoA = '';
+  let doB = '';
+  let mensagemDoA = '';
+  let mensagemDoOutro = '';
+
+  const arquivo = (org: string, r: Referencias) =>
+    incluir('arquivos', org, {
+      nome: 'erro.png',
+      tipo: 'image/png',
+      bytes: 2048,
+      enviado_por: r.conta,
+    });
+
+  const anexo = async (org: string, r: Referencias, colunas: Record<string, unknown> = {}) =>
+    incluir('anexos_dos_chamados', org, { arquivo_id: await arquivo(org, r), ...colunas });
+
+  beforeAll(async () => {
+    doA = await chamado(orgA, deA, tipoDeA);
+    outroDoA = await chamado(orgA, deA, tipoDeA);
+    doB = await chamado(orgB, deB, tipoDeB);
+    const daConta = { especie: 'mensagem', autor_conta: deA.conta };
+    mensagemDoA = await mensagem(orgA, doA, { ...daConta, texto: 'Segue o print.' });
+    mensagemDoOutro = await mensagem(orgA, outroDoA, { ...daConta, texto: 'Segue a foto.' });
+  });
+
+  it('nasce sem dono e passa ao chamado, com a mensagem ou com o campo', async () => {
+    const daMensagem = await anexo(orgA, deA);
+    const doCampo = await anexo(orgA, deA);
+    await emTransacao(app, orgA, async (c) => {
+      await c.query(
+        'update anexos_dos_chamados set chamado_id = $1, mensagem_id = $2 where id = $3',
+        [doA, mensagemDoA, daMensagem],
+      );
+      await c.query(
+        "update anexos_dos_chamados set chamado_id = $1, campo_id = 'k3Fq9x' where id = $2",
+        [doA, doCampo],
+      );
+    });
+    expect(
+      await consultar(
+        orgA,
+        `select mensagem_id is not null as da_mensagem, campo_id
+           from anexos_dos_chamados where chamado_id = $1 order by campo_id nulls first`,
+        [doA],
+      ),
+    ).toEqual([
+      { da_mensagem: true, campo_id: null },
+      { da_mensagem: false, campo_id: 'k3Fq9x' },
+    ]);
+  });
+
+  it('o dono tem três formas: nenhum, o chamado com a mensagem ou o chamado com o campo', async () => {
+    for (const forma of [
+      { chamado_id: doA },
+      { mensagem_id: mensagemDoA },
+      { campo_id: 'k3Fq9x' },
+      { chamado_id: doA, mensagem_id: mensagemDoA, campo_id: 'k3Fq9x' },
+    ]) {
+      expect(await recusada(anexo(orgA, deA, forma))).toBe('anexos_dos_chamados_dono_valido');
+    }
+  });
+
+  it('o id do campo é curto, sem espaço', async () => {
+    for (const campo_id of ['', 'campo 1', 'a'.repeat(41)]) {
+      expect(await recusada(anexo(orgA, deA, { chamado_id: doA, campo_id }))).toBe(
+        'anexos_dos_chamados_campo_valido',
+      );
+    }
+    await anexo(orgA, deA, { chamado_id: doA, campo_id: 'a'.repeat(40) });
+  });
+
+  it('o arquivo é anexo de um dono só', async () => {
+    const arquivoId = await arquivo(orgA, deA);
+    await incluir('anexos_dos_chamados', orgA, { arquivo_id: arquivoId });
+    expect(
+      await recusada(
+        incluir('anexos_dos_chamados', orgA, {
+          arquivo_id: arquivoId,
+          chamado_id: doA,
+          mensagem_id: mensagemDoA,
+        }),
+      ),
+    ).toBe('anexos_dos_chamados_arquivo_unico');
+  });
+
+  it('a mensagem do anexo é do mesmo chamado', async () => {
+    expect(
+      await recusada(anexo(orgA, deA, { chamado_id: doA, mensagem_id: mensagemDoOutro })),
+    ).toBe('anexos_dos_chamados_mensagem_fk');
+  });
+
+  it('o papel da aplicação não apaga o anexo', async () => {
+    const id = await anexo(orgA, deA);
+    expect(
+      await recusada(
+        emTransacao(app, orgA, (c) =>
+          c.query('delete from anexos_dos_chamados where id = $1', [id]),
+        ),
+      ),
+    ).toMatch(/permission denied/);
+  });
+
+  it('recusa as referências de outra organização, e cada uma vê só os próprios', async () => {
+    expect(
+      await recusada(
+        incluir('anexos_dos_chamados', orgA, { arquivo_id: await arquivo(orgB, deB) }),
+      ),
+    ).toBe('anexos_dos_chamados_arquivo_fk');
+    expect(await recusada(anexo(orgA, deA, { chamado_id: doB, campo_id: 'k3Fq9x' }))).toBe(
+      'anexos_dos_chamados_chamado_fk',
+    );
+    const deOutra = await anexo(orgB, deB);
+    expect(
+      await consultar(orgA, 'select id from anexos_dos_chamados where id = $1', [deOutra]),
     ).toEqual([]);
   });
 });

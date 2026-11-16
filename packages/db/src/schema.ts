@@ -4208,6 +4208,8 @@ export const mensagensDosChamados = orgScoped(
       foreignColumns: [pessoas.orgId, pessoas.id],
     }),
     index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
+    // Para o anexo da mensagem ser do mesmo chamado (anexos_dos_chamados_mensagem_fk).
+    unique('mensagens_dos_chamados_id_chamado_unico').on(t.orgId, t.id, t.chamadoId),
     check(
       'mensagens_dos_chamados_especie_valida',
       sql`${t.especie} in (${lista(ESPECIES_DA_CONVERSA_NO_BANCO)})`,
@@ -4231,6 +4233,143 @@ export const mensagensDosChamados = orgScoped(
     check(
       'mensagens_dos_chamados_dados_validos',
       sql`${t.dados} is null or (${documentoAte(t.dados, 1048576)})`,
+    ),
+  ],
+);
+
+/**
+ * O último número de chamado de cada organização (change chamados-da-ti, design, decisão 1): sem
+ * buraco nem repetição, como o das OS.
+ */
+export const numeracaoDosChamados = orgScoped(
+  'numeracao_dos_chamados',
+  {
+    ultimo: integer('ultimo').notNull(),
+  },
+  (t) => [
+    unique('numeracao_dos_chamados_org_unica').on(t.orgId),
+    check('numeracao_dos_chamados_ultimo_valido', sql`${t.ultimo} >= 1`),
+  ],
+);
+
+/**
+ * As respostas prontas de quem atende (spec chamados, "Respostas prontas"; change chamados-da-ti,
+ * design, decisão 1): o rótulo, único sem acento e maiúsculas; o texto, em que `{nome}` vira o
+ * primeiro nome da pessoa; a espera da resposta, que põe o chamado em Aguardando; os tipos em que
+ * ela aparece, ou todos, com a lista vazia; e a ordem. O limite de 100 por organização é do domínio.
+ */
+export const respostasProntas = orgScoped(
+  'respostas_prontas',
+  {
+    rotulo: text('rotulo').notNull(),
+    rotuloNormalizado: text('rotulo_normalizado').notNull(),
+    texto: text('texto').notNull(),
+    esperaAResposta: boolean('espera_a_resposta').notNull().default(false),
+    tipos: uuid('tipos').array().notNull().default(sql`'{}'::uuid[]`),
+    ordem: integer('ordem').notNull(),
+  },
+  (t) => [
+    unique('respostas_prontas_rotulo_unico').on(t.orgId, t.rotuloNormalizado),
+    check('respostas_prontas_rotulo_valido', sql`length(trim(${t.rotulo})) between 1 and 60`),
+    check('respostas_prontas_texto_valido', sql`length(trim(${t.texto})) between 1 and 2000`),
+  ],
+);
+
+/** Os dias da semana do horário da TI, de segunda (1) a domingo (7). */
+const DIAS_DA_SEMANA = [1, 2, 3, 4, 5, 6, 7] as const;
+
+/**
+ * O horário da TI (spec chamados, "Horário da TI"; change chamados-da-ti, design, decisões 1 e 3):
+ * os dias da semana; o início e o fim, em minutos do dia, os mesmos em todos os dias; o fuso; e a
+ * carga cheia, o número de chamados abertos que enche a barra de carga de uma pessoa. Uma linha por
+ * organização, opcional: sem ela, vale o padrão do domínio, que também confere o fuso na lista.
+ */
+export const horarioDaTi = orgScoped(
+  'horario_da_ti',
+  {
+    dias: smallint('dias').array().notNull(),
+    inicio: smallint('inicio').notNull(),
+    fim: smallint('fim').notNull(),
+    fuso: text('fuso').notNull(),
+    cargaCheia: smallint('carga_cheia').notNull(),
+  },
+  (t) => [
+    unique('horario_da_ti_org_unica').on(t.orgId),
+    // Ao menos um dia, sem repetir; o `<@` recusa também o dia fora da semana e o nulo.
+    check(
+      'horario_da_ti_dias_validos',
+      sql`cardinality(${t.dias}) between 1 and 7
+        and ${t.dias} <@ '{1,2,3,4,5,6,7}'::smallint[]
+        and ${sql.join(
+          DIAS_DA_SEMANA.map(
+            (dia) =>
+              sql`cardinality(array_positions(${t.dias}, ${sql.raw(String(dia))}::smallint)) <= 1`,
+          ),
+          sql` and `,
+        )}`,
+    ),
+    // Das 00:00 às 23:59: o fim não chega à meia-noite (24:00), que um campo de hora não escreve.
+    check(
+      'horario_da_ti_horas_validas',
+      sql`${t.inicio} >= 0 and ${t.fim} <= 1439 and ${t.inicio} < ${t.fim}`,
+    ),
+    check('horario_da_ti_fuso_valido', textoAte(t.fuso, 64)),
+    check('horario_da_ti_carga_cheia_valida', sql`${t.cargaCheia} between 1 and 20`),
+  ],
+);
+
+/**
+ * O anexo de um chamado (spec arquivos-e-imagens, "Anexos dos chamados"; change chamados-da-ti,
+ * design, decisão 10): o arquivo, de um dono só, que nasce sem dono no envio e passa ao chamado na
+ * gravação, com a mensagem (ou a nota) do mesmo chamado ou com o id do campo do formulário. O papel
+ * da aplicação não apaga o anexo (migration 0061): a linha liga o arquivo ao dono, e o anexo que
+ * sai de um campo ganha o `removido_em` no arquivo.
+ */
+export const anexosDosChamados = orgScoped(
+  'anexos_dos_chamados',
+  {
+    arquivoId: uuid('arquivo_id').notNull(),
+    chamadoId: uuid('chamado_id'),
+    mensagemId: uuid('mensagem_id'),
+    campoId: text('campo_id'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'anexos_dos_chamados_arquivo_fk',
+      columns: [t.orgId, t.arquivoId],
+      foreignColumns: [arquivos.orgId, arquivos.id],
+    }),
+    foreignKey({
+      name: 'anexos_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'anexos_dos_chamados_mensagem_fk',
+      columns: [t.orgId, t.mensagemId, t.chamadoId],
+      foreignColumns: [
+        mensagensDosChamados.orgId,
+        mensagensDosChamados.id,
+        mensagensDosChamados.chamadoId,
+      ],
+    }),
+    unique('anexos_dos_chamados_arquivo_unico').on(t.orgId, t.arquivoId),
+    index('anexos_dos_chamados_chamado_idx')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.chamadoId} is not null`),
+    index('anexos_dos_chamados_sem_dono_idx')
+      .on(t.orgId, t.arquivoId)
+      .where(sql`${t.chamadoId} is null`),
+    // Sem dono, ou o chamado com a mensagem ou com o campo.
+    check(
+      'anexos_dos_chamados_dono_valido',
+      sql`(${t.chamadoId} is null and ${t.mensagemId} is null and ${t.campoId} is null)
+        or (${t.chamadoId} is not null and num_nonnulls(${t.mensagemId}, ${t.campoId}) = 1)`,
+    ),
+    // O id curto e estável do campo (design, decisão 2).
+    check(
+      'anexos_dos_chamados_campo_valido',
+      sql`${t.campoId} is null or ${t.campoId} ~ '^[A-Za-z0-9_-]{1,40}$'`,
     ),
   ],
 );

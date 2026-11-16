@@ -60,10 +60,10 @@ Todas com `orgScoped()`, RLS ativo e forçado, e as chaves estrangeiras em `(org
 
   O papel da aplicação perde o UPDATE e o DELETE nela (`REVOKE`), como no histórico das OS.
 - **Os documentos JSON** (o formulário, as respostas, o prazo e os dados do evento) têm o tipo conferido no banco e um teto em bytes que só serve de rede, acima do pior caso que o domínio aceita: 512 KB no formulário, 1 MB nas respostas e nos dados e 1 KB no prazo. As 20 respostas de 4.000 caracteres, com até 6 bytes cada no texto do JSON, ficam perto de 480 KB.
-- **`anexos_dos_chamados`:** `arquivo_id` (único), com o arquivo na tabela `arquivos` de hoje, e o dono: `chamado_id` e `mensagem_id` ou `campo_id` (decisão 10). O CHECK aceita três formas: sem dono (os três nulos), o da mensagem (o chamado e a mensagem) e o do campo (o chamado e o id do campo).
+- **`anexos_dos_chamados`:** `arquivo_id` (único), com o arquivo na tabela `arquivos` de hoje, e o dono: `chamado_id` e `mensagem_id` ou `campo_id` (decisão 10). O CHECK aceita três formas: sem dono (os três nulos), o da mensagem (o chamado e a mensagem) e o do campo (o chamado e o id do campo, no formato da decisão 2). A chave estrangeira da mensagem leva o chamado junto, com a chave única `(org_id, id, chamado_id)` na conversa: o anexo da mensagem é sempre do mesmo chamado. O papel da aplicação não apaga o anexo (`REVOKE DELETE`): a linha liga o arquivo ao dono, e o que sai, sem dono ou de um campo, ganha o `removido_em` no arquivo.
 - **`numeracao_dos_chamados`:** o contador por organização, como o das OS.
 - **`respostas_prontas`:** `rotulo` e `rotulo_normalizado` (único), `texto`, `espera_a_resposta`, `tipos uuid[]` (vazio para todos) e `ordem`.
-- **`horario_da_ti`:** uma linha por organização, opcional, com `dias smallint[]` (1 a 7, segunda a domingo), `inicio` e `fim` em minutos do dia, `fuso` e `carga_cheia`. Sem a linha, vale o padrão do domínio.
+- **`horario_da_ti`:** uma linha por organização, opcional, com `dias smallint[]` (1 a 7, segunda a domingo, sem repetir), `inicio` e `fim` em minutos do dia, das 00:00 às 23:59 (o fim não chega à meia-noite, 24:00, que um campo de hora não escreve), `fuso` e `carga_cheia`. Sem a linha, vale o padrão do domínio.
 
 `chamados` e `mensagens_dos_chamados` recusam o DELETE pelo papel da aplicação, como as solicitações.
 
@@ -78,7 +78,7 @@ O formulário é um documento validado por um esquema Zod do domínio (`packages
 }
 ```
 
-Cada campo tem um id curto e estável, gerado na criação e nunca reaproveitado. Também tem o tipo, o rótulo, o nome no resumo, `obrigatorio`, `soDaTi`, `apagarSeSumir`, as opções e a condição:
+Cada campo tem um id curto e estável, de 1 a 40 letras sem acento, números, `-` ou `_`, gerado na criação e nunca reaproveitado. O banco confere esse formato no anexo do campo. Também tem o tipo, o rótulo, o nome no resumo, `obrigatorio`, `soDaTi`, `apagarSeSumir`, as opções e a condição:
 - **as opções** têm id e texto;
 - **a condição** é uma lista de cláusulas `{ campoId, opcaoId | valor, juncao: 'e' | 'ou' }`.
 
