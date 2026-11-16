@@ -1,0 +1,44 @@
+## ADDED Requirements
+
+### Requirement: Solicitação pelo chamado
+
+O chamado (spec chamados) SHALL poder ter uma solicitação, de dois jeitos.
+
+**"Pedir toner",** num chamado em aberto com uma impressora ligada, que usa consumíveis, por quem atende o chamado e as solicitações nos locais da impressora:
+- havendo uma solicitação de Toner pendente com essa impressora, o chamado SHALL se juntar a ela, e nenhuma solicitação nova SHALL ser registrada;
+- sem ela, SHALL abrir o registro do Toner com:
+  - a pessoa do chamado como quem pediu;
+  - a impressora;
+  - um item da cor mais baixa na última leitura válida dos suprimentos, ou o preto sem a leitura, com a quantidade 1.
+
+Quem atende pode mudar o registro antes de gravar.
+
+**O tipo que gera uma solicitação** (spec tipos-de-chamado), na abertura do chamado, na mesma transação:
+- **Toner:** como o "Pedir toner", com a impressora do chamado e o item da cor mais baixa, sem abrir o registro;
+- **Equipamento:**
+  - o tipo de ativo do tipo de chamado e a quantidade 1;
+  - o motivo "Chamado #<número>: <título>";
+  - o local de trabalho da pessoa ou, sem ele, o local do ativo ligado.
+
+A solicitação gerada pelo tipo SHALL ser registrada por quem abriu o chamado, sem pedir a permissão das solicitações, porque quem ligou o "Gera uma Solicitação" no tipo atende as solicitações em todos os locais (spec tipos-de-chamado, requisito "O que acontece depois"). A auditoria da solicitação SHALL dizer o chamado e o tipo de chamado que a geraram.
+
+A solicitação gerada SHALL seguir todas as regras do registro. Se o registro for recusado, o chamado SHALL abrir mesmo assim, sem a solicitação, e a conversa SHALL dizer "A solicitação não foi gerada: <motivo>.":
+- sem local para o equipamento: "A solicitação não foi gerada: Marina Lopes não tem local de trabalho.";
+- a impressora sem consumíveis: "A solicitação não foi gerada: PAT-00139 não usa consumíveis.";
+- o tipo de ativo inativado: "A solicitação não foi gerada: o tipo de ativo Notebook está inativo.";
+- o local inativado: "A solicitação não foi gerada: o local Financeiro está inativo.";
+- qualquer outra recusa do registro: "A solicitação não foi gerada:" seguido da recusa.
+
+A solicitação SHALL mostrar os chamados ligados a ela, como "Do chamado #1042" ou "Dos chamados #1040 e #1042". O chamado SHALL mostrar a solicitação e a situação dela a quem vê as solicitações. Cada chamado SHALL ter uma solicitação só, e a recusa da segunda SHALL ser "O chamado #1042 já está na solicitação 4.". A solicitação SHALL seguir as regras de toda solicitação: concluí-la ou cancelá-la SHALL NOT mudar o chamado.
+
+#### Scenario: Toner pelo chamado sem pendente
+- **WHEN** Ana usa "Pedir toner" no #1042, com a PAT-00139, cujo preto está a 8% e o ciano a 40%, sem solicitação pendente, e grava
+- **THEN** a solicitação nasce Aberta, pedida por Marina Lopes, com 1 preto para a PAT-00139 e ligada ao #1042, e a conversa ganha "Pediu toner: solicitação 5"
+
+#### Scenario: Equipamento gerado pelo tipo
+- **WHEN** Ana abre um chamado de "Equipamento novo", que gera a solicitação de Equipamento de "Notebook", para Marina Lopes, do Financeiro
+- **THEN** a solicitação de 1 Notebook para o Financeiro nasce na mesma transação, com o motivo "Chamado #1043: Equipamento novo para Marina", registrada por Ana e ligada ao #1043
+
+#### Scenario: Solicitação recusada na abertura
+- **WHEN** Ana abre um chamado de "Equipamento novo" para Marina Lopes, e o tipo de ativo Notebook foi inativado
+- **THEN** o chamado abre sem a solicitação, e a conversa diz "A solicitação não foi gerada: o tipo de ativo Notebook está inativo."
