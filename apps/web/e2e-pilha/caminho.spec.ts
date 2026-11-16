@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, gunzipSync } from 'node:zlib';
 import { auditoria, criarBanco, naOrganizacao } from '@grafite/db';
-import { REGRAS_DE_FABRICA } from '@grafite/domain';
+import { CATEGORIAS_DE_SOFTWARE_DE_FABRICA, REGRAS_DE_FABRICA } from '@grafite/domain';
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import pg from 'pg';
 import { decifrarPush } from '../../api/test/canais.ts';
@@ -353,12 +353,14 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await expect(page.getByRole('banner').getByRole('button', { name: 'Ana Souza' })).toBeVisible();
 
   // 5. A auditoria registrou o caminho. O comando no servidor grava a organização, o endereço, o
-  // perfil Administrador, a pessoa, a conta, a atribuição do perfil e as regras de fábrica dos
-  // alertas numa transação só, no mesmo instante; o resto vem na ordem do caminho.
+  // perfil Administrador, a pessoa, a conta, a atribuição do perfil, as regras de fábrica dos
+  // alertas e as categorias de fábrica do software numa transação só, no mesmo instante; o resto
+  // vem na ordem do caminho.
   const acoes = await acoesDaAuditoria();
-  const doComando = 6 + REGRAS_DE_FABRICA.length;
+  const doComando = 6 + REGRAS_DE_FABRICA.length + CATEGORIAS_DE_SOFTWARE_DE_FABRICA.length;
   expect(acoes.slice(0, doComando).sort()).toEqual([
     'atribuicao.criada',
+    ...CATEGORIAS_DE_SOFTWARE_DE_FABRICA.map(() => 'categoria-de-software.criada'),
     'conta.criada',
     'endereco.registrado',
     'organizacao.criada',
@@ -1821,9 +1823,10 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   // agente de um computador, manda o CONTACT, que anuncia o Deploy. Ela liga o agente à PAT-00412,
   // cadastra o pacote com um arquivo de 9 MB, que vai em duas partes, e o distribui à máquina pelo
   // assistente da ficha do pacote (change software-por-pacote): a máquina pela busca, agora, e o
-  // Conferir antes do envio. O agente faz o Deploy como o do GLPI: o getConfig, o getJobs, as partes
-  // do espelho conferidas pelo SHA-512 e juntas pelo gunzip e os passos; a ficha da distribuição,
-  // que se relê sozinha, mostra a máquina concluída, com o log na ordem.
+  // Conferir antes do envio. A distribuição de agora chama o agente pela porta 62354, que aqui não
+  // responde, e a fila diz isso. O agente faz o Deploy como o do GLPI: o getConfig, o getJobs, as
+  // partes do espelho conferidas pelo SHA-512 e juntas pelo gunzip e os passos; a ficha da
+  // distribuição, que se relê sozinha, mostra a máquina concluída, com o log na ordem.
   await page.goto('/administracao/agentes');
   await page.getByRole('button', { name: 'Gerar o endereço' }).click();
   const dialogoDoEndereco = page.getByRole('dialog', { name: 'Endereço dos agentes' });
@@ -1914,6 +1917,12 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await expect(page).toHaveURL(/\/gestao\/software\/distribuicoes\/[\w-]+$/);
   await expect(page.getByRole('heading', { name: 'Na fila' })).toBeVisible();
   await expect(page.getByText('Aguardando o agente')).toBeVisible();
+  // O chamado sai pela fila de tarefas, logo depois da criação, ao IP do contato, onde nenhum agente
+  // ouve; o teste o espera antes de fazer o papel do agente, para o log ter uma ordem só. No pior
+  // caso, a fila (2 s), o prazo do chamado (5 s) e a releitura da ficha (5 s) somam 12 s.
+  await expect(page.getByText(/^Não respondeu ao chamado das \d{2}:\d{2}/)).toBeVisible({
+    timeout: 30_000,
+  });
 
   /** O GET do cliente "Fusion" do agente: o hash vira `chave[campo]`, e a lista, `chave[]`. */
   const comoOAgente = async (
@@ -1970,7 +1979,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await expect(page.getByRole('heading', { name: 'Em andamento' })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByText('Instalando')).toBeVisible();
+  await expect(page.getByText('Instalando', { exact: true })).toBeVisible();
 
   const passo = (args: Record<string, string | string[]>) =>
     comoOAgente(remote, {
@@ -1991,9 +2000,11 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   // A ficha se relê a cada 5 s enquanto a máquina instala.
   await expect(page.getByRole('heading', { name: 'Concluídas' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('de 1 concluída', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /PAT-00412/ }).click();
+  // O chip das concluídas mostra o nome da máquina, que na PAT-00412, sem nome, é o modelo.
+  await page.getByRole('button', { name: /HP LaserJet M404/ }).click();
   const log = page.getByRole('list', { name: 'Passos do agente' });
   await expect(log.getByRole('listitem')).toHaveText([
+    /^Chamado às \d{2}:\d{2}, sem resposta$/,
     'Agente: job received',
     'Conferindo: ok, all checks are ok',
     'Baixando: ok, success',
