@@ -296,17 +296,18 @@ function conferirTitulo(
   return { comecaPeloTipo, campoId };
 }
 
-/** O "Pede o ativo": o primeiro campo Ativo é o ativo ligado, e todo chamado nasce com ele. */
-function conferirPedeOAtivo(campos: CampoDoFormulario[], erros: Erros): void {
+/**
+ * A recusa do "Pede o ativo" no formulário, ou nula: o primeiro campo Ativo é o ativo ligado, e
+ * todo chamado nasce com ele. A gravação do tipo a usa no formulário gravado
+ * (`conferirTipoDeChamado`).
+ */
+export function recusaDoPedeOAtivo(campos: readonly CampoDoFormulario[]): string | null {
   const primeiro = campos.find((campo) => campo.tipo === 'ativo');
-  if (!primeiro) {
-    erros.anotar('pedeOAtivo', 'Pede o ativo: inclua no formulário um campo Ativo obrigatório.');
-  } else if (!primeiro.obrigatorio || primeiro.soDaTi || primeiro.condicao.length > 0) {
-    erros.anotar(
-      'pedeOAtivo',
-      "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'.",
-    );
+  if (!primeiro) return 'Pede o ativo: inclua no formulário um campo Ativo obrigatório.';
+  if (!primeiro.obrigatorio || primeiro.soDaTi || primeiro.condicao.length > 0) {
+    return "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'.";
   }
+  return null;
 }
 
 /**
@@ -335,7 +336,8 @@ export function conferirFormulario(
       campo.condicao = conferirCondicao(indice, campos, pedidos, erros);
     });
     const titulo = conferirTitulo(formulario.titulo, campos, erros);
-    if (opcoes.pedeOAtivo) conferirPedeOAtivo(campos, erros);
+    const recusaDoAtivo = opcoes.pedeOAtivo ? recusaDoPedeOAtivo(campos) : null;
+    if (recusaDoAtivo) erros.anotar('pedeOAtivo', recusaDoAtivo);
     return erros.vazio
       ? { ok: true, formulario: { titulo, campos } }
       : { ok: false, erros: erros.porChave };

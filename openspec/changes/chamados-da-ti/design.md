@@ -251,6 +251,21 @@ Os ícones dos tipos são uma lista fechada do domínio, mapeada para o lucide n
 
 Os mockups usam o Phosphor, mas o Grafite usa o lucide.
 
+**A conferência do tipo.** O `conferirTipoDeChamado` (`packages/domain/src/chamados/tipo.ts`) recebe o pedido, com o formato conferido pelo esquema da rota, e o que a API lê na transação da gravação:
+- a situação em que a gravação deixa o tipo, porque só o Rascunho aceita a frase vazia; o "Criar o tipo" e o reativar a chamam com o tipo e a situação Em uso;
+- o que o tipo gerava antes, para o "Gera uma Solicitação";
+- quem atende por padrão, pela conta pedida, como ela está agora (`ContaQueAtendePorPadrao`, da decisão 7);
+- os tipos de ativo ativos da organização;
+- o formulário gravado, para o "Pede o ativo", pela mesma regra do `conferirFormulario` (`recusaDoPedeOAtivo`);
+- o alcance de `solicitacoes.atender` de quem grava;
+- o horário da TI, para comparar a resposta e a resolução em minutos, com o dia útil de agora.
+
+Ele devolve o tipo limpo, com o `nome_normalizado` pelo `normalizarTexto`, ou as recusas por campo; na mesma chave, vale a primeira. O tipo de ativo fica nulo fora do Equipamento, como o banco pede. O nome repetido, quem acha é o `tipos_de_chamado_nome_unico`: a API troca a violação pela frase do domínio, no nome.
+
+A gravação do tipo e a do formulário travam a linha do tipo (`for update`) antes de ler. Uma confere o "Pede o ativo" pelo formulário gravado, e a outra pelo `pede_o_ativo` gravado: sem a trava, as duas se cruzariam, e o tipo ficaria com a chave ligada sem o campo Ativo.
+
+O `ligaASolicitacao(antes, depois)` diz se a gravação liga o "Gera uma Solicitação" ou o faz gerar outra: a outra solicitação ou, no Equipamento, outro tipo de ativo. O duplicar usa a mesma regra, com o antes nulo, para o Rascunho nascer com ele desligado (tarefa 4.2).
+
 ### 7. O atendimento padrão e o "fora do horário"
 
 "Não houver ninguém" quer dizer:

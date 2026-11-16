@@ -132,6 +132,31 @@ export function prazoEmMinutos(tipo: PrazoDoTipo, horario: HorarioDaTi): PrazoDo
   };
 }
 
+/**
+ * A unidade que segue o número no prazo: "min", "h" e o dia, que no horário da TI é o dia útil
+ * ("dias úteis", ou "dia útil" em 1) e em horas corridas é o dia de 24 h ("dias", ou "dia").
+ */
+export function rotuloDaUnidadeDoPrazo(
+  { valor, unidade }: ValorDoPrazo,
+  modo: ModoDoPrazo,
+): string {
+  if (unidade !== 'd') return unidade;
+  const dia = valor === 1 ? 'dia' : 'dias';
+  if (modo === 'corridas') return dia;
+  return `${dia} ${valor === 1 ? 'útil' : 'úteis'}`;
+}
+
+/** Um prazo do tipo em texto, como "30 min", "8 h", "3 dias" e "3 dias úteis". */
+export function textoDoValorDoPrazo(prazo: ValorDoPrazo, modo: ModoDoPrazo): string {
+  return `${prazo.valor} ${rotuloDaUnidadeDoPrazo(prazo, modo)}`;
+}
+
+/** O prazo do tipo como a frase do editor: "Responde em 30 min e resolve em 8 h, no horário da TI". */
+export function fraseDoPrazo({ modo, resposta, resolucao }: PrazoDoTipo): string {
+  const comoConta = modo === 'horario' ? 'no horário da TI' : 'em horas corridas';
+  return `Responde em ${textoDoValorDoPrazo(resposta, modo)} e resolve em ${textoDoValorDoPrazo(resolucao, modo)}, ${comoConta}`;
+}
+
 const MS_POR_DIA = 86_400_000;
 
 /** Um dia do calendário, em UTC, para andar de dia em dia sem o horário de verão. */

@@ -2,14 +2,18 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   conferirHorario,
   type DiaDaSemana,
+  fraseDoPrazo,
   HORARIO_DA_TI_PADRAO,
   type HorarioDaTi,
   minutosDoPrazo,
   momentoEmQueAlcanca,
   noHorarioDaTi,
   type PedidoDoHorario,
+  type PrazoDoTipo,
   prazoEmMinutos,
+  rotuloDaUnidadeDoPrazo,
   segundosNoHorario,
+  textoDoValorDoPrazo,
 } from './prazo.ts';
 
 /**
@@ -143,6 +147,49 @@ describe('minutosDoPrazo e prazoEmMinutos', () => {
       resposta: { valor: 1, unidade: 'h' },
       resolucao: { valor: 3, unidade: 'd' },
     });
+  });
+});
+
+describe('rotuloDaUnidadeDoPrazo, textoDoValorDoPrazo e fraseDoPrazo', () => {
+  it('escreve o número com a unidade, e o dia do horário da TI como dia útil', () => {
+    expect(textoDoValorDoPrazo({ valor: 30, unidade: 'min' }, 'corridas')).toBe('30 min');
+    expect(textoDoValorDoPrazo({ valor: 8, unidade: 'h' }, 'horario')).toBe('8 h');
+    expect(textoDoValorDoPrazo({ valor: 3, unidade: 'd' }, 'corridas')).toBe('3 dias');
+    expect(textoDoValorDoPrazo({ valor: 3, unidade: 'd' }, 'horario')).toBe('3 dias úteis');
+  });
+
+  it('põe o dia no singular em 1', () => {
+    expect(textoDoValorDoPrazo({ valor: 1, unidade: 'd' }, 'corridas')).toBe('1 dia');
+    expect(textoDoValorDoPrazo({ valor: 1, unidade: 'd' }, 'horario')).toBe('1 dia útil');
+    expect(textoDoValorDoPrazo({ valor: 1, unidade: 'h' }, 'corridas')).toBe('1 h');
+    expect(textoDoValorDoPrazo({ valor: 1, unidade: 'min' }, 'horario')).toBe('1 min');
+  });
+
+  it('dá a unidade que segue o número no editor', () => {
+    expect(rotuloDaUnidadeDoPrazo({ valor: 3, unidade: 'd' }, 'horario')).toBe('dias úteis');
+    expect(rotuloDaUnidadeDoPrazo({ valor: 1, unidade: 'd' }, 'corridas')).toBe('dia');
+    expect(rotuloDaUnidadeDoPrazo({ valor: 30, unidade: 'min' }, 'horario')).toBe('min');
+    expect(rotuloDaUnidadeDoPrazo({ valor: 8, unidade: 'h' }, 'corridas')).toBe('h');
+  });
+
+  it('escreve o prazo do tipo como a frase do editor (m07 e m08)', () => {
+    const impressora: PrazoDoTipo = {
+      modo: 'horario',
+      resposta: { valor: 30, unidade: 'min' },
+      resolucao: { valor: 8, unidade: 'h' },
+    };
+    expect(fraseDoPrazo(impressora)).toBe('Responde em 30 min e resolve em 8 h, no horário da TI');
+    expect(fraseDoPrazo({ ...impressora, modo: 'corridas' })).toBe(
+      'Responde em 30 min e resolve em 8 h, em horas corridas',
+    );
+    const trocaDeEquipamento: PrazoDoTipo = {
+      modo: 'horario',
+      resposta: { valor: 1, unidade: 'h' },
+      resolucao: { valor: 3, unidade: 'd' },
+    };
+    expect(fraseDoPrazo(trocaDeEquipamento)).toBe(
+      'Responde em 1 h e resolve em 3 dias úteis, no horário da TI',
+    );
   });
 });
 

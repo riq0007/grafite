@@ -28,12 +28,14 @@ Só o tipo Em uso SHALL receber chamados novos.
 
 Inativar SHALL pedir confirmação. O tipo inativo:
 - SHALL guardar os chamados dele, que seguem até resolvidos;
-- SHALL voltar Em uso ao reativar.
+- SHALL voltar Em uso ao reativar, com as mesmas conferências da gravação, como em "Criar o tipo". Assim, ele não volta com quem atende por padrão desativado, ou com o tipo de ativo do equipamento inativado, enquanto esteve inativo.
 
 As recusas SHALL ficar no campo:
 - "Escreva o nome.", "Use até 40 caracteres." e "Já existe um tipo com esse nome.", no nome;
 - "Escolha o ícone.", no ícone;
 - "Escreva a frase." e "Use até 80 caracteres.", na frase.
+
+O nome e a frase SHALL ser gravados numa linha, sem os espaços das pontas e com os espaços repetidos juntados, e o tamanho deles SHALL ser contado em caracteres. Só o Rascunho SHALL aceitar a frase vazia, que "Criar o tipo" pede (requisito "Rascunho, duplicar e descartar").
 
 #### Scenario: Nome repetido
 - **WHEN** quem configura cria o tipo "impressora", e já existe "Impressora"
@@ -43,17 +45,23 @@ As recusas SHALL ficar no campo:
 - **WHEN** quem configura inativa a Impressora, com o #1042 aberto
 - **THEN** o #1042 segue até resolvido, e a Impressora sai da escolha do tipo ao abrir um chamado
 
+#### Scenario: Reativar com quem atende desativado
+- **WHEN** quem configura reativa o Telefone, e a conta de quem o atende por padrão foi desativada enquanto ele estava inativo
+- **THEN** o reativar é recusado com "Escolha uma conta que atende os chamados.", em quem atende, e o Telefone continua inativo
+
 ### Requirement: Prazo e atendimento do tipo
 
 O prazo do tipo SHALL ser escrito como uma frase: "Responde em [30] [min] e resolve em [8] [h], [no horário da TI]".
 - **A resposta e a resolução:** cada uma é um número inteiro de 1 a 999 e uma unidade: minutos, horas ou dias.
 - **O modo de contar,** do tipo: "em horas corridas" ou "no horário da TI" (spec chamados, requisito "Prazo do chamado").
-- **O dia:** no horário da TI, é o dia útil, com o comprimento de um dia do horário, e a frase diz "dias úteis"; em horas corridas, são 24 h. O chamado copia o prazo em minutos na abertura (spec chamados, requisito "Prazo do chamado").
+- **O dia:** no horário da TI, é o dia útil, com o comprimento de um dia do horário, e a frase diz "dias úteis", ou "1 dia útil"; em horas corridas, são 24 h, e a frase diz "dias", ou "1 dia". O chamado copia o prazo em minutos na abertura (spec chamados, requisito "Prazo do chamado").
 - **O tamanho:** a resposta SHALL NOT passar da resolução, com o dia útil do horário da TI de quando o tipo é gravado.
 
 O atendimento SHALL ter:
 - **quem atende por padrão:** uma conta ativa com `chamados.atender`, ou ninguém, que leva o chamado à triagem;
 - **"Se não houver ninguém",** fora do horário da TI e quando quem atende por padrão não pode atender o chamado: "Cai na triagem" ou "Fica com <pessoa> mesmo assim", este só fora do horário.
+
+A gravação do tipo SHALL conferir quem atende por padrão como a conta está agora: a conta escolhida que depois foi desativada, ou perdeu o `chamados.atender`, SHALL ser recusada na gravação seguinte. "Fica com <pessoa> mesmo assim" SHALL pedir quem atende por padrão.
 
 Abaixo da frase, a tela SHALL dizer: "O relógio para quando o chamado fica aguardando o colaborador.".
 
@@ -70,6 +78,10 @@ As recusas SHALL ser:
 - **WHEN** quem configura escreve "Responde em 10 h e resolve em 8 h"
 - **THEN** a gravação é recusada com "A resposta passa da resolução. Use uma resposta menor."
 
+#### Scenario: Quem atende por padrão desativado
+- **WHEN** a conta de Diego Martins, que atende a Impressora por padrão, foi desativada, e quem configura muda a frase da Impressora
+- **THEN** a gravação é recusada com "Escolha uma conta que atende os chamados.", em quem atende
+
 ### Requirement: O que acontece depois
 
 O tipo SHALL ter três chaves, cada uma com "Ligado" ou "Desligado" escrito:
@@ -77,16 +89,18 @@ O tipo SHALL ter três chaves, cada uma com "Ligado" ou "Desligado" escrito:
 - **"Gera uma Solicitação":** a abertura do chamado registra uma solicitação de Toner ou de Equipamento, este com o tipo de ativo pedido (spec solicitacoes, requisito "Solicitação pelo chamado");
 - **"Pede o ativo":** o primeiro campo Ativo do formulário SHALL ser obrigatório, sem condição e sem o "Só a TI vê", e a resposta dele é o ativo ligado do chamado. Assim, todo chamado do tipo nasce com o ativo.
 
-A solicitação de Toner SHALL pedir "Pede o ativo" ligado.
+A solicitação de Toner SHALL pedir "Pede o ativo" ligado. A de Equipamento SHALL pedir um tipo de ativo ativo quando o tipo é gravado.
 
-A solicitação gerada pelo tipo é registrada sem pedir a permissão das solicitações a quem abre o chamado. Por isso, toda gravação que deixa o tipo com o "Gera uma Solicitação" ligado, ou gerando outra solicitação, sem que ele já estivesse assim naquele tipo, SHALL pedir também `solicitacoes.atender` na organização inteira. Desligá-lo e gravar o resto do tipo SHALL NOT pedi-la.
+O "Pede o ativo" SHALL ser conferido pelo formulário como está gravado, porque o formulário se grava à parte (requisito "Formulário do tipo"): para ligá-lo num tipo sem o campo Ativo, quem configura acrescenta o campo antes.
 
-As recusas SHALL ser:
-- "Escolha o tipo de ativo do equipamento.";
-- "O Toner precisa do ativo: ligue 'Pede o ativo'.";
-- "Pede o ativo: inclua no formulário um campo Ativo obrigatório.", sem campo Ativo;
-- "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'.";
-- "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.".
+A solicitação gerada pelo tipo é registrada sem pedir a permissão das solicitações a quem abre o chamado. Por isso, toda gravação que deixa o tipo com o "Gera uma Solicitação" ligado, ou gerando outra solicitação (a de Toner no lugar da de Equipamento, ou o contrário, ou o Equipamento de outro tipo de ativo), sem que ele já estivesse assim naquele tipo, SHALL pedir também `solicitacoes.atender` na organização inteira. Desligá-lo e gravar o resto do tipo SHALL NOT pedi-la.
+
+As recusas SHALL ficar no campo:
+- "Escolha o tipo de ativo do equipamento.", no tipo de ativo, sem ele ou com ele inativo;
+- "O Toner precisa do ativo: ligue 'Pede o ativo'.", no "Pede o ativo";
+- "Pede o ativo: inclua no formulário um campo Ativo obrigatório.", sem campo Ativo, no "Pede o ativo";
+- "Pede o ativo: o primeiro campo Ativo precisa ser obrigatório, sem condição e sem o 'Só a TI vê'.", no "Pede o ativo";
+- "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'.", no "Gera uma Solicitação".
 
 #### Scenario: Pede o ativo sem o campo
 - **WHEN** quem configura liga "Pede o ativo" num tipo cujo formulário não tem campo Ativo
@@ -98,6 +112,18 @@ As recusas SHALL ser:
 
 #### Scenario: Gerar a solicitação sem atendê-las
 - **WHEN** Bruno, com `chamados.configurar` e `solicitacoes.atender` só em Campinas, liga o "Gera uma Solicitação" de Equipamento num tipo
+- **THEN** a gravação é recusada com "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'."
+
+#### Scenario: Desligar a solicitação sem atendê-las
+- **WHEN** Bruno, com `solicitacoes.atender` só em Campinas, desliga o "Gera uma Solicitação" do Toner e grava
+- **THEN** a gravação passa, e o Toner deixa de gerar a solicitação
+
+#### Scenario: Mudar o resto do tipo que já gera
+- **WHEN** Bruno, com `solicitacoes.atender` só em Campinas, muda a frase do Toner, que já gera a solicitação de Toner
+- **THEN** a gravação passa, sem pedir a permissão das solicitações
+
+#### Scenario: Trocar o tipo de ativo do equipamento
+- **WHEN** Bruno, com `solicitacoes.atender` só em Campinas, troca o tipo de ativo do "Equipamento novo" de Notebook para Monitor
 - **THEN** a gravação é recusada com "Só quem atende as solicitações em todos os locais liga o 'Gera uma Solicitação'."
 
 ### Requirement: Quem vê o tipo
