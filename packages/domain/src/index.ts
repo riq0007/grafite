@@ -338,6 +338,7 @@ export {
   MODOS_DO_PRAZO,
   type ModoDoPrazo,
   minutosDoPrazo,
+  modoDoPrazoGuardado,
   momentoEmQueAlcanca,
   noHorarioDaTi,
   type PedidoDoHorario,

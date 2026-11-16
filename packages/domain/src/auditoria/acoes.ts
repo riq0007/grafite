@@ -256,6 +256,7 @@ export const ACOES_DA_AUDITORIA = {
   'chamado.assumir-desfeito': 'Assumir desfeito',
   'chamado.passado': 'Chamado passado',
   'chamado.devolvido': 'Chamado devolvido à triagem',
+  'chamado.aguardando': 'Chamado aguardando o colaborador',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

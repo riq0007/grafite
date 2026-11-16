@@ -331,6 +331,7 @@ export const EVENTO_DA_ACAO = {
   'chamado.assumir-desfeito': 'chamados.mudaram',
   'chamado.passado': 'chamados.mudaram',
   'chamado.devolvido': 'chamados.mudaram',
+  'chamado.aguardando': 'chamados.mudaram',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

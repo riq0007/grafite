@@ -161,6 +161,7 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('chamado.assumir-desfeito')).toBe('Assumir desfeito');
     expect(rotuloDaAcao('chamado.passado')).toBe('Chamado passado');
     expect(rotuloDaAcao('chamado.devolvido')).toBe('Chamado devolvido à triagem');
+    expect(rotuloDaAcao('chamado.aguardando')).toBe('Chamado aguardando o colaborador');
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

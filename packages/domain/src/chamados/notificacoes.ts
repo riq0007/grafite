@@ -81,18 +81,18 @@ export function notificacoesDaAbertura(
 }
 
 /**
- * A ação que muda quem atende, como as notificações a leem: o passar, com a conta escolhida; o
- * devolver, com as contas e o alcance de `chamados.atender` delas; o assumir e o desfazer.
+ * A ação do atendimento, como as notificações a leem: o passar, com a conta escolhida; o devolver,
+ * com as contas e o alcance de `chamados.atender` delas; o assumir, o desfazer e a conversa.
  */
 export type AcaoQueNotifica =
   | { acao: 'passar'; para: string }
   | { acao: 'devolver'; contas: readonly ContaQueRecebeATriagem[] }
-  | { acao: 'assumir' | 'desfazer' };
+  | { acao: 'assumir' | 'desfazer' | 'mensagem' | 'esperar' | 'nota' };
 
 /**
- * As notificações das ações que mudam quem atende: o passar avisa a conta escolhida, fora quem passa
- * a si mesmo; o devolver avisa quem atende os locais, fora quem devolveu; o assumir e o desfazer não
- * avisam ninguém.
+ * As notificações das ações do atendimento: o passar avisa a conta escolhida, fora quem passa a si
+ * mesmo; o devolver avisa quem atende os locais, fora quem devolveu; o assumir, o desfazer, a
+ * mensagem, a espera e a nota não avisam ninguém.
  */
 export function notificacoesDaAcao(
   chamado: Pick<ChamadoQueNotifica, 'numero' | 'titulo' | 'locais'>,
@@ -106,6 +106,9 @@ export function notificacoesDaAcao(
       return notificacoesDaTriagem(chamado, acao.contas, { fora: quemAge });
     case 'assumir':
     case 'desfazer':
+    case 'mensagem':
+    case 'esperar':
+    case 'nota':
       return [];
   }
 }

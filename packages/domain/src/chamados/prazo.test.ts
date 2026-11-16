@@ -7,6 +7,7 @@ import {
   type HorarioDaTi,
   lerPrazoDoChamado,
   minutosDoPrazo,
+  modoDoPrazoGuardado,
   momentoEmQueAlcanca,
   noHorarioDaTi,
   type PedidoDoHorario,
@@ -631,6 +632,19 @@ describe('lerPrazoDoChamado', () => {
       { ...bom, resolucao: { valor: 1000, unidade: 'd' } },
     ]) {
       expect(lerPrazoDoChamado(estragado), JSON.stringify(estragado)).toBeNull();
+    }
+  });
+});
+
+describe('modoDoPrazoGuardado', () => {
+  it('é o modo do prazo guardado, mesmo com o resto estragado, como a troca do horário o lê', () => {
+    expect(modoDoPrazoGuardado({ modo: 'horario', respostaMin: 60 })).toBe('horario');
+    expect(modoDoPrazoGuardado({ modo: 'corridas', resolucaoMin: 0 })).toBe('corridas');
+  });
+
+  it('sem o modo, conta em horas corridas', () => {
+    for (const estragado of [null, 'horario', [], {}, { modo: 'semana' }, { modo: null }]) {
+      expect(modoDoPrazoGuardado(estragado), JSON.stringify(estragado)).toBe('corridas');
     }
   });
 });

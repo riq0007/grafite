@@ -13,7 +13,7 @@ import {
   type ContaQueAtendePorPadrao,
 } from './atendimento.ts';
 import type { CampoDoFormulario, Formulario } from './formulario.ts';
-import { type HorarioDaTi, segundosNoHorario } from './prazo.ts';
+import { type HorarioDaTi, type ModoDoPrazo, segundosNoHorario } from './prazo.ts';
 import { camposVisiveis, respostaDe } from './respostas.ts';
 import type { RelogioDoChamado } from './situacao-do-prazo.ts';
 import { nomeNoResumo } from './titulo-e-resumo.ts';
@@ -527,8 +527,14 @@ export function decidirDesfazer(
   };
 }
 
-/** O relógio guardado do chamado, como a ação o muda. */
-export type RelogioDaAcao = Pick<RelogioDoChamado, 'prazo' | 'contadoS' | 'relogioDesde'>;
+/**
+ * O relógio guardado do chamado, como a ação o muda, com o modo do prazo guardado
+ * (`modoDoPrazoGuardado`).
+ */
+export type RelogioDaAcao = { modo: ModoDoPrazo } & Pick<
+  RelogioDoChamado,
+  'contadoS' | 'relogioDesde'
+>;
 
 /**
  * O relógio guardado depois da ação. Parar soma o tempo que o relógio contou desde que voltou a
@@ -549,7 +555,7 @@ export function relogioDepois(
     case 'para':
       if (relogioDesde === null) throw new Error('O relógio já está parado.');
       return {
-        contadoS: contadoS + segundosNoHorario(relogioDesde, agora, relogio.prazo.modo, horario),
+        contadoS: contadoS + segundosNoHorario(relogioDesde, agora, relogio.modo, horario),
         relogioDesde: null,
       };
     case 'volta':

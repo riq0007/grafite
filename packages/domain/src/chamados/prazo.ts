@@ -146,6 +146,16 @@ function lerValorDoPrazo(valor: unknown): ValorDoPrazo | null {
 }
 
 /**
+ * O modo do prazo guardado, para o relógio das ações: o `modo` do documento, como a troca do horário
+ * o lê, mesmo com o resto estragado, e horas corridas, quando nem ele se lê. O chamado de prazo
+ * estragado aparece sem relógio, e a ação não fica presa a ele (change chamados-da-ti, design,
+ * decisão 4).
+ */
+export function modoDoPrazoGuardado(valor: unknown): ModoDoPrazo {
+  return ehRegistro(valor) && ehModo(valor.modo) ? valor.modo : 'corridas';
+}
+
+/**
  * O prazo copiado na abertura, conferido na leitura, só com o que ele tem; `null` no estragado. O
  * banco guarda o prazo num documento sem conferência, e o estragado faria o relógio contar errado
  * ou o `momentoEmQueAlcanca` recusar o tempo. Os minutos vão de 1 ao maior prazo, 999 dias de 24 h.

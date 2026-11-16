@@ -215,6 +215,7 @@ describe('tipos de evento', () => {
     ['chamado.assumir-desfeito', 'chamados.mudaram'],
     ['chamado.passado', 'chamados.mudaram'],
     ['chamado.devolvido', 'chamados.mudaram'],
+    ['chamado.aguardando', 'chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],

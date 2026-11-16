@@ -18,7 +18,7 @@ import {
   type SituacaoDoChamado,
 } from './acoes.ts';
 import { conferirFormulario, type Formulario } from './formulario.ts';
-import { HORARIO_DA_TI_PADRAO, type PrazoDoChamado } from './prazo.ts';
+import { HORARIO_DA_TI_PADRAO, type ModoDoPrazo } from './prazo.ts';
 
 const JUNDIAI = { id: 'local-jundiai', nome: 'Jundiaí' };
 const SALA_ATLANTICO = { id: 'local-sala-atlantico', nome: 'Sala Atlântico' };
@@ -1061,20 +1061,14 @@ describe('a matriz', () => {
 describe('relogioDepois', () => {
   /** O instante no relógio de São Paulo; terça, 17/11/2026, é o dia dos mockups. */
   const sp = (dataHora: string) => new Date(`${dataHora}:00-03:00`);
-  const NO_HORARIO: PrazoDoChamado = {
-    modo: 'horario',
-    respostaMin: 30,
-    resolucaoMin: 480,
-    resposta: { valor: 30, unidade: 'min' },
-    resolucao: { valor: 8, unidade: 'h' },
-  };
-  const CORRIDAS: PrazoDoChamado = { ...NO_HORARIO, modo: 'corridas' };
+  const NO_HORARIO: ModoDoPrazo = 'horario';
+  const CORRIDAS: ModoDoPrazo = 'corridas';
 
   it('parar soma o tempo do relógio desde que ele voltou a contar e o deixa parado', () => {
     // O #1042, aberto às 07:40, para às 09:40: conta 1 h 40 min, das 08:00.
     expect(
       relogioDepois(
-        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T07:40') },
+        { modo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T07:40') },
         'para',
         sp('2026-11-17T09:40'),
         HORARIO_DA_TI_PADRAO,
@@ -1083,7 +1077,7 @@ describe('relogioDepois', () => {
     // Em horas corridas, todo o tempo conta: 8 h 20 min desde 01:20.
     expect(
       relogioDepois(
-        { prazo: CORRIDAS, contadoS: 600, relogioDesde: sp('2026-11-17T01:20') },
+        { modo: CORRIDAS, contadoS: 600, relogioDesde: sp('2026-11-17T01:20') },
         'para',
         sp('2026-11-17T09:40'),
         HORARIO_DA_TI_PADRAO,
@@ -1095,7 +1089,7 @@ describe('relogioDepois', () => {
     // O #1035, reaberto às 10:00 com 3 h contadas.
     expect(
       relogioDepois(
-        { prazo: NO_HORARIO, contadoS: 10800, relogioDesde: null },
+        { modo: NO_HORARIO, contadoS: 10800, relogioDesde: null },
         'volta',
         sp('2026-11-17T10:00'),
         HORARIO_DA_TI_PADRAO,
@@ -1105,12 +1099,12 @@ describe('relogioDepois', () => {
 
   it('seguir não muda nada, contando ou parado', () => {
     const agora = sp('2026-11-17T09:40');
-    const contando = { prazo: NO_HORARIO, contadoS: 120, relogioDesde: sp('2026-11-17T09:00') };
+    const contando = { modo: NO_HORARIO, contadoS: 120, relogioDesde: sp('2026-11-17T09:00') };
     expect(relogioDepois(contando, 'segue', agora, HORARIO_DA_TI_PADRAO)).toEqual({
       contadoS: 120,
       relogioDesde: sp('2026-11-17T09:00'),
     });
-    const parado = { prazo: NO_HORARIO, contadoS: 8160, relogioDesde: null };
+    const parado = { modo: NO_HORARIO, contadoS: 8160, relogioDesde: null };
     expect(relogioDepois(parado, 'segue', agora, HORARIO_DA_TI_PADRAO)).toEqual({
       contadoS: 8160,
       relogioDesde: null,
@@ -1121,7 +1115,7 @@ describe('relogioDepois', () => {
     const agora = sp('2026-11-17T09:40');
     expect(() =>
       relogioDepois(
-        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: null },
+        { modo: NO_HORARIO, contadoS: 0, relogioDesde: null },
         'para',
         agora,
         HORARIO_DA_TI_PADRAO,
@@ -1129,7 +1123,7 @@ describe('relogioDepois', () => {
     ).toThrow('O relógio já está parado.');
     expect(() =>
       relogioDepois(
-        { prazo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T09:00') },
+        { modo: NO_HORARIO, contadoS: 0, relogioDesde: sp('2026-11-17T09:00') },
         'volta',
         agora,
         HORARIO_DA_TI_PADRAO,

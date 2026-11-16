@@ -1,7 +1,8 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.12): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.13): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
 // quem abre e para a prévia do colaborador de quem configura; o quadro, a lista dos prazos e a ficha
-// do chamado, com `chamados.ver`; e as ações que mudam quem atende, com `chamados.atender`. As
+// do chamado, com `chamados.ver`; e as ações do atendimento, as que mudam quem atende e a conversa,
+// com `chamados.atender`. As
 // regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
 // `chamados/prazos.ts`, `chamados/ficha.ts` e `chamados/acoes.ts`; aqui, o formato do pedido e da
 // resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
@@ -26,12 +27,9 @@ import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
-import {
-  mudarQuemAtende,
-  type PedidoQueMudaQuemAtende,
-  RECUSAS_DAS_ACOES,
-} from '../chamados/acoes.ts';
+import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../chamados/acoes.ts';
 import { NumeroDoChamado } from '../chamados/alcance.ts';
+import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
@@ -403,6 +401,29 @@ const PedidoDoDesfazer = z
   })
   .meta({ id: 'PedidoDoDesfazerDoChamado' });
 
+/** O id de um anexo, como o envio o devolveu. */
+const IdDoAnexo = z.uuid();
+
+const PedidoDaConversa = z
+  .object({
+    /**
+     * O texto, sem os espaços das pontas, com até 4.000 caracteres: o vazio e o longo são recusados
+     * pelo domínio, com a frase de cada ação, no campo `texto`.
+     */
+    texto: z.string().default(''),
+    /**
+     * Os ids dos anexos, como o envio os devolveu, até 5, enviados pela mesma conta e sem dono; o que
+     * nem é um id é o anexo que não se acha, também no campo `anexos`.
+     */
+    anexos: z
+      .array(z.string())
+      .refine((ids) => ids.every((id) => IdDoAnexo.safeParse(id).success), {
+        error: ANEXO_NAO_ENCONTRADO,
+      })
+      .optional(),
+  })
+  .meta({ id: 'PedidoDaConversaDoChamado' });
+
 const ChamadoDepoisDaAcao = z
   .object({
     numero: z.int(),
@@ -543,10 +564,11 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       ),
   );
 
-  // As ações que mudam quem atende (tarefa 4.12), com `chamados.atender`, cada uma com o pedido dela.
-  const mudar = (requisicao: FastifyRequest, numero: number, pedido: PedidoQueMudaQuemAtende) =>
+  // As ações do atendimento (tarefas 4.12 e 4.13), com `chamados.atender`, cada uma com o pedido
+  // dela, gravadas pelo `agirNoChamado`.
+  const agir = (requisicao: FastifyRequest, numero: number, pedido: PedidoDoAtendimento) =>
     naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
-      mudarQuemAtende(tx, numero, pedido, {
+      agirNoChamado(tx, numero, pedido, {
         requisicao,
         momento: agora(),
         ...(fila?.rodando() ? { enviar: (...dados) => fila.enviar(...dados) } : {}),
@@ -570,7 +592,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       },
     },
     (requisicao) =>
-      mudar(requisicao, requisicao.params.numero, { acao: 'assumir', ...requisicao.body }),
+      agir(requisicao, requisicao.params.numero, { acao: 'assumir', ...requisicao.body }),
   );
 
   app.post(
@@ -585,7 +607,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       },
     },
     (requisicao) =>
-      mudar(requisicao, requisicao.params.numero, { acao: 'passar', ...requisicao.body }),
+      agir(requisicao, requisicao.params.numero, { acao: 'passar', ...requisicao.body }),
   );
 
   app.post(
@@ -600,7 +622,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       },
     },
     (requisicao) =>
-      mudar(requisicao, requisicao.params.numero, { acao: 'devolver', ...requisicao.body }),
+      agir(requisicao, requisicao.params.numero, { acao: 'devolver', ...requisicao.body }),
   );
 
   app.post(
@@ -615,6 +637,32 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       },
     },
     (requisicao) =>
-      mudar(requisicao, requisicao.params.numero, { acao: 'desfazer', ...requisicao.body }),
+      agir(requisicao, requisicao.params.numero, { acao: 'desfazer', ...requisicao.body }),
   );
+
+  // A conversa (tarefa 4.13): a mensagem para a pessoa, o "Enviar e esperar a resposta" e a nota
+  // interna, com o texto e os anexos.
+  const ROTAS_DA_CONVERSA = [
+    { acao: 'mensagem', summary: 'Enviar uma mensagem à pessoa do chamado, com os anexos' },
+    {
+      acao: 'esperar',
+      summary: 'Enviar a mensagem e esperar a resposta: o chamado fica aguardando a pessoa',
+    },
+    { acao: 'nota', summary: 'Gravar uma nota interna no chamado, com os anexos' },
+  ] as const;
+  for (const { acao, summary } of ROTAS_DA_CONVERSA) {
+    app.post(
+      `/chamados/:numero/${acao}`,
+      {
+        config: DA_ACAO.config,
+        schema: {
+          summary,
+          params: DA_ACAO.params,
+          body: PedidoDaConversa,
+          response: DA_ACAO.response,
+        },
+      },
+      (requisicao) => agir(requisicao, requisicao.params.numero, { acao, ...requisicao.body }),
+    );
+  }
 };

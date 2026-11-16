@@ -164,4 +164,10 @@ describe('notificacoesDaAcao', () => {
     expect(notificacoesDaAcao(chamado(), { acao: 'assumir' }, 'conta-diego')).toEqual([]);
     expect(notificacoesDaAcao(chamado(), { acao: 'desfazer' }, 'conta-diego')).toEqual([]);
   });
+
+  it('a mensagem, a espera e a nota não avisam ninguém (tarefa 4.13)', () => {
+    for (const acao of ['mensagem', 'esperar', 'nota'] as const) {
+      expect(notificacoesDaAcao(chamado(), { acao }, 'conta-diego'), acao).toEqual([]);
+    }
+  });
 });
