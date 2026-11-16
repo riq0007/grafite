@@ -151,6 +151,10 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('tipo-de-chamado.formulario-salvo')).toBe(
       'Formulário do tipo de chamado salvo',
     );
+    expect(rotuloDaAcao('resposta-pronta.criada')).toBe('Resposta pronta criada');
+    expect(rotuloDaAcao('resposta-pronta.alterada')).toBe('Resposta pronta alterada');
+    expect(rotuloDaAcao('resposta-pronta.removida')).toBe('Resposta pronta removida');
+    expect(rotuloDaAcao('respostas-prontas.ordenadas')).toBe('Respostas prontas reordenadas');
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

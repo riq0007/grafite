@@ -246,6 +246,10 @@ export const ACOES_DA_AUDITORIA = {
   'tipo-de-chamado.reativado': 'Tipo de chamado reativado',
   'tipo-de-chamado.descartado': 'Tipo de chamado descartado',
   'tipo-de-chamado.formulario-salvo': 'Formulário do tipo de chamado salvo',
+  'resposta-pronta.criada': 'Resposta pronta criada',
+  'resposta-pronta.alterada': 'Resposta pronta alterada',
+  'resposta-pronta.removida': 'Resposta pronta removida',
+  'respostas-prontas.ordenadas': 'Respostas prontas reordenadas',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

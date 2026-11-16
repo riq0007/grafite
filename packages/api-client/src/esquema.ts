@@ -26418,6 +26418,413 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/respostas-prontas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As respostas prontas, na ordem */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDasRespostasProntas"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Criar uma resposta pronta, no fim da ordem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaRespostaProntaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RespostaPronta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/respostas-prontas/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ordenar as respostas prontas, com todas, uma vez cada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDasRespostasProntas"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/respostas-prontas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Gravar uma resposta pronta */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaRespostaProntaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RespostaPronta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remover uma resposta pronta */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -33542,36 +33949,6 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
-        FormularioDeChamadoInput: {
-            titulo: {
-                comecaPeloTipo: boolean;
-                campoId: string | null;
-            };
-            campos: {
-                id: string;
-                /** @enum {string} */
-                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
-                rotulo: string;
-                nomeNoResumo: string | null;
-                obrigatorio: boolean;
-                soDaTi: boolean;
-                apagarSeSumir: boolean;
-                opcoes: {
-                    id: string;
-                    texto: string;
-                }[];
-                tiposDeAtivo: string[];
-                condicao: ({
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    opcaoId: string;
-                } | {
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    valor: boolean;
-                })[];
-            }[];
-        };
         TipoDeChamadoInput: {
             /** Format: uuid */
             id: string;
@@ -33618,6 +33995,57 @@ export interface components {
             duplicadoDe: string | null;
             abertos: number;
             noUltimoAno: number;
+        };
+        RespostaProntaInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDasRespostasProntasInput: {
+            respostas: components["schemas"]["RespostaProntaInput"][];
+        };
+        PedidoDaRespostaProntaInput: {
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: string[];
+        };
+        FormularioDeChamadoInput: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
         };
         ListaDosTiposDeChamadoInput: {
             tipos: components["schemas"]["TipoDeChamadoInput"][];
@@ -38309,36 +38737,6 @@ export interface components {
         AvisoDeTeste: {
             aparelhos: number;
         };
-        FormularioDeChamado: {
-            titulo: {
-                comecaPeloTipo: boolean;
-                campoId: string | null;
-            };
-            campos: {
-                id: string;
-                /** @enum {string} */
-                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
-                rotulo: string;
-                nomeNoResumo: string | null;
-                obrigatorio: boolean;
-                soDaTi: boolean;
-                apagarSeSumir: boolean;
-                opcoes: {
-                    id: string;
-                    texto: string;
-                }[];
-                tiposDeAtivo: string[];
-                condicao: ({
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    opcaoId: string;
-                } | {
-                    campoId: string;
-                    juncao: ("e" | "ou") | null;
-                    valor: boolean;
-                })[];
-            }[];
-        };
         TipoDeChamado: {
             /** Format: uuid */
             id: string;
@@ -38385,6 +38783,57 @@ export interface components {
             duplicadoDe: string | null;
             abertos: number;
             noUltimoAno: number;
+        };
+        RespostaPronta: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDasRespostasProntas: {
+            respostas: components["schemas"]["RespostaPronta"][];
+        };
+        PedidoDaRespostaPronta: {
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: string[];
+        };
+        FormularioDeChamado: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
         };
         ListaDosTiposDeChamado: {
             tipos: components["schemas"]["TipoDeChamado"][];

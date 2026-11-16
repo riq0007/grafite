@@ -9938,183 +9938,6 @@
           "aparelhos"
         ]
       },
-      "FormularioDeChamadoInput": {
-        "type": "object",
-        "properties": {
-          "titulo": {
-            "type": "object",
-            "properties": {
-              "comecaPeloTipo": {
-                "type": "boolean"
-              },
-              "campoId": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            },
-            "required": [
-              "comecaPeloTipo",
-              "campoId"
-            ]
-          },
-          "campos": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "tipo": {
-                  "type": "string",
-                  "enum": [
-                    "texto-curto",
-                    "texto-longo",
-                    "escolha-unica",
-                    "varias-opcoes",
-                    "ativo",
-                    "local",
-                    "pessoa",
-                    "data",
-                    "numero",
-                    "anexo",
-                    "sim-ou-nao"
-                  ]
-                },
-                "rotulo": {
-                  "type": "string"
-                },
-                "nomeNoResumo": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "obrigatorio": {
-                  "type": "boolean"
-                },
-                "soDaTi": {
-                  "type": "boolean"
-                },
-                "apagarSeSumir": {
-                  "type": "boolean"
-                },
-                "opcoes": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "texto": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "texto"
-                    ]
-                  }
-                },
-                "tiposDeAtivo": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                },
-                "condicao": {
-                  "type": "array",
-                  "items": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "campoId": {
-                            "type": "string"
-                          },
-                          "juncao": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "e",
-                                  "ou"
-                                ]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "opcaoId": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "campoId",
-                          "juncao",
-                          "opcaoId"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "campoId": {
-                            "type": "string"
-                          },
-                          "juncao": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "e",
-                                  "ou"
-                                ]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "valor": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "campoId",
-                          "juncao",
-                          "valor"
-                        ]
-                      }
-                    ]
-                  }
-                }
-              },
-              "required": [
-                "id",
-                "tipo",
-                "rotulo",
-                "nomeNoResumo",
-                "obrigatorio",
-                "soDaTi",
-                "apagarSeSumir",
-                "opcoes",
-                "tiposDeAtivo",
-                "condicao"
-              ]
-            }
-          }
-        },
-        "required": [
-          "titulo",
-          "campos"
-        ]
-      },
       "TipoDeChamadoInput": {
         "type": "object",
         "properties": {
@@ -10338,6 +10161,271 @@
           "duplicadoDe",
           "abertos",
           "noUltimoAno"
+        ]
+      },
+      "RespostaProntaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "esperaAResposta": {
+            "type": "boolean"
+          },
+          "tipos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "texto",
+          "esperaAResposta",
+          "tipos"
+        ]
+      },
+      "ListaDasRespostasProntasInput": {
+        "type": "object",
+        "properties": {
+          "respostas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RespostaProntaInput"
+            }
+          }
+        },
+        "required": [
+          "respostas"
+        ]
+      },
+      "PedidoDaRespostaProntaInput": {
+        "type": "object",
+        "properties": {
+          "rotulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "esperaAResposta": {
+            "type": "boolean"
+          },
+          "tipos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        },
+        "required": [
+          "rotulo",
+          "texto",
+          "esperaAResposta",
+          "tipos"
+        ]
+      },
+      "FormularioDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "object",
+            "properties": {
+              "comecaPeloTipo": {
+                "type": "boolean"
+              },
+              "campoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "comecaPeloTipo",
+              "campoId"
+            ]
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "texto-curto",
+                    "texto-longo",
+                    "escolha-unica",
+                    "varias-opcoes",
+                    "ativo",
+                    "local",
+                    "pessoa",
+                    "data",
+                    "numero",
+                    "anexo",
+                    "sim-ou-nao"
+                  ]
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "nomeNoResumo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "obrigatorio": {
+                  "type": "boolean"
+                },
+                "soDaTi": {
+                  "type": "boolean"
+                },
+                "apagarSeSumir": {
+                  "type": "boolean"
+                },
+                "opcoes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "texto": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "texto"
+                    ]
+                  }
+                },
+                "tiposDeAtivo": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "condicao": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "opcaoId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "opcaoId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "valor": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "valor"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "tipo",
+                "rotulo",
+                "nomeNoResumo",
+                "obrigatorio",
+                "soDaTi",
+                "apagarSeSumir",
+                "opcoes",
+                "tiposDeAtivo",
+                "condicao"
+              ]
+            }
+          }
+        },
+        "required": [
+          "titulo",
+          "campos"
         ]
       },
       "ListaDosTiposDeChamadoInput": {
@@ -33967,189 +34055,6 @@
         ],
         "additionalProperties": false
       },
-      "FormularioDeChamado": {
-        "type": "object",
-        "properties": {
-          "titulo": {
-            "type": "object",
-            "properties": {
-              "comecaPeloTipo": {
-                "type": "boolean"
-              },
-              "campoId": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            },
-            "required": [
-              "comecaPeloTipo",
-              "campoId"
-            ],
-            "additionalProperties": false
-          },
-          "campos": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "tipo": {
-                  "type": "string",
-                  "enum": [
-                    "texto-curto",
-                    "texto-longo",
-                    "escolha-unica",
-                    "varias-opcoes",
-                    "ativo",
-                    "local",
-                    "pessoa",
-                    "data",
-                    "numero",
-                    "anexo",
-                    "sim-ou-nao"
-                  ]
-                },
-                "rotulo": {
-                  "type": "string"
-                },
-                "nomeNoResumo": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "obrigatorio": {
-                  "type": "boolean"
-                },
-                "soDaTi": {
-                  "type": "boolean"
-                },
-                "apagarSeSumir": {
-                  "type": "boolean"
-                },
-                "opcoes": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "texto": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "texto"
-                    ],
-                    "additionalProperties": false
-                  }
-                },
-                "tiposDeAtivo": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                },
-                "condicao": {
-                  "type": "array",
-                  "items": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "campoId": {
-                            "type": "string"
-                          },
-                          "juncao": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "e",
-                                  "ou"
-                                ]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "opcaoId": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "campoId",
-                          "juncao",
-                          "opcaoId"
-                        ],
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "campoId": {
-                            "type": "string"
-                          },
-                          "juncao": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "e",
-                                  "ou"
-                                ]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "valor": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "campoId",
-                          "juncao",
-                          "valor"
-                        ],
-                        "additionalProperties": false
-                      }
-                    ]
-                  }
-                }
-              },
-              "required": [
-                "id",
-                "tipo",
-                "rotulo",
-                "nomeNoResumo",
-                "obrigatorio",
-                "soDaTi",
-                "apagarSeSumir",
-                "opcoes",
-                "tiposDeAtivo",
-                "condicao"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "titulo",
-          "campos"
-        ],
-        "additionalProperties": false
-      },
       "TipoDeChamado": {
         "type": "object",
         "properties": {
@@ -34378,6 +34283,281 @@
           "duplicadoDe",
           "abertos",
           "noUltimoAno"
+        ],
+        "additionalProperties": false
+      },
+      "RespostaPronta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "esperaAResposta": {
+            "type": "boolean"
+          },
+          "tipos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "texto",
+          "esperaAResposta",
+          "tipos"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDasRespostasProntas": {
+        "type": "object",
+        "properties": {
+          "respostas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RespostaPronta"
+            }
+          }
+        },
+        "required": [
+          "respostas"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaRespostaPronta": {
+        "type": "object",
+        "properties": {
+          "rotulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "esperaAResposta": {
+            "type": "boolean"
+          },
+          "tipos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        },
+        "required": [
+          "rotulo",
+          "texto",
+          "esperaAResposta",
+          "tipos"
+        ],
+        "additionalProperties": false
+      },
+      "FormularioDeChamado": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "object",
+            "properties": {
+              "comecaPeloTipo": {
+                "type": "boolean"
+              },
+              "campoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "comecaPeloTipo",
+              "campoId"
+            ],
+            "additionalProperties": false
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "texto-curto",
+                    "texto-longo",
+                    "escolha-unica",
+                    "varias-opcoes",
+                    "ativo",
+                    "local",
+                    "pessoa",
+                    "data",
+                    "numero",
+                    "anexo",
+                    "sim-ou-nao"
+                  ]
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "nomeNoResumo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "obrigatorio": {
+                  "type": "boolean"
+                },
+                "soDaTi": {
+                  "type": "boolean"
+                },
+                "apagarSeSumir": {
+                  "type": "boolean"
+                },
+                "opcoes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "texto": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "texto"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "tiposDeAtivo": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "condicao": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "opcaoId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "opcaoId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "valor": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "valor"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "tipo",
+                "rotulo",
+                "nomeNoResumo",
+                "obrigatorio",
+                "soDaTi",
+                "apagarSeSumir",
+                "opcoes",
+                "tiposDeAtivo",
+                "condicao"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "titulo",
+          "campos"
         ],
         "additionalProperties": false
       },
@@ -75586,6 +75766,417 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/respostas-prontas": {
+      "get": {
+        "summary": "As respostas prontas, na ordem",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDasRespostasProntas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar uma resposta pronta, no fim da ordem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDaRespostaProntaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespostaPronta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/respostas-prontas/ordem": {
+      "put": {
+        "summary": "Ordenar as respostas prontas, com todas, uma vez cada",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  }
+                },
+                "required": [
+                  "ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDasRespostasProntas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/respostas-prontas/{id}": {
+      "put": {
+        "summary": "Gravar uma resposta pronta",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDaRespostaProntaInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespostaPronta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remover uma resposta pronta",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
           },
           "400": {
             "description": "Default Response",

@@ -344,6 +344,16 @@ export {
   responder,
 } from './chamados/respostas.ts';
 export {
+  type CampoDaRespostaPronta,
+  type ConferenciaDaRespostaPronta,
+  type ContextoDaRespostaPronta,
+  conferirRespostaPronta,
+  MAXIMO_DE_RESPOSTAS_PRONTAS,
+  MENSAGENS_DA_RESPOSTA_PRONTA,
+  type PedidoDaRespostaPronta,
+  type RespostaProntaConferida,
+} from './chamados/respostas-prontas.ts';
+export {
   compararPrazos,
   GRUPOS_DO_PRAZO,
   type GrupoDoPrazo,
