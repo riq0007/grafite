@@ -9938,6 +9938,183 @@
           "aparelhos"
         ]
       },
+      "FormularioDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "object",
+            "properties": {
+              "comecaPeloTipo": {
+                "type": "boolean"
+              },
+              "campoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "comecaPeloTipo",
+              "campoId"
+            ]
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "texto-curto",
+                    "texto-longo",
+                    "escolha-unica",
+                    "varias-opcoes",
+                    "ativo",
+                    "local",
+                    "pessoa",
+                    "data",
+                    "numero",
+                    "anexo",
+                    "sim-ou-nao"
+                  ]
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "nomeNoResumo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "obrigatorio": {
+                  "type": "boolean"
+                },
+                "soDaTi": {
+                  "type": "boolean"
+                },
+                "apagarSeSumir": {
+                  "type": "boolean"
+                },
+                "opcoes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "texto": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "texto"
+                    ]
+                  }
+                },
+                "tiposDeAtivo": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "condicao": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "opcaoId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "opcaoId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "valor": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "valor"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "tipo",
+                "rotulo",
+                "nomeNoResumo",
+                "obrigatorio",
+                "soDaTi",
+                "apagarSeSumir",
+                "opcoes",
+                "tiposDeAtivo",
+                "condicao"
+              ]
+            }
+          }
+        },
+        "required": [
+          "titulo",
+          "campos"
+        ]
+      },
       "TipoDeChamadoInput": {
         "type": "object",
         "properties": {
@@ -10329,6 +10506,32 @@
         "required": [
           "tipo",
           "solicitacaoDesligada"
+        ]
+      },
+      "PedidoDoFormularioDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "titulo": {},
+          "campos": {}
+        }
+      },
+      "FormularioDoTipoDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "formulario": {
+            "$ref": "#/components/schemas/FormularioDeChamadoInput"
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "abertos": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "formulario",
+          "pedeOAtivo",
+          "abertos"
         ]
       },
       "PessoaDoSegredoInput": {
@@ -33764,6 +33967,189 @@
         ],
         "additionalProperties": false
       },
+      "FormularioDeChamado": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "object",
+            "properties": {
+              "comecaPeloTipo": {
+                "type": "boolean"
+              },
+              "campoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "comecaPeloTipo",
+              "campoId"
+            ],
+            "additionalProperties": false
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "texto-curto",
+                    "texto-longo",
+                    "escolha-unica",
+                    "varias-opcoes",
+                    "ativo",
+                    "local",
+                    "pessoa",
+                    "data",
+                    "numero",
+                    "anexo",
+                    "sim-ou-nao"
+                  ]
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "nomeNoResumo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "obrigatorio": {
+                  "type": "boolean"
+                },
+                "soDaTi": {
+                  "type": "boolean"
+                },
+                "apagarSeSumir": {
+                  "type": "boolean"
+                },
+                "opcoes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "texto": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "texto"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "tiposDeAtivo": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "condicao": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "opcaoId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "opcaoId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "campoId": {
+                            "type": "string"
+                          },
+                          "juncao": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "e",
+                                  "ou"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "valor": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "campoId",
+                          "juncao",
+                          "valor"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "tipo",
+                "rotulo",
+                "nomeNoResumo",
+                "obrigatorio",
+                "soDaTi",
+                "apagarSeSumir",
+                "opcoes",
+                "tiposDeAtivo",
+                "condicao"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "titulo",
+          "campos"
+        ],
+        "additionalProperties": false
+      },
       "TipoDeChamado": {
         "type": "object",
         "properties": {
@@ -34166,6 +34552,34 @@
         "required": [
           "tipo",
           "solicitacaoDesligada"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoFormularioDeChamado": {
+        "type": "object",
+        "properties": {
+          "titulo": {},
+          "campos": {}
+        },
+        "additionalProperties": false
+      },
+      "FormularioDoTipoDeChamado": {
+        "type": "object",
+        "properties": {
+          "formulario": {
+            "$ref": "#/components/schemas/FormularioDeChamado"
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          },
+          "abertos": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "formulario",
+          "pedeOAtivo",
+          "abertos"
         ],
         "additionalProperties": false
       },
@@ -75038,6 +75452,172 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/{id}/formulario": {
+      "get": {
+        "summary": "O formulário do tipo de chamado, com o \"Pede o ativo\" e os chamados abertos",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormularioDoTipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Salvar o formulário do tipo; os chamados abertos mantêm o formulário com que abriram",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoFormularioDeChamadoInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormularioDoTipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {

@@ -319,6 +319,7 @@ export const EVENTO_DA_ACAO = {
   'tipo-de-chamado.inativado': 'ajustes-dos-chamados.mudaram',
   'tipo-de-chamado.reativado': 'ajustes-dos-chamados.mudaram',
   'tipo-de-chamado.descartado': 'ajustes-dos-chamados.mudaram',
+  'tipo-de-chamado.formulario-salvo': 'ajustes-dos-chamados.mudaram',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

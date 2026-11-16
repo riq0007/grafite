@@ -1,9 +1,11 @@
 // Os tipos de chamado pela API (spec tipos-de-chamado, "Tipo de chamado", "Prazo e atendimento do
-// tipo", "O que acontece depois" e "Rascunho, duplicar e descartar"; change chamados-da-ti, design,
-// decisões 6 e 18), para quem configura os chamados: a lista e a ordem; o "Novo tipo" e o duplicar,
-// como Rascunho; a gravação, o "Criar o tipo" e o reativar, pela conferência do domínio, com o
-// contexto lido na mesma transação; o inativar, sem conferir; e o descartar do Rascunho. Tudo com a
-// auditoria e o evento dos ajustes.
+// tipo", "O que acontece depois", "Rascunho, duplicar e descartar", "Formulário do tipo" e
+// "Formulário que muda"; change chamados-da-ti, design, decisões 2, 6 e 18), para quem configura os
+// chamados: a lista e a ordem; o "Novo tipo" e o duplicar, como Rascunho; a gravação, o "Criar o
+// tipo" e o reativar, pela conferência do domínio, com o contexto lido na mesma transação; o
+// inativar, sem conferir; o descartar do Rascunho; e o formulário, lido e gravado à parte. Tudo com
+// a auditoria e o evento dos ajustes.
+import { isDeepStrictEqual } from 'node:util';
 import {
   type Banco,
   naOrganizacao,
@@ -13,6 +15,7 @@ import {
 } from '@grafite/db';
 import {
   alcance,
+  conferirFormulario,
   conferirTipoDeChamado,
   type Formulario,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
@@ -36,6 +39,11 @@ import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouUnicidade } from '../banco.ts';
+import {
+  conferirTiposDeAtivoDoFormulario,
+  contarAbertos,
+  FormularioDeChamado,
+} from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { lerContaQueAtende } from '../chamados/quem-atende.ts';
 import {
@@ -86,6 +94,24 @@ const TipoDeChamadoDuplicado = z
     solicitacaoDesligada: z.boolean(),
   })
   .meta({ id: 'TipoDeChamadoDuplicado' });
+
+/**
+ * O formulário como a tela o grava. Quem confere é o domínio, por chave, como `campos.<id>.rotulo`;
+ * o que a tela não monta, também a chave que falta, recebe a recusa geral, na chave `formulario`.
+ */
+const PedidoDoFormulario = z
+  .object({ titulo: z.unknown().optional(), campos: z.unknown().optional() })
+  .meta({ id: 'PedidoDoFormularioDeChamado' });
+
+const FormularioDoTipo = z
+  .object({
+    formulario: FormularioDeChamado,
+    /** Ligado, o primeiro campo Ativo do formulário é obrigatório, sem condição e sem o "Só a TI vê". */
+    pedeOAtivo: z.boolean(),
+    /** Os chamados do tipo em aberto, de todos os locais, que mantêm o formulário anterior. */
+    abertos: z.number(),
+  })
+  .meta({ id: 'FormularioDoTipoDeChamado' });
 
 const ParametrosDoTipo = z.object({ id: z.uuid() });
 
@@ -150,6 +176,22 @@ async function lerLinhaDoTipo(
   const [linha] = await (travar ? consulta.for('update') : consulta);
   if (!linha) throw naoEncontrado(M.naoEncontrado);
   return linha;
+}
+
+/** O formulário gravado no tipo: a API grava sempre o formulário conferido. */
+const formularioDa = (linha: Pick<LinhaDoTipo, 'formulario'>) =>
+  linha.formulario as unknown as Formulario;
+
+/** O formulário do tipo como a tela o lê, com o "Pede o ativo" e os abertos de agora. */
+async function formularioDoTipo(
+  tx: Transacao,
+  linha: Pick<LinhaDoTipo, 'id' | 'formulario' | 'pedeOAtivo'>,
+) {
+  return {
+    formulario: formularioDa(linha),
+    pedeOAtivo: linha.pedeOAtivo,
+    abertos: await contarAbertos(tx, linha.id),
+  };
 }
 
 /** O tipo de ativo pedido, se está ativo: a conferência só pergunta por ele. */
@@ -251,8 +293,7 @@ export const rotasDosTiposDeChamado: FastifyPluginAsyncZod<{
           ? null
           : await lerContaQueAtende(tx, pedido.atendePorPadrao, arvore),
       tiposDeAtivo: await tiposDeAtivoAtivos(tx, pedido),
-      // A API grava sempre o formulário conferido.
-      formulario: linha.formulario as unknown as Formulario,
+      formulario: formularioDa(linha),
       alcanceDasSolicitacoes: alcance(sessaoDa(requisicao).acesso, 'solicitacoes.atender', arvore),
       horario: await lerHorarioDaTi(tx),
     });
@@ -594,6 +635,70 @@ export const rotasDosTiposDeChamado: FastifyPluginAsyncZod<{
         });
       });
       return resposta.code(204).send(null);
+    },
+  );
+
+  app.get(
+    '/chamados/tipos/:id/formulario',
+    {
+      config: { permissao: 'chamados.configurar' },
+      schema: {
+        summary: 'O formulário do tipo de chamado, com o "Pede o ativo" e os chamados abertos',
+        params: ParametrosDoTipo,
+        response: { 200: FormularioDoTipo, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) =>
+      naOrganizacao(banco, orgDa(requisicao), async (tx) =>
+        formularioDoTipo(tx, await lerLinhaDoTipo(tx, requisicao.params.id)),
+      ),
+  );
+
+  app.put(
+    '/chamados/tipos/:id/formulario',
+    {
+      config: { permissao: 'chamados.configurar' },
+      schema: {
+        summary:
+          'Salvar o formulário do tipo; os chamados abertos mantêm o formulário com que abriram',
+        params: ParametrosDoTipo,
+        body: PedidoDoFormulario,
+        response: { 200: FormularioDoTipo, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const momento = agora();
+      return naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        // Travado antes de ler o "Pede o ativo". A gravação do tipo confere o "Pede o ativo" pelo
+        // formulário gravado, e esta confere o formulário pelo "Pede o ativo" gravado: com a trava,
+        // a que chega depois espera a outra e confere o que ela gravou, e o tipo nunca fica com a
+        // chave ligada sem o campo Ativo.
+        const linha = await lerLinhaDoTipo(tx, requisicao.params.id, { travar: true });
+        const conferencia = conferirFormulario(requisicao.body, { pedeOAtivo: linha.pedeOAtivo });
+        if (!conferencia.ok) throw dadosInvalidos(conferencia.erros);
+        const { formulario } = conferencia;
+        const gravado = formularioDa(linha);
+        await conferirTiposDeAtivoDoFormulario(tx, formulario, gravado);
+        // O formulário igual ao gravado não grava nada, como a gravação do tipo.
+        if (!isDeepStrictEqual(formulario, gravado)) {
+          await tx
+            .update(tiposDeChamado)
+            .set({ formulario: { ...formulario } })
+            .where(eq(tiposDeChamado.id, linha.id));
+          await registrarNaAuditoria(tx, {
+            acao: 'tipo-de-chamado.formulario-salvo',
+            ator: autorDa(requisicao),
+            alvo: { tipo: 'tipo-de-chamado', id: linha.id },
+            antes: { formulario: gravado },
+            depois: { formulario },
+            // A auditoria não acha o nome do tipo pelo alvo; ele vai junto.
+            dados: { tipo: linha.nome },
+            origem: origemDa(requisicao),
+            momento,
+          });
+        }
+        return formularioDoTipo(tx, { ...linha, formulario: { ...formulario } });
+      });
     },
   );
 };

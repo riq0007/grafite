@@ -52,6 +52,9 @@ const NO_TITULO: readonly TipoDeCampoDoChamado[] = ['escolha-unica', 'texto-curt
 export const RECUSA_DO_FORMULARIO =
   'O formulário não pôde ser lido. Recarregue a página e tente de novo.';
 
+/** A recusa dos tipos de ativo do campo Ativo: aqui, o formato; na API, os que não estão ativos. */
+export const RECUSA_DOS_TIPOS_DE_ATIVO = 'Escolha os tipos da lista.';
+
 export interface OpcaoDoCampo {
   id: string;
   texto: string;
@@ -157,7 +160,7 @@ function conferirTiposDeAtivo(campoId: string, pedidos: unknown, erros: Erros): 
     !Array.isArray(pedidos) ||
     pedidos.some((tipo) => typeof tipo !== 'string' || !UUID.test(tipo))
   ) {
-    erros.anotar(`campos.${campoId}.tiposDeAtivo`, 'Escolha os tipos da lista.');
+    erros.anotar(`campos.${campoId}.tiposDeAtivo`, RECUSA_DOS_TIPOS_DE_ATIVO);
     return [];
   }
   return [...new Set(pedidos.map((tipo) => String(tipo).toLowerCase()))];

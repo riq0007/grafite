@@ -148,6 +148,9 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('tipo-de-chamado.inativado')).toBe('Tipo de chamado inativado');
     expect(rotuloDaAcao('tipo-de-chamado.reativado')).toBe('Tipo de chamado reativado');
     expect(rotuloDaAcao('tipo-de-chamado.descartado')).toBe('Tipo de chamado descartado');
+    expect(rotuloDaAcao('tipo-de-chamado.formulario-salvo')).toBe(
+      'Formulário do tipo de chamado salvo',
+    );
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

@@ -204,6 +204,7 @@ describe('tipos de evento', () => {
     ['tipo-de-chamado.inativado', 'ajustes-dos-chamados.mudaram'],
     ['tipo-de-chamado.reativado', 'ajustes-dos-chamados.mudaram'],
     ['tipo-de-chamado.descartado', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.formulario-salvo', 'ajustes-dos-chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],

@@ -26264,6 +26264,160 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/tipos/{id}/formulario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O formulário do tipo de chamado, com o "Pede o ativo" e os chamados abertos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FormularioDoTipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Salvar o formulário do tipo; os chamados abertos mantêm o formulário com que abriram */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoFormularioDeChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FormularioDoTipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -33388,6 +33542,36 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
+        FormularioDeChamadoInput: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
         TipoDeChamadoInput: {
             /** Format: uuid */
             id: string;
@@ -33470,6 +33654,15 @@ export interface components {
         TipoDeChamadoDuplicadoInput: {
             tipo: components["schemas"]["TipoDeChamadoInput"];
             solicitacaoDesligada: boolean;
+        };
+        PedidoDoFormularioDeChamadoInput: {
+            titulo?: unknown;
+            campos?: unknown;
+        };
+        FormularioDoTipoDeChamadoInput: {
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+            pedeOAtivo: boolean;
+            abertos: number;
         };
         PessoaDoSegredoInput: {
             /** Format: uuid */
@@ -38116,6 +38309,36 @@ export interface components {
         AvisoDeTeste: {
             aparelhos: number;
         };
+        FormularioDeChamado: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
         TipoDeChamado: {
             /** Format: uuid */
             id: string;
@@ -38198,6 +38421,15 @@ export interface components {
         TipoDeChamadoDuplicado: {
             tipo: components["schemas"]["TipoDeChamado"];
             solicitacaoDesligada: boolean;
+        };
+        PedidoDoFormularioDeChamado: {
+            titulo?: unknown;
+            campos?: unknown;
+        };
+        FormularioDoTipoDeChamado: {
+            formulario: components["schemas"]["FormularioDeChamado"];
+            pedeOAtivo: boolean;
+            abertos: number;
         };
         PessoaDoSegredo: {
             /** Format: uuid */
