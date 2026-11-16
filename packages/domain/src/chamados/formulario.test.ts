@@ -155,6 +155,27 @@ describe('conferirFormulario', () => {
         formulario: GERAL,
       });
     });
+
+    it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])(
+      'o id %s, nome de uma propriedade do objeto, é a recusa geral',
+      (id) => {
+        const noCampo = comCampos((c) => [{ ...c[0], id }]);
+        const naOpcao = comCampos((c) => [
+          {
+            ...c[1],
+            opcoes: [
+              { id, texto: 'Manchando' },
+              { id: 'atolando', texto: 'Atolando' },
+            ],
+          },
+        ]);
+        for (const pedido of [noCampo, naOpcao]) {
+          expect(recusas({ ...pedido, titulo: { comecaPeloTipo: true, campoId: null } })).toEqual({
+            formulario: GERAL,
+          });
+        }
+      },
+    );
   });
 
   describe('o rótulo e o nome no resumo', () => {

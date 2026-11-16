@@ -5,6 +5,7 @@
 // tela mostrá-los no lugar. Se os tipos de ativo existem e estão ativos, quem confere é a API.
 import { lerTexto } from '../campos/textos.ts';
 import { normalizarTexto } from '../texto.ts';
+import { ForaDoFormato, fora, objeto, UUID } from './leitura.ts';
 
 export const TIPOS_DE_CAMPO_DO_CHAMADO = [
   'texto-curto',
@@ -95,23 +96,15 @@ export type ConferenciaDoFormulario =
   | { ok: true; formulario: Formulario }
   | { ok: false; erros: Record<string, string> };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const objeto = (valor: unknown): Record<string, unknown> | null =>
-  typeof valor === 'object' && valor !== null && !Array.isArray(valor)
-    ? (valor as Record<string, unknown>)
-    : null;
-
-/** O formulário que a tela não monta: o id, o tipo ou a condição fora do que ela produz. */
-class ForaDoFormato extends Error {}
-
-const fora = (): never => {
-  throw new ForaDoFormato();
-};
-
-/** O id pedido. O que falta ou sai do formato não é da tela, que sempre manda o id. */
+/**
+ * O id pedido. O que falta ou sai do formato não é da tela, que sempre manda o id. O nome de uma
+ * propriedade do objeto do JavaScript, como `constructor` e `__proto__`, também não: como chave
+ * das respostas, ele devolveria a do protótipo ou o trocaria. O `idDoFormulario` nunca o gera.
+ */
 function lerId(valor: unknown): string {
-  return typeof valor === 'string' && ID_DO_FORMULARIO.test(valor) ? valor : fora();
+  return typeof valor === 'string' && ID_DO_FORMULARIO.test(valor) && !(valor in Object.prototype)
+    ? valor
+    : fora();
 }
 
 class Erros {

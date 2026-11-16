@@ -138,7 +138,7 @@ As recusas SHALL ser:
 - "O chamado #1042 não está aguardando.", ao retomar;
 - "O chamado #1042 não está resolvido.", ao reabrir;
 - "O chamado mudou depois. Confira antes de desfazer.", no desfazer depois de outra ação;
-- "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio;
+- "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio que a condição dele mostra;
 - "Escreva o que foi feito." e "Use até 2.000 caracteres.", na resolução.
 
 #### Scenario: Assumir o estourado de outra pessoa

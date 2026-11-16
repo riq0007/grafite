@@ -85,9 +85,24 @@ Cada campo tem um id curto e estável, de 1 a 40 letras sem acento, números, `-
 
 `conferirFormulario(pedido, { pedeOAtivo })` devolve o formulário conferido, só com as chaves conhecidas, ou os erros por chave, para a tela mostrá-los no lugar: `formulario`, `campos`, `campos.<id>`, `campos.<id>.rotulo`, `campos.<id>.nomeNoResumo`, `campos.<id>.opcoes`, `campos.<id>.opcoes.<id da opção>`, `campos.<id>.tiposDeAtivo`, `campos.<id>.condicao` e `pedeOAtivo`.
 - **O que outro usa:** a recusa de remover um campo ou uma opção de que outro depende, ou o campo do título, vai na chave do que saiu (`campos.<id>` ou `campos.<id>.opcoes.<id da opção>`). Assim, o construtor confere o formulário com o campo tirado antes de tirá-lo, pela mesma função. A do "Só a TI vê" no campo do título vai na chave do campo (`campos.<id>`), e a do campo que a pessoa vê com a condição sobre um campo só da TI, na condição dele.
-- **O que a tela não monta** recebe a recusa geral do formulário: o id que falta, fora do formato ou repetido, o tipo de campo desconhecido, a condição sobre o próprio campo ou sobre um tipo de campo que não serve, a sexta cláusula, a junção que não é "e" nem "ou" e o título num tipo de campo que não serve. Como o tipo de campo não muda depois de acrescentado (spec tipos-de-chamado, "Formulário do tipo"), nada que a tela produz cai nela.
+- **O que a tela não monta** recebe a recusa geral do formulário: o id que falta, fora do formato ou repetido, o id com o nome de uma propriedade do objeto do JavaScript (como `constructor` e `__proto__`, que como chave das respostas devolveria a do protótipo ou o trocaria, e que o `idDoFormulario` nunca gera), o tipo de campo desconhecido, a condição sobre o próprio campo ou sobre um tipo de campo que não serve, a sexta cláusula, a junção que não é "e" nem "ou" e o título num tipo de campo que não serve. Como o tipo de campo não muda depois de acrescentado (spec tipos-de-chamado, "Formulário do tipo"), nada que a tela produz cai nela.
 
-As respostas são um mapa do id do campo para a resposta.
+As respostas são um mapa do id do campo para a resposta, no tipo do campo, e o campo sem resposta não tem a chave:
+
+| Tipo de campo | Resposta |
+|---|---|
+| Texto curto e Texto longo | o texto, sem os espaços nas pontas |
+| Escolha única | o id da opção |
+| Várias opções | os ids das opções, na ordem delas no campo, sem repetir |
+| Ativo, Local e Pessoa | o id do ativo, do local ou da pessoa |
+| Data | a data em `aaaa-mm-dd`, como o campo de data do kit a escreve |
+| Número | o número inteiro |
+| Anexo | os ids dos arquivos, sem repetir |
+| Sim ou não | `true` ou `false` |
+
+`conferirRespostas(formulario, pedido)` devolve as respostas dos campos visíveis, só com os campos do formulário, ou os erros na chave do campo (`campos.<id>`). O que a tela não monta, como a resposta fora do tipo do campo, recebe a recusa geral do formulário, na chave `formulario`. Se o ativo, o local e a pessoa existem e estão ativos, e se os arquivos são aceitos, quem confere é a API. As respostas dos campos só da TI são aceitas na abertura, porque nesta change quem abre é a TI, com esses campos na gaveta; a abertura pela pessoa fica para a 19 e a 20 (decisão 11).
+
+`responder(formulario, respostas, campoId, resposta)` é o estado do formulário que se preenche, na gaveta da abertura e na prévia: grava a resposta nova, e o campo que some perde a dele quando tem o "Apagar a resposta se o campo sumir" ligado. Desligado, ele a guarda para quando voltar, e o `conferirRespostas` a deixa de fora enquanto ele está escondido.
 
 Os ids, e não os textos, ligam as condições e as respostas. Assim, renomear uma opção não quebra a condição nem os chamados abertos.
 
@@ -95,7 +110,8 @@ Alternativa recusada: uma tabela por campo. O formulário é lido e gravado inte
 
 O domínio tem as funções puras:
 - `conferirFormulario`: a gravação do tipo, com o limite de 20 campos, as opções, a ordem das condições e o campo do título;
-- `camposVisiveis`: com as respostas, aplica as condições, com o "e" antes do "ou";
+- `camposVisiveis`: com as respostas, aplica as condições, com o "e" antes do "ou". A condição só vê os campos visíveis: a resposta guardada de um campo escondido não mostra o que depende dele;
+- `responder`: o formulário que se preenche;
 - `conferirRespostas`: a abertura;
 - `tituloDasRespostas`: o título;
 - `resumoDasRespostas`: a linha da conversa.
@@ -271,7 +287,9 @@ A cor mais baixa do toner sai da última leitura válida dos suprimentos (P2b). 
 
 A gravação do tipo pede `solicitacoes.atender` na organização inteira para ligar o "Gera uma Solicitação" ou trocar o que ele gera (spec tipos-de-chamado). Assim, a solicitação registrada sem a permissão de quem abre foi delegada por quem poderia registrá-la em qualquer local. A auditoria da solicitação gerada leva o chamado e o tipo de chamado.
 
-Para a 19 e a 20: lá, quem abre o chamado é a pessoa, sem uma conta da TI. A solicitação gerada pelo tipo vai precisar de um registrador, e a decisão fica com essas changes.
+Para a 19 e a 20: lá, quem abre o chamado é a pessoa, sem uma conta da TI.
+- A solicitação gerada pelo tipo vai precisar de um registrador, e a decisão fica com essas changes.
+- Na abertura pela pessoa, a API tira ou recusa as respostas dos campos só da TI, que o `conferirRespostas` aceita porque aqui quem abre é a TI (decisão 2). Sem isso, a pessoa responderia o "Contrato de manutenção", que nem vê.
 
 ### 12. As notificações e a tarefa do prazo
 

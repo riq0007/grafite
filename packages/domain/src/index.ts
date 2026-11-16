@@ -238,6 +238,14 @@ export {
   type TituloDoFormulario,
 } from './chamados/formulario.ts';
 export {
+  type ConferenciaDasRespostas,
+  camposVisiveis,
+  conferirRespostas,
+  type RespostaDoCampo,
+  type RespostasDoFormulario,
+  responder,
+} from './chamados/respostas.ts';
+export {
   type AcessoAoSegredo,
   alcancaOSegredo,
   DURACAO_DA_LIBERACAO_DO_COFRE,

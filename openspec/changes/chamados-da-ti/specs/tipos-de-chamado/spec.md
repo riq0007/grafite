@@ -331,7 +331,7 @@ A abertura do chamado SHALL conferir as respostas com o formulário do tipo:
 - o tamanho;
 - os arquivos aceitos.
 
-Os campos escondidos pela condição SHALL ficar sem resposta. Os campos só da TI SHALL ser opcionais na abertura.
+Os campos escondidos pela condição SHALL ficar sem resposta, mesmo com a resposta guardada pelo "Apagar a resposta se o campo sumir" desligado. Os campos só da TI SHALL ser opcionais na abertura.
 
 As recusas SHALL ficar no campo:
 - "Responda esta pergunta.", no obrigatório;
@@ -341,6 +341,8 @@ As recusas SHALL ficar no campo:
 - "O ativo escolhido está inativo.", "O local escolhido está inativo. Escolha um local ativo." e "A pessoa escolhida está inativa. Escolha uma pessoa ativa.", no inativo;
 - "Anexe até 5 arquivos.", no anexo.
 
+O que a tela não monta, como a resposta fora do tipo do campo, SHALL ser recusado com "O formulário não pôde ser lido. Recarregue a página e tente de novo.".
+
 #### Scenario: Obrigatório escondido
 - **WHEN** a pessoa escolhe "Atolando", e "Onde as manchas aparecem?", obrigatório, está escondido
 - **THEN** a abertura não pede a resposta dele
@@ -348,6 +350,10 @@ As recusas SHALL ficar no campo:
 #### Scenario: Opção inventada
 - **WHEN** a API recebe "Fumaçando" em "O que está acontecendo?"
 - **THEN** a abertura é recusada com "Escolha uma das opções.", nesse campo, e nada é gravado
+
+#### Scenario: Resposta guardada de um campo escondido
+- **WHEN** "Onde as manchas aparecem?" tem o "Apagar a resposta se o campo sumir" desligado, a pessoa responde "Na borda" e depois troca "Manchando" por "Atolando"
+- **THEN** o chamado segue sem a resposta "Na borda", e ela volta ao campo se a pessoa escolher "Manchando" de novo antes de enviar
 
 ### Requirement: Formulário que muda
 
