@@ -126,15 +126,17 @@ A prévia da web, a gaveta da abertura e a API usam as mesmas.
 - a hora vale 60 min;
 - o dia vale 24 h em horas corridas e, no horário da TI, o comprimento da janela do horário de agora (`fim - inicio`).
 
-A cópia guarda também o valor e a unidade do tipo, só para o texto ("Prazo do tipo, 3 dias úteis, no horário da TI"). Assim, mudar o horário depois não muda o prazo dos chamados abertos: 3 dias úteis de 10 h continuam 30 h com um horário de 9 h.
+A cópia guarda também o valor e a unidade do tipo, só para o texto ("Prazo do tipo, 3 dias úteis, no horário da TI"), no `prazo` jsonb: `{ modo, respostaMin, resolucaoMin, resposta: { valor, unidade }, resolucao: { valor, unidade } }`. Assim, mudar o horário depois não muda o prazo dos chamados abertos: 3 dias úteis de 10 h continuam 30 h com um horário de 9 h. O `minutosDoPrazo(valor, modo, horario)` converte um prazo só, e a conferência do tipo o usa para a resposta que passa da resolução.
+
+**O horário da TI.** O domínio tem o `HORARIO_DA_TI_PADRAO`, que vale enquanto a organização não grava o dela, e o `conferirHorario(pedido)`, com as recusas da spec e os dias sem repetir e em ordem, de segunda (1) a domingo (7). A rota recebe o início e o fim em minutos do dia, como o banco os guarda, e o esquema dela confere o formato: os dias de 1 a 7, entregues no tipo `DiaDaSemana` (`z.literal([1, 2, 3, 4, 5, 6, 7])`), e os minutos inteiros de 0 a 1.439. O domínio não tira o dia fora do formato, para o esquema frouxo aparecer no compilador e, por último, no CHECK do banco. A tela converte a hora do campo.
 
 **O relógio.** O chamado guarda:
 - `contado_s`: os segundos contados até a última parada, inteiros, arredondados para baixo a cada fechamento. O segundo, e não o minuto, para cada parada e retomada não perder até um minuto;
 - `relogio_desde`: o instante em que o relógio voltou a contar, ou nulo, parado.
 
 O domínio (`packages/domain/src/chamados/prazo.ts`) calcula:
-- **`segundosNoHorario(de, ate, horario)`:** em horas corridas, a diferença. No horário da TI, a soma das sobreposições com as janelas de cada dia, no fuso do horário. O dia e a hora locais saem do `Intl.DateTimeFormat` com o `timeZone`, como no `software/quando.ts`, e valem também com o horário de verão;
-- **`momentoEmQueAlcanca(desde, segundosQueFaltam, horario)`:** anda pelas janelas até completar o tempo;
+- **`segundosNoHorario(de, ate, modo, horario)`:** em horas corridas, a diferença. No horário da TI, a soma das sobreposições com as janelas de cada dia, no fuso do horário. O dia e a hora locais saem do `Intl.DateTimeFormat` com o `timeZone`, pelo `fuso.ts` do domínio, que o `software/quando.ts` também usa, e valem também com o horário de verão. As janelas ficam guardadas por fuso, dia e horas, porque a lista dos prazos calcula as mesmas para centenas de chamados;
+- **`momentoEmQueAlcanca(desde, segundosQueFaltam, modo, horario)`:** anda pelas janelas até completar o tempo. O tempo que acaba no fim de uma janela vence no fim dela, e não no começo da seguinte. Como ela roda na API e na tarefa de cada minuto, um laço preso pararia o processo inteiro. Por isso, recusa com um `RangeError` o tempo que não é de um prazo (sem número, infinito ou maior que 999 dias de 24 h, o maior prazo do tipo) e o horário sem dia ou sem janela. O laço ainda tem um teto, de 14 dias por janela que o tempo pede, mais 28, que um horário conferido nunca alcança;
 - **`situacaoDoPrazo(chamado, horario, agora)`:**
   - o contado e o que resta;
   - o vencimento ou o relógio parado;

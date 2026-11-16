@@ -238,6 +238,26 @@ export {
   type TituloDoFormulario,
 } from './chamados/formulario.ts';
 export {
+  type ConferenciaDoHorario,
+  conferirHorario,
+  DIAS_DA_SEMANA_DO_HORARIO,
+  type DiaDaSemana,
+  HORARIO_DA_TI_PADRAO,
+  type HorarioDaTi,
+  MODOS_DO_PRAZO,
+  type ModoDoPrazo,
+  minutosDoPrazo,
+  momentoEmQueAlcanca,
+  type PedidoDoHorario,
+  type PrazoDoChamado,
+  type PrazoDoTipo,
+  prazoEmMinutos,
+  segundosNoHorario,
+  UNIDADES_DO_PRAZO,
+  type UnidadeDoPrazo,
+  type ValorDoPrazo,
+} from './chamados/prazo.ts';
+export {
   type ConferenciaDasRespostas,
   camposVisiveis,
   conferirRespostas,

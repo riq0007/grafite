@@ -1,0 +1,265 @@
+// O horário da TI e o relógio dos chamados (spec chamados, "Prazo do chamado" e "Horário da TI";
+// change chamados-da-ti, design, decisão 3). O chamado copia o prazo do tipo em minutos na
+// abertura e guarda o relógio: os segundos contados até a última parada e o instante em que ele
+// voltou a contar. No horário da TI, só conta o tempo dentro das janelas dos dias do horário, no
+// relógio do fuso dele, com o horário de verão.
+import { fusoValido, instanteDoRelogio, relogioDoFuso } from '../fuso.ts';
+
+/** As unidades do prazo do tipo: minutos, horas e dias. */
+export const UNIDADES_DO_PRAZO = ['min', 'h', 'd'] as const;
+export type UnidadeDoPrazo = (typeof UNIDADES_DO_PRAZO)[number];
+
+/** Os modos de contar o prazo: em horas corridas ou no horário da TI. */
+export const MODOS_DO_PRAZO = ['corridas', 'horario'] as const;
+export type ModoDoPrazo = (typeof MODOS_DO_PRAZO)[number];
+
+/** Os dias da semana do horário da TI, de segunda (1) a domingo (7), como o banco os guarda. */
+export const DIAS_DA_SEMANA_DO_HORARIO = [1, 2, 3, 4, 5, 6, 7] as const;
+export type DiaDaSemana = (typeof DIAS_DA_SEMANA_DO_HORARIO)[number];
+
+/** Um prazo como o tipo o escreve, como "8 h" ou "3 dias". */
+export interface ValorDoPrazo {
+  valor: number;
+  unidade: UnidadeDoPrazo;
+}
+
+/** O prazo do tipo: a resposta, a resolução e o modo de contar. */
+export interface PrazoDoTipo {
+  modo: ModoDoPrazo;
+  resposta: ValorDoPrazo;
+  resolucao: ValorDoPrazo;
+}
+
+/**
+ * O prazo que o chamado copia na abertura: os minutos, que não mudam depois, e o valor e a unidade
+ * do tipo, só para o texto ("Prazo do tipo, 3 dias úteis, no horário da TI").
+ */
+export interface PrazoDoChamado {
+  modo: ModoDoPrazo;
+  respostaMin: number;
+  resolucaoMin: number;
+  resposta: ValorDoPrazo;
+  resolucao: ValorDoPrazo;
+}
+
+/**
+ * O horário da TI: os dias da semana; o início e o fim, em minutos do dia (de 0 a 1.439), os
+ * mesmos em todos os dias; o fuso; e a carga cheia, o número de chamados abertos que enche a barra
+ * de carga de uma pessoa.
+ */
+export interface HorarioDaTi {
+  dias: readonly DiaDaSemana[];
+  inicio: number;
+  fim: number;
+  fuso: string;
+  cargaCheia: number;
+}
+
+/** O horário de quem não mudou o dele: de segunda a sexta, das 08:00 às 18:00, em São Paulo. */
+export const HORARIO_DA_TI_PADRAO: HorarioDaTi = {
+  dias: [1, 2, 3, 4, 5],
+  inicio: 8 * 60,
+  fim: 18 * 60,
+  fuso: 'America/Sao_Paulo',
+  cargaCheia: 5,
+};
+
+/**
+ * O horário que a tela manda. O formato (os dias de 1 a 7 e o início e o fim em minutos, de 0 a
+ * 1.439) é do esquema da rota, que entrega os dias já no tipo; aqui ficam as recusas da spec.
+ */
+export interface PedidoDoHorario {
+  dias: readonly DiaDaSemana[];
+  inicio: number;
+  fim: number;
+  fuso: string;
+  cargaCheia: number;
+}
+
+export type ConferenciaDoHorario =
+  | { ok: true; horario: HorarioDaTi }
+  | { ok: false; erros: Partial<Record<keyof PedidoDoHorario, string>> };
+
+const ehDiaDaSemana = (dia: number): dia is DiaDaSemana =>
+  (DIAS_DA_SEMANA_DO_HORARIO as readonly number[]).includes(dia);
+
+/** Confere o horário da TI pelas recusas da spec, com os dias sem repetir e em ordem. */
+export function conferirHorario(pedido: PedidoDoHorario): ConferenciaDoHorario {
+  const erros: Partial<Record<keyof PedidoDoHorario, string>> = {};
+  const dias = [...new Set(pedido.dias)].sort((a, b) => a - b);
+  if (dias.length === 0) erros.dias = 'Escolha ao menos um dia.';
+  if (!(pedido.fim > pedido.inicio)) erros.fim = 'O fim vem depois do início.';
+  if (!fusoValido(pedido.fuso.trim())) erros.fuso = 'Escolha um fuso da lista.';
+  const carga = pedido.cargaCheia;
+  if (!(Number.isInteger(carga) && carga >= 1 && carga <= 20)) {
+    erros.cargaCheia = 'Use um número inteiro de 1 a 20.';
+  }
+  if (Object.keys(erros).length > 0) return { ok: false, erros };
+  return {
+    ok: true,
+    horario: {
+      dias,
+      inicio: pedido.inicio,
+      fim: pedido.fim,
+      fuso: pedido.fuso.trim(),
+      cargaCheia: carga,
+    },
+  };
+}
+
+/**
+ * Um prazo do tipo em minutos: a hora vale 60 min; o dia, 24 h em horas corridas e, no horário da
+ * TI, o comprimento de um dia do horário (o dia útil).
+ */
+export function minutosDoPrazo(
+  { valor, unidade }: ValorDoPrazo,
+  modo: ModoDoPrazo,
+  horario: HorarioDaTi,
+): number {
+  if (unidade === 'min') return valor;
+  if (unidade === 'h') return valor * 60;
+  return valor * (modo === 'horario' ? horario.fim - horario.inicio : 24 * 60);
+}
+
+/** O prazo que o chamado copia na abertura, com o dia útil do horário de agora. */
+export function prazoEmMinutos(tipo: PrazoDoTipo, horario: HorarioDaTi): PrazoDoChamado {
+  return {
+    modo: tipo.modo,
+    respostaMin: minutosDoPrazo(tipo.resposta, tipo.modo, horario),
+    resolucaoMin: minutosDoPrazo(tipo.resolucao, tipo.modo, horario),
+    resposta: { ...tipo.resposta },
+    resolucao: { ...tipo.resolucao },
+  };
+}
+
+const MS_POR_DIA = 86_400_000;
+
+/** Um dia do calendário, em UTC, para andar de dia em dia sem o horário de verão. */
+interface DiaDoCalendario {
+  ano: number;
+  mes: number;
+  dia: number;
+  semana: DiaDaSemana;
+}
+
+function diaDoCalendario(meiaNoite: number): DiaDoCalendario {
+  const data = new Date(meiaNoite);
+  return {
+    ano: data.getUTCFullYear(),
+    mes: data.getUTCMonth() + 1,
+    dia: data.getUTCDate(),
+    // O getUTCDay vai de domingo (0) a sábado (6); o horário, de segunda (1) a domingo (7).
+    semana: (((data.getUTCDay() + 6) % 7) + 1) as DiaDaSemana,
+  };
+}
+
+/** A meia-noite, em UTC, do dia do calendário em que o momento cai no relógio do fuso. */
+function meiaNoiteDoDia(momento: Date, fuso: string): number {
+  const { ano, mes, dia } = relogioDoFuso(momento, fuso);
+  return Date.UTC(ano, mes - 1, dia);
+}
+
+/** A janela do horário num dia, em milissegundos: do início ao fim, no relógio do fuso. */
+interface Janela {
+  inicio: number;
+  fim: number;
+}
+
+const janelas = new Map<string, Janela>();
+const MAXIMO_DE_JANELAS_GUARDADAS = 10_000;
+
+/**
+ * A janela do horário no dia, guardada por fuso, dia e horas: a lista dos prazos calcula as mesmas
+ * janelas para centenas de chamados.
+ */
+function janelaDoDia({ ano, mes, dia }: DiaDoCalendario, horario: HorarioDaTi): Janela {
+  const chave = `${horario.fuso}|${ano}-${mes}-${dia}|${horario.inicio}|${horario.fim}`;
+  const guardada = janelas.get(chave);
+  if (guardada) return guardada;
+  const instante = (minutos: number) =>
+    instanteDoRelogio(
+      ano,
+      mes,
+      dia,
+      Math.floor(minutos / 60),
+      minutos % 60,
+      horario.fuso,
+    ).getTime();
+  const janela = { inicio: instante(horario.inicio), fim: instante(horario.fim) };
+  if (janelas.size >= MAXIMO_DE_JANELAS_GUARDADAS) janelas.clear();
+  janelas.set(chave, janela);
+  return janela;
+}
+
+/**
+ * Os segundos que o relógio conta entre dois momentos, arredondados para baixo: em horas corridas,
+ * todo o tempo; no horário da TI, só o que cai nas janelas dos dias do horário.
+ */
+export function segundosNoHorario(
+  de: Date,
+  ate: Date,
+  modo: ModoDoPrazo,
+  horario: HorarioDaTi,
+): number {
+  const comeco = de.getTime();
+  const fim = ate.getTime();
+  if (fim <= comeco) return 0;
+  if (modo === 'corridas') return Math.floor((fim - comeco) / 1000);
+  let contado = 0;
+  const ultimo = meiaNoiteDoDia(ate, horario.fuso);
+  for (let dia = meiaNoiteDoDia(de, horario.fuso); dia <= ultimo; dia += MS_POR_DIA) {
+    const doCalendario = diaDoCalendario(dia);
+    if (!horario.dias.includes(doCalendario.semana)) continue;
+    const janela = janelaDoDia(doCalendario, horario);
+    const sobreposto = Math.min(janela.fim, fim) - Math.max(janela.inicio, comeco);
+    if (sobreposto > 0) contado += sobreposto;
+  }
+  return Math.floor(contado / 1000);
+}
+
+/**
+ * O maior tempo que falta num prazo, em segundos: o tipo vai até 999 na unidade, e o dia mais
+ * longo é o de 24 h, das horas corridas. O tempo que falta nunca passa do prazo copiado.
+ */
+const SEGUNDOS_NO_MAIOR_PRAZO = 999 * 24 * 60 * 60;
+
+/**
+ * O momento em que o relógio, contando desde `desde`, completa os segundos que faltam: em horas
+ * corridas, a soma; no horário da TI, andando pelas janelas dos dias do horário. O tempo que acaba
+ * no fim de uma janela vence no fim dela. O tempo que não é de um prazo (sem número ou maior que o
+ * maior prazo) e o horário sem janela são recusados, porque o laço andaria para sempre.
+ */
+export function momentoEmQueAlcanca(
+  desde: Date,
+  segundosQueFaltam: number,
+  modo: ModoDoPrazo,
+  horario: HorarioDaTi,
+): Date {
+  if (!Number.isFinite(segundosQueFaltam) || segundosQueFaltam > SEGUNDOS_NO_MAIOR_PRAZO) {
+    throw new RangeError('O tempo que falta não é de um prazo.');
+  }
+  if (segundosQueFaltam <= 0) return new Date(desde.getTime());
+  if (modo === 'corridas') return new Date(desde.getTime() + segundosQueFaltam * 1000);
+  const comprimento = (horario.fim - horario.inicio) * 60_000;
+  if (!horario.dias.some(ehDiaDaSemana) || !(comprimento > 0)) {
+    throw new RangeError('O horário da TI não tem janela.');
+  }
+  let falta = segundosQueFaltam * 1000;
+  const cursor = desde.getTime();
+  const primeiro = meiaNoiteDoDia(desde, horario.fuso);
+  // Toda semana tem um dia do horário, e cada um conta uma janela inteira, fora o primeiro e os
+  // que o horário de verão encurta. O teto dá o dobro dessas semanas: um horário conferido nunca
+  // chega a ele, e o que chegasse é recusado, em vez de travar o processo.
+  const teto = primeiro + 14 * (Math.ceil(falta / comprimento) + 2) * MS_POR_DIA;
+  for (let dia = primeiro; dia <= teto; dia += MS_POR_DIA) {
+    const doCalendario = diaDoCalendario(dia);
+    if (!horario.dias.includes(doCalendario.semana)) continue;
+    const janela = janelaDoDia(doCalendario, horario);
+    if (janela.fim <= cursor) continue;
+    const comeco = Math.max(janela.inicio, cursor);
+    const cabe = janela.fim - comeco;
+    if (cabe >= falta) return new Date(comeco + falta);
+    falta -= cabe;
+  }
+  throw new RangeError('O tempo que falta não cabe no horário da TI.');
+}

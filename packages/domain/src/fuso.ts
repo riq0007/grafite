@@ -1,0 +1,86 @@
+// O relógio de um fuso horário, pelo `Intl.DateTimeFormat` com o `timeZone`, com o horário de verão
+// dele: o dia e a hora locais de um momento e o momento de um dia e uma hora locais. Servem ao
+// quando da distribuição (software/quando.ts) e ao relógio dos chamados (chamados/prazo.ts).
+
+const formatos = new Map<string, Intl.DateTimeFormat>();
+
+/** O formato que lê o relógio do fuso, guardado por fuso; `null` no fuso que o Intl não conhece. */
+function formatoDo(fuso: string): Intl.DateTimeFormat | null {
+  const guardado = formatos.get(fuso);
+  if (guardado) return guardado;
+  try {
+    const formato = new Intl.DateTimeFormat('en-US', {
+      timeZone: fuso,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    formatos.set(fuso, formato);
+    return formato;
+  } catch {
+    return null;
+  }
+}
+
+/** Se o fuso existe no Intl do servidor (e do navegador). */
+export function fusoValido(fuso: string | null | undefined): fuso is string {
+  return !!fuso && formatoDo(fuso) !== null;
+}
+
+/** O dia e a hora no relógio de um fuso. */
+export interface RelogioDoFuso {
+  ano: number;
+  mes: number;
+  dia: number;
+  hora: number;
+  minuto: number;
+  segundo: number;
+}
+
+/** O relógio do fuso no momento; o fuso desconhecido lê o de UTC. */
+export function relogioDoFuso(momento: Date, fuso: string): RelogioDoFuso {
+  const formato = formatoDo(fuso) ?? (formatoDo('UTC') as Intl.DateTimeFormat);
+  const partes = Object.fromEntries(
+    formato.formatToParts(momento).map(({ type, value }) => [type, Number(value)]),
+  );
+  return {
+    ano: partes.year ?? 0,
+    mes: partes.month ?? 0,
+    dia: partes.day ?? 0,
+    hora: partes.hour ?? 0,
+    minuto: partes.minute ?? 0,
+    segundo: partes.second ?? 0,
+  };
+}
+
+/** Quanto o relógio do fuso está à frente de UTC no momento, em milissegundos. */
+function deslocamento(momento: Date, fuso: string): number {
+  const { ano, mes, dia, hora, minuto, segundo } = relogioDoFuso(momento, fuso);
+  const comoUtc = Date.UTC(ano, mes - 1, dia, hora, minuto, segundo);
+  return comoUtc - Math.floor(momento.getTime() / 1000) * 1000;
+}
+
+/** O instante de um dia e uma hora do relógio do fuso; a hora que o verão pula cai depois dele. */
+export function instanteDoRelogio(
+  ano: number,
+  mes: number,
+  dia: number,
+  hora: number,
+  minuto: number,
+  fuso: string,
+): Date {
+  const comoUtc = Date.UTC(ano, mes - 1, dia, hora, minuto);
+  const primeiro = comoUtc - deslocamento(new Date(comoUtc), fuso);
+  return new Date(comoUtc - deslocamento(new Date(primeiro), fuso));
+}
+
+/** O instante do dia ("2026-11-15") e da hora ("22:00") no relógio do fuso. */
+export function instanteNoFuso(data: string, hora: string, fuso: string): Date {
+  const [ano = 0, mes = 0, dia = 0] = data.split('-').map(Number);
+  const [horas = 0, minutos = 0] = hora.split(':').map(Number);
+  return instanteDoRelogio(ano, mes, dia, horas, minutos, fuso);
+}
