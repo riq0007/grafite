@@ -288,14 +288,14 @@ O título SHALL ser:
 - o nome do tipo, quando a chave está ligada;
 - seguido da resposta do campo escolhido:
   - na opção, com a primeira letra minúscula depois do nome do tipo, fora quando a primeira palavra tem outra letra maiúscula, como "VPN" e "Wi-Fi";
-  - no texto, como foi escrito;
+  - no texto, como foi escrito, numa linha só: as quebras de linha e os espaços repetidos viram um espaço;
   - no ativo, o patrimônio ou, sem ele, o nome que as telas mostram (spec cadastro-de-ativos).
 
 Sem o campo escolhido, ou sem a resposta dele, o título SHALL ser:
-- a primeira resposta de texto;
+- a primeira resposta de texto que a pessoa vê, de um Texto curto ou de um Texto longo, sozinha e numa linha só;
 - sem ela, o nome do tipo.
 
-Todo título montado com mais de 120 caracteres SHALL ser cortado em 120, com as reticências no fim.
+Todo título montado com mais de 120 caracteres SHALL ser cortado em 120, com as reticências no fim e sem o espaço antes delas.
 
 O item SHALL mostrar o exemplo do título, como "Das respostas: 'Impressora manchando'".
 

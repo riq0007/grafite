@@ -113,8 +113,10 @@ O domínio tem as funções puras:
 - `camposVisiveis`: com as respostas, aplica as condições, com o "e" antes do "ou". A condição só vê os campos visíveis: a resposta guardada de um campo escondido não mostra o que depende dele;
 - `responder`: o formulário que se preenche;
 - `conferirRespostas`: a abertura;
-- `tituloDasRespostas`: o título;
-- `resumoDasRespostas`: a linha da conversa.
+- `tituloDasRespostas(formulario, respostas, contexto)`: o título;
+- `resumoDasRespostas(formulario, respostas, contexto)`: a linha da conversa.
+
+O contexto do título e do resumo traz o nome do tipo e, pelo id, o patrimônio e o nome dos ativos e o nome dos locais e das pessoas. A API os lê na abertura, para o título, e na leitura do chamado, para o resumo (decisão 8). A web os tem nos campos, na prévia e na gaveta. A resposta que o contexto não traz fica de fora, como a que não foi dada; como a falta não dá erro, os testes de integração da abertura e da leitura conferem o resumo com o ativo, o local e a pessoa. Os dois usam só os campos visíveis que a pessoa vê, e leem também o formulário que se preenche, na prévia: o que não está no tipo do campo fica de fora.
 
 A prévia da web, a gaveta da abertura e a API usam as mesmas.
 
@@ -248,7 +250,7 @@ A conversa é uma tabela só, ordenada pelo `criada_em` e pelo id (uuidv7).
 
 O evento tem o código na coluna `evento`, como `assumiu`, `passou`, `aguardando`, `retomou`, `resolveu`, `reabriu`, `virou-os`, `solicitacao`, `ativo` e `abertura`, e os `dados`: as contas, a OS e a solicitação. A web monta a frase, para o nome atual das pessoas aparecer, como nas OS.
 
-A abertura guarda o resumo pronto nos `dados`, porque ele usa o formulário da abertura.
+A abertura não guarda o resumo pronto. A leitura do chamado o monta pelo `resumoDasRespostas`, da cópia do formulário e das respostas que o chamado guarda desde a abertura, com os nomes de agora dos ativos, dos locais e das pessoas. As respostas do Ativo, do Local e da Pessoa guardam o id: com o resumo pronto, a pessoa anonimizada ficaria nele com o nome, e a spec manda a anonimização trocar a referência à pessoa, e não o texto livre (spec chamados, "Quem vê e quem atende os chamados").
 
 Os alertas do ativo entram na leitura (decisão 9), e não na tabela.
 

@@ -33,11 +33,17 @@ const MAXIMO_DE_ARQUIVOS = 5;
 const DATA = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** A resposta do campo no pedido, sem o que o objeto herda, como o `constructor`. */
-const respostaDe = (respostas: Readonly<Record<string, unknown>>, campoId: string): unknown =>
-  Object.hasOwn(respostas, campoId) ? respostas[campoId] : undefined;
+export const respostaDe = (
+  respostas: Readonly<Record<string, unknown>>,
+  campoId: string,
+): unknown => (Object.hasOwn(respostas, campoId) ? respostas[campoId] : undefined);
 
 /** A cláusula vale com a resposta do campo de que ela depende; sem a resposta, não vale. */
-function vale(clausula: ClausulaDaCondicao, base: CampoDoFormulario, resposta: unknown): boolean {
+export function vale(
+  clausula: ClausulaDaCondicao,
+  base: CampoDoFormulario,
+  resposta: unknown,
+): boolean {
   if ('valor' in clausula) return resposta === clausula.valor;
   if (base.tipo === 'varias-opcoes') {
     return Array.isArray(resposta) && resposta.includes(clausula.opcaoId);

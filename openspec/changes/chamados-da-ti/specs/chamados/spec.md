@@ -41,7 +41,7 @@ O título SHALL ser o montado das respostas (spec tipos-de-chamado, requisito "T
 - ligado, o chamado nasce Em atendimento, com quem abriu;
 - desligado, o chamado segue o atendimento do tipo (requisito "Situação e quem atende").
 
-O chamado aberto pela TI SHALL nascer com a primeira resposta dada, porque a pessoa já falou com a TI. A abertura SHALL gravar o evento de abertura na conversa, com o resumo das respostas. Quando o tipo gera uma solicitação, ela SHALL ser registrada na mesma transação (spec solicitacoes, requisito "Solicitação pelo chamado").
+O chamado aberto pela TI SHALL nascer com a primeira resposta dada, porque a pessoa já falou com a TI. A abertura SHALL gravar o evento de abertura na conversa, que mostra o resumo das respostas (requisito "Conversa do chamado"). Quando o tipo gera uma solicitação, ela SHALL ser registrada na mesma transação (spec solicitacoes, requisito "Solicitação pelo chamado").
 
 As recusas SHALL ficar no campo:
 - "Escolha quem pediu." e "A pessoa escolhida está inativa. Escolha uma pessoa ativa.", na pessoa;
@@ -190,7 +190,21 @@ A conversa SHALL ter, na ordem em que aconteceram:
 
 As mensagens e as notas SHALL NOT ser editadas nem apagadas. Cada uma SHALL guardar quem escreveu e quando.
 
-O resumo das respostas SHALL juntar as respostas que a pessoa vê, na ordem do formulário, cada uma como "<nome no resumo>: <resposta>", separadas por " · ". A resposta do ativo SHALL vir por último, com o patrimônio do ativo ou, sem ele, com o nome que as telas mostram (spec cadastro-de-ativos). A resposta de um campo que aparece por uma condição SHALL ir junto da resposta do campo de que ele depende, depois de uma vírgula, como "Problema: Manchando, na borda · Ativo: PAT-00139". A primeira letra dela SHALL ficar minúscula, fora quando a primeira palavra tem outra letra maiúscula, como "VPN" e "Wi-Fi".
+O resumo das respostas SHALL juntar as respostas que a pessoa vê, na ordem do formulário, cada uma como "<nome no resumo>: <resposta>", separadas por " · ". O nome no resumo vazio vale o rótulo sem o "?" (spec tipos-de-chamado, "Formulário do tipo"). A resposta SHALL aparecer:
+- no texto, numa linha só, como no título (spec tipos-de-chamado, "Título montado das respostas");
+- na opção, com o texto dela;
+- nas Várias opções, com os textos na ordem do campo, separados por vírgula, e a primeira letra minúscula a partir do segundo, fora quando a primeira palavra tem outra letra maiúscula, como "VPN" e "Wi-Fi";
+- no local e na pessoa, com o nome;
+- na data, como "12/11/2026";
+- no número, com o ponto dos milhares, como "18.450";
+- no anexo, como "1 arquivo" e "2 arquivos";
+- no Sim ou não, com "Sim" ou "Não".
+
+As respostas de Ativo SHALL vir por último, na ordem do formulário, com o patrimônio do ativo ou, sem ele, com o nome que as telas mostram (spec cadastro-de-ativos), também quando o campo aparece por uma condição.
+
+A opção e o texto que aparecem por uma condição SHALL ir junto da resposta do campo da primeira cláusula da condição que vale, depois de uma vírgula e sem o nome no resumo, como "Problema: Manchando, na borda · Ativo: PAT-00139". Quando a resposta desse campo já foi junto de outra, a deles SHALL ir junto da mesma. Na opção, a primeira letra SHALL ficar minúscula, com a mesma exceção da sigla, e o texto SHALL ficar como foi escrito. O Sim ou não, o número, a data, o local, a pessoa e o anexo que aparecem por uma condição SHALL ficar na posição deles, com o nome no resumo, como "Problema: Sem acesso a um sistema · Já reiniciou: Sim", porque sem o nome não se sabe a que respondem.
+
+O resumo SHALL ser montado na leitura do chamado, da cópia do formulário e das respostas guardadas na abertura, com os nomes de agora dos ativos, dos locais e das pessoas. As respostas do Ativo, do Local e da Pessoa guardam a referência, e não o nome.
 
 Os alertas do ativo ligado abertos depois da abertura do chamado SHALL aparecer na conversa, na hora em que abriram, a quem vê os alertas do ativo, como "Toner preto abaixo de 10% · 09:36".
 
@@ -207,8 +221,16 @@ As recusas SHALL ser "Escreva a mensagem.", "Use até 4.000 caracteres." e "Anex
 - **THEN** a conversa do #1042 mostra o alerta às 09:36 a quem vê os alertas da PAT-00139, e quem não os vê não o vê
 
 #### Scenario: Sigla na resposta condicional
-- **WHEN** a resposta de um campo que aparece por uma condição é "VPN não conecta"
+- **WHEN** a resposta de um campo que aparece por uma condição é a opção "VPN não conecta"
 - **THEN** o resumo a junta depois da vírgula como "VPN não conecta", com a maiúscula
+
+#### Scenario: Texto na resposta condicional
+- **WHEN** a resposta de um campo que aparece por uma condição é o texto "Fernanda pediu a troca"
+- **THEN** o resumo a junta depois da vírgula como "Fernanda pediu a troca", como foi escrito
+
+#### Scenario: Sim ou não na resposta condicional
+- **WHEN** o "Já reiniciou?" aparece quando o problema é "Sem acesso a um sistema", e a pessoa responde "Sim"
+- **THEN** o resumo é "Problema: Sem acesso a um sistema · Já reiniciou: Sim"
 
 ### Requirement: Prazo do chamado
 
@@ -341,7 +363,7 @@ Quem tem `chamados.ver` num dos locais do chamado SHALL vê-lo. Quem tem `chamad
 
 A API SHALL repetir essas verificações em cada rota. O chamado que a conta não vê SHALL responder como inexistente.
 
-O chamado SHALL mostrar a quem o vê o nome e o local de trabalho da pessoa que pediu, porque o pedido é dela. Os contatos da pessoa e o atalho para a ficha dela SHALL aparecer só a quem tem `pessoas.ver` no local dela. A pessoa anonimizada SHALL aparecer como "Pessoa anonimizada" com o código (spec administracao-de-pessoas), sem os contatos e sem o atalho, e o chamado SHALL continuar como estava. O título, as respostas, as mensagens e o motivo da solicitação SHALL ficar como foram escritos, mesmo com o nome da pessoa: a anonimização troca a referência à pessoa, e não o texto livre.
+O chamado SHALL mostrar a quem o vê o nome e o local de trabalho da pessoa que pediu, porque o pedido é dela. Os contatos da pessoa e o atalho para a ficha dela SHALL aparecer só a quem tem `pessoas.ver` no local dela. A pessoa anonimizada SHALL aparecer como "Pessoa anonimizada" com o código (spec administracao-de-pessoas), sem os contatos e sem o atalho, e o chamado SHALL continuar como estava. O título, as respostas de texto, as mensagens e o motivo da solicitação SHALL ficar como foram escritos, mesmo com o nome da pessoa: a anonimização troca a referência à pessoa, e não o texto livre. A resposta de um campo Pessoa é uma referência: no resumo das respostas, a pessoa anonimizada SHALL aparecer com o nome anonimizado, como no chamado.
 
 A nota interna, o campo só da TI e os anexos dos dois SHALL ir só a quem vê o chamado com `chamados.ver`, e nunca pela leitura que a pessoa terá do próprio chamado, no chat e na aba.
 
@@ -359,7 +381,11 @@ A nota interna, o campo só da TI e os anexos dos dois SHALL ir só a quem vê o
 
 #### Scenario: Pessoa anonimizada
 - **WHEN** Marina Lopes, já inativa, é anonimizada depois de resolvido o #1042
-- **THEN** o #1042 mostra "Pessoa anonimizada" com o código, sem os contatos, também a quem tem `pessoas.ver`, e o título, as respostas e as mensagens ficam como foram escritos
+- **THEN** o #1042 mostra "Pessoa anonimizada" com o código, sem os contatos, também a quem tem `pessoas.ver`, e o título, as respostas de texto e as mensagens ficam como foram escritos
+
+#### Scenario: Pessoa anonimizada no resumo
+- **WHEN** Marina Lopes, a resposta do "Quem vai usar?" do #1050, é anonimizada
+- **THEN** o resumo das respostas do #1050 mostra o nome anonimizado dela, com o código, no "Quem vai usar"
 
 ### Requirement: Respostas prontas
 

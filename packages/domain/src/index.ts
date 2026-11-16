@@ -246,6 +246,12 @@ export {
   responder,
 } from './chamados/respostas.ts';
 export {
+  type AtivoDasRespostas,
+  type ContextoDasRespostas,
+  resumoDasRespostas,
+  tituloDasRespostas,
+} from './chamados/titulo-e-resumo.ts';
+export {
   type AcessoAoSegredo,
   alcancaOSegredo,
   DURACAO_DA_LIBERACAO_DO_COFRE,
