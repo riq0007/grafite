@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { limparPessoa, textoDeBusca, validarPessoa } from './pessoa.ts';
+import { limparPessoa, nomeCurto, textoDeBusca, validarPessoa } from './pessoa.ts';
 
 const pessoa = (dados: Partial<Parameters<typeof validarPessoa>[0]> = {}) => ({
   nome: 'João da Silva',
@@ -86,5 +86,17 @@ describe('textoDeBusca', () => {
 
   it('deixa de fora o que não há', () => {
     expect(textoDeBusca({ nome: 'Ana Souza', matricula: null, email: null })).toBe('ana souza');
+  });
+});
+
+describe('nomeCurto', () => {
+  it('é o primeiro nome, sem os espaços das pontas', () => {
+    expect(nomeCurto('Fernanda Rocha')).toBe('Fernanda');
+    expect(nomeCurto('  Paulo   Nunes ')).toBe('Paulo');
+    expect(nomeCurto('Ana')).toBe('Ana');
+  });
+
+  it('mantém inteiro o nome da pessoa anonimizada, que tem o código', () => {
+    expect(nomeCurto('Pessoa anonimizada 7KQ2')).toBe('Pessoa anonimizada 7KQ2');
   });
 });

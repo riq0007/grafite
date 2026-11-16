@@ -160,10 +160,18 @@ Alternativa recusada: guardar o vencimento. Ele muda com o horário da TI e para
 A tabela é uma matriz no código, situação × ação, e os testes da 2.7 e da 2.8 a percorrem célula a célula. O invariante do chamado aguardando, sempre com alguém atendendo, sai dela: o "enviar e esperar" na triagem passa o chamado a quem enviou, e o devolver do aguardando é recusado.
 
 A `versao` sobe só nas ações que mudam a situação ou quem atende (assumir, desfazer, passar, devolver, enviar e esperar, retomar, resolver e reabrir) e na troca do ativo, que muda quem pode atender. A mensagem sem esperar, a nota, o título, os campos da TI e o fechamento dos relógios pela mudança do horário não a sobem. Assim:
-- assumir devolve a versão nova e o estado de antes;
-- o "Desfazer" manda os dois e é recusado com 409 e "O chamado mudou depois. Confira antes de desfazer." quando a versão não bate;
+- assumir devolve a versão nova;
+- o "Desfazer" manda só a versão. A rota lê o estado de antes do evento `assumiu` que ela gravou: quem estava é o `de`, e a situação de antes é a triagem, com o `de` nulo, e a de agora nos outros casos. Ele é recusado com 409 e "O chamado mudou depois. Confira antes de desfazer." quando a versão não bate ou quando o último evento que sobe a versão não é um `assumiu` de quem desfaz. Assim, o cliente não escolhe para quem o chamado volta, e o desfazer não vira um passar sem aviso, com um evento falso na conversa;
 - a nota escrita entre o assumir e o desfazer não o impede;
 - as outras ações usam a mesma conferência quando o cliente manda a versão, para dois técnicos não passarem o mesmo chamado ao mesmo tempo sem saber.
+
+**As ações que mudam quem atende.** O `decidirAcao(chamado, quemAge, pedido)` decide assumir, passar e devolver pela `MATRIZ_DAS_ACOES`. Cada célula diz a situação de chegada, com quem o chamado fica (quem age, a conta escolhida ou ninguém) e o efeito no relógio (segue, para ou volta), ou a recusa da célula. A decisão é a mudança (a situação, quem atende, o relógio, se a versão sobe e os eventos da conversa) ou a recusa, que o `mensagemDaRecusaDaAcao(numero, recusa)` escreve com a frase da spec:
+- o chamado chega com o nome da pessoa e com os locais e as contas com o nome, para as frases. Elas usam o primeiro nome (`nomeCurto`, no `pessoas/pessoa.ts`), fora a pessoa anonimizada, que fica com o nome inteiro, com o código;
+- quem age sem atender os locais recebe "Você não atende os chamados de <local>.", a frase da abertura. A conta escolhida que não atende os locais, ou está inativa, dá "<Nome> não atende os chamados de <local>.". O local é o primeiro do chamado fora do alcance; no chamado da organização inteira, a frase diz "os chamados da organização inteira";
+- o `decidirDesfazer(chamado, quemAge, { versao, antes })`, com o estado de antes que a rota lê do `assumiu`, confere a versão que o assumir deixou, que o chamado continua com quem desfaz e que o estado de antes é um dos que o assumir deixa: a triagem sem ninguém, ou o atendimento e o aguardando com outra conta. Senão, recusa com "O chamado mudou depois. Confira antes de desfazer.". A conta de antes chega como está agora, e a que deixou de atender os locais recusa o desfazer. Como o assumir não mexe no relógio, o desfazer também não;
+- os eventos são o `assumiu` (de quem estava), o `passou` (de quem e para quem), o `devolveu` (de quem) e o `desfez` (para quem o chamado volta, ou a triagem). Quem agiu é o autor do evento.
+
+A mensagem, a espera, a nota, retomar, resolver e reabrir entram na mesma matriz.
 
 O atendimento na abertura (`decidirAtendimento`) também é do domínio. Ele recebe:
 - o "Fica comigo";
@@ -252,7 +260,7 @@ Com "Cai na triagem", o chamado vai à triagem. Com "Fica com <pessoa> mesmo ass
 
 A conversa é uma tabela só, ordenada pelo `criada_em` e pelo id (uuidv7).
 
-O evento tem o código na coluna `evento`, como `assumiu`, `passou`, `aguardando`, `retomou`, `resolveu`, `reabriu`, `virou-os`, `solicitacao`, `ativo` e `abertura`, e os `dados`: as contas, a OS e a solicitação. A web monta a frase, para o nome atual das pessoas aparecer, como nas OS.
+O evento tem o código na coluna `evento`, como `assumiu`, `passou`, `devolveu`, `desfez`, `aguardando`, `retomou`, `resolveu`, `reabriu`, `virou-os`, `solicitacao`, `ativo` e `abertura`, e os `dados`: as contas, a OS e a solicitação. A web monta a frase, para o nome atual das pessoas aparecer, como nas OS.
 
 A abertura não guarda o resumo pronto. A leitura do chamado o monta pelo `resumoDasRespostas`, da cópia do formulário e das respostas que o chamado guarda desde a abertura, com os nomes de agora dos ativos, dos locais e das pessoas. As respostas do Ativo, do Local e da Pessoa guardam o id: com o resumo pronto, a pessoa anonimizada ficaria nele com o nome, e a spec manda a anonimização trocar a referência à pessoa, e não o texto livre (spec chamados, "Quem vê e quem atende os chamados").
 

@@ -133,6 +133,7 @@ As recusas SHALL ser:
 - "O chamado #1042 já está com você.", ao assumir o chamado que já está com quem assume;
 - "O chamado #1042 já está com <Nome>.", ao passar a quem já atende o chamado;
 - "<Nome> não atende os chamados de <local>.", ao passar a quem não atende os locais e no desfazer para quem deixou de atendê-los;
+- "Você não atende os chamados de <local>.", a quem age sem atender os locais do chamado, como na abertura;
 - "O chamado #1042 já está na triagem.", ao devolver um chamado da triagem;
 - "O chamado #1041 está aguardando Fernanda. Passe a outra pessoa ou retome antes de devolver.", ao devolver um chamado aguardando;
 - "O chamado #1042 não está aguardando.", ao retomar;
@@ -140,6 +141,8 @@ As recusas SHALL ser:
 - "O chamado mudou depois. Confira antes de desfazer.", no desfazer depois de outra ação;
 - "Preencha <campo> antes de resolver.", no campo só da TI obrigatório e vazio que a condição dele mostra;
 - "Escreva o que foi feito." e "Use até 2.000 caracteres.", na resolução.
+
+Na recusa pelos locais, o local SHALL ser o primeiro do chamado que a conta não atende. No chamado da organização inteira, a frase SHALL dizer "os chamados da organização inteira". Nas frases, a pessoa e as contas SHALL aparecer pelo primeiro nome, como "Fernanda" e "Bruno"; a pessoa anonimizada, pelo nome inteiro, que tem o código.
 
 #### Scenario: Assumir o estourado de outra pessoa
 - **WHEN** Ana assume o #1033, que está com Renato
@@ -152,6 +155,10 @@ As recusas SHALL ser:
 #### Scenario: Desfazer depois de uma nota
 - **WHEN** Ana assume o #1042, Diego grava uma nota nele, e Ana usa "Desfazer"
 - **THEN** o #1042 volta à triagem, e a nota de Diego continua na conversa
+
+#### Scenario: Desfazer para quem não atende mais
+- **WHEN** Ana assume o #1033, que estava com Renato, a conta de Renato é desativada, e Ana usa "Desfazer"
+- **THEN** o desfazer é recusado com "Renato não atende os chamados de Jundiaí.", e o #1033 continua com Ana
 
 #### Scenario: Passar a quem não atende o local
 - **WHEN** Ana tenta passar o #1038, da Sala Atlântico de Jundiaí, a Bruno, que atende só Campinas

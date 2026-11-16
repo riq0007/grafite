@@ -220,6 +220,30 @@ export {
 } from './campos/tipos.ts';
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
+  ACOES_DO_CHAMADO,
+  type AcaoDoChamado,
+  type CelulaDaAcao,
+  type ChamadoParaAcao,
+  type ContaQueRecebe,
+  type DecisaoDaAcao,
+  decidirAcao,
+  decidirDesfazer,
+  type EfeitoNoRelogio,
+  type EventoDaAcao,
+  type LocalDoChamado,
+  MATRIZ_DAS_ACOES,
+  type MudancaDoChamado,
+  mensagemDaRecusaDaAcao,
+  type PedidoDeAcao,
+  type PedidoDeDesfazer,
+  type QuemAge,
+  type QuemFica,
+  type RecusaDaAcao,
+  type RecusaDaCelula,
+  SITUACOES_DO_CHAMADO,
+  type SituacaoDoChamado,
+} from './chamados/acoes.ts';
+export {
   type AlcanceDeQuemAtende,
   type Atendimento,
   atendeOChamado,
@@ -813,6 +837,8 @@ export {
   type DadosDaPessoa,
   type ErrosDaPessoa,
   limparPessoa,
+  NOME_DA_PESSOA_ANONIMIZADA,
+  nomeCurto,
   textoDeBusca,
   validarPessoa,
 } from './pessoas/pessoa.ts';

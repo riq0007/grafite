@@ -2,6 +2,7 @@
 // quem atende"; change chamados-da-ti, design, decisão 7): com quem o chamado nasce, ou se nasce Na
 // triagem. A abertura recusa antes quem abre com o "Fica comigo" sem atender os locais do chamado.
 import { atendeASolicitacao } from '../solicitacoes/solicitacoes.ts';
+import type { SituacaoDoChamado } from './acoes.ts';
 import { type HorarioDaTi, noHorarioDaTi } from './prazo.ts';
 
 /** O "Se não houver ninguém" do tipo: "Cai na triagem" ou "Fica com <pessoa> mesmo assim". */
@@ -45,8 +46,8 @@ export interface PedidoDeAtendimento {
 }
 
 export type Atendimento =
-  | { situacao: 'em-atendimento'; atende: string }
-  | { situacao: 'triagem'; atende: null };
+  | { situacao: Extract<SituacaoDoChamado, 'em-atendimento'>; atende: string }
+  | { situacao: Extract<SituacaoDoChamado, 'triagem'>; atende: null };
 
 const NA_TRIAGEM: Atendimento = { situacao: 'triagem', atende: null };
 
