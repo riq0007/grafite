@@ -7,7 +7,13 @@
 import { normalizarTexto } from '../texto.ts';
 import { type ContaQueAtendePorPadrao, ehDaTi, type SemNinguem } from './atendimento.ts';
 import { type Formulario, recusaDoPedeOAtivo } from './formulario.ts';
-import { type HorarioDaTi, minutosDoPrazo, type PrazoDoTipo, type ValorDoPrazo } from './prazo.ts';
+import {
+  type HorarioDaTi,
+  MAIOR_NUMERO_DO_PRAZO,
+  minutosDoPrazo,
+  type PrazoDoTipo,
+  type ValorDoPrazo,
+} from './prazo.ts';
 
 /** Os ícones dos tipos de chamado, mapeados para o lucide na web (decisão 6). */
 export const ICONES_DO_TIPO_DE_CHAMADO = [
@@ -64,7 +70,6 @@ export const MENSAGENS_DO_TIPO_DE_CHAMADO = {
 
 const LIMITE_DO_NOME = 40;
 const LIMITE_DA_FRASE = 80;
-const MAIOR_NUMERO_DO_PRAZO = 999;
 
 /** O tipo como a tela o grava, com o formato conferido pelo esquema da rota. */
 export interface PedidoDoTipoDeChamado {

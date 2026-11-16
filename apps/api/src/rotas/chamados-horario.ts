@@ -29,7 +29,8 @@ const DiaDaSemana = z.literal([...DIAS_DA_SEMANA_DO_HORARIO]);
 /** O minuto do dia, das 00:00 (0) às 23:59 (1.439), como o banco guarda o início e o fim. */
 const MinutoDoDia = z.int().min(0).max(1439);
 
-const HorarioDaTiLido = z
+/** O horário como a leitura o dá: também na lista dos prazos, para a web recalcular a situação. */
+export const HorarioDaTiLido = z
   .object({
     /** Os dias do horário, em ordem e sem repetir. */
     dias: z.array(DiaDaSemana),

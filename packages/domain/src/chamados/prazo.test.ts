@@ -5,6 +5,7 @@ import {
   fraseDoPrazo,
   HORARIO_DA_TI_PADRAO,
   type HorarioDaTi,
+  lerPrazoDoChamado,
   minutosDoPrazo,
   momentoEmQueAlcanca,
   noHorarioDaTi,
@@ -443,5 +444,70 @@ describe('noHorarioDaTi', () => {
     // 09:00 em São Paulo são 07:00 em Nova York, no horário padrão de lá.
     expect(noHorarioDaTi(sp('2026-11-17T09:00'), NOVA_YORK)).toBe(false);
     expect(noHorarioDaTi(sp('2026-11-17T11:00'), NOVA_YORK)).toBe(true);
+  });
+});
+
+describe('lerPrazoDoChamado', () => {
+  const bom = {
+    modo: 'horario',
+    respostaMin: 60,
+    resolucaoMin: 1800,
+    resposta: { valor: 1, unidade: 'h' },
+    resolucao: { valor: 3, unidade: 'd' },
+  };
+
+  it('devolve o prazo copiado na abertura, só com o que ele tem', () => {
+    expect(lerPrazoDoChamado({ ...bom, sobra: true })).toEqual(bom);
+    expect(
+      lerPrazoDoChamado(
+        prazoEmMinutos(
+          {
+            modo: 'corridas',
+            resposta: { valor: 30, unidade: 'min' },
+            resolucao: { valor: 8, unidade: 'h' },
+          },
+          HORARIO_DA_TI_PADRAO,
+        ),
+      ),
+    ).toEqual({
+      modo: 'corridas',
+      respostaMin: 30,
+      resolucaoMin: 480,
+      resposta: { valor: 30, unidade: 'min' },
+      resolucao: { valor: 8, unidade: 'h' },
+    });
+    // O maior prazo, 999 dias corridos, cabe.
+    const maior = prazoEmMinutos(
+      {
+        modo: 'corridas',
+        resposta: { valor: 999, unidade: 'd' },
+        resolucao: { valor: 999, unidade: 'd' },
+      },
+      HORARIO_DA_TI_PADRAO,
+    );
+    expect(lerPrazoDoChamado(maior)).toEqual(maior);
+  });
+
+  it('o prazo estragado é nulo', () => {
+    for (const estragado of [
+      null,
+      'prazo',
+      [],
+      {},
+      { ...bom, modo: 'semana' },
+      { ...bom, respostaMin: 0 },
+      { ...bom, resolucaoMin: 0 },
+      { ...bom, resolucaoMin: -1 },
+      { ...bom, resolucaoMin: 999 * 24 * 60 + 1 },
+      { ...bom, resolucaoMin: 1.5 },
+      { ...bom, resolucaoMin: '1800' },
+      { ...bom, resposta: null },
+      { ...bom, resposta: { valor: 0, unidade: 'h' } },
+      { ...bom, resolucao: { valor: 3, unidade: 'semanas' } },
+      { ...bom, resolucao: { valor: 2.5, unidade: 'd' } },
+      { ...bom, resolucao: { valor: 1000, unidade: 'd' } },
+    ]) {
+      expect(lerPrazoDoChamado(estragado), JSON.stringify(estragado)).toBeNull();
+    }
   });
 });

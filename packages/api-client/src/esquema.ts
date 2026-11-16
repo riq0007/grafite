@@ -27592,6 +27592,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/prazos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os prazos: os chamados abertos pelo vencimento, nos grupos do dia */
+        get: {
+            parameters: {
+                query: {
+                    fuso: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrazosDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -34746,6 +34829,67 @@ export interface components {
                 })[];
             }[];
         };
+        TipoDeChamadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        HorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
         PedidoDeAberturaDoChamadoInput: {
             pessoa?: string | null;
             tipo?: string | null;
@@ -34816,73 +34960,77 @@ export interface components {
             resolvidosHoje: number[];
             contandoSoOsLocaisQueVe: boolean;
         };
+        PrazosDosChamadosInput: {
+            horario: components["schemas"]["HorarioDaTiInput"];
+            chamados: {
+                numero: number;
+                titulo: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                /** Format: date-time */
+                abertoEm: string;
+                tipo: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    icone: string;
+                };
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    local: string | null;
+                };
+                responsavel: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                    local: string | null;
+                } | null;
+                locais: string[];
+                semLocal: boolean;
+                relogio: {
+                    prazo: {
+                        /** @enum {string} */
+                        modo: "corridas" | "horario";
+                        respostaMin: number;
+                        resolucaoMin: number;
+                        resposta: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                        resolucao: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                    };
+                    contadoS: number;
+                    relogioDesde: string | null;
+                    primeiraRespostaEm: string | null;
+                } | null;
+                grupo: ("estourado" | "ate-2-horas" | "hoje" | "depois-de-hoje" | "parado") | null;
+                ultimaMensagem: {
+                    autor: string;
+                    /** Format: date-time */
+                    em: string;
+                    texto: string;
+                } | null;
+            }[];
+        };
         AnexoEnviadoInput: {
             /** Format: uuid */
             id: string;
             nome: string;
             tipo: string;
             bytes: number;
-        };
-        HorarioDaTiInput: {
-            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
-            inicio: number;
-            fim: number;
-            fuso: string;
-            cargaCheia: number;
-        };
-        PedidoDoHorarioDaTiInput: {
-            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
-            inicio: number;
-            fim: number;
-            fuso: string;
-            cargaCheia: number;
-        };
-        TipoDeChamadoInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            /** @enum {string} */
-            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            frase: string | null;
-            /** @enum {string} */
-            situacao: "rascunho" | "em-uso" | "inativo";
-            ordem: number;
-            prazo: {
-                /** @enum {string} */
-                modo: "corridas" | "horario";
-                resposta: {
-                    valor: number;
-                    /** @enum {string} */
-                    unidade: "min" | "h" | "d";
-                };
-                resolucao: {
-                    valor: number;
-                    /** @enum {string} */
-                    unidade: "min" | "h" | "d";
-                };
-            };
-            atendePorPadrao: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            /** @enum {string} */
-            semNinguem: "triagem" | "fica";
-            podeVirarOs: boolean;
-            /** @enum {string} */
-            geraSolicitacao: "nao" | "toner" | "equipamento";
-            tipoDeAtivoDoEquipamento: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            pedeOAtivo: boolean;
-            apareceParaOColaborador: boolean;
-            soATiAbre: boolean;
-            campos: number;
-            duplicadoDe: string | null;
-            abertos: number;
-            noUltimoAno: number;
         };
         RespostaProntaInput: {
             /** Format: uuid */
@@ -39625,6 +39773,67 @@ export interface components {
                 })[];
             }[];
         };
+        TipoDeChamado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        HorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
         PedidoDeAberturaDoChamado: {
             pessoa?: string | null;
             tipo?: string | null;
@@ -39695,73 +39904,77 @@ export interface components {
             resolvidosHoje: number[];
             contandoSoOsLocaisQueVe: boolean;
         };
+        PrazosDosChamados: {
+            horario: components["schemas"]["HorarioDaTi"];
+            chamados: {
+                numero: number;
+                titulo: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                /** Format: date-time */
+                abertoEm: string;
+                tipo: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    icone: string;
+                };
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    local: string | null;
+                };
+                responsavel: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                    local: string | null;
+                } | null;
+                locais: string[];
+                semLocal: boolean;
+                relogio: {
+                    prazo: {
+                        /** @enum {string} */
+                        modo: "corridas" | "horario";
+                        respostaMin: number;
+                        resolucaoMin: number;
+                        resposta: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                        resolucao: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                    };
+                    contadoS: number;
+                    relogioDesde: string | null;
+                    primeiraRespostaEm: string | null;
+                } | null;
+                grupo: ("estourado" | "ate-2-horas" | "hoje" | "depois-de-hoje" | "parado") | null;
+                ultimaMensagem: {
+                    autor: string;
+                    /** Format: date-time */
+                    em: string;
+                    texto: string;
+                } | null;
+            }[];
+        };
         AnexoEnviado: {
             /** Format: uuid */
             id: string;
             nome: string;
             tipo: string;
             bytes: number;
-        };
-        HorarioDaTi: {
-            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
-            inicio: number;
-            fim: number;
-            fuso: string;
-            cargaCheia: number;
-        };
-        PedidoDoHorarioDaTi: {
-            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
-            inicio: number;
-            fim: number;
-            fuso: string;
-            cargaCheia: number;
-        };
-        TipoDeChamado: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            /** @enum {string} */
-            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            frase: string | null;
-            /** @enum {string} */
-            situacao: "rascunho" | "em-uso" | "inativo";
-            ordem: number;
-            prazo: {
-                /** @enum {string} */
-                modo: "corridas" | "horario";
-                resposta: {
-                    valor: number;
-                    /** @enum {string} */
-                    unidade: "min" | "h" | "d";
-                };
-                resolucao: {
-                    valor: number;
-                    /** @enum {string} */
-                    unidade: "min" | "h" | "d";
-                };
-            };
-            atendePorPadrao: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            /** @enum {string} */
-            semNinguem: "triagem" | "fica";
-            podeVirarOs: boolean;
-            /** @enum {string} */
-            geraSolicitacao: "nao" | "toner" | "equipamento";
-            tipoDeAtivoDoEquipamento: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            pedeOAtivo: boolean;
-            apareceParaOColaborador: boolean;
-            soATiAbre: boolean;
-            campos: number;
-            duplicadoDe: string | null;
-            abertos: number;
-            noUltimoAno: number;
         };
         RespostaPronta: {
             /** Format: uuid */

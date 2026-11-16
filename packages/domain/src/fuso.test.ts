@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { comecoDoDia, relogioDoFuso } from './fuso.ts';
+import { comecoDoDia, nomeDoFuso, relogioDoFuso } from './fuso.ts';
 
 describe('comecoDoDia', () => {
   it('é a meia-noite do dia no relógio do fuso', () => {
@@ -78,5 +78,30 @@ describe('o formato do relógio do fuso', () => {
     // E o texto pedido não ficou guardado: pedi-lo de novo monta o formato outra vez.
     expect(relogioDoFuso(momento, 'pacific/auckland')).toEqual(emMinusculas);
     expect(montar).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('nomeDoFuso', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('é o nome que o Intl devolve, na caixa certa', () => {
+    expect(nomeDoFuso('America/Sao_Paulo')).toBe('America/Sao_Paulo');
+    expect(nomeDoFuso('america/sao_paulo')).toBe('America/Sao_Paulo');
+    expect(nomeDoFuso('utc')).toBe('UTC');
+  });
+
+  it('o fuso que o Intl não conhece não tem nome', () => {
+    expect(nomeDoFuso('America/Jundiai')).toBeNull();
+    expect(nomeDoFuso('')).toBeNull();
+  });
+
+  it('pelo nome, o relógio acha o formato guardado, sem montar outro', () => {
+    // A rota troca o fuso da consulta pelo nome uma vez, antes do laço dos chamados.
+    const nome = nomeDoFuso('europe/lisbon') ?? '';
+    const montar = contarOsFormatosMontados();
+    relogioDoFuso(new Date('2026-10-02T14:00:00Z'), nome);
+    expect(montar).not.toHaveBeenCalled();
   });
 });

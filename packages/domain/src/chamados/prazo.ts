@@ -23,6 +23,11 @@ export interface ValorDoPrazo {
   unidade: UnidadeDoPrazo;
 }
 
+/** O maior número de um prazo do tipo, como em "999 dias". */
+export const MAIOR_NUMERO_DO_PRAZO = 999;
+/** O maior prazo em minutos: 999 dias de 24 h. O dia útil do horário da TI é mais curto. */
+const MAIOR_PRAZO_EM_MINUTOS = MAIOR_NUMERO_DO_PRAZO * 24 * 60;
+
 /** O prazo do tipo: a resposta, a resolução e o modo de contar. */
 export interface PrazoDoTipo {
   modo: ModoDoPrazo;
@@ -119,6 +124,47 @@ export function minutosDoPrazo(
   if (unidade === 'min') return valor;
   if (unidade === 'h') return valor * 60;
   return valor * (modo === 'horario' ? horario.fim - horario.inicio : 24 * 60);
+}
+
+const ehRegistro = (valor: unknown): valor is Record<string, unknown> =>
+  typeof valor === 'object' && valor !== null;
+
+const inteiroEntre = (valor: unknown, menor: number, maior: number): valor is number =>
+  Number.isInteger(valor) && (valor as number) >= menor && (valor as number) <= maior;
+
+const ehUnidade = (valor: unknown): valor is UnidadeDoPrazo =>
+  (UNIDADES_DO_PRAZO as readonly unknown[]).includes(valor);
+
+const ehModo = (valor: unknown): valor is ModoDoPrazo =>
+  (MODOS_DO_PRAZO as readonly unknown[]).includes(valor);
+
+function lerValorDoPrazo(valor: unknown): ValorDoPrazo | null {
+  if (!ehRegistro(valor)) return null;
+  const { valor: numero, unidade } = valor;
+  if (!inteiroEntre(numero, 1, MAIOR_NUMERO_DO_PRAZO) || !ehUnidade(unidade)) return null;
+  return { valor: numero, unidade };
+}
+
+/**
+ * O prazo copiado na abertura, conferido na leitura, só com o que ele tem; `null` no estragado. O
+ * banco guarda o prazo num documento sem conferência, e o estragado faria o relógio contar errado
+ * ou o `momentoEmQueAlcanca` recusar o tempo. Os minutos vão de 1 ao maior prazo, 999 dias de 24 h.
+ */
+export function lerPrazoDoChamado(valor: unknown): PrazoDoChamado | null {
+  if (!ehRegistro(valor)) return null;
+  const { modo, respostaMin, resolucaoMin } = valor;
+  const resposta = lerValorDoPrazo(valor.resposta);
+  const resolucao = lerValorDoPrazo(valor.resolucao);
+  if (
+    !ehModo(modo) ||
+    !inteiroEntre(respostaMin, 1, MAIOR_PRAZO_EM_MINUTOS) ||
+    !inteiroEntre(resolucaoMin, 1, MAIOR_PRAZO_EM_MINUTOS) ||
+    resposta === null ||
+    resolucao === null
+  ) {
+    return null;
+  }
+  return { modo, respostaMin, resolucaoMin, resposta, resolucao };
 }
 
 /** O prazo que o chamado copia na abertura, com o dia útil do horário de agora. */
@@ -243,10 +289,12 @@ export function segundosNoHorario(
 }
 
 /**
- * O maior tempo que falta num prazo, em segundos: o tipo vai até 999 na unidade, e o dia mais
- * longo é o de 24 h, das horas corridas. O tempo que falta nunca passa do prazo copiado.
+ * O maior tempo que falta num prazo, em segundos: o maior prazo em minutos, o mesmo que o
+ * `lerPrazoDoChamado` aceita (o tipo vai até 999 na unidade, e o dia mais longo é o de 24 h, das
+ * horas corridas). O tempo que falta nunca passa do prazo copiado, e o prazo lido nunca faz o
+ * `momentoEmQueAlcanca` recusar o tempo.
  */
-const SEGUNDOS_NO_MAIOR_PRAZO = 999 * 24 * 60 * 60;
+const SEGUNDOS_NO_MAIOR_PRAZO = MAIOR_PRAZO_EM_MINUTOS * 60;
 
 /**
  * O momento em que o relógio, contando desde `desde`, completa os segundos que faltam: em horas

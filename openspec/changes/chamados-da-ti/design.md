@@ -204,6 +204,8 @@ O público dos eventos é o `publicoDoChamado`, igual ao `publicoDaOrdem`, com o
 
 **A pessoa no chamado.** A leitura manda o nome e o local de trabalho da pessoa a toda conta que vê o chamado, porque o pedido é dela. Os contatos e o atalho da ficha vão só a quem tem `pessoas.ver` no local da pessoa, como a pessoa da máquina no software (spec distribuicao-de-software, "Pessoa da máquina"). A pessoa anonimizada vai com o nome anonimizado do cadastro dela, que já tem o código, e sem os contatos.
 
+**O ativo no chamado.** A leitura manda o rótulo, o patrimônio e o caminho do local do ativo ligado a toda conta que vê o chamado, como a pessoa: os locais do chamado já têm o do ativo. O atalho da ficha do ativo aparece só a quem tem `ativos.ver` no local dele, e os alertas, só a quem tem `alertas.ver` (decisão 9).
+
 ### 6. Os tipos de fábrica, numa lista só
 
 `TIPOS_DE_CHAMADO_DE_FABRICA` (domínio) traz os 9 tipos com o formulário de cada um. O `organizacao criar` os grava na mesma transação, com uma `tipo-de-chamado.criado` por tipo na auditoria. A migration os grava nas organizações que já existem, como a `0057_categorias_de_software`. O texto da migration sai de um gerador conferido por um teste contra a lista do domínio, para os dois não se afastarem:

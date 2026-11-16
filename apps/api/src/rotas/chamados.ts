@@ -1,14 +1,17 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.9): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.10): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
-// quem abre e para a prévia do colaborador de quem configura; e o quadro, com `chamados.ver`. As
-// regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts` e `chamados/quadro.ts`; aqui, o
-// formato do pedido e da resposta. A
+// quem abre e para a prévia do colaborador de quem configura; e o quadro e a lista dos prazos, com
+// `chamados.ver`. As regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`,
+// `chamados/quadro.ts` e `chamados/prazos.ts`; aqui, o formato do pedido e da resposta. A
 // pessoa e o tipo da abertura chegam como ids, e o vazio deles é recusado pela abertura, com as
 // outras recusas dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
   fusoReconhecido,
+  GRUPOS_DO_PRAZO,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
+  MODOS_DO_PRAZO,
+  nomeDoFuso,
   RECUSA_DO_FORMULARIO,
   SITUACOES_DO_CHAMADO,
 } from '@grafite/domain';
@@ -17,10 +20,13 @@ import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
+import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
+import { ValorDoPrazo } from '../chamados/tipos.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { RespostaDeProblema } from '../problemas.ts';
+import { HorarioDaTiLido } from './chamados-horario.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 const PedidoDeAbertura = z
@@ -88,11 +94,16 @@ const SugestoesDoChamado = z
 
 const FUSO_DESCONHECIDO = 'Fuso horário desconhecido.';
 
-const PedidoDoQuadro = z.object({
-  /** O fuso de quem olha, que diz o que é hoje. */
+const PedidoComOFuso = z.object({
+  /**
+   * O fuso de quem olha, que diz o que é hoje, trocado uma vez pelo nome que o Intl devolve: o
+   * quadro e a lista leem o relógio dele em cada chamado, e o fuso escrito em outra caixa montaria
+   * o formato em cada leitura (tarefa 4.23).
+   */
   fuso: z
     .string({ error: FUSO_DESCONHECIDO })
-    .refine(fusoReconhecido, { error: FUSO_DESCONHECIDO }),
+    .refine(fusoReconhecido, { error: FUSO_DESCONHECIDO })
+    .transform((fuso) => nomeDoFuso(fuso) ?? fuso),
 });
 
 /** O aberto há mais tempo, pela abertura: "mais antigo #1041, há 17 h". */
@@ -129,6 +140,64 @@ const QuadroDosChamados = z
     contandoSoOsLocaisQueVe: z.boolean(),
   })
   .meta({ id: 'QuadroDosChamados' });
+
+/** Um chamado aberto na lista dos prazos, com o que a lista e o painel mostram. */
+const ChamadoNosPrazos = z.object({
+  numero: z.int(),
+  titulo: z.string(),
+  situacao: z.enum(SITUACOES_DO_CHAMADO),
+  abertoEm: z.iso.datetime(),
+  tipo: z.object({ id: z.uuid(), nome: z.string(), icone: z.string() }),
+  /** Quem pediu, com o caminho do local de trabalho, como "Jundiaí › Financeiro". */
+  pessoa: z.object({ id: z.uuid(), nome: z.string(), local: z.string().nullable() }),
+  responsavel: z.object({ conta: z.uuid(), nome: z.string() }).nullable(),
+  ativo: z
+    .object({
+      id: z.uuid(),
+      rotulo: z.string(),
+      patrimonio: z.string().nullable(),
+      /** O caminho do local do ativo. */
+      local: z.string().nullable(),
+    })
+    .nullable(),
+  locais: z.array(z.uuid()),
+  semLocal: z.boolean(),
+  /**
+   * O relógio guardado, de onde a web recalcula a situação a cada minuto, com o horário da TI; nulo
+   * com o prazo estragado.
+   */
+  relogio: z
+    .object({
+      /** O prazo copiado do tipo na abertura, em minutos, com o valor e a unidade do tipo. */
+      prazo: z.object({
+        modo: z.enum(MODOS_DO_PRAZO),
+        respostaMin: z.int(),
+        resolucaoMin: z.int(),
+        resposta: ValorDoPrazo,
+        resolucao: ValorDoPrazo,
+      }),
+      /** Os segundos contados até a última parada. */
+      contadoS: z.int(),
+      /** O instante em que o relógio voltou a contar, ou nulo, com ele parado. */
+      relogioDesde: z.iso.datetime().nullable(),
+      primeiraRespostaEm: z.iso.datetime().nullable(),
+    })
+    .nullable(),
+  /** O grupo no momento da leitura, no dia do fuso de quem olha; nulo com o prazo estragado. */
+  grupo: z.enum(GRUPOS_DO_PRAZO).nullable(),
+  /** A última mensagem, de quem pediu ou da TI, com o começo do texto, até 280 caracteres. */
+  ultimaMensagem: z
+    .object({ autor: z.string(), em: z.iso.datetime(), texto: z.string() })
+    .nullable(),
+});
+
+const PrazosDosChamados = z
+  .object({
+    horario: HorarioDaTiLido,
+    /** Pelo vencimento, com o empate pelo número, e os de prazo estragado no fim, pelo número. */
+    chamados: z.array(ChamadoNosPrazos),
+  })
+  .meta({ id: 'PrazosDosChamados' });
 
 const PROBLEMAS = { 401: RespostaDeProblema, 409: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 
@@ -203,13 +272,34 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       config: { permissao: 'chamados.ver' },
       schema: {
         summary: 'O quadro: a triagem, a carga de cada pessoa da TI e os resolvidos hoje',
-        querystring: PedidoDoQuadro,
+        querystring: PedidoComOFuso,
         response: { 200: QuadroDosChamados, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
       },
     },
     (requisicao) =>
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
         quadroDosChamados(tx, {
+          acesso: sessaoDa(requisicao).acesso,
+          arvore: await lerArvore(tx),
+          fuso: requisicao.query.fuso,
+          agora: agora(),
+        }),
+      ),
+  );
+
+  app.get(
+    '/chamados/prazos',
+    {
+      config: { permissao: 'chamados.ver' },
+      schema: {
+        summary: 'Os prazos: os chamados abertos pelo vencimento, nos grupos do dia',
+        querystring: PedidoComOFuso,
+        response: { 200: PrazosDosChamados, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        prazosDosChamados(tx, {
           acesso: sessaoDa(requisicao).acesso,
           arvore: await lerArvore(tx),
           fuso: requisicao.query.fuso,

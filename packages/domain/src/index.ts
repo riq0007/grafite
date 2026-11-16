@@ -321,6 +321,8 @@ export {
   fraseDoPrazo,
   HORARIO_DA_TI_PADRAO,
   type HorarioDaTi,
+  lerPrazoDoChamado,
+  MAIOR_NUMERO_DO_PRAZO,
   MODOS_DO_PRAZO,
   type ModoDoPrazo,
   minutosDoPrazo,
@@ -665,7 +667,7 @@ export {
   nomeNormalizadoDoFornecedor,
   validarFornecedor,
 } from './fornecedores/fornecedor.ts';
-export { comecoDoDia } from './fuso.ts';
+export { comecoDoDia, nomeDoFuso } from './fuso.ts';
 export {
   type AtivoNoIndice,
   type CampoDoCasamento,

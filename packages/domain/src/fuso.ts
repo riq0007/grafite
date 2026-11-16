@@ -34,6 +34,16 @@ function formatoDo(fuso: string): Intl.DateTimeFormat | null {
   return formato;
 }
 
+/**
+ * O nome que o Intl dá ao fuso, na caixa certa, como "America/Sao_Paulo" para "america/sao_paulo";
+ * `null` no fuso que ele não conhece. A rota que recebe o fuso da consulta e lê o relógio dele num
+ * laço o troca pelo nome uma vez: pelo nome, o relógio acha o formato guardado, sem montar outro a
+ * cada leitura.
+ */
+export function nomeDoFuso(fuso: string): string | null {
+  return formatoDo(fuso)?.resolvedOptions().timeZone ?? null;
+}
+
 /** Se o fuso existe no Intl do servidor (e do navegador). */
 export function fusoValido(fuso: string | null | undefined): fuso is string {
   return !!fuso && formatoDo(fuso) !== null;
