@@ -5,7 +5,7 @@
 // os tipos de ativo ativos, o formulário gravado, o que o tipo gerava antes e o alcance das
 // solicitações de quem grava. O nome repetido, quem acha é o índice único do banco.
 import { normalizarTexto } from '../texto.ts';
-import type { ContaQueAtendePorPadrao, SemNinguem } from './atendimento.ts';
+import { type ContaQueAtendePorPadrao, ehDaTi, type SemNinguem } from './atendimento.ts';
 import { type Formulario, recusaDoPedeOAtivo } from './formulario.ts';
 import { type HorarioDaTi, minutosDoPrazo, type PrazoDoTipo, type ValorDoPrazo } from './prazo.ts';
 
@@ -192,11 +192,7 @@ export function conferirTipoDeChamado(
 
   const conta = contexto.quemAtende;
   if (pedido.atendePorPadrao !== null) {
-    const atende =
-      conta !== null &&
-      conta.id === pedido.atendePorPadrao &&
-      conta.ativa &&
-      conta.alcance !== null;
+    const atende = conta !== null && conta.id === pedido.atendePorPadrao && ehDaTi(conta);
     if (!atende) anotar('atendePorPadrao', M.quemAtende);
   } else if (pedido.semNinguem === 'fica') {
     anotar('atendePorPadrao', M.quemAtende);

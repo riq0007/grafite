@@ -82,7 +82,7 @@ A tela SHALL ter:
 - **uma coluna por pessoa da TI** (spec chamados, requisito "Carga de cada pessoa"), com:
   - a sigla num círculo;
   - o nome em peso forte;
-  - "2 abertos · mais antigo #1041, há 17 h";
+  - "2 abertos · mais antigo #1041, há 17 h", ou só "0 abertos";
   - a barra de carga em pedaços;
   - no pé, "Resolveu hoje: #1035" ou "Nada resolvido hoje";
 - **a coluna de quem não atende mais os chamados** e ainda tem chamados abertos, depois das outras, com "não atende mais os chamados" junto do nome;
@@ -123,6 +123,7 @@ Durante o arraste:
 - o lugar de origem SHALL ficar com o contorno tracejado e o aviso "O #1038 está sendo movido. O prazo dele vence em 2 h.";
 - a coluna sob o ponteiro SHALL ganhar a borda forte, o pedaço seguinte da barra tracejado e a frase "Soltar para passar a Renato · o prazo continua contando", ou, no chamado aguardando, "Soltar para passar a Renato · o relógio continua parado";
 - a coluna de quem não atende os locais do chamado SHALL dizer "Renato não atende Jundiaí" e SHALL NOT receber o quadrado;
+- a coluna de quem não atende mais os chamados SHALL NOT receber o quadrado;
 - a coluna "Sem responsável" SHALL dizer, no chamado aguardando, "O #1041 está aguardando Fernanda" e SHALL NOT recebê-lo.
 
 Esc SHALL cancelar o arraste. Soltar fora de uma coluna SHALL deixar o chamado como estava.

@@ -453,10 +453,14 @@ As pessoas da TI SHALL ser:
 - as contas com chamados abertos que não atendem mais os chamados (requisito "Situação e quem atende"), com "não atende mais os chamados".
 
 A carga de cada pessoa SHALL contar só os chamados que a conta que olha vê:
-- os chamados Em atendimento e Aguardando o colaborador com ela, como "2 abertos";
-- o mais antigo deles, como "mais antigo #1041, há 17 h";
+- os chamados Em atendimento e Aguardando o colaborador com ela, como "2 abertos", "1 aberto" e "0 abertos";
+- o mais antigo deles, pela abertura, como "mais antigo #1041, há 17 h";
 - a barra em tantos pedaços quanto a carga cheia, um por chamado, cheia a partir dela;
-- os chamados que ela resolveu hoje, como "Resolveu hoje: #1035", ou "Nada resolvido hoje".
+- os chamados que ela resolveu hoje, como "Resolveu hoje: #1035", ou "Nada resolvido hoje". Com mais de três, SHALL listar os três primeiros pelo número, como "Resolveu hoje: #1031, #1033, #1035 e mais 2".
+
+As colunas das pessoas SHALL seguir os nomes em ordem alfabética, e as de quem não atende mais os chamados SHALL vir depois das outras, também pelo nome.
+
+O chamado aberto que está com uma conta que não o atende mais, porque ela foi desativada ou perdeu a permissão nos locais dele, SHALL ficar na coluna dela de quem não atende mais os chamados, mesmo quando ela ainda atende outros locais. O resolvido hoje SHALL ficar na coluna de pessoa da TI da conta que resolveu ou, sem ela, na de quem não atende mais; sem nenhuma das duas, SHALL contar só na contagem do Início.
 
 Quem não vê os chamados da organização inteira SHALL ler "Contando só os chamados dos locais que você vê." junto das contagens.
 
@@ -469,6 +473,10 @@ O hoje SHALL ser o dia do fuso da conta que olha.
 #### Scenario: Carga de quem vê um local só
 - **WHEN** Bruno, que vê só os chamados de Campinas, abre "Quem está com o quê", e Diego tem 2 chamados de Campinas e 5 de Jundiaí
 - **THEN** a coluna de Diego diz "2 abertos", e a tela diz "Contando só os chamados dos locais que você vê."
+
+#### Scenario: Quem perdeu um dos locais
+- **WHEN** Renato, que atendia Campinas e Jundiaí, perde Jundiaí, com o #1033, de Jundiaí, e o #1036, de Campinas, com ele
+- **THEN** a coluna de Renato tem o #1036, e a coluna "Renato Alves · não atende mais os chamados", depois das outras, tem o #1033
 
 ### Requirement: OS e solicitação pelo chamado
 

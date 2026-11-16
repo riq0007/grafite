@@ -3,8 +3,10 @@ import {
   atendeOChamado,
   type ContaQueAtendePorPadrao,
   decidirAtendimento,
+  ehDaTi,
   type LocaisDoChamado,
   type PedidoDeAtendimento,
+  veOChamado,
 } from './atendimento.ts';
 import { HORARIO_DA_TI_PADRAO } from './prazo.ts';
 
@@ -122,5 +124,28 @@ describe('atendeOChamado', () => {
     expect(atendeOChamado(null, doisLocais)).toBe(false);
     expect(atendeOChamado(new Set([JUNDIAI]), { locais: [JUNDIAI], semLocal: true })).toBe(false);
     expect(atendeOChamado('organizacao', { locais: [], semLocal: true })).toBe(true);
+  });
+});
+
+describe('ehDaTi', () => {
+  it('é da TI a conta ativa com `chamados.atender` em algum local', () => {
+    expect(ehDaTi(DIEGO)).toBe(true);
+    expect(ehDaTi({ ...DIEGO, alcance: 'organizacao' })).toBe(true);
+    expect(ehDaTi({ ...DIEGO, ativa: false })).toBe(false);
+    expect(ehDaTi({ ...DIEGO, alcance: null })).toBe(false);
+    expect(ehDaTi({ ...DIEGO, alcance: new Set() })).toBe(false);
+  });
+});
+
+describe('veOChamado', () => {
+  it('vê quem tem `chamados.ver` num dos locais, e o sem local, na organização inteira', () => {
+    const doisLocais: LocaisDoChamado = { locais: [JUNDIAI, CAMPINAS], semLocal: false };
+    expect(veOChamado('organizacao', doisLocais)).toBe(true);
+    expect(veOChamado(new Set([CAMPINAS]), doisLocais)).toBe(true);
+    expect(veOChamado(new Set([CAMPINAS]), EM_JUNDIAI)).toBe(false);
+    expect(veOChamado(null, doisLocais)).toBe(false);
+    expect(veOChamado(new Set([JUNDIAI]), { locais: [JUNDIAI], semLocal: true })).toBe(true);
+    expect(veOChamado(new Set([JUNDIAI]), { locais: [], semLocal: true })).toBe(false);
+    expect(veOChamado('organizacao', { locais: [], semLocal: true })).toBe(true);
   });
 });

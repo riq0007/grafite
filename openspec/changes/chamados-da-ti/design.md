@@ -279,6 +279,13 @@ Com "Cai na triagem", o chamado vai à triagem. Com "Fica com <pessoa> mesmo ass
 
 **Quem não atende mais.** O chamado guarda quem atende, e a leitura confere a cada vez se essa conta ainda está ativa e atende os locais dele. Quando não, a leitura a marca "não atende mais os chamados": o quadro abre a coluna dela depois das outras, e a tarefa do prazo avisa quem atende os locais, como na triagem. O chamado não muda até alguém o assumir ou passar. Assim, a desativação de uma conta e a troca de um perfil não precisam saber dos chamados. A troca do ativo, que é dos chamados, recusa os locais novos que quem atende não atende.
 
+**A carga no domínio.** O `cargaDasPessoas` (`packages/domain/src/chamados/carga.ts`) recebe:
+- as contas: as ativas com `chamados.atender` e as de quem atende os chamados abertos, lidas depois dos chamados (4.9), cada uma com o alcance de agora;
+- os chamados abertos e os resolvidos;
+- o alcance de `chamados.ver` de quem olha, a carga cheia, o momento e o fuso de quem olha.
+
+Ele conta só os chamados que quem olha vê, pelo `veOChamado`, que é o `veASolicitacao` (decisão 5). A conta é da TI pelo `ehDaTi`, a mesma regra de quem atende o tipo por padrão (decisão 6): ativa, com `chamados.atender` em algum local. Devolve a triagem, as colunas, todos os resolvidos hoje, para a contagem do Início, e o `contandoSoOsLocaisQueVe`. Cada coluna traz os números dos abertos, o mais antigo, os pedaços e os resolvidos hoje. A marca de quem não atende mais é de cada chamado: a conta que perdeu um dos locais fica com duas colunas, a dela e a dos chamados que não atende mais. A ordem dos quadrados pelo vencimento é da tela, pelo `compararPrazos`. A saudação é o `saudacao(nome, agora, fuso)`, no mesmo arquivo.
+
 ### 8. A conversa e o resumo
 
 A conversa é uma tabela só, ordenada pelo `criada_em` e pelo id (uuidv7).

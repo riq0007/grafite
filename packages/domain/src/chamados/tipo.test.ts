@@ -416,7 +416,7 @@ describe('conferirTipoDeChamado', () => {
       expect(recusas(pedido, { ...NO_TONER, quemAtende: DIEGO })).toEqual({});
     });
 
-    it('recusa a conta desativada, a sem `chamados.atender` e a que não é da organização', () => {
+    it('recusa a conta desativada, a sem `chamados.atender` em algum local e a que não é da organização', () => {
       const pedido = { ...TONER, atendePorPadrao: DIEGO.id };
       const comDiego = (quemAtende: ContaQueAtendePorPadrao | null) => ({
         ...NO_TONER,
@@ -425,6 +425,7 @@ describe('conferirTipoDeChamado', () => {
       const recusa = { atendePorPadrao: M.quemAtende };
       expect(recusas(pedido, comDiego({ ...DIEGO, ativa: false }))).toEqual(recusa);
       expect(recusas(pedido, comDiego({ ...DIEGO, alcance: null }))).toEqual(recusa);
+      expect(recusas(pedido, comDiego({ ...DIEGO, alcance: new Set() }))).toEqual(recusa);
       expect(recusas(pedido, comDiego(null))).toEqual(recusa);
       expect(recusas(pedido, comDiego({ ...DIEGO, id: 'conta-renato' }))).toEqual(recusa);
     });

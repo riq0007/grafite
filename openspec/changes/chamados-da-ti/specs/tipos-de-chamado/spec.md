@@ -58,7 +58,7 @@ O prazo do tipo SHALL ser escrito como uma frase: "Responde em [30] [min] e reso
 - **O tamanho:** a resposta SHALL NOT passar da resolução, com o dia útil do horário da TI de quando o tipo é gravado.
 
 O atendimento SHALL ter:
-- **quem atende por padrão:** uma conta ativa com `chamados.atender`, ou ninguém, que leva o chamado à triagem;
+- **quem atende por padrão:** uma conta ativa com `chamados.atender` em algum local, ou ninguém, que leva o chamado à triagem;
 - **"Se não houver ninguém",** fora do horário da TI e quando quem atende por padrão não pode atender o chamado: "Cai na triagem" ou "Fica com <pessoa> mesmo assim", este só fora do horário.
 
 A gravação do tipo SHALL conferir quem atende por padrão como a conta está agora: a conta escolhida que depois foi desativada, ou perdeu o `chamados.atender`, SHALL ser recusada na gravação seguinte. "Fica com <pessoa> mesmo assim" SHALL pedir quem atende por padrão.

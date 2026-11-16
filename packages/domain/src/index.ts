@@ -250,15 +250,31 @@ export {
 } from './chamados/acoes.ts';
 export {
   type AlcanceDeQuemAtende,
+  type AlcanceDeQuemVe,
   type Atendimento,
   atendeOChamado,
   type ContaQueAtendePorPadrao,
   decidirAtendimento,
+  ehDaTi,
   type LocaisDoChamado,
   type PedidoDeAtendimento,
   SEM_NINGUEM,
   type SemNinguem,
+  veOChamado,
 } from './chamados/atendimento.ts';
+export {
+  AVISO_DO_ALCANCE,
+  type CargaDasPessoas,
+  type ChamadoMaisAntigo,
+  type ChamadoNaCarga,
+  type ColunaDaCarga,
+  type ContaNaCarga,
+  cargaDasPessoas,
+  type PedidoDaCarga,
+  saudacao,
+  textoDoResolvidoHoje,
+  textoDosAbertos,
+} from './chamados/carga.ts';
 export {
   type CampoDoFormulario,
   type ClausulaDaCondicao,

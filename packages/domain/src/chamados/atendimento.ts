@@ -1,7 +1,7 @@
 // O atendimento na abertura do chamado (spec chamados, "Abrir um chamado pela TI" e "Situação e
 // quem atende"; change chamados-da-ti, design, decisão 7): com quem o chamado nasce, ou se nasce Na
 // triagem. A abertura recusa antes quem abre com o "Fica comigo" sem atender os locais do chamado.
-import { atendeASolicitacao } from '../solicitacoes/solicitacoes.ts';
+import { atendeASolicitacao, veASolicitacao } from '../solicitacoes/solicitacoes.ts';
 import type { SituacaoDoChamado } from './acoes.ts';
 import { type HorarioDaTi, noHorarioDaTi } from './prazo.ts';
 
@@ -26,11 +26,31 @@ export function atendeOChamado(alcance: AlcanceDeQuemAtende, chamado: LocaisDoCh
   return atendeASolicitacao(alcance, chamado);
 }
 
+/** O alcance de `chamados.ver` de uma conta: a organização, os locais, ou nada. */
+export type AlcanceDeQuemVe = 'organizacao' | ReadonlySet<string> | null;
+
+/**
+ * Vê o chamado quem tem `chamados.ver` em algum dos locais dele; o que não tem local nenhum, só quem
+ * vê a organização inteira. É a mesma regra das solicitações (decisão 5).
+ */
+export function veOChamado(alcance: AlcanceDeQuemVe, chamado: LocaisDoChamado): boolean {
+  return veASolicitacao(alcance, chamado);
+}
+
 /** Quem atende o tipo por padrão, como está agora: se a conta está ativa e o alcance dela. */
 export interface ContaQueAtendePorPadrao {
   id: string;
   ativa: boolean;
   alcance: AlcanceDeQuemAtende;
+}
+
+/**
+ * É da TI a conta ativa com `chamados.atender` em algum local: a que pode atender um tipo por
+ * padrão e a que tem coluna em "Quem está com o quê". O alcance vazio conta como nenhum.
+ */
+export function ehDaTi(conta: Pick<ContaQueAtendePorPadrao, 'ativa' | 'alcance'>): boolean {
+  if (!conta.ativa || conta.alcance === null) return false;
+  return conta.alcance === 'organizacao' || conta.alcance.size > 0;
 }
 
 export interface PedidoDeAtendimento {
