@@ -33,6 +33,7 @@ import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
 import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../chamados/acoes.ts';
 import { NumeroDoChamado } from '../chamados/alcance.ts';
 import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
+import { buscarChamados } from '../chamados/busca.ts';
 import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edicao.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
@@ -72,6 +73,30 @@ const ChamadoAberto = z
     responsavel: z.object({ id: z.uuid(), nome: z.string() }).nullable(),
   })
   .meta({ id: 'ChamadoAberto' });
+
+/** O termo da busca dos chamados (design, decisão 17): o número, com ou sem o "#", ou as palavras. */
+const PedidoDaBusca = z.object({
+  termo: z
+    .string({ error: 'Informe o que buscar.' })
+    .trim()
+    .min(1, { error: 'Informe o que buscar.' })
+    .max(100, { error: 'Use até 100 caracteres.' }),
+});
+
+const ChamadosNaBusca = z
+  .object({
+    /** Até 8: o do número primeiro, os abertos antes dos resolvidos, o mais novo primeiro. */
+    itens: z.array(
+      z.object({
+        numero: z.int(),
+        titulo: z.string(),
+        /** O nome de agora de quem pediu. */
+        pessoa: z.string(),
+        situacao: z.enum(SITUACOES_DO_CHAMADO),
+      }),
+    ),
+  })
+  .meta({ id: 'ChamadosNaBusca' });
 
 const TIPO_NAO_ENCONTRADO = 'Tipo de ativo não encontrado.';
 const FORMATO_DO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -621,6 +646,25 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
         ),
     );
   }
+
+  app.get(
+    '/chamados/busca',
+    {
+      config: { permissao: 'chamados.ver' },
+      schema: {
+        summary: 'A busca dos chamados pelo número, com ou sem o "#", ou pelas palavras do título',
+        querystring: PedidoDaBusca,
+        response: { 200: ChamadosNaBusca, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        buscarChamados(tx, requisicao.query.termo, {
+          acesso: sessaoDa(requisicao).acesso,
+          arvore: await lerArvore(tx),
+        }),
+      ),
+  );
 
   app.get(
     '/chamados/quadro',

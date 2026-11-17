@@ -335,15 +335,27 @@ A tela "Horário da TI" SHALL ter:
 
 ### Requirement: Busca dos chamados
 
-O provedor de busca dos chamados SHALL achar, no grupo "Chamados", os chamados que a conta vê:
-- pelo número, com ou sem o "#";
+O provedor de busca dos chamados SHALL achar, no grupo "Chamados", até 8 chamados que a conta vê:
+- pelo número, com ou sem o "#"; só com os algarismos, sem o "#", SHALL achar também os títulos que os têm, depois do chamado do número;
 - pelas palavras do título, sem acento e em qualquer ordem.
 
-Cada resultado SHALL mostrar o número, o título, quem pediu e a situação em texto, e Enter SHALL abrir o chamado.
+O chamado do número SHALL vir primeiro, os abertos antes dos resolvidos e, em cada grupo, o mais novo primeiro. Cada resultado SHALL mostrar o número, o título, quem pediu e a situação em texto, e Enter SHALL abrir o chamado. Com o módulo Chamados desligado, a busca SHALL NOT achar chamados.
 
 #### Scenario: Pelo número
 - **WHEN** Ana digita "1042" na busca
 - **THEN** a busca mostra "#1042 Impressora manchando", com Marina Lopes e "Em atendimento", e Enter abre o chamado
+
+#### Scenario: Pelas palavras, os abertos primeiro
+- **WHEN** Ana digita "impressora" na busca, com o #1046 da impressora resolvido
+- **THEN** a busca mostra os chamados abertos com "Impressora" no título, do mais novo ao mais velho, e o #1046 depois deles
+
+#### Scenario: Os algarismos no título
+- **WHEN** Ana digita "404"
+- **THEN** a busca mostra o "Impressora M404 travando"; com "#404", só o chamado 404, se ele existir
+
+#### Scenario: Fora do alcance
+- **WHEN** Bruno, que vê os chamados de Campinas, digita "impressora"
+- **THEN** a busca mostra só os chamados de Campinas, sem os de Jundiaí e sem os chamados sem local
 
 ### Requirement: Selos, prazo em texto e movimento
 

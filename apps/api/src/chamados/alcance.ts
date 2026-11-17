@@ -4,11 +4,12 @@
 // que não existe, em toda rota que chega a um chamado pelo número.
 import { chamados, type Transacao } from '@grafite/db';
 import { alcance, type LocaisDoChamado, veOChamado } from '@grafite/domain';
-import { eq } from 'drizzle-orm';
+import { eq, type SQL, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
+import { arrayDeIds } from '../estoque/leitura.ts';
 import { naoEncontrado } from '../problemas.ts';
 import { publicoDosLocais } from '../solicitacoes/registro.ts';
 
@@ -40,6 +41,16 @@ export async function chamadoQueAContaVe(
   const ve = alcance(sessaoDa(requisicao).acesso, 'chamados.ver', await lerArvore(tx));
   if (!veOChamado(ve, chamado)) throw chamadoNaoEncontrado();
   return chamado;
+}
+
+/**
+ * A condição das listas e da busca pelo alcance de `chamados.ver`: o chamado que a conta vê tem um
+ * dos locais no alcance dela; o sem local, só quem vê a organização inteira.
+ */
+export function ondeAContaVe(doVer: 'organizacao' | Set<string> | null): SQL | undefined {
+  if (doVer === null) return sql`false`;
+  if (doVer === 'organizacao') return undefined;
+  return sql`${chamados.locais} && ${arrayDeIds([...doVer])}`;
 }
 
 /**

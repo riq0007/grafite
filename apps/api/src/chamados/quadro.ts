@@ -15,9 +15,9 @@ import {
   cargaDasPessoas,
   comecoDoDia,
 } from '@grafite/domain';
-import { and, eq, gte, inArray, or, type SQL, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, or } from 'drizzle-orm';
 import { carregarAcessosDaOrganizacao } from '../acesso/acesso.ts';
-import { arrayDeIds } from '../estoque/leitura.ts';
+import { ondeAContaVe } from './alcance.ts';
 import { lerHorarioDaTi } from './horario.ts';
 
 const ABERTOS = ['triagem', 'em-atendimento', 'aguardando'] as const;
@@ -71,13 +71,6 @@ export async function quadroDosChamados(
 ): Promise<QuadroDosChamados> {
   const doVer = alcance(acesso, 'chamados.ver', arvore);
 
-  // O chamado que a conta vê tem um dos locais no alcance dela; o sem local, só pela organização.
-  const deVer: SQL | undefined =
-    doVer === null
-      ? sql`false`
-      : doVer === 'organizacao'
-        ? undefined
-        : sql`${chamados.locais} && ${arrayDeIds([...doVer])}`;
   const lidos = await tx
     .select({
       numero: chamados.numero,
@@ -93,7 +86,7 @@ export async function quadroDosChamados(
     .from(chamados)
     .where(
       and(
-        deVer,
+        ondeAContaVe(doVer),
         or(
           inArray(chamados.situacao, [...ABERTOS]),
           and(

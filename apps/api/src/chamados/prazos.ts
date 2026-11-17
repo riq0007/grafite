@@ -31,9 +31,9 @@ import {
   type SituacaoDoPrazo,
   situacaoDoPrazo,
 } from '@grafite/domain';
-import { and, asc, desc, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { arrayDeIds } from '../estoque/leitura.ts';
+import { ondeAContaVe } from './alcance.ts';
 import { lerHorarioDaTi } from './horario.ts';
 
 const ABERTOS = ['triagem', 'em-atendimento', 'aguardando'] as const;
@@ -104,13 +104,6 @@ export async function prazosDosChamados(
   }: { acesso: Acesso; arvore: ArvoreDeLocais; fuso: string; agora: Date },
 ): Promise<PrazosDosChamados> {
   const doVer = alcance(acesso, 'chamados.ver', arvore);
-  // O chamado que a conta vê tem um dos locais no alcance dela; o sem local, só pela organização.
-  const deVer: SQL | undefined =
-    doVer === null
-      ? sql`false`
-      : doVer === 'organizacao'
-        ? undefined
-        : sql`${chamados.locais} && ${arrayDeIds([...doVer])}`;
   const lidos = await tx
     .select({
       id: chamados.id,
@@ -136,7 +129,7 @@ export async function prazosDosChamados(
     .innerJoin(pessoas, eq(pessoas.id, chamados.pessoaId))
     .leftJoin(contas, eq(contas.id, chamados.responsavelId))
     .leftJoin(pessoaQueAtende, eq(pessoaQueAtende.id, contas.pessoaId))
-    .where(and(deVer, inArray(chamados.situacao, [...ABERTOS])))
+    .where(and(ondeAContaVe(doVer), inArray(chamados.situacao, [...ABERTOS])))
     .orderBy(asc(chamados.numero));
   const horario = await lerHorarioDaTi(tx);
   const horarioNaResposta = { ...horario, dias: [...horario.dias] };

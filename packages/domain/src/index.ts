@@ -271,6 +271,11 @@ export {
   veOChamado,
 } from './chamados/atendimento.ts';
 export {
+  MAIOR_NUMERO_DE_CHAMADO,
+  type TermoDaBusca,
+  termoDaBusca,
+} from './chamados/busca.ts';
+export {
   AVISO_DO_ALCANCE,
   type CargaDasPessoas,
   type ChamadoMaisAntigo,

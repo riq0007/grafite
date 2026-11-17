@@ -582,6 +582,15 @@ O chamado guarda `titulo_normalizado` (o `normalizarTexto` do domínio). O prove
 
 Os dois respeitam o alcance da conta. O grupo é "Chamados", com no máximo 8 resultados.
 
+**A rota da busca (tarefa 4.20).** Decisões que o plano não fechava:
+- **A rota** é o `GET /chamados/busca?termo=`, com `chamados.ver`, no bloco do módulo: com o módulo desligado, ela responde a recusa do módulo desligado, como as outras rotas do bloco, e nada vem. O termo vai de 1 a 100 caracteres, sem os espaços das pontas; a web só chama com 2 ou mais.
+- **Cada resultado** traz o número, o título, o nome de agora de quem pediu e a situação; a web escreve a situação em texto, com o rótulo do selo. Não há "Ver todos": o módulo não tem uma lista de todos os chamados para onde levar.
+- **O número com o "#"** acha só o chamado daquele número. **Só os algarismos** acham o chamado daquele número primeiro e, depois, os títulos que têm os algarismos, como "404" acha a "Impressora M404 travando": o modelo de um equipamento aparece no título com frequência, e quem digita o "#" diz que quer o número. O número maior que o do banco não acha nenhum chamado pelo número, sem recusa.
+- **As palavras** são as do `normalizarTexto`, cada uma num `strpos` do título normalizado, sem escapar nada, porque o `strpos` não tem curinga. O termo só de acento não sobra palavra nenhuma e não acha nada, porque a palavra vazia acharia todos os títulos. O "#" seguido de mais coisa, como "# 1042" ou "#1042 toner", vira palavra e não pede o número.
+- **O que o termo pede** (o "#", a faixa do número, as palavras) é regra sem banco e fica no domínio, no `termoDaBusca` de `packages/domain/src/chamados/busca.ts`, com os casos no teste unitário; a integração fica com um caso de cada ligação: o número, as palavras, os dois juntos, o termo que não pede nada, o alcance, o limite, a validação e o módulo desligado.
+- **A ordem:** o chamado do número primeiro; depois, os abertos (na triagem, em atendimento e aguardando) antes dos resolvidos, porque quem busca na TI quase sempre procura o que está aberto; e, em cada grupo, o mais novo primeiro, pelo número.
+- **O alcance** é a condição das listas, que sai do quadro e dos prazos para o `alcance.ts` (`ondeAContaVe`): o chamado com um dos locais no alcance de `chamados.ver`, e o sem local só para quem vê a organização inteira.
+
 ### 18. O contrato e as permissões
 
 As rotas entram no OpenAPI pelo Zod, e o cliente tipado sai do `contrato:gerar`. As três permissões entram no catálogo do domínio, na área "Chamados". O perfil Administrador, que tem todas por definição, passa a tê-las sem mudança no perfil.
