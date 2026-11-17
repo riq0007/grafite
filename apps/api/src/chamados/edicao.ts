@@ -2,7 +2,7 @@
 // change chamados-da-ti, design, "O ativo, o título e os campos da TI", "O ativo ligado e as
 // respostas" e "O local da pessoa na abertura", tarefa 4.15): três mudanças fora do
 // `agirNoChamado`, porque não mudam a situação nem quem atende, cada uma numa transação:
-// - o chamado, travado como nas ações (`travarOChamado`), se a conta o vê; senão, o que não existe;
+// - o chamado, travado como nas ações (`travarParaMudar`), se a conta o vê; senão, o que não existe;
 // - as recusas do domínio de quem não atende os locais do chamado e do chamado resolvido, no 409,
 //   antes das do campo, fora a do ativo, que é lido antes, como na abertura;
 // - a mudança, que o mesmo ativo, o mesmo título e as mesmas respostas não fazem: a rota responde o
@@ -20,7 +20,6 @@ import {
 import {
   type ArvoreDeLocais,
   type AtivoDasRespostas,
-  alcance,
   type CampoMudado,
   camposNaAuditoria,
   conferirTituloDoChamado,
@@ -35,13 +34,16 @@ import {
 } from '@grafite/domain';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
-import { sessaoDa } from '../acesso/escopo.ts';
-import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { chamadoMudou, conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { type AtivoDaResposta, conferirAtivo, conferirReferencias } from './abertura.ts';
-import { type ChamadoDepoisDaAcao, formularioDoChamado, travarOChamado } from './acoes.ts';
+import {
+  type ChamadoDepoisDaAcao,
+  type ChamadoTravado,
+  formularioDoChamado,
+  travarParaMudar,
+} from './acoes.ts';
 import { publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
 import { ativosPorId, nomesDasPessoas } from './ficha.ts';
@@ -57,17 +59,6 @@ interface Contexto {
 export interface PedidoDaTrocaDoAtivo {
   ativo: string | null;
   versao?: number | undefined;
-}
-
-type ChamadoTravado = Awaited<ReturnType<typeof travarOChamado>>;
-
-/** O chamado travado, a árvore e quem age, que as três leem do mesmo jeito. */
-async function travarParaMudar(tx: Transacao, numero: number, requisicao: FastifyRequest) {
-  const { acesso, contaId } = sessaoDa(requisicao);
-  const arvore = await lerArvore(tx);
-  const lido = await travarOChamado(tx, numero, acesso, arvore);
-  const quemAge: QuemAge = { id: contaId, alcance: alcance(acesso, 'chamados.atender', arvore) };
-  return { acesso, contaId, arvore, lido, quemAge };
 }
 
 /** O local pelo caminho, como as recusas do domínio o escrevem. */

@@ -4,6 +4,7 @@ import {
   antesDoAssumir,
   desdeDeQuemAtende,
   desdeNaTriagem,
+  EVENTOS_QUE_NAO_SOBEM_A_VERSAO,
   EVENTOS_QUE_SOBEM_A_VERSAO,
   type EventoNaConversa,
 } from './desde.ts';
@@ -193,6 +194,16 @@ describe('antesDoAssumir', () => {
     ).toEqual({ situacao: 'triagem', de: null, desde: ABERTO });
   });
 
+  it('Desfazer depois de virar OS: o evento da OS não sobe a versão nem impede o desfazer', () => {
+    expect(
+      antesDoAssumir(
+        [assumiuDaTriagem, evento('os', ANA, '09:45', { numero: 13 })],
+        ANA,
+        'em-atendimento',
+      ),
+    ).toEqual({ situacao: 'triagem', de: null, desde: ABERTO });
+  });
+
   it('do assumir de outra conta: a situação de agora, que o assumir não muda, com ela', () => {
     const deRenato = evento('assumiu', ANA, '09:40', {
       de: RENATO,
@@ -267,5 +278,9 @@ describe('antesDoAssumir', () => {
       'reabriu',
       'ativo',
     ]);
+  });
+
+  it('virar OS vai à conversa e não sobe a versão', () => {
+    expect(EVENTOS_QUE_NAO_SOBEM_A_VERSAO).toEqual(['os']);
   });
 });

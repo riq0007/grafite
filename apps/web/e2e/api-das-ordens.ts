@@ -202,6 +202,7 @@ export async function simularOrdens(
             pessoa: { id: pessoa?.id ?? '', nome: pessoa?.nome ?? '' },
           }
         : null,
+      chamado: null,
       problema: o.problema,
       fornecedor: referenciaDoFornecedor(o.fornecedorId),
       osDoFornecedor: o.osDoFornecedor,

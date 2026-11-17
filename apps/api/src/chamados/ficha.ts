@@ -60,9 +60,8 @@ import { lerContaQueAtende } from './quem-atende.ts';
 type EventoGravado = 'abertura' | EventoDaAcao['evento'];
 
 /**
- * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento e a troca do ativo. Os
- * que as tarefas 4.16 a 4.18 gravam, o da OS e o da solicitação, entram com elas, pelo
- * `EventoDaAcao`.
+ * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento, a troca do ativo e o
+ * Virar OS (4.16). O da solicitação, da 4.17 e da 4.18, entra com elas, pelo `EventoDaAcao`.
  */
 export const EVENTOS_DA_FICHA = [
   'abertura',
@@ -75,6 +74,7 @@ export const EVENTOS_DA_FICHA = [
   'resolveu',
   'reabriu',
   'ativo',
+  'os',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -86,6 +86,10 @@ type SemNenhum<Sobra extends never> = Sobra;
  * vez de sumir da conversa em silêncio, como o código desconhecido de uma versão mais nova.
  */
 export type EventosForaDaFicha = SemNenhum<Exclude<EventoGravado, EventoDaFicha>>;
+
+/** O número da OS do evento `os`; o ilegível vem nulo, como a conta sem o nome. */
+const osDoEvento = (dados: Record<string, unknown> | null) =>
+  Number.isInteger(dados?.numero) ? { numero: dados?.numero as number } : null;
 
 const eventoLido = (evento: string | null): evento is EventoDaFicha =>
   (EVENTOS_DA_FICHA as readonly (string | null)[]).includes(evento);
@@ -142,6 +146,8 @@ export type ItemDaConversa =
       desde: string | null;
       /** No `ativo`, o ativo de antes e o de depois, cada um nulo sem ativo; nulo nos outros. */
       ativo: { antes: AtivoNaFicha | null; depois: AtivoNaFicha | null } | null;
+      /** No `os`, o número da OS, a toda conta que vê o chamado; nulo nos outros. */
+      os: { numero: number } | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -458,6 +464,7 @@ export async function fichaDoChamado(
                   depois: ativoNoEvento(doEvento(linha.dados, 'depois')),
                 }
               : null,
+          os: linha.evento === 'os' ? osDoEvento(linha.dados) : null,
         },
       });
       continue;

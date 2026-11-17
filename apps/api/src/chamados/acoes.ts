@@ -107,8 +107,8 @@ const NA_AUDITORIA = {
 } as const satisfies Record<AcaoDoAtendimento, AcaoDaAuditoria | null>;
 
 /**
- * O chamado pelo número, travado até o fim da ação, se a conta o vê; senão, o que não existe. A troca
- * do ativo, do título e dos campos da TI também o trava por aqui (`edicao.ts`).
+ * O chamado pelo número, travado até o fim da ação, se a conta o vê; senão, o que não existe. As
+ * mudanças o travam pelo `travarParaMudar`, abaixo.
  */
 export async function travarOChamado(
   tx: Transacao,
@@ -145,6 +145,20 @@ export async function travarOChamado(
     throw chamadoNaoEncontrado();
   }
   return chamado;
+}
+
+export type ChamadoTravado = Awaited<ReturnType<typeof travarOChamado>>;
+
+/**
+ * O chamado travado, a árvore e quem age, como as ações, a troca do ativo, do título e dos campos da
+ * TI (`edicao.ts`) e o Virar OS (`os.ts`) os leem: quem age pelo alcance de `chamados.atender`.
+ */
+export async function travarParaMudar(tx: Transacao, numero: number, requisicao: FastifyRequest) {
+  const { acesso, contaId } = sessaoDa(requisicao);
+  const arvore = await lerArvore(tx);
+  const lido = await travarOChamado(tx, numero, acesso, arvore);
+  const quemAge: QuemAge = { id: contaId, alcance: alcance(acesso, 'chamados.atender', arvore) };
+  return { acesso, contaId, arvore, lido, quemAge };
 }
 
 /**
@@ -339,9 +353,7 @@ export async function agirNoChamado(
     enviar,
   }: { requisicao: FastifyRequest; momento: Date; enviar?: EnviarTarefa },
 ): Promise<ChamadoDepoisDaAcao> {
-  const { acesso, contaId } = sessaoDa(requisicao);
-  const arvore = await lerArvore(tx);
-  const lido = await travarOChamado(tx, numero, acesso, arvore);
+  const { contaId, arvore, lido, quemAge } = await travarParaMudar(tx, numero, requisicao);
   const eventos = await eventosDoChamado(tx, lido.id);
   const chamado: ChamadoParaAcao = {
     numero: lido.numero,
@@ -354,7 +366,6 @@ export async function agirNoChamado(
     versao: lido.versao,
     primeiraRespostaEm: lido.primeiraRespostaEm,
   };
-  const quemAge = { id: contaId, alcance: alcance(acesso, 'chamados.atender', arvore) };
   const decisao = await decidir(tx, chamado, quemAge, pedido, { eventos, arvore, lido });
   if (!decisao.aceita) throw problemaDaRecusa(lido.numero, decisao.recusa);
 

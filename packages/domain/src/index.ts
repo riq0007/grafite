@@ -286,6 +286,7 @@ export {
   antesDoAssumir,
   desdeDeQuemAtende,
   desdeNaTriagem,
+  EVENTOS_QUE_NAO_SOBEM_A_VERSAO,
   EVENTOS_QUE_SOBEM_A_VERSAO,
   type EventoNaConversa,
   momentoLido,
@@ -336,6 +337,12 @@ export {
   notificacoesDaTriagem,
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';
+export {
+  type ChamadoParaVirarOs,
+  mensagemDaRecusaDoVirarOs,
+  type RecusaDoVirarOs,
+  recusaDoVirarOs,
+} from './chamados/os-e-solicitacao.ts';
 export {
   type ConferenciaDoHorario,
   conferirHorario,

@@ -29006,6 +29006,102 @@ export interface paths {
         };
         trace?: never;
     };
+    "/chamados/{numero}/os": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoVirarOsDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrdemDeServico"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -36207,6 +36303,168 @@ export interface components {
             abertos: number;
             noUltimoAno: number;
         };
+        LocalDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        MudancaDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            texto: string | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            mudadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            mudadaEm: string;
+        };
+        PecaDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            };
+            quantidade: number;
+            local: components["schemas"]["LocalDaOrdemInput"];
+            /** Format: uuid */
+            movimento: string;
+            lancadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            lancadaEm: string;
+        };
+        OrdemDeServicoInput: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            ativo: components["schemas"]["AtivoDaOrdemInput"];
+            local: components["schemas"]["LocalDaOrdemInput"] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+            } | null;
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+            problema: string;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            solucao: string | null;
+            motivoDoEncerramento: string | null;
+            abertaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            abertaEm: string;
+            resolvidaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            resolvidaEm: string | null;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            historico: components["schemas"]["MudancaDaOrdemInput"][];
+            pecas: components["schemas"]["PecaDaOrdemInput"][];
+            permite: {
+                atender: boolean;
+            };
+        };
+        PedidoDeAberturaDaOrdemInput: {
+            ativo?: string | null;
+            problema?: string | null;
+        };
+        PedidoDeCorrecaoDaOrdemInput: {
+            problema?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeSituacaoDaOrdemInput: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            observacao?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDePecaDaOrdemInput: {
+            consumivel?: string | null;
+            local?: string | null;
+            quantidade?: number | null;
+        };
+        PedidoDeResolucaoDaOrdemInput: {
+            solucao?: string | null;
+        };
+        PedidoDeReaberturaDaOrdemInput: {
+            motivo?: string | null;
+        };
+        PedidoDeEncerramentoDaOrdemInput: {
+            /** @default false */
+            semResolver: boolean;
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeOrdensInput: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
+        };
+        RetornoDoLoteDeOrdensInput: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        ListaDeOrdensInput: {
+            itens: components["schemas"]["OrdemDeServicoInput"][];
+            total: number;
+            proximo: string | null;
+        };
+        OrdensDoAtivoInput: {
+            emAberto: components["schemas"]["OrdemDeServicoInput"][];
+            resolvidasOuEncerradas: components["schemas"]["OrdemDeServicoInput"][];
+        };
         HorarioDaTiInput: {
             dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
             inicio: number;
@@ -36535,7 +36793,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -36560,6 +36818,9 @@ export interface components {
                         rotulo: string;
                         patrimonio: string | null;
                     } | null;
+                } | null;
+                os: {
+                    numero: number;
                 } | null;
             } | {
                 /** @constant */
@@ -36613,6 +36874,9 @@ export interface components {
             respostas: {
                 [key: string]: unknown;
             };
+        };
+        PedidoDoVirarOsDoChamadoInput: {
+            problema?: string;
         };
         ChamadoDepoisDaAcaoInput: {
             numero: number;
@@ -38221,164 +38485,6 @@ export interface components {
         MudancaDaAgendaInput: {
             horario: string;
             diaDoTeste: number;
-        };
-        LocalDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        MudancaDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            texto: string | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            mudadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            mudadaEm: string;
-        };
-        PecaDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            };
-            quantidade: number;
-            local: components["schemas"]["LocalDaOrdemInput"];
-            /** Format: uuid */
-            movimento: string;
-            lancadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            lancadaEm: string;
-        };
-        OrdemDeServicoInput: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            ativo: components["schemas"]["AtivoDaOrdemInput"];
-            local: components["schemas"]["LocalDaOrdemInput"] | null;
-            solicitacao: {
-                /** Format: uuid */
-                id: string;
-                numero: number;
-                pessoa: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-            } | null;
-            problema: string;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            solucao: string | null;
-            motivoDoEncerramento: string | null;
-            abertaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            abertaEm: string;
-            resolvidaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            resolvidaEm: string | null;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            historico: components["schemas"]["MudancaDaOrdemInput"][];
-            pecas: components["schemas"]["PecaDaOrdemInput"][];
-            permite: {
-                atender: boolean;
-            };
-        };
-        PedidoDeAberturaDaOrdemInput: {
-            ativo?: string | null;
-            problema?: string | null;
-        };
-        PedidoDeCorrecaoDaOrdemInput: {
-            problema?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeSituacaoDaOrdemInput: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
-            observacao?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDePecaDaOrdemInput: {
-            consumivel?: string | null;
-            local?: string | null;
-            quantidade?: number | null;
-        };
-        PedidoDeResolucaoDaOrdemInput: {
-            solucao?: string | null;
-        };
-        PedidoDeReaberturaDaOrdemInput: {
-            motivo?: string | null;
-        };
-        PedidoDeEncerramentoDaOrdemInput: {
-            /** @default false */
-            semResolver: boolean;
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeOrdensInput: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
-        };
-        RetornoDoLoteDeOrdensInput: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        ListaDeOrdensInput: {
-            itens: components["schemas"]["OrdemDeServicoInput"][];
-            total: number;
-            proximo: string | null;
-        };
-        OrdensDoAtivoInput: {
-            emAberto: components["schemas"]["OrdemDeServicoInput"][];
-            resolvidasOuEncerradas: components["schemas"]["OrdemDeServicoInput"][];
         };
         LocalDaSolicitacaoInput: {
             /** Format: uuid */
@@ -41420,6 +41526,168 @@ export interface components {
             abertos: number;
             noUltimoAno: number;
         };
+        LocalDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        MudancaDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            texto: string | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            mudadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            mudadaEm: string;
+        };
+        PecaDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            };
+            quantidade: number;
+            local: components["schemas"]["LocalDaOrdem"];
+            /** Format: uuid */
+            movimento: string;
+            lancadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            lancadaEm: string;
+        };
+        OrdemDeServico: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            ativo: components["schemas"]["AtivoDaOrdem"];
+            local: components["schemas"]["LocalDaOrdem"] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+            } | null;
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+            problema: string;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            solucao: string | null;
+            motivoDoEncerramento: string | null;
+            abertaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            abertaEm: string;
+            resolvidaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            resolvidaEm: string | null;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            historico: components["schemas"]["MudancaDaOrdem"][];
+            pecas: components["schemas"]["PecaDaOrdem"][];
+            permite: {
+                atender: boolean;
+            };
+        };
+        PedidoDeAberturaDaOrdem: {
+            ativo?: string | null;
+            problema?: string | null;
+        };
+        PedidoDeCorrecaoDaOrdem: {
+            problema?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeSituacaoDaOrdem: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            observacao?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDePecaDaOrdem: {
+            consumivel?: string | null;
+            local?: string | null;
+            quantidade?: number | null;
+        };
+        PedidoDeResolucaoDaOrdem: {
+            solucao?: string | null;
+        };
+        PedidoDeReaberturaDaOrdem: {
+            motivo?: string | null;
+        };
+        PedidoDeEncerramentoDaOrdem: {
+            /** @default false */
+            semResolver: boolean;
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeOrdens: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
+        };
+        RetornoDoLoteDeOrdens: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        ListaDeOrdens: {
+            itens: components["schemas"]["OrdemDeServico"][];
+            total: number;
+            proximo: string | null;
+        };
+        OrdensDoAtivo: {
+            emAberto: components["schemas"]["OrdemDeServico"][];
+            resolvidasOuEncerradas: components["schemas"]["OrdemDeServico"][];
+        };
         HorarioDaTi: {
             dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
             inicio: number;
@@ -41748,7 +42016,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -41773,6 +42041,9 @@ export interface components {
                         rotulo: string;
                         patrimonio: string | null;
                     } | null;
+                } | null;
+                os: {
+                    numero: number;
                 } | null;
             } | {
                 /** @constant */
@@ -41826,6 +42097,9 @@ export interface components {
             respostas: {
                 [key: string]: unknown;
             };
+        };
+        PedidoDoVirarOsDoChamado: {
+            problema?: string;
         };
         ChamadoDepoisDaAcao: {
             numero: number;
@@ -43434,164 +43708,6 @@ export interface components {
         MudancaDaAgenda: {
             horario: string;
             diaDoTeste: number;
-        };
-        LocalDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        MudancaDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            texto: string | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            mudadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            mudadaEm: string;
-        };
-        PecaDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            };
-            quantidade: number;
-            local: components["schemas"]["LocalDaOrdem"];
-            /** Format: uuid */
-            movimento: string;
-            lancadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            lancadaEm: string;
-        };
-        OrdemDeServico: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            ativo: components["schemas"]["AtivoDaOrdem"];
-            local: components["schemas"]["LocalDaOrdem"] | null;
-            solicitacao: {
-                /** Format: uuid */
-                id: string;
-                numero: number;
-                pessoa: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-            } | null;
-            problema: string;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            solucao: string | null;
-            motivoDoEncerramento: string | null;
-            abertaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            abertaEm: string;
-            resolvidaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            resolvidaEm: string | null;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            historico: components["schemas"]["MudancaDaOrdem"][];
-            pecas: components["schemas"]["PecaDaOrdem"][];
-            permite: {
-                atender: boolean;
-            };
-        };
-        PedidoDeAberturaDaOrdem: {
-            ativo?: string | null;
-            problema?: string | null;
-        };
-        PedidoDeCorrecaoDaOrdem: {
-            problema?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeSituacaoDaOrdem: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
-            observacao?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDePecaDaOrdem: {
-            consumivel?: string | null;
-            local?: string | null;
-            quantidade?: number | null;
-        };
-        PedidoDeResolucaoDaOrdem: {
-            solucao?: string | null;
-        };
-        PedidoDeReaberturaDaOrdem: {
-            motivo?: string | null;
-        };
-        PedidoDeEncerramentoDaOrdem: {
-            /** @default false */
-            semResolver: boolean;
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeOrdens: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
-        };
-        RetornoDoLoteDeOrdens: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        ListaDeOrdens: {
-            itens: components["schemas"]["OrdemDeServico"][];
-            total: number;
-            proximo: string | null;
-        };
-        OrdensDoAtivo: {
-            emAberto: components["schemas"]["OrdemDeServico"][];
-            resolvidasOuEncerradas: components["schemas"]["OrdemDeServico"][];
         };
         LocalDaSolicitacao: {
             /** Format: uuid */

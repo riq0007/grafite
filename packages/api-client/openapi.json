@@ -10340,6 +10340,813 @@
           "noUltimoAno"
         ]
       },
+      "LocalDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "caminho"
+        ]
+      },
+      "AtivoDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "abrir"
+        ]
+      },
+      "MudancaDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor",
+              "resolvida",
+              "encerrada"
+            ]
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mudadaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ]
+          },
+          "mudadaEm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "situacao",
+          "texto",
+          "fornecedor",
+          "mudadaPor",
+          "mudadaEm"
+        ]
+      },
+      "PecaDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "consumivel": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "codigo": {
+                "type": "string"
+              },
+              "nome": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "abrir": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "codigo",
+              "nome",
+              "abrir"
+            ]
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalDaOrdemInput"
+          },
+          "movimento": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "lancadaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ]
+          },
+          "lancadaEm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "consumivel",
+          "quantidade",
+          "local",
+          "movimento",
+          "lancadaPor",
+          "lancadaEm"
+        ]
+      },
+      "OrdemDeServicoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor",
+              "resolvida",
+              "encerrada"
+            ]
+          },
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaOrdemInput"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaOrdemInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "solicitacao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "pessoa": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nome"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "numero",
+                  "pessoa"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chamado": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problema": {
+            "type": "string"
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "osDoFornecedor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "solucao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "motivoDoEncerramento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abertaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ]
+          },
+          "abertaEm": {
+            "type": "string"
+          },
+          "resolvidaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvidaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "encerradaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "encerradaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "historico": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MudancaDaOrdemInput"
+            }
+          },
+          "pecas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PecaDaOrdemInput"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "atender": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "atender"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "situacao",
+          "ativo",
+          "local",
+          "solicitacao",
+          "chamado",
+          "problema",
+          "fornecedor",
+          "osDoFornecedor",
+          "solucao",
+          "motivoDoEncerramento",
+          "abertaPor",
+          "abertaEm",
+          "resolvidaPor",
+          "resolvidaEm",
+          "encerradaPor",
+          "encerradaEm",
+          "historico",
+          "pecas",
+          "permite"
+        ]
+      },
+      "PedidoDeAberturaDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeCorrecaoDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "problema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeSituacaoDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor"
+            ]
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "situacao"
+        ]
+      },
+      "PedidoDePecaDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "consumivel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantidade": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "PedidoDeResolucaoDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "solucao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeReaberturaDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeEncerramentoDaOrdemInput": {
+        "type": "object",
+        "properties": {
+          "semResolver": {
+            "default": false,
+            "type": "boolean"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDoLoteDeOrdensInput": {
+        "type": "object",
+        "properties": {
+          "numeros": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-peca",
+              "encerrada"
+            ]
+          }
+        },
+        "required": [
+          "numeros",
+          "situacao"
+        ]
+      },
+      "RetornoDoLoteDeOrdensInput": {
+        "type": "object",
+        "properties": {
+          "mudaram": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recusadas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "numero",
+                "mensagem"
+              ]
+            }
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mudaram",
+          "recusadas",
+          "texto"
+        ]
+      },
+      "ListaDeOrdensInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServicoInput"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "itens",
+          "total",
+          "proximo"
+        ]
+      },
+      "OrdensDoAtivoInput": {
+        "type": "object",
+        "properties": {
+          "emAberto": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServicoInput"
+            }
+          },
+          "resolvidasOuEncerradas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServicoInput"
+            }
+          }
+        },
+        "required": [
+          "emAberto",
+          "resolvidasOuEncerradas"
+        ]
+      },
       "HorarioDaTiInput": {
         "type": "object",
         "properties": {
@@ -11893,7 +12700,8 @@
                         "retomou",
                         "resolveu",
                         "reabriu",
-                        "ativo"
+                        "ativo",
+                        "os"
                       ]
                     },
                     "de": {
@@ -12033,6 +12841,26 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "os": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numero": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "numero"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -12044,7 +12872,8 @@
                     "de",
                     "para",
                     "desde",
-                    "ativo"
+                    "ativo",
+                    "os"
                   ]
                 },
                 {
@@ -12262,6 +13091,15 @@
         "required": [
           "respostas"
         ]
+      },
+      "PedidoDoVirarOsDoChamadoInput": {
+        "type": "object",
+        "properties": {
+          "problema": {
+            "type": "string",
+            "maxLength": 5000
+          }
+        }
       },
       "ChamadoDepoisDaAcaoInput": {
         "type": "object",
@@ -20180,788 +21018,6 @@
         "required": [
           "horario",
           "diaDoTeste"
-        ]
-      },
-      "LocalDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "caminho"
-        ]
-      },
-      "AtivoDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "rotulo": {
-            "type": "string"
-          },
-          "patrimonio": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abrir": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "rotulo",
-          "patrimonio",
-          "abrir"
-        ]
-      },
-      "MudancaDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor",
-              "resolvida",
-              "encerrada"
-            ]
-          },
-          "texto": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "mudadaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ]
-          },
-          "mudadaEm": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "situacao",
-          "texto",
-          "fornecedor",
-          "mudadaPor",
-          "mudadaEm"
-        ]
-      },
-      "PecaDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "consumivel": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "codigo": {
-                "type": "string"
-              },
-              "nome": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "abrir": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "id",
-              "codigo",
-              "nome",
-              "abrir"
-            ]
-          },
-          "quantidade": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "local": {
-            "$ref": "#/components/schemas/LocalDaOrdemInput"
-          },
-          "movimento": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "lancadaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ]
-          },
-          "lancadaEm": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "consumivel",
-          "quantidade",
-          "local",
-          "movimento",
-          "lancadaPor",
-          "lancadaEm"
-        ]
-      },
-      "OrdemDeServicoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor",
-              "resolvida",
-              "encerrada"
-            ]
-          },
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaOrdemInput"
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaOrdemInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "solicitacao": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "numero": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "pessoa": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "nome": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "nome"
-                    ]
-                  }
-                },
-                "required": [
-                  "id",
-                  "numero",
-                  "pessoa"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "problema": {
-            "type": "string"
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "osDoFornecedor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "solucao": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "motivoDoEncerramento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abertaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ]
-          },
-          "abertaEm": {
-            "type": "string"
-          },
-          "resolvidaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "resolvidaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "encerradaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "encerradaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "historico": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MudancaDaOrdemInput"
-            }
-          },
-          "pecas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PecaDaOrdemInput"
-            }
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "atender": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "atender"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "numero",
-          "situacao",
-          "ativo",
-          "local",
-          "solicitacao",
-          "problema",
-          "fornecedor",
-          "osDoFornecedor",
-          "solucao",
-          "motivoDoEncerramento",
-          "abertaPor",
-          "abertaEm",
-          "resolvidaPor",
-          "resolvidaEm",
-          "encerradaPor",
-          "encerradaEm",
-          "historico",
-          "pecas",
-          "permite"
-        ]
-      },
-      "PedidoDeAberturaDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "problema": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeCorrecaoDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "problema": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeSituacaoDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor"
-            ]
-          },
-          "observacao": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "situacao"
-        ]
-      },
-      "PedidoDePecaDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "consumivel": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "quantidade": {
-            "type": [
-              "number",
-              "null"
-            ]
-          }
-        }
-      },
-      "PedidoDeResolucaoDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "solucao": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeReaberturaDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeEncerramentoDaOrdemInput": {
-        "type": "object",
-        "properties": {
-          "semResolver": {
-            "default": false,
-            "type": "boolean"
-          },
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDoLoteDeOrdensInput": {
-        "type": "object",
-        "properties": {
-          "numeros": {
-            "minItems": 1,
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-peca",
-              "encerrada"
-            ]
-          }
-        },
-        "required": [
-          "numeros",
-          "situacao"
-        ]
-      },
-      "RetornoDoLoteDeOrdensInput": {
-        "type": "object",
-        "properties": {
-          "mudaram": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "recusadas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "numero": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "mensagem": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "numero",
-                "mensagem"
-              ]
-            }
-          },
-          "texto": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "mudaram",
-          "recusadas",
-          "texto"
-        ]
-      },
-      "ListaDeOrdensInput": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServicoInput"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "itens",
-          "total",
-          "proximo"
-        ]
-      },
-      "OrdensDoAtivoInput": {
-        "type": "object",
-        "properties": {
-          "emAberto": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServicoInput"
-            }
-          },
-          "resolvidasOuEncerradas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServicoInput"
-            }
-          }
-        },
-        "required": [
-          "emAberto",
-          "resolvidasOuEncerradas"
         ]
       },
       "LocalDaSolicitacaoInput": {
@@ -36473,6 +36529,845 @@
         ],
         "additionalProperties": false
       },
+      "LocalDaOrdem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "caminho"
+        ],
+        "additionalProperties": false
+      },
+      "AtivoDaOrdem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "abrir"
+        ],
+        "additionalProperties": false
+      },
+      "MudancaDaOrdem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor",
+              "resolvida",
+              "encerrada"
+            ]
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mudadaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          "mudadaEm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "situacao",
+          "texto",
+          "fornecedor",
+          "mudadaPor",
+          "mudadaEm"
+        ],
+        "additionalProperties": false
+      },
+      "PecaDaOrdem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "consumivel": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "codigo": {
+                "type": "string"
+              },
+              "nome": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "abrir": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "codigo",
+              "nome",
+              "abrir"
+            ],
+            "additionalProperties": false
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalDaOrdem"
+          },
+          "movimento": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "lancadaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          "lancadaEm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "consumivel",
+          "quantidade",
+          "local",
+          "movimento",
+          "lancadaPor",
+          "lancadaEm"
+        ],
+        "additionalProperties": false
+      },
+      "OrdemDeServico": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor",
+              "resolvida",
+              "encerrada"
+            ]
+          },
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaOrdem"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaOrdem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "solicitacao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "pessoa": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nome"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "numero",
+                  "pessoa"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chamado": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problema": {
+            "type": "string"
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "osDoFornecedor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "solucao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "motivoDoEncerramento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abertaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          "abertaEm": {
+            "type": "string"
+          },
+          "resolvidaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvidaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "encerradaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "encerradaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "historico": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MudancaDaOrdem"
+            }
+          },
+          "pecas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PecaDaOrdem"
+            }
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "atender": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "atender"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "situacao",
+          "ativo",
+          "local",
+          "solicitacao",
+          "chamado",
+          "problema",
+          "fornecedor",
+          "osDoFornecedor",
+          "solucao",
+          "motivoDoEncerramento",
+          "abertaPor",
+          "abertaEm",
+          "resolvidaPor",
+          "resolvidaEm",
+          "encerradaPor",
+          "encerradaEm",
+          "historico",
+          "pecas",
+          "permite"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeAberturaDaOrdem": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeCorrecaoDaOrdem": {
+        "type": "object",
+        "properties": {
+          "problema": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeSituacaoDaOrdem": {
+        "type": "object",
+        "properties": {
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor"
+            ]
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDePecaDaOrdem": {
+        "type": "object",
+        "properties": {
+          "consumivel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantidade": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeResolucaoDaOrdem": {
+        "type": "object",
+        "properties": {
+          "solucao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeReaberturaDaOrdem": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeEncerramentoDaOrdem": {
+        "type": "object",
+        "properties": {
+          "semResolver": {
+            "default": false,
+            "type": "boolean"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "semResolver"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoLoteDeOrdens": {
+        "type": "object",
+        "properties": {
+          "numeros": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-peca",
+              "encerrada"
+            ]
+          }
+        },
+        "required": [
+          "numeros",
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "RetornoDoLoteDeOrdens": {
+        "type": "object",
+        "properties": {
+          "mudaram": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recusadas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "numero",
+                "mensagem"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mudaram",
+          "recusadas",
+          "texto"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDeOrdens": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServico"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "itens",
+          "total",
+          "proximo"
+        ],
+        "additionalProperties": false
+      },
+      "OrdensDoAtivo": {
+        "type": "object",
+        "properties": {
+          "emAberto": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServico"
+            }
+          },
+          "resolvidasOuEncerradas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemDeServico"
+            }
+          }
+        },
+        "required": [
+          "emAberto",
+          "resolvidasOuEncerradas"
+        ],
+        "additionalProperties": false
+      },
       "HorarioDaTi": {
         "type": "object",
         "properties": {
@@ -38079,7 +38974,8 @@
                         "retomou",
                         "resolveu",
                         "reabriu",
-                        "ativo"
+                        "ativo",
+                        "os"
                       ]
                     },
                     "de": {
@@ -38224,6 +39120,27 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "os": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numero": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "numero"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -38235,7 +39152,8 @@
                     "de",
                     "para",
                     "desde",
-                    "ativo"
+                    "ativo",
+                    "os"
                   ],
                   "additionalProperties": false
                 },
@@ -38473,6 +39391,16 @@
         "required": [
           "respostas"
         ],
+        "additionalProperties": false
+      },
+      "PedidoDoVirarOsDoChamado": {
+        "type": "object",
+        "properties": {
+          "problema": {
+            "type": "string",
+            "maxLength": 5000
+          }
+        },
         "additionalProperties": false
       },
       "ChamadoDepoisDaAcao": {
@@ -46669,819 +47597,6 @@
         "required": [
           "horario",
           "diaDoTeste"
-        ],
-        "additionalProperties": false
-      },
-      "LocalDaOrdem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "caminho"
-        ],
-        "additionalProperties": false
-      },
-      "AtivoDaOrdem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "rotulo": {
-            "type": "string"
-          },
-          "patrimonio": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abrir": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "rotulo",
-          "patrimonio",
-          "abrir"
-        ],
-        "additionalProperties": false
-      },
-      "MudancaDaOrdem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor",
-              "resolvida",
-              "encerrada"
-            ]
-          },
-          "texto": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "mudadaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ],
-            "additionalProperties": false
-          },
-          "mudadaEm": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "situacao",
-          "texto",
-          "fornecedor",
-          "mudadaPor",
-          "mudadaEm"
-        ],
-        "additionalProperties": false
-      },
-      "PecaDaOrdem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "consumivel": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "codigo": {
-                "type": "string"
-              },
-              "nome": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "abrir": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "id",
-              "codigo",
-              "nome",
-              "abrir"
-            ],
-            "additionalProperties": false
-          },
-          "quantidade": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "local": {
-            "$ref": "#/components/schemas/LocalDaOrdem"
-          },
-          "movimento": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "lancadaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ],
-            "additionalProperties": false
-          },
-          "lancadaEm": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "consumivel",
-          "quantidade",
-          "local",
-          "movimento",
-          "lancadaPor",
-          "lancadaEm"
-        ],
-        "additionalProperties": false
-      },
-      "OrdemDeServico": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor",
-              "resolvida",
-              "encerrada"
-            ]
-          },
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaOrdem"
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaOrdem"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "solicitacao": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "numero": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "pessoa": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "nome": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "nome"
-                    ],
-                    "additionalProperties": false
-                  }
-                },
-                "required": [
-                  "id",
-                  "numero",
-                  "pessoa"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "problema": {
-            "type": "string"
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "osDoFornecedor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "solucao": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "motivoDoEncerramento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abertaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ],
-            "additionalProperties": false
-          },
-          "abertaEm": {
-            "type": "string"
-          },
-          "resolvidaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "resolvidaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "encerradaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "encerradaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "historico": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MudancaDaOrdem"
-            }
-          },
-          "pecas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PecaDaOrdem"
-            }
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "atender": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "atender"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "id",
-          "numero",
-          "situacao",
-          "ativo",
-          "local",
-          "solicitacao",
-          "problema",
-          "fornecedor",
-          "osDoFornecedor",
-          "solucao",
-          "motivoDoEncerramento",
-          "abertaPor",
-          "abertaEm",
-          "resolvidaPor",
-          "resolvidaEm",
-          "encerradaPor",
-          "encerradaEm",
-          "historico",
-          "pecas",
-          "permite"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDeAberturaDaOrdem": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "problema": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeCorrecaoDaOrdem": {
-        "type": "object",
-        "properties": {
-          "problema": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeSituacaoDaOrdem": {
-        "type": "object",
-        "properties": {
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-peca",
-              "aguardando-fornecedor"
-            ]
-          },
-          "observacao": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDePecaDaOrdem": {
-        "type": "object",
-        "properties": {
-          "consumivel": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "quantidade": {
-            "type": [
-              "number",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeResolucaoDaOrdem": {
-        "type": "object",
-        "properties": {
-          "solucao": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeReaberturaDaOrdem": {
-        "type": "object",
-        "properties": {
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeEncerramentoDaOrdem": {
-        "type": "object",
-        "properties": {
-          "semResolver": {
-            "default": false,
-            "type": "boolean"
-          },
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "semResolver"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDoLoteDeOrdens": {
-        "type": "object",
-        "properties": {
-          "numeros": {
-            "minItems": 1,
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-peca",
-              "encerrada"
-            ]
-          }
-        },
-        "required": [
-          "numeros",
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "RetornoDoLoteDeOrdens": {
-        "type": "object",
-        "properties": {
-          "mudaram": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "recusadas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "numero": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "mensagem": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "numero",
-                "mensagem"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "texto": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "mudaram",
-          "recusadas",
-          "texto"
-        ],
-        "additionalProperties": false
-      },
-      "ListaDeOrdens": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServico"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "itens",
-          "total",
-          "proximo"
-        ],
-        "additionalProperties": false
-      },
-      "OrdensDoAtivo": {
-        "type": "object",
-        "properties": {
-          "emAberto": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServico"
-            }
-          },
-          "resolvidasOuEncerradas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrdemDeServico"
-            }
-          }
-        },
-        "required": [
-          "emAberto",
-          "resolvidasOuEncerradas"
         ],
         "additionalProperties": false
       },
@@ -82458,6 +82573,105 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChamadoDepoisDaAcao"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/{numero}/os": {
+      "post": {
+        "summary": "Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoVirarOsDoChamadoInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemDeServico"
                 }
               }
             }

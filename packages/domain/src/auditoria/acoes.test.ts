@@ -168,6 +168,7 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('chamado.ativo-trocado')).toBe('Ativo do chamado trocado');
     expect(rotuloDaAcao('chamado.titulo-trocado')).toBe('Título do chamado trocado');
     expect(rotuloDaAcao('chamado.campos-trocados')).toBe('Campos da TI do chamado trocados');
+    expect(rotuloDaAcao('chamado.virou-os')).toBe('Chamado virou OS');
   });
 
   it('dá a própria chave para a ação desconhecida', () => {

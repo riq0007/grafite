@@ -6,7 +6,7 @@ Num chamado em aberto, com o ativo ligado e de um tipo que pode virar OS (spec c
 - com o ativo do chamado;
 - com o título do chamado como o problema, que quem abre pode corrigir antes.
 
-A OS SHALL ficar ligada ao chamado e mostrar "Do chamado #1042". Cada chamado SHALL ter uma OS só.
+A OS SHALL ficar ligada ao chamado e mostrar "Do chamado #1042" a quem vê a OS, com o link só para quem vê o chamado. Com o módulo Chamados desligado, a OS SHALL NOT mostrar o chamado. Cada chamado SHALL ter uma OS só.
 
 A OS do chamado SHALL seguir as regras de toda OS. Resolver ou encerrar a OS SHALL NOT mudar o chamado, que mostra a situação da OS a quem vê as OS.
 

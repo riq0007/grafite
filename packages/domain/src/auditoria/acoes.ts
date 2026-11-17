@@ -263,6 +263,7 @@ export const ACOES_DA_AUDITORIA = {
   'chamado.ativo-trocado': 'Ativo do chamado trocado',
   'chamado.titulo-trocado': 'Título do chamado trocado',
   'chamado.campos-trocados': 'Campos da TI do chamado trocados',
+  'chamado.virou-os': 'Chamado virou OS',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

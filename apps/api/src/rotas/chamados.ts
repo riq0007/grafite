@@ -1,12 +1,13 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.15): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.16): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
 // quem abre e para a prévia do colaborador de quem configura; o quadro, a lista dos prazos e a ficha
 // do chamado, com `chamados.ver`; e as ações do atendimento, as que mudam quem atende, a conversa, o
-// fim e a volta, e a troca do ativo, do título e dos campos da TI, com `chamados.atender`. As regras
-// ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
-// `chamados/prazos.ts`, `chamados/ficha.ts`, `chamados/acoes.ts` e `chamados/edicao.ts`; aqui, o
-// formato do pedido e da resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
-// deles é recusado pela abertura, com as outras recusas dos campos, para a gaveta mostrá-las juntas.
+// fim e a volta, a troca do ativo, do título e dos campos da TI, e o Virar OS, com
+// `chamados.atender`. As regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`,
+// `chamados/quadro.ts`, `chamados/prazos.ts`, `chamados/ficha.ts`, `chamados/acoes.ts`,
+// `chamados/edicao.ts` e `chamados/os.ts`; aqui, o formato do pedido e da resposta. A pessoa e o
+// tipo da abertura chegam como ids, e o vazio deles é recusado pela abertura, com as outras recusas
+// dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
   fusoReconhecido,
@@ -33,11 +34,13 @@ import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
 import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edicao.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
+import { virarOs } from '../chamados/os.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import { ValorDoPrazo } from '../chamados/tipos.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
+import { OrdemDeServico } from '../ordens/esquemas.ts';
 import { RespostaDeProblema } from '../problemas.ts';
 import { HorarioDaTiLido } from './chamados-horario.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
@@ -277,6 +280,8 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
     desde: z.iso.datetime().nullable(),
     /** No `ativo`, o ativo de antes e o de depois da troca; nulo nos outros. */
     ativo: z.object({ antes: AtivoDoEvento, depois: AtivoDoEvento }).nullable(),
+    /** No `os`, o número da OS em que o chamado virou; nulo nos outros. */
+    os: z.object({ numero: z.int() }).nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),
@@ -472,6 +477,16 @@ const PedidoDosCamposDaTi = z
     respostas: z.record(z.string(), z.unknown(), { error: RECUSA_DO_FORMULARIO }),
   })
   .meta({ id: 'PedidoDosCamposDaTiDoChamado' });
+
+const PedidoDoVirarOs = z
+  .object({
+    /**
+     * O problema da OS, que a tela traz com o título do chamado para quem abre corrigir; sem ele, o
+     * título. O vazio é recusado pela abertura da OS, no campo `problema`.
+     */
+    problema: z.string().max(5000).optional(),
+  })
+  .meta({ id: 'PedidoDoVirarOsDoChamado' });
 
 const ChamadoDepoisDaAcao = z
   .object({
@@ -823,5 +838,29 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
           momento: agora(),
         }),
       ),
+  );
+
+  // Virar OS (tarefa 4.16), pela abertura das OS de hoje, no `chamados/os.ts`.
+  app.post(
+    '/chamados/:numero/os',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary:
+          'Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois',
+        params: DA_ACAO.params,
+        body: PedidoDoVirarOs,
+        response: { 201: OrdemDeServico, ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      const ordem = await naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+        virarOs(tx, requisicao.params.numero, requisicao.body, {
+          requisicao,
+          momento: agora(),
+        }),
+      );
+      return resposta.code(201).send(ordem);
+    },
   );
 };

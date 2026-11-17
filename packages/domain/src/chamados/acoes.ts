@@ -234,7 +234,9 @@ export type EventoDaAcao =
   | { evento: 'aguardando' | 'retomou' | 'resolveu'; dados: Record<string, never> }
   | { evento: 'reabriu'; dados: { para: string | null } }
   /** A troca do ativo (`edicao.ts`), com os ids do ativo de antes e do de depois, ou nulo. */
-  | { evento: 'ativo'; dados: { antes: string | null; depois: string | null } };
+  | { evento: 'ativo'; dados: { antes: string | null; depois: string | null } }
+  /** O chamado virou OS (`os-e-solicitacao.ts`), com o número dela, que não muda. */
+  | { evento: 'os'; dados: { numero: number } };
 
 /** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
 export type EntradaDaConversa =

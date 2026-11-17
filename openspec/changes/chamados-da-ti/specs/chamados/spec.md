@@ -501,7 +501,17 @@ Quem atende o chamado SHALL poder:
 
 O chamado SHALL mostrar a OS e a solicitação ligadas, com a situação de cada uma, a quem as vê. Cada uma SHALL gravar o evento na conversa, como "Virou a OS 12" e "Juntou-se à solicitação 4".
 
-Virar OS e pedir toner SHALL NOT mudar a situação do chamado. Num chamado resolvido, os dois SHALL ser recusados com "O chamado #1042 está resolvido.".
+Virar OS e pedir toner SHALL NOT mudar a situação do chamado, quem atende nem os locais, e o evento deles SHALL NOT subir a versão. Num chamado resolvido, os dois SHALL ser recusados com "O chamado #1042 está resolvido.". Com o módulo Operação desligado, os dois SHALL ser recusados como as rotas do módulo desligado.
+
+A troca do ativo SHALL NOT mudar a OS nem a solicitação ligadas: elas seguem no ativo em que nasceram, e o chamado continua ligado a elas.
+
+#### Scenario: Desfazer depois de virar OS
+- **WHEN** Ana assume o #1042, usa "Virar OS" e desfaz o assumir
+- **THEN** o #1042 volta à triagem, continua ligado à OS, e a conversa guarda "Virou a OS 13"
+
+#### Scenario: Troca do ativo depois da OS
+- **WHEN** Ana troca o ativo do #1042, que virou a OS 13 na PAT-00139, pela PAT-00200
+- **THEN** o #1042 fica com a PAT-00200 e ligado à OS 13, que continua na PAT-00139
 
 #### Scenario: Pedir toner com uma solicitação pendente
 - **WHEN** Ana usa "Pedir toner" no #1042, com a PAT-00139, que já está na solicitação 4, Aberta

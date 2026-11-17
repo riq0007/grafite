@@ -31,6 +31,7 @@ export function ordem(numero: number, extras: Partial<OrdemDeTeste> = {}): Ordem
     ativo: NB0031,
     local: EXPEDICAO,
     solicitacao: null,
+    chamado: null,
     problema: 'Não liga',
     fornecedor: null,
     osDoFornecedor: null,

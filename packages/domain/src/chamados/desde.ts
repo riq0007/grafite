@@ -37,12 +37,23 @@ export const EVENTOS_QUE_SOBEM_A_VERSAO = [
   'ativo',
 ] as const satisfies readonly EventoDaAcao['evento'][];
 
+/**
+ * Os eventos que vão à conversa sem subir a versão: o chamado que virou OS não muda a situação, quem
+ * atende nem os locais, e o desfazer do assumir segue valendo depois dele.
+ */
+export const EVENTOS_QUE_NAO_SOBEM_A_VERSAO = [
+  'os',
+] as const satisfies readonly EventoDaAcao['evento'][];
+
 /** Aceita só o `never`: o tipo que sobra reprova o typecheck onde o guarda o pede. */
 type SemNenhum<Sobra extends never> = Sobra;
 
-/** O guarda: o evento novo do domínio que falta na lista reprova o typecheck aqui. */
-export type EventosQueNaoSobemAVersao = SemNenhum<
-  Exclude<EventoDaAcao['evento'], (typeof EVENTOS_QUE_SOBEM_A_VERSAO)[number]>
+/** O guarda: o evento novo do domínio que não está numa das duas listas reprova o typecheck aqui. */
+export type EventosForaDasListas = SemNenhum<
+  Exclude<
+    EventoDaAcao['evento'],
+    (typeof EVENTOS_QUE_SOBEM_A_VERSAO)[number] | (typeof EVENTOS_QUE_NAO_SOBEM_A_VERSAO)[number]
+  >
 >;
 
 const SOBEM: ReadonlySet<string | null> = new Set(EVENTOS_QUE_SOBEM_A_VERSAO);
