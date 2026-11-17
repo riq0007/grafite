@@ -6,7 +6,7 @@ Dar aos chamados um módulo na casca, que é a primeira tela da TI: quem está c
 
 ### Requirement: Chamados no dock
 
-A casca SHALL ter o módulo Chamados, com o ícone da boia, primeiro na ordem de fábrica do dock, antes do Início (spec dock). Ele SHALL ser visível para quem tem `chamados.ver`, `chamados.atender` ou `chamados.configurar`, e só com o módulo ligado na organização.
+A casca SHALL ter o módulo Chamados, com o ícone da boia, primeiro na ordem de fábrica do dock, antes do Início (spec dock). Ele SHALL ser visível para quem tem `chamados.ver`, `chamados.atender` ou `chamados.configurar`, e só com o módulo ligado na organização. No celular, o módulo SHALL ficar na barra de abas, antes do Início.
 
 O menu SHALL ter:
 - "Início", "Quem está com o quê" e "Prazos", para quem vê os chamados;

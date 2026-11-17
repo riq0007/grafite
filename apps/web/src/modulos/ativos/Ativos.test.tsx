@@ -140,10 +140,13 @@ describe('o módulo Ativos no registro', () => {
   });
 
   it('no celular, fica logo depois do Início', async () => {
-    const prioridades = REGISTRO.filter((modulo) => modulo.id !== 'inicio')
-      .map((modulo) => modulo.prioridadeNoCelular)
-      .filter((prioridade): prioridade is number => typeof prioridade === 'number');
-    expect(ativos.prioridadeNoCelular).toBe(Math.min(...prioridades));
+    // Os Chamados vêm antes do Início (change chamados-da-ti, design, decisão 14).
+    const doInicio = REGISTRO.find((modulo) => modulo.id === 'inicio')?.prioridadeNoCelular;
+    const depoisDoInicio = REGISTRO.map((modulo) => modulo.prioridadeNoCelular).filter(
+      (prioridade): prioridade is number =>
+        typeof prioridade === 'number' && typeof doInicio === 'number' && prioridade > doInicio,
+    );
+    expect(ativos.prioridadeNoCelular).toBe(Math.min(...depoisDoInicio));
 
     noCelular();
     abrir('/', naOrganizacao('ativos.ver'), {

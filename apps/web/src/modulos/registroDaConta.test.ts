@@ -3,7 +3,7 @@ import { createRoute } from '@tanstack/react-router';
 import { Box, Users } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { raiz } from '../rotas/raiz.tsx';
-import { interruptorDe, registroDaConta } from './registroDaConta.ts';
+import { interruptorDe, itensPermitidos, registroDaConta } from './registroDaConta.ts';
 import { definirModulo, type ModuloRegistrado } from './tipos.ts';
 
 const rotasDoLivre = createRoute({ getParentRoute: () => raiz, path: '/livre' });
@@ -101,6 +101,41 @@ describe('registroDaConta', () => {
     expect(acessos && 'filhos' in acessos ? rotulosDe(acessos.filhos) : null).toEqual([
       'Perfis',
       'Grupos',
+    ]);
+  });
+
+  it('o primeiro item que a conta vê não leva a linha antes dele, e os outros a mantêm', () => {
+    const menu = [
+      { rotulo: 'Início', destino: '/livre', permissoes: ['chamados.ver'] },
+      {
+        rotulo: 'Configurar',
+        destino: '/livre',
+        separadoAntes: true,
+        permissoes: ['chamados.configurar'],
+      },
+      {
+        rotulo: 'Mais',
+        separadoAntes: true,
+        filhos: [
+          { rotulo: 'Um', destino: '/livre', permissoes: ['chamados.ver'] },
+          {
+            rotulo: 'Dois',
+            destino: '/livre',
+            separadoAntes: true,
+            permissoes: ['chamados.configurar'],
+          },
+        ],
+      },
+    ] as const;
+    expect(itensPermitidos(menu, comAs('chamados.ver', 'chamados.configurar'))).toEqual(menu);
+    const soConfigura = itensPermitidos(menu, comAs('chamados.configurar'));
+    expect(soConfigura).toEqual([
+      { rotulo: 'Configurar', destino: '/livre', permissoes: ['chamados.configurar'] },
+      {
+        rotulo: 'Mais',
+        separadoAntes: true,
+        filhos: [{ rotulo: 'Dois', destino: '/livre', permissoes: ['chamados.configurar'] }],
+      },
     ]);
   });
 

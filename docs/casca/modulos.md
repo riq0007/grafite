@@ -42,7 +42,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 
 ### Menus em árvore
 
-Cada item leva a um destino (`{ rotulo, destino }`) ou abre um submenu (`{ rotulo, filhos }`). Com `separadoAntes: true`, uma linha separa o item dos anteriores. Os destinos são endereços das rotas do próprio módulo, conferidos na compilação.
+Cada item leva a um destino (`{ rotulo, destino }`) ou abre um submenu (`{ rotulo, filhos }`). Com `separadoAntes: true`, uma linha separa o item dos anteriores; o primeiro item que a conta vê, no menu e em cada submenu, fica sem ela, porque os anteriores são os que a conta não vê. Os destinos são endereços das rotas do próprio módulo, conferidos na compilação.
 
 A casca decide como o menu abre:
 - **Dock:** abre ao parar o ponteiro sobre o item.
@@ -2492,6 +2492,7 @@ import { administracao } from './administracao/modulo.ts';
 import { ajustes } from './ajustes/modulo.ts';
 import { alertas } from './alertas/modulo.ts';
 import { ativos } from './ativos/modulo.ts';
+import { chamados } from './chamados/modulo.ts';
 import { cofre } from './cofre/modulo.ts';
 import { gestao } from './gestao/modulo.ts';
 import { inicio } from './inicio/modulo.ts';
@@ -2504,9 +2505,10 @@ import { salas } from './salas/modulo.ts';
  * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
  * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
  * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
- * dock.
+ * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI.
  */
 export const REGISTRO = [
+  chamados,
   inicio,
   ativos,
   gestao,

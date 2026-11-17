@@ -11,17 +11,30 @@ export type Pode = (chave: Permissao) => boolean;
 const permite = (pode: Pode, { permissoes }: ExigePermissoes) =>
   !permissoes || permissoes.length === 0 || permissoes.some(pode);
 
-/** Os itens que a conta pode usar; o submenu que fica sem itens some também. */
+/** O item sem a linha antes dele, como o primeiro que a conta vê num menu. */
+function semALinha<TEndereco extends string>(
+  item: ItemDoMenuDoModulo<TEndereco>,
+): ItemDoMenuDoModulo<TEndereco> {
+  if (!item.separadoAntes) return item;
+  const { separadoAntes: _, ...semLinha } = item;
+  return semLinha;
+}
+
+/**
+ * Os itens que a conta pode usar; o submenu que fica sem itens some também, e o primeiro item que
+ * fica, no menu e em cada submenu, perde a linha antes dele, que separava de um item que sumiu.
+ */
 export function itensPermitidos<TEndereco extends string>(
   itens: readonly ItemDoMenuDoModulo<TEndereco>[],
   pode: Pode,
 ): ItemDoMenuDoModulo<TEndereco>[] {
-  return itens.flatMap((item): ItemDoMenuDoModulo<TEndereco>[] => {
+  const [primeiro, ...outros] = itens.flatMap((item): ItemDoMenuDoModulo<TEndereco>[] => {
     if (!permite(pode, item)) return [];
     if (!('filhos' in item)) return [item];
     const filhos = itensPermitidos(item.filhos, pode);
     return filhos.length > 0 ? [{ ...item, filhos }] : [];
   });
+  return primeiro ? [semALinha(primeiro), ...outros] : [];
 }
 
 function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
