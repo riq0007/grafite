@@ -41,6 +41,7 @@ function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
   const {
     menu,
     menuDinamico,
+    primeiraTela,
     menusDaBarra,
     busca,
     ocorrencias,
@@ -51,6 +52,7 @@ function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
   if (
     !menu &&
     !menuDinamico &&
+    !primeiraTela &&
     !menusDaBarra &&
     !busca &&
     !ocorrencias &&
@@ -64,6 +66,7 @@ function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
     ...modulo,
     menu: menu && itensPermitidos(menu, pode),
     menuDinamico: menuDinamico && permite(pode, menuDinamico) ? menuDinamico : undefined,
+    primeiraTela: primeiraTela && permite(pode, primeiraTela) ? primeiraTela : undefined,
     menusDaBarra: menusDaBarra
       ?.map((barra) => ({ ...barra, itens: itensPermitidos(barra.itens, pode) }))
       .filter((barra) => barra.itens.length > 0),

@@ -169,6 +169,22 @@ describe('registroDaConta', () => {
     expect(comAuditoria?.menuDinamico).toBe(administracao.menuDinamico);
   });
 
+  it('a primeira tela fica só para quem tem a permissão dela, também no módulo que só a declara', () => {
+    const entrada = definirModulo({
+      id: 'entrada',
+      nome: 'Entrada',
+      icone: Box,
+      endereco: '/livre',
+      prioridadeNoCelular: 1,
+      rotas: rotasDoLivre,
+      primeiraTela: { permissoes: ['chamados.ver'] },
+    });
+    const [semVer] = registroDaConta([entrada], comAs('chamados.configurar'));
+    expect(semVer?.primeiraTela).toBeUndefined();
+    const [comVer] = registroDaConta([entrada], comAs('chamados.ver'));
+    expect(comVer?.primeiraTela).toBe(entrada.primeiraTela);
+  });
+
   it('o cadastro que abre numa aba fica só para quem tem a permissão dele', () => {
     const [, semEditar] = registroDaConta(REGISTRO, comAs('pessoas.ver'));
     expect(semEditar?.cadastros).toEqual([]);

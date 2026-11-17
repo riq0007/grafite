@@ -535,13 +535,18 @@ A web declara, no registro do módulo, as consultas que cada evento atualiza. O 
 
 **O dock.** O módulo `chamados` entra primeiro no `REGISTRO`, que é a ordem de fábrica do dock. O comportamento com o dock já arrumado é o da spec do dock: o módulo novo vai para depois dos arrumados.
 
-**A primeira tela.** O redirecionamento acontece só na primeira carga de cada aba:
-- se o endereço é a raiz, a sessão vê os chamados com o módulo ligado e a aba ainda não tem a marca `grafite.entrou` no `sessionStorage`, a casca troca o endereço por `/chamados` (`replace`);
-- a casca grava a marca quando decide, com a sessão conhecida, com ou sem a troca;
-- recarregar a página mantém o Início, porque a marca continua na aba, e uma aba nova não tem a marca;
+**A primeira tela (tarefa 5.2).** O redirecionamento acontece só na primeira carga de cada aba:
+- se o endereço é a raiz pura, `/` sem busca nem âncora, como o `start_url` da PWA, a conta vê os chamados com o módulo ligado e a marca `grafite.entrou` do `sessionStorage` não é dela, a casca troca o endereço por `/chamados` (`replace`). Um endereço do Início com parâmetros é um destino, e fica;
+- a marca guarda o usuário da conta. A casca a grava quando abre com a sessão conhecida, com ou sem a troca, e quando a sessão desconhecida passa a ser conhecida;
+- recarregar a página mantém o Início, porque a marca continua na aba. Uma aba nova não tem a marca, e outra conta que entra na mesma aba, depois do "Sair", tem a primeira tela dela;
+- com a sessão desconhecida na primeira carga, a casca fica no Início. Quando a sessão fica conhecida, a casca continua onde a pessoa está e grava a marca;
 - a navegação interna para `/`, pelo dock, não passa por ali, e o Início continua no endereço dele.
 
 O `sessionStorage` é lido e gravado num `try/catch`. Sem ele, a troca acontece em toda carga da raiz, o que só repete a primeira tela.
+
+Decisões que o plano não fechava:
+- **Onde:** antes da primeira carga do roteador. O roteador só monta quando a porta monta a casca, com a sessão conhecida ou desconhecida; entre a porta e ele, a `PrimeiraCarga` decide e troca o endereço do histórico (`replace`), e só depois monta o roteador, que carrega já no endereço novo. Assim o Início não abre nem pede os dados dele antes da troca, e o foco da abertura fica onde está (design do F1b, decisão 4), porque não há navegação. As navegações depois não passam por ali. Recusados: uma navegação num efeito da casca, depois da primeira carga, que abriria o Início e levaria o foco ao título; e um `beforeLoad` na raiz, que roda em toda navegação e muda o tempo de todas (na tela das visões dos ativos, a lista relida chegava antes da navegação para a visão de fábrica, e a tela avisava que a visão removida tinha sido removida). O `beforeLoad` só na rota do Início, com o `redirect`, não foi tentado: ele rodaria só nas idas à raiz, mas também na do dock; precisaria da sessão no contexto do roteador, que hoje leva só os módulos; e o `redirect` é uma segunda navegação, depois de a raiz começar a carregar. A `PrimeiraCarga` decide uma vez, antes de o roteador montar, com a sessão que a porta já tem.
+- **No contrato de módulo:** o módulo declara a `primeiraTela`, com as permissões dela, e a casca leva a raiz ao endereço do primeiro módulo do registro da conta que a declara. O registro da conta tira a primeira tela de quem não tem as permissões dela, como faz com o menu dinâmico, e o módulo desligado sai inteiro. O Chamados a declara com `chamados.ver` ou `chamados.atender`: quem só configura fica no Início.
 
 **O módulo na casca (tarefa 5.1).** O módulo vive em `apps/web/src/modulos/chamados/`. Decisões que o plano não fechava:
 - **Os endereços:** `/chamados` (o Início dos chamados), `/chamados/quem-esta-com-o-que`, `/chamados/prazos`, `/chamados/tipos`, `/chamados/respostas-prontas` e `/chamados/horario`. O chamado aberto, `/chamados/<número>`, entra com a tela dele (5.10), junto do provedor da busca, que leva a ele pelo Enter.

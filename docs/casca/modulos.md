@@ -1,6 +1,6 @@
 # Contrato de módulo da casca
 
-Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor e as etapas da chegada também têm contratos prontos, descritos abaixo.
+Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor, a primeira tela ao entrar e as etapas da chegada também têm contratos prontos, descritos abaixo.
 
 ## Passo a passo
 
@@ -32,6 +32,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 | `rotas` | A subárvore de rotas do módulo |
 | `menu` | Menu em árvore do item do dock (opcional) |
 | `menuDinamico` | Os itens do menu do dock que vêm dos dados, como as visões fixadas: a permissão, as consultas e o `montar` (opcional) |
+| `primeiraTela` | As permissões com que o módulo é a primeira tela ao entrar, no lugar do Início (opcional; veja Primeira tela ao entrar) |
 | `menusDaBarra` | Menus do módulo na barra superior, como Visualizar e Ações (opcional) |
 | `busca` | Entradas de busca e os provedores de busca, cada um com o grupo dele (opcional) |
 | `ocorrencias` | Fonte das ocorrências abertas do módulo, para a tela inicial (opcional) |
@@ -529,6 +530,23 @@ As regras:
 ### Largura do bloco
 
 Cada bloco de módulo tem a largura "Inteira", de fábrica, ou "Metade", que a conta escolhe no modo Personalizar e fica em `inicio.blocos`. No computador, com a área a partir de 1.200 px, o Início é uma grade de duas colunas: dois blocos de metade seguidos ficam lado a lado, e o inteiro ocupa as duas. No tablet, no celular e na área estreita, todo bloco é inteiro. O bloco não precisa fazer nada: ele deve caber na metade da área, e a prateleira dos suprimentos, por exemplo, quebra em linhas.
+
+## Primeira tela ao entrar
+
+Um módulo pode ser a primeira tela de quem entra, no lugar do Início (change chamados-da-ti, design, decisão 14). Ele declara o `primeiraTela`, com as permissões dela, e a casca faz o resto. O Chamados é a primeira tela de quem vê ou atende os chamados; quem só os configura fica no Início:
+
+```ts
+// apps/web/src/modulos/chamados/modulo.ts (trecho)
+  permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'],
+  primeiraTela: { permissoes: PERMISSOES_DE_VER },
+```
+
+As regras:
+- **Só a raiz pura:** a casca troca só o endereço da organização sem caminho nem parâmetros, `/`, como o `start_url` da PWA. Um endereço salvo, com busca ou com âncora abre onde aponta.
+- **Só na primeira carga da aba:** a casca marca a aba com a conta, no `sessionStorage`, em qualquer endereço. A marca é da casca, e não do módulo. Recarregar fica onde estava; a aba nova e outra conta na mesma aba voltam à primeira tela. Sem o `sessionStorage`, a raiz leva à primeira tela a cada carga.
+- **Quem:** vale o primeiro módulo do registro da conta que declara a primeira tela, para quem tem uma das permissões dela; o módulo desligado sai com o resto dele. Quem não tem nenhuma fica no Início.
+- **Antes do roteador:** a `PrimeiraCarga` (`apps/web/src/casca/primeiraTela.ts`) troca a raiz no histórico antes de o roteador montar, e ele já carrega a tela do módulo. O Início não começa a carregar, o voltar do navegador não leva à raiz e o foco da abertura fica onde estava.
+- **A sessão desconhecida:** sem resposta do servidor na abertura, a casca fica no Início, também quando ele volta.
 
 ## Notificações
 

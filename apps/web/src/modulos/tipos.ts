@@ -262,6 +262,12 @@ export interface ModuloRegistrado<TRota extends AnyRoute = AnyRoute> extends Exi
   menu?: readonly ItemDoMenuDoModulo<EnderecosDe<TRota>>[];
   /** O menu do dock com os itens que vêm dos dados, como as visões fixadas. */
   menuDinamico?: MenuDinamicoDoModulo<EnderecosDe<TRota>>;
+  /**
+   * O módulo é a primeira tela ao entrar de quem tem uma das permissões dela (change
+   * chamados-da-ti, design, decisão 14): na primeira carga da aba, a raiz vai ao endereço do
+   * módulo, e não ao Início. Vale o primeiro módulo do registro da conta que a declara.
+   */
+  primeiraTela?: ExigePermissoes;
   /** Menus do módulo na barra superior. */
   menusDaBarra?: readonly MenuDaBarraDoModulo<EnderecosDe<TRota>>[];
   /**

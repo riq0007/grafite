@@ -34,6 +34,9 @@ beforeEach(() => {
   // As boas-vindas já foram vistas: só os testes do primeiro acesso as desmarcam (design do F1c,
   // decisão 10).
   localStorage.setItem('grafite.chegada.boasVindas', 'vistas');
+  // Cada teste abre numa aba nova, sem a marca da primeira tela que a casca grava ao abrir (change
+  // chamados-da-ti, design, decisão 14).
+  sessionStorage.clear();
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => Response.json({ status: 'ok', versao: '0.0.0', banco: 'ok' })),

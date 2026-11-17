@@ -322,6 +322,16 @@ describe('docs/casca/modulos.md', () => {
     expect(documento).not.toContain('**Ligar e desligar módulos por organização:**');
   });
 
+  it('traz, do código, a primeira tela ao entrar, com a do Chamados', () => {
+    const doArquivo = blocos
+      .filter((bloco) => bloco.caminho === `${PASTA}chamados/modulo.ts` && bloco.trecho)
+      .map((bloco) => bloco.codigo)
+      .join('');
+    expect(doArquivo).toContain('primeiraTela: { permissoes: PERMISSOES_DE_VER },');
+    expect(documento).toContain('| `primeiraTela` |');
+    expect(documento).toContain('## Primeira tela ao entrar');
+  });
+
   it('reproduz cada exemplo exatamente como está no código', () => {
     for (const { caminho, trecho, codigo } of blocos) {
       const fonte = fontes.get(caminho);

@@ -15,13 +15,13 @@ const osChamados = () => [CHAVE_DOS_CHAMADOS];
 const aFicha = () => [CHAVE_DA_FICHA_DO_CHAMADO];
 
 /**
- * O módulo Chamados no registro (spec modulo-chamados, "Chamados no dock" e "Telas atualizadas e
- * módulo desligado"; change chamados-da-ti, design, decisão 14, "O módulo na casca"): o primeiro do
- * dock e do celular, antes do Início, com a boia, para quem vê, atende ou configura os chamados. O
- * menu tem as telas de ver e, depois de uma linha, as de configurar, cada uma a quem tem a
- * permissão dela; na busca, as telas e a ação de abrir um chamado, a quem atende. Os eventos dos
- * chamados e dos ajustes relêem as telas deles, e os das outras capacidades, o que as telas mostram
- * delas.
+ * O módulo Chamados no registro (spec modulo-chamados, "Chamados no dock", "Primeira tela ao entrar"
+ * e "Telas atualizadas e módulo desligado"; change chamados-da-ti, design, decisão 14): o primeiro
+ * do dock e do celular, antes do Início, com a boia, para quem vê, atende ou configura os chamados,
+ * e a primeira tela ao entrar de quem os vê ou os atende. O menu tem as telas de ver e, depois de
+ * uma linha, as de configurar, cada uma a quem tem a permissão dela; na busca, as telas e a ação de
+ * abrir um chamado, a quem atende. Os eventos dos chamados e dos ajustes relêem as telas deles, e
+ * os das outras capacidades, o que as telas mostram delas.
  */
 export const chamados = definirModulo({
   id: 'chamados',
@@ -31,6 +31,7 @@ export const chamados = definirModulo({
   prioridadeNoCelular: 0,
   rotas: rotasDosChamados,
   permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'],
+  primeiraTela: { permissoes: PERMISSOES_DE_VER },
   menu: [
     { rotulo: 'Início', destino: '/chamados', permissoes: PERMISSOES_DE_VER },
     {

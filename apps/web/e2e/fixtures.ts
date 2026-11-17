@@ -158,10 +158,15 @@ function noFluxo({ tipo, alvo = null }: EventoSimulado): string {
  * chegada terminar. E as boas-vindas do primeiro acesso já nascem vistas (design do F1c, decisão
  * 10). As pontas a ponta da própria chegada desligam isso com
  * `test.use({ esperarAChegada: false, boasVindasVistas: false })`.
+ *
+ * A aba também já nasce marcada com a conta, como a de quem já estava no app: a raiz fica no
+ * Início, sem a primeira tela ao entrar (change chamados-da-ti, design, decisão 14). As pontas a
+ * ponta da primeira tela desligam isso com `test.use({ primeiraTelaVista: false })`.
  */
 export const test = base.extend<{
   esperarAChegada: boolean;
   boasVindasVistas: boolean;
+  primeiraTelaVista: boolean;
   semSessao: boolean;
   semPermissoes: boolean;
   /** O ambiente que o servidor diz no estado da sessão (padrão: produção). */
@@ -172,6 +177,7 @@ export const test = base.extend<{
 }>({
   esperarAChegada: [true, { option: true }],
   boasVindasVistas: [true, { option: true }],
+  primeiraTelaVista: [true, { option: true }],
   semSessao: [false, { option: true }],
   semPermissoes: [false, { option: true }],
   ambiente: ['producao', { option: true }],
@@ -186,7 +192,16 @@ export const test = base.extend<{
     });
   },
   context: async (
-    { context, boasVindasVistas, semSessao, semPermissoes, ambiente, operaOServidor, servidor },
+    {
+      context,
+      boasVindasVistas,
+      primeiraTelaVista,
+      semSessao,
+      semPermissoes,
+      ambiente,
+      operaOServidor,
+      servidor,
+    },
     use,
   ) => {
     const estado = semSessao ? SEM_SESSAO : semPermissoes ? SESSAO_SEM_PERMISSOES : SESSAO;
@@ -340,6 +355,17 @@ export const test = base.extend<{
           // Um teste com o armazenamento bloqueado também não vê as boas-vindas.
         }
       });
+    }
+    if (primeiraTelaVista) {
+      // Sem sessão, a conta que entra nas pontas a ponta da entrada é a da Ana.
+      const usuario = (estado.sessao ?? SESSAO.sessao).conta.usuario;
+      await context.addInitScript((conta) => {
+        try {
+          sessionStorage.setItem('grafite.entrou', conta);
+        } catch {
+          // Com o armazenamento bloqueado, a raiz leva à primeira tela a cada carga.
+        }
+      }, usuario);
     }
     await use(context);
   },

@@ -32,11 +32,11 @@ Sem a permissão, o endereço do módulo SHALL dizer "Você não tem acesso aos 
 
 ### Requirement: Primeira tela ao entrar
 
-Abrir a aplicação no endereço da organização, sem caminho, SHALL levar ao Início dos chamados a conta que vê os chamados, com o módulo ligado. As outras contas SHALL ver o Início. Escolher o Início no dock SHALL abrir o Início, sem levar aos chamados.
+Abrir a aplicação no endereço da organização, sem caminho nem parâmetros, SHALL levar ao Início dos chamados a conta que vê os chamados, com o módulo ligado. As outras contas SHALL ver o Início. Escolher o Início no dock SHALL abrir o Início, sem levar aos chamados.
 
-A troca SHALL acontecer só na primeira carga de cada aba do navegador. Recarregar a página SHALL manter a tela em que a conta estava, também o Início.
+A troca SHALL acontecer só na primeira carga de cada aba do navegador, e de novo quando outra conta entra na mesma aba. Recarregar a página SHALL manter a tela em que a conta estava, também o Início.
 
-Com a sessão desconhecida, porque o servidor não respondeu, a casca SHALL ficar no Início.
+Com a sessão desconhecida na primeira carga, porque o servidor não respondeu, a casca SHALL ficar no Início, também quando o servidor volta.
 
 #### Scenario: Ana entra
 - **WHEN** Ana, que atende os chamados, entra pelo endereço da organização
@@ -57,6 +57,14 @@ Com a sessão desconhecida, porque o servidor não respondeu, a casca SHALL fica
 #### Scenario: Conta sem os chamados
 - **WHEN** Paula, sem nenhuma permissão dos chamados, entra
 - **THEN** a primeira tela é o Início
+
+#### Scenario: Outra conta na mesma aba
+- **WHEN** Ana sai, e Bruno, que também atende os chamados, entra na mesma aba, no endereço da organização
+- **THEN** a primeira tela de Bruno é o Início dos chamados
+
+#### Scenario: O servidor volta
+- **WHEN** Ana abre o endereço da organização sem resposta do servidor, e o servidor volta
+- **THEN** a casca continua no Início, e recarregar a página mantém o Início
 
 ### Requirement: Início dos chamados
 

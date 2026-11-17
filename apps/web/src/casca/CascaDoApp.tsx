@@ -49,6 +49,7 @@ import { ModuloDesligado } from './ModuloDesligado.tsx';
 import { useMenusDinamicos } from './menusDinamicos.ts';
 import { moduloAtual, modulosDaCasca } from './modulosDaCasca.ts';
 import { ContextoDosModulosDaConta } from './modulosDaConta.tsx';
+import { useMarcaDaAba } from './primeiraTela.ts';
 import { ItemDeRede } from './status/ItemDeRede.tsx';
 import { Relogio } from './status/Relogio.tsx';
 
@@ -178,6 +179,8 @@ export function CascaDoApp() {
   const sessao = useSessao();
   const loja = useLojaDaSessao();
   const conta = sessao.tipo === 'ativa' ? sessao.conta : null;
+  // A aba fica marcada com a conta: recarregar não troca a raiz pela primeira tela de novo.
+  useMarcaDaAba(conta?.usuario ?? null);
   /** Sair encerra a sessão e recarrega a página, que recomeça sem nada da conta na memória. */
   const sair = async () => {
     const resultado = await loja.sair();
