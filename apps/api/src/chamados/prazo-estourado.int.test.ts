@@ -3,7 +3,7 @@
 // avisado uma vez, a quem atende ou a quem atende os locais, e marcado; o parado e o de prazo
 // estragado ficam de fora; o reaberto é avisado de novo; e a tarefa pula a organização com o módulo
 // Chamados desligado. Quem recebe em cada caso é do domínio (`notificacoesDoEstouro`).
-import { naOrganizacao, notificacoes } from '@grafite/db';
+import { contas, naOrganizacao, notificacoes } from '@grafite/db';
 import type { PrazoDoChamado } from '@grafite/domain';
 import { and, eq, like } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -47,6 +47,15 @@ const verificar = (minutos: number) =>
 /** Os avisos do estouro do chamado, com quem recebeu pelo usuário. */
 const avisosDo = async (numero: number, em: ChamadosDeTeste = c) =>
   (await em.notificacoesDo(numero)).filter(({ titulo }) => titulo.includes('passou do prazo'));
+
+/** Troca o nome de usuário da conta direto no banco. */
+const renomear = (usuario: 'ana', novo: string) =>
+  naOrganizacao(api.banco, c.org, (tx) =>
+    tx
+      .update(contas)
+      .set({ usuario: novo })
+      .where(eq(contas.id, c.conta(usuario))),
+  );
 
 const aviso = async (numero: number, usuario: string, em: ChamadosDeTeste = c) => {
   const { titulo } = await em.lerChamado(numero);
@@ -106,7 +115,14 @@ describe('a verificação do prazo', () => {
     // Marina é da Recepção, em Jundiaí, e o chamado está com Elisa, que só atende Campinas.
     const comElisa = await abrirComDuasHoras(c.relato('marina'));
     await c.mudarChamado(comElisa, { responsavelId: c.conta('elisa') });
-    expect(await verificar(120)).toEqual({ avisados: 2 });
+    // Os avisos saem na ordem da criação das contas, e não na do usuário: Ana, renomeada para o fim
+    // do alfabeto, segue a primeira.
+    await renomear('ana', 'zana');
+    try {
+      expect(await verificar(120)).toEqual({ avisados: 2 });
+    } finally {
+      await renomear('ana', 'ana');
+    }
     expect(await avisosDo(naTriagem)).toEqual([
       await aviso(naTriagem, 'ana'),
       await aviso(naTriagem, 'elisa'),
