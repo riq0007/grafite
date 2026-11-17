@@ -51,6 +51,16 @@ As recusas SHALL ficar no campo:
 
 A recusa pelos locais SHALL ser "Você não atende os chamados de <local>.".
 
+A pessoa SHALL ser buscada pelas palavras do nome, sem diferenciar os acentos e as maiúsculas, entre as pessoas ativas da organização, até 10, pela ordem do nome, com o total das que casam, para quem busca saber que há mais e afinar o termo. Cada uma SHALL vir com o nome e o local de trabalho, como o chamado a mostra a quem o vê, sem os contatos. A busca SHALL servir também a quem não tem `pessoas.ver`, e a prévia do colaborador SHALL buscar a pessoa do "Ver como" do mesmo jeito.
+
+#### Scenario: Busca da pessoa sem acesso às pessoas
+- **WHEN** Diego, com `chamados.atender` e sem `pessoas.ver`, busca "marina" ao abrir um chamado
+- **THEN** a busca acha Marina Rocha, com "Jundiaí › Recepção", sem os contatos, e deixa de fora as pessoas inativas e as anonimizadas
+
+#### Scenario: Busca só pelo nome
+- **WHEN** quem abre busca pela matrícula ou por uma parte do e-mail de uma pessoa
+- **THEN** a busca não acha a pessoa, porque os contatos só aparecem a quem tem `pessoas.ver`
+
 #### Scenario: Chamado pelo telefone
 - **WHEN** Ana abre, em nome de Marina Lopes, um chamado de Impressora com a PAT-00139 e "Manchando, na borda", com "Fica comigo" ligado
 - **THEN** o chamado nasce Em atendimento com Ana, com o título "Impressora manchando" e a primeira resposta dada, e a conversa começa pelo evento de abertura e por "Problema: Manchando, na borda · Ativo: PAT-00139"

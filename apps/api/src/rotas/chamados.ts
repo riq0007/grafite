@@ -38,6 +38,7 @@ import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edic
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
 import { virarOs } from '../chamados/os.ts';
+import { buscarPessoas } from '../chamados/pessoas.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
@@ -136,6 +137,31 @@ const SugestoesDoChamado = z
     ),
   })
   .meta({ id: 'SugestoesDoChamado' });
+
+const PedidoDaBuscaDaPessoa = z.object({
+  /** As palavras do nome, de 1 a 100 caracteres, sem os espaços das pontas. */
+  busca: z
+    .string({ error: 'Informe o que buscar.' })
+    .trim()
+    .min(1, { error: 'Informe o que buscar.' })
+    .max(100, { error: 'Use até 100 caracteres.' }),
+});
+
+const PessoasNaBusca = z
+  .object({
+    /** Até 10 pessoas ativas, pela ordem do nome sem acento, sem os contatos. */
+    itens: z.array(
+      z.object({
+        id: z.uuid(),
+        nome: z.string(),
+        /** O caminho do local de trabalho, como o chamado o mostra; nulo sem o local. */
+        local: z.string().nullable(),
+      }),
+    ),
+    /** Quantas pessoas ativas casam com o termo, também as que passam das 10. */
+    total: z.number().int(),
+  })
+  .meta({ id: 'PessoasNaBuscaDosChamados' });
 
 const FUSO_DESCONHECIDO = 'Fuso horário desconhecido.';
 
@@ -643,6 +669,39 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
             acesso: sessaoDa(requisicao).acesso,
             arvore: await lerArvore(tx),
           }),
+        ),
+    );
+  }
+
+  // A busca da pessoa em duas rotas, como as sugestões: a da gaveta, de quem abre, e a do "Ver
+  // como" da prévia, de quem configura. A lista das pessoas pede `pessoas.ver`, que as duas contas
+  // podem não ter, e esta dá só o que o chamado mostra a quem o vê: o nome e o local de trabalho.
+  const ROTAS_DA_BUSCA_DA_PESSOA = [
+    {
+      endereco: '/chamados/pessoas',
+      permissao: 'chamados.atender',
+      summary: 'A busca da pessoa do chamado pelo nome, para abrir o chamado',
+    },
+    {
+      endereco: '/chamados/tipos/pessoas',
+      permissao: 'chamados.configurar',
+      summary: 'A busca da pessoa pelo nome, para o "Ver como" da prévia do colaborador',
+    },
+  ] as const;
+  for (const { endereco, permissao, summary } of ROTAS_DA_BUSCA_DA_PESSOA) {
+    app.get(
+      endereco,
+      {
+        config: { permissao },
+        schema: {
+          summary,
+          querystring: PedidoDaBuscaDaPessoa,
+          response: { 200: PessoasNaBusca, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+        },
+      },
+      (requisicao) =>
+        naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+          buscarPessoas(tx, requisicao.query.busca, await lerArvore(tx)),
         ),
     );
   }
