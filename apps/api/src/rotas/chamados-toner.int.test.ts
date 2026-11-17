@@ -5,7 +5,6 @@
 // recusas. A ordem das recusas do chamado é do domínio (`chamados/os-e-solicitacao.test.ts`), e a
 // cor, do `chamados/cor-do-toner.test.ts`; aqui fica um caso de cada ligação.
 import {
-  eventos,
   impressorasDasSolicitacoes,
   itensDasSolicitacoes,
   naOrganizacao,
@@ -101,16 +100,6 @@ const solicitacao = async (numero: number) => {
   );
   return { ...linha, itens };
 };
-
-/** Os eventos em tempo real de um alvo qualquer, na ordem. */
-const eventosDoAlvo = (alvoId: string) =>
-  naOrganizacao(api.banco, c.org, (tx) =>
-    tx
-      .select({ tipo: eventos.tipo, permissao: eventos.permissao, locais: eventos.locais })
-      .from(eventos)
-      .where(eq(eventos.alvoId, alvoId))
-      .orderBy(asc(eventos.id)),
-  );
 
 /** A recusa sem mudança: nem a solicitação, nem a conversa, nem a versão, nem os eventos. */
 async function nadaMudou(numero: number, impressora: string, recusado: () => Promise<unknown>) {
@@ -265,7 +254,7 @@ describe('POST /chamados/:numero/toner', () => {
         locais: [c.locais.recepcao],
       },
     ]);
-    expect(await eventosDoAlvo(nova.id)).toEqual([
+    expect(await c.eventosDoAlvo(nova.id)).toEqual([
       { tipo: 'solicitacoes.mudaram', permissao: 'solicitacoes.ver', locais: [c.locais.recepcao] },
     ]);
     expect(await c.notificacoesDo(1042)).toEqual(avisos);
@@ -277,7 +266,7 @@ describe('POST /chamados/:numero/toner', () => {
     const antes = await c.lerChamado(1043);
     const eventosAntes = await c.eventosDo(1043);
     const { id: daCinco } = await solicitacao(5);
-    const daSolicitacao = await eventosDoAlvo(daCinco);
+    const daSolicitacao = await c.eventosDoAlvo(daCinco);
     const r = await pedirToner(1043, 'ana');
     expect(r.statusCode, r.body).toBe(200);
     expect(r.json()).toEqual({ resultado: 'juntou', solicitacao: { numero: 5 } });
@@ -300,7 +289,7 @@ describe('POST /chamados/:numero/toner', () => {
         locais: [c.locais.recepcao],
       },
     ]);
-    expect(await eventosDoAlvo(daCinco)).toEqual([
+    expect(await c.eventosDoAlvo(daCinco)).toEqual([
       ...daSolicitacao,
       { tipo: 'solicitacoes.mudaram', permissao: 'solicitacoes.ver', locais: [c.locais.recepcao] },
     ]);

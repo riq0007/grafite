@@ -117,6 +117,12 @@ export const Solicitacao = z
         abrir: z.boolean(),
       })
       .nullable(),
+    /**
+     * Os chamados ligados a ela (change chamados-da-ti), pelo número, a toda conta que vê a
+     * solicitação, com o `abrir` só para quem vê o chamado; vazia sem eles ou com o módulo Chamados
+     * desligado.
+     */
+    chamados: z.array(z.object({ numero: z.number().int(), abrir: z.boolean() })),
   })
   .meta({ id: 'Solicitacao' });
 

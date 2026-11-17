@@ -225,6 +225,8 @@ export {
   type AcaoDoChamado,
   type CelulaDaAcao,
   type ChamadoParaAcao,
+  COMO_O_CHAMADO_TEM_A_SOLICITACAO,
+  type ComoOChamadoTemASolicitacao,
   type ContaQueRecebe,
   type DecisaoDaAcao,
   decidirAcao,
@@ -341,12 +343,18 @@ export {
 export {
   type ChamadoParaPedirToner,
   type ChamadoParaVirarOs,
+  type DadosDaSolicitacaoNaoGerada,
+  fraseDaSolicitacaoNaoGerada,
   mensagemDaRecusaDoPedirToner,
   mensagemDaRecusaDoVirarOs,
+  motivoDaSolicitacaoNaoGerada,
+  motivoDoEquipamento,
+  motivoDoEventoNaoGerado,
   type RecusaDoPedirToner,
   type RecusaDoVirarOs,
   recusaDoPedirToner,
   recusaDoVirarOs,
+  type SolicitacaoNaoGerada,
 } from './chamados/os-e-solicitacao.ts';
 export {
   type ConferenciaDoHorario,

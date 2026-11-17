@@ -8,9 +8,9 @@
 // - os locais, da pessoa e do ativo ligado, e o alcance de quem abre;
 // - o atendimento, o número da organização e o prazo do tipo em minutos;
 // - o chamado, com a primeira resposta dada, o evento de abertura, sem o resumo pronto, os anexos
-//   tomados pelos campos, a auditoria e o `chamados.mudaram`;
+//   tomados pelos campos, a solicitação gerada pelo tipo (`solicitacao-gerada.ts`, tarefa 4.18), a
+//   auditoria e o `chamados.mudaram`;
 // - as notificações de quem recebe o chamado pelo tipo ou da triagem (tarefa 4.8).
-// A solicitação gerada pelo tipo chega na tarefa 4.18.
 import {
   ativos,
   chamados,
@@ -61,6 +61,7 @@ import { tomarAnexos } from './anexos.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
+import { gerarSolicitacao } from './solicitacao-gerada.ts';
 
 export const RECUSAS_DA_ABERTURA = {
   semPessoa: 'Escolha quem pediu.',
@@ -375,6 +376,20 @@ export async function abrirChamado(
       chave: `campos.${campo.id}`,
     });
   }
+  const solicitacao = await gerarSolicitacao(
+    tx,
+    {
+      id: aberto.id,
+      numero,
+      titulo,
+      tipo,
+      pessoa,
+      campos: formulario.campos,
+      respostas,
+      ativo: ativoLigado,
+    },
+    { requisicao, momento, leitor },
+  );
 
   const responsavel = atendimento.atende
     ? { id: atendimento.atende, nome: await nomeDaConta(tx, atendimento.atende) }
@@ -389,6 +404,8 @@ export async function abrirChamado(
     ativo: ativoLigado
       ? [ativoLigado.rotulo, ativoLigado.patrimonio].filter(Boolean).join(' · ')
       : null,
+    // A solicitação a que o chamado nasceu ligado, gerada pelo tipo ou a pendente do Toner.
+    solicitacao: solicitacao?.numero ?? null,
   };
   await registrarNaAuditoria(tx, {
     acao: 'chamado.aberto',

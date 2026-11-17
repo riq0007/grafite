@@ -4,8 +4,9 @@
 // - o módulo Operação desligado responde o 403 dele antes de tudo, como o "Virar OS";
 // - o chamado, travado como nas ações (`travarParaMudar`), se a conta o vê; senão, o que não existe;
 // - as recusas do chamado, do domínio (`recusaDoPedirToner`), no 409;
-// - a impressora, travada para dois pedidos dela não registrarem duas solicitações, com as recusas
-//   e a permissão do registro (`conferirImpressora` e `exigirAtender`), com e sem a pendente;
+// - a trava da impressora (`toner:<impressora>`), a mesma da solicitação gerada pelo tipo na
+//   abertura, para dois pedidos dela não registrarem duas solicitações, e as recusas e a permissão
+//   do registro (`conferirImpressora` e `exigirAtender`), com e sem a pendente;
 // - sem o registro, o chamado se junta à pendente ou recebe o registro do Toner com a cor do chamado
 //   (`corDoToner`), sem gravar nada; com ele, o registro de hoje (`registrar`) grava a solicitação;
 // - o chamado guarda a solicitação, a conversa ganha o evento `solicitacao`, que não sobe a versão,
@@ -21,6 +22,7 @@ import {
   tiposDeAtivo,
 } from '@grafite/db';
 import {
+  type CampoDoFormulario,
   type CorDeConsumivel,
   corDoToner,
   locaisDaSolicitacao,
@@ -40,6 +42,7 @@ import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import type { PedidoDoToner } from '../solicitacoes/esquemas.ts';
 import {
+  type AtivoConferido,
   comoDados,
   conferirImpressora,
   exigirAtender,
@@ -47,6 +50,7 @@ import {
   publicoDosLocais,
   registrar,
 } from '../solicitacoes/registro.ts';
+import { travar } from '../travas.ts';
 import { type ChamadoTravado, travarParaMudar } from './acoes.ts';
 import { publicoDoChamado } from './alcance.ts';
 import { formularioDa } from './formulario.ts';
@@ -76,15 +80,18 @@ interface Contexto {
 }
 
 /** A solicitação pendente, com os locais, para o público do evento dela. */
-interface Pendente {
+export interface Pendente {
   id: string;
   numero: number;
   locais: string[];
   semLocal: boolean;
 }
 
-/** A solicitação de Toner pendente com a impressora: a de menor número, também a que a conta não vê. */
-async function pendenteDa(tx: Transacao, impressoraId: string): Promise<Pendente | null> {
+/**
+ * A solicitação de Toner pendente com a impressora: a de menor número, também a que a conta não vê.
+ * Quem decide por ela segura antes a trava da impressora (`travarAImpressora`).
+ */
+export async function pendenteDa(tx: Transacao, impressoraId: string): Promise<Pendente | null> {
   const [pendente] = await tx
     .select({
       id: solicitacoes.id,
@@ -134,6 +141,36 @@ async function leiturasDa(tx: Transacao, impressoraId: string) {
   return linhas.flatMap(({ descricao, percentual }) =>
     percentual === null ? [] : [{ tinta: tintaDoSuprimento(descricao ?? ''), percentual }],
   );
+}
+
+/**
+ * A trava da impressora: o "Pedir toner" e a abertura do Toner decidem pela pendente um de cada vez.
+ * A abertura já tem a impressora travada para leitura, e subir essa trava para a de escrita faria
+ * duas aberturas esperarem uma pela outra até o PostgreSQL derrubar uma.
+ */
+export const travarAImpressora = (tx: Transacao, impressoraId: string) =>
+  travar(tx, `toner:${impressoraId}`);
+
+/**
+ * A cor do chamado para a impressora (`corDoToner`): a respondida no formulário, a mais baixa na
+ * leitura ou o preto, pelas cores dos compatíveis do modelo dela.
+ */
+export async function corDaImpressora(
+  tx: Transacao,
+  impressora: Pick<AtivoConferido, 'id' | 'modeloId'>,
+  {
+    campos,
+    respostas,
+  }: { campos: readonly CampoDoFormulario[]; respostas: Readonly<Record<string, unknown>> },
+): Promise<CorDeConsumivel> {
+  const compativeis =
+    impressora.modeloId === null ? [] : await compativeisDoModelo(tx, impressora.modeloId);
+  return corDoToner({
+    campos,
+    respostas,
+    cores: compativeis.flatMap(({ cor }) => (cor === null ? [] : [cor])),
+    leituras: await leiturasDa(tx, impressora.id),
+  });
 }
 
 /** Liga o chamado à solicitação: a coluna, o evento da conversa e a auditoria. */
@@ -202,7 +239,7 @@ export async function pedirToner(
   if (impressoraId === null) throw new Error('O chamado sem o ativo passou da recusa.');
 
   // A impressora travada: o segundo pedido dela espera este terminar e encontra a pendente.
-  await tx.select({ id: ativos.id }).from(ativos).where(eq(ativos.id, impressoraId)).for('update');
+  await travarAImpressora(tx, impressoraId);
   const leitor = { acesso, arvore };
   const conferencia = await conferirImpressora(tx, impressoraId, leitor);
   if (!('impressora' in conferencia)) {
@@ -227,14 +264,9 @@ export async function pedirToner(
       });
       return { resultado: 'juntou', solicitacao: { numero: pendente.numero } };
     }
-    const formulario = formularioDa({ formulario: extra.formulario });
-    const compativeis =
-      impressora.modeloId === null ? [] : await compativeisDoModelo(tx, impressora.modeloId);
-    const cor = corDoToner({
-      campos: formulario.campos,
+    const cor = await corDaImpressora(tx, impressora, {
+      campos: formularioDa({ formulario: extra.formulario }).campos,
       respostas: extra.respostas,
-      cores: compativeis.flatMap(({ cor: daCor }) => (daCor === null ? [] : [daCor])),
-      leituras: await leiturasDa(tx, impressoraId),
     });
     return {
       resultado: 'registro',

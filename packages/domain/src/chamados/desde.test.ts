@@ -290,7 +290,7 @@ describe('antesDoAssumir', () => {
     ]);
   });
 
-  it('virar OS e pedir toner vão à conversa e não sobem a versão', () => {
-    expect(EVENTOS_QUE_NAO_SOBEM_A_VERSAO).toEqual(['os', 'solicitacao']);
+  it('virar OS, pedir toner e a solicitação gerada ou não vão à conversa e não sobem a versão', () => {
+    expect(EVENTOS_QUE_NAO_SOBEM_A_VERSAO).toEqual(['os', 'solicitacao', 'solicitacao-nao-gerada']);
   });
 });

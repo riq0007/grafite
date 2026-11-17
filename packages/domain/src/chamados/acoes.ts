@@ -13,6 +13,7 @@ import {
   type ContaQueAtendePorPadrao,
 } from './atendimento.ts';
 import type { CampoDoFormulario, Formulario } from './formulario.ts';
+import type { DadosDaSolicitacaoNaoGerada } from './os-e-solicitacao.ts';
 import { type HorarioDaTi, type ModoDoPrazo, segundosNoHorario } from './prazo.ts';
 import { camposVisiveis, respostaDe } from './respostas.ts';
 import type { RelogioDoChamado } from './situacao-do-prazo.ts';
@@ -221,6 +222,13 @@ export interface PedidoDeDesfazer {
 }
 
 /**
+ * Como o chamado tem a solicitação: `juntou`, à pendente da impressora, pelo "Pedir toner" ou pelo
+ * Toner na abertura; `pediu`, pelo "Pedir toner", que a registrou; `gerou`, pelo tipo na abertura.
+ */
+export const COMO_O_CHAMADO_TEM_A_SOLICITACAO = ['juntou', 'pediu', 'gerou'] as const;
+export type ComoOChamadoTemASolicitacao = (typeof COMO_O_CHAMADO_TEM_A_SOLICITACAO)[number];
+
+/**
  * O evento da conversa, com as contas nos dados; quem agiu é o autor dele. A espera, a retomada e a
  * resolução não têm dados: a pessoa vem do chamado. O `desde` do assumir, em ISO, é desde quando o
  * chamado estava na triagem, ou com quem estava; o do desfazer é o do assumir que ele desfaz, e o
@@ -237,8 +245,16 @@ export type EventoDaAcao =
   | { evento: 'ativo'; dados: { antes: string | null; depois: string | null } }
   /** O chamado virou OS (`os-e-solicitacao.ts`), com o número dela, que não muda. */
   | { evento: 'os'; dados: { numero: number } }
-  /** O "Pedir toner", com o número da solicitação e se o chamado se juntou a ela ou a pediu. */
-  | { evento: 'solicitacao'; dados: { numero: number; como: 'juntou' | 'pediu' } };
+  /**
+   * O chamado com a solicitação, pelo "Pedir toner" ou pelo tipo na abertura, com o número dela e
+   * como ele a tem.
+   */
+  | { evento: 'solicitacao'; dados: { numero: number; como: ComoOChamadoTemASolicitacao } }
+  /**
+   * A solicitação que o tipo gera e a abertura não conseguiu registrar, com o motivo escrito na hora
+   * ou, no Equipamento sem local, só o caso (`os-e-solicitacao.ts`).
+   */
+  | { evento: 'solicitacao-nao-gerada'; dados: DadosDaSolicitacaoNaoGerada };
 
 /** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
 export type EntradaDaConversa =

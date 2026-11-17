@@ -410,11 +410,27 @@ export function comoDados(pedido: z.infer<typeof PedidoDaSolicitacao>): DadosDaS
   }
 }
 
-/** Registra a solicitação e a devolve lida. */
+/**
+ * O chamado que gera a solicitação pelo tipo, na abertura (change chamados-da-ti, design, "A
+ * solicitação gerada pelo tipo (tarefa 4.18)"): o número e o nome do tipo de chamado.
+ */
+export interface SolicitacaoDoChamado {
+  numero: number;
+  tipoDeChamado: string;
+}
+
+/**
+ * Registra a solicitação e a devolve lida. Com o `doChamado`, o registro é delegado pelo tipo de
+ * chamado: não pede `solicitacoes.atender` a quem abre, e a auditoria leva o chamado e o tipo.
+ */
 export async function registrar(
   tx: Transacao,
   pedido: DadosDaSolicitacao,
-  { requisicao, momento }: { requisicao: FastifyRequest; momento: Date },
+  {
+    requisicao,
+    momento,
+    doChamado,
+  }: { requisicao: FastifyRequest; momento: Date; doChamado?: SolicitacaoDoChamado },
 ): Promise<SolicitacaoLida> {
   const { acesso, contaId } = sessaoDa(requisicao);
   const dados = limparSolicitacao(pedido);
@@ -425,7 +441,7 @@ export async function registrar(
   const leitor: LeitorDasSolicitacoes = { acesso, arvore };
   const referencias = await conferirReferencias(tx, dados, leitor);
   const daSolicitacao = locaisDas(dados, referencias);
-  exigirAtender(requisicao, daSolicitacao, arvore);
+  if (!doChamado) exigirAtender(requisicao, daSolicitacao, arvore);
   const consumiveis =
     dados.tipo === 'toner'
       ? await consumiveisDosItens(tx, dados, referencias.impressoras, leitor)
@@ -472,7 +488,10 @@ export async function registrar(
     acao: 'solicitacao.registrada',
     ator: { tipo: 'conta', contaId },
     alvo: { tipo: 'solicitacao', id: registrada.id },
-    depois: visaoDaSolicitacao(lida),
+    depois: {
+      ...visaoDaSolicitacao(lida),
+      ...(doChamado ? { chamado: doChamado.numero, tipoDeChamado: doChamado.tipoDeChamado } : {}),
+    },
     origem: origemDa(requisicao),
     momento,
     saida: {

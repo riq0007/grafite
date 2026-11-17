@@ -1,6 +1,10 @@
 // A OS e a solicitação pelo chamado (spec chamados, "OS e solicitação pelo chamado";
-// ordens-de-servico, "OS pelo chamado"; change chamados-da-ti, design, "Virar OS (tarefa 4.16)"): as
-// recusas do chamado, que vêm antes das da abertura da OS, que a rota chama depois delas.
+// ordens-de-servico, "OS pelo chamado"; solicitacoes, "Solicitação pelo chamado"; change
+// chamados-da-ti, design, "Virar OS (tarefa 4.16)", "Pedir toner (tarefa 4.17)" e "A solicitação
+// gerada pelo tipo (tarefa 4.18)"): as recusas do chamado, que vêm antes das da abertura da OS e do
+// registro, que a rota chama depois delas, e o motivo da solicitação que o tipo não conseguiu gerar.
+import { MENSAGEM_DO_LOCAL_INATIVO } from '../estoque/estoque.ts';
+import { MENSAGEM_DO_TIPO_INATIVO } from '../solicitacoes/solicitacoes.ts';
 import type { QuemAge } from './acoes.ts';
 import { mensagemDaRecusaDaAcao } from './acoes.ts';
 import { type ChamadoParaEdicao, type RecusaDaEdicao, recusaDaEdicao } from './edicao.ts';
@@ -95,3 +99,71 @@ export function mensagemDaRecusaDoPedirToner(numero: number, recusa: RecusaDoPed
       return mensagemDaRecusaDaAcao(numero, recusa);
   }
 }
+
+/**
+ * Por que a solicitação que o tipo gera não nasceu na abertura: o módulo Operação desligado, o Toner
+ * sem o ativo ligado e o Equipamento sem local, que a abertura confere, ou a recusa do registro, com
+ * a frase e os campos dele e os nomes do tipo de ativo e do local pedidos.
+ */
+export type SolicitacaoNaoGerada =
+  | { motivo: 'modulo-desligado' }
+  | { motivo: 'sem-ativo' }
+  | { motivo: 'sem-local'; pessoa: string }
+  | {
+      motivo: 'recusa';
+      frase: string;
+      campos?: Readonly<Record<string, string>> | undefined;
+      nomes: { tipoDeAtivo: string | null; local: string | null };
+    };
+
+/**
+ * O motivo que a conversa guarda, depois de "A solicitação não foi gerada: ". Na recusa do registro,
+ * o tipo de ativo e o local inativos vêm pelo nome, nessa ordem quando são os dois; a outra recusa é
+ * a frase do primeiro campo, ou a da recusa sem campo.
+ */
+export function motivoDaSolicitacaoNaoGerada(caso: SolicitacaoNaoGerada): string {
+  switch (caso.motivo) {
+    case 'modulo-desligado':
+      return 'o módulo Operação está desligado.';
+    case 'sem-ativo':
+      return 'o chamado não tem um ativo ligado.';
+    case 'sem-local':
+      return `${caso.pessoa} não tem local de trabalho.`;
+    case 'recusa': {
+      const { campos = {}, nomes } = caso;
+      if (campos.tipoDeAtivo === MENSAGEM_DO_TIPO_INATIVO && nomes.tipoDeAtivo !== null) {
+        return `o tipo de ativo ${nomes.tipoDeAtivo} está inativo.`;
+      }
+      if (campos.local === MENSAGEM_DO_LOCAL_INATIVO && nomes.local !== null) {
+        return `o local ${nomes.local} está inativo.`;
+      }
+      return Object.values(campos)[0] ?? caso.frase;
+    }
+  }
+}
+
+/**
+ * O que o evento `solicitacao-nao-gerada` guarda: o motivo escrito na hora ou, no Equipamento sem
+ * local, só o caso. A frase dele tem o nome da pessoa, que é uma referência a ela: a ficha a escreve
+ * com o nome de agora, e a pessoa anonimizada aparece com o nome anonimizado (spec chamados, "a
+ * anonimização troca a referência à pessoa, e não o texto livre").
+ */
+export type DadosDaSolicitacaoNaoGerada = { motivo: string } | { semLocal: true };
+
+/** O motivo do evento como a ficha o lê, com o nome de agora da pessoa do chamado; o ilegível é nulo. */
+export function motivoDoEventoNaoGerado(
+  dados: Readonly<Record<string, unknown>> | null,
+  pessoa: string,
+): string | null {
+  if (dados?.semLocal === true)
+    return motivoDaSolicitacaoNaoGerada({ motivo: 'sem-local', pessoa });
+  return typeof dados?.motivo === 'string' ? dados.motivo : null;
+}
+
+/** A frase da conversa, pelo motivo guardado. */
+export const fraseDaSolicitacaoNaoGerada = (motivo: string) =>
+  `A solicitação não foi gerada: ${motivo}`;
+
+/** O motivo da solicitação de Equipamento gerada pelo tipo: o número e o título do chamado. */
+export const motivoDoEquipamento = (numero: number, titulo: string) =>
+  `Chamado #${numero}: ${titulo}`;

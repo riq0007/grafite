@@ -31,12 +31,15 @@ import {
   type AtivoDasRespostas,
   alcance,
   atendeOChamado,
+  COMO_O_CHAMADO_TEM_A_SOLICITACAO,
+  type ComoOChamadoTemASolicitacao,
   type DiaDaSemana,
   type EventoDaAcao,
   type Formulario,
   type HorarioDaTi,
   lerPrazoDoChamado,
   momentoLido,
+  motivoDoEventoNaoGerado,
   type OrigemDoChamado,
   type PrazoDoChamado,
   podeEm,
@@ -60,8 +63,9 @@ import { lerContaQueAtende } from './quem-atende.ts';
 type EventoGravado = 'abertura' | EventoDaAcao['evento'];
 
 /**
- * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento, a troca do ativo e o
- * Virar OS (4.16). O da solicitação, da 4.17 e da 4.18, entra com elas, pelo `EventoDaAcao`.
+ * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento, a troca do ativo, o
+ * Virar OS (4.16) e a solicitação, pelo "Pedir toner" (4.17) e pelo tipo na abertura, gerada ou não
+ * (4.18).
  */
 export const EVENTOS_DA_FICHA = [
   'abertura',
@@ -76,6 +80,7 @@ export const EVENTOS_DA_FICHA = [
   'ativo',
   'os',
   'solicitacao',
+  'solicitacao-nao-gerada',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -92,14 +97,16 @@ export type EventosForaDaFicha = SemNenhum<Exclude<EventoGravado, EventoDaFicha>
 const osDoEvento = (dados: Record<string, unknown> | null) =>
   Number.isInteger(dados?.numero) ? { numero: dados?.numero as number } : null;
 
+const COMOS: ReadonlySet<unknown> = new Set(COMO_O_CHAMADO_TEM_A_SOLICITACAO);
+
 /** A solicitação do evento `solicitacao`, com o `como`; o ilegível vem nulo. */
 function solicitacaoDoEvento(
   dados: Record<string, unknown> | null,
-): { numero: number; como: 'juntou' | 'pediu' } | null {
+): { numero: number; como: ComoOChamadoTemASolicitacao } | null {
   const numero = dados?.numero;
   const como = dados?.como;
-  if (!Number.isInteger(numero) || (como !== 'juntou' && como !== 'pediu')) return null;
-  return { numero: numero as number, como };
+  if (!Number.isInteger(numero) || !COMOS.has(como)) return null;
+  return { numero: numero as number, como: como as ComoOChamadoTemASolicitacao };
 }
 
 const eventoLido = (evento: string | null): evento is EventoDaFicha =>
@@ -160,7 +167,9 @@ export type ItemDaConversa =
       /** No `os`, o número da OS, a toda conta que vê o chamado; nulo nos outros. */
       os: { numero: number } | null;
       /** No `solicitacao`, o número e o `como`, a toda conta que vê o chamado; nulo nos outros. */
-      solicitacao: { numero: number; como: 'juntou' | 'pediu' } | null;
+      solicitacao: { numero: number; como: ComoOChamadoTemASolicitacao } | null;
+      /** No `solicitacao-nao-gerada`, o motivo escrito na abertura; nulo nos outros. */
+      motivo: string | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -479,6 +488,10 @@ export async function fichaDoChamado(
               : null,
           os: linha.evento === 'os' ? osDoEvento(linha.dados) : null,
           solicitacao: linha.evento === 'solicitacao' ? solicitacaoDoEvento(linha.dados) : null,
+          motivo:
+            linha.evento === 'solicitacao-nao-gerada'
+              ? motivoDoEventoNaoGerado(linha.dados, pessoa.nome)
+              : null,
         },
       });
       continue;

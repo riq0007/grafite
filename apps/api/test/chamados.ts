@@ -175,6 +175,13 @@ export async function montarChamados(api: ApiDeTeste, host: string) {
   const usuarioDa = (contaId: string) =>
     Object.entries(contasDe).find(([, deUsuario]) => deUsuario === contaId)?.[0] ?? contaId;
   const chamadoId = (numero: number) => chamadoDe.get(numero) ?? '';
+  /** Guarda o id do chamado aberto pelo número, para as leituras pelo número. */
+  const guardar = async (numero: number) => {
+    const [linha] = await naOrganizacao(api.banco, org, (tx) =>
+      tx.select({ id: chamados.id }).from(chamados).where(eq(chamados.numero, numero)),
+    );
+    chamadoDe.set(numero, linha?.id ?? '');
+  };
 
   return {
     org,
@@ -207,15 +214,14 @@ export async function montarChamados(api: ApiDeTeste, host: string) {
       ficaComigo,
     }),
 
+    guardar,
+
     /** Abre o chamado pela rota, como o usuário, guarda o id pelo número e devolve o número. */
     async abrir(corpo: object, usuario: UsuarioDosChamados = 'ana'): Promise<number> {
       const r = await cliente.enviar('POST', '/chamados', entradas[usuario] ?? SEM_ENTRADA, corpo);
       expect(r.statusCode, r.body).toBe(201);
       const { numero } = r.json() as { numero: number };
-      const [linha] = await naOrganizacao(api.banco, org, (tx) =>
-        tx.select({ id: chamados.id }).from(chamados).where(eq(chamados.numero, numero)),
-      );
-      chamadoDe.set(numero, linha?.id ?? '');
+      await guardar(numero);
       return numero;
     },
 
@@ -274,6 +280,16 @@ export async function montarChamados(api: ApiDeTeste, host: string) {
           .from(mensagensDosChamados)
           .where(eq(mensagensDosChamados.chamadoId, chamadoId(numero)))
           .orderBy(asc(mensagensDosChamados.criadaEm), asc(mensagensDosChamados.id)),
+      ),
+
+    /** Os eventos em tempo real de um alvo qualquer, como a solicitação, na ordem. */
+    eventosDoAlvo: (alvoId: string) =>
+      naOrganizacao(api.banco, org, (tx) =>
+        tx
+          .select({ tipo: eventos.tipo, permissao: eventos.permissao, locais: eventos.locais })
+          .from(eventos)
+          .where(eq(eventos.alvoId, alvoId))
+          .orderBy(asc(eventos.id)),
       ),
 
     /** Os eventos em tempo real do chamado, na ordem. */

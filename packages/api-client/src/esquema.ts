@@ -36679,6 +36679,10 @@ export interface components {
                 situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
                 abrir: boolean;
             } | null;
+            chamados: {
+                numero: number;
+                abrir: boolean;
+            }[];
         };
         PedidoDaSolicitacaoInput: {
             /** @constant */
@@ -37121,7 +37125,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -37153,8 +37157,9 @@ export interface components {
                 solicitacao: {
                     numero: number;
                     /** @enum {string} */
-                    como: "juntou" | "pediu";
+                    como: "juntou" | "pediu" | "gerou";
                 } | null;
+                motivo: string | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -41955,6 +41960,10 @@ export interface components {
                 situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
                 abrir: boolean;
             } | null;
+            chamados: {
+                numero: number;
+                abrir: boolean;
+            }[];
         };
         PedidoDaSolicitacao: {
             /** @constant */
@@ -42397,7 +42406,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -42429,8 +42438,9 @@ export interface components {
                 solicitacao: {
                     numero: number;
                     /** @enum {string} */
-                    como: "juntou" | "pediu";
+                    como: "juntou" | "pediu" | "gerou";
                 } | null;
+                motivo: string | null;
             } | {
                 /** @constant */
                 especie: "alerta";

@@ -11678,6 +11678,26 @@
                 "type": "null"
               }
             ]
+          },
+          "chamados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "abrir": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "numero",
+                "abrir"
+              ]
+            }
           }
         },
         "required": [
@@ -11705,7 +11725,8 @@
           "encerradaPor",
           "encerradaEm",
           "permite",
-          "ordem"
+          "ordem",
+          "chamados"
         ]
       },
       "PedidoDaSolicitacaoInput": {
@@ -13974,7 +13995,8 @@
                         "reabriu",
                         "ativo",
                         "os",
-                        "solicitacao"
+                        "solicitacao",
+                        "solicitacao-nao-gerada"
                       ]
                     },
                     "de": {
@@ -14149,7 +14171,8 @@
                               "type": "string",
                               "enum": [
                                 "juntou",
-                                "pediu"
+                                "pediu",
+                                "gerou"
                               ]
                             }
                           },
@@ -14161,6 +14184,12 @@
                         {
                           "type": "null"
                         }
+                      ]
+                    },
+                    "motivo": {
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     }
                   },
@@ -14175,7 +14204,8 @@
                     "desde",
                     "ativo",
                     "os",
-                    "solicitacao"
+                    "solicitacao",
+                    "motivo"
                   ]
                 },
                 {
@@ -38200,6 +38230,27 @@
                 "type": "null"
               }
             ]
+          },
+          "chamados": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "abrir": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "numero",
+                "abrir"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -38227,7 +38278,8 @@
           "encerradaPor",
           "encerradaEm",
           "permite",
-          "ordem"
+          "ordem",
+          "chamados"
         ],
         "additionalProperties": false
       },
@@ -40572,7 +40624,8 @@
                         "reabriu",
                         "ativo",
                         "os",
-                        "solicitacao"
+                        "solicitacao",
+                        "solicitacao-nao-gerada"
                       ]
                     },
                     "de": {
@@ -40753,7 +40806,8 @@
                               "type": "string",
                               "enum": [
                                 "juntou",
-                                "pediu"
+                                "pediu",
+                                "gerou"
                               ]
                             }
                           },
@@ -40766,6 +40820,12 @@
                         {
                           "type": "null"
                         }
+                      ]
+                    },
+                    "motivo": {
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     }
                   },
@@ -40780,7 +40840,8 @@
                     "desde",
                     "ativo",
                     "os",
-                    "solicitacao"
+                    "solicitacao",
+                    "motivo"
                   ],
                   "additionalProperties": false
                 },

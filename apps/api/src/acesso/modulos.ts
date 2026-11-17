@@ -29,16 +29,21 @@ export async function modulosDesligados(banco: Banco, orgId: string): Promise<st
   });
 }
 
+/** Se o módulo está ligado na organização da transação. */
+export async function ligadoNaTransacao(tx: Transacao, id: IdDoModuloOpcional): Promise<boolean> {
+  const [organizacao] = await tx
+    .select({ desligados: organizacoes.modulosDesligados })
+    .from(organizacoes)
+    .where(eq(organizacoes.id, sql`app.current_org()`));
+  return !organizacao?.desligados.includes(id);
+}
+
 /**
  * Recusa, na transação, a ação de um módulo que mora no escopo de outro, como o "Virar OS" e o
  * "Pedir toner" dos Chamados, que são do Operação: a guarda do escopo não vê o módulo da ação.
  */
 export async function exigirLigadoNaTransacao(tx: Transacao, id: IdDoModuloOpcional) {
-  const [organizacao] = await tx
-    .select({ desligados: organizacoes.modulosDesligados })
-    .from(organizacoes)
-    .where(eq(organizacoes.id, sql`app.current_org()`));
-  if (organizacao?.desligados.includes(id)) throw moduloDesligado(id);
+  if (!(await ligadoNaTransacao(tx, id))) throw moduloDesligado(id);
 }
 
 /**

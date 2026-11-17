@@ -10,6 +10,7 @@
 // dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
+  COMO_O_CHAMADO_TEM_A_SOLICITACAO,
   CORES_DE_CONSUMIVEL,
   fusoReconhecido,
   GRUPOS_DO_PRAZO,
@@ -286,10 +287,17 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
     /** No `os`, o número da OS em que o chamado virou; nulo nos outros. */
     os: z.object({ numero: z.int() }).nullable(),
     /**
-     * No `solicitacao`, o número da solicitação e se o chamado se juntou a ela ou a pediu; nulo nos
-     * outros.
+     * No `solicitacao`, o número da solicitação e como o chamado a tem: se juntou a ela, a pediu
+     * pelo "Pedir toner" ou a gerou pelo tipo na abertura; nulo nos outros.
      */
-    solicitacao: z.object({ numero: z.int(), como: z.enum(['juntou', 'pediu']) }).nullable(),
+    solicitacao: z
+      .object({ numero: z.int(), como: z.enum(COMO_O_CHAMADO_TEM_A_SOLICITACAO) })
+      .nullable(),
+    /**
+     * No `solicitacao-nao-gerada`, o motivo, escrito na abertura (o do Equipamento sem local, com o
+     * nome de agora da pessoa), que vem depois de "A solicitação não foi gerada: "; nulo nos outros.
+     */
+    motivo: z.string().nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),

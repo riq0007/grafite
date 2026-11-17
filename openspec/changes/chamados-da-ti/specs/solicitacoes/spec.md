@@ -18,7 +18,7 @@ Quem atende pode mudar o registro antes de gravar, mas a solicitação SHALL lev
 As recusas da impressora e a permissão SHALL ser as do registro, com e sem a solicitação pendente: a impressora que a conta não vê, a inativa, a que não usa consumíveis e quem não atende as solicitações nos locais dela.
 
 **O tipo que gera uma solicitação** (spec tipos-de-chamado), na abertura do chamado, na mesma transação:
-- **Toner:** como o "Pedir toner", com a impressora do chamado e o item da cor do chamado, sem abrir o registro;
+- **Toner:** como o "Pedir toner", com a impressora do chamado e o item da cor do chamado, sem abrir o registro: havendo uma solicitação de Toner pendente com a impressora, o chamado SHALL se juntar a ela;
 - **Equipamento:**
   - o tipo de ativo do tipo de chamado e a quantidade 1;
   - o motivo "Chamado #<número>: <título>";
@@ -28,10 +28,14 @@ A solicitação gerada pelo tipo SHALL ser registrada por quem abriu o chamado, 
 
 A solicitação gerada SHALL seguir todas as regras do registro. Se o registro for recusado, o chamado SHALL abrir mesmo assim, sem a solicitação, e a conversa SHALL dizer "A solicitação não foi gerada: <motivo>.":
 - sem local para o equipamento: "A solicitação não foi gerada: Marina Lopes não tem local de trabalho.";
+- o Toner sem o ativo ligado: "A solicitação não foi gerada: o chamado não tem um ativo ligado.";
+- o módulo Operação desligado: "A solicitação não foi gerada: o módulo Operação está desligado.";
 - a impressora sem consumíveis: "A solicitação não foi gerada: PAT-00139 não usa consumíveis.";
 - o tipo de ativo inativado: "A solicitação não foi gerada: o tipo de ativo Notebook está inativo.";
 - o local inativado: "A solicitação não foi gerada: o local Financeiro está inativo.";
 - qualquer outra recusa do registro: "A solicitação não foi gerada:" seguido da recusa.
+
+Na frase do Equipamento sem local, a pessoa SHALL aparecer pelo nome de agora: a anonimizada, pelo nome anonimizado, como no chamado. As outras frases SHALL ficar como foram escritas na abertura.
 
 A solicitação SHALL mostrar os chamados ligados a ela, como "Do chamado #1042" ou "Dos chamados #1040 e #1042". O chamado SHALL mostrar a solicitação e a situação dela a quem vê as solicitações. Cada chamado SHALL ter uma solicitação só, e a recusa da segunda SHALL ser "O chamado #1042 já está na solicitação 4.". A solicitação SHALL seguir as regras de toda solicitação: concluí-la ou cancelá-la SHALL NOT mudar o chamado.
 
@@ -51,6 +55,10 @@ A solicitação SHALL mostrar os chamados ligados a ela, como "Do chamado #1042"
 - **WHEN** Ana abre um chamado de Toner para Marina Lopes, com a PAT-00139, cujo preto está a 8% e o ciano a 40%, responde "Ciano" em "Qual cor acabou?", e não há solicitação pendente
 - **THEN** a solicitação gerada leva 1 ciano para a PAT-00139, e não o preto, que está mais baixo
 
+#### Scenario: Toner gerado com uma solicitação pendente
+- **WHEN** Ana abre um chamado de Toner para Marina Lopes, com a PAT-00139, que já está na solicitação 5, Aberta
+- **THEN** o chamado se junta à solicitação 5, nenhuma solicitação nova é registrada, e a conversa ganha "Juntou-se à solicitação 5"
+
 #### Scenario: Equipamento gerado pelo tipo
 - **WHEN** Ana abre um chamado de "Equipamento novo", que gera a solicitação de Equipamento de "Notebook", para Marina Lopes, do Financeiro
 - **THEN** a solicitação de 1 Notebook para o Financeiro nasce na mesma transação, com o motivo "Chamado #1043: Equipamento novo para Marina", registrada por Ana e ligada ao #1043
@@ -58,3 +66,11 @@ A solicitação SHALL mostrar os chamados ligados a ela, como "Do chamado #1042"
 #### Scenario: Solicitação recusada na abertura
 - **WHEN** Ana abre um chamado de "Equipamento novo" para Marina Lopes, e o tipo de ativo Notebook foi inativado
 - **THEN** o chamado abre sem a solicitação, e a conversa diz "A solicitação não foi gerada: o tipo de ativo Notebook está inativo."
+
+#### Scenario: Equipamento sem local
+- **WHEN** Ana abre um chamado de "Equipamento novo" para Rita Moraes, que não tem local de trabalho, sem ativo ligado
+- **THEN** o chamado abre sem a solicitação, e a conversa diz "A solicitação não foi gerada: Rita Moraes não tem local de trabalho."
+
+#### Scenario: Equipamento sem local e a pessoa anonimizada
+- **WHEN** Rita Moraes é anonimizada depois de o chamado abrir sem a solicitação, por ela não ter local de trabalho
+- **THEN** a conversa do chamado diz "A solicitação não foi gerada:" seguido do nome anonimizado, com o código, e de "não tem local de trabalho."

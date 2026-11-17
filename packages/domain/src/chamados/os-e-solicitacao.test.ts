@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { MENSAGEM_DO_LOCAL_INATIVO } from '../estoque/estoque.ts';
+import { MENSAGEM_DO_TIPO_INATIVO } from '../solicitacoes/solicitacoes.ts';
 import type { QuemAge } from './acoes.ts';
 import {
   type ChamadoParaPedirToner,
   type ChamadoParaVirarOs,
+  fraseDaSolicitacaoNaoGerada,
   mensagemDaRecusaDoPedirToner,
   mensagemDaRecusaDoVirarOs,
+  motivoDaSolicitacaoNaoGerada,
+  motivoDoEquipamento,
+  motivoDoEventoNaoGerado,
   recusaDoPedirToner,
   recusaDoVirarOs,
 } from './os-e-solicitacao.ts';
@@ -164,5 +170,99 @@ describe('mensagemDaRecusaDoPedirToner', () => {
     expect(
       mensagemDaRecusaDoPedirToner(1042, { motivo: 'voce-nao-atende', local: 'Campinas' }),
     ).toBe('Você não atende os chamados de Campinas.');
+  });
+});
+
+describe('motivoDaSolicitacaoNaoGerada', () => {
+  const NOMES = { tipoDeAtivo: 'Notebook', local: 'Financeiro' };
+
+  it('escreve os casos da abertura, que não chegam ao registro', () => {
+    expect(motivoDaSolicitacaoNaoGerada({ motivo: 'modulo-desligado' })).toBe(
+      'o módulo Operação está desligado.',
+    );
+    expect(motivoDaSolicitacaoNaoGerada({ motivo: 'sem-ativo' })).toBe(
+      'o chamado não tem um ativo ligado.',
+    );
+    expect(motivoDaSolicitacaoNaoGerada({ motivo: 'sem-local', pessoa: 'Marina Lopes' })).toBe(
+      'Marina Lopes não tem local de trabalho.',
+    );
+  });
+
+  it('o tipo de ativo e o local inativos, pelo nome; os dois juntos, o tipo de ativo', () => {
+    const recusa = (campos: Record<string, string>) =>
+      motivoDaSolicitacaoNaoGerada({
+        motivo: 'recusa',
+        frase: 'Confira os campos indicados.',
+        campos,
+        nomes: NOMES,
+      });
+    expect(recusa({ tipoDeAtivo: MENSAGEM_DO_TIPO_INATIVO })).toBe(
+      'o tipo de ativo Notebook está inativo.',
+    );
+    expect(recusa({ local: MENSAGEM_DO_LOCAL_INATIVO })).toBe('o local Financeiro está inativo.');
+    expect(
+      recusa({ local: MENSAGEM_DO_LOCAL_INATIVO, tipoDeAtivo: MENSAGEM_DO_TIPO_INATIVO }),
+    ).toBe('o tipo de ativo Notebook está inativo.');
+  });
+
+  it('as outras recusas: a frase do primeiro campo ou, sem campo, a da recusa', () => {
+    expect(
+      motivoDaSolicitacaoNaoGerada({
+        motivo: 'recusa',
+        frase: 'Confira os campos indicados.',
+        campos: { tipoDeAtivo: 'Tipo de ativo não encontrado.', local: 'Local não encontrado.' },
+        nomes: NOMES,
+      }),
+    ).toBe('Tipo de ativo não encontrado.');
+    expect(
+      motivoDaSolicitacaoNaoGerada({
+        motivo: 'recusa',
+        frase: 'PAT-00139 não usa consumíveis.',
+        nomes: { tipoDeAtivo: null, local: null },
+      }),
+    ).toBe('PAT-00139 não usa consumíveis.');
+    // O inativo sem o nome lido fica com a frase do campo.
+    expect(
+      motivoDaSolicitacaoNaoGerada({
+        motivo: 'recusa',
+        frase: MENSAGEM_DO_LOCAL_INATIVO,
+        campos: { local: MENSAGEM_DO_LOCAL_INATIVO },
+        nomes: { tipoDeAtivo: null, local: null },
+      }),
+    ).toBe(MENSAGEM_DO_LOCAL_INATIVO);
+  });
+
+  it('a frase da conversa junta o começo ao motivo', () => {
+    expect(fraseDaSolicitacaoNaoGerada('o tipo de ativo Notebook está inativo.')).toBe(
+      'A solicitação não foi gerada: o tipo de ativo Notebook está inativo.',
+    );
+  });
+});
+
+describe('motivoDoEventoNaoGerado', () => {
+  it('o sem local vem com o nome de agora da pessoa, também o anonimizado', () => {
+    expect(motivoDoEventoNaoGerado({ semLocal: true }, 'Rita Moraes')).toBe(
+      'Rita Moraes não tem local de trabalho.',
+    );
+    expect(motivoDoEventoNaoGerado({ semLocal: true }, 'Pessoa anonimizada 7K2M')).toBe(
+      'Pessoa anonimizada 7K2M não tem local de trabalho.',
+    );
+  });
+
+  it('o outro motivo vem como foi escrito, e o ilegível vem nulo', () => {
+    expect(
+      motivoDoEventoNaoGerado({ motivo: 'PAT-00139 não usa consumíveis.' }, 'Rita Moraes'),
+    ).toBe('PAT-00139 não usa consumíveis.');
+    expect(motivoDoEventoNaoGerado(null, 'Rita Moraes')).toBeNull();
+    expect(motivoDoEventoNaoGerado({ motivo: 7 }, 'Rita Moraes')).toBeNull();
+    expect(motivoDoEventoNaoGerado({ semLocal: 'sim' }, 'Rita Moraes')).toBeNull();
+  });
+});
+
+describe('motivoDoEquipamento', () => {
+  it('é o número e o título do chamado', () => {
+    expect(motivoDoEquipamento(1043, 'Equipamento novo para Marina')).toBe(
+      'Chamado #1043: Equipamento novo para Marina',
+    );
   });
 });

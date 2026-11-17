@@ -11,7 +11,6 @@ import {
   historicoDasOrdens,
   modelos,
   ordensDeServico,
-  organizacoes,
   pecasDasOrdens,
   pessoas,
   solicitacoes,
@@ -27,8 +26,9 @@ import {
   rotuloDoAtivo,
   veOChamado,
 } from '@grafite/domain';
-import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { asc, desc, eq, inArray } from 'drizzle-orm';
 import type { z } from 'zod';
+import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import type { AtivoDaOrdem, OrdemDeServico } from './esquemas.ts';
 
 /** O que a leitura sabe da conta: o acesso e a árvore dos locais. */
@@ -222,11 +222,7 @@ async function chamadosDasOrdens(
   { acesso, arvore }: LeitorDasOrdens,
   ids: readonly string[],
 ): Promise<Map<string, NonNullable<OrdemLida['chamado']>>> {
-  const [organizacao] = await tx
-    .select({ desligados: organizacoes.modulosDesligados })
-    .from(organizacoes)
-    .where(eq(organizacoes.id, sql`app.current_org()`));
-  if (organizacao?.desligados.includes('chamados')) return new Map();
+  if (!(await ligadoNaTransacao(tx, 'chamados'))) return new Map();
   const linhas = await tx
     .select({
       osId: chamados.osId,
