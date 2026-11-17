@@ -144,6 +144,18 @@ export function situacaoDoPrazo(
 }
 
 /**
+ * Se o chamado passou do prazo da resolução agora, para o aviso do estouro: com o relógio contando e
+ * o vencimento já alcançado, como o grupo "Estourado" da lista. O parado não estoura enquanto parado.
+ */
+export function prazoEstourado(
+  relogio: RelogioDoChamado,
+  horario: HorarioDaTi,
+  agora: Date,
+): boolean {
+  return situacaoDoPrazo(relogio, horario, agora, horario.fuso).grupo === 'estourado';
+}
+
+/**
  * A ordem da lista dos prazos e das colunas do quadro: pelo vencimento, que põe os estourados à
  * frente, e os parados por último, pelo que resta. O empate fica com quem ordena, como pelo número.
  */

@@ -491,6 +491,16 @@ O reabrir limpa a marca.
 
 As notificações seguem a `notificar()`, com a origem "Chamados", e o e-mail e o push pela severidade, como os alertas.
 
+**A tarefa do prazo (tarefa 4.19).** Decisões que o plano não fechava:
+- **A tarefa** entra no catálogo das tarefas (`fila/tarefas.ts`), com a agenda a cada minuto, no fuso de São Paulo, como as outras, e a rotina "Prazo dos chamados" na tela das rotinas. Ela percorre as organizações (`organizacoes_para_tarefas`), cada uma na transação dela. A falha de uma organização desfaz a transação dela, vai para o log e não para as outras; a do minuto seguinte tenta de novo, sem encher a lista das tarefas com falha. A falha fora das organizações, como a leitura delas, vai para a lista das tarefas com falha, como a da verificação dos painéis.
+- **O módulo Chamados desligado** pula a organização. Ao religar, o chamado que passou do prazo nesse tempo é avisado no minuto seguinte, porque a marca ficou nula: quem atende fica sabendo do que estourou enquanto o módulo estava fora.
+- **Os chamados lidos:** na triagem e em atendimento, as situações com o relógio contando (o `chamados_relogio_coerente`), pelo índice da situação, e com a marca nula. A primeira leitura é sem trava: no minuto em que nada estourou, que é quase sempre, nenhuma linha fica travada (nem gravada pela trava), e nenhuma ação espera a verificação. Só os estourados são lidos de novo, travados com `for update skip locked`, e conferidos outra vez, para valer a ação que os mudou entre as duas leituras. O chamado que uma ação muda naquele instante fica para o minuto seguinte, sem a tarefa esperar a ação; a ação no chamado estourado espera só os milissegundos da verificação. Duas verificações ao mesmo tempo, como a de uma segunda instância da API, avisam o chamado uma vez.
+- **O vencimento** é o `prazoEstourado` do domínio, pela `situacaoDoPrazo`, com o horário da TI de agora, como a lista dos prazos. O prazo estragado é pulado, sem a marca, e não derruba os outros.
+- **Quem recebe** é o `notificacoesDoEstouro` do domínio, pelas contas ativas com o alcance de `chamados.atender`, as mesmas da triagem: a conta com o chamado, se ela está entre elas e atende os locais dele; senão, cada conta que atende os locais. Na severidade Atenção, com "Chamado #1033 passou do prazo: Wi-Fi cai na Sala Atlântico". O e-mail e o push vão pela entrega da fila.
+- **A marca** grava o momento da verificação mesmo sem ninguém para avisar: sem ela, o chamado seria lido de novo a cada minuto.
+- **Nada mais muda:** a marca não sobe a versão nem grava na conversa, na auditoria ou no tempo real. Para quem vê o chamado, nada mudou, e a web calcula o estouro pelo relógio.
+- **O reabrir limpa a marca** (tarefa 4.13): o reaberto volta a contar já depois do prazo, vence na volta, e a verificação o avisa de novo. O retomar não limpa: o chamado que estourou antes da espera já foi avisado, e a spec pede o aviso de volta só no reaberto.
+
 ### 13. Os eventos
 
 | Evento | Quando |

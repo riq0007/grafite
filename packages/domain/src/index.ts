@@ -338,6 +338,7 @@ export {
   notificacoesDaAbertura,
   notificacoesDaAcao,
   notificacoesDaTriagem,
+  notificacoesDoEstouro,
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';
 export {
@@ -418,6 +419,7 @@ export {
   GRUPOS_DO_PRAZO,
   type GrupoDoPrazo,
   type PrimeiraRespostaPendente,
+  prazoEstourado,
   type RelogioDoChamado,
   type SituacaoDoPrazo,
   situacaoDoPrazo,

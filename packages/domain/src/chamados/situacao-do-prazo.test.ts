@@ -6,7 +6,12 @@ import {
   prazoEmMinutos,
   type ValorDoPrazo,
 } from './prazo.ts';
-import { compararPrazos, type RelogioDoChamado, situacaoDoPrazo } from './situacao-do-prazo.ts';
+import {
+  compararPrazos,
+  prazoEstourado,
+  type RelogioDoChamado,
+  situacaoDoPrazo,
+} from './situacao-do-prazo.ts';
 
 /**
  * O instante no relógio de São Paulo, que não tem horário de verão desde 2019 (UTC−3). Nos
@@ -275,5 +280,26 @@ describe('compararPrazos', () => {
       .sort((a, b) => compararPrazos(a.situacao, b.situacao))
       .map(({ numero }) => numero);
     expect(ordem).toEqual([1033, 1039, 1031, 1038, 1037, 1040, 1042, 1034, 1036, 1041, 1032, 1029]);
+  });
+});
+
+describe('prazoEstourado', () => {
+  it('estoura no vencimento, e não antes', () => {
+    expect(prazoEstourado(venceEm(1), HORARIO, AGORA)).toBe(false);
+    expect(prazoEstourado(venceEm(0), HORARIO, AGORA)).toBe(true);
+    expect(prazoEstourado(venceEm(-60), HORARIO, AGORA)).toBe(true);
+  });
+
+  it('no horário da TI, conta só as horas do horário', () => {
+    // O #1033, de 8 h corridas desde a 01:20, venceu às 09:20.
+    expect(prazoEstourado(doDoze(1033), HORARIO, AGORA)).toBe(true);
+    // O #1031, de 4 h no horário desde as 17:40 de ontem, vence às 11:40; corridas, teria vencido.
+    expect(prazoEstourado(doDoze(1031), HORARIO, AGORA)).toBe(false);
+  });
+
+  it('com o relógio parado, não estoura, mesmo passado do prazo', () => {
+    expect(prazoEstourado(parado(OUTRO, 30 * HORA, '2026-11-16T10:00'), HORARIO, AGORA)).toBe(
+      false,
+    );
   });
 });

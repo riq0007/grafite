@@ -7,6 +7,7 @@ import {
   notificacoesDaAbertura,
   notificacoesDaAcao,
   notificacoesDaTriagem,
+  notificacoesDoEstouro,
   ORIGEM_DOS_CHAMADOS,
 } from './notificacoes.ts';
 
@@ -199,5 +200,47 @@ describe('notificacoesDaAcao', () => {
       'conta-ana': 'Chamado #1043 na triagem: Impressora manchando',
       'conta-diego': 'Chamado #1043 na triagem: Impressora manchando',
     });
+  });
+});
+
+describe('notificacoesDoEstouro', () => {
+  const TITULO = 'Chamado #1043 passou do prazo: Impressora manchando';
+  const comQuemAtende = (responsavelId: string) =>
+    chamado({ situacao: 'em-atendimento', responsavelId });
+
+  it('avisa a conta com o chamado, que ainda atende os locais dele, na severidade Atenção', () => {
+    expect(notificacoesDoEstouro(comQuemAtende('conta-diego'), CONTAS)).toEqual([
+      { ...NOTIFICACAO, severidade: 'atencao', contaId: 'conta-diego', titulo: TITULO },
+    ]);
+  });
+
+  it('na triagem, avisa cada conta que atende os locais', () => {
+    expect(titulosPorConta(notificacoesDoEstouro(chamado(), CONTAS))).toEqual({
+      'conta-ana': TITULO,
+      'conta-diego': TITULO,
+      'conta-fabio': TITULO,
+    });
+  });
+
+  it('com quem não atende mais os locais, ou com a conta inativa, avisa quem atende', () => {
+    const quemAtende = { 'conta-ana': TITULO, 'conta-diego': TITULO, 'conta-fabio': TITULO };
+    // Bruno atende só Campinas, e o chamado é de Jundiaí.
+    expect(titulosPorConta(notificacoesDoEstouro(comQuemAtende('conta-bruno'), CONTAS))).toEqual(
+      quemAtende,
+    );
+    // A conta inativa não está entre as contas que atendem.
+    expect(titulosPorConta(notificacoesDoEstouro(comQuemAtende('conta-inativa'), CONTAS))).toEqual(
+      quemAtende,
+    );
+  });
+
+  it('o chamado sem local avisa só quem atende a organização inteira', () => {
+    expect(titulosPorConta(notificacoesDoEstouro(chamado({ locais: SEM_LOCAL }), CONTAS))).toEqual({
+      'conta-ana': TITULO,
+    });
+  });
+
+  it('sem ninguém que atenda os locais, não avisa ninguém', () => {
+    expect(notificacoesDoEstouro(chamado(), [{ id: 'conta-carla', alcance: null }])).toEqual([]);
   });
 });

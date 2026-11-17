@@ -364,11 +364,19 @@ Uma verificação a cada minuto SHALL achar os chamados em aberto, com o relógi
 - a quem atende o chamado, se essa conta ainda atende os locais dele;
 - na triagem, ou com uma conta que não atende mais os locais, a cada conta que atende os locais dele.
 
-O aviso SHALL voltar a valer para o chamado reaberto.
+O aviso SHALL voltar a valer para o chamado reaberto. O chamado com o relógio parado SHALL NOT ser avisado enquanto parado. Com o módulo Chamados desligado, a verificação SHALL pular a organização; ao religar, o chamado que passou do prazo nesse tempo SHALL ser avisado.
 
 #### Scenario: Estourado avisado uma vez
 - **WHEN** o #1033, com Renato, passa do vencimento às 09:20, e a verificação roda às 09:20 e às 09:21
 - **THEN** Renato recebe um aviso só, "Chamado #1033 passou do prazo: Wi-Fi cai na Sala Atlântico"
+
+#### Scenario: Estourado na triagem
+- **WHEN** o #1040, na triagem, de Campinas, passa do vencimento
+- **THEN** cada conta que atende os chamados de Campinas recebe "Chamado #1040 passou do prazo", com o título dele, e quem atende só Jundiaí não recebe nada
+
+#### Scenario: Reaberto depois do aviso
+- **WHEN** o #1033, já avisado do estouro, é resolvido e depois reaberto por Renato
+- **THEN** o #1033 volta a contar já vencido, e a verificação seguinte avisa Renato de novo
 
 ### Requirement: Ativo ligado e campos da TI
 

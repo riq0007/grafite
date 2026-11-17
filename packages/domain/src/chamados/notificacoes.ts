@@ -27,9 +27,14 @@ export interface ContaQueRecebeATriagem {
   alcance: AlcanceDeQuemAtende;
 }
 
-const notificacao = (numero: number, contaId: string, titulo: string): NovaNotificacao => ({
+const notificacao = (
+  numero: number,
+  contaId: string,
+  titulo: string,
+  severidade: NovaNotificacao['severidade'] = 'info',
+): NovaNotificacao => ({
   contaId,
-  severidade: 'info',
+  severidade,
   titulo,
   descricao: null,
   origem: ORIGEM_DOS_CHAMADOS,
@@ -78,6 +83,23 @@ export function notificacoesDaAbertura(
   }
   if (chamado.responsavelId === null || chamado.responsavelId === abertoPor) return [];
   return [notificacaoDoPassado(chamado, chamado.responsavelId)];
+}
+
+/**
+ * "Chamado #1043 passou do prazo: Impressora manchando", na severidade Atenção: para quem recebe o
+ * chamado, se ainda atende os locais dele; sem ele, ou com quem não atende mais (a conta inativa, o
+ * alcance mudado), para cada conta que atende os locais, como a triagem.
+ */
+export function notificacoesDoEstouro(
+  chamado: Pick<ChamadoQueNotifica, 'numero' | 'titulo' | 'locais' | 'responsavelId'>,
+  contas: readonly ContaQueRecebeATriagem[],
+): NovaNotificacao[] {
+  const titulo = `Chamado #${chamado.numero} passou do prazo: ${chamado.titulo}`;
+  const quemAtende = contas.filter(({ alcance }) => atendeOChamado(alcance, chamado.locais));
+  const responsavel = quemAtende.find(({ id }) => id === chamado.responsavelId);
+  return (responsavel ? [responsavel] : quemAtende).map(({ id }) =>
+    notificacao(chamado.numero, id, titulo, 'atencao'),
+  );
 }
 
 /**
