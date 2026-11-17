@@ -29102,6 +29102,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/toner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pedir toner: juntar o chamado à solicitação pendente da impressora, ou dar o registro do Toner e gravá-lo */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoPedirTonerInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TonerDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TonerPedidoPeloChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -36465,6 +36570,229 @@ export interface components {
             emAberto: components["schemas"]["OrdemDeServicoInput"][];
             resolvidasOuEncerradas: components["schemas"]["OrdemDeServicoInput"][];
         };
+        LocalDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        ItemDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+            quantidade: number;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            } | null;
+            entrega: {
+                /** @enum {string} */
+                origem: "estoque" | "fornecedor";
+                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+                movimento: string | null;
+                fornecedor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    abrir: boolean;
+                } | null;
+                entreguePor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                entregueEm: string;
+            } | null;
+        };
+        ImpressoraDaSolicitacaoInput: {
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            itens: components["schemas"]["ItemDaSolicitacaoInput"][];
+        };
+        SolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            tipo: "toner" | "conserto" | "equipamento";
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            observacao: string | null;
+            locais: components["schemas"]["LocalDaSolicitacaoInput"][];
+            semLocal: boolean;
+            impressoras: components["schemas"]["ImpressoraDaSolicitacaoInput"][];
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"] | null;
+            defeito: string | null;
+            tipoDeAtivo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            quantidade: number | null;
+            motivo: string | null;
+            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            oQueFoiFeito: string | null;
+            motivoDoCancelamento: string | null;
+            registradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            registradaEm: string;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            permite: {
+                atender: boolean;
+            };
+            ordem: {
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                abrir: boolean;
+            } | null;
+        };
+        PedidoDaSolicitacaoInput: {
+            /** @constant */
+            tipo: "toner";
+            pessoa?: string | null;
+            observacao?: string | null;
+            impressoras?: string[];
+            itens?: {
+                impressora?: string | null;
+                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                quantidade?: number | null;
+                consumivel?: string | null;
+            }[];
+        } | {
+            /** @constant */
+            tipo: "conserto";
+            pessoa?: string | null;
+            observacao?: string | null;
+            ativo?: string | null;
+            defeito?: string | null;
+        } | {
+            /** @constant */
+            tipo: "equipamento";
+            pessoa?: string | null;
+            observacao?: string | null;
+            tipoDeAtivo?: string | null;
+            quantidade?: number | null;
+            motivo?: string | null;
+            local?: string | null;
+        };
+        PedidoDeSituacaoDaSolicitacaoInput: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega";
+        };
+        PedidoAoFornecedorInput: {
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeConclusaoDaSolicitacaoInput: {
+            oQueFoiFeito?: string | null;
+        };
+        PedidoDeCancelamentoDaSolicitacaoInput: {
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeSolicitacoesInput: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            motivo?: string | null;
+        };
+        RetornoDoLoteDeSolicitacoesInput: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        PedidoDeEntregaDaSolicitacaoInput: {
+            entregas: ({
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "estoque";
+                consumivel?: string | null;
+                local?: string | null;
+            } | {
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "fornecedor";
+                fornecedor?: string | null;
+                consumivel?: string | null;
+            })[];
+        };
+        ListaDeSolicitacoesInput: {
+            itens: components["schemas"]["SolicitacaoInput"][];
+            total: number;
+            proximo: string | null;
+        };
+        ImpressorasParaSolicitacaoInput: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            }[];
+        };
+        ImpressoraParaSolicitacaoInput: {
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
+            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            cores: {
+                /** @enum {string} */
+                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                sugerido: string | null;
+                compativeis: {
+                    /** Format: uuid */
+                    id: string;
+                    codigo: string;
+                    nome: string | null;
+                    saldo: number | null;
+                }[];
+            }[];
+        };
+        SolicitacoesDoAtivoInput: {
+            pendentes: components["schemas"]["SolicitacaoInput"][];
+            encerradas: components["schemas"]["SolicitacaoInput"][];
+            usaConsumiveis: boolean;
+        };
         HorarioDaTiInput: {
             dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
             inicio: number;
@@ -36793,7 +37121,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -36821,6 +37149,11 @@ export interface components {
                 } | null;
                 os: {
                     numero: number;
+                } | null;
+                solicitacao: {
+                    numero: number;
+                    /** @enum {string} */
+                    como: "juntou" | "pediu";
                 } | null;
             } | {
                 /** @constant */
@@ -36877,6 +37210,54 @@ export interface components {
         };
         PedidoDoVirarOsDoChamadoInput: {
             problema?: string;
+        };
+        PedidoDoPedirTonerInput: {
+            registro?: {
+                /** @constant */
+                tipo: "toner";
+                pessoa?: string | null;
+                observacao?: string | null;
+                impressoras?: string[];
+                itens?: {
+                    impressora?: string | null;
+                    cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                    quantidade?: number | null;
+                    consumivel?: string | null;
+                }[];
+            };
+        };
+        TonerDoChamadoInput: {
+            /** @constant */
+            resultado: "juntou";
+            solicitacao: {
+                numero: number;
+            };
+        } | {
+            /** @constant */
+            resultado: "registro";
+            registro: {
+                /** @constant */
+                tipo: "toner";
+                /** Format: uuid */
+                pessoa: string;
+                observacao: string | null;
+                impressoras: string[];
+                itens: {
+                    /** Format: uuid */
+                    impressora: string;
+                    /** @enum {string} */
+                    cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                    quantidade: number;
+                    consumivel: string | null;
+                }[];
+            };
+        };
+        TonerPedidoPeloChamadoInput: {
+            /** @constant */
+            resultado: "pediu";
+            solicitacao: {
+                numero: number;
+            };
         };
         ChamadoDepoisDaAcaoInput: {
             numero: number;
@@ -38485,229 +38866,6 @@ export interface components {
         MudancaDaAgendaInput: {
             horario: string;
             diaDoTeste: number;
-        };
-        LocalDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        ItemDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-            quantidade: number;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            } | null;
-            entrega: {
-                /** @enum {string} */
-                origem: "estoque" | "fornecedor";
-                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-                movimento: string | null;
-                fornecedor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                    abrir: boolean;
-                } | null;
-                entreguePor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-                entregueEm: string;
-            } | null;
-        };
-        ImpressoraDaSolicitacaoInput: {
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            itens: components["schemas"]["ItemDaSolicitacaoInput"][];
-        };
-        SolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            tipo: "toner" | "conserto" | "equipamento";
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            pessoa: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            observacao: string | null;
-            locais: components["schemas"]["LocalDaSolicitacaoInput"][];
-            semLocal: boolean;
-            impressoras: components["schemas"]["ImpressoraDaSolicitacaoInput"][];
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"] | null;
-            defeito: string | null;
-            tipoDeAtivo: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            quantidade: number | null;
-            motivo: string | null;
-            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            oQueFoiFeito: string | null;
-            motivoDoCancelamento: string | null;
-            registradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            registradaEm: string;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            permite: {
-                atender: boolean;
-            };
-            ordem: {
-                numero: number;
-                /** @enum {string} */
-                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-                abrir: boolean;
-            } | null;
-        };
-        PedidoDaSolicitacaoInput: {
-            /** @constant */
-            tipo: "toner";
-            pessoa?: string | null;
-            observacao?: string | null;
-            impressoras?: string[];
-            itens?: {
-                impressora?: string | null;
-                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-                quantidade?: number | null;
-                consumivel?: string | null;
-            }[];
-        } | {
-            /** @constant */
-            tipo: "conserto";
-            pessoa?: string | null;
-            observacao?: string | null;
-            ativo?: string | null;
-            defeito?: string | null;
-        } | {
-            /** @constant */
-            tipo: "equipamento";
-            pessoa?: string | null;
-            observacao?: string | null;
-            tipoDeAtivo?: string | null;
-            quantidade?: number | null;
-            motivo?: string | null;
-            local?: string | null;
-        };
-        PedidoDeSituacaoDaSolicitacaoInput: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega";
-        };
-        PedidoAoFornecedorInput: {
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeConclusaoDaSolicitacaoInput: {
-            oQueFoiFeito?: string | null;
-        };
-        PedidoDeCancelamentoDaSolicitacaoInput: {
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeSolicitacoesInput: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            motivo?: string | null;
-        };
-        RetornoDoLoteDeSolicitacoesInput: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        PedidoDeEntregaDaSolicitacaoInput: {
-            entregas: ({
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "estoque";
-                consumivel?: string | null;
-                local?: string | null;
-            } | {
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "fornecedor";
-                fornecedor?: string | null;
-                consumivel?: string | null;
-            })[];
-        };
-        ListaDeSolicitacoesInput: {
-            itens: components["schemas"]["SolicitacaoInput"][];
-            total: number;
-            proximo: string | null;
-        };
-        ImpressorasParaSolicitacaoInput: {
-            itens: {
-                /** Format: uuid */
-                id: string;
-                rotulo: string;
-                patrimonio: string | null;
-                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            }[];
-        };
-        ImpressoraParaSolicitacaoInput: {
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
-            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            cores: {
-                /** @enum {string} */
-                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-                sugerido: string | null;
-                compativeis: {
-                    /** Format: uuid */
-                    id: string;
-                    codigo: string;
-                    nome: string | null;
-                    saldo: number | null;
-                }[];
-            }[];
-        };
-        SolicitacoesDoAtivoInput: {
-            pendentes: components["schemas"]["SolicitacaoInput"][];
-            encerradas: components["schemas"]["SolicitacaoInput"][];
-            usaConsumiveis: boolean;
         };
         PainelInput: {
             /** Format: uuid */
@@ -41688,6 +41846,229 @@ export interface components {
             emAberto: components["schemas"]["OrdemDeServico"][];
             resolvidasOuEncerradas: components["schemas"]["OrdemDeServico"][];
         };
+        LocalDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        ItemDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+            quantidade: number;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            } | null;
+            entrega: {
+                /** @enum {string} */
+                origem: "estoque" | "fornecedor";
+                local: components["schemas"]["LocalDaSolicitacao"] | null;
+                movimento: string | null;
+                fornecedor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    abrir: boolean;
+                } | null;
+                entreguePor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                entregueEm: string;
+            } | null;
+        };
+        ImpressoraDaSolicitacao: {
+            ativo: components["schemas"]["AtivoDaSolicitacao"];
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            itens: components["schemas"]["ItemDaSolicitacao"][];
+        };
+        Solicitacao: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            tipo: "toner" | "conserto" | "equipamento";
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            observacao: string | null;
+            locais: components["schemas"]["LocalDaSolicitacao"][];
+            semLocal: boolean;
+            impressoras: components["schemas"]["ImpressoraDaSolicitacao"][];
+            ativo: components["schemas"]["AtivoDaSolicitacao"] | null;
+            defeito: string | null;
+            tipoDeAtivo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            quantidade: number | null;
+            motivo: string | null;
+            local: components["schemas"]["LocalDaSolicitacao"] | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            oQueFoiFeito: string | null;
+            motivoDoCancelamento: string | null;
+            registradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            registradaEm: string;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            permite: {
+                atender: boolean;
+            };
+            ordem: {
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                abrir: boolean;
+            } | null;
+        };
+        PedidoDaSolicitacao: {
+            /** @constant */
+            tipo: "toner";
+            pessoa?: string | null;
+            observacao?: string | null;
+            impressoras?: string[];
+            itens?: {
+                impressora?: string | null;
+                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                quantidade?: number | null;
+                consumivel?: string | null;
+            }[];
+        } | {
+            /** @constant */
+            tipo: "conserto";
+            pessoa?: string | null;
+            observacao?: string | null;
+            ativo?: string | null;
+            defeito?: string | null;
+        } | {
+            /** @constant */
+            tipo: "equipamento";
+            pessoa?: string | null;
+            observacao?: string | null;
+            tipoDeAtivo?: string | null;
+            quantidade?: number | null;
+            motivo?: string | null;
+            local?: string | null;
+        };
+        PedidoDeSituacaoDaSolicitacao: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega";
+        };
+        PedidoAoFornecedor: {
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeConclusaoDaSolicitacao: {
+            oQueFoiFeito?: string | null;
+        };
+        PedidoDeCancelamentoDaSolicitacao: {
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeSolicitacoes: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            motivo?: string | null;
+        };
+        RetornoDoLoteDeSolicitacoes: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        PedidoDeEntregaDaSolicitacao: {
+            entregas: ({
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "estoque";
+                consumivel?: string | null;
+                local?: string | null;
+            } | {
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "fornecedor";
+                fornecedor?: string | null;
+                consumivel?: string | null;
+            })[];
+        };
+        ListaDeSolicitacoes: {
+            itens: components["schemas"]["Solicitacao"][];
+            total: number;
+            proximo: string | null;
+        };
+        ImpressorasParaSolicitacao: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: components["schemas"]["LocalDaSolicitacao"] | null;
+            }[];
+        };
+        ImpressoraParaSolicitacao: {
+            ativo: components["schemas"]["AtivoDaSolicitacao"];
+            local: components["schemas"]["LocalDaSolicitacao"] | null;
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            cores: {
+                /** @enum {string} */
+                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                sugerido: string | null;
+                compativeis: {
+                    /** Format: uuid */
+                    id: string;
+                    codigo: string;
+                    nome: string | null;
+                    saldo: number | null;
+                }[];
+            }[];
+        };
+        SolicitacoesDoAtivo: {
+            pendentes: components["schemas"]["Solicitacao"][];
+            encerradas: components["schemas"]["Solicitacao"][];
+            usaConsumiveis: boolean;
+        };
         HorarioDaTi: {
             dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
             inicio: number;
@@ -42016,7 +42397,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -42044,6 +42425,11 @@ export interface components {
                 } | null;
                 os: {
                     numero: number;
+                } | null;
+                solicitacao: {
+                    numero: number;
+                    /** @enum {string} */
+                    como: "juntou" | "pediu";
                 } | null;
             } | {
                 /** @constant */
@@ -42100,6 +42486,54 @@ export interface components {
         };
         PedidoDoVirarOsDoChamado: {
             problema?: string;
+        };
+        PedidoDoPedirToner: {
+            registro?: {
+                /** @constant */
+                tipo: "toner";
+                pessoa?: string | null;
+                observacao?: string | null;
+                impressoras?: string[];
+                itens?: {
+                    impressora?: string | null;
+                    cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                    quantidade?: number | null;
+                    consumivel?: string | null;
+                }[];
+            };
+        };
+        TonerDoChamado: {
+            /** @constant */
+            resultado: "juntou";
+            solicitacao: {
+                numero: number;
+            };
+        } | {
+            /** @constant */
+            resultado: "registro";
+            registro: {
+                /** @constant */
+                tipo: "toner";
+                /** Format: uuid */
+                pessoa: string;
+                observacao: string | null;
+                impressoras: string[];
+                itens: {
+                    /** Format: uuid */
+                    impressora: string;
+                    /** @enum {string} */
+                    cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                    quantidade: number;
+                    consumivel: string | null;
+                }[];
+            };
+        };
+        TonerPedidoPeloChamado: {
+            /** @constant */
+            resultado: "pediu";
+            solicitacao: {
+                numero: number;
+            };
         };
         ChamadoDepoisDaAcao: {
             numero: number;
@@ -43708,229 +44142,6 @@ export interface components {
         MudancaDaAgenda: {
             horario: string;
             diaDoTeste: number;
-        };
-        LocalDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        ItemDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-            quantidade: number;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            } | null;
-            entrega: {
-                /** @enum {string} */
-                origem: "estoque" | "fornecedor";
-                local: components["schemas"]["LocalDaSolicitacao"] | null;
-                movimento: string | null;
-                fornecedor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                    abrir: boolean;
-                } | null;
-                entreguePor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-                entregueEm: string;
-            } | null;
-        };
-        ImpressoraDaSolicitacao: {
-            ativo: components["schemas"]["AtivoDaSolicitacao"];
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            itens: components["schemas"]["ItemDaSolicitacao"][];
-        };
-        Solicitacao: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            tipo: "toner" | "conserto" | "equipamento";
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            pessoa: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            observacao: string | null;
-            locais: components["schemas"]["LocalDaSolicitacao"][];
-            semLocal: boolean;
-            impressoras: components["schemas"]["ImpressoraDaSolicitacao"][];
-            ativo: components["schemas"]["AtivoDaSolicitacao"] | null;
-            defeito: string | null;
-            tipoDeAtivo: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            quantidade: number | null;
-            motivo: string | null;
-            local: components["schemas"]["LocalDaSolicitacao"] | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            oQueFoiFeito: string | null;
-            motivoDoCancelamento: string | null;
-            registradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            registradaEm: string;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            permite: {
-                atender: boolean;
-            };
-            ordem: {
-                numero: number;
-                /** @enum {string} */
-                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-                abrir: boolean;
-            } | null;
-        };
-        PedidoDaSolicitacao: {
-            /** @constant */
-            tipo: "toner";
-            pessoa?: string | null;
-            observacao?: string | null;
-            impressoras?: string[];
-            itens?: {
-                impressora?: string | null;
-                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-                quantidade?: number | null;
-                consumivel?: string | null;
-            }[];
-        } | {
-            /** @constant */
-            tipo: "conserto";
-            pessoa?: string | null;
-            observacao?: string | null;
-            ativo?: string | null;
-            defeito?: string | null;
-        } | {
-            /** @constant */
-            tipo: "equipamento";
-            pessoa?: string | null;
-            observacao?: string | null;
-            tipoDeAtivo?: string | null;
-            quantidade?: number | null;
-            motivo?: string | null;
-            local?: string | null;
-        };
-        PedidoDeSituacaoDaSolicitacao: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega";
-        };
-        PedidoAoFornecedor: {
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeConclusaoDaSolicitacao: {
-            oQueFoiFeito?: string | null;
-        };
-        PedidoDeCancelamentoDaSolicitacao: {
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeSolicitacoes: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            motivo?: string | null;
-        };
-        RetornoDoLoteDeSolicitacoes: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        PedidoDeEntregaDaSolicitacao: {
-            entregas: ({
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "estoque";
-                consumivel?: string | null;
-                local?: string | null;
-            } | {
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "fornecedor";
-                fornecedor?: string | null;
-                consumivel?: string | null;
-            })[];
-        };
-        ListaDeSolicitacoes: {
-            itens: components["schemas"]["Solicitacao"][];
-            total: number;
-            proximo: string | null;
-        };
-        ImpressorasParaSolicitacao: {
-            itens: {
-                /** Format: uuid */
-                id: string;
-                rotulo: string;
-                patrimonio: string | null;
-                local: components["schemas"]["LocalDaSolicitacao"] | null;
-            }[];
-        };
-        ImpressoraParaSolicitacao: {
-            ativo: components["schemas"]["AtivoDaSolicitacao"];
-            local: components["schemas"]["LocalDaSolicitacao"] | null;
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            cores: {
-                /** @enum {string} */
-                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-                sugerido: string | null;
-                compativeis: {
-                    /** Format: uuid */
-                    id: string;
-                    codigo: string;
-                    nome: string | null;
-                    saldo: number | null;
-                }[];
-            }[];
-        };
-        SolicitacoesDoAtivo: {
-            pendentes: components["schemas"]["Solicitacao"][];
-            encerradas: components["schemas"]["Solicitacao"][];
-            usaConsumiveis: boolean;
         };
         Painel: {
             /** Format: uuid */

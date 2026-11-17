@@ -236,7 +236,9 @@ export type EventoDaAcao =
   /** A troca do ativo (`edicao.ts`), com os ids do ativo de antes e do de depois, ou nulo. */
   | { evento: 'ativo'; dados: { antes: string | null; depois: string | null } }
   /** O chamado virou OS (`os-e-solicitacao.ts`), com o número dela, que não muda. */
-  | { evento: 'os'; dados: { numero: number } };
+  | { evento: 'os'; dados: { numero: number } }
+  /** O "Pedir toner", com o número da solicitação e se o chamado se juntou a ela ou a pediu. */
+  | { evento: 'solicitacao'; dados: { numero: number; como: 'juntou' | 'pediu' } };
 
 /** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
 export type EntradaDaConversa =

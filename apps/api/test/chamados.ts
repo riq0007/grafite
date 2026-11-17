@@ -1,8 +1,9 @@
 // Os chamados dos testes de integração (change chamados-da-ti): o preparo que cada arquivo dos
 // chamados refazia, num lugar só. A organização com os tipos de fábrica, o horário da TI e a
 // numeração do mockup (o primeiro chamado é o #1042), os locais, as pessoas que pedem, as contas da
-// TI com as sessões, e as funções que leem e gravam os chamados direto no banco, como as ações
-// gravam. Os arquivos antigos passam a usá-lo quando uma tarefa mexer neles.
+// TI com as sessões, as funções que leem e gravam os chamados direto no banco, como as ações
+// gravam, e as impressoras do toner, com os compatíveis e as leituras. Os arquivos antigos passam
+// a usá-lo quando uma tarefa mexer neles.
 
 import {
   chamados,
@@ -19,6 +20,7 @@ import type { HorarioDaTi } from '@grafite/domain';
 import { asc, eq } from 'drizzle-orm';
 import { expect } from 'vitest';
 import { criarTiposDeFabrica } from '../src/chamados/fabrica.ts';
+import { criarAtivoDoTipo, criarColetor, criarModelo, criarTipo, gravarEstado } from './alertas.ts';
 import {
   type ApiDeTeste,
   atribuir,
@@ -31,6 +33,7 @@ import {
   type Entrada,
   SEM_ENTRADA,
 } from './integracao.ts';
+import { criarCompativel } from './solicitacoes.ts';
 
 /** O horário da TI dos testes: de segunda a sexta, das 08:00 às 18:00 em São Paulo, carga de 5. */
 export const HORARIO_DOS_CHAMADOS: HorarioDaTi = {
@@ -300,4 +303,106 @@ export async function montarChamados(api: ApiDeTeste, host: string) {
       return linhas.map(({ contaId, titulo }) => ({ usuario: usuarioDa(contaId), titulo }));
     },
   };
+}
+
+/**
+ * As impressoras do "Pedir toner" e da solicitação pelo chamado (tarefas 4.17, 4.18 e 4.25), com os
+ * consumíveis compatíveis e as leituras dos suprimentos, no momento dado:
+ * - as coloridas PAT-00139 e PAT-00140, da Recepção, e PAT-00200, do Administrativo, com o preto a
+ *   8% e o ciano a 40%, e o magenta inconsistente da PAT-00139 fora da conta;
+ * - a tanque de tinta PAT-00300, da Recepção, que usa o preto e o colorido, com o ciano a 5% e o
+ *   preto a 30%;
+ * - a PAT-00500, da Recepção, de um tipo que liga os consumíveis sem a coleta dos suprimentos, com as
+ *   leituras da tanque;
+ * - o monitor MON-00001, da Recepção, que não usa consumíveis.
+ */
+export async function montarImpressorasDoToner(
+  api: ApiDeTeste,
+  c: Pick<ChamadosDeTeste, 'org' | 'locais'>,
+  momento: Date,
+) {
+  const ids = {
+    pat139: '',
+    pat140: '',
+    pat200: '',
+    pat300: '',
+    pat500: '',
+    mon001: '',
+    /** O toner preto compatível com as coloridas. */
+    pretoDaColorida: '',
+  };
+  const impressoras = await criarTipo(api, c.org, {
+    nome: 'Impressora',
+    capacidades: ['consumiveis.compatibilidade', 'snmp.suprimentos'],
+  });
+  const colorida = await criarModelo(api, c.org, {
+    tipoId: impressoras,
+    fabricante: 'HP',
+    nome: 'Color LaserJet M479',
+  });
+  ids.pretoDaColorida = await criarCompativel(api, c.org, {
+    codigo: 'W2020A',
+    cor: 'preto',
+    modeloId: colorida,
+  });
+  for (const [codigo, cor] of [
+    ['W2021A', 'ciano'],
+    ['W2023A', 'magenta'],
+    ['W2022A', 'amarelo'],
+  ] as const) {
+    await criarCompativel(api, c.org, { codigo, cor, modeloId: colorida });
+  }
+  const tanque = await criarModelo(api, c.org, {
+    tipoId: impressoras,
+    fabricante: 'HP',
+    nome: 'Ink Tank 316',
+  });
+  await criarCompativel(api, c.org, { codigo: 'GT53', cor: 'preto', modeloId: tanque });
+  await criarCompativel(api, c.org, { codigo: 'GT52', cor: 'colorido', modeloId: tanque });
+  const semColeta = await criarTipo(api, c.org, {
+    nome: 'Impressora sem coleta',
+    capacidades: ['consumiveis.compatibilidade'],
+  });
+  const daSemColeta = await criarModelo(api, c.org, {
+    tipoId: semColeta,
+    fabricante: 'HP',
+    nome: 'Color LaserJet M454',
+  });
+  await criarCompativel(api, c.org, { codigo: 'W2030A', cor: 'preto', modeloId: daSemColeta });
+  await criarCompativel(api, c.org, { codigo: 'W2031A', cor: 'ciano', modeloId: daSemColeta });
+  const monitores = await criarTipo(api, c.org, { nome: 'Monitor' });
+
+  const ativo = (tipoId: string, modeloId: string | null, patrimonio: string, localId: string) =>
+    criarAtivoDoTipo(api, c.org, { tipoId, modeloId, patrimonio, localId, situacao: 'ativo' });
+  ids.pat139 = await ativo(impressoras, colorida, 'PAT-00139', c.locais.recepcao);
+  ids.pat140 = await ativo(impressoras, colorida, 'PAT-00140', c.locais.recepcao);
+  ids.pat200 = await ativo(impressoras, colorida, 'PAT-00200', c.locais.administrativo);
+  ids.pat300 = await ativo(impressoras, tanque, 'PAT-00300', c.locais.recepcao);
+  ids.pat500 = await ativo(semColeta, daSemColeta, 'PAT-00500', c.locais.recepcao);
+  ids.mon001 = await ativo(monitores, null, 'MON-00001', c.locais.recepcao);
+
+  // As leituras: o preto a 8% e o ciano a 40% nas coloridas, com o magenta inconsistente da
+  // PAT-00139 fora da conta; o ciano a 5% e o preto a 30% na tanque e na sem coleta.
+  const coletorId = await criarColetor(api, c.org);
+  const ler = (ativoId: string, item: string, descricao: string, nivel: number, valida = true) =>
+    gravarEstado(api, c.org, {
+      ativoId,
+      coletorId,
+      metrica: 'impressora.suprimento',
+      item,
+      momento,
+      valorNumero: nivel,
+      situacao: valida ? 'valida' : 'inconsistente',
+      detalhes: { descricao },
+    });
+  for (const impressora of [ids.pat139, ids.pat140, ids.pat200]) {
+    await ler(impressora, '1', 'Black Toner', 8);
+    await ler(impressora, '2', 'Cyan Toner', 40);
+  }
+  await ler(ids.pat139, '3', 'Magenta Toner', 2, false);
+  for (const impressora of [ids.pat300, ids.pat500]) {
+    await ler(impressora, '1', 'Black Toner', 30);
+    await ler(impressora, '2', 'Cyan Toner', 5);
+  }
+  return ids;
 }

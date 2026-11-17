@@ -1,9 +1,9 @@
 // Os módulos opcionais desligados (spec modulos-da-organizacao; design do P1b, decisão 12): as rotas
 // de um módulo ficam num escopo próprio, e a guarda dele recusa a requisição quando a organização o
 // desligou. A guarda lê a organização a cada requisição, sem cache: ligar e desligar valem na hora.
-import { type Banco, naOrganizacao, organizacoes } from '@grafite/db';
+import { type Banco, naOrganizacao, organizacoes, type Transacao } from '@grafite/db';
 import { type IdDoModuloOpcional, MODULOS_OPCIONAIS } from '@grafite/domain';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { ProblemaDaApi } from '../problemas.ts';
 
@@ -27,6 +27,18 @@ export async function modulosDesligados(banco: Banco, orgId: string): Promise<st
       .where(eq(organizacoes.id, orgId));
     return organizacao?.desligados ?? [];
   });
+}
+
+/**
+ * Recusa, na transação, a ação de um módulo que mora no escopo de outro, como o "Virar OS" e o
+ * "Pedir toner" dos Chamados, que são do Operação: a guarda do escopo não vê o módulo da ação.
+ */
+export async function exigirLigadoNaTransacao(tx: Transacao, id: IdDoModuloOpcional) {
+  const [organizacao] = await tx
+    .select({ desligados: organizacoes.modulosDesligados })
+    .from(organizacoes)
+    .where(eq(organizacoes.id, sql`app.current_org()`));
+  if (organizacao?.desligados.includes(id)) throw moduloDesligado(id);
 }
 
 /**

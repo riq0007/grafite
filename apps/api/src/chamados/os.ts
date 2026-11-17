@@ -11,13 +11,12 @@ import {
   chamados,
   mensagensDosChamados,
   ordensDeServico,
-  organizacoes,
   type Transacao,
   tiposDeChamado,
 } from '@grafite/db';
 import { mensagemDaRecusaDoVirarOs, recusaDoVirarOs } from '@grafite/domain';
 import { eq, sql } from 'drizzle-orm';
-import { moduloDesligado } from '../acesso/modulos.ts';
+import { exigirLigadoNaTransacao } from '../acesso/modulos.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { abrir, type Contexto } from '../ordens/abertura.ts';
 import { lerOrdem, type OrdemLida } from '../ordens/leitura.ts';
@@ -31,15 +30,6 @@ export interface PedidoDoVirarOs {
   problema?: string | undefined;
 }
 
-/** Os módulos que a organização desligou, na transação. */
-async function desligados(tx: Transacao): Promise<readonly string[]> {
-  const [organizacao] = await tx
-    .select({ desligados: organizacoes.modulosDesligados })
-    .from(organizacoes)
-    .where(eq(organizacoes.id, sql`app.current_org()`));
-  return organizacao?.desligados ?? [];
-}
-
 /** Abre a OS do chamado, liga os dois e devolve a OS lida, já com o chamado. */
 export async function virarOs(
   tx: Transacao,
@@ -47,7 +37,7 @@ export async function virarOs(
   pedido: PedidoDoVirarOs,
   contexto: Contexto,
 ): Promise<OrdemLida> {
-  if ((await desligados(tx)).includes('operacao')) throw moduloDesligado('operacao');
+  await exigirLigadoNaTransacao(tx, 'operacao');
   const { requisicao, momento } = contexto;
   const { acesso, contaId, arvore, lido, quemAge } = await travarParaMudar(tx, numero, requisicao);
   const [extra] = await tx

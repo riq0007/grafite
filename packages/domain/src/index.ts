@@ -281,6 +281,7 @@ export {
   textoDoResolvidoHoje,
   textoDosAbertos,
 } from './chamados/carga.ts';
+export { type CorDoTonerPedida, corDoToner } from './chamados/cor-do-toner.ts';
 export {
   type AntesDoAssumir,
   antesDoAssumir,
@@ -338,9 +339,13 @@ export {
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';
 export {
+  type ChamadoParaPedirToner,
   type ChamadoParaVirarOs,
+  mensagemDaRecusaDoPedirToner,
   mensagemDaRecusaDoVirarOs,
+  type RecusaDoPedirToner,
   type RecusaDoVirarOs,
+  recusaDoPedirToner,
   recusaDoVirarOs,
 } from './chamados/os-e-solicitacao.ts';
 export {

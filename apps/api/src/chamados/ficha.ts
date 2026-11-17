@@ -75,6 +75,7 @@ export const EVENTOS_DA_FICHA = [
   'reabriu',
   'ativo',
   'os',
+  'solicitacao',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -90,6 +91,16 @@ export type EventosForaDaFicha = SemNenhum<Exclude<EventoGravado, EventoDaFicha>
 /** O número da OS do evento `os`; o ilegível vem nulo, como a conta sem o nome. */
 const osDoEvento = (dados: Record<string, unknown> | null) =>
   Number.isInteger(dados?.numero) ? { numero: dados?.numero as number } : null;
+
+/** A solicitação do evento `solicitacao`, com o `como`; o ilegível vem nulo. */
+function solicitacaoDoEvento(
+  dados: Record<string, unknown> | null,
+): { numero: number; como: 'juntou' | 'pediu' } | null {
+  const numero = dados?.numero;
+  const como = dados?.como;
+  if (!Number.isInteger(numero) || (como !== 'juntou' && como !== 'pediu')) return null;
+  return { numero: numero as number, como };
+}
 
 const eventoLido = (evento: string | null): evento is EventoDaFicha =>
   (EVENTOS_DA_FICHA as readonly (string | null)[]).includes(evento);
@@ -148,6 +159,8 @@ export type ItemDaConversa =
       ativo: { antes: AtivoNaFicha | null; depois: AtivoNaFicha | null } | null;
       /** No `os`, o número da OS, a toda conta que vê o chamado; nulo nos outros. */
       os: { numero: number } | null;
+      /** No `solicitacao`, o número e o `como`, a toda conta que vê o chamado; nulo nos outros. */
+      solicitacao: { numero: number; como: 'juntou' | 'pediu' } | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -465,6 +478,7 @@ export async function fichaDoChamado(
                 }
               : null,
           os: linha.evento === 'os' ? osDoEvento(linha.dados) : null,
+          solicitacao: linha.evento === 'solicitacao' ? solicitacaoDoEvento(linha.dados) : null,
         },
       });
       continue;

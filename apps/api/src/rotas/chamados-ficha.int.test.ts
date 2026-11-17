@@ -667,9 +667,11 @@ describe('GET /chamados/:numero', () => {
         de: null,
         para: null,
         desde: null,
-        // Só o evento do ativo tem o ativo (tarefa 4.15).
+        // Só o evento do ativo tem o ativo (tarefa 4.15), e só os da OS e da solicitação, a OS e a
+        // solicitação (4.16 e 4.17).
         ativo: null,
         os: null,
+        solicitacao: null,
       },
       {
         especie: 'mensagem',
@@ -698,6 +700,7 @@ describe('GET /chamados/:numero', () => {
         desde: null,
         ativo: null,
         os: null,
+        solicitacao: null,
       },
       {
         especie: 'evento',
@@ -710,6 +713,7 @@ describe('GET /chamados/:numero', () => {
         desde: iso('08:30'),
         ativo: null,
         os: null,
+        solicitacao: null,
       },
     ];
     expect((await lerFicha(1042, 'ana')).conversa).toEqual(esperada);

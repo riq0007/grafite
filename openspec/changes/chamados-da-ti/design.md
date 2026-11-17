@@ -431,10 +431,30 @@ A OS e a solicitação mostram os chamados delas por uma consulta, "Do chamado #
 
 **A troca do ativo depois da OS** (revisão da 4.15) segue permitida: a OS é do ativo em que nasceu e não muda com a troca, e o chamado continua ligado a ela. Recusar a troca prenderia o chamado a um ativo errado. A OS aberta por engano se encerra, como qualquer outra. A 4.17 e a 4.18 seguem a mesma regra para a solicitação.
 
+**Pedir toner (tarefa 4.17).** O `POST /chamados/:numero/toner` pede `chamados.atender`, como as ações, e tem dois passos na mesma rota:
+- **sem o `registro`:** havendo a pendente, o chamado se junta a ela (200, `{ resultado: 'juntou', solicitacao: { numero } }`); sem ela, a resposta é o registro do Toner para a tela abrir (200, `{ resultado: 'registro', registro }`), e nada é gravado;
+- **com o `registro`,** o pedido do Toner do `POST /solicitacoes`: o registro das solicitações de hoje (`registrar`) grava, com as regras e as recusas dele, e o chamado se liga à solicitação nova (201, `{ resultado: 'pediu', solicitacao: { numero } }`).
+
+Decisões que o plano não fechava:
+- **As recusas são as mesmas com e sem a pendente,** e nos dois passos, nesta ordem:
+  - as do chamado, no domínio (`recusaDoPedirToner`), no 409: quem age precisa atender os locais do chamado; o resolvido; a solicitação que o chamado já tem ("O chamado #1042 já está na solicitação 4."); e o chamado sem o ativo ligado (a frase do "Virar OS");
+  - as da impressora, pela conferência do registro (`conferirImpressora`), com as frases e o campo dele (`impressoras.0`): a que a conta não vê com `ativos.ver` (400, "Impressora não encontrada."), a inativa e a que não usa consumíveis ("PAT-00139 não usa consumíveis."), no 409. A tela mostra a frase, sem o campo, como no "Virar OS";
+  - e a permissão do registro, `solicitacoes.atender` nos locais da impressora (403), também para se juntar (spec solicitacoes, "por quem atende o chamado e as solicitações nos locais da impressora").
+- **Com o módulo Operação desligado,** a rota responde o 403 do módulo antes das recusas, como o "Virar OS".
+- **A pendente** é a solicitação de Toner Aberta, Em atendimento ou Aguardando entrega com a impressora entre as dela. Havendo mais de uma, é a de menor número, a mais antiga. Ela vale também quando a conta não a vê, porque a impressora mudou de local depois do registro: a spec não deixa nascer a segunda, e a ficha só mostra a solicitação a quem a vê.
+- **A pendente que nasce entre os dois passos** recusa a gravação, no 409: "A PAT-00139 já está na solicitação 6: peça o toner de novo para o chamado se juntar a ela.". Juntar em silêncio jogaria fora o registro que quem atende mudou. A rota trava a impressora (`for update`) antes de procurar a pendente, e dois "Pedir toner" da mesma impressora ao mesmo tempo não registram duas.
+- **O registro dado** tem a pessoa do chamado, a impressora e um item da cor do chamado, com a quantidade 1 e o consumível nulo, que o registro sugere na gravação, como no "Nova solicitação". A observação vem nula.
+- **O registro gravado precisa da impressora do chamado** entre as dele: sem ela, 400 no `impressoras`, "A solicitação do chamado leva a impressora dele, PAT-00139.". O resto, quem atende muda: a pessoa, as outras impressoras, os itens e a observação.
+- **O evento `solicitacao`,** com `{ numero, como }`: o `como` é `juntou` ("Juntou-se à solicitação 4") ou `pediu` ("Pediu toner: solicitação 5"), e a 4.18 acrescenta o `gerou`. Ele não sobe a versão, como o `os`, e a ficha o mostra a toda conta que vê o chamado.
+- **A auditoria:** o `chamado.pediu-toner`, com a solicitação e o `como` depois, e o `chamados.mudaram` pela saída dele; com a solicitação nova, o `solicitacao.registrada` do registro. Ao se juntar, a solicitação ganha um chamado, e o `solicitacoes.mudaram` vai também aos locais dela. Nada notifica.
+- **A resposta leva só o número da solicitação,** porque a pendente pode ser uma que a conta não vê. A tela relê a ficha, que mostra a solicitação com a situação a quem a vê.
+
 A cor do toner é a do chamado (spec solicitacoes), que o `corDoToner` do domínio decide para o "Pedir toner" e para a solicitação gerada pelo tipo:
-- a respondida no formulário, pela primeira escolha única, na ordem dos campos, cuja opção tem o nome de uma cor de consumível, sem diferença de maiúsculas nem de acentos, quando a impressora usa um consumível dessa cor. O texto da opção, e não o id, vale também no formulário que a TI monta, cujos ids são aleatórios;
-- sem ela, a cor mais baixa na última leitura válida dos suprimentos (P2b);
+- a respondida no formulário, pela primeira escolha única, na ordem dos campos, cuja opção respondida tem o nome de uma cor de consumível, sem diferença de maiúsculas nem de acentos, quando a impressora usa um consumível dessa cor. A escolha única de uma cor que a impressora não usa é pulada. O texto da opção, e não o id, vale também no formulário que a TI monta, cujos ids são aleatórios;
+- sem ela, a cor mais baixa na última leitura válida dos suprimentos (P2b): o nível medido de cada toner com a tinta pela descrição (`tintaDoSuprimento`). O ciano, o magenta e o amarelo de uma impressora que só usa o colorido viram o colorido, e a tinta que ela não usa fica de fora. No empate, vale a ordem das cores (o preto primeiro);
 - sem a leitura, o preto.
+
+A impressora usa as cores dos consumíveis compatíveis ativos do modelo dela. Sem nenhum compatível cadastrado, ela é tratada como se usasse todas: sem o cadastro, não há como saber, e a cor respondida é a melhor informação.
 
 **A solicitação gerada pelo tipo.** A abertura chama o registro das solicitações dentro de um ponto de salvamento (a transação aninhada do Drizzle, um `savepoint`). Uma recusa do registro volta só o ponto de salvamento: o chamado abre, e a conversa ganha o evento "A solicitação não foi gerada: <motivo>". O motivo tem texto próprio nos casos conhecidos (sem local, impressora sem consumíveis, tipo de ativo inativado e local inativado) e é a recusa do registro nos outros. Conferir antes, no lugar do ponto de salvamento, repetiria as regras do registro e se afastaria delas com o tempo.
 

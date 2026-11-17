@@ -54,13 +54,13 @@ import {
 } from '../consumiveis/compativeis.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
-import type { Solicitacao } from './esquemas.ts';
+import type { PedidoDaSolicitacao, Solicitacao } from './esquemas.ts';
 import { type LeitorDasSolicitacoes, lerSolicitacao } from './leitura.ts';
 
 type SolicitacaoLida = z.infer<typeof Solicitacao>;
 
 /** Um ativo conferido: o que a conta vê, ativo, com o tipo, o modelo e o local. */
-interface AtivoConferido {
+export interface AtivoConferido {
   id: string;
   rotulo: string;
   patrimonio: string | null;
@@ -70,7 +70,7 @@ interface AtivoConferido {
 }
 
 /** O nome do ativo nas recusas: o patrimônio, ou o rótulo sem ele. */
-const identificacao = (ativo: { rotulo: string; patrimonio: string | null }) =>
+export const identificacao = (ativo: { rotulo: string; patrimonio: string | null }) =>
   ativo.patrimonio ?? ativo.rotulo;
 
 function conferido<T>(valor: T | null): T {
@@ -119,6 +119,35 @@ export async function conferirAtivo(
   };
 }
 
+/** A recusa da impressora do toner, com a frase do registro: a que não existe e a inativa. */
+export type RecusaDaImpressora =
+  | { recusa: 'nao-encontrada'; mensagem: string }
+  | { recusa: 'inativa'; mensagem: string };
+
+/**
+ * A impressora do toner: a que a conta vê, ativa e que usa consumíveis. A que a conta não vê é
+ * como a que não existe; a inativa e a que não usa consumíveis são a mesma recusa, a do 409.
+ */
+export async function conferirImpressora(
+  tx: Transacao,
+  ativoId: string,
+  leitor: LeitorDasSolicitacoes,
+): Promise<{ impressora: AtivoConferido } | RecusaDaImpressora> {
+  const conferencia = await conferirAtivo(tx, ativoId, leitor);
+  if ('recusa' in conferencia) {
+    return conferencia.recusa === 'inativo'
+      ? { recusa: 'inativa', mensagem: MENSAGEM_DO_ATIVO_INATIVO }
+      : { recusa: 'nao-encontrada', mensagem: 'Impressora não encontrada.' };
+  }
+  if (!conferencia.ativo.usaConsumiveis) {
+    return {
+      recusa: 'inativa',
+      mensagem: mensagemDoAtivoSemConsumiveis(identificacao(conferencia.ativo)),
+    };
+  }
+  return { impressora: conferencia.ativo };
+}
+
 /** As referências conferidas de cada tipo. */
 interface Referencias {
   impressoras: AtivoConferido[];
@@ -150,15 +179,10 @@ async function conferirReferencias(
     case 'toner':
       for (const [indice, id] of dados.impressoras.entries()) {
         const campo = `impressoras.${indice}`;
-        const conferencia = await conferirAtivo(tx, id, leitor);
-        if ('recusa' in conferencia) {
-          if (conferencia.recusa === 'inativo') inativos[campo] = MENSAGEM_DO_ATIVO_INATIVO;
-          else naoEncontrados[campo] = 'Impressora não encontrada.';
-        } else if (!conferencia.ativo.usaConsumiveis) {
-          inativos[campo] = mensagemDoAtivoSemConsumiveis(identificacao(conferencia.ativo));
-        } else {
-          impressoras.push(conferencia.ativo);
-        }
+        const conferencia = await conferirImpressora(tx, id, leitor);
+        if ('impressora' in conferencia) impressoras.push(conferencia.impressora);
+        else if (conferencia.recusa === 'inativa') inativos[campo] = conferencia.mensagem;
+        else naoEncontrados[campo] = conferencia.mensagem;
       }
       break;
     case 'conserto': {
@@ -349,6 +373,41 @@ export function visaoDaSolicitacao(solicitacao: SolicitacaoLida): Record<string,
     observacao: solicitacao.observacao,
   };
   return Object.fromEntries(Object.entries(visao).filter(([, valor]) => valor !== null));
+}
+
+/** O pedido da API como o domínio o confere, com o vazio como nulo. */
+export function comoDados(pedido: z.infer<typeof PedidoDaSolicitacao>): DadosDaSolicitacao {
+  const comum = { pessoa: pedido.pessoa ?? null, observacao: pedido.observacao ?? null };
+  switch (pedido.tipo) {
+    case 'toner':
+      return {
+        tipo: 'toner',
+        ...comum,
+        impressoras: pedido.impressoras ?? [],
+        itens: (pedido.itens ?? []).map((item) => ({
+          impressora: item.impressora ?? null,
+          cor: item.cor ?? null,
+          quantidade: item.quantidade ?? null,
+          consumivel: item.consumivel ?? null,
+        })),
+      };
+    case 'conserto':
+      return {
+        tipo: 'conserto',
+        ...comum,
+        ativo: pedido.ativo ?? null,
+        defeito: pedido.defeito ?? null,
+      };
+    case 'equipamento':
+      return {
+        tipo: 'equipamento',
+        ...comum,
+        tipoDeAtivo: pedido.tipoDeAtivo ?? null,
+        quantidade: pedido.quantidade ?? null,
+        motivo: pedido.motivo ?? null,
+        local: pedido.local ?? null,
+      };
+  }
 }
 
 /** Registra a solicitação e a devolve lida. */

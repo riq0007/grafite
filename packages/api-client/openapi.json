@@ -11147,6 +11147,1278 @@
           "resolvidasOuEncerradas"
         ]
       },
+      "LocalDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "caminho"
+        ]
+      },
+      "AtivoDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "abrir"
+        ]
+      },
+      "ItemDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "cor": {
+            "type": "string",
+            "enum": [
+              "preto",
+              "ciano",
+              "magenta",
+              "amarelo",
+              "colorido"
+            ]
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "consumivel": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "codigo": {
+                    "type": "string"
+                  },
+                  "nome": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "codigo",
+                  "nome",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entrega": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "origem": {
+                    "type": "string",
+                    "enum": [
+                      "estoque",
+                      "fornecedor"
+                    ]
+                  },
+                  "local": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "movimento": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fornecedor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          },
+                          "abrir": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome",
+                          "abrir"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "entreguePor": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nome"
+                    ]
+                  },
+                  "entregueEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "origem",
+                  "local",
+                  "movimento",
+                  "fornecedor",
+                  "entreguePor",
+                  "entregueEm"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "cor",
+          "quantidade",
+          "consumivel",
+          "entrega"
+        ]
+      },
+      "ImpressoraDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
+          },
+          "contador": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "paginas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lidoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "paginas",
+                  "lidoEm"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaSolicitacaoInput"
+            }
+          }
+        },
+        "required": [
+          "ativo",
+          "contador",
+          "itens"
+        ]
+      },
+      "SolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "toner",
+              "conserto",
+              "equipamento"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-entrega",
+              "concluida",
+              "cancelada"
+            ]
+          },
+          "pessoa": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ]
+          },
+          "observacao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
+            }
+          },
+          "semLocal": {
+            "type": "boolean"
+          },
+          "impressoras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImpressoraDaSolicitacaoInput"
+            }
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defeito": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tipoDeAtivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantidade": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "osDoFornecedor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oQueFoiFeito": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "motivoDoCancelamento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "registradaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ]
+          },
+          "registradaEm": {
+            "type": "string"
+          },
+          "encerradaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "encerradaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "atender": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "atender"
+            ]
+          },
+          "ordem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aberta",
+                      "em-atendimento",
+                      "aguardando-peca",
+                      "aguardando-fornecedor",
+                      "resolvida",
+                      "encerrada"
+                    ]
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "situacao",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "tipo",
+          "situacao",
+          "pessoa",
+          "observacao",
+          "locais",
+          "semLocal",
+          "impressoras",
+          "ativo",
+          "defeito",
+          "tipoDeAtivo",
+          "quantidade",
+          "motivo",
+          "local",
+          "fornecedor",
+          "osDoFornecedor",
+          "oQueFoiFeito",
+          "motivoDoCancelamento",
+          "registradaPor",
+          "registradaEm",
+          "encerradaPor",
+          "encerradaEm",
+          "permite",
+          "ordem"
+        ]
+      },
+      "PedidoDaSolicitacaoInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "toner"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "impressoras": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              "itens": {
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "impressora": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quantidade": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "conserto"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ativo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "defeito": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "equipamento"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tipoDeAtivo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "quantidade": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "motivo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "local": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          }
+        ]
+      },
+      "PedidoDeSituacaoDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-entrega"
+            ]
+          }
+        },
+        "required": [
+          "situacao"
+        ]
+      },
+      "PedidoAoFornecedorInput": {
+        "type": "object",
+        "properties": {
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeConclusaoDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "oQueFoiFeito": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDeCancelamentoDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PedidoDoLoteDeSolicitacoesInput": {
+        "type": "object",
+        "properties": {
+          "numeros": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-entrega",
+              "concluida",
+              "cancelada"
+            ]
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numeros",
+          "situacao"
+        ]
+      },
+      "RetornoDoLoteDeSolicitacoesInput": {
+        "type": "object",
+        "properties": {
+          "mudaram": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recusadas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "numero",
+                "mensagem"
+              ]
+            }
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mudaram",
+          "recusadas",
+          "texto"
+        ]
+      },
+      "PedidoDeEntregaDaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "entregas": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origem": {
+                      "type": "string",
+                      "const": "estoque"
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "local": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "origem"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origem": {
+                      "type": "string",
+                      "const": "fornecedor"
+                    },
+                    "fornecedor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "origem"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "entregas"
+        ]
+      },
+      "ListaDeSolicitacoesInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolicitacaoInput"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "itens",
+          "total",
+          "proximo"
+        ]
+      },
+      "ImpressorasParaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "local": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "rotulo",
+                "patrimonio",
+                "local"
+              ]
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ]
+      },
+      "ImpressoraParaSolicitacaoInput": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contador": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "paginas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lidoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "paginas",
+                  "lidoEm"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "cor": {
+                  "type": "string",
+                  "enum": [
+                    "preto",
+                    "ciano",
+                    "magenta",
+                    "amarelo",
+                    "colorido"
+                  ]
+                },
+                "sugerido": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "compativeis": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "codigo": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "saldo": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "codigo",
+                      "nome",
+                      "saldo"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "cor",
+                "sugerido",
+                "compativeis"
+              ]
+            }
+          }
+        },
+        "required": [
+          "ativo",
+          "local",
+          "contador",
+          "cores"
+        ]
+      },
+      "SolicitacoesDoAtivoInput": {
+        "type": "object",
+        "properties": {
+          "pendentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolicitacaoInput"
+            }
+          },
+          "encerradas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SolicitacaoInput"
+            }
+          },
+          "usaConsumiveis": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pendentes",
+          "encerradas",
+          "usaConsumiveis"
+        ]
+      },
       "HorarioDaTiInput": {
         "type": "object",
         "properties": {
@@ -12701,7 +13973,8 @@
                         "resolveu",
                         "reabriu",
                         "ativo",
-                        "os"
+                        "os",
+                        "solicitacao"
                       ]
                     },
                     "de": {
@@ -12861,6 +14134,34 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "solicitacao": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numero": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "como": {
+                              "type": "string",
+                              "enum": [
+                                "juntou",
+                                "pediu"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "numero",
+                            "como"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -12873,7 +14174,8 @@
                     "para",
                     "desde",
                     "ativo",
-                    "os"
+                    "os",
+                    "solicitacao"
                   ]
                 },
                 {
@@ -13100,6 +14402,261 @@
             "maxLength": 5000
           }
         }
+      },
+      "PedidoDoPedirTonerInput": {
+        "type": "object",
+        "properties": {
+          "registro": {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "toner"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "impressoras": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              "itens": {
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "impressora": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quantidade": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "tipo"
+            ]
+          }
+        }
+      },
+      "TonerDoChamadoInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "resultado": {
+                "type": "string",
+                "const": "juntou"
+              },
+              "solicitacao": {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "numero"
+                ]
+              }
+            },
+            "required": [
+              "resultado",
+              "solicitacao"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "resultado": {
+                "type": "string",
+                "const": "registro"
+              },
+              "registro": {
+                "type": "object",
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "const": "toner"
+                  },
+                  "pessoa": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "observacao": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "impressoras": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "itens": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "impressora": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "cor": {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        "quantidade": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "consumivel": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "impressora",
+                        "cor",
+                        "quantidade",
+                        "consumivel"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "tipo",
+                  "pessoa",
+                  "observacao",
+                  "impressoras",
+                  "itens"
+                ]
+              }
+            },
+            "required": [
+              "resultado",
+              "registro"
+            ]
+          }
+        ]
+      },
+      "TonerPedidoPeloChamadoInput": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "const": "pediu"
+          },
+          "solicitacao": {
+            "type": "object",
+            "properties": {
+              "numero": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "numero"
+            ]
+          }
+        },
+        "required": [
+          "resultado",
+          "solicitacao"
+        ]
       },
       "ChamadoDepoisDaAcaoInput": {
         "type": "object",
@@ -21018,1278 +22575,6 @@
         "required": [
           "horario",
           "diaDoTeste"
-        ]
-      },
-      "LocalDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "caminho"
-        ]
-      },
-      "AtivoDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "rotulo": {
-            "type": "string"
-          },
-          "patrimonio": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abrir": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "rotulo",
-          "patrimonio",
-          "abrir"
-        ]
-      },
-      "ItemDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "cor": {
-            "type": "string",
-            "enum": [
-              "preto",
-              "ciano",
-              "magenta",
-              "amarelo",
-              "colorido"
-            ]
-          },
-          "quantidade": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "consumivel": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "codigo": {
-                    "type": "string"
-                  },
-                  "nome": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "codigo",
-                  "nome",
-                  "abrir"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "entrega": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "origem": {
-                    "type": "string",
-                    "enum": [
-                      "estoque",
-                      "fornecedor"
-                    ]
-                  },
-                  "local": {
-                    "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "movimento": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "fornecedor": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "format": "uuid",
-                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                          },
-                          "nome": {
-                            "type": "string"
-                          },
-                          "abrir": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "nome",
-                          "abrir"
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "entreguePor": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "nome": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "nome"
-                    ]
-                  },
-                  "entregueEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "origem",
-                  "local",
-                  "movimento",
-                  "fornecedor",
-                  "entreguePor",
-                  "entregueEm"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "cor",
-          "quantidade",
-          "consumivel",
-          "entrega"
-        ]
-      },
-      "ImpressoraDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
-          },
-          "contador": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "paginas": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "lidoEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "paginas",
-                  "lidoEm"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ItemDaSolicitacaoInput"
-            }
-          }
-        },
-        "required": [
-          "ativo",
-          "contador",
-          "itens"
-        ]
-      },
-      "SolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "tipo": {
-            "type": "string",
-            "enum": [
-              "toner",
-              "conserto",
-              "equipamento"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-entrega",
-              "concluida",
-              "cancelada"
-            ]
-          },
-          "pessoa": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ]
-          },
-          "observacao": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "locais": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
-            }
-          },
-          "semLocal": {
-            "type": "boolean"
-          },
-          "impressoras": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ImpressoraDaSolicitacaoInput"
-            }
-          },
-          "ativo": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "defeito": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "tipoDeAtivo": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "quantidade": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "motivo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "osDoFornecedor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "oQueFoiFeito": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "motivoDoCancelamento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "registradaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ]
-          },
-          "registradaEm": {
-            "type": "string"
-          },
-          "encerradaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "encerradaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "atender": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "atender"
-            ]
-          },
-          "ordem": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "numero": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "situacao": {
-                    "type": "string",
-                    "enum": [
-                      "aberta",
-                      "em-atendimento",
-                      "aguardando-peca",
-                      "aguardando-fornecedor",
-                      "resolvida",
-                      "encerrada"
-                    ]
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "numero",
-                  "situacao",
-                  "abrir"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "numero",
-          "tipo",
-          "situacao",
-          "pessoa",
-          "observacao",
-          "locais",
-          "semLocal",
-          "impressoras",
-          "ativo",
-          "defeito",
-          "tipoDeAtivo",
-          "quantidade",
-          "motivo",
-          "local",
-          "fornecedor",
-          "osDoFornecedor",
-          "oQueFoiFeito",
-          "motivoDoCancelamento",
-          "registradaPor",
-          "registradaEm",
-          "encerradaPor",
-          "encerradaEm",
-          "permite",
-          "ordem"
-        ]
-      },
-      "PedidoDaSolicitacaoInput": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "toner"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "impressoras": {
-                "maxItems": 100,
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                }
-              },
-              "itens": {
-                "maxItems": 500,
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "impressora": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "cor": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "enum": [
-                            "preto",
-                            "ciano",
-                            "magenta",
-                            "amarelo",
-                            "colorido"
-                          ]
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "quantidade": {
-                      "type": [
-                        "number",
-                        "null"
-                      ]
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            },
-            "required": [
-              "tipo"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "conserto"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "ativo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "defeito": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "tipo"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "equipamento"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "tipoDeAtivo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "quantidade": {
-                "type": [
-                  "number",
-                  "null"
-                ]
-              },
-              "motivo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "local": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "tipo"
-            ]
-          }
-        ]
-      },
-      "PedidoDeSituacaoDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-entrega"
-            ]
-          }
-        },
-        "required": [
-          "situacao"
-        ]
-      },
-      "PedidoAoFornecedorInput": {
-        "type": "object",
-        "properties": {
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeConclusaoDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "oQueFoiFeito": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDeCancelamentoDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
-      "PedidoDoLoteDeSolicitacoesInput": {
-        "type": "object",
-        "properties": {
-          "numeros": {
-            "minItems": 1,
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-entrega",
-              "concluida",
-              "cancelada"
-            ]
-          },
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "numeros",
-          "situacao"
-        ]
-      },
-      "RetornoDoLoteDeSolicitacoesInput": {
-        "type": "object",
-        "properties": {
-          "mudaram": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "recusadas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "numero": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "mensagem": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "numero",
-                "mensagem"
-              ]
-            }
-          },
-          "texto": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "mudaram",
-          "recusadas",
-          "texto"
-        ]
-      },
-      "PedidoDeEntregaDaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "entregas": {
-            "maxItems": 500,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "item": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    "origem": {
-                      "type": "string",
-                      "const": "estoque"
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "local": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": [
-                    "item",
-                    "origem"
-                  ]
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "item": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    "origem": {
-                      "type": "string",
-                      "const": "fornecedor"
-                    },
-                    "fornecedor": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": [
-                    "item",
-                    "origem"
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        "required": [
-          "entregas"
-        ]
-      },
-      "ListaDeSolicitacoesInput": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SolicitacaoInput"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "itens",
-          "total",
-          "proximo"
-        ]
-      },
-      "ImpressorasParaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "rotulo": {
-                  "type": "string"
-                },
-                "patrimonio": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "local": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              },
-              "required": [
-                "id",
-                "rotulo",
-                "patrimonio",
-                "local"
-              ]
-            }
-          }
-        },
-        "required": [
-          "itens"
-        ]
-      },
-      "ImpressoraParaSolicitacaoInput": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaSolicitacaoInput"
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaSolicitacaoInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "contador": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "paginas": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "lidoEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "paginas",
-                  "lidoEm"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cores": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "cor": {
-                  "type": "string",
-                  "enum": [
-                    "preto",
-                    "ciano",
-                    "magenta",
-                    "amarelo",
-                    "colorido"
-                  ]
-                },
-                "sugerido": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "compativeis": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "codigo": {
-                        "type": "string"
-                      },
-                      "nome": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "saldo": {
-                        "anyOf": [
-                          {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "codigo",
-                      "nome",
-                      "saldo"
-                    ]
-                  }
-                }
-              },
-              "required": [
-                "cor",
-                "sugerido",
-                "compativeis"
-              ]
-            }
-          }
-        },
-        "required": [
-          "ativo",
-          "local",
-          "contador",
-          "cores"
-        ]
-      },
-      "SolicitacoesDoAtivoInput": {
-        "type": "object",
-        "properties": {
-          "pendentes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SolicitacaoInput"
-            }
-          },
-          "encerradas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SolicitacaoInput"
-            }
-          },
-          "usaConsumiveis": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "pendentes",
-          "encerradas",
-          "usaConsumiveis"
         ]
       },
       "PainelInput": {
@@ -37368,6 +37653,1317 @@
         ],
         "additionalProperties": false
       },
+      "LocalDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "caminho": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "caminho"
+        ],
+        "additionalProperties": false
+      },
+      "AtivoDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "rotulo": {
+            "type": "string"
+          },
+          "patrimonio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "rotulo",
+          "patrimonio",
+          "abrir"
+        ],
+        "additionalProperties": false
+      },
+      "ItemDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "cor": {
+            "type": "string",
+            "enum": [
+              "preto",
+              "ciano",
+              "magenta",
+              "amarelo",
+              "colorido"
+            ]
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "consumivel": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "codigo": {
+                    "type": "string"
+                  },
+                  "nome": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "codigo",
+                  "nome",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entrega": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "origem": {
+                    "type": "string",
+                    "enum": [
+                      "estoque",
+                      "fornecedor"
+                    ]
+                  },
+                  "local": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LocalDaSolicitacao"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "movimento": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fornecedor": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "nome": {
+                            "type": "string"
+                          },
+                          "abrir": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nome",
+                          "abrir"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "entreguePor": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nome"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "entregueEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "origem",
+                  "local",
+                  "movimento",
+                  "fornecedor",
+                  "entreguePor",
+                  "entregueEm"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "cor",
+          "quantidade",
+          "consumivel",
+          "entrega"
+        ],
+        "additionalProperties": false
+      },
+      "ImpressoraDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaSolicitacao"
+          },
+          "contador": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "paginas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lidoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "paginas",
+                  "lidoEm"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaSolicitacao"
+            }
+          }
+        },
+        "required": [
+          "ativo",
+          "contador",
+          "itens"
+        ],
+        "additionalProperties": false
+      },
+      "Solicitacao": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "toner",
+              "conserto",
+              "equipamento"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-entrega",
+              "concluida",
+              "cancelada"
+            ]
+          },
+          "pessoa": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          "observacao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocalDaSolicitacao"
+            }
+          },
+          "semLocal": {
+            "type": "boolean"
+          },
+          "impressoras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImpressoraDaSolicitacao"
+            }
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AtivoDaSolicitacao"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defeito": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tipoDeAtivo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantidade": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaSolicitacao"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "osDoFornecedor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oQueFoiFeito": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "motivoDoCancelamento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "registradaPor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nome"
+            ],
+            "additionalProperties": false
+          },
+          "registradaEm": {
+            "type": "string"
+          },
+          "encerradaPor": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "encerradaEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "permite": {
+            "type": "object",
+            "properties": {
+              "atender": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "atender"
+            ],
+            "additionalProperties": false
+          },
+          "ordem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aberta",
+                      "em-atendimento",
+                      "aguardando-peca",
+                      "aguardando-fornecedor",
+                      "resolvida",
+                      "encerrada"
+                    ]
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "situacao",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "tipo",
+          "situacao",
+          "pessoa",
+          "observacao",
+          "locais",
+          "semLocal",
+          "impressoras",
+          "ativo",
+          "defeito",
+          "tipoDeAtivo",
+          "quantidade",
+          "motivo",
+          "local",
+          "fornecedor",
+          "osDoFornecedor",
+          "oQueFoiFeito",
+          "motivoDoCancelamento",
+          "registradaPor",
+          "registradaEm",
+          "encerradaPor",
+          "encerradaEm",
+          "permite",
+          "ordem"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaSolicitacao": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "toner"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "impressoras": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              "itens": {
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "impressora": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quantidade": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "conserto"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ativo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "defeito": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "equipamento"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tipoDeAtivo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "quantidade": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "motivo": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "local": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PedidoDeSituacaoDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-entrega"
+            ]
+          }
+        },
+        "required": [
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoAoFornecedor": {
+        "type": "object",
+        "properties": {
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeConclusaoDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "oQueFoiFeito": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDeCancelamentoDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoDoLoteDeSolicitacoes": {
+        "type": "object",
+        "properties": {
+          "numeros": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "em-atendimento",
+              "aguardando-entrega",
+              "concluida",
+              "cancelada"
+            ]
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numeros",
+          "situacao"
+        ],
+        "additionalProperties": false
+      },
+      "RetornoDoLoteDeSolicitacoes": {
+        "type": "object",
+        "properties": {
+          "mudaram": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recusadas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "numero": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "numero",
+                "mensagem"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "texto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mudaram",
+          "recusadas",
+          "texto"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeEntregaDaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "entregas": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origem": {
+                      "type": "string",
+                      "const": "estoque"
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "local": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "origem"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origem": {
+                      "type": "string",
+                      "const": "fornecedor"
+                    },
+                    "fornecedor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "item",
+                    "origem"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "entregas"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDeSolicitacoes": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Solicitacao"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "itens",
+          "total",
+          "proximo"
+        ],
+        "additionalProperties": false
+      },
+      "ImpressorasParaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "rotulo": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "local": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LocalDaSolicitacao"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "rotulo",
+                "patrimonio",
+                "local"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ],
+        "additionalProperties": false
+      },
+      "ImpressoraParaSolicitacao": {
+        "type": "object",
+        "properties": {
+          "ativo": {
+            "$ref": "#/components/schemas/AtivoDaSolicitacao"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalDaSolicitacao"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contador": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "paginas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lidoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "paginas",
+                  "lidoEm"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "cor": {
+                  "type": "string",
+                  "enum": [
+                    "preto",
+                    "ciano",
+                    "magenta",
+                    "amarelo",
+                    "colorido"
+                  ]
+                },
+                "sugerido": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "compativeis": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "codigo": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "saldo": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "codigo",
+                      "nome",
+                      "saldo"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "cor",
+                "sugerido",
+                "compativeis"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "ativo",
+          "local",
+          "contador",
+          "cores"
+        ],
+        "additionalProperties": false
+      },
+      "SolicitacoesDoAtivo": {
+        "type": "object",
+        "properties": {
+          "pendentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Solicitacao"
+            }
+          },
+          "encerradas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Solicitacao"
+            }
+          },
+          "usaConsumiveis": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pendentes",
+          "encerradas",
+          "usaConsumiveis"
+        ],
+        "additionalProperties": false
+      },
       "HorarioDaTi": {
         "type": "object",
         "properties": {
@@ -38975,7 +40571,8 @@
                         "resolveu",
                         "reabriu",
                         "ativo",
-                        "os"
+                        "os",
+                        "solicitacao"
                       ]
                     },
                     "de": {
@@ -39141,6 +40738,35 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "solicitacao": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numero": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "como": {
+                              "type": "string",
+                              "enum": [
+                                "juntou",
+                                "pediu"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "numero",
+                            "como"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -39153,7 +40779,8 @@
                     "para",
                     "desde",
                     "ativo",
-                    "os"
+                    "os",
+                    "solicitacao"
                   ],
                   "additionalProperties": false
                 },
@@ -39401,6 +41028,271 @@
             "maxLength": 5000
           }
         },
+        "additionalProperties": false
+      },
+      "PedidoDoPedirToner": {
+        "type": "object",
+        "properties": {
+          "registro": {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "const": "toner"
+              },
+              "pessoa": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observacao": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "impressoras": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              },
+              "itens": {
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "impressora": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quantidade": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "consumivel": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "tipo"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "TonerDoChamado": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "resultado": {
+                "type": "string",
+                "const": "juntou"
+              },
+              "solicitacao": {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "numero"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "resultado",
+              "solicitacao"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "resultado": {
+                "type": "string",
+                "const": "registro"
+              },
+              "registro": {
+                "type": "object",
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "const": "toner"
+                  },
+                  "pessoa": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "observacao": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "impressoras": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "itens": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "impressora": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "cor": {
+                          "type": "string",
+                          "enum": [
+                            "preto",
+                            "ciano",
+                            "magenta",
+                            "amarelo",
+                            "colorido"
+                          ]
+                        },
+                        "quantidade": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "consumivel": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "impressora",
+                        "cor",
+                        "quantidade",
+                        "consumivel"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "tipo",
+                  "pessoa",
+                  "observacao",
+                  "impressoras",
+                  "itens"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "resultado",
+              "registro"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "TonerPedidoPeloChamado": {
+        "type": "object",
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "const": "pediu"
+          },
+          "solicitacao": {
+            "type": "object",
+            "properties": {
+              "numero": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "numero"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "resultado",
+          "solicitacao"
+        ],
         "additionalProperties": false
       },
       "ChamadoDepoisDaAcao": {
@@ -47597,1317 +49489,6 @@
         "required": [
           "horario",
           "diaDoTeste"
-        ],
-        "additionalProperties": false
-      },
-      "LocalDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "caminho": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "caminho"
-        ],
-        "additionalProperties": false
-      },
-      "AtivoDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "rotulo": {
-            "type": "string"
-          },
-          "patrimonio": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "abrir": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "rotulo",
-          "patrimonio",
-          "abrir"
-        ],
-        "additionalProperties": false
-      },
-      "ItemDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "cor": {
-            "type": "string",
-            "enum": [
-              "preto",
-              "ciano",
-              "magenta",
-              "amarelo",
-              "colorido"
-            ]
-          },
-          "quantidade": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "consumivel": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "codigo": {
-                    "type": "string"
-                  },
-                  "nome": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "codigo",
-                  "nome",
-                  "abrir"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "entrega": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "origem": {
-                    "type": "string",
-                    "enum": [
-                      "estoque",
-                      "fornecedor"
-                    ]
-                  },
-                  "local": {
-                    "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/LocalDaSolicitacao"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "movimento": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "fornecedor": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "format": "uuid",
-                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                          },
-                          "nome": {
-                            "type": "string"
-                          },
-                          "abrir": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "nome",
-                          "abrir"
-                        ],
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "entreguePor": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "nome": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "nome"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "entregueEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "origem",
-                  "local",
-                  "movimento",
-                  "fornecedor",
-                  "entreguePor",
-                  "entregueEm"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "cor",
-          "quantidade",
-          "consumivel",
-          "entrega"
-        ],
-        "additionalProperties": false
-      },
-      "ImpressoraDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaSolicitacao"
-          },
-          "contador": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "paginas": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "lidoEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "paginas",
-                  "lidoEm"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ItemDaSolicitacao"
-            }
-          }
-        },
-        "required": [
-          "ativo",
-          "contador",
-          "itens"
-        ],
-        "additionalProperties": false
-      },
-      "Solicitacao": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "tipo": {
-            "type": "string",
-            "enum": [
-              "toner",
-              "conserto",
-              "equipamento"
-            ]
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "aberta",
-              "em-atendimento",
-              "aguardando-entrega",
-              "concluida",
-              "cancelada"
-            ]
-          },
-          "pessoa": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ],
-            "additionalProperties": false
-          },
-          "observacao": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "locais": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LocalDaSolicitacao"
-            }
-          },
-          "semLocal": {
-            "type": "boolean"
-          },
-          "impressoras": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ImpressoraDaSolicitacao"
-            }
-          },
-          "ativo": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AtivoDaSolicitacao"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "defeito": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "tipoDeAtivo": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "quantidade": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "motivo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaSolicitacao"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome",
-                  "abrir"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "osDoFornecedor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "oQueFoiFeito": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "motivoDoCancelamento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "registradaPor": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "nome": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "nome"
-            ],
-            "additionalProperties": false
-          },
-          "registradaEm": {
-            "type": "string"
-          },
-          "encerradaPor": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "nome": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "nome"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "encerradaEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "permite": {
-            "type": "object",
-            "properties": {
-              "atender": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "atender"
-            ],
-            "additionalProperties": false
-          },
-          "ordem": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "numero": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "situacao": {
-                    "type": "string",
-                    "enum": [
-                      "aberta",
-                      "em-atendimento",
-                      "aguardando-peca",
-                      "aguardando-fornecedor",
-                      "resolvida",
-                      "encerrada"
-                    ]
-                  },
-                  "abrir": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "numero",
-                  "situacao",
-                  "abrir"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "numero",
-          "tipo",
-          "situacao",
-          "pessoa",
-          "observacao",
-          "locais",
-          "semLocal",
-          "impressoras",
-          "ativo",
-          "defeito",
-          "tipoDeAtivo",
-          "quantidade",
-          "motivo",
-          "local",
-          "fornecedor",
-          "osDoFornecedor",
-          "oQueFoiFeito",
-          "motivoDoCancelamento",
-          "registradaPor",
-          "registradaEm",
-          "encerradaPor",
-          "encerradaEm",
-          "permite",
-          "ordem"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDaSolicitacao": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "toner"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "impressoras": {
-                "maxItems": 100,
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                }
-              },
-              "itens": {
-                "maxItems": 500,
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "impressora": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "cor": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "enum": [
-                            "preto",
-                            "ciano",
-                            "magenta",
-                            "amarelo",
-                            "colorido"
-                          ]
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "quantidade": {
-                      "type": [
-                        "number",
-                        "null"
-                      ]
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            },
-            "required": [
-              "tipo"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "conserto"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "ativo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "defeito": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "tipo"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tipo": {
-                "type": "string",
-                "const": "equipamento"
-              },
-              "pessoa": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "observacao": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "tipoDeAtivo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "quantidade": {
-                "type": [
-                  "number",
-                  "null"
-                ]
-              },
-              "motivo": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 5000
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "local": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "tipo"
-            ],
-            "additionalProperties": false
-          }
-        ]
-      },
-      "PedidoDeSituacaoDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-entrega"
-            ]
-          }
-        },
-        "required": [
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoAoFornecedor": {
-        "type": "object",
-        "properties": {
-          "fornecedor": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "os": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeConclusaoDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "oQueFoiFeito": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDeCancelamentoDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "PedidoDoLoteDeSolicitacoes": {
-        "type": "object",
-        "properties": {
-          "numeros": {
-            "minItems": 1,
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          "situacao": {
-            "type": "string",
-            "enum": [
-              "em-atendimento",
-              "aguardando-entrega",
-              "concluida",
-              "cancelada"
-            ]
-          },
-          "motivo": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "numeros",
-          "situacao"
-        ],
-        "additionalProperties": false
-      },
-      "RetornoDoLoteDeSolicitacoes": {
-        "type": "object",
-        "properties": {
-          "mudaram": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "recusadas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "numero": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "mensagem": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "numero",
-                "mensagem"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "texto": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "mudaram",
-          "recusadas",
-          "texto"
-        ],
-        "additionalProperties": false
-      },
-      "PedidoDeEntregaDaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "entregas": {
-            "maxItems": 500,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "item": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    "origem": {
-                      "type": "string",
-                      "const": "estoque"
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "local": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": [
-                    "item",
-                    "origem"
-                  ],
-                  "additionalProperties": false
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "item": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    "origem": {
-                      "type": "string",
-                      "const": "fornecedor"
-                    },
-                    "fornecedor": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "consumivel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": [
-                    "item",
-                    "origem"
-                  ],
-                  "additionalProperties": false
-                }
-              ]
-            }
-          }
-        },
-        "required": [
-          "entregas"
-        ],
-        "additionalProperties": false
-      },
-      "ListaDeSolicitacoes": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Solicitacao"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "proximo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "itens",
-          "total",
-          "proximo"
-        ],
-        "additionalProperties": false
-      },
-      "ImpressorasParaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "rotulo": {
-                  "type": "string"
-                },
-                "patrimonio": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "local": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/LocalDaSolicitacao"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              },
-              "required": [
-                "id",
-                "rotulo",
-                "patrimonio",
-                "local"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "itens"
-        ],
-        "additionalProperties": false
-      },
-      "ImpressoraParaSolicitacao": {
-        "type": "object",
-        "properties": {
-          "ativo": {
-            "$ref": "#/components/schemas/AtivoDaSolicitacao"
-          },
-          "local": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalDaSolicitacao"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "contador": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "paginas": {
-                    "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
-                  },
-                  "lidoEm": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "paginas",
-                  "lidoEm"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "cores": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "cor": {
-                  "type": "string",
-                  "enum": [
-                    "preto",
-                    "ciano",
-                    "magenta",
-                    "amarelo",
-                    "colorido"
-                  ]
-                },
-                "sugerido": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "compativeis": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      },
-                      "codigo": {
-                        "type": "string"
-                      },
-                      "nome": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "saldo": {
-                        "anyOf": [
-                          {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "codigo",
-                      "nome",
-                      "saldo"
-                    ],
-                    "additionalProperties": false
-                  }
-                }
-              },
-              "required": [
-                "cor",
-                "sugerido",
-                "compativeis"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "ativo",
-          "local",
-          "contador",
-          "cores"
-        ],
-        "additionalProperties": false
-      },
-      "SolicitacoesDoAtivo": {
-        "type": "object",
-        "properties": {
-          "pendentes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Solicitacao"
-            }
-          },
-          "encerradas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Solicitacao"
-            }
-          },
-          "usaConsumiveis": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "pendentes",
-          "encerradas",
-          "usaConsumiveis"
         ],
         "additionalProperties": false
       },
@@ -82672,6 +83253,115 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OrdemDeServico"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/{numero}/toner": {
+      "post": {
+        "summary": "Pedir toner: juntar o chamado à solicitação pendente da impressora, ou dar o registro do Toner e gravá-lo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoPedirTonerInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TonerDoChamado"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TonerPedidoPeloChamado"
                 }
               }
             }

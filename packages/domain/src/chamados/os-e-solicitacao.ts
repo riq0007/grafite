@@ -51,3 +51,47 @@ export function mensagemDaRecusaDoVirarOs(numero: number, recusa: RecusaDoVirarO
       return mensagemDaRecusaDaAcao(numero, recusa);
   }
 }
+
+/** O chamado como o "Pedir toner" o lê: a solicitação que ele já tem e o ativo ligado. */
+export interface ChamadoParaPedirToner extends ChamadoParaEdicao {
+  /** O número da solicitação que o chamado já tem, ou nulo. */
+  solicitacao: number | null;
+  /** O id do ativo ligado, ou nulo. */
+  ativo: string | null;
+}
+
+/** Por que o chamado não pede toner; `mensagemDaRecusaDoPedirToner` escreve a frase. */
+export type RecusaDoPedirToner =
+  | RecusaDaEdicao
+  | { motivo: 'ja-tem-solicitacao'; solicitacao: number }
+  | { motivo: 'sem-ativo' };
+
+/**
+ * As recusas do chamado, nesta ordem: quem age precisa atender os locais dele; o resolvido; a
+ * solicitação que ele já tem; e o chamado sem o ativo ligado. As da impressora e a permissão das
+ * solicitações são as do registro, que a rota confere depois destas.
+ */
+export function recusaDoPedirToner(
+  chamado: ChamadoParaPedirToner,
+  quemAge: QuemAge,
+): RecusaDoPedirToner | null {
+  const daEdicao = recusaDaEdicao(chamado, quemAge);
+  if (daEdicao) return daEdicao;
+  if (chamado.solicitacao !== null) {
+    return { motivo: 'ja-tem-solicitacao', solicitacao: chamado.solicitacao };
+  }
+  if (chamado.ativo === null) return { motivo: 'sem-ativo' };
+  return null;
+}
+
+/** A frase da recusa, com a das ações para quem não atende e o resolvido. */
+export function mensagemDaRecusaDoPedirToner(numero: number, recusa: RecusaDoPedirToner): string {
+  switch (recusa.motivo) {
+    case 'ja-tem-solicitacao':
+      return `O chamado #${numero} já está na solicitação ${recusa.solicitacao}.`;
+    case 'sem-ativo':
+      return mensagemDaRecusaDoVirarOs(numero, recusa);
+    default:
+      return mensagemDaRecusaDaAcao(numero, recusa);
+  }
+}

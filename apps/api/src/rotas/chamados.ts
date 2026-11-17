@@ -10,6 +10,7 @@
 // dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
+  CORES_DE_CONSUMIVEL,
   fusoReconhecido,
   GRUPOS_DO_PRAZO,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
@@ -39,9 +40,11 @@ import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import { ValorDoPrazo } from '../chamados/tipos.ts';
+import { pedirToner } from '../chamados/toner.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { OrdemDeServico } from '../ordens/esquemas.ts';
 import { RespostaDeProblema } from '../problemas.ts';
+import { PedidoDoToner } from '../solicitacoes/esquemas.ts';
 import { HorarioDaTiLido } from './chamados-horario.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
@@ -282,6 +285,11 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
     ativo: z.object({ antes: AtivoDoEvento, depois: AtivoDoEvento }).nullable(),
     /** No `os`, o número da OS em que o chamado virou; nulo nos outros. */
     os: z.object({ numero: z.int() }).nullable(),
+    /**
+     * No `solicitacao`, o número da solicitação e se o chamado se juntou a ela ou a pediu; nulo nos
+     * outros.
+     */
+    solicitacao: z.object({ numero: z.int(), como: z.enum(['juntou', 'pediu']) }).nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),
@@ -487,6 +495,46 @@ const PedidoDoVirarOs = z
     problema: z.string().max(5000).optional(),
   })
   .meta({ id: 'PedidoDoVirarOsDoChamado' });
+
+const PedidoDoPedirToner = z
+  .object({
+    /**
+     * O registro do Toner que a tela abriu, para gravar; sem ele, o chamado se junta à pendente ou
+     * recebe o registro, sem gravar nada.
+     */
+    registro: PedidoDoToner.optional(),
+  })
+  .meta({ id: 'PedidoDoPedirToner' });
+
+const SolicitacaoDoToner = z.object({ numero: z.int() });
+
+const TonerDoChamado = z
+  .discriminatedUnion('resultado', [
+    z.object({ resultado: z.literal('juntou'), solicitacao: SolicitacaoDoToner }),
+    z.object({
+      resultado: z.literal('registro'),
+      /** O registro do Toner para a tela abrir, com a pessoa, a impressora e a cor do chamado. */
+      registro: z.object({
+        tipo: z.literal('toner'),
+        pessoa: z.uuid(),
+        observacao: z.string().nullable(),
+        impressoras: z.array(z.uuid()),
+        itens: z.array(
+          z.object({
+            impressora: z.uuid(),
+            cor: z.enum(CORES_DE_CONSUMIVEL),
+            quantidade: z.int(),
+            consumivel: z.uuid().nullable(),
+          }),
+        ),
+      }),
+    }),
+  ])
+  .meta({ id: 'TonerDoChamado' });
+
+const TonerPedidoPeloChamado = z
+  .object({ resultado: z.literal('pediu'), solicitacao: SolicitacaoDoToner })
+  .meta({ id: 'TonerPedidoPeloChamado' });
 
 const ChamadoDepoisDaAcao = z
   .object({
@@ -861,6 +909,31 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
         }),
       );
       return resposta.code(201).send(ordem);
+    },
+  );
+
+  // Pedir toner (tarefa 4.17), pelo registro das solicitações de hoje, no `chamados/toner.ts`.
+  app.post(
+    '/chamados/:numero/toner',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary:
+          'Pedir toner: juntar o chamado à solicitação pendente da impressora, ou dar o registro do Toner e gravá-lo',
+        params: DA_ACAO.params,
+        body: PedidoDoPedirToner,
+        response: { 200: TonerDoChamado, 201: TonerPedidoPeloChamado, ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      const resultado = await naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+        pedirToner(tx, requisicao.params.numero, requisicao.body, {
+          requisicao,
+          momento: agora(),
+        }),
+      );
+      if (resultado.resultado === 'pediu') return resposta.code(201).send(resultado);
+      return resposta.code(200).send(resultado);
     },
   );
 };

@@ -3,7 +3,7 @@
 // que pedem, o notebook, a segunda impressora e o CF258A compatível com a M404.
 
 import { consumiveis, consumiveisDosModelos, naOrganizacao } from '@grafite/db';
-import { codigoNormalizado } from '@grafite/domain';
+import { type CorDeConsumivel, codigoNormalizado } from '@grafite/domain';
 import { criarAtivoDoTipo, criarModelo, criarTipo } from './alertas.ts';
 import { montarEstoque, USUARIOS_DO_ESTOQUE } from './estoque.ts';
 import {
@@ -111,7 +111,7 @@ export async function montarSolicitacoes(api: ApiDeTeste, host: string) {
 export function criarCompativel(
   api: ApiDeTeste,
   org: string,
-  { codigo, cor, modeloId }: { codigo: string; cor: 'preto' | 'ciano'; modeloId: string },
+  { codigo, cor, modeloId }: { codigo: string; cor: CorDeConsumivel; modeloId: string },
 ): Promise<string> {
   return naOrganizacao(api.banco, org, async (tx) => {
     const [consumivel] = await tx

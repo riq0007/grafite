@@ -223,6 +223,7 @@ describe('tipos de evento', () => {
     ['chamado.titulo-trocado', 'chamados.mudaram'],
     ['chamado.campos-trocados', 'chamados.mudaram'],
     ['chamado.virou-os', 'chamados.mudaram'],
+    ['chamado.pediu-toner', 'chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { QuemAge } from './acoes.ts';
 import {
+  type ChamadoParaPedirToner,
   type ChamadoParaVirarOs,
+  mensagemDaRecusaDoPedirToner,
   mensagemDaRecusaDoVirarOs,
+  recusaDoPedirToner,
   recusaDoVirarOs,
 } from './os-e-solicitacao.ts';
 
@@ -98,5 +101,68 @@ describe('mensagemDaRecusaDoVirarOs', () => {
     expect(mensagemDaRecusaDoVirarOs(1042, { motivo: 'voce-nao-atende', local: 'Campinas' })).toBe(
       'Você não atende os chamados de Campinas.',
     );
+  });
+});
+
+/** O #1042 com a PAT-00139 ligada, em atendimento, sem solicitação. */
+const PARA_O_TONER: ChamadoParaPedirToner = {
+  numero: 1042,
+  situacao: 'em-atendimento',
+  locais: [JUNDIAI],
+  semLocal: false,
+  solicitacao: null,
+  ativo: 'ativo-pat-00139',
+};
+
+describe('recusaDoPedirToner', () => {
+  it('o chamado em aberto, com o ativo e sem solicitação, de qualquer tipo, não tem recusa', () => {
+    expect(recusaDoPedirToner(PARA_O_TONER, ANA)).toBeNull();
+    expect(recusaDoPedirToner({ ...PARA_O_TONER, situacao: 'triagem' }, DIEGO)).toBeNull();
+    expect(recusaDoPedirToner({ ...PARA_O_TONER, situacao: 'aguardando' }, DIEGO)).toBeNull();
+  });
+
+  it('quem não atende os locais vem antes de tudo, e o resolvido, depois dele', () => {
+    const tudoErrado: ChamadoParaPedirToner = {
+      ...PARA_O_TONER,
+      locais: [CAMPINAS],
+      situacao: 'resolvido',
+      solicitacao: 4,
+      ativo: null,
+    };
+    expect(recusaDoPedirToner(tudoErrado, DIEGO)).toEqual({
+      motivo: 'voce-nao-atende',
+      local: 'Campinas',
+    });
+    expect(recusaDoPedirToner(tudoErrado, ANA)).toEqual({ motivo: 'resolvido' });
+  });
+
+  it('Segunda solicitação do chamado: a que ele já tem vem antes do ativo', () => {
+    expect(recusaDoPedirToner({ ...PARA_O_TONER, solicitacao: 4, ativo: null }, ANA)).toEqual({
+      motivo: 'ja-tem-solicitacao',
+      solicitacao: 4,
+    });
+  });
+
+  it('o chamado sem o ativo ligado é a última recusa', () => {
+    expect(recusaDoPedirToner({ ...PARA_O_TONER, ativo: null }, ANA)).toEqual({
+      motivo: 'sem-ativo',
+    });
+  });
+});
+
+describe('mensagemDaRecusaDoPedirToner', () => {
+  it('escreve as frases da spec', () => {
+    expect(
+      mensagemDaRecusaDoPedirToner(1042, { motivo: 'ja-tem-solicitacao', solicitacao: 4 }),
+    ).toBe('O chamado #1042 já está na solicitação 4.');
+    expect(mensagemDaRecusaDoPedirToner(1042, { motivo: 'sem-ativo' })).toBe(
+      'O chamado #1042 não tem um ativo ligado.',
+    );
+    expect(mensagemDaRecusaDoPedirToner(1042, { motivo: 'resolvido' })).toBe(
+      'O chamado #1042 está resolvido.',
+    );
+    expect(
+      mensagemDaRecusaDoPedirToner(1042, { motivo: 'voce-nao-atende', local: 'Campinas' }),
+    ).toBe('Você não atende os chamados de Campinas.');
   });
 });

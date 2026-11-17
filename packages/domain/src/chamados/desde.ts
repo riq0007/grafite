@@ -38,11 +38,12 @@ export const EVENTOS_QUE_SOBEM_A_VERSAO = [
 ] as const satisfies readonly EventoDaAcao['evento'][];
 
 /**
- * Os eventos que vão à conversa sem subir a versão: o chamado que virou OS não muda a situação, quem
- * atende nem os locais, e o desfazer do assumir segue valendo depois dele.
+ * Os eventos que vão à conversa sem subir a versão: o chamado que virou OS ou pediu toner não muda a
+ * situação, quem atende nem os locais, e o desfazer do assumir segue valendo depois deles.
  */
 export const EVENTOS_QUE_NAO_SOBEM_A_VERSAO = [
   'os',
+  'solicitacao',
 ] as const satisfies readonly EventoDaAcao['evento'][];
 
 /** Aceita só o `never`: o tipo que sobra reprova o typecheck onde o guarda o pede. */

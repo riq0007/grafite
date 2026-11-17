@@ -135,21 +135,24 @@ const ItemPedido = z.object({
   consumivel: z.uuid({ error: 'Consumível não encontrado.' }).nullable().optional(),
 });
 
+/** O registro e a alteração do Toner, que o "Pedir toner" do chamado também grava. */
+export const PedidoDoToner = z.object({
+  tipo: z.literal('toner'),
+  pessoa: PessoaPedida,
+  observacao: TextoPedido,
+  impressoras: z
+    .array(z.uuid({ error: 'Impressora não encontrada.' }))
+    .max(100)
+    .optional(),
+  itens: z.array(ItemPedido).max(500).optional(),
+});
+
 /** O registro e a alteração, com os campos do tipo; a alteração não muda o tipo. */
 export const PedidoDaSolicitacao = z
   .discriminatedUnion(
     'tipo',
     [
-      z.object({
-        tipo: z.literal('toner'),
-        pessoa: PessoaPedida,
-        observacao: TextoPedido,
-        impressoras: z
-          .array(z.uuid({ error: 'Impressora não encontrada.' }))
-          .max(100)
-          .optional(),
-        itens: z.array(ItemPedido).max(500).optional(),
-      }),
+      PedidoDoToner,
       z.object({
         tipo: z.literal('conserto'),
         pessoa: PessoaPedida,
