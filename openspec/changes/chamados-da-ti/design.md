@@ -46,7 +46,7 @@ Todas com `orgScoped()`, RLS ativo e forçado, e as chaves estrangeiras em `(org
   - a identificação: `numero` (único na organização), `tipo_id`, `titulo` e `titulo_normalizado`;
   - quem e de onde: `pessoa_id`, `origem` (`ti`; o chat e a aba entram nas changes deles), `aberto_por` e `aberto_em`;
   - o formulário: `formulario` (a cópia da abertura) e `respostas`, em jsonb;
-  - o ativo e o alcance: `ativo_id`, `locais uuid[]` e `sem_local`;
+  - o ativo e o alcance: `ativo_id`, `locais uuid[]`, `sem_local` e `local_da_pessoa`, o local de trabalho da pessoa na abertura, que a troca do ativo usa (tarefa 4.15);
   - o atendimento: `situacao` (`triagem`, `em-atendimento`, `aguardando` ou `resolvido`), `responsavel_id` e `responsavel_desde`. Os CHECKs seguem a tabela da spec: ninguém na triagem, alguém no atendimento e no aguardando, e o relógio contando só na triagem e no atendimento;
   - o prazo (decisão 3): o `prazo` jsonb, com o modo, os minutos da resposta e da resolução e o valor e a unidade do tipo, só para o texto; `contado_s`; `relogio_desde`; `primeira_resposta_em`; `estouro_avisado_em`;
   - a resolução: `resolvido_em` e `resolvido_por`;
@@ -210,6 +210,21 @@ As rotas da conversa são o `POST /chamados/:numero/mensagem`, `/esperar` e `/no
 - registra na auditoria o `chamado.retomado`, o `chamado.resolvido` e o `chamado.reaberto`, com a situação e quem atende, pelo nome, antes e depois, e o `chamados.mudaram` pela saída dela;
 - notifica pelo domínio. O reabrir que devolve o chamado a quem o resolveu avisa essa conta com o "Chamado #1035 com você", fora quando é ela que reabre, como o passar. O que o deixa na triagem avisa quem atende os locais, fora quem reabriu, como o devolver. O retomar e o resolver não avisam ninguém: quem atende não muda, e nada cai na triagem.
 
+**O ativo, o título e os campos da TI** (tarefa 4.15): três rotas com `chamados.atender`, fora do `agirNoChamado`, porque não mudam a situação nem quem atende. Cada uma trava o chamado (`for update`) e responde com o chamado depois, como as ações (`ChamadoDepoisDaAcao`):
+- `PUT /chamados/:numero/ativo`, com `{ ativo, versao }`: o id do ativo, ou nulo, para tirar, e a versão opcional, como nas ações dos botões, porque a troca sobe a versão. O ativo é conferido antes da decisão, como na abertura, e as recusas vão no campo `ativo` (400): o que quem age não vê (`ativos.ver` no local dele) é "Ativo não encontrado.", e o inativo tem a recusa do cadastro. Os tipos aceitos do campo Ativo não valem aqui: o ativo ligado é do chamado, e não da resposta. A decisão é do domínio (`decidirTrocaDoAtivo`), na ordem das ações: a versão, quem age nos locais de agora, o chamado resolvido, o mesmo ativo, quem age nos locais novos e quem atende nos locais novos, como a conta está agora, com "<Nome> não atende os chamados de <local>. Passe o chamado antes de trocar o ativo.". A conta inativa de quem atende também recebe essa recusa: o chamado precisa ser passado antes. Os locais novos são o local de trabalho da pessoa na abertura e o do ativo novo, pela regra da abertura: o `locaisDaTroca` chama o `locaisDaSolicitacao` com os ids e devolve os nomes dos dois locais que já tem. A troca sobe a versão, grava o evento `ativo` com os ids do ativo de antes e do de depois (`{ antes, depois }`, ou nulo) e registra o `chamado.ativo-trocado`, com o ativo antes e depois, pelo rótulo e o patrimônio. O `chamados.mudaram` vai aos locais de antes e aos de depois;
+- `PUT /chamados/:numero/titulo`, com `{ titulo }`: o `conferirTituloDoChamado` da abertura, com as recusas no campo `titulo`, e o `chamado.titulo-trocado`, com o título antes e depois;
+- `PATCH /chamados/:numero/campos`, com `{ respostas }`: só as chaves que mudam, com o vazio ou o nulo para apagar. O domínio (`mudarCamposDaTi`) junta as respostas novas às guardadas e confere tudo pelo `conferirRespostas`, com a cópia do formulário do chamado. A chave que não é um campo só da TI recebe a recusa geral, porque a tela não a monta, e as recusas de cada campo vão na chave dele. O campo que some pela condição perde a resposta, como na abertura. O ativo, o local e a pessoa a API confere como na abertura, só nos campos que mudaram: o ativo da resposta da pessoa que ficou inativo depois não recusa a mudança de outro campo. O anexo novo é tomado pelo campo (`tomarAnexos`), e o que sai do campo (trocado, tirado ou do campo que sumiu) ganha o `removido_em` na mesma transação, sem volta pela tela. Como a tela grava o campo ao sair dele, um clique errado num Sim ou não só da TI apagaria o anexo do campo que depende dele. Por isso, a tela pede a confirmação antes de gravar a mudança que esconde um campo com anexo, com o nome do campo e quantos arquivos saem (o m04 não mostra o caso; tarefa 5.14). A rota registra o `chamado.campos-trocados`, com cada campo que mudou, pelo nome no resumo, antes e depois, como o resumo mostra a resposta;
+- quem age precisa atender os locais do chamado, e o resolvido é recusado com "O chamado #1042 está resolvido.", nessa ordem, as duas no 409 (`recusaDaEdicao`, do domínio). Nas três, essas recusas vêm antes das do campo, fora a do ativo, que é lido antes;
+- o mesmo ativo, o mesmo título e as mesmas respostas não mudam nada: a rota responde o chamado como está, sem a auditoria, o evento e a versão. Assim, a tela que grava o campo ao sair dele não precisa saber se ele mudou;
+- só a troca do ativo sobe a versão e vai à conversa. O título e os campos da TI ficam na auditoria, e o `chamados.mudaram` atualiza as telas;
+- nenhuma das três notifica: quem atende não muda, e nada cai na triagem.
+
+**O ativo ligado e as respostas.** O ativo ligado nasce da resposta do primeiro campo Ativo e depois só muda pela troca do ativo. As respostas guardam o que foi dito na abertura, que o resumo mostra, e a conversa guarda as trocas. Por isso, a troca não muda a resposta, e a resposta de um campo Ativo só da TI, preenchida depois, não liga o ativo: quem atende o liga pela troca.
+
+**O local da pessoa na abertura.** A troca do ativo refaz os locais com o local de trabalho da pessoa na abertura, e não com o de agora: o chamado não acompanha a pessoa que mudou de local depois. O chamado o guarda na coluna `local_da_pessoa`, com a chave estrangeira `chamados_local_da_pessoa_fk` (migration 0064). Os chamados que já existiam ficam com o local de agora da pessoa, o único que se conhece. O nulo é a pessoa sem local, que deixa o chamado sem local, como na abertura.
+
+**A ficha lê o evento do ativo** com o ativo de antes e o de depois, pelo rótulo e o patrimônio de agora, a toda conta que vê o chamado, como o ativo ligado: o campo `ativo` do evento, nulo nos outros. Os dados do evento não usam o `de` e o `para`, que a ficha lê como contas. O `ativo` entra no `EVENTOS_QUE_SOBEM_A_VERSAO`: o desfazer depois da troca é recusado, porque o último evento que sobe a versão não é o assumir.
+
 O atendimento na abertura (`decidirAtendimento`) também é do domínio. Ele recebe:
 - o "Fica comigo";
 - o tipo;
@@ -220,7 +235,7 @@ O atendimento na abertura (`decidirAtendimento`) também é do domínio. Ele rec
 ### 5. Os locais e o alcance
 
 Como nas solicitações, com `locais uuid[]` e `sem_local`:
-- o local de trabalho da pessoa na abertura;
+- o local de trabalho da pessoa na abertura, guardado no `local_da_pessoa`;
 - o local do ativo, recalculado quando o ativo muda;
 - `sem_local` quando um dos dois falta.
 
@@ -541,6 +556,8 @@ A referência das revisões das telas. Cada item é do plano, e não do mockup:
 - **As notificações da triagem para toda a TI do local** → A severidade é Informação, e as preferências de cada conta decidem o som e o aviso. Se pesar no uso, a 17 pode juntar as da triagem num resumo.
 - **A carga mostra só os chamados que a conta que olha vê** → É a regra das outras listas. Uma conta com o alcance de um local vê a carga só nele, e a tela diz "Contando só os chamados dos locais que você vê.".
 - **Os testes de integração dividem um banco** → As organizações dos testes novos usam endereços próprios, como `grafite.chamados-outra.local`.
+- **A auditoria guarda o nome da pessoa citada** (o `chamado.aberto` e o `chamado.campos-trocados`, como os campos dos ativos) → A anonimização limpa a ficha e o resumo ("Pessoa anonimizada"), e não a auditoria, como no resto do app. Mudar isso atravessa o app e é decisão do usuário: fica nas pendências dele.
+- **O campo só da TI com o nome de uma chave proibida da auditoria** (`senha`, `token`, `chave`, `hash`, `segredo`, `csrf`, `codigo` ou `codigos`, exatamente assim, em minúsculas e sem acento) dá 500 ao gravar, e, como a cópia do formulário guarda o nome, o campo não grava mais naquele chamado → O risco é baixo e é o mesmo dos campos dos ativos ("Senha" e "Código" passam). O conserto, a guarda olhar só as chaves do próprio registro, é de uma change da auditoria.
 
 ## Migration Plan
 

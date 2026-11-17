@@ -1,11 +1,11 @@
-// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.14): a abertura pela
+// Os chamados pela API (spec chamados; change chamados-da-ti, tarefas 4.7 a 4.15): a abertura pela
 // TI, com `chamados.atender`; as sugestões dos campos Ativo e Local pela pessoa, para a gaveta de
 // quem abre e para a prévia do colaborador de quem configura; o quadro, a lista dos prazos e a ficha
 // do chamado, com `chamados.ver`; e as ações do atendimento, as que mudam quem atende, a conversa, o
-// fim e a volta, com `chamados.atender`. As
-// regras ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
-// `chamados/prazos.ts`, `chamados/ficha.ts` e `chamados/acoes.ts`; aqui, o formato do pedido e da
-// resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
+// fim e a volta, e a troca do ativo, do título e dos campos da TI, com `chamados.atender`. As regras
+// ficam em `chamados/abertura.ts`, `chamados/sugestoes.ts`, `chamados/quadro.ts`,
+// `chamados/prazos.ts`, `chamados/ficha.ts`, `chamados/acoes.ts` e `chamados/edicao.ts`; aqui, o
+// formato do pedido e da resposta. A pessoa e o tipo da abertura chegam como ids, e o vazio
 // deles é recusado pela abertura, com as outras recusas dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
@@ -30,6 +30,7 @@ import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
 import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../chamados/acoes.ts';
 import { NumeroDoChamado } from '../chamados/alcance.ts';
 import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
+import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edicao.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
@@ -239,6 +240,11 @@ const AutorNaConversa = z.object({
 /** Uma conta dos dados do evento, com o nome de agora; nula quando o evento não a tem. */
 const ContaDoEvento = z.object({ conta: z.uuid(), nome: z.string() }).nullable();
 
+/** O ativo do evento do ativo, com o rótulo e o patrimônio de agora, ou nulo, sem ativo. */
+const AtivoDoEvento = z
+  .object({ id: z.uuid(), rotulo: z.string(), patrimonio: z.string().nullable() })
+  .nullable();
+
 const EscritoNaConversa = z.object({
   id: z.uuid(),
   em: z.iso.datetime(),
@@ -269,6 +275,8 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
      * 2 h na triagem"; no `desfez`, o de antes, que ele devolve; nulo nos outros.
      */
     desde: z.iso.datetime().nullable(),
+    /** No `ativo`, o ativo de antes e o de depois da troca; nulo nos outros. */
+    ativo: z.object({ antes: AtivoDoEvento, depois: AtivoDoEvento }).nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),
@@ -435,6 +443,35 @@ const PedidoDaConversa = z
       .optional(),
   })
   .meta({ id: 'PedidoDaConversaDoChamado' });
+
+const PedidoDaTrocaDoAtivo = z
+  .object({
+    /** O ativo que o chamado passa a ter, que quem age vê e está ativo, ou nulo, para tirar o ativo. */
+    ativo: z.uuid({ error: RECUSAS_DA_ABERTURA.ativoNaoEncontrado }).nullable(),
+    /** A versão que a tela mostra; a que o chamado não tem mais é recusada com o `chamado-mudou`. */
+    versao: VersaoDoChamado.optional(),
+  })
+  .meta({ id: 'PedidoDaTrocaDoAtivoDoChamado' });
+
+const PedidoDaTrocaDoTitulo = z
+  .object({
+    /**
+     * O título, numa linha só, de 1 a 120 caracteres: o vazio e o longo são recusados pelo domínio,
+     * com as frases da abertura, no campo `titulo`.
+     */
+    titulo: z.string().default(''),
+  })
+  .meta({ id: 'PedidoDaTrocaDoTituloDoChamado' });
+
+const PedidoDosCamposDaTi = z
+  .object({
+    /**
+     * As respostas dos campos só da TI que mudam, pelo id de cada campo, com o vazio ou o nulo para
+     * apagar; a chave que não é um campo só da TI é recusada no `formulario`.
+     */
+    respostas: z.record(z.string(), z.unknown(), { error: RECUSA_DO_FORMULARIO }),
+  })
+  .meta({ id: 'PedidoDosCamposDaTiDoChamado' });
 
 const ChamadoDepoisDaAcao = z
   .object({
@@ -723,5 +760,68 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
     },
     (requisicao) =>
       agir(requisicao, requisicao.params.numero, { acao: 'reabrir', ...requisicao.body }),
+  );
+
+  // O ativo, o título e os campos da TI (tarefa 4.15), gravados pelo `chamados/edicao.ts`, fora das
+  // ações, porque não mudam a situação nem quem atende.
+  app.put(
+    '/chamados/:numero/ativo',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Ligar, trocar ou tirar o ativo do chamado: os locais seguem a pessoa e o ativo',
+        params: DA_ACAO.params,
+        body: PedidoDaTrocaDoAtivo,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+        trocarOAtivo(tx, requisicao.params.numero, requisicao.body, {
+          requisicao,
+          momento: agora(),
+        }),
+      ),
+  );
+
+  app.put(
+    '/chamados/:numero/titulo',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary: 'Trocar o título do chamado',
+        params: DA_ACAO.params,
+        body: PedidoDaTrocaDoTitulo,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+        trocarOTitulo(tx, requisicao.params.numero, requisicao.body, {
+          requisicao,
+          momento: agora(),
+        }),
+      ),
+  );
+
+  app.patch(
+    '/chamados/:numero/campos',
+    {
+      config: DA_ACAO.config,
+      schema: {
+        summary:
+          'Preencher os campos só da TI do chamado: só os que mudam, com o vazio para apagar',
+        params: DA_ACAO.params,
+        body: PedidoDosCamposDaTi,
+        response: DA_ACAO.response,
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', (tx) =>
+        mudarOsCamposDaTi(tx, requisicao.params.numero, requisicao.body, {
+          requisicao,
+          momento: agora(),
+        }),
+      ),
   );
 };

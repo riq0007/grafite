@@ -1,8 +1,9 @@
 // As respostas do formulário do tipo de chamado (spec tipos-de-chamado, "Condição de um campo" e
 // "Respostas do formulário"; change chamados-da-ti, design, decisão 2): os campos que aparecem com
-// as respostas, o formulário que se preenche, com o "Apagar a resposta se o campo sumir", e a
-// conferência da abertura, com os erros na chave do campo. Se o ativo, o local e a pessoa existem e
-// estão ativos, e se os arquivos são aceitos, quem confere é a API.
+// as respostas, o formulário que se preenche, com o "Apagar a resposta se o campo sumir", a
+// conferência da abertura, com os erros na chave do campo, e a mudança dos campos só da TI depois
+// dela (tarefa 4.15). Se o ativo, o local e a pessoa existem e estão ativos, e se os arquivos são
+// aceitos, quem confere é a API.
 //
 // Os ids dos campos podem ser nomes do JavaScript, como `constructor` e `__proto__`: as respostas
 // são lidas só do próprio pedido e montadas pelo `Object.fromEntries`, que nunca troca o protótipo.
@@ -214,4 +215,49 @@ export function conferirRespostas(
     if (erro instanceof ForaDoFormato) return geral;
     throw erro;
   }
+}
+
+/** Um campo que a mudança dos campos da TI mudou: a resposta guardada antes e a de depois, ou nulo. */
+export interface CampoMudado {
+  campo: CampoDoFormulario;
+  antes: unknown;
+  depois: RespostaDoCampo | null;
+}
+
+export type MudancaDosCamposDaTi =
+  | { ok: true; respostas: RespostasDoFormulario; mudados: CampoMudado[] }
+  | { ok: false; erros: Record<string, string> };
+
+/**
+ * A mudança dos campos só da TI do chamado (spec chamados, "Ativo ligado e campos da TI"; change
+ * chamados-da-ti, design, "O ativo, o título e os campos da TI"). O pedido traz só as chaves que
+ * mudam, com o vazio ou o nulo para apagar; a chave que não é um campo só da TI recebe a recusa
+ * geral, porque a tela não a monta. As respostas novas se juntam às guardadas, e tudo passa pela
+ * conferência da abertura: o campo que some pela condição perde a resposta, e a recusa de cada campo
+ * vai na chave dele. Os campos que mudaram vêm na ordem do formulário, para a auditoria e os anexos;
+ * sem nenhum, nada muda.
+ */
+export function mudarCamposDaTi(
+  formulario: Formulario,
+  guardadas: Readonly<Record<string, unknown>>,
+  pedido: unknown,
+): MudancaDosCamposDaTi {
+  const novas = objeto(pedido);
+  const daTi = new Set(formulario.campos.filter((campo) => campo.soDaTi).map((campo) => campo.id));
+  if (!novas || Object.keys(novas).some((id) => !daTi.has(id))) {
+    return { ok: false, erros: { formulario: RECUSA_DO_FORMULARIO } };
+  }
+  const juntas = Object.fromEntries([
+    ...Object.entries(guardadas).filter(([id]) => !Object.hasOwn(novas, id)),
+    ...Object.entries(novas),
+  ]);
+  const conferidas = conferirRespostas(formulario, juntas);
+  if (!conferidas.ok) return conferidas;
+  const { respostas } = conferidas;
+  const mudados = formulario.campos.flatMap((campo): CampoMudado[] => {
+    const antes = respostaDe(guardadas, campo.id) ?? null;
+    const depois = Object.hasOwn(respostas, campo.id) ? (respostas[campo.id] ?? null) : null;
+    return JSON.stringify(antes) === JSON.stringify(depois) ? [] : [{ campo, antes, depois }];
+  });
+  return { ok: true, respostas, mudados };
 }

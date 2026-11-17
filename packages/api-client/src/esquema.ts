@@ -28718,6 +28718,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/ativo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ligar, trocar ou tirar o ativo do chamado: os locais seguem a pessoa e o ativo */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaTrocaDoAtivoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/titulo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Trocar o título do chamado */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaTrocaDoTituloDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/campos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Preencher os campos só da TI do chamado: só os que mudam, com o vazio para apagar */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDosCamposDaTiDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -36247,7 +36535,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -36259,6 +36547,20 @@ export interface components {
                     nome: string;
                 } | null;
                 desde: string | null;
+                ativo: {
+                    antes: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                    depois: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                } | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -36298,6 +36600,19 @@ export interface components {
             /** @default  */
             texto: string;
             anexos?: string[];
+        };
+        PedidoDaTrocaDoAtivoDoChamadoInput: {
+            ativo: string | null;
+            versao?: number;
+        };
+        PedidoDaTrocaDoTituloDoChamadoInput: {
+            /** @default  */
+            titulo: string;
+        };
+        PedidoDosCamposDaTiDoChamadoInput: {
+            respostas: {
+                [key: string]: unknown;
+            };
         };
         ChamadoDepoisDaAcaoInput: {
             numero: number;
@@ -41433,7 +41748,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -41445,6 +41760,20 @@ export interface components {
                     nome: string;
                 } | null;
                 desde: string | null;
+                ativo: {
+                    antes: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                    depois: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                } | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -41484,6 +41813,19 @@ export interface components {
             /** @default  */
             texto: string;
             anexos?: string[];
+        };
+        PedidoDaTrocaDoAtivoDoChamado: {
+            ativo: string | null;
+            versao?: number;
+        };
+        PedidoDaTrocaDoTituloDoChamado: {
+            /** @default  */
+            titulo: string;
+        };
+        PedidoDosCamposDaTiDoChamado: {
+            respostas: {
+                [key: string]: unknown;
+            };
         };
         ChamadoDepoisDaAcao: {
             numero: number;

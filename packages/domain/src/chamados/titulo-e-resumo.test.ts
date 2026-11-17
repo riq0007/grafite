@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type CampoDoFormulario, conferirFormulario, type Formulario } from './formulario.ts';
 import {
   type ContextoDasRespostas,
+  camposNaAuditoria,
   conferirTituloDoChamado,
   resumoDasRespostas,
   tituloDasRespostas,
@@ -721,5 +722,83 @@ describe('o título que quem abre escreve', () => {
       ok: true,
       titulo: `${'a'.repeat(60)} ${'b'.repeat(59)}`,
     });
+  });
+});
+
+describe('camposNaAuditoria', () => {
+  /** A Impressora com os campos só da TI da revisão: a foto da peça, o técnico e as observações. */
+  const comOsDaTi = () =>
+    formularioCom([
+      ...camposDaImpressora(),
+      { id: 'peca', tipo: 'anexo', rotulo: 'Foto da peça', soDaTi: true },
+      { id: 'tecnico', tipo: 'pessoa', rotulo: 'Quem foi ao local?', soDaTi: true },
+      { id: 'obs', tipo: 'texto-longo', rotulo: 'Observação', soDaTi: true },
+      {
+        id: 'obs-final',
+        tipo: 'texto-longo',
+        rotulo: 'Observação final',
+        nomeNoResumo: 'Observação',
+        soDaTi: true,
+      },
+    ]);
+
+  const campoDe = (id: string): CampoDoFormulario => {
+    const campo = comOsDaTi().campos.find((um) => um.id === id);
+    if (!campo) throw new Error(`Sem o campo ${id}.`);
+    return campo;
+  };
+
+  it('Campo da TI preenchido: o antes e o depois pelo nome no resumo, como o resumo mostra', () => {
+    expect(
+      camposNaAuditoria([{ campo: campoDe('contador'), antes: null, depois: 48_210 }], contexto),
+    ).toEqual({ antes: {}, depois: { 'Contador de páginas': '48.210' } });
+  });
+
+  it('Anexo tirado de um campo da TI: "1 arquivo" antes e nada depois', () => {
+    expect(
+      camposNaAuditoria([{ campo: campoDe('peca'), antes: [FOTO], depois: null }], contexto),
+    ).toEqual({ antes: { 'Foto da peça': '1 arquivo' }, depois: {} });
+  });
+
+  it('cada campo que mudou, com o sim ou não e a pessoa pelos nomes', () => {
+    expect(
+      camposNaAuditoria(
+        [
+          { campo: campoDe('contrato'), antes: false, depois: true },
+          { campo: campoDe('peca'), antes: [FOTO, FOTO_2], depois: [FOTO] },
+          { campo: campoDe('tecnico'), antes: null, depois: MARINA },
+        ],
+        contexto,
+      ),
+    ).toEqual({
+      antes: { 'Contrato de manutenção': 'Não', 'Foto da peça': '2 arquivos' },
+      depois: {
+        'Contrato de manutenção': 'Sim',
+        'Foto da peça': '1 arquivo',
+        'Quem foi ao local': 'Marina Rocha',
+      },
+    });
+  });
+
+  it('o nome repetido ganha o número da vez, para um campo não apagar o outro', () => {
+    expect(
+      camposNaAuditoria(
+        [
+          { campo: campoDe('obs'), antes: null, depois: 'Troquei o toner.' },
+          { campo: campoDe('obs-final'), antes: 'Pedir o fusor', depois: null },
+        ],
+        contexto,
+      ),
+    ).toEqual({
+      antes: { 'Observação (2)': 'Pedir o fusor' },
+      depois: { Observação: 'Troquei o toner.' },
+    });
+  });
+
+  it('o nome dos nomes do JavaScript fica no próprio registro', () => {
+    const campo = { ...campoDe('obs'), rotulo: '__proto__', nomeNoResumo: null };
+    const { depois } = camposNaAuditoria([{ campo, antes: null, depois: 'Teste' }], contexto);
+    expect(JSON.stringify(depois)).toBe('{"__proto__":"Teste"}');
+    expect(Object.getPrototypeOf(depois)).toBe(Object.prototype);
   });
 });

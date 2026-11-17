@@ -1,11 +1,12 @@
 // O título e o resumo das respostas do chamado (spec tipos-de-chamado, "Título montado das
 // respostas"; spec chamados, "Conversa do chamado"; change chamados-da-ti, design, decisão 2). Os
 // dois usam só os campos visíveis que a pessoa vê e leem também o formulário que se preenche, na
-// prévia: a resposta fora do tipo do campo, ou que o contexto não traz, fica de fora.
+// prévia: a resposta fora do tipo do campo, ou que o contexto não traz, fica de fora. Os campos da TI
+// que mudam depois da abertura vão à auditoria como o resumo mostra a resposta (tarefa 4.15).
 import { mostrarData } from '../campos/datas.ts';
 import { mostrarDecimal } from '../campos/numeros.ts';
 import type { CampoDoFormulario, Formulario } from './formulario.ts';
-import { camposVisiveis, respostaDe, vale } from './respostas.ts';
+import { type CampoMudado, camposVisiveis, respostaDe, vale } from './respostas.ts';
 
 /** O ativo como o título e o resumo o mostram: o patrimônio ou, sem ele, o nome das telas. */
 export interface AtivoDasRespostas {
@@ -21,6 +22,9 @@ export interface ContextoDasRespostas {
   locais?: ReadonlyMap<string, string>;
   pessoas?: ReadonlyMap<string, string>;
 }
+
+/** Os nomes do que as respostas citam, sem o nome do tipo, que só o título usa. */
+type NomesDasRespostas = Omit<ContextoDasRespostas, 'nomeDoTipo'>;
 
 const LIMITE_DO_TITULO = 120;
 
@@ -66,7 +70,7 @@ const textoDaOpcao = (campo: CampoDoFormulario, id: unknown) =>
 const textos = (valor: unknown): string[] | null =>
   Array.isArray(valor) && valor.every((item) => typeof item === 'string') ? valor : null;
 
-function mostrarAtivo(id: unknown, contexto: ContextoDasRespostas): string | null {
+function mostrarAtivo(id: unknown, contexto: NomesDasRespostas): string | null {
   const ativo = typeof id === 'string' ? contexto.ativos?.get(id) : undefined;
   return ativo ? (ativo.patrimonio ?? ativo.rotulo) : null;
 }
@@ -75,7 +79,7 @@ function mostrarAtivo(id: unknown, contexto: ContextoDasRespostas): string | nul
 function mostrarResposta(
   campo: CampoDoFormulario,
   resposta: unknown,
-  contexto: ContextoDasRespostas,
+  contexto: NomesDasRespostas,
 ): string | null {
   switch (campo.tipo) {
     case 'texto-curto':
@@ -222,4 +226,31 @@ export function resumoDasRespostas(
   return [...partes.map((parte) => `${parte.nome}: ${parte.respostas.join(', ')}`), ...ativos].join(
     ' · ',
   );
+}
+
+/**
+ * Os campos da TI que mudaram, como a auditoria os guarda (spec chamados, "Ativo ligado e campos da
+ * TI"; change chamados-da-ti, design, "O ativo, o título e os campos da TI"): pelo nome no resumo,
+ * com a resposta de antes e a de depois como o resumo a mostra, e o lado sem resposta fica sem a
+ * chave, como nos campos do ativo. O nome que se repete ganha o número da vez, para um campo não
+ * apagar o outro.
+ */
+export function camposNaAuditoria(
+  mudados: readonly CampoMudado[],
+  contexto: NomesDasRespostas,
+): { antes: Record<string, string>; depois: Record<string, string> } {
+  const vezes = new Map<string, number>();
+  const antes: [string, string][] = [];
+  const depois: [string, string][] = [];
+  for (const mudado of mudados) {
+    const nome = nomeNoResumo(mudado.campo);
+    const vez = (vezes.get(nome) ?? 0) + 1;
+    vezes.set(nome, vez);
+    const chave = vez === 1 ? nome : `${nome} (${vez})`;
+    const deAntes = mostrarResposta(mudado.campo, mudado.antes, contexto);
+    const deDepois = mostrarResposta(mudado.campo, mudado.depois, contexto);
+    if (deAntes !== null) antes.push([chave, deAntes]);
+    if (deDepois !== null) depois.push([chave, deDepois]);
+  }
+  return { antes: Object.fromEntries(antes), depois: Object.fromEntries(depois) };
 }

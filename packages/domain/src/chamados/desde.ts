@@ -21,8 +21,9 @@ export interface EventoNaConversa {
 }
 
 /**
- * Os eventos que as ações gravam, todos quando a versão sobe (`decidirAcao`): o desfazer só vale com
- * o assumir depois de todos eles. A abertura não sobe a versão.
+ * Os eventos que as ações gravam, todos quando a versão sobe (`decidirAcao`), e o da troca do ativo,
+ * que também a sobe (`decidirTrocaDoAtivo`): o desfazer só vale com o assumir depois de todos eles.
+ * A abertura não sobe a versão, nem a troca do título e dos campos da TI, que não vão à conversa.
  */
 export const EVENTOS_QUE_SOBEM_A_VERSAO = [
   'assumiu',
@@ -33,6 +34,7 @@ export const EVENTOS_QUE_SOBEM_A_VERSAO = [
   'retomou',
   'resolveu',
   'reabriu',
+  'ativo',
 ] as const satisfies readonly EventoDaAcao['evento'][];
 
 /** Aceita só o `never`: o tipo que sobra reprova o typecheck onde o guarda o pede. */

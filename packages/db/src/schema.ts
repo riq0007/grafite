@@ -4043,9 +4043,10 @@ export const tiposDeChamado = orgScoped(
 /**
  * O chamado (spec chamados; change chamados-da-ti, design, decisões 1, 3, 4 e 5): o número
  * sequencial na organização, o tipo, o título, a pessoa que pediu, a origem e quem abriu; o
- * formulário da abertura e as respostas; o ativo ligado e os locais em que ele vale para ver e para
- * atender; a situação e quem atende; o prazo copiado em minutos e o relógio guardado; a resolução;
- * a OS e a solicitação; e a versão, que sobe nas ações que mudam a situação ou quem atende. Quem
+ * formulário da abertura e as respostas; o ativo ligado, o local da pessoa na abertura (migration
+ * 0064) e os locais em que ele vale para ver e para atender; a situação e quem atende; o prazo
+ * copiado em minutos e o relógio guardado; a resolução; a OS e a solicitação; e a versão, que sobe
+ * nas ações que mudam a situação ou quem atende e na troca do ativo. Quem
  * atende e o relógio seguem a tabela da spec, e as checagens são implicações, para a situação
  * desconhecida ficar com a checagem da situação. O papel da aplicação não apaga (migration 0060).
  */
@@ -4065,6 +4066,8 @@ export const chamados = orgScoped(
     ativoId: uuid('ativo_id'),
     locais: uuid('locais').array().notNull().default(sql`'{}'::uuid[]`),
     semLocal: boolean('sem_local').notNull().default(false),
+    /** O local de trabalho da pessoa na abertura, que a troca do ativo usa; nulo, a pessoa sem local. */
+    localDaPessoa: uuid('local_da_pessoa'),
     situacao: text('situacao', { enum: SITUACOES_DO_CHAMADO_NO_BANCO }).notNull(),
     responsavelId: uuid('responsavel_id'),
     responsavelDesde: momento('responsavel_desde'),
@@ -4104,6 +4107,11 @@ export const chamados = orgScoped(
       name: 'chamados_responsavel_fk',
       columns: [t.orgId, t.responsavelId],
       foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_local_da_pessoa_fk',
+      columns: [t.orgId, t.localDaPessoa],
+      foreignColumns: [locais.orgId, locais.id],
     }),
     foreignKey({
       name: 'chamados_resolvido_por_fk',

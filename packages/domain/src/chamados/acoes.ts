@@ -232,7 +232,9 @@ export type EventoDaAcao =
   | { evento: 'devolveu'; dados: { de: string } }
   | { evento: 'desfez'; dados: { para: string | null; desde: string } }
   | { evento: 'aguardando' | 'retomou' | 'resolveu'; dados: Record<string, never> }
-  | { evento: 'reabriu'; dados: { para: string | null } };
+  | { evento: 'reabriu'; dados: { para: string | null } }
+  /** A troca do ativo (`edicao.ts`), com os ids do ativo de antes e do de depois, ou nulo. */
+  | { evento: 'ativo'; dados: { antes: string | null; depois: string | null } };
 
 /** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
 export type EntradaDaConversa =
@@ -282,7 +284,8 @@ const recusada = (recusa: RecusaDaAcao): DecisaoDaAcao => ({ aceita: false, recu
 
 const evento = (doEvento: EventoDaAcao): EntradaDaConversa => ({ especie: 'evento', ...doEvento });
 
-type LocaisComNome = Pick<ChamadoParaAcao, 'locais' | 'semLocal'>;
+/** Os locais do chamado com os nomes que as recusas citam. */
+export type LocaisComNome = Pick<ChamadoParaAcao, 'locais' | 'semLocal'>;
 
 const idsDosLocais = (chamado: LocaisComNome) => ({
   locais: chamado.locais.map((local) => local.id),
@@ -301,7 +304,14 @@ function localDeFora(alcance: AlcanceDeQuemAtende, chamado: LocaisComNome): stri
   return fora?.nome ?? null;
 }
 
-function recusaDeQuemAge(quemAge: QuemAge, chamado: ChamadoParaAcao): RecusaDaAcao | null {
+/**
+ * Quem age precisa atender os locais do chamado: os de agora, nas ações, e também os novos, na troca
+ * do ativo (`edicao.ts`).
+ */
+export function recusaDeQuemAge(
+  quemAge: QuemAge,
+  chamado: LocaisComNome,
+): Extract<RecusaDaAcao, { motivo: 'voce-nao-atende' }> | null {
   if (atendeOChamado(quemAge.alcance, idsDosLocais(chamado))) return null;
   return { motivo: 'voce-nao-atende', local: localDeFora(quemAge.alcance, chamado) };
 }
@@ -319,8 +329,14 @@ export function recusaDeQuemAbre(
   return `Você não atende ${dosChamados(localDeFora(alcance, chamado))}.`;
 }
 
-/** Só a conta ativa que atende todos os locais do chamado o recebe. */
-function recusaDeQuemRecebe(conta: ContaQueRecebe, chamado: ChamadoParaAcao): RecusaDaAcao | null {
+/**
+ * Só a conta ativa que atende todos os locais do chamado o recebe; na troca do ativo, quem está com o
+ * chamado precisa atender os locais novos (`edicao.ts`).
+ */
+export function recusaDeQuemRecebe(
+  conta: ContaQueRecebe,
+  chamado: LocaisComNome,
+): Extract<RecusaDaAcao, { motivo: 'nao-atende' }> | null {
   if (conta.ativa && atendeOChamado(conta.alcance, idsDosLocais(chamado))) return null;
   const alcance = conta.ativa ? conta.alcance : null;
   return { motivo: 'nao-atende', nome: conta.nome, local: localDeFora(alcance, chamado) };

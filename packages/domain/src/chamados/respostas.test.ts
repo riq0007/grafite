@@ -5,7 +5,7 @@ import {
   type Formulario,
   RECUSA_DO_FORMULARIO,
 } from './formulario.ts';
-import { camposVisiveis, conferirRespostas, responder } from './respostas.ts';
+import { camposVisiveis, conferirRespostas, mudarCamposDaTi, responder } from './respostas.ts';
 
 const ATIVO = '0192f0c4-6a1e-7c3b-9d2a-5b8e4f1a2c3d';
 const FOTO = '0192f0c4-6a1e-7c3b-9d2a-5b8e4f1a2c40';
@@ -431,5 +431,124 @@ describe('conferirRespostas', () => {
     const respondido = responder(formulario, {}, '__proto__', ['a']);
     expect(JSON.stringify(respondido)).toBe('{"__proto__":["a"]}');
     expect(Object.getPrototypeOf(respondido)).toBe(Object.prototype);
+  });
+});
+
+describe('mudarCamposDaTi', () => {
+  const PECA = '0192f0c4-6a1e-7c3b-9d2a-5b8e4f1a2c41';
+
+  /** A Impressora com a Foto da peça, só da TI, que aparece sem o Contrato de manutenção. */
+  const comAFotoDaPeca = () =>
+    formularioCom([
+      ...camposDaImpressora(),
+      {
+        id: 'peca',
+        tipo: 'anexo',
+        rotulo: 'Foto da peça',
+        soDaTi: true,
+        condicao: [{ campoId: 'contrato', valor: false }],
+      },
+    ]);
+
+  const campoDe = (formulario: Formulario, id: string) =>
+    formulario.campos.find((campo) => campo.id === id);
+
+  /** As respostas guardadas do #1042: a impressora manchando na borda, com a foto da pessoa. */
+  const DO_1042 = { impressora: ATIVO, problema: 'manchando', manchas: 'borda', foto: [FOTO] };
+
+  it('Campo da TI preenchido: o Contador fica com 48210, e só ele muda', () => {
+    const formulario = comAFotoDaPeca();
+    expect(mudarCamposDaTi(formulario, DO_1042, { contador: 48_210 })).toEqual({
+      ok: true,
+      respostas: { ...DO_1042, contador: 48_210 },
+      mudados: [{ campo: campoDe(formulario, 'contador'), antes: null, depois: 48_210 }],
+    });
+  });
+
+  it('o vazio e o nulo apagam a resposta', () => {
+    const formulario = comAFotoDaPeca();
+    const guardadas = { ...DO_1042, contador: 48_210, contrato: true };
+    expect(mudarCamposDaTi(formulario, guardadas, { contador: null, contrato: '' })).toEqual({
+      ok: true,
+      respostas: DO_1042,
+      mudados: [
+        { campo: campoDe(formulario, 'contador'), antes: 48_210, depois: null },
+        { campo: campoDe(formulario, 'contrato'), antes: true, depois: null },
+      ],
+    });
+  });
+
+  it('Anexo tirado de um campo da TI: a foto sai das respostas', () => {
+    const formulario = comAFotoDaPeca();
+    const guardadas = { ...DO_1042, contrato: false, peca: [PECA] };
+    expect(mudarCamposDaTi(formulario, guardadas, { peca: [] })).toEqual({
+      ok: true,
+      respostas: { ...DO_1042, contrato: false },
+      mudados: [{ campo: campoDe(formulario, 'peca'), antes: [PECA], depois: null }],
+    });
+  });
+
+  it('o campo que some pela condição perde a resposta, como na abertura', () => {
+    const formulario = comAFotoDaPeca();
+    const guardadas = { ...DO_1042, contrato: false, peca: [PECA] };
+    expect(mudarCamposDaTi(formulario, guardadas, { contrato: true })).toEqual({
+      ok: true,
+      respostas: { ...DO_1042, contrato: true },
+      mudados: [
+        { campo: campoDe(formulario, 'contrato'), antes: false, depois: true },
+        { campo: campoDe(formulario, 'peca'), antes: [PECA], depois: null },
+      ],
+    });
+    // O campo escondido não guarda a resposta pedida.
+    expect(mudarCamposDaTi(formulario, DO_1042, { peca: [PECA] })).toEqual({
+      ok: true,
+      respostas: DO_1042,
+      mudados: [],
+    });
+  });
+
+  it('as mesmas respostas, no tipo de cada campo, não mudam nada', () => {
+    const formulario = comAFotoDaPeca();
+    const guardadas = { ...DO_1042, contador: 48_210, contrato: false, peca: [PECA] };
+    expect(
+      mudarCamposDaTi(formulario, guardadas, {
+        contador: 48_210,
+        contrato: false,
+        peca: [PECA.toUpperCase(), PECA],
+      }),
+    ).toEqual({ ok: true, respostas: guardadas, mudados: [] });
+    expect(mudarCamposDaTi(formulario, guardadas, {})).toEqual({
+      ok: true,
+      respostas: guardadas,
+      mudados: [],
+    });
+  });
+
+  it('o só da TI obrigatório pode ficar vazio: quem o pede é o resolver', () => {
+    const formulario = impressoraCom('contador', { obrigatorio: true });
+    expect(
+      mudarCamposDaTi(formulario, { ...DO_1042, contador: 5 }, { contador: null }),
+    ).toMatchObject({ ok: true, respostas: DO_1042 });
+  });
+
+  it('as recusas de cada campo vão na chave dele', () => {
+    expect(mudarCamposDaTi(impressora(), DO_1042, { contador: -1, contrato: true })).toEqual({
+      ok: false,
+      erros: { 'campos.contador': 'Use um número inteiro de 0 a 999.999.999.' },
+    });
+  });
+
+  it.each([
+    ['o campo que a pessoa vê', { problema: 'atolando' }],
+    ['o campo que não é do formulário', { outro: 1 }],
+    ['o id dos nomes do JavaScript', JSON.parse('{"__proto__": 1}')],
+    ['o número em texto', { contador: '12' }],
+    ['as respostas que não são um objeto', [48_210]],
+    ['o nulo no lugar das respostas', null],
+  ])('%s é a recusa geral', (_, pedido) => {
+    expect(mudarCamposDaTi(impressora(), DO_1042, pedido)).toEqual({
+      ok: false,
+      erros: { formulario: RECUSA_DO_FORMULARIO },
+    });
   });
 });

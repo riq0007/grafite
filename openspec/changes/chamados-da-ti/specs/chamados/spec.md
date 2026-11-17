@@ -372,15 +372,17 @@ O aviso SHALL voltar a valer para o chamado reaberto.
 
 ### Requirement: Ativo ligado e campos da TI
 
-O ativo ligado SHALL ser a resposta do primeiro campo Ativo do formulário, quando há. Quem atende os locais do chamado SHALL poder ligar um ativo, trocá-lo ou tirá-lo, entre os ativos ativos que vê. A mudança SHALL recalcular os locais do chamado e gravar o evento na conversa.
+O ativo ligado SHALL nascer da resposta do primeiro campo Ativo do formulário, quando há, e depois SHALL mudar só pela troca do ativo: as respostas guardam o que foi dito na abertura. Quem atende os locais do chamado SHALL poder ligar um ativo, trocá-lo ou tirá-lo, entre os ativos ativos que vê. A mudança SHALL recalcular os locais do chamado, com o local de trabalho da pessoa na abertura e o do ativo novo, subir a versão e gravar o evento na conversa.
 
-Quem muda o ativo SHALL atender também os locais novos. Se quem está com o chamado não atende os locais novos, a mudança SHALL ser recusada com "<Nome> não atende os chamados de <local>. Passe o chamado antes de trocar o ativo.".
+Quem muda o ativo SHALL atender também os locais novos. Se quem está com o chamado não atende os locais novos, ou está inativo, a mudança SHALL ser recusada com "<Nome> não atende os chamados de <local>. Passe o chamado antes de trocar o ativo.". A troca pela tela de antes de outra ação SHALL ser recusada com "O chamado #1042 mudou. Confira antes de trocar o ativo.".
 
 Quem atende SHALL poder:
-- preencher e mudar os campos só da TI do formulário do chamado;
-- trocar o título, de 1 a 120 caracteres.
+- preencher e mudar os campos só da TI do formulário do chamado. Os campos que a pessoa vê SHALL NOT mudar depois da abertura. O campo que some pela condição SHALL perder a resposta, como na abertura;
+- trocar o título, de 1 a 120 caracteres, com as recusas da abertura.
 
-As recusas dos campos SHALL ser as das respostas do formulário (spec tipos-de-chamado). Num chamado resolvido, a troca do ativo, do título e dos campos da TI SHALL ser recusada com "O chamado #1042 está resolvido.".
+As recusas dos campos SHALL ser as das respostas do formulário (spec tipos-de-chamado). Num chamado resolvido, a troca do ativo, do título e dos campos da TI SHALL ser recusada com "O chamado #1042 está resolvido.". Escolher o ativo que já está ligado, tirar o ativo do chamado que não tem e gravar o mesmo título ou as mesmas respostas SHALL NOT mudar nada.
+
+A troca do título e dos campos da TI SHALL NOT subir a versão nem ir à conversa; a auditoria a registra.
 
 #### Scenario: Ativo de outro local
 - **WHEN** Ana liga ao #1040, de uma pessoa de Jundiaí, uma impressora de Campinas
@@ -390,9 +392,17 @@ As recusas dos campos SHALL ser as das respostas do formulário (spec tipos-de-c
 - **WHEN** Ana tenta ligar uma impressora de Campinas ao #1038, que está com Renato, que atende só Jundiaí
 - **THEN** a mudança é recusada com "Renato não atende os chamados de Campinas. Passe o chamado antes de trocar o ativo."
 
+#### Scenario: Ativo tirado depois de a pessoa mudar de local
+- **WHEN** Ana tira a impressora de Campinas do #1040, aberto quando a pessoa trabalhava em Jundiaí, que depois passou a trabalhar em Itu
+- **THEN** o #1040 volta a ser só de Jundiaí, o local da pessoa na abertura
+
 #### Scenario: Campo da TI preenchido
 - **WHEN** Diego preenche o Contador de páginas do #1042 com 48210
 - **THEN** o campo fica com 48210, e a auditoria guarda o antes e o depois
+
+#### Scenario: Anexo tirado de um campo da TI
+- **WHEN** Diego tira a foto do campo "Foto da peça" do #1042
+- **THEN** a foto é removida na hora, e a auditoria guarda "1 arquivo" antes e nada depois
 
 ### Requirement: Quem vê e quem atende os chamados
 
@@ -504,7 +514,7 @@ Os chamados SHALL notificar pela notificação da plataforma (spec notificacoes)
 - **o chamado que cai na triagem,** a cada conta que atende os locais dele, fora quem abriu, devolveu ou reabriu, na severidade Informação: "Chamado #1043 na triagem: Impressora manchando";
 - **o prazo estourado** (requisito "Prazo estourado"), na severidade Atenção.
 
-Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar: quem atende não muda, e nada cai na triagem.
+Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar: quem atende não muda, e nada cai na triagem. Pelo mesmo motivo, a troca do ativo, do título e dos campos da TI SHALL NOT notificar.
 
 #### Scenario: Passado a Renato
 - **WHEN** Ana passa o #1038 a Renato

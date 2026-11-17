@@ -106,8 +106,11 @@ const NA_AUDITORIA = {
   nota: null,
 } as const satisfies Record<AcaoDoAtendimento, AcaoDaAuditoria | null>;
 
-/** O chamado pelo número, travado até o fim da ação, se a conta o vê; senão, o que não existe. */
-async function travarOChamado(
+/**
+ * O chamado pelo número, travado até o fim da ação, se a conta o vê; senão, o que não existe. A troca
+ * do ativo, do título e dos campos da TI também o trava por aqui (`edicao.ts`).
+ */
+export async function travarOChamado(
   tx: Transacao,
   numero: number,
   acesso: Acesso,
@@ -130,6 +133,8 @@ async function travarOChamado(
       relogioDesde: chamados.relogioDesde,
       primeiraRespostaEm: chamados.primeiraRespostaEm,
       resolvidoPor: chamados.resolvidoPor,
+      ativo: chamados.ativoId,
+      localDaPessoa: chamados.localDaPessoa,
       pessoa: pessoas.nome,
     })
     .from(chamados)
@@ -160,8 +165,11 @@ const eventosDoChamado = (tx: Transacao, chamadoId: string): Promise<EventoNaCon
     )
     .orderBy(asc(mensagensDosChamados.criadaEm), asc(mensagensDosChamados.id));
 
-/** A cópia do formulário da abertura e as respostas do chamado já travado, que só o resolver lê. */
-async function formularioDoChamado(tx: Transacao, chamadoId: string) {
+/**
+ * A cópia do formulário da abertura e as respostas do chamado já travado, que só o resolver e os
+ * campos da TI leem (`edicao.ts`).
+ */
+export async function formularioDoChamado(tx: Transacao, chamadoId: string) {
   const [linha] = await tx
     .select({ formulario: chamados.formulario, respostas: chamados.respostas })
     .from(chamados)

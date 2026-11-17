@@ -94,6 +94,8 @@ let numerosDasSolicitacoes = 700;
 /** As referências de uma organização, para os tipos e os chamados dela. */
 interface Referencias {
   pessoa: string;
+  /** O local de trabalho da pessoa na abertura. */
+  local: string;
   conta: string;
   outraConta: string;
   tipoDeAtivo: string;
@@ -121,8 +123,14 @@ async function referencias(org: string): Promise<Referencias> {
       situacao: 'aberta',
       aberta_por: quemAtende,
     });
+  const nomeDoLocal = unico('Sala ');
   return {
     pessoa: quemPede,
+    local: await incluir('locais', org, {
+      nome: nomeDoLocal,
+      nome_normalizado: nomeDoLocal.toLowerCase(),
+      tipo: 'sala',
+    }),
     conta: quemAtende,
     outraConta: await conta(org),
     tipoDeAtivo,
@@ -478,6 +486,10 @@ describe('chamados', () => {
     expect(await recusada(chamado(orgA, deA, tipoDeA, { ativo_id: deB.ativo }))).toBe(
       'chamados_ativo_fk',
     );
+    expect(await recusada(chamado(orgA, deA, tipoDeA, { local_da_pessoa: deB.local }))).toBe(
+      'chamados_local_da_pessoa_fk',
+    );
+    await chamado(orgA, deA, tipoDeA, { local_da_pessoa: deA.local });
     expect(await recusada(chamado(orgA, deA, tipoDeA, { aberto_por: deB.conta }))).toBe(
       'chamados_aberto_por_fk',
     );

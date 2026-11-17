@@ -291,6 +291,17 @@ export {
   momentoLido,
 } from './chamados/desde.ts';
 export {
+  type ChamadoParaEdicao,
+  type ChamadoParaTrocaDoAtivo,
+  type DecisaoDaTrocaDoAtivo,
+  decidirTrocaDoAtivo,
+  mensagemDaRecusaDaTrocaDoAtivo,
+  type PedidoDeTrocaDoAtivo,
+  type RecusaDaEdicao,
+  type RecusaDaTrocaDoAtivo,
+  recusaDaEdicao,
+} from './chamados/edicao.ts';
+export {
   TIPOS_DE_CHAMADO_DE_FABRICA,
   type TipoDeChamadoDeFabrica,
 } from './chamados/fabrica.ts';
@@ -361,9 +372,12 @@ export {
   solicitacaoDoDuplicado,
 } from './chamados/rascunho.ts';
 export {
+  type CampoMudado,
   type ConferenciaDasRespostas,
   camposVisiveis,
   conferirRespostas,
+  type MudancaDosCamposDaTi,
+  mudarCamposDaTi,
   type RespostaDoCampo,
   type RespostasDoFormulario,
   responder,
@@ -408,6 +422,7 @@ export {
 export {
   type AtivoDasRespostas,
   type ContextoDasRespostas,
+  camposNaAuditoria,
   conferirTituloDoChamado,
   resumoDasRespostas,
   tituloDasRespostas,

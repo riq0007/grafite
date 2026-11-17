@@ -1,10 +1,12 @@
 // A ficha do chamado (spec chamados, "Quem vê e quem atende os chamados", "Prazo do chamado",
 // "Conversa do chamado" e "Respostas prontas"; change chamados-da-ti, design, decisões 5, 8 e 9, e
-// tarefa 4.11): o chamado inteiro numa resposta, a quem o vê. O resumo das respostas sai na
+// tarefas 4.11 e 4.15): o chamado inteiro numa resposta, a quem o vê. O resumo das respostas sai na
 // leitura, dos nomes de agora dos ativos, dos locais e das pessoas; a pessoa vai pelo alcance das
 // pessoas; a conversa leva os anexos de cada mensagem e nota e os alertas do ativo a quem os vê; a
 // OS e a solicitação vão a quem as vê; e o módulo desligado vale como o que a conta não vê. O
-// evento de um código que esta versão não lê fica de fora, em vez de derrubar a ficha.
+// evento do ativo vai com o ativo de antes e o de depois, a toda conta que vê o chamado, como o
+// ativo ligado. O evento de um código que esta versão não lê fica de fora, em vez de derrubar a
+// ficha.
 import {
   alertas,
   anexosDosChamados,
@@ -58,8 +60,9 @@ import { lerContaQueAtende } from './quem-atende.ts';
 type EventoGravado = 'abertura' | EventoDaAcao['evento'];
 
 /**
- * Os eventos que a ficha lê (decisão 8): a abertura e as ações do atendimento. Os que as tarefas
- * 4.15 a 4.18 gravam, o do ativo, o da OS e o da solicitação, entram com elas, pelo `EventoDaAcao`.
+ * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento e a troca do ativo. Os
+ * que as tarefas 4.16 a 4.18 gravam, o da OS e o da solicitação, entram com elas, pelo
+ * `EventoDaAcao`.
  */
 export const EVENTOS_DA_FICHA = [
   'abertura',
@@ -71,6 +74,7 @@ export const EVENTOS_DA_FICHA = [
   'retomou',
   'resolveu',
   'reabriu',
+  'ativo',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -110,6 +114,13 @@ export interface ContaNaFicha {
   nome: string;
 }
 
+/** Um ativo dos dados do evento do ativo, com o rótulo e o patrimônio de agora. */
+export interface AtivoNaFicha {
+  id: string;
+  rotulo: string;
+  patrimonio: string | null;
+}
+
 export type ItemDaConversa =
   | {
       especie: 'mensagem' | 'nota';
@@ -129,6 +140,8 @@ export type ItemDaConversa =
       para: ContaNaFicha | null;
       /** O `desde` do `assumiu` e do `desfez`; nulo nos outros. */
       desde: string | null;
+      /** No `ativo`, o ativo de antes e o de depois, cada um nulo sem ativo; nulo nos outros. */
+      ativo: { antes: AtivoNaFicha | null; depois: AtivoNaFicha | null } | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -229,8 +242,8 @@ async function nomesDasContas(tx: Transacao, ids: ReadonlySet<string>) {
   return new Map(lidas.map(({ id, nome }) => [id, nome]));
 }
 
-/** O nome de agora de cada pessoa. */
-async function nomesDasPessoas(tx: Transacao, ids: ReadonlySet<string>) {
+/** O nome de agora de cada pessoa; a auditoria dos campos da TI também o usa (`edicao.ts`). */
+export async function nomesDasPessoas(tx: Transacao, ids: ReadonlySet<string>) {
   if (ids.size === 0) return new Map<string, string>();
   const lidas = await tx
     .select({ id: pessoas.id, nome: pessoas.nome })
@@ -239,8 +252,11 @@ async function nomesDasPessoas(tx: Transacao, ids: ReadonlySet<string>) {
   return new Map(lidas.map(({ id, nome }) => [id, nome]));
 }
 
-/** Os ativos pelo id, com o rótulo das telas e o local. */
-async function ativosPorId(tx: Transacao, ids: ReadonlySet<string>) {
+/**
+ * Os ativos pelo id, com o rótulo das telas e o local, sem a permissão de ver os ativos, como o ativo
+ * ligado; a troca do ativo e a auditoria dos campos da TI também o usam (`edicao.ts`).
+ */
+export async function ativosPorId(tx: Transacao, ids: ReadonlySet<string>) {
   if (ids.size === 0)
     return new Map<string, AtivoDasRespostas & { id: string; localId: string | null }>();
   const lidos = await tx
@@ -333,14 +349,20 @@ export async function fichaDoChamado(
     .from(mensagensDosChamados)
     .where(eq(mensagensDosChamados.chamadoId, chamado.id))
     .orderBy(asc(mensagensDosChamados.criadaEm), asc(mensagensDosChamados.id));
-  const doEvento = (dados: Record<string, unknown> | null, chave: 'de' | 'para') => {
-    const conta = dados?.[chave];
-    return typeof conta === 'string' ? conta : null;
+  /** O id dos dados do evento: a conta do `de` e do `para`, ou o ativo do `antes` e do `depois`. */
+  const doEvento = (
+    dados: Record<string, unknown> | null,
+    chave: 'de' | 'para' | 'antes' | 'depois',
+  ) => {
+    const id = dados?.[chave];
+    return typeof id === 'string' ? id : null;
   };
 
   const idsDasContas = new Set<string>();
   if (chamado.responsavelId !== null) idsDasContas.add(chamado.responsavelId);
   const idsDasPessoas = new Set(citados.pessoa);
+  const idsDosAtivos = new Set(chamado.ativoId === null ? [] : [chamado.ativoId]);
+  for (const id of citados.ativo) idsDosAtivos.add(id);
   for (const linha of conversaLida) {
     if (linha.especie === 'evento' && !eventoLido(linha.evento)) continue;
     if (linha.autorConta !== null) idsDasContas.add(linha.autorConta);
@@ -348,6 +370,11 @@ export async function fichaDoChamado(
     for (const chave of ['de', 'para'] as const) {
       const conta = doEvento(linha.dados, chave);
       if (conta !== null) idsDasContas.add(conta);
+    }
+    if (linha.evento !== 'ativo') continue;
+    for (const chave of ['antes', 'depois'] as const) {
+      const ativo = doEvento(linha.dados, chave);
+      if (ativo !== null) idsDosAtivos.add(ativo);
     }
   }
   const nomeDaConta = await nomesDasContas(tx, idsDasContas);
@@ -363,9 +390,13 @@ export async function fichaDoChamado(
           nome: nomeDaPessoa.get(linha.autorPessoa ?? '') ?? '',
         };
 
-  const idsDosAtivos = new Set(chamado.ativoId === null ? [] : [chamado.ativoId]);
-  for (const id of citados.ativo) idsDosAtivos.add(id);
   const ativoDe = await ativosPorId(tx, idsDosAtivos);
+  /** O ativo do evento; o que não se acha vem sem o rótulo, como a conta sem o nome. */
+  const ativoNoEvento = (id: string | null): AtivoNaFicha | null => {
+    if (id === null) return null;
+    const ativo = ativoDe.get(id);
+    return { id, rotulo: ativo?.rotulo ?? '', patrimonio: ativo?.patrimonio ?? null };
+  };
   const ligadoAoChamado = chamado.ativoId === null ? undefined : ativoDe.get(chamado.ativoId);
 
   // Os anexos que ainda existem, de cada mensagem e nota e dos campos, na ordem do envio.
@@ -420,6 +451,13 @@ export async function fichaDoChamado(
           de: contaNoEvento(doEvento(linha.dados, 'de')),
           para: contaNoEvento(doEvento(linha.dados, 'para')),
           desde: momentoLido(linha.dados?.desde)?.toISOString() ?? null,
+          ativo:
+            linha.evento === 'ativo'
+              ? {
+                  antes: ativoNoEvento(doEvento(linha.dados, 'antes')),
+                  depois: ativoNoEvento(doEvento(linha.dados, 'depois')),
+                }
+              : null,
         },
       });
       continue;

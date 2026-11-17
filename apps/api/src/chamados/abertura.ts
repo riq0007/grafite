@@ -88,13 +88,14 @@ export interface ChamadoAberto {
   responsavel: { id: string; nome: string } | null;
 }
 
-interface Leitor {
+/** Quem lê o ativo, o local e a pessoa das respostas: a conta, pelo acesso, e a árvore. */
+export interface Leitor {
   acesso: Acesso;
   arvore: ArvoreDeLocais;
 }
 
 /** O ativo de uma resposta, como a abertura o usa. */
-interface AtivoDaResposta extends AtivoDasRespostas {
+export interface AtivoDaResposta extends AtivoDasRespostas {
   id: string;
   localId: string | null;
 }
@@ -128,9 +129,10 @@ async function lerTipo(tx: Transacao, id: string) {
 
 /**
  * O ativo de uma resposta: o que quem abre não vê é como o que não existe, o inativo é recusado, e
- * o de um tipo que o campo não aceita, com os nomes dos aceitos.
+ * o de um tipo que o campo não aceita, com os nomes dos aceitos. A troca do ativo do chamado e os
+ * campos da TI também o usam (`edicao.ts`).
  */
-async function conferirAtivo(
+export async function conferirAtivo(
   tx: Transacao,
   ativoId: string,
   aceitos: readonly string[],
@@ -183,9 +185,10 @@ async function conferirLocal(tx: Transacao, localId: string): Promise<string | n
 /**
  * O ativo, o local e a pessoa das respostas, que o domínio deixa para a API (design, decisão 2):
  * existem, quem abre vê o ativo, e estão ativos. Devolve as recusas na chave de cada campo, os
- * ativos lidos, para o título, e o ativo ligado, a resposta do primeiro campo Ativo.
+ * ativos lidos, para o título, e o ativo ligado, a resposta do primeiro campo Ativo. Os campos da
+ * TI o usam com as respostas que mudaram (`edicao.ts`).
  */
-async function conferirReferencias(
+export async function conferirReferencias(
   tx: Transacao,
   formulario: Formulario,
   respostas: Readonly<Record<string, unknown>>,
@@ -329,6 +332,8 @@ export async function abrirChamado(
       ativoId: ativoLigado?.id ?? null,
       locais: doChamado.locais,
       semLocal: doChamado.semLocal,
+      // O local da pessoa na abertura, que a troca do ativo usa para refazer os locais (tarefa 4.15).
+      localDaPessoa: pessoa.localId,
       situacao: atendimento.situacao,
       responsavelId: atendimento.atende,
       responsavelDesde: atendimento.atende ? momento : null,

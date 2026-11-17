@@ -224,6 +224,17 @@ describe('antesDoAssumir', () => {
         'aguardando',
       ),
     ).toBeNull();
+    // A troca do ativo depois do assumir sobe a versão (tarefa 4.15).
+    expect(
+      antesDoAssumir(
+        [
+          assumiuDaTriagem,
+          evento('ativo', DIEGO, '09:50', { antes: null, depois: 'ativo-pat-00139' }),
+        ],
+        ANA,
+        'em-atendimento',
+      ),
+    ).toBeNull();
     // Nada foi assumido desde a abertura.
     expect(antesDoAssumir([evento('abertura', ANA, '07:40')], ANA, 'triagem')).toBeNull();
     expect(antesDoAssumir([], ANA, 'triagem')).toBeNull();
@@ -244,7 +255,7 @@ describe('antesDoAssumir', () => {
     }
   });
 
-  it('os eventos que sobem a versão são os das ações, sem a abertura', () => {
+  it('os eventos que sobem a versão são os das ações e a troca do ativo, sem a abertura', () => {
     expect(EVENTOS_QUE_SOBEM_A_VERSAO).toEqual([
       'assumiu',
       'passou',
@@ -254,6 +265,7 @@ describe('antesDoAssumir', () => {
       'retomou',
       'resolveu',
       'reabriu',
+      'ativo',
     ]);
   });
 });

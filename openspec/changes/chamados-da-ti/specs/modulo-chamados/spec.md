@@ -165,11 +165,17 @@ A coluna da direita SHALL ter as seções que recolhem:
 
 As seções SHALL começar com o Ativo ligado e a Linha do tempo abertos, e a escolha SHALL ficar guardada neste navegador.
 
+A mudança de um campo só da TI que esconde, pela condição, um campo com anexo SHALL pedir a confirmação antes de gravar, com o nome do campo e quantos arquivos saem, porque o anexo é removido na hora (spec chamados, requisito "Ativo ligado e campos da TI").
+
 Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 
 #### Scenario: Chamado aguardando
 - **WHEN** Ana abre o #1041, que aguarda Fernanda desde 09:21
 - **THEN** o cabeçalho mostra "Aguardando o colaborador", e o quadro do prazo diz "Relógio parado · Parou às 09:21 · restam 1 h 44 min"
+
+#### Scenario: Mudança que esconde um anexo
+- **WHEN** Ana muda o "Contrato de manutenção" do #1042 para "Sim", e a "Foto da peça", que só aparece com "Não", tem 1 arquivo
+- **THEN** a tela pergunta "A Foto da peça some, e 1 arquivo é apagado." com "Mudar" e "Cancelar", e só grava depois de "Mudar"
 
 #### Scenario: Ver sem atender
 - **WHEN** Carla, que só vê os chamados, abre o #1042

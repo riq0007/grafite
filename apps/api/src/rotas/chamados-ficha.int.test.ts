@@ -667,6 +667,8 @@ describe('GET /chamados/:numero', () => {
         de: null,
         para: null,
         desde: null,
+        // Só o evento do ativo tem o ativo (tarefa 4.15).
+        ativo: null,
       },
       {
         especie: 'mensagem',
@@ -693,6 +695,7 @@ describe('GET /chamados/:numero', () => {
         de: { conta: conta('ana'), nome: 'Ana Souza' },
         para: { conta: conta('diego'), nome: 'Diego Ramos' },
         desde: null,
+        ativo: null,
       },
       {
         especie: 'evento',
@@ -703,6 +706,7 @@ describe('GET /chamados/:numero', () => {
         de: { conta: conta('diego'), nome: 'Diego Ramos' },
         para: null,
         desde: iso('08:30'),
+        ativo: null,
       },
     ];
     expect((await lerFicha(1042, 'ana')).conversa).toEqual(esperada);
