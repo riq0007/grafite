@@ -599,6 +599,13 @@ A leitura que serve a quem atende e a quem configura, como as sugestões do Ativ
 
 As rotas ficam num bloco próprio em `apps/api/src/app.ts`, com o `exigirModuloLigado` do módulo `chamados`, como os outros módulos opcionais. Fora do bloco, a busca segue a regra dos módulos desligados (spec modulos-da-organizacao), e a tarefa do prazo pula a organização com o módulo desligado, pelo `modulosDesligados`.
 
+**Os alvos na consulta da auditoria (tarefa 4.21).** A consulta (`apps/api/src/rotas/auditoria.ts`) dá o nome de agora do alvo, lido de uma vez para os registros da página, como o dos ativos, dos segredos, das solicitações e das OS. Decisões que o plano não fechava:
+- **O chamado** é "#<número> · <título>", com o título inteiro: ele já tem no máximo 120 caracteres e fica numa linha só, ao contrário do problema da OS, que o `nomeDaOrdem` corta. O título é o de agora, como foi escrito, também depois da anonimização da pessoa.
+- **O tipo** vai pelo nome, e **a resposta pronta**, pelo rótulo. O Rascunho descartado e a resposta removida não têm mais a linha: o alvo fica sem o nome, e o filtro pelo alvo segue achando os registros pelo id. O nome e o rótulo ficam no antes do `tipo-de-chamado.descartado` e do `resposta-pronta.removida`, que já os gravam.
+- **Os alvos sem id** (a ordem dos tipos, a ordem das respostas prontas e o horário da TI) ficam sem o nome: o tipo do alvo já diz o que é, e a tela da Auditoria o escreve (tarefa 5.28).
+- **Com o módulo desligado**, a consulta segue com os nomes, como a do segredo com o Cofre desligado: a auditoria é da plataforma, só de quem tem `auditoria.ver`, que já lê o título no depois da abertura, e o desligar guarda os dados (spec modulos-da-organizacao).
+- **A leitura dos nomes** passa a um mapa por tipo de alvo, com uma consulta por tipo que aparece na página, para os sete tipos lidos à parte não repetirem o mesmo bloco.
+
 ### 19. O que o plano põe e o mockup não mostra
 
 A referência das revisões das telas. Cada item é do plano, e não do mockup:

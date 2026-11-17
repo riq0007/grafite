@@ -567,7 +567,7 @@ A auditoria SHALL registrar:
   - as respostas prontas;
   - o horário da TI.
 
-Cada registro SHALL ter o "antes → depois" do que mudou. O "Enviar e esperar a resposta" na triagem, que assume o chamado e o põe em Aguardando, SHALL ser um registro só, o do aguardar, com quem passou a atender no "antes → depois"; no chamado que já aguarda, ele é só a mensagem. O alvo SHALL ser o chamado com o número e o título como estão agora, como "#1042 · Impressora manchando". As mensagens e as notas SHALL NOT ir para a auditoria: a conversa as guarda, com quem escreveu e quando.
+Cada registro SHALL ter o "antes → depois" do que mudou. O "Enviar e esperar a resposta" na triagem, que assume o chamado e o põe em Aguardando, SHALL ser um registro só, o do aguardar, com quem passou a atender no "antes → depois"; no chamado que já aguarda, ele é só a mensagem. O alvo SHALL ser o chamado com o número e o título como estão agora, como "#1042 · Impressora manchando". Nos ajustes, o alvo SHALL ser o tipo pelo nome de agora e a resposta pronta pelo rótulo de agora. O Rascunho descartado e a resposta pronta removida SHALL ficar sem o nome no alvo, e o registro do descarte e o da remoção guardam o nome e o rótulo no antes. As mensagens e as notas SHALL NOT ir para a auditoria: a conversa as guarda, com quem escreveu e quando.
 
 Os eventos em tempo real (spec eventos-em-tempo-real) SHALL ser:
 - `chamados.mudaram`, quando um chamado abre, muda ou ganha uma mensagem, a quem vê os chamados nos locais dele, os de antes e os de depois;
@@ -582,3 +582,11 @@ Os eventos SHALL NOT levar o título, o texto nem o nome da pessoa.
 #### Scenario: Passar na auditoria
 - **WHEN** Ana passa o #1038 a Renato
 - **THEN** a auditoria registra "#1038 · Wi-Fi cai na Sala Atlântico", com quem atendia antes e depois, Ana e o momento
+
+#### Scenario: Título trocado na auditoria
+- **WHEN** Ana troca o título do #1042 de "Impressora manchando na borda" para "Impressora manchando"
+- **THEN** a abertura e a troca do título aparecem na auditoria com o alvo "#1042 · Impressora manchando"
+
+#### Scenario: Rascunho descartado na auditoria
+- **WHEN** quem configura cria um Rascunho, o salva com o nome "Scanner" e o descarta
+- **THEN** os três registros dele ficam sem o nome no alvo, e o do descarte guarda "Scanner" no antes

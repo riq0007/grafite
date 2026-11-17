@@ -8,6 +8,7 @@ import { contas, eventos, horarioDaTi, naOrganizacao, tiposDeChamado } from '@gr
 import { eq, notInArray } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { criarTipo, desligarModulos } from '../../test/alertas.ts';
+import { pedidoDoTipo } from '../../test/chamados.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -102,20 +103,7 @@ const descartar = (id: string, usuario = 'ana') =>
   cliente.enviar('DELETE', `/chamados/tipos/${id}`, como(usuario));
 
 /** O pedido da gravação a partir do tipo lido, como a tela o manda. */
-const pedidoDe = (tipo: TipoLido) => ({
-  nome: tipo.nome,
-  icone: tipo.icone,
-  frase: tipo.frase,
-  prazo: tipo.prazo,
-  atendePorPadrao: tipo.atendePorPadrao?.id ?? null,
-  semNinguem: tipo.semNinguem,
-  podeVirarOs: tipo.podeVirarOs,
-  geraSolicitacao: tipo.geraSolicitacao,
-  tipoDeAtivoDoEquipamento: tipo.tipoDeAtivoDoEquipamento?.id ?? null,
-  pedeOAtivo: tipo.pedeOAtivo,
-  apareceParaOColaborador: tipo.apareceParaOColaborador,
-  soATiAbre: tipo.soATiAbre,
-});
+const pedidoDe = (tipo: TipoLido) => pedidoDoTipo(tipo);
 type Pedido = ReturnType<typeof pedidoDe>;
 
 /**

@@ -75,6 +75,40 @@ export interface LinhaDaConversa {
   em: Date;
 }
 
+/** O que a gravação do tipo (`PUT /chamados/tipos/:id`) lê do tipo como a API o devolve. */
+export interface TipoParaGravar {
+  nome: string;
+  icone: string;
+  frase: string | null;
+  prazo: unknown;
+  atendePorPadrao: { id: string } | null;
+  semNinguem: string;
+  podeVirarOs: boolean;
+  geraSolicitacao: string;
+  tipoDeAtivoDoEquipamento: { id: string } | null;
+  pedeOAtivo: boolean;
+  apareceParaOColaborador: boolean;
+  soATiAbre: boolean;
+}
+
+/** O pedido da gravação do tipo a partir do tipo devolvido pela API, como a tela o manda. */
+export function pedidoDoTipo<T extends TipoParaGravar>(tipo: T) {
+  return {
+    nome: tipo.nome,
+    icone: tipo.icone,
+    frase: tipo.frase,
+    prazo: tipo.prazo,
+    atendePorPadrao: tipo.atendePorPadrao?.id ?? null,
+    semNinguem: tipo.semNinguem,
+    podeVirarOs: tipo.podeVirarOs,
+    geraSolicitacao: tipo.geraSolicitacao,
+    tipoDeAtivoDoEquipamento: tipo.tipoDeAtivoDoEquipamento?.id ?? null,
+    pedeOAtivo: tipo.pedeOAtivo,
+    apareceParaOColaborador: tipo.apareceParaOColaborador,
+    soATiAbre: tipo.soATiAbre,
+  };
+}
+
 export type ChamadosDeTeste = Awaited<ReturnType<typeof montarChamados>>;
 
 /**
