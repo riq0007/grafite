@@ -577,10 +577,14 @@ export {
   type ContadorDaImpressora,
   condicoesDosBits,
   contadoresDaImpressora,
+  DIAS_DA_MEDIA_DE_PAGINAS,
+  JANELA_DA_MEDIA_DE_PAGINAS,
+  type LeituraDoContador,
   NIVEL_HA_SUPRIMENTO,
   type NivelDoSuprimento,
   nivelDoSuprimento,
   paginasEmPretoEBranco,
+  paginasPorMes,
   ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
   type SeveridadeDaCondicao,
   TIPOS_DE_SUPRIMENTO,
@@ -723,7 +727,7 @@ export {
   nomeNormalizadoDoFornecedor,
   validarFornecedor,
 } from './fornecedores/fornecedor.ts';
-export { comecoDoDia, nomeDoFuso } from './fuso.ts';
+export { comecoDoAno, comecoDoDia, nomeDoFuso } from './fuso.ts';
 export {
   type AtivoNoIndice,
   type CampoDoCasamento,

@@ -220,3 +220,30 @@ export function paginasEmPretoEBranco(contadores: readonly ContadorDaImpressora[
   }
   return total.cores === 1 ? total.paginas : null;
 }
+
+/** Uma leitura do total de páginas, com o momento dela. */
+export interface LeituraDoContador {
+  paginas: number;
+  momento: Date;
+}
+
+/** Quantos dias de leituras do contador a média por mês pede, no mínimo. */
+export const DIAS_DA_MEDIA_DE_PAGINAS = 7;
+
+/** Quantos dias de leituras do contador a média por mês olha, no máximo: o uso de agora. */
+export const JANELA_DA_MEDIA_DE_PAGINAS = 90;
+
+const DIA_EM_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * As páginas por mês entre duas leituras do contador (change chamados-da-ti, design, decisão 5, "O
+ * resumo na ficha"), num mês de 30 dias, arredondadas: nada com menos de 7 dias entre elas, para uma
+ * leitura de ontem não virar média, e nada com o contador que diminuiu, como na troca da placa.
+ */
+export function paginasPorMes(antes: LeituraDoContador, agora: LeituraDoContador): number | null {
+  const dias = (agora.momento.getTime() - antes.momento.getTime()) / DIA_EM_MS;
+  if (dias < DIAS_DA_MEDIA_DE_PAGINAS) return null;
+  const paginas = agora.paginas - antes.paginas;
+  if (paginas < 0) return null;
+  return Math.round((paginas / dias) * 30);
+}

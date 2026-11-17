@@ -402,6 +402,28 @@ As recusas dos campos SHALL ser as das respostas do formulário (spec tipos-de-c
 
 A troca do título e dos campos da TI SHALL NOT subir a versão nem ir à conversa; a auditoria a registra.
 
+O chamado SHALL trazer a quem o vê, com o módulo Ativos ligado, o resumo do ativo ligado, também sem `ativos.ver`:
+- a disponibilidade e os suprimentos, cada um com o nível, como a ficha do ativo os mostra, com o que é restrito, como o IP no motivo, só a quem vê os campos restritos no local do ativo;
+- o total de páginas e, com pelo menos 7 dias de leituras do contador nos últimos 90, a média de páginas por mês;
+- a quem vê os alertas no local do ativo, se ele tem um alerta do toner aberto na severidade Crítico, que a tela mostra como "Toner crítico", com o limite da regra de alerta da organização;
+- a quem vê as OS no local do ativo, quantas OS do ativo estão em aberto e quantas foram concluídas no ano, no fuso do horário da TI;
+- a quem vê o estoque, os consumíveis compatíveis com o modelo, cada um com o saldo e o mínimo somados nos locais em que a conta vê o estoque e se algum desses locais está abaixo do mínimo;
+- a quem a vê, a solicitação de Toner pendente da impressora, a que o "Pedir toner" juntaria o chamado.
+
+Com o módulo Operação desligado, as OS, o saldo e a solicitação SHALL ficar de fora, como a quem não os vê; com o módulo Alertas desligado, o alerta do toner.
+
+#### Scenario: Resumo do ativo sem acesso aos ativos
+- **WHEN** Diego, sem `ativos.ver`, abre o #1042, da PAT-00139, com o toner preto em 8% e 12.500 páginas
+- **THEN** o resumo traz o toner preto em 8% e as 12.500 páginas, e não traz as OS, o saldo nem a solicitação, que ele não vê
+
+#### Scenario: Toner crítico pelo alerta do toner
+- **WHEN** Ana abre o #1042, da PAT-00139, com o alerta "Toner em 10% ou menos", Crítico, aberto às 09:36
+- **THEN** o resumo diz que o toner está crítico, o que não diria com o alerta já resolvido ou só na Atenção
+
+#### Scenario: Resumo do ativo com o estoque e a solicitação
+- **WHEN** quem vê o estoque e as solicitações abre o #1042, com o CF258A em 3 de 6 e a solicitação 4 de Toner pendente na PAT-00139
+- **THEN** o resumo traz o CF258A com o saldo 3 e o mínimo 6, e a solicitação 4 com a situação dela
+
 #### Scenario: Ativo de outro local
 - **WHEN** Ana liga ao #1040, de uma pessoa de Jundiaí, uma impressora de Campinas
 - **THEN** os locais do #1040 passam a ser Jundiaí e Campinas, e só quem atende os dois pode atendê-lo

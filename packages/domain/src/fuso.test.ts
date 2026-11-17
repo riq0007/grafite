@@ -1,5 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { comecoDoDia, nomeDoFuso, relogioDoFuso } from './fuso.ts';
+import { comecoDoAno, comecoDoDia, nomeDoFuso, relogioDoFuso } from './fuso.ts';
+
+describe('comecoDoAno', () => {
+  it('é a meia-noite do 1º de janeiro no relógio do fuso', () => {
+    const agora = new Date('2026-11-17T12:00:00Z');
+    expect(comecoDoAno(agora, 'America/Sao_Paulo')).toEqual(new Date('2026-01-01T03:00:00Z'));
+    expect(comecoDoAno(agora, 'UTC')).toEqual(new Date('2026-01-01T00:00:00Z'));
+  });
+
+  it('o ano é o do fuso, e não o de UTC', () => {
+    // 02:00 do 1º de janeiro em UTC ainda é 23:00 do dia 31 de dezembro em São Paulo.
+    expect(comecoDoAno(new Date('2026-01-01T02:00:00Z'), 'America/Sao_Paulo')).toEqual(
+      new Date('2025-01-01T03:00:00Z'),
+    );
+    expect(comecoDoAno(new Date('2026-12-31T20:00:00Z'), 'Asia/Tokyo')).toEqual(
+      new Date('2026-12-31T15:00:00Z'),
+    );
+  });
+});
 
 describe('comecoDoDia', () => {
   it('é a meia-noite do dia no relógio do fuso', () => {

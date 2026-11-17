@@ -10,9 +10,41 @@ import {
   NIVEL_HA_SUPRIMENTO,
   nivelDoSuprimento,
   paginasEmPretoEBranco,
+  paginasPorMes,
   ROTULOS_DOS_TIPOS_DE_SUPRIMENTO,
   tipoDoSuprimento,
 } from './impressoras.ts';
+
+describe('as páginas por mês', () => {
+  const DIA = 24 * 60 * 60 * 1000;
+  const agora = new Date('2026-11-17T12:00:00Z');
+  const leitura = (paginas: number, diasAntes = 0) => ({
+    paginas,
+    momento: new Date(agora.getTime() - diasAntes * DIA),
+  });
+
+  it('a diferença do contador num mês de 30 dias, arredondada', () => {
+    expect(paginasPorMes(leitura(10600, 30), leitura(12500))).toBe(1900);
+    expect(paginasPorMes(leitura(10600, 15), leitura(11550))).toBe(1900);
+    expect(paginasPorMes(leitura(0, 10), leitura(333))).toBe(999);
+    // 100 páginas em 7 dias são 428,57 por mês.
+    expect(paginasPorMes(leitura(0, 7), leitura(100))).toBe(429);
+  });
+
+  it('o contador parado dá zero', () => {
+    expect(paginasPorMes(leitura(12500, 30), leitura(12500))).toBe(0);
+  });
+
+  it('pede pelo menos 7 dias entre as leituras', () => {
+    const quaseSete = { paginas: 0, momento: new Date(agora.getTime() - 7 * DIA + 1) };
+    expect(paginasPorMes(quaseSete, leitura(100))).toBeNull();
+    expect(paginasPorMes(leitura(12500), leitura(12500))).toBeNull();
+  });
+
+  it('o contador que diminuiu, como na troca da placa, não dá média', () => {
+    expect(paginasPorMes(leitura(12500, 30), leitura(300))).toBeNull();
+  });
+});
 
 describe('o nível do suprimento', () => {
   it('o percentual da capacidade, arredondado, quando a impressora mede', () => {

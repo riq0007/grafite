@@ -37217,6 +37217,37 @@ export interface components {
                 } | null;
             }[];
         };
+        CompativelNoResumoDoAtivoInput: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number;
+            minimo: number;
+            abaixo: boolean;
+        };
+        ResumoDoAtivoNoChamadoInput: {
+            disponibilidade: components["schemas"]["DisponibilidadeDoAtivoInput"] | null;
+            suprimentos: components["schemas"]["SuprimentosDoAtivoInput"] | null;
+            paginasPorMes: number | null;
+            tonerCritico: boolean | null;
+            ordens: {
+                abertas: number;
+                concluidas: number;
+            } | null;
+            compativeis: components["schemas"]["CompativelNoResumoDoAtivoInput"][] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+        };
         FichaDoChamadoInput: {
             numero: number;
             titulo: string;
@@ -37259,6 +37290,7 @@ export interface components {
                 patrimonio: string | null;
                 local: string | null;
                 abrir: boolean;
+                resumo: components["schemas"]["ResumoDoAtivoNoChamadoInput"] | null;
             } | null;
             locais: string[];
             semLocal: boolean;
@@ -42516,6 +42548,37 @@ export interface components {
                 } | null;
             }[];
         };
+        CompativelNoResumoDoAtivo: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number;
+            minimo: number;
+            abaixo: boolean;
+        };
+        ResumoDoAtivoNoChamado: {
+            disponibilidade: components["schemas"]["DisponibilidadeDoAtivo"] | null;
+            suprimentos: components["schemas"]["SuprimentosDoAtivo"] | null;
+            paginasPorMes: number | null;
+            tonerCritico: boolean | null;
+            ordens: {
+                abertas: number;
+                concluidas: number;
+            } | null;
+            compativeis: components["schemas"]["CompativelNoResumoDoAtivo"][] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+        };
         FichaDoChamado: {
             numero: number;
             titulo: string;
@@ -42558,6 +42621,7 @@ export interface components {
                 patrimonio: string | null;
                 local: string | null;
                 abrir: boolean;
+                resumo: components["schemas"]["ResumoDoAtivoNoChamado"] | null;
             } | null;
             locais: string[];
             semLocal: boolean;

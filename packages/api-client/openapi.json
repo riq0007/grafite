@@ -13306,6 +13306,218 @@
           "chamados"
         ]
       },
+      "CompativelNoResumoDoAtivoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "toner",
+              "cilindro",
+              "tinta",
+              "fita",
+              "kit-de-manutencao",
+              "peca",
+              "outro"
+            ]
+          },
+          "cor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "preto",
+                  "ciano",
+                  "magenta",
+                  "amarelo",
+                  "colorido"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rendimento": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saldo": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "minimo": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "abaixo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "codigo",
+          "nome",
+          "tipo",
+          "cor",
+          "rendimento",
+          "saldo",
+          "minimo",
+          "abaixo"
+        ]
+      },
+      "ResumoDoAtivoNoChamadoInput": {
+        "type": "object",
+        "properties": {
+          "disponibilidade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisponibilidadeDoAtivoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suprimentos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuprimentosDoAtivoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paginasPorMes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tonerCritico": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "ordens": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "abertas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "concluidas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "abertas",
+                  "concluidas"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compativeis": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CompativelNoResumoDoAtivoInput"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "solicitacao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aberta",
+                      "em-atendimento",
+                      "aguardando-entrega",
+                      "concluida",
+                      "cancelada"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "numero",
+                  "situacao"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "disponibilidade",
+          "suprimentos",
+          "paginasPorMes",
+          "tonerCritico",
+          "ordens",
+          "compativeis",
+          "solicitacao"
+        ]
+      },
       "FichaDoChamadoInput": {
         "type": "object",
         "properties": {
@@ -13481,6 +13693,16 @@
                   },
                   "abrir": {
                     "type": "boolean"
+                  },
+                  "resumo": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ResumoDoAtivoNoChamadoInput"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -13488,7 +13710,8 @@
                   "rotulo",
                   "patrimonio",
                   "local",
-                  "abrir"
+                  "abrir",
+                  "resumo"
                 ]
               },
               {
@@ -39998,6 +40221,222 @@
         ],
         "additionalProperties": false
       },
+      "CompativelNoResumoDoAtivo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "toner",
+              "cilindro",
+              "tinta",
+              "fita",
+              "kit-de-manutencao",
+              "peca",
+              "outro"
+            ]
+          },
+          "cor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "preto",
+                  "ciano",
+                  "magenta",
+                  "amarelo",
+                  "colorido"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rendimento": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saldo": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "minimo": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "abaixo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "codigo",
+          "nome",
+          "tipo",
+          "cor",
+          "rendimento",
+          "saldo",
+          "minimo",
+          "abaixo"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDoAtivoNoChamado": {
+        "type": "object",
+        "properties": {
+          "disponibilidade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisponibilidadeDoAtivo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suprimentos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuprimentosDoAtivo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paginasPorMes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tonerCritico": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "ordens": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "abertas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "concluidas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "abertas",
+                  "concluidas"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compativeis": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CompativelNoResumoDoAtivo"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "solicitacao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "situacao": {
+                    "type": "string",
+                    "enum": [
+                      "aberta",
+                      "em-atendimento",
+                      "aguardando-entrega",
+                      "concluida",
+                      "cancelada"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "numero",
+                  "situacao"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "disponibilidade",
+          "suprimentos",
+          "paginasPorMes",
+          "tonerCritico",
+          "ordens",
+          "compativeis",
+          "solicitacao"
+        ],
+        "additionalProperties": false
+      },
       "FichaDoChamado": {
         "type": "object",
         "properties": {
@@ -40177,6 +40616,16 @@
                   },
                   "abrir": {
                     "type": "boolean"
+                  },
+                  "resumo": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ResumoDoAtivoNoChamado"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -40184,7 +40633,8 @@
                   "rotulo",
                   "patrimonio",
                   "local",
-                  "abrir"
+                  "abrir",
+                  "resumo"
                 ],
                 "additionalProperties": false
               },

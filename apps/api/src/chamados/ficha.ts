@@ -1,6 +1,7 @@
 // A ficha do chamado (spec chamados, "Quem vê e quem atende os chamados", "Prazo do chamado",
 // "Conversa do chamado" e "Respostas prontas"; change chamados-da-ti, design, decisões 5, 8 e 9, e
-// tarefas 4.11 e 4.15): o chamado inteiro numa resposta, a quem o vê. O resumo das respostas sai na
+// tarefas 4.11, 4.15 e 4.25): o chamado inteiro numa resposta, a quem o vê, com o resumo do ativo
+// ligado (`resumo-do-ativo.ts`). O resumo das respostas sai na
 // leitura, dos nomes de agora dos ativos, dos locais e das pessoas; a pessoa vai pelo alcance das
 // pessoas; a conversa leva os anexos de cada mensagem e nota e os alertas do ativo a quem os vê; a
 // OS e a solicitação vão a quem as vê; e o módulo desligado vale como o que a conta não vê. O
@@ -58,6 +59,7 @@ import { chamadoNaoEncontrado } from './alcance.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { lerContaQueAtende } from './quem-atende.ts';
+import { type ResumoDoAtivo, resumoDoAtivo } from './resumo-do-ativo.ts';
 
 /** Os códigos que esta versão grava na conversa: a abertura e os eventos das ações do domínio. */
 type EventoGravado = 'abertura' | EventoDaAcao['evento'];
@@ -195,6 +197,8 @@ export interface FichaDoChamado {
     patrimonio: string | null;
     local: string | null;
     abrir: boolean;
+    /** O resumo da seção "Ativo ligado"; nulo com o Ativos desligado. */
+    resumo: ResumoDoAtivo | null;
   } | null;
   locais: string[];
   semLocal: boolean;
@@ -615,6 +619,16 @@ export async function fichaDoChamado(
 
   const prazo = lerPrazoDoChamado(chamado.prazo);
   const horario = await lerHorarioDaTi(tx);
+  const resumoDoLigado =
+    ligadoAoChamado && ligado('ativos')
+      ? await resumoDoAtivo(tx, ligadoAoChamado.id, {
+          acesso,
+          arvore,
+          agora,
+          fuso: horario.fuso,
+          ligado,
+        })
+      : null;
   const parouEm = momentoEmQueParou(chamado.relogioDesde, conversaLida);
   const anonimizada = pessoa.situacao === 'anonimizada';
   const vePessoa = !anonimizada && podeEm(acesso, 'pessoas.ver', pessoa.localId, arvore);
@@ -642,6 +656,7 @@ export async function fichaDoChamado(
           patrimonio: ligadoAoChamado.patrimonio,
           local: caminhoDo(arvore, ligadoAoChamado.localId),
           abrir: ligado('ativos') && podeEm(acesso, 'ativos.ver', ligadoAoChamado.localId, arvore),
+          resumo: resumoDoLigado,
         }
       : null,
     locais: chamado.locais,

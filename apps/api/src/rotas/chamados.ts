@@ -29,6 +29,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
+import { DisponibilidadeDoAtivo, SuprimentosDoAtivo } from '../ativos/esquemas.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
 import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../chamados/acoes.ts';
 import { NumeroDoChamado } from '../chamados/alcance.ts';
@@ -44,6 +45,7 @@ import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import { ValorDoPrazo } from '../chamados/tipos.ts';
 import { pedirToner } from '../chamados/toner.ts';
+import { ConsumivelCompativel } from '../consumiveis/compativeis.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { OrdemDeServico } from '../ordens/esquemas.ts';
 import { RespostaDeProblema } from '../problemas.ts';
@@ -359,6 +361,44 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
   }),
 ]);
 
+/**
+ * O resumo do ativo ligado (change chamados-da-ti, design, decisão 5, "O resumo na ficha"): as
+ * leituras como a ficha do ativo as dá, e as OS, os compatíveis e a solicitação, nulos a quem não
+ * os vê e com o Operação desligado.
+ */
+const ResumoDoAtivo = z
+  .object({
+    /** Nula no ativo inativo e no tipo sem a capacidade, como na ficha do ativo. */
+    disponibilidade: DisponibilidadeDoAtivo.nullable(),
+    /** Nulo no ativo inativo e no tipo sem a capacidade, como na ficha do ativo. */
+    suprimentos: SuprimentosDoAtivo.nullable(),
+    /** A média dos últimos 90 dias do contador; nula com menos de 7 dias de leituras. */
+    paginasPorMes: z.int().nullable(),
+    /**
+     * O "Toner crítico": um alerta do toner aberto, na severidade Crítico; nulo sem `alertas.ver` no
+     * local do ativo.
+     */
+    tonerCritico: z.boolean().nullable(),
+    /** As em aberto agora e as concluídas no ano, no fuso da TI; nulo sem `ordens.ver` no local. */
+    ordens: z.object({ abertas: z.int(), concluidas: z.int() }).nullable(),
+    /**
+     * Com o saldo e o mínimo somados onde a conta vê o estoque, e o `abaixo` quando algum desses
+     * locais está abaixo do mínimo; nulo sem `estoque.ver`.
+     */
+    compativeis: z
+      .array(
+        ConsumivelCompativel.extend({ saldo: z.int(), minimo: z.int(), abaixo: z.boolean() }).meta({
+          id: 'CompativelNoResumoDoAtivo',
+        }),
+      )
+      .nullable(),
+    /** A de Toner pendente que o "Pedir toner" juntaria, a quem a vê. */
+    solicitacao: z
+      .object({ id: z.uuid(), numero: z.int(), situacao: z.enum(SITUACOES_DA_SOLICITACAO) })
+      .nullable(),
+  })
+  .meta({ id: 'ResumoDoAtivoNoChamado' });
+
 const FichaDoChamado = z
   .object({
     numero: z.int(),
@@ -402,6 +442,8 @@ const FichaDoChamado = z
         patrimonio: z.string().nullable(),
         local: z.string().nullable(),
         abrir: z.boolean(),
+        /** O resumo da seção "Ativo ligado", também sem `ativos.ver`; nulo com o Ativos desligado. */
+        resumo: ResumoDoAtivo.nullable(),
       })
       .nullable(),
     locais: z.array(z.uuid()),

@@ -111,3 +111,11 @@ export function comecoDoDia(momento: Date, fuso: string): Date {
   const { ano, mes, dia } = relogioDoFuso(momento, fuso);
   return instanteDoRelogio(ano, mes, dia, 0, 0, fuso);
 }
+
+/**
+ * O começo do ano do momento no relógio do fuso: a meia-noite do 1º de janeiro. As OS concluídas no
+ * ano do resumo do ativo no chamado contam a partir dele, no fuso do horário da TI.
+ */
+export function comecoDoAno(momento: Date, fuso: string): Date {
+  return instanteDoRelogio(relogioDoFuso(momento, fuso).ano, 1, 1, 0, 0, fuso);
+}

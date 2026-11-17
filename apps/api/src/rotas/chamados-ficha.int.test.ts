@@ -440,6 +440,8 @@ describe('GET /chamados/:numero', () => {
       patrimonio: 'PAT-00139',
       local: 'Jundiaí › Recepção',
       abrir: true,
+      // O resumo tem o teste dele (chamados-resumo-do-ativo).
+      resumo: expect.any(Object),
     });
 
     // Diego atende os chamados de Jundiaí, sem pessoas.ver nem ativos.ver.
@@ -457,6 +459,7 @@ describe('GET /chamados/:numero', () => {
       patrimonio: 'PAT-00139',
       local: 'Jundiaí › Recepção',
       abrir: false,
+      resumo: expect.any(Object),
     });
     expect(deDiego.permite).toEqual({ atender: true });
   });
@@ -1038,7 +1041,7 @@ describe('GET /chamados/:numero', () => {
       const desligada = await lerFicha(1052, 'ana');
       expect(desligada).toMatchObject({ os: null, solicitacao: null });
       // O ativo é do chamado: continua no cabeçalho e no resumo, sem o atalho.
-      expect(desligada.ativo).toEqual({ ...ligada.ativo, abrir: false });
+      expect(desligada.ativo).toEqual({ ...ligada.ativo, abrir: false, resumo: null });
       expect(desligada.resumo).toBe(ligada.resumo);
       const daImpressora = await lerFicha(1051, 'ana');
       expect(daImpressora.conversa.map((item: { especie: string }) => item.especie)).toEqual([

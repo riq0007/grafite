@@ -29,6 +29,7 @@ import {
   mensagemDaRecusaDoPedirToner,
   recusaDoPedirToner,
   SITUACOES_PENDENTES,
+  type SituacaoDaSolicitacao,
   tintaDoSuprimento,
 } from '@grafite/domain';
 import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
@@ -79,10 +80,14 @@ interface Contexto {
   momento: Date;
 }
 
-/** A solicitação pendente, com os locais, para o público do evento dela. */
+/**
+ * A solicitação pendente, com os locais, para o público do evento dela, e a situação, para o resumo
+ * do ativo no chamado.
+ */
 export interface Pendente {
   id: string;
   numero: number;
+  situacao: SituacaoDaSolicitacao;
   locais: string[];
   semLocal: boolean;
 }
@@ -96,6 +101,7 @@ export async function pendenteDa(tx: Transacao, impressoraId: string): Promise<P
     .select({
       id: solicitacoes.id,
       numero: solicitacoes.numero,
+      situacao: solicitacoes.situacao,
       locais: solicitacoes.locais,
       semLocal: solicitacoes.semLocal,
     })
