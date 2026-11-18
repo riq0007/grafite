@@ -17,18 +17,15 @@ import {
 } from '@grafite/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useApi } from '../../../api/useApi.tsx';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
-import {
-  type ResultadoDoSeletor,
-  SeletorDeConta,
-} from '../../administracao/seletores/SeletorDeConta.tsx';
+import { SeletorDeConta } from '../../administracao/seletores/SeletorDeConta.tsx';
 import {
   SeletorDeLocal,
   useCaminhoDoLocal,
 } from '../../administracao/seletores/SeletorDeLocal.tsx';
-import { buscarPessoas, opcoesDasSugestoes, type PessoaDoFormulario } from './buscas.ts';
+import { opcoesDasSugestoes, type PessoaDoFormulario } from './buscas.ts';
 import {
   avisoSemOsAtivos,
   type Citado,
@@ -41,6 +38,7 @@ import {
 } from './estado.ts';
 import estilos from './Formulario.module.css';
 import { Recusa } from './Recusa.tsx';
+import { useBuscaDaPessoa } from './useBuscaDaPessoa.ts';
 import { useBuscaDoAtivo } from './useBuscaDoAtivo.ts';
 
 export interface PropsDoCampoQueSePreenche {
@@ -410,23 +408,8 @@ interface PropsDaEscolhaDaPessoa {
 
 /** A Pessoa, pela busca do nome, com o local de cada uma ao lado, para os homônimos. */
 function EscolhaDaPessoa({ comum, escolhida, citados, responder, quem }: PropsDaEscolhaDaPessoa) {
-  const api = useApi();
-  // O nome de cada pessoa que a lista mostrou: a resposta cita o nome, sem o local.
-  const nomes = useRef(new Map<string, string>());
-  const buscar = useCallback(
-    async (texto: string, sinal: AbortSignal): Promise<ResultadoDoSeletor> => {
-      const achadas = await buscarPessoas(api, quem, texto, sinal);
-      for (const pessoa of achadas.itens) nomes.current.set(pessoa.id, pessoa.nome);
-      return {
-        itens: achadas.itens.map((pessoa) => ({
-          id: pessoa.id,
-          rotulo: pessoa.local ? `${pessoa.nome} · ${pessoa.local}` : pessoa.nome,
-        })),
-        total: achadas.total,
-      };
-    },
-    [api, quem],
-  );
+  // A resposta cita o nome, sem o local.
+  const { buscar, nomeDa } = useBuscaDaPessoa(quem);
   return (
     <SeletorDeConta
       {...comum}
@@ -440,8 +423,7 @@ function EscolhaDaPessoa({ comum, escolhida, citados, responder, quem }: PropsDa
           responder(null);
           return;
         }
-        const nome = nomes.current.get(escolha.id) ?? escolha.rotulo;
-        responder(escolha.id, [{ tipo: 'pessoa', id: escolha.id, nome }]);
+        responder(escolha.id, [{ tipo: 'pessoa', id: escolha.id, nome: nomeDa(escolha) }]);
       }}
       buscar={buscar}
     />

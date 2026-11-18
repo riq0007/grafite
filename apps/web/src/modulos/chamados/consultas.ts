@@ -59,6 +59,20 @@ export function useFichaDoChamado(numero: number | null) {
   });
 }
 
+export type TipoDaAbertura = components['schemas']['TipoDaAbertura'];
+
+/**
+ * Os tipos que a gaveta da abertura oferece, com o formulário de cada um, debaixo da chave dos
+ * ajustes: o tipo ativado, inativado ou com o formulário trocado chega à gaveta aberta.
+ */
+export function useTiposDaAbertura() {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DOS_AJUSTES_DOS_CHAMADOS, 'abertura'],
+    queryFn: () => consultar(() => api.GET('/chamados/abertura'), 'carregar os tipos de chamado'),
+  });
+}
+
 /** A lista dos abertos que a conta vê, com o tipo, o título e o relógio de cada um, e o horário. */
 export function usePrazosDosChamados() {
   const api = useApi();

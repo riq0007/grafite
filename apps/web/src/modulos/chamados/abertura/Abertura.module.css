@@ -1,0 +1,125 @@
+/*
+ * A gaveta da abertura (change chamados-da-ti, design, "A gaveta da abertura (tarefa 5.18)"): os
+ * campos um embaixo do outro, a grade dos tipos em duas colunas, o título com a volta ao montado e
+ * os botões no fim.
+ */
+.abertura {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A grade dos tipos: as opções do grupo de rádios do kit em duas colunas da mesma largura. */
+.tipos [data-parte="opcoes"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: stretch;
+}
+
+/*
+ * Cada tipo: o ícone na série dele, o nome e a frase, com a bolinha do rádio no canto. A escolha
+ * aparece pela bolinha preenchida e pela borda do destaque, e não só pela cor.
+ */
+.tipos .tipo {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-3);
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: var(--esp-3) calc(var(--esp-3) + var(--esp-4) + var(--esp-2)) var(--esp-3) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.tipos .tipo[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.tipos .tipo[data-pressed] {
+  background-color: var(--cor-pressionado);
+}
+
+.tipos .tipo[data-selected] {
+  border-color: var(--cor-destaque);
+  box-shadow: inset 0 0 0 1px var(--cor-destaque);
+}
+
+.tipos .tipo[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.tipos .tipo[data-invalid]:not([data-selected]) {
+  border-color: var(--cor-critico);
+}
+
+/* A bolinha do kit, no canto de cima à direita. */
+.tipos .tipo > [data-parte="bolinha"] {
+  position: absolute;
+  inset-block-start: var(--esp-3);
+  inset-inline-end: var(--esp-3);
+  margin: 0;
+}
+
+/* O anel do foco fica no quadro inteiro, e não na bolinha, como no kit. */
+.tipos .tipo[data-focus-visible] > [data-parte="bolinha"] {
+  outline: none;
+}
+
+.textoDoTipo {
+  display: grid;
+  gap: calc(var(--esp-1) / 2);
+  min-width: 0;
+}
+
+.nomeDoTipo {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: 1.3;
+}
+
+.fraseDoTipo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  line-height: 1.35;
+}
+
+/* O estado dos tipos no lugar da grade: carregando, a falha ou nenhum em uso. */
+.semTipos {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.falhaDosTipos {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+}
+
+.falhaDosTipos p {
+  margin: 0;
+  color: var(--cor-critico);
+  font-size: var(--texto-rotulo);
+}
+
+/* O título, com "Usar o título montado" embaixo, à esquerda. */
+.titulo {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-1);
+}
+
+.titulo > :first-child {
+  justify-self: stretch;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}

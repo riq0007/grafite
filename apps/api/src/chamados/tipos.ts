@@ -24,6 +24,7 @@ import {
 import { and, asc, eq, gte, ne, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { naoEncontrado } from '../problemas.ts';
+import { FormularioDeChamado, formularioDa } from './formulario.ts';
 
 /** O último ano da contagem: os 365 dias antes de agora. */
 const UM_ANO_MS = 365 * 24 * 60 * 60 * 1000;
@@ -147,6 +148,37 @@ export async function lerTiposDeChamado(
     abertos: doTipo.get(tipo.id)?.abertos ?? 0,
     noUltimoAno: doTipo.get(tipo.id)?.noUltimoAno ?? 0,
   }));
+}
+
+/**
+ * Um tipo que a gaveta da abertura oferece (design, decisão 18, "Os tipos da gaveta"): o que ela
+ * mostra e o formulário de agora, sem o que só quem configura vê.
+ */
+export const TipoDaAbertura = z
+  .object({
+    id: z.uuid(),
+    nome: z.string(),
+    icone: z.enum(ICONES_DO_TIPO_DE_CHAMADO),
+    /** A frase para o colaborador; o tipo Em uso sempre a tem. */
+    frase: z.string().nullable(),
+    formulario: FormularioDeChamado,
+  })
+  .meta({ id: 'TipoDaAbertura' });
+
+/** Os tipos Em uso, na ordem dos tipos, também os que só a TI abre: os que a abertura aceita. */
+export async function lerTiposDaAbertura(tx: Transacao) {
+  const linhas = await tx
+    .select({
+      id: tiposDeChamado.id,
+      nome: tiposDeChamado.nome,
+      icone: tiposDeChamado.icone,
+      frase: tiposDeChamado.frase,
+      formulario: tiposDeChamado.formulario,
+    })
+    .from(tiposDeChamado)
+    .where(eq(tiposDeChamado.situacao, 'em-uso'))
+    .orderBy(...naOrdem);
+  return linhas.map((linha) => ({ ...linha, formulario: formularioDa(linha) }));
 }
 
 /** Um tipo só, como a lista o mostra; fora da organização, o 404 com a frase do domínio. */

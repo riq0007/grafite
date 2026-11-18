@@ -370,9 +370,15 @@ A mensagem mudada SHALL ficar até a escolha de outro chamado ou até o envio.
 
 A ação principal SHALL ser "Abrir o chamado". O retorno SHALL ser "Chamado #1043 aberto." com "Abrir". A recusa SHALL ficar no campo.
 
+A gaveta SHALL abrir pelo "Novo chamado" dos cabeçalhos do Início, de "Quem está com o quê" e dos Prazos, sobre a tela em que se está, e pela ação "Abrir um chamado" da busca, sobre o Início, só a quem tem `chamados.atender`.
+
 #### Scenario: Abertura pela gaveta
 - **WHEN** Ana busca "Marina", escolhe Impressora, responde e usa "Abrir o chamado"
 - **THEN** a gaveta fecha com "Chamado #1043 aberto.", e o #1043 aparece na coluna de Ana
+
+#### Scenario: Quem só vê não abre
+- **WHEN** Carla, com `chamados.ver` e sem `chamados.atender`, está nos Prazos
+- **THEN** o cabeçalho não tem o "Novo chamado", e o endereço com a gaveta aberta não a abre
 
 ### Requirement: Formulário que se preenche
 

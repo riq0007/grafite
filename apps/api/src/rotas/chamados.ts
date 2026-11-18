@@ -43,7 +43,7 @@ import { buscarPessoas } from '../chamados/pessoas.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
 import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
-import { ValorDoPrazo } from '../chamados/tipos.ts';
+import { lerTiposDaAbertura, TipoDaAbertura, ValorDoPrazo } from '../chamados/tipos.ts';
 import { pedirToner } from '../chamados/toner.ts';
 import { ConsumivelCompativel } from '../consumiveis/compativeis.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
@@ -76,6 +76,10 @@ const ChamadoAberto = z
     responsavel: z.object({ id: z.uuid(), nome: z.string() }).nullable(),
   })
   .meta({ id: 'ChamadoAberto' });
+
+const TiposDaAbertura = z
+  .object({ tipos: z.array(TipoDaAbertura) })
+  .meta({ id: 'TiposDaAbertura' });
 
 /** O termo da busca dos chamados (design, decisão 17): o número, com ou sem o "#", ou as palavras. */
 const PedidoDaBusca = z.object({
@@ -680,6 +684,22 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       );
       return resposta.code(201).send(aberto);
     },
+  );
+
+  // Os tipos da gaveta, a quem atende: a lista e o formulário de cada tipo, em `/chamados/tipos`,
+  // são de quem configura (design, decisão 18, "Os tipos da gaveta").
+  app.get(
+    '/chamados/abertura',
+    {
+      config: { permissao: 'chamados.atender' },
+      schema: {
+        summary: 'Os tipos que a abertura aceita, na ordem, com o formulário de cada um',
+        response: { 200: TiposDaAbertura, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    async (requisicao) => ({
+      tipos: await naOrganizacao(banco, requisicao.organizacao?.id ?? '', lerTiposDaAbertura),
+    }),
   );
 
   // As mesmas sugestões em duas rotas, porque cada rota pede uma permissão só: a da gaveta, de quem

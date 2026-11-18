@@ -53,6 +53,8 @@ A recusa pelos locais SHALL ser "Você não atende os chamados de <local>.".
 
 A pessoa SHALL ser buscada pelas palavras do nome, sem diferenciar os acentos e as maiúsculas, entre as pessoas ativas da organização, até 10, pela ordem do nome, com o total das que casam, para quem busca saber que há mais e afinar o termo. Cada uma SHALL vir com o nome e o local de trabalho, como o chamado a mostra a quem o vê, sem os contatos. A busca SHALL servir também a quem não tem `pessoas.ver`, e a prévia do colaborador SHALL buscar a pessoa do "Ver como" do mesmo jeito.
 
+Os tipos que a abertura oferece SHALL ser lidos por quem tem `chamados.atender`, também sem `chamados.configurar`: os tipos Em uso, na ordem dos tipos, também os que só a TI abre, cada um com o ícone, o nome, a frase e o formulário de agora, sem o que só quem configura vê, como o prazo, quem atende por padrão e os chamados abertos do tipo.
+
 #### Scenario: Busca da pessoa sem acesso às pessoas
 - **WHEN** Diego, com `chamados.atender` e sem `pessoas.ver`, busca "marina" ao abrir um chamado
 - **THEN** a busca acha Marina Rocha, com "Jundiaí › Recepção", sem os contatos, e deixa de fora as pessoas inativas e as anonimizadas
@@ -60,6 +62,10 @@ A pessoa SHALL ser buscada pelas palavras do nome, sem diferenciar os acentos e 
 #### Scenario: Busca só pelo nome
 - **WHEN** quem abre busca pela matrícula ou por uma parte do e-mail de uma pessoa
 - **THEN** a busca não acha a pessoa, porque os contatos só aparecem a quem tem `pessoas.ver`
+
+#### Scenario: Tipos da abertura sem configurar os tipos
+- **WHEN** Diego, com `chamados.atender` e sem `chamados.configurar`, abre a gaveta da abertura
+- **THEN** ele lê os tipos Em uso, na ordem, com o formulário de cada um, sem os rascunhos e sem os inativos
 
 #### Scenario: Chamado pelo telefone
 - **WHEN** Ana abre, em nome de Marina Lopes, um chamado de Impressora com a PAT-00139 e "Manchando, na borda", com "Fica comigo" ligado

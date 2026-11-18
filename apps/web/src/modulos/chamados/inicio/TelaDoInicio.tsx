@@ -30,6 +30,7 @@ import { useAgora } from '../../../casca/status/useAgora.ts';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useSessao } from '../../../sessao/useSessao.tsx';
 import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
+import { NovoChamado } from '../abertura/NovoChamado.tsx';
 import { type ChamadoDepoisDaAcao, useAcoesDoAtendimento } from '../acoes.ts';
 import { BuscaNosChamados } from '../BuscaNosChamados.tsx';
 import {
@@ -182,7 +183,12 @@ export function TelaDoInicio() {
             />
           )
         }
-        acoes={<BuscaNosChamados />}
+        acoes={
+          <>
+            <BuscaNosChamados />
+            <NovoChamado />
+          </>
+        }
       />
       {conteudo}
     </div>

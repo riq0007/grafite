@@ -17,6 +17,7 @@ import {
   useState,
 } from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { NovoChamado } from '../abertura/NovoChamado.tsx';
 import { BuscaNosChamados } from '../BuscaNosChamados.tsx';
 import { usePrazosDosChamados } from '../consultas.ts';
 import { Selo } from '../Pecas.tsx';
@@ -175,7 +176,12 @@ export function ListaDosPrazos() {
               </Selo>
             ))
           }
-          acoes={<BuscaNosChamados />}
+          acoes={
+            <>
+              <BuscaNosChamados />
+              <NovoChamado />
+            </>
+          }
         />
         {conteudo}
       </div>

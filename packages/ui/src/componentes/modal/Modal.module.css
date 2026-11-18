@@ -80,6 +80,10 @@
   outline: none;
 }
 
+.gavetaLarga {
+  width: min(100%, calc(var(--esp-12) * 12));
+}
+
 .gaveta[data-entering] {
   animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-padrao);
 }

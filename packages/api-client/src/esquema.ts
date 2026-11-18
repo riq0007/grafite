@@ -27341,6 +27341,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/abertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos que a abertura aceita, na ordem, com o formulário de cada um */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TiposDaAbertura"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/sugestoes": {
         parameters: {
             query?: never;
@@ -36660,6 +36741,15 @@ export interface components {
             abertos: number;
             noUltimoAno: number;
         };
+        TipoDaAberturaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+        };
         LocalDaOrdemInput: {
             /** Format: uuid */
             id: string;
@@ -37082,6 +37172,9 @@ export interface components {
                 id: string;
                 nome: string;
             } | null;
+        };
+        TiposDaAberturaInput: {
+            tipos: components["schemas"]["TipoDaAberturaInput"][];
         };
         ChamadosNaBuscaInput: {
             itens: {
@@ -41999,6 +42092,15 @@ export interface components {
             abertos: number;
             noUltimoAno: number;
         };
+        TipoDaAbertura: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            formulario: components["schemas"]["FormularioDeChamado"];
+        };
         LocalDaOrdem: {
             /** Format: uuid */
             id: string;
@@ -42421,6 +42523,9 @@ export interface components {
                 id: string;
                 nome: string;
             } | null;
+        };
+        TiposDaAbertura: {
+            tipos: components["schemas"]["TipoDaAbertura"][];
         };
         ChamadosNaBusca: {
             itens: {

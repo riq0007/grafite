@@ -1,5 +1,6 @@
 import { createRoute, Outlet } from '@tanstack/react-router';
 import { raiz } from '../../rotas/raiz.tsx';
+import { validarAbertura } from './abertura/abertura.ts';
 import { HorarioDaTi } from './ajustes/Horario.tsx';
 import { RespostasProntas } from './ajustes/RespostasProntas.tsx';
 import { TiposDeChamado } from './ajustes/Tipos.tsx';
@@ -18,21 +19,25 @@ const chamados = createRoute({
 });
 
 // O endereço do módulo abre o Início dos chamados, que leva quem só configura aos Tipos de chamado.
+// O Início, "Quem está com o quê" e os Prazos abrem a gaveta da abertura pelo `abrir` do endereço.
 const inicio = createRoute({
   getParentRoute: () => chamados,
   path: '/',
+  validateSearch: validarAbertura,
   component: InicioDosChamados,
 });
 
 const quemEstaComOQue = createRoute({
   getParentRoute: () => chamados,
   path: 'quem-esta-com-o-que',
+  validateSearch: validarAbertura,
   component: QuemEstaComOQue,
 });
 
 const prazos = createRoute({
   getParentRoute: () => chamados,
   path: 'prazos',
+  validateSearch: validarAbertura,
   component: PrazosDosChamados,
 });
 
