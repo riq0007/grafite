@@ -260,7 +260,7 @@ O campo de escrever SHALL ficar no pé do chamado aberto, só para quem atende o
 
 A nota interna SHALL mudar o campo para o quadro tracejado da nota, sem as respostas prontas e sem "Esperar a resposta", e o botão SHALL dizer "Salvar a nota".
 
-A resposta pronta SHALL entrar no campo onde está o cursor, com o primeiro nome da pessoa, e ser mandada só pela ação de quem atende. A que espera a resposta SHALL ligar "Esperar a resposta".
+A resposta pronta SHALL entrar no campo onde está o cursor, numa linha dela quando o cursor está colado no texto, com o primeiro nome da pessoa, e ser mandada só pela ação de quem atende. A que espera a resposta SHALL ligar "Esperar a resposta".
 
 Nesta versão, a ajuda do campo SHALL dizer "Escreva a resposta para Fernanda.".
 

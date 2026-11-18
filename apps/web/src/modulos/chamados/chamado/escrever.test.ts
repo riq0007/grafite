@@ -61,25 +61,51 @@ describe('inserirNoTexto: a resposta pronta entra onde está o cursor', () => {
     });
   });
 
-  it('no meio do texto, entra no cursor, e o cursor fica depois dela', () => {
-    expect(inserirNoTexto('Oi, . Obrigada.', 4, 4, 'Fernanda')).toEqual({
-      texto: 'Oi, Fernanda. Obrigada.',
-      cursor: 12,
+  it('entre espaços, entra no cursor, e o cursor fica depois dela', () => {
+    expect(inserirNoTexto('Bom dia! \nAbraço.', 9, 9, 'Pode mandar o print?')).toEqual({
+      texto: 'Bom dia! Pode mandar o print?\nAbraço.',
+      cursor: 29,
     });
   });
 
   it('com uma seleção, troca o selecionado', () => {
-    expect(inserirNoTexto('Bom dia, XXX!', 9, 12, 'Fernanda')).toEqual({
-      texto: 'Bom dia, Fernanda!',
-      cursor: 17,
+    expect(inserirNoTexto('Bom dia! XXX\nAbraço.', 9, 12, 'Pode mandar o print?')).toEqual({
+      texto: 'Bom dia! Pode mandar o print?\nAbraço.',
+      cursor: 29,
     });
   });
 
   it('o cursor fora do texto vai para o fim, e o início depois do fim é o fim', () => {
-    expect(inserirNoTexto('Oi.', 99, 99, ' Tudo bem?')).toEqual({
+    expect(inserirNoTexto('Oi. ', 99, 99, 'Tudo bem?')).toEqual({
       texto: 'Oi. Tudo bem?',
       cursor: 13,
     });
-    expect(inserirNoTexto('abc', 2, 1, 'X')).toEqual({ texto: 'abXc', cursor: 3 });
+    expect(inserirNoTexto('ab  c', 3, 1, 'X')).toEqual({ texto: 'ab X c', cursor: 4 });
+  });
+
+  it('colada no texto de antes, entra na linha de baixo', () => {
+    expect(inserirNoTexto('Abraço.', 7, 7, 'Fernanda, liberei o acesso.')).toEqual({
+      texto: 'Abraço.\nFernanda, liberei o acesso.',
+      cursor: 35,
+    });
+  });
+
+  it('duas seguidas ficam cada uma na sua linha', () => {
+    const primeira = inserirNoTexto('', 0, 0, 'Pode mandar o print?');
+    expect(
+      inserirNoTexto(primeira.texto, primeira.cursor, primeira.cursor, 'Qual é o caminho?'),
+    ).toEqual({ texto: 'Pode mandar o print?\nQual é o caminho?', cursor: 38 });
+  });
+
+  it('colada no texto de depois, o texto segue na linha de baixo, com o cursor no fim dela', () => {
+    expect(inserirNoTexto('Abraço.', 0, 0, 'Pode mandar o print?')).toEqual({
+      texto: 'Pode mandar o print?\nAbraço.',
+      cursor: 20,
+    });
+    // No meio de uma palavra, as duas pontas.
+    expect(inserirNoTexto('Obrigada', 4, 4, 'Tudo bem?')).toEqual({
+      texto: 'Obri\nTudo bem?\ngada',
+      cursor: 14,
+    });
   });
 });

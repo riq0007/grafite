@@ -59,9 +59,14 @@ export function envioDoCampo(modo: ModoDoCampo, esperar: boolean): EnvioDoCampo 
       };
 }
 
+/** O caractere que separa a resposta pronta do texto: o espaço e a quebra de linha. */
+const SEPARA = /\s/;
+
 /**
  * O texto com a resposta pronta onde está o cursor, no lugar da seleção, e o cursor depois dela. O
- * cursor fora do texto vai para o fim.
+ * cursor fora do texto vai para o fim. Colada no texto, ela entra numa linha dela: a quebra antes,
+ * quando o de antes não acaba em espaço nem em quebra, e depois, quando o de depois não começa
+ * neles; o cursor fica no fim da resposta.
  */
 export function inserirNoTexto(
   texto: string,
@@ -71,5 +76,12 @@ export function inserirNoTexto(
 ): { texto: string; cursor: number } {
   const de = Math.min(Math.max(0, inicio), texto.length);
   const ate = Math.min(Math.max(de, fim), texto.length);
-  return { texto: texto.slice(0, de) + inserido + texto.slice(ate), cursor: de + inserido.length };
+  const antes = texto.slice(0, de);
+  const depois = texto.slice(ate);
+  const quebraAntes = antes !== '' && !SEPARA.test(antes.at(-1) ?? '') ? '\n' : '';
+  const quebraDepois = depois !== '' && !SEPARA.test(depois[0] ?? '') ? '\n' : '';
+  return {
+    texto: antes + quebraAntes + inserido + quebraDepois + depois,
+    cursor: de + quebraAntes.length + inserido.length,
+  };
 }
