@@ -17,22 +17,46 @@ export type PedidoDoTipo = components['schemas']['PedidoDoTipoDeChamado'];
 export type ContaQueAtende = components['schemas']['ContasQueAtendemOsChamados']['contas'][number];
 
 /**
- * A ordem depois de soltar os tipos movidos antes ou depois do alvo: os movidos vão juntos, na ordem
- * em que estavam. Soltar sobre um dos movidos, ou num alvo que não está na lista, não muda nada.
+ * A ordem depois de soltar o tipo na metade de cima (antes) ou na de baixo (depois) da linha sob o
+ * ponteiro, como o `useArrastar` a dá (decisão 15). Soltar sobre ele mesmo, ou num alvo que não está
+ * na lista, não muda nada.
  */
 export function reordenar(
   ids: readonly string[],
-  movidos: readonly string[],
+  movido: string,
   alvo: string,
-  posicao: 'before' | 'after',
+  metade: 'antes' | 'depois',
 ): string[] {
-  const mover = new Set(movidos);
-  if (mover.has(alvo)) return [...ids];
-  const resto = ids.filter((id) => !mover.has(id));
+  if (movido === alvo || !ids.includes(movido)) return [...ids];
+  const resto = ids.filter((id) => id !== movido);
   const indice = resto.indexOf(alvo);
   if (indice < 0) return [...ids];
-  const em = posicao === 'before' ? indice : indice + 1;
-  return [...resto.slice(0, em), ...ids.filter((id) => mover.has(id)), ...resto.slice(em)];
+  const em = metade === 'antes' ? indice : indice + 1;
+  return [...resto.slice(0, em), movido, ...resto.slice(em)];
+}
+
+export type MovimentoNaOrdem = 'subir' | 'descer';
+
+/** O "Subir" e o "Descer" do menu da linha: o tipo troca de lugar com o de cima ou com o de baixo. */
+export function moverNaOrdem(
+  ids: readonly string[],
+  id: string,
+  movimento: MovimentoNaOrdem,
+): string[] {
+  const indice = ids.indexOf(id);
+  const vizinho = ids[movimento === 'subir' ? indice - 1 : indice + 1];
+  if (indice < 0 || vizinho === undefined) return [...ids];
+  return reordenar(ids, id, vizinho, movimento === 'subir' ? 'antes' : 'depois');
+}
+
+/** O que o menu da linha oferece: só o que muda a ordem. O primeiro só desce, e o último só sobe. */
+export function movimentosNaOrdem(ids: readonly string[], id: string): MovimentoNaOrdem[] {
+  const indice = ids.indexOf(id);
+  if (indice < 0) return [];
+  const movimentos: MovimentoNaOrdem[] = [];
+  if (indice > 0) movimentos.push('subir');
+  if (indice < ids.length - 1) movimentos.push('descer');
+  return movimentos;
 }
 
 /** O prazo da tabela: o da resolução, curto e com a unidade como está, como "8 h" e "3 d". */

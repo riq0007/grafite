@@ -395,9 +395,10 @@ export {
   Tabela,
 } from './componentes/tabela/Tabela.tsx';
 export {
+  type ArrasteNaTabela,
   type ColunaQueSeOrdena,
+  type PropsDaAlca,
   type PropsDaTabelaQueSeOrdena,
-  type SolturaNaTabela,
   TabelaQueSeOrdena,
 } from './componentes/tabela/TabelaQueSeOrdena.tsx';
 export { type PropsDoValorComposto, ValorComposto } from './componentes/tabela/ValorComposto.tsx';

@@ -8,6 +8,8 @@ import {
   errosDoTipo,
   errosQueValem,
   fraseDosAbertos,
+  moverNaOrdem,
+  movimentosNaOrdem,
   mudouOTipo,
   notasDaPrevia,
   opcoesDeQuemAtende,
@@ -59,8 +61,8 @@ const IMPRESSORA = tipo('Impressora', { frase: 'Mancha, atola ou não imprime' }
 describe('reordenar', () => {
   const ORDEM = ['toner', 'computador', 'impressora', 'acesso', 'software'];
 
-  it('desce o tipo para depois do alvo', () => {
-    expect(reordenar(ORDEM, ['computador'], 'acesso', 'after')).toEqual([
+  it('desce o tipo para depois da linha sob o ponteiro', () => {
+    expect(reordenar(ORDEM, 'computador', 'acesso', 'depois')).toEqual([
       'toner',
       'impressora',
       'acesso',
@@ -69,8 +71,8 @@ describe('reordenar', () => {
     ]);
   });
 
-  it('sobe o tipo para antes do alvo', () => {
-    expect(reordenar(ORDEM, ['software'], 'computador', 'before')).toEqual([
+  it('sobe o tipo para antes da linha sob o ponteiro', () => {
+    expect(reordenar(ORDEM, 'software', 'computador', 'antes')).toEqual([
       'toner',
       'software',
       'computador',
@@ -80,25 +82,50 @@ describe('reordenar', () => {
   });
 
   it('leva ao começo e ao fim da lista', () => {
-    expect(reordenar(ORDEM, ['impressora'], 'toner', 'before')[0]).toBe('impressora');
-    expect(reordenar(ORDEM, ['toner'], 'software', 'after').at(-1)).toBe('toner');
+    expect(reordenar(ORDEM, 'impressora', 'toner', 'antes')[0]).toBe('impressora');
+    expect(reordenar(ORDEM, 'toner', 'software', 'depois').at(-1)).toBe('toner');
   });
 
-  it('vários tipos vão juntos, na ordem em que estavam', () => {
-    expect(reordenar(ORDEM, ['software', 'computador'], 'toner', 'before')).toEqual([
-      'computador',
-      'software',
+  it('a metade de baixo de uma linha e a de cima da seguinte dão a mesma ordem', () => {
+    expect(reordenar(ORDEM, 'toner', 'impressora', 'depois')).toEqual(
+      reordenar(ORDEM, 'toner', 'acesso', 'antes'),
+    );
+  });
+
+  it('soltar no lugar em que já está, ou num alvo que não está na lista, não muda a ordem', () => {
+    expect(reordenar(ORDEM, 'impressora', 'impressora', 'depois')).toEqual(ORDEM);
+    expect(reordenar(ORDEM, 'impressora', 'acesso', 'antes')).toEqual(ORDEM);
+    expect(reordenar(ORDEM, 'impressora', 'computador', 'depois')).toEqual(ORDEM);
+    expect(reordenar(ORDEM, 'impressora', 'outro', 'antes')).toEqual(ORDEM);
+    // O que não está na lista não entra nela.
+    expect(reordenar(ORDEM, 'outro', 'toner', 'antes')).toEqual(ORDEM);
+  });
+});
+
+describe('o Subir e o Descer do menu da linha', () => {
+  const ORDEM = ['toner', 'computador', 'impressora'];
+
+  it('o Subir troca o tipo com o de cima, e o Descer, com o de baixo', () => {
+    expect(moverNaOrdem(ORDEM, 'impressora', 'subir')).toEqual([
       'toner',
       'impressora',
-      'acesso',
+      'computador',
     ]);
+    expect(moverNaOrdem(ORDEM, 'toner', 'descer')).toEqual(['computador', 'toner', 'impressora']);
   });
 
-  it('soltar sobre si mesmo, ou num alvo que não está na lista, não muda a ordem', () => {
-    expect(reordenar(ORDEM, ['impressora'], 'impressora', 'after')).toEqual(ORDEM);
-    expect(reordenar(ORDEM, ['impressora'], 'outro', 'before')).toEqual(ORDEM);
-    // O que não está na lista não entra nela.
-    expect(reordenar(ORDEM, ['outro'], 'toner', 'before')).toEqual(ORDEM);
+  it('nas pontas, e com um tipo que não está na lista, a ordem fica', () => {
+    expect(moverNaOrdem(ORDEM, 'toner', 'subir')).toEqual(ORDEM);
+    expect(moverNaOrdem(ORDEM, 'impressora', 'descer')).toEqual(ORDEM);
+    expect(moverNaOrdem(ORDEM, 'outro', 'subir')).toEqual(ORDEM);
+  });
+
+  it('o menu só oferece o que muda a ordem: o primeiro só desce, e o último só sobe', () => {
+    expect(movimentosNaOrdem(ORDEM, 'toner')).toEqual(['descer']);
+    expect(movimentosNaOrdem(ORDEM, 'computador')).toEqual(['subir', 'descer']);
+    expect(movimentosNaOrdem(ORDEM, 'impressora')).toEqual(['subir']);
+    expect(movimentosNaOrdem(['toner'], 'toner')).toEqual([]);
+    expect(movimentosNaOrdem(ORDEM, 'outro')).toEqual([]);
   });
 });
 

@@ -1,9 +1,13 @@
-// A tabela dos tipos (change chamados-da-ti, design, "A tela dos tipos (tarefa 5.19)"; m07): a
-// alça, o tipo com o ícone e o selo da exceção, o prazo da resolução em mono, quem atende e os
-// abertos. A linha escolhida é o tipo do editor; a alça muda a ordem, com o ponteiro ou o teclado.
-import { type ColunaQueSeOrdena, TabelaQueSeOrdena } from '@grafite/ui';
+// A tabela dos tipos (change chamados-da-ti, design, decisão 15 e "A tela dos tipos (tarefa 5.19)";
+// m07): a alça, o tipo com o ícone e o selo da exceção, o prazo da resolução em mono, quem atende e
+// os abertos. A linha escolhida é o tipo do editor. A ordem muda pela alça, com o `useArrastar`, e,
+// no teclado, pelo "Subir" e pelo "Descer" do menu da linha.
+import { type ColunaQueSeOrdena, type ItemDoMenuDeContexto, TabelaQueSeOrdena } from '@grafite/ui';
 import { IconeDoTipo, Selo } from '../Pecas.tsx';
+import { useArrastar } from '../useArrastar.ts';
 import {
+  moverNaOrdem,
+  movimentosNaOrdem,
   prazoNaTabela,
   quemAtendeNaTabela,
   reordenar,
@@ -45,6 +49,8 @@ const COLUNAS: readonly ColunaQueSeOrdena<TipoDeChamado>[] = [
   { id: 'abertos', titulo: 'Abertos', largura: 70, mono: true, celula: (tipo) => tipo.abertos },
 ];
 
+const ROTULO_DO_MOVIMENTO = { subir: 'Subir', descer: 'Descer' } as const;
+
 export function TabelaDosTipos({
   tipos,
   idDoTitulo,
@@ -52,6 +58,20 @@ export function TabelaDosTipos({
   aoEscolher,
   aoReordenar,
 }: PropsDaTabelaDosTipos) {
+  const ids = tipos.map((tipo) => tipo.id);
+  const mudar = (nova: string[]) => {
+    if (nova.some((id, indice) => id !== ids[indice])) aoReordenar(nova);
+  };
+  const { arraste, alca, alvo } = useArrastar<string>({
+    aoSoltar: (id, { chave, metade }) => mudar(reordenar(ids, id, chave, metade)),
+  });
+  const menuDaLinha = (tipo: TipoDeChamado): ItemDoMenuDeContexto[] =>
+    movimentosNaOrdem(ids, tipo.id).map((movimento) => ({
+      id: movimento,
+      rotulo: ROTULO_DO_MOVIMENTO[movimento],
+      aoEscolher: () => mudar(moverNaOrdem(ids, tipo.id, movimento)),
+    }));
+
   return (
     <TabelaQueSeOrdena
       aria-labelledby={idDoTitulo}
@@ -61,11 +81,15 @@ export function TabelaDosTipos({
       colunas={COLUNAS}
       escolhido={escolhido}
       aoEscolher={aoEscolher}
-      aoSoltar={({ movidos, alvo, posicao }) => {
-        const ids = tipos.map((tipo) => tipo.id);
-        const nova = reordenar(ids, movidos, alvo, posicao);
-        if (nova.some((id, indice) => id !== ids[indice])) aoReordenar(nova);
-      }}
+      alca={(tipo) => alca(tipo.id)}
+      alvo={(tipo) => alvo(tipo.id)}
+      arraste={
+        arraste && {
+          noAr: arraste.item,
+          encaixe: arraste.alvo && { id: arraste.alvo.chave, metade: arraste.alvo.metade },
+        }
+      }
+      menuDaLinha={menuDaLinha}
       alta={(tipo) => seloDoTipo(tipo) !== null}
     />
   );

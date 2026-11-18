@@ -1,6 +1,7 @@
 /*
- * A tabela que se ordena pelo arraste: as linhas de 46 px, e as altas, de 56; a escolhida, na
- * superfície, com as linhas fortes e a barra do destaque à esquerda; a que se arrasta, esmaecida.
+ * A tabela que se ordena: as linhas de 46 px, e as altas, de 56; a escolhida, na superfície, com
+ * as linhas fortes e a barra do destaque à esquerda; no arraste, a linha no ar esmaecida e a linha de
+ * encaixe.
  */
 .tabela {
   width: 100%;
@@ -74,24 +75,49 @@
     inset 0 -2px 0 var(--cor-foco);
 }
 
-.linha[data-dragging] {
+/* No arraste: a linha no ar, esmaecida, e a linha de encaixe no alto ou embaixo da linha sob o ponteiro. */
+.linha[data-no-ar] td {
   opacity: var(--opacidade-desabilitado);
 }
 
-.celulaDaAlca {
+.linha[data-encaixe="antes"] td {
+  box-shadow: inset 0 2px 0 var(--cor-destaque);
+}
+
+.linha[data-encaixe="depois"] td {
+  box-shadow: inset 0 -2px 0 var(--cor-destaque);
+}
+
+/* No arraste, o cursor de segurar, o do sistema, em toda a tabela, e nenhum texto se seleciona. */
+.area[data-arrastando],
+.area[data-arrastando] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* A célula da alça vence a das linhas: sem o respiro da direita, a alça cabe, e nada vira reticências. */
+.linha .celulaDaAlca {
   padding: 0 0 0 var(--esp-1);
+  text-overflow: clip;
+}
+
+/* A alça, só do ponteiro, como no m07: o ícone de 14 px, sem botão em volta. */
+.alca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 32px;
   color: var(--cor-texto-2);
+  cursor: grab;
+  touch-action: none;
+}
+
+.alca:hover {
+  color: var(--cor-texto);
 }
 
 .mono {
   font-family: var(--fonte-mono);
   font-size: var(--texto-dado);
-}
-
-.indicador {
-  outline: none;
-}
-
-.indicador[data-drop-target] {
-  outline: 1px solid var(--cor-destaque);
 }
