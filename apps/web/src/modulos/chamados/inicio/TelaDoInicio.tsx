@@ -156,7 +156,7 @@ export function TelaDoInicio() {
       </>
     );
   } else if (falha) {
-    conteudo = <EstadoVazio className={estilos.falha} titulo={falha.message} acao={tentarDeNovo} />;
+    conteudo = <EstadoVazio titulo={falha.message} acao={tentarDeNovo} />;
   } else {
     conteudo = (
       <p role="status" className={estilos.carregando}>
