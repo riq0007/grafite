@@ -656,6 +656,36 @@ A referência das revisões das telas. Cada item é do plano, e não do mockup:
 - **m02:** a coluna "Sem responsável", que recusa o chamado aguardando;
 - **todos:** os textos com o nome da pessoa vão sem o artigo, como "Aguardando Fernanda", "Mensagem para Fernanda", "Avisar Sandra" e "Soltar para passar a Renato", porque o Grafite não sabe o gênero das pessoas. Os mockups põem o artigo.
 
+### 20. Os selos e o prazo em texto
+
+As peças comuns das telas (tarefa 5.3) ficam em `apps/web/src/modulos/chamados/Pecas.tsx`, que só exporta componentes e tipos, como as do Software, para não perder a atualização a quente do Vite; a conta do prazo fica no `prazo.ts`, ao lado.
+
+**O selo** é o `RotuloDeSituacao` do `@grafite/ui`, com a marca e o ícone de cada palavra da spec numa lista fechada, o `SELOS`. O rótulo ganha o `icone`, que troca o ícone da situação, como ganhou o `semIcone` no software-por-pacote: a spec dá um ícone a cada palavra, e as palavras da mesma marca têm desenhos diferentes, como o "Em atendimento", o "Aguardando o colaborador" e o "Só a TI abre", os três de informação. A contagem vai no lugar da palavra, na mesma marca ("1 estourado", "3 com o relógio parado"). A chave do selo de uma situação, do chamado ou do tipo, é o código dela, e a tela passa a situação direto ao selo. Decisões que o plano não fechava:
+- **Os ícones no lucide** (os mockups usam o Phosphor):
+
+  | Selo | Lucide |
+  |---|---|
+  | Estourado e Toner crítico | `CircleAlert` |
+  | Vencem em até 2 h | `Clock` |
+  | Relógio parado e Aguardando o colaborador | `Hourglass` |
+  | Na triagem | `Inbox` |
+  | Em atendimento | `Headset` |
+  | Resolvido e Em uso | `CircleCheck` |
+  | Inativo | `Circle` |
+  | Só a TI abre | `Lock` |
+  | Rascunho e Ainda não criado | `SquarePen` |
+
+  O cadeado é o `Lock`, o do "Só a TI vê" das notas (o `lock-simple` dos mockups), e não o `LockKeyhole` do ícone do tipo Acesso e senha. O lápis é o `SquarePen`, o mais perto do `note-pencil` do m08. O Estourado e o Toner crítico levam o `CircleAlert`, o `warning-circle` que os dois dividem nos mockups, no quadrado, na linha e no selo, e não o octógono do crítico do rótulo: o mockup decide o visual (revisão da 5.3).
+- **O Inativo** do tipo entra na lista, neutro e com o círculo, como o "Inativo" no resto do Grafite. Os mockups não mostram um tipo inativo.
+
+**O prazo em texto** (`PrazoEmTexto`) recebe a situação do prazo (`situacaoDoPrazo`, decisão 3) e mostra o ícone, a palavra e a cor do estado, na mono, com algarismos tabulares: a exceção nomeada do ANTISLOP, por decisão do usuário de 17/11/2026, que escolheu a mono dos mockups no lugar da Instrument Sans da idade "há 2 min". Duas formas, como nos mockups:
+- **a curta,** do quadrado (m01): "estourado", "parado" ou o "vence em 2 h";
+- **a inteira,** da linha dos prazos (m05) e da triagem do Início (m12): o texto do domínio, como "estourado há 20 min", "relógio parado" ou "vence em 2 h".
+
+O ícone é o do selo do estado: o círculo com a exclamação no estourado, a ampulheta no parado e o relógio nos outros. A cor entra no estourado, a de perigo, em peso forte, e no que vence em até 2 h, a de atenção; os outros ficam na cor do texto, como no m05.
+
+**A cada minuto.** O `useContarOPrazo()` do `prazo.ts` devolve a conta do prazo agora, `(relogio, horario) => SituacaoDoPrazo`: o `relogioDaApi` converte as datas da resposta, e a situação sai do `useAgora` da casca, que vira na virada do minuto, como a idade das leituras, no fuso das preferências (`useDataHora`), e não no do horário da TI. A tela chama o gancho uma vez e conta cada chamado: no quadro, nos prazos e no Início, o texto, o grupo e a ordem mudam juntos, num relógio só; o chamado aberto, que pode vir sem relógio, conta só quando ele vem. O vencimento cai em qualquer segundo, e o texto muda na virada seguinte: o "vence em menos de 1 min" fica até ela, e o estouro aparece nela, até um minuto depois do vencimento. É a precisão que a spec pede ("a cada minuto"), a mesma da tarefa que avisa o estouro.
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

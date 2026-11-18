@@ -42,6 +42,11 @@ export interface PropsDoRotuloDeSituacao {
    * diz a situação de cada um.
    */
   semIcone?: boolean;
+  /**
+   * O ícone da palavra, no lugar do da situação, no módulo que dá um ícone a cada uma: nos
+   * chamados, o "Em atendimento" e o "Só a TI abre" são informação, com desenhos diferentes.
+   */
+  icone?: LucideIcon;
 }
 
 /** Situação em uma linha só: o texto informa, o ícone e a cor reforçam. */
@@ -50,13 +55,14 @@ export function RotuloDeSituacao({
   children,
   className,
   semIcone,
+  icone = ICONES_DAS_SITUACOES[situacao],
 }: PropsDoRotuloDeSituacao) {
   return (
     <span
       data-situacao={situacao}
       className={[estilos.rotulo, className].filter(Boolean).join(' ')}
     >
-      {!semIcone && <Icone icone={ICONES_DAS_SITUACOES[situacao]} tamanho={12} />}
+      {!semIcone && <Icone icone={icone} tamanho={12} />}
       {children}
     </span>
   );

@@ -226,7 +226,7 @@ Cada chamado SHALL ter:
 - a barra até o prazo, com a linha do "agora";
 - o prazo à direita, em mono, com o ícone e a palavra.
 
-A cor SHALL entrar só no estourado, a de perigo, e nos que vencem em até 2 h, a de atenção. Os outros SHALL ficar em cinza.
+A cor SHALL entrar só no estourado, a de perigo, e nos que vencem em até 2 h, a de atenção. Nos outros, a barra SHALL ficar em cinza, e o prazo, na cor do texto.
 
 Escolher um chamado SHALL abrir o painel ao lado, sem cobrir a lista. O painel SHALL ter:
 - o prazo do tipo, como "Prazo do tipo, 8 h corridas", e a barra dele;
@@ -371,7 +371,7 @@ Toda situação SHALL vir em texto, num selo com borda, maiúsculas e ícone, e 
 
 | Selo | Marca | Ícone |
 |---|---|---|
-| Estourado | perigo | o círculo com o x |
+| Estourado | perigo | o círculo com a exclamação |
 | Vencem em até 2 h | atenção | o relógio |
 | Relógio parado | neutro | a ampulheta |
 | Na triagem | neutro | a bandeja |
@@ -379,11 +379,18 @@ Toda situação SHALL vir em texto, num selo com borda, maiúsculas e ícone, e 
 | Aguardando o colaborador | informação | a ampulheta |
 | Resolvido | sucesso | o visto |
 | Em uso | sucesso | o visto |
+| Inativo | neutro | o círculo |
 | Só a TI abre | informação | o cadeado |
 | Rascunho e Ainda não criado | atenção | o lápis |
-| Toner crítico | perigo | a gota |
+| Toner crítico | perigo | o círculo com a exclamação |
 
-O prazo de um quadrado e de uma linha SHALL ir em mono, com o ícone e a cor do estado, e a palavra ao lado. O tempo do prazo SHALL avançar sozinho a cada minuto, sem recarregar.
+O selo de uma contagem SHALL levar a marca da palavra, como "1 estourado" e "3 com o relógio parado".
+
+O prazo de um quadrado e de uma linha SHALL ir em mono, com o ícone e a cor do estado, e a palavra ao lado:
+- no quadrado, curto: "estourado", "parado" ou "vence em 2 h";
+- na linha, inteiro: "estourado há 20 min", "relógio parado" ou "vence em 2 h".
+
+O ícone SHALL ser o do selo do estado: o círculo com a exclamação no estourado, a ampulheta no parado e o relógio nos outros. A cor SHALL entrar só no estourado, a de perigo, em peso forte, e no que vence em até 2 h, a de atenção; os outros SHALL ficar na cor do texto. O tempo do prazo SHALL avançar sozinho a cada minuto, sem recarregar.
 
 O movimento SHALL ser só de mudança de estado:
 - o fundo ao passar o ponteiro, em 120 ms;
@@ -397,7 +404,11 @@ Com o movimento reduzido, nada SHALL se mover.
 
 #### Scenario: Estado sem cor
 - **WHEN** alguém que não distingue cores olha a coluna de Renato
-- **THEN** o #1033 diz "estourado há 20 min" em texto, além da cor
+- **THEN** o quadrado do #1033 diz "estourado" em texto, além da cor, e a linha dele nos prazos, "estourado há 20 min"
+
+#### Scenario: Prazo que anda sozinho
+- **WHEN** o #1039 vence às 10:40:30, e a lista dos prazos fica aberta sem recarregar
+- **THEN** às 10:39 a linha dele diz "vence em 1 min", às 10:40, "vence em menos de 1 min", e às 10:41, "estourado há menos de 1 min", com o círculo com a exclamação e a cor de perigo
 
 ### Requirement: Telas atualizadas e módulo desligado
 

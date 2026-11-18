@@ -1,0 +1,29 @@
+/*
+ * O prazo em texto (change chamados-da-ti, design, decisão 20): na mono, com algarismos tabulares,
+ * a exceção nomeada do ANTISLOP, numa linha só; o ícone e a palavra na cor do estado: a de perigo,
+ * em peso forte, no estourado, a de atenção no que vence em até 2 h e a do texto nos outros. No
+ * quadrado, menor.
+ */
+.prazo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-1);
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+}
+
+.prazo[data-forma="curta"] {
+  font-size: var(--texto-legenda);
+}
+
+.prazo[data-grupo="estourado"] {
+  color: var(--cor-critico);
+  font-weight: var(--peso-forte);
+}
+
+.prazo[data-grupo="ate-2-horas"] {
+  color: var(--cor-atencao);
+}
