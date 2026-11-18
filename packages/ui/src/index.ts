@@ -77,6 +77,7 @@ export {
   FORMATOS_DE_ARQUIVO,
   LIMITE_DOS_ARQUIVOS,
   type PropsDaEscolhaDeArquivo,
+  recusaAntesDoEnvio,
 } from './componentes/arquivo/EscolhaDeArquivo.tsx';
 export { formatarTamanho } from './componentes/arquivo/tamanho.ts';
 export {

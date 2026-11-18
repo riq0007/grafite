@@ -402,6 +402,7 @@ export {
   type ConferenciaDasRespostas,
   camposVisiveis,
   conferirRespostas,
+  MAXIMO_DE_ANEXOS,
   type MudancaDosCamposDaTi,
   mudarCamposDaTi,
   type RespostaDoCampo,

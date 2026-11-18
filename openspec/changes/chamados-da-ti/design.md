@@ -698,6 +698,60 @@ O ícone é o do selo do estado: o círculo com a exclamação no estourado, a a
 
 **A cada minuto.** O `useContarOPrazo()` do `prazo.ts` devolve a conta do prazo agora, `(relogio, horario) => SituacaoDoPrazo`: o `relogioDaApi` converte as datas da resposta, e a situação sai do `useAgora` da casca, que vira na virada do minuto, como a idade das leituras, no fuso das preferências (`useDataHora`), e não no do horário da TI. A tela chama o gancho uma vez e conta cada chamado: no quadro, nos prazos e no Início, o texto, o grupo e a ordem mudam juntos, num relógio só; o chamado aberto, que pode vir sem relógio, conta só quando ele vem. O vencimento cai em qualquer segundo, e o texto muda na virada seguinte: o "vence em menos de 1 min" fica até ela, e o estouro aparece nela, até um minuto depois do vencimento. É a precisão que a spec pede ("a cada minuto"), a mesma da tarefa que avisa o estouro.
 
+### 21. O formulário que se preenche
+
+Uma peça só, o `FormularioQueSePreenche` (`apps/web/src/modulos/chamados/formulario/`), para os três que preenchem o formulário do tipo:
+- **a gaveta da abertura** (5.18): quem abre, em nome da pessoa, com todos os campos que a condição mostra, também os só da TI;
+- **os "Campos do tipo" do chamado aberto** (5.14): quem atende, com os campos só da TI para preencher e as respostas da pessoa só para ler;
+- **a prévia do colaborador** (5.24, no visual da aba, que a 5.6 acrescenta à mesma peça): quem configura, com o que a pessoa vê, sem enviar arquivo nenhum.
+
+O `quem` diz qual dos três (`'abertura' | 'chamado' | 'pessoa'`), e o `soLeitura` deixa tudo só para ler, a quem vê o chamado sem atender.
+
+**O estado é de quem usa a peça:** as respostas e os citados, o nome do que elas citam pelo id:
+- os ativos, com o patrimônio e o rótulo;
+- os locais, com o caminho;
+- as pessoas, com o nome;
+- os anexos, com o nome, o tamanho e onde estão: sem dono, no chamado ou, na prévia, só no navegador.
+
+A peça muda as respostas pelo `responder` do domínio, com o "Apagar a resposta se o campo sumir", e guarda o nome de cada escolha. A mudança chega a quem usa pelo `aoMudar`, pelo estado anterior, e é aplicada na hora, como o `set` do `useState`: o Número mostra a resposta, e a mudança adiada apagaria o que se digita. Com os citados, quem usa monta o contexto do `tituloDasRespostas` e do `resumoDasRespostas` sem pedir nada à API: o título da gaveta e o "O que chegaria para a TI" da prévia. O chamado aberto começa pelos citados que a ficha traz (`citados` e `anexosDosCampos`). As funções puras ficam no `estado.ts`, com o teste delas.
+
+**Cada tipo de campo, no visual da tela:**
+
+| Tipo de campo | Entrada |
+|---|---|
+| Texto curto e Texto longo | o campo de texto e a área de texto |
+| Escolha única | a seleção, com "Nenhum" no campo que não é obrigatório, como os campos do ativo |
+| Várias opções | as caixas de marcar, com a resposta na ordem das opções |
+| Ativo | a busca, com as sugestões da pessoa sem nada digitado |
+| Local | a escolha na árvore dos locais, com o local de trabalho da pessoa sugerido |
+| Pessoa | a busca pelo nome, com o local de cada pessoa, para os homônimos |
+| Data | o campo de data do kit |
+| Número | o campo de texto com o teclado numérico |
+| Anexo | a lista dos arquivos e "Anexar arquivos" |
+| Sim ou não | a seleção com "Sim" e "Não", e "Nenhum" no campo que não é obrigatório |
+
+Todo campo exigido tem a marca de obrigatório, como os campos do kit: as Várias opções pelo `obrigatorio` que o grupo de caixas do kit passa a receber, e o Anexo no rótulo da lista. Nos dois grupos, a marca é lida com o nome, porque o papel `group` não aceita o `aria-required`: o grupo de caixas, pelo `marcaLida` do rótulo do kit, e o Anexo, no próprio rótulo.
+
+**As rotas, pelo `quem`:**
+- a gaveta e o chamado aberto pedem as sugestões ao `GET /chamados/sugestoes` e buscam a pessoa no `GET /chamados/pessoas` (4.22), com `chamados.atender`;
+- a prévia pede ao `GET /chamados/tipos/sugestoes` e ao `GET /chamados/tipos/pessoas`, com `chamados.configurar`;
+- sem a pessoa do chamado, não há sugestão, e o pedido das sugestões que falha dá o mesmo: o campo segue com a busca;
+- o campo Ativo, com o texto, busca no `GET /ativos`, com os tipos do campo no filtro, porque a abertura só aceita o ativo que a conta vê (decisão 5). As sugeridas que o texto acha ficam no alto. Sem `ativos.ver` em nenhum local, a busca seria recusada, e o campo fica sem ela, com a marca, a explicação e a recusa, como os outros campos. A resposta que já tem aparece só para ler, com "Você não vê os ativos.", porque a ficha traz o nome dela nos citados. Sem resposta, o campo exigido diz também quem pode respondê-lo (`avisoSemOsAtivos`, no `estado.ts`): "Quem vê os ativos pode abrir este chamado." na abertura e "Quem vê os ativos pode responder este campo." no chamado aberto;
+- a origem das sugestões sai do `motivo` de cada ativo: só os da pessoa, só os do local ou os dois.
+
+**O número** guarda o número inteiro. O campo aceita só os algarismos e tira os pontos de milhar e os espaços, também o inseparável de um número colado ("48.210" e "48 210" viram 48210). Outro caractere, como a vírgula, não entra, para a resposta nunca sair do tipo do campo, o que daria a recusa geral do formulário. O limite (999.999.999) é a recusa do domínio, no campo.
+
+**Os anexos:**
+- **o envio:** um a um, pelo `POST /chamados/anexos`, na hora (decisão 10), com o progresso de cada um, e a resposta guarda os ids;
+- **a fila:** o envio que acaba entra pelo `aoAnexar` de agora, que já conhece o formulário trocado no meio da fila. Desmontada a peça, o envio em curso acaba fora da resposta e a fila para: o arquivo enviado fica sem dono, para a manutenção. Uma falha no laço não prende a fila;
+- **as recusas:** o arquivo vazio e o maior que 25 MB são recusados antes do envio, como no kit. Essas e a recusa da API ficam no campo, com o nome do arquivo;
+- **o limite:** o do domínio (`MAXIMO_DE_ANEXOS`), o mesmo que a gravação confere. Com 5 arquivos, "Anexar arquivos" sai. Dos escolhidos a mais, os que passam do limite não vão, com "Anexe até 5 arquivos." e o nome dos que ficaram de fora;
+- **"Tirar"** tira o arquivo da resposta. O arquivo sem dono sai na manutenção (decisão 10), e o do campo só da TI, na gravação;
+- **o download:** cada arquivo baixa pelo endereço de onde ele está, que o estado guarda com o nome. O enviado agora, ainda sem dono, baixa pelo `GET /chamados/anexos/:arquivo`, que só o entrega a quem o enviou, também no chamado aberto até a gravação. O do chamado baixa pelo `GET /chamados/:numero/anexos/:arquivo`, que só entrega o anexo já tomado;
+- **na prévia,** o arquivo não é enviado. Ele entra na resposta com um id do navegador (`crypto.randomUUID`), para a condição, o título e o resumo o contarem.
+
+**As recusas** chegam de quem usa a peça, na chave do domínio (`campos.<id>`), do `conferirRespostas` ou do 400 da API, e a geral (`formulario`) fica no alto da peça.
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

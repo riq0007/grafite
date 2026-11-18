@@ -29,7 +29,8 @@ export type ConferenciaDasRespostas =
 
 const LIMITES_DO_TEXTO = { 'texto-curto': 200, 'texto-longo': 4000 } as const;
 const MAIOR_NUMERO = 999_999_999;
-const MAXIMO_DE_ARQUIVOS = 5;
+/** Quantos arquivos um campo Anexo aceita. */
+export const MAXIMO_DE_ANEXOS = 5;
 
 const DATA = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -173,8 +174,8 @@ function lerResposta(campo: CampoDoFormulario, bruta: unknown): Leitura {
         return fora();
       }
       const ids = [...new Set(bruta.map((id) => String(id).toLowerCase()))];
-      return ids.length > MAXIMO_DE_ARQUIVOS
-        ? recusada(`Anexe até ${MAXIMO_DE_ARQUIVOS} arquivos.`)
+      return ids.length > MAXIMO_DE_ANEXOS
+        ? recusada(`Anexe até ${MAXIMO_DE_ANEXOS} arquivos.`)
         : aceita(ids);
     }
     case 'sim-ou-nao':

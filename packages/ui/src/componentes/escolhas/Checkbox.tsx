@@ -41,6 +41,11 @@ export function Checkbox({ children, className, ...resto }: PropsDoCheckbox) {
 export interface PropsDoGrupoDeCheckboxes
   extends Omit<CheckboxGroupProps, 'children' | 'className' | 'isRequired' | 'isInvalid'> {
   rotulo: string;
+  /**
+   * A marca "obrigatório" no rótulo, lida com o nome do grupo; quem recusa a escolha vazia é o
+   * formulário.
+   */
+  obrigatorio?: boolean;
   /** Os checkboxes do grupo, cada um com o seu `value`. */
   children: ReactNode;
   /** Texto de apoio abaixo das opções, ligado ao grupo para o leitor de tela. */
@@ -53,6 +58,7 @@ export interface PropsDoGrupoDeCheckboxes
 /** Várias opções ligadas ou desligadas sob um nome só, como as severidades que viram aviso. */
 export function GrupoDeCheckboxes({
   rotulo,
+  obrigatorio = false,
   children,
   descricao,
   erro,
@@ -65,7 +71,7 @@ export function GrupoDeCheckboxes({
       isInvalid={erro ? true : undefined}
       className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}
     >
-      <RotuloDoCampo rotulo={rotulo} />
+      <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} marcaLida />
       <div className={estilos.opcoesDoGrupo}>{children}</div>
       {descricao && <DescricaoDoCampo>{descricao}</DescricaoDoCampo>}
       <ErroDoCampo erro={erro} tipo="escolha" />

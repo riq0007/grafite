@@ -1,0 +1,140 @@
+/*
+ * O formulário que se preenche (change chamados-da-ti, design, decisão 21): os campos em coluna, na
+ * ordem do formulário, com a recusa geral no alto. A resposta só para ler e o campo Anexo têm o
+ * rótulo e o texto dos campos do kit, e a resposta vazia, "Sem resposta", vai na cor secundária.
+ */
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.campo {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+/* O grupo do Anexo, sem a borda e o recuo do fieldset do navegador. */
+.anexos {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.paraLer {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+}
+
+.rotulo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-2);
+}
+
+/* O texto longo guarda as quebras de linha da pessoa. */
+.resposta {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.resposta[data-vazia] {
+  color: var(--cor-texto-2);
+}
+
+.descricao {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.recusa {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+.arquivos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--altura-controle);
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+}
+
+.nome {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tamanho {
+  flex: none;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.progresso {
+  flex: none;
+  width: calc(var(--esp-12) * 2);
+}
+
+/* O download é um link no destaque, sem a caixa de um botão, como o link de cadastro do kit. */
+.baixar {
+  flex: none;
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+  outline: none;
+}
+
+.baixar:hover {
+  text-decoration: underline;
+}
+
+.baixar:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}

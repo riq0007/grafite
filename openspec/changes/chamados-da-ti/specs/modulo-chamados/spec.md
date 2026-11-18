@@ -256,6 +256,39 @@ A ação principal SHALL ser "Abrir o chamado". O retorno SHALL ser "Chamado #10
 - **WHEN** Ana busca "Marina", escolhe Impressora, responde e usa "Abrir o chamado"
 - **THEN** a gaveta fecha com "Chamado #1043 aberto.", e o #1043 aparece na coluna de Ana
 
+### Requirement: Formulário que se preenche
+
+O formulário do tipo SHALL se preencher do mesmo jeito na gaveta da abertura, nos "Campos do tipo" do chamado aberto e na prévia do colaborador, com:
+- **os campos** que a condição mostra, na ordem do formulário (spec tipos-de-chamado, requisito "Condição de um campo"); na prévia, sem os campos só da TI;
+- **o campo só da TI** com "Só a TI vê." e, quando obrigatório, "A resposta é exigida para resolver.", porque ele é opcional na abertura;
+- **no chamado aberto,** os campos só da TI para preencher e as respostas da pessoa só para ler, com "Sem resposta" no campo que ficou vazio;
+- **o campo Ativo** com as sugestões da pessoa antes de digitar, sob "Sugerido: de <nome>", "Sugerido: do local de trabalho de <nome>" ou "Sugerido: de <nome> e do local de trabalho", e com a busca pelo texto entre os ativos que a conta vê, só dos tipos do campo. A quem não vê os ativos, o campo SHALL mostrar só para ler a resposta que já tem, com "Você não vê os ativos."; sem resposta, o campo exigido SHALL dizer também quem pode respondê-lo: "Quem vê os ativos pode abrir este chamado." na abertura e "Quem vê os ativos pode responder este campo." no chamado aberto;
+- **o campo Local** com o local de trabalho da pessoa sugerido;
+- **o campo Número** só com os algarismos: os pontos de milhar e os espaços saem, e outro caractere não entra;
+- **o campo Anexo** com cada arquivo enviado na hora, antes da gravação, até 5, cada um com o nome, o tamanho e "Tirar". Na prévia, o arquivo SHALL NOT ser enviado, e o campo SHALL dizer "Na prévia, o arquivo não é enviado.".
+
+As recusas SHALL ficar no campo, e a recusa geral do formulário, no alto dele. A recusa do envio de um anexo SHALL dizer o nome do arquivo.
+
+#### Scenario: Campo que aparece pela resposta
+- **WHEN** Ana, na gaveta, escolhe "Manchando" em "O que está acontecendo?" e depois troca por "Atolando"
+- **THEN** "Onde as manchas aparecem?" aparece logo depois dele e some com a troca, sem a resposta que tinha
+
+#### Scenario: Ativos da pessoa primeiro
+- **WHEN** Ana abre um chamado de Impressora em nome de Marina Lopes, responsável pela PAT-00139, que trabalha em Jundiaí › Recepção
+- **THEN** "Qual impressora?" sugere a PAT-00139 e depois as impressoras da Recepção, sob "Sugerido: de Marina Lopes e do local de trabalho"
+
+#### Scenario: Print anexado antes de abrir
+- **WHEN** Ana anexa "erro-vpn.png" a "Uma foto ajuda" antes de abrir o chamado
+- **THEN** o arquivo já foi enviado e aparece com o nome e o tamanho, e o chamado o toma ao ser aberto
+
+#### Scenario: Respostas da pessoa no chamado aberto
+- **WHEN** Diego abre os "Campos do tipo" do #1042
+- **THEN** "O que está acontecendo?" aparece com "Manchando", só para ler, e o "Contador de páginas" aparece para preencher, com "Só a TI vê."
+
+#### Scenario: Ativo a quem não vê os ativos
+- **WHEN** Bruno, que atende os chamados sem ver os ativos, abre os "Campos do tipo" do #1042
+- **THEN** "Qual impressora?" mostra a impressora da resposta, só para ler, com "Você não vê os ativos."
+
 ### Requirement: Tipos de chamado na tela
 
 A tela dos tipos SHALL ter, à esquerda, a tabela dos tipos, com:

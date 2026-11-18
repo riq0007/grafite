@@ -29,6 +29,7 @@ export const Estados: Historia = {
       </GrupoDeRadios>
       <GrupoDeCheckboxes
         rotulo="Avisos na tela"
+        obrigatorio
         defaultValue={['critico', 'atencao']}
         descricao="O Crítico sempre aparece."
       >
@@ -95,6 +96,7 @@ export const GrupoDeCheckboxesPeloTeclado: Historia = {
   render: () => (
     <GrupoDeCheckboxes
       rotulo="Avisos na tela"
+      obrigatorio
       defaultValue={['critico']}
       descricao="O Crítico sempre aparece."
     >
@@ -107,7 +109,8 @@ export const GrupoDeCheckboxesPeloTeclado: Historia = {
   ),
   play: async ({ canvasElement }) => {
     const tela = within(canvasElement);
-    const grupo = tela.getByRole('group', { name: 'Avisos na tela' });
+    // A marca é lida com o nome: o papel `group` não aceita o `aria-required`.
+    const grupo = tela.getByRole('group', { name: 'Avisos na tela obrigatório' });
     await expect(grupo).toHaveAccessibleDescription('O Crítico sempre aparece.');
     await expect(tela.getByRole('checkbox', { name: 'Crítico' })).toBeChecked();
     await expect(tela.getByRole('checkbox', { name: 'Crítico' })).toBeDisabled();

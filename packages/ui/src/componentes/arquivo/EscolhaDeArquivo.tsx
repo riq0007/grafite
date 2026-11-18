@@ -80,8 +80,14 @@ export interface PropsDaEscolhaDeArquivo {
   rotuloDoEnvio?: string;
 }
 
-/** A recusa que dá para saber antes do envio, pelo tamanho; o formato quem confere é a API. */
-function recusaAntesDoEnvio(arquivo: File, limite: number): string | null {
+/**
+ * A recusa que dá para saber antes do envio, pelo tamanho; o formato quem confere é a API. Quem
+ * envia vários arquivos, como o campo Anexo dos chamados, recusa do mesmo jeito.
+ */
+export function recusaAntesDoEnvio(
+  arquivo: Pick<File, 'size'>,
+  limite = LIMITE_DOS_ARQUIVOS,
+): string | null {
   if (arquivo.size === 0) return 'O arquivo está vazio.';
   if (arquivo.size > limite) return `O arquivo passa de ${Math.round(limite / 1024 / 1024)} MB.`;
   return null;
