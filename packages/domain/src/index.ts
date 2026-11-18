@@ -400,8 +400,10 @@ export {
 export {
   type CampoMudado,
   type ConferenciaDasRespostas,
+  camposDaTiQueFaltam,
   camposVisiveis,
   conferirRespostas,
+  contagemDasRespostas,
   MAXIMO_DE_ANEXOS,
   type MudancaDosCamposDaTi,
   mudarCamposDaTi,
@@ -453,6 +455,7 @@ export {
   camposNaAuditoria,
   comMinuscula,
   conferirTituloDoChamado,
+  nomeNoResumo,
   type ParteDoResumo,
   partesDoResumo,
   resumoDasRespostas,

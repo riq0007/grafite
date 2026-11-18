@@ -97,6 +97,41 @@ export function camposVisiveis(
 }
 
 /**
+ * Os campos só da TI obrigatórios, vazios e mostrados pela condição, na ordem do formulário: os que
+ * o resolver exige (spec chamados, "Ativo ligado e campos da TI"). Os da pessoa passaram pela
+ * conferência da abertura.
+ */
+export function camposDaTiQueFaltam(
+  formulario: Formulario,
+  respostas: Readonly<Record<string, unknown>>,
+): CampoDoFormulario[] {
+  const visiveis = camposVisiveis(formulario, respostas);
+  return formulario.campos.filter(
+    (campo) =>
+      campo.soDaTi &&
+      campo.obrigatorio &&
+      visiveis.has(campo.id) &&
+      vazio(respostaDe(respostas, campo.id)),
+  );
+}
+
+/**
+ * A contagem dos "Campos do tipo" do chamado aberto (spec modulo-chamados, "Chamado aberto"): os
+ * campos que a condição mostra com resposta, sem a guardada de um campo escondido, e os pendentes,
+ * os que o resolver exige.
+ */
+export function contagemDasRespostas(
+  formulario: Formulario,
+  respostas: Readonly<Record<string, unknown>>,
+): { respondidos: number; pendentes: number } {
+  const visiveis = camposVisiveis(formulario, respostas);
+  const respondidos = formulario.campos.filter(
+    (campo) => visiveis.has(campo.id) && !vazio(respostaDe(respostas, campo.id)),
+  ).length;
+  return { respondidos, pendentes: camposDaTiQueFaltam(formulario, respostas).length };
+}
+
+/**
  * O formulário que se preenche, na gaveta da abertura e na prévia: grava a resposta nova, ou tira
  * a chave com a resposta vazia, e o campo que some perde a dele quando tem o "Apagar a resposta se
  * o campo sumir" ligado. Desligado, ele a guarda para quando voltar.

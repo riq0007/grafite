@@ -285,7 +285,70 @@
   list-style: none;
 }
 
-.formulario {
+/* O resumo da cabeça, como a contagem dos campos: no texto principal, sem a versal pequena. */
+.resumo {
+  color: var(--cor-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* A linha do tempo (m03 e m04): o ponto de cada passo e o fio até o próximo. */
+.linhaDoTempo {
   display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linhaDoTempo li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
   gap: var(--esp-3);
+  padding-bottom: var(--esp-2);
+}
+
+.linhaDoTempo li::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  left: 6px;
+  width: 2px;
+  background: var(--cor-linha-forte);
+}
+
+.linhaDoTempo li:last-child {
+  padding-bottom: 0;
+}
+
+.linhaDoTempo li:last-child::before {
+  display: none;
+}
+
+.ponto {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border: 2px solid var(--cor-texto);
+  border-radius: 50%;
+  background: var(--cor-texto);
+}
+
+.linhaDoTempo li[data-agora] .ponto {
+  border-color: var(--cor-info);
+  background: var(--cor-info);
+}
+
+.linhaDoTempo b {
+  font-weight: var(--peso-forte);
+}
+
+.linhaDoTempo small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
 }

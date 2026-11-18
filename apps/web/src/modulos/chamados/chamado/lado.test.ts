@@ -1,6 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { criarDataHora } from '@grafite/ui';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FichaDoChamado } from '../consultas.ts';
-import { acoesDoAtivo, contatosDaPessoa, linhasDoEstoque, textoDasOrdens } from './lado.ts';
+import {
+  acoesDoAtivo,
+  contatosDaPessoa,
+  gravarSecoes,
+  lerSecoes,
+  linhaDoTempo,
+  linhasDoEstoque,
+  preencheOsCampos,
+  textoDasOrdens,
+} from './lado.ts';
 
 type Ativo = NonNullable<FichaDoChamado['ativo']>;
 type Compativel = NonNullable<NonNullable<Ativo['resumo']>['compativeis']>[number];
@@ -101,6 +111,19 @@ describe('as ações do ativo (spec modulo-chamados, "Chamado aberto")', () => {
       pedirToner: false,
       trocar: 'trocar',
     });
+  });
+});
+
+describe('quem preenche os campos só da TI', () => {
+  it('quem atende os locais do chamado, fora do resolvido, como a API', () => {
+    expect(preencheOsCampos(FICHA)).toBe(true);
+    expect(preencheOsCampos({ ...FICHA, situacao: 'triagem' })).toBe(true);
+    expect(preencheOsCampos({ ...FICHA, situacao: 'aguardando' })).toBe(true);
+  });
+
+  it('quem só vê o chamado e o chamado resolvido só leem', () => {
+    expect(preencheOsCampos({ ...FICHA, permite: { atender: false } })).toBe(false);
+    expect(preencheOsCampos({ ...FICHA, situacao: 'resolvido' })).toBe(false);
   });
 });
 
@@ -233,5 +256,242 @@ describe('o estoque e a solicitação pendente', () => {
       linhas: ['A solicitação 4 está aberta.'],
       atencao: false,
     });
+  });
+});
+
+type Item = FichaDoChamado['conversa'][number];
+type Evento = Extract<Item, { especie: 'evento' }>;
+
+const ANA = {
+  tipo: 'conta',
+  id: '0190a000-0000-7000-8000-00000000a0a0',
+  nome: 'Ana Souza',
+} as const;
+const BRUNO = {
+  tipo: 'conta',
+  id: '0190a000-0000-7000-8000-00000000b0b0',
+  nome: 'Bruno Lima',
+} as const;
+const FERNANDA = {
+  tipo: 'pessoa',
+  id: '0190a000-0000-7000-8000-00000000f0f0',
+  nome: 'Fernanda Rocha',
+} as const;
+const contaDe = (autor: typeof ANA | typeof BRUNO) => ({ conta: autor.id, nome: autor.nome });
+
+let sequencia = 0;
+const proximoId = () => {
+  sequencia += 1;
+  return `0190a000-0000-7000-8000-${String(sequencia).padStart(12, '0')}`;
+};
+
+function evento(
+  qual: Evento['evento'],
+  em: string,
+  autor: Evento['autor'],
+  dados: Partial<Evento> = {},
+): Item {
+  return {
+    especie: 'evento',
+    id: proximoId(),
+    em,
+    autor,
+    evento: qual,
+    de: null,
+    para: null,
+    desde: null,
+    ativo: null,
+    os: null,
+    solicitacao: null,
+    motivo: null,
+    ...dados,
+  };
+}
+
+const mensagem = (em: string, autor: Evento['autor']): Item => ({
+  especie: 'mensagem',
+  id: proximoId(),
+  em,
+  autor,
+  texto: 'Pode testar agora?',
+  anexos: [],
+});
+
+// Hoje é 18/11, ao meio-dia de São Paulo.
+const AGORA = new Date('2026-11-18T15:00:00Z');
+const dataHora = criarDataHora('America/Sao_Paulo');
+const linha = (conversa: Item[], pessoa = 'Fernanda Rocha') =>
+  linhaDoTempo(conversa, { pessoa, agora: AGORA, dataHora });
+
+describe('a linha do tempo (spec modulo-chamados, "Chamado aberto")', () => {
+  it('o #1041 do m03: a triagem, o atendimento e a espera, com o último como o de agora', () => {
+    expect(
+      linha([
+        evento('abertura', '2026-11-17T20:05:00Z', FERNANDA),
+        mensagem('2026-11-17T20:05:00Z', FERNANDA),
+        evento('assumiu', '2026-11-17T20:20:00Z', ANA, { desde: '2026-11-17T20:05:00Z' }),
+        {
+          especie: 'alerta',
+          id: proximoId(),
+          em: '2026-11-18T12:00:00Z',
+          texto: 'Offline',
+          severidade: 'critico',
+        },
+        mensagem('2026-11-18T12:21:00Z', ANA),
+        evento('aguardando', '2026-11-18T12:21:00Z', ANA),
+      ]),
+    ).toMatchObject([
+      { titulo: 'Na triagem', texto: 'ontem, 17:05 · aberto por Fernanda Rocha', agora: false },
+      { titulo: 'Em atendimento', texto: 'ontem, 17:20 · assumido por Ana Souza', agora: false },
+      { titulo: 'Aguardando o colaborador', texto: 'hoje, 09:21 · o relógio parou', agora: true },
+    ]);
+  });
+
+  it('o #1042 do m04: a troca do ativo, a OS e a solicitação ficam só na conversa', () => {
+    const marina = { ...FERNANDA, nome: 'Marina Rocha' };
+    expect(
+      linha(
+        [
+          evento('abertura', '2026-11-18T10:40:00Z', marina),
+          evento('solicitacao', '2026-11-18T10:40:00Z', marina, {
+            solicitacao: { numero: 4, como: 'gerou' },
+          }),
+          evento('assumiu', '2026-11-18T12:40:00Z', ANA, { desde: '2026-11-18T10:40:00Z' }),
+          evento('os', '2026-11-18T12:45:00Z', ANA, { os: { numero: 12 } }),
+        ],
+        'Marina Rocha',
+      ),
+    ).toMatchObject([
+      { titulo: 'Na triagem', texto: 'hoje, 07:40 · aberto por Marina Rocha', agora: false },
+      { titulo: 'Em atendimento', texto: 'hoje, 09:40 · assumido por Ana Souza', agora: true },
+    ]);
+  });
+
+  it('a abertura pela TI diz para quem', () => {
+    expect(linha([evento('abertura', '2026-11-18T10:40:00Z', ANA)], 'Marina Rocha')).toMatchObject([
+      { titulo: 'Na triagem', texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha' },
+    ]);
+  });
+
+  it('o assumir e o passar no aguardando continuam no aguardando, e o devolver volta à triagem', () => {
+    const passos = linha([
+      evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),
+      evento('assumiu', '2026-11-18T12:40:00Z', ANA),
+      evento('aguardando', '2026-11-18T12:41:00Z', ANA),
+      evento('passou', '2026-11-18T13:00:00Z', ANA, {
+        de: contaDe(ANA),
+        para: contaDe(BRUNO),
+      }),
+      evento('assumiu', '2026-11-18T13:10:00Z', ANA, { de: contaDe(BRUNO) }),
+    ]);
+    expect(passos.slice(3)).toMatchObject([
+      {
+        titulo: 'Aguardando o colaborador',
+        texto: 'hoje, 10:00 · passado para Bruno Lima por Ana Souza',
+      },
+      { titulo: 'Aguardando o colaborador', texto: 'hoje, 10:10 · assumido por Ana Souza' },
+    ]);
+    expect(
+      linha([
+        evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),
+        evento('passou', '2026-11-18T12:40:00Z', ANA, { para: contaDe(BRUNO) }),
+        evento('devolveu', '2026-11-18T13:00:00Z', BRUNO, { de: contaDe(BRUNO) }),
+      ]).slice(1),
+    ).toMatchObject([
+      { titulo: 'Em atendimento', texto: 'hoje, 09:40 · passado para Bruno Lima por Ana Souza' },
+      { titulo: 'Na triagem', texto: 'hoje, 10:00 · devolvido por Bruno Lima', agora: true },
+    ]);
+  });
+
+  it('o desfazer tira o assumir que ele desfaz', () => {
+    expect(
+      linha([
+        evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),
+        evento('assumiu', '2026-11-18T12:40:00Z', ANA),
+        evento('desfez', '2026-11-18T12:40:05Z', ANA, { desde: '2026-11-18T10:40:00Z' }),
+      ]),
+    ).toMatchObject([{ titulo: 'Na triagem', agora: true }]);
+    // No aguardando, o desfazer volta à espera com quem estava.
+    expect(
+      linha([
+        evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),
+        evento('assumiu', '2026-11-18T12:00:00Z', BRUNO),
+        evento('aguardando', '2026-11-18T12:30:00Z', BRUNO),
+        evento('assumiu', '2026-11-18T12:40:00Z', ANA, { de: contaDe(BRUNO) }),
+        evento('desfez', '2026-11-18T12:40:05Z', ANA, { para: contaDe(BRUNO) }),
+      ]).map((passo) => passo.titulo),
+    ).toEqual(['Na triagem', 'Em atendimento', 'Aguardando o colaborador']);
+  });
+
+  it('a retomada e a reabertura voltam a contar, e a resolução para o relógio que contava', () => {
+    const abertoEEsperando = [
+      evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),
+      evento('assumiu', '2026-11-18T12:40:00Z', ANA),
+      evento('aguardando', '2026-11-18T12:41:00Z', ANA),
+    ];
+    expect(
+      linha([
+        ...abertoEEsperando,
+        evento('retomou', '2026-11-18T13:30:00Z', ANA),
+        evento('resolveu', '2026-11-18T14:00:00Z', ANA),
+        evento('reabriu', '2026-11-18T14:30:00Z', BRUNO, { para: contaDe(ANA) }),
+        evento('resolveu', '2026-11-18T14:40:00Z', ANA),
+        evento('reabriu', '2026-11-18T14:50:00Z', ANA),
+      ]).slice(3),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 10:30 · retomado por Ana Souza · o relógio voltou a contar',
+      },
+      { titulo: 'Resolvido', texto: 'hoje, 11:00 · resolvido por Ana Souza · o relógio parou' },
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 11:30 · reaberto por Bruno Lima para Ana Souza · o relógio voltou a contar',
+      },
+      { titulo: 'Resolvido', texto: 'hoje, 11:40 · resolvido por Ana Souza · o relógio parou' },
+      {
+        titulo: 'Na triagem',
+        texto: 'hoje, 11:50 · reaberto por Ana Souza · o relógio voltou a contar',
+        agora: true,
+      },
+    ]);
+    // Resolvido do aguardando: o relógio já estava parado.
+    expect(
+      linha([...abertoEEsperando, evento('resolveu', '2026-11-18T14:00:00Z', ANA)]).at(-1),
+    ).toMatchObject({ titulo: 'Resolvido', texto: 'hoje, 11:00 · resolvido por Ana Souza' });
+  });
+});
+
+describe('as seções guardadas neste navegador', () => {
+  const DE_FABRICA = { pessoa: false, ativo: true, linha: true, campos: false };
+
+  beforeEach(() => localStorage.clear());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('começam com o Ativo ligado e a Linha do tempo abertos', () => {
+    expect(lerSecoes()).toEqual(DE_FABRICA);
+  });
+
+  it('a escolha fica guardada, a mesma para os outros chamados', () => {
+    gravarSecoes({ ...DE_FABRICA, linha: false, campos: true });
+    expect(lerSecoes()).toEqual({ ...DE_FABRICA, linha: false, campos: true });
+  });
+
+  it('o guardado que não se lê fica com a fábrica, seção por seção', () => {
+    localStorage.setItem('grafite.chamados.secoes', '{quebrado');
+    expect(lerSecoes()).toEqual(DE_FABRICA);
+    localStorage.setItem('grafite.chamados.secoes', JSON.stringify({ linha: 'não', pessoa: true }));
+    expect(lerSecoes()).toEqual({ ...DE_FABRICA, pessoa: true });
+  });
+
+  it('com o armazenamento bloqueado, a fábrica, sem erro', () => {
+    vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+      throw new DOMException('bloqueado', 'SecurityError');
+    });
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('bloqueado', 'SecurityError');
+    });
+    expect(lerSecoes()).toEqual(DE_FABRICA);
+    expect(() => gravarSecoes({ ...DE_FABRICA, pessoa: true })).not.toThrow();
   });
 });

@@ -5,7 +5,14 @@ import {
   type Formulario,
   RECUSA_DO_FORMULARIO,
 } from './formulario.ts';
-import { camposVisiveis, conferirRespostas, mudarCamposDaTi, responder } from './respostas.ts';
+import {
+  camposDaTiQueFaltam,
+  camposVisiveis,
+  conferirRespostas,
+  contagemDasRespostas,
+  mudarCamposDaTi,
+  responder,
+} from './respostas.ts';
 
 const ATIVO = '0192f0c4-6a1e-7c3b-9d2a-5b8e4f1a2c3d';
 const FOTO = '0192f0c4-6a1e-7c3b-9d2a-5b8e4f1a2c40';
@@ -550,5 +557,54 @@ describe('mudarCamposDaTi', () => {
       ok: false,
       erros: { formulario: RECUSA_DO_FORMULARIO },
     });
+  });
+});
+
+describe('contagemDasRespostas e camposDaTiQueFaltam', () => {
+  /**
+   * A Impressora com o Laudo, só da TI e obrigatório, e a Nota fiscal, só da TI e obrigatória, que
+   * aparece com o Contrato de manutenção.
+   */
+  const comOLaudo = () =>
+    formularioCom([
+      ...camposDaImpressora(),
+      { id: 'laudo', tipo: 'texto-longo', rotulo: 'Laudo', soDaTi: true, obrigatorio: true },
+      {
+        id: 'nota',
+        tipo: 'texto-curto',
+        rotulo: 'Nota fiscal',
+        soDaTi: true,
+        obrigatorio: true,
+        condicao: [{ campoId: 'contrato', valor: true }],
+      },
+    ]);
+
+  const DO_1042 = { impressora: ATIVO, problema: 'manchando', manchas: 'borda', foto: [FOTO] };
+
+  it('os campos que a condição mostra, com resposta, e os só da TI obrigatórios e vazios', () => {
+    expect(contagemDasRespostas(comOLaudo(), DO_1042)).toEqual({ respondidos: 4, pendentes: 1 });
+    expect(
+      contagemDasRespostas(comOLaudo(), { ...DO_1042, contrato: true, contador: 48_210 }),
+    ).toEqual({ respondidos: 6, pendentes: 2 });
+  });
+
+  it('o campo escondido não conta, nem com a resposta guardada', () => {
+    expect(contagemDasRespostas(comOLaudo(), { ...DO_1042, problema: 'atolando' })).toEqual({
+      respondidos: 3,
+      pendentes: 1,
+    });
+  });
+
+  it('o vazio não é respondido, o Não é, e o opcional vazio não fica pendente', () => {
+    expect(
+      contagemDasRespostas(comOLaudo(), { ...DO_1042, foto: [], laudo: '  ', contrato: false }),
+    ).toEqual({ respondidos: 4, pendentes: 1 });
+  });
+
+  it('os pendentes são os que o resolver pede, na ordem do formulário', () => {
+    const faltam = (respostas: Record<string, unknown>) =>
+      camposDaTiQueFaltam(comOLaudo(), respostas).map((campo) => campo.id);
+    expect(faltam({ ...DO_1042, contrato: true })).toEqual(['laudo', 'nota']);
+    expect(faltam({ ...DO_1042, laudo: 'Trocado o fusor.' })).toEqual([]);
   });
 });

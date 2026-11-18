@@ -2,8 +2,15 @@
 // chamados-da-ti, design, "A coluna da direita, a pessoa e o ativo (tarefa 5.13)"): as ações do
 // ativo de quem atende, os contatos da pessoa, as OS do ativo no ano e a nota do estoque. A ficha
 // já vem só com o que a conta vê: o que não vem fica de fora.
-import { type Permissao, ROTULOS_DAS_SITUACOES_DA_SOLICITACAO } from '@grafite/domain';
+import {
+  type Permissao,
+  ROTULOS_DAS_SITUACOES_DA_SOLICITACAO,
+  type SituacaoDoChamado,
+} from '@grafite/domain';
+import type { DataHora } from '@grafite/ui';
 import type { FichaDoChamado } from '../consultas.ts';
+import { ROTULO_DA_SITUACAO } from '../situacoes.ts';
+import { type ItemDaConversa, momentoNaConversa } from './conversa.ts';
 
 type Ativo = NonNullable<FichaDoChamado['ativo']>;
 type Resumo = NonNullable<Ativo['resumo']>;
@@ -52,6 +59,16 @@ export function acoesDoAtivo(
     trocar: ativo ? 'trocar' : pode('ativos.ver') ? 'ligar' : null,
   };
 }
+
+/**
+ * Quem preenche os campos só da TI nos "Campos do tipo": quem atende os locais do chamado, fora do
+ * resolvido, como a API (`recusaDaEdicao`); a quem só vê, tudo para ler.
+ */
+export const preencheOsCampos = ({
+  situacao,
+  permite,
+}: Pick<FichaDoChamado, 'situacao' | 'permite'>): boolean =>
+  permite.atender && situacao !== 'resolvido';
 
 export interface ContatoDaPessoa {
   rotulo: string;
@@ -128,4 +145,157 @@ export function linhasDoEstoque(
   }
   if (linhas.length === 0) return null;
   return { linhas, atencao: comCor.some((compativel) => compativel.abaixo) };
+}
+
+/** Um passo da linha do tempo: a situação, em peso forte, e embaixo a hora, o que houve e quem fez. */
+export interface PassoDaLinha {
+  /** O id do evento que fez o passo. */
+  id: string;
+  titulo: string;
+  texto: string;
+  /** O passo de agora, o último. */
+  agora: boolean;
+}
+
+const juntarPartes = (...partes: (string | null)[]) =>
+  partes.filter((parte): parte is string => parte !== null).join(' · ');
+
+/**
+ * A linha do tempo (change chamados-da-ti, design, "A linha do tempo, os campos do tipo e as seções
+ * guardadas"): o caminho do chamado pelas situações, montado dos eventos da conversa, na ordem
+ * dela. A situação de cada passo sai da matriz das ações (spec chamados, "Ações do atendimento"): o
+ * assumir e o passar no aguardando continuam nele, e a reabertura sem ninguém volta à triagem. O
+ * desfazer tira o passo do assumir que ele desfaz. O relógio entra quando para ou volta a contar.
+ */
+export function linhaDoTempo(
+  conversa: readonly ItemDaConversa[],
+  { pessoa, agora, dataHora }: { pessoa: string; agora: Date; dataHora: DataHora },
+): PassoDaLinha[] {
+  const passos: (PassoDaLinha & { situacao: SituacaoDoChamado; doAssumir: boolean })[] = [];
+  let situacao: SituacaoDoChamado = 'triagem';
+  for (const item of conversa) {
+    if (item.especie !== 'evento') continue;
+    const quando = momentoNaConversa(new Date(item.em), agora, dataHora);
+    const quem = item.autor.nome;
+    const estava = situacao;
+    const comAlguem = estava === 'aguardando' ? 'aguardando' : 'em-atendimento';
+    const passo = (nova: SituacaoDoChamado, ...partes: (string | null)[]) => {
+      situacao = nova;
+      passos.push({
+        id: item.id,
+        situacao: nova,
+        titulo: ROTULO_DA_SITUACAO[nova],
+        texto: juntarPartes(quando, ...partes),
+        agora: false,
+        doAssumir: item.evento === 'assumiu',
+      });
+    };
+    switch (item.evento) {
+      case 'abertura':
+        passo(
+          'triagem',
+          item.autor.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
+        );
+        break;
+      case 'assumiu':
+        passo(comAlguem, `assumido por ${quem}`);
+        break;
+      case 'passou':
+        passo(
+          comAlguem,
+          item.para ? `passado para ${item.para.nome} por ${quem}` : `passado por ${quem}`,
+        );
+        break;
+      case 'devolveu':
+        passo('triagem', `devolvido por ${quem}`);
+        break;
+      case 'desfez':
+        // O desfazer vem logo depois do assumir que ele desfaz (decidirDesfazer, no domínio).
+        if (passos.at(-1)?.doAssumir) {
+          passos.pop();
+          situacao = passos.at(-1)?.situacao ?? 'triagem';
+        }
+        break;
+      case 'aguardando':
+        passo('aguardando', 'o relógio parou');
+        break;
+      case 'retomou':
+        passo('em-atendimento', `retomado por ${quem}`, 'o relógio voltou a contar');
+        break;
+      case 'resolveu':
+        // No aguardando, o relógio já estava parado.
+        passo(
+          'resolvido',
+          `resolvido por ${quem}`,
+          estava === 'aguardando' ? null : 'o relógio parou',
+        );
+        break;
+      case 'reabriu': {
+        const para =
+          item.para && item.para.conta !== item.autor.id ? ` para ${item.para.nome}` : '';
+        passo(
+          item.para ? 'em-atendimento' : 'triagem',
+          `reaberto por ${quem}${para}`,
+          'o relógio voltou a contar',
+        );
+        break;
+      }
+      case 'ativo':
+      case 'os':
+      case 'solicitacao':
+      case 'solicitacao-nao-gerada':
+        // A troca do ativo, a OS e a solicitação ficam só na conversa.
+        break;
+    }
+  }
+  return passos.map(({ id, titulo, texto }, indice) => ({
+    id,
+    titulo,
+    texto,
+    agora: indice === passos.length - 1,
+  }));
+}
+
+/** As seções da coluna da direita, abertas ou fechadas. */
+export interface SecoesDoLado {
+  pessoa: boolean;
+  ativo: boolean;
+  linha: boolean;
+  campos: boolean;
+}
+
+/** Como as seções começam: o Ativo ligado e a Linha do tempo abertos, como no m04. */
+export const SECOES_DE_FABRICA: Readonly<SecoesDoLado> = {
+  pessoa: false,
+  ativo: true,
+  linha: true,
+  campos: false,
+};
+
+const CHAVE_DAS_SECOES = 'grafite.chamados.secoes';
+
+/** A escolha guardada neste navegador, a mesma em todos os chamados; o que não se lê fica com a fábrica. */
+export function lerSecoes(): SecoesDoLado {
+  const lidas = { ...SECOES_DE_FABRICA };
+  try {
+    const guardadas: unknown = JSON.parse(localStorage.getItem(CHAVE_DAS_SECOES) ?? 'null');
+    if (typeof guardadas !== 'object' || guardadas === null) return lidas;
+    for (const nome of Object.keys(SECOES_DE_FABRICA) as (keyof SecoesDoLado)[]) {
+      const valor = (guardadas as Partial<Record<keyof SecoesDoLado, unknown>>)[nome];
+      if (typeof valor === 'boolean') lidas[nome] = valor;
+    }
+    return lidas;
+  } catch {
+    // O texto que não é JSON e o armazenamento bloqueado: a fábrica.
+    return { ...SECOES_DE_FABRICA };
+  }
+}
+
+/** Grava a escolha; com o armazenamento bloqueado, ela vale até a tela fechar. */
+export function gravarSecoes(secoes: SecoesDoLado): void {
+  try {
+    localStorage.setItem(CHAVE_DAS_SECOES, JSON.stringify(secoes));
+  } catch {
+    // Navegação privada ou armazenamento bloqueado: a escolha fica só na tela aberta.
+  }
 }

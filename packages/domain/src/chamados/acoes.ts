@@ -5,7 +5,6 @@
 // e o desfazer do assumir) e as da conversa e do fim (a mensagem, a espera, a nota, retomar,
 // resolver e reabrir).
 import { lerTexto } from '../campos/textos.ts';
-import { vazio } from '../campos/tipos.ts';
 import { nomeCurto } from '../pessoas/pessoa.ts';
 import {
   type AlcanceDeQuemAtende,
@@ -15,7 +14,7 @@ import {
 import type { CampoDoFormulario, Formulario } from './formulario.ts';
 import type { DadosDaSolicitacaoNaoGerada } from './os-e-solicitacao.ts';
 import { type HorarioDaTi, type ModoDoPrazo, segundosNoHorario } from './prazo.ts';
-import { camposVisiveis, respostaDe } from './respostas.ts';
+import { camposDaTiQueFaltam } from './respostas.ts';
 import type { RelogioDoChamado } from './situacao-do-prazo.ts';
 import { nomeNoResumo } from './titulo-e-resumo.ts';
 
@@ -389,22 +388,13 @@ function lerAMensagem(pedido: { texto: string; anexos: number }, de: 'mensagem' 
 }
 
 /**
- * O primeiro campo só da TI obrigatório, vazio e mostrado pela condição, na ordem do formulário. Os
- * da pessoa passaram pela conferência da abertura.
+ * O primeiro campo só da TI obrigatório, vazio e mostrado pela condição, na ordem do formulário,
+ * como os pendentes da contagem dos "Campos do tipo".
  */
-function campoDaTiQueFalta(
+const campoDaTiQueFalta = (
   formulario: Formulario,
   respostas: Readonly<Record<string, unknown>>,
-): CampoDoFormulario | undefined {
-  const visiveis = camposVisiveis(formulario, respostas);
-  return formulario.campos.find(
-    (campo) =>
-      campo.soDaTi &&
-      campo.obrigatorio &&
-      visiveis.has(campo.id) &&
-      vazio(respostaDe(respostas, campo.id)),
-  );
-}
+): CampoDoFormulario | undefined => camposDaTiQueFaltam(formulario, respostas)[0];
 
 /** A versão que a tela mandou e o chamado não tem mais: a recusa, antes de tudo. */
 function recusaDaVersao(chamado: ChamadoParaAcao, pedido: PedidoDeAcao): RecusaDaAcao | null {

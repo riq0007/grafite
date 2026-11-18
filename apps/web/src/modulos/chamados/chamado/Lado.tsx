@@ -1,7 +1,8 @@
 // A coluna da direita do chamado aberto (spec modulo-chamados, "Chamado aberto"; change
-// chamados-da-ti, design, "A coluna da direita, a pessoa e o ativo (tarefa 5.13)"; mockup m04): as
-// seções que recolhem, com a Pessoa e o Ativo ligado. A Linha do tempo e os Campos do tipo, e a
-// escolha guardada neste navegador, são da 5.14.
+// chamados-da-ti, design, "A coluna da direita, a pessoa e o ativo (tarefa 5.13)" e "A linha do
+// tempo, os campos do tipo e as seções guardadas (tarefa 5.14)"; mockups m03 e m04): as seções
+// que recolhem, com a Pessoa, o Ativo ligado, a Linha do tempo e os Campos do tipo, e a escolha de
+// cada uma guardada neste navegador.
 import {
   ROTULOS_DAS_SITUACOES_DA_ORDEM,
   ROTULOS_DAS_SITUACOES_DA_SOLICITACAO,
@@ -15,53 +16,90 @@ import {
   MiniaturaDeAtivo,
   NOMES_DAS_TINTAS,
   RotuloDeSituacao,
+  useDataHora,
 } from '@grafite/ui';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowUpRight, ChevronDown, Package } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { ArrowUpRight, Package } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { Desatualizado, IdadeDaLeitura, SituacaoNaTela } from '../../ativos/disponibilidade.tsx';
 import type { PainelDeSuprimentos } from '../../ativos/suprimentos.tsx';
 import type { FichaDoChamado } from '../consultas.ts';
 import { SiglaDaPessoa } from '../Pecas.tsx';
+import { CamposDoTipo } from './CamposDoTipo.tsx';
 import estilos from './Lado.module.css';
-import { type AcoesDoAtivo, contatosDaPessoa, linhasDoEstoque, textoDasOrdens } from './lado.ts';
+import {
+  type AcoesDoAtivo,
+  contatosDaPessoa,
+  gravarSecoes,
+  lerSecoes,
+  linhaDoTempo,
+  linhasDoEstoque,
+  preencheOsCampos,
+  type SecoesDoLado,
+  textoDasOrdens,
+} from './lado.ts';
+import { SecaoDoLado } from './SecaoDoLado.tsx';
 import { TrocarOAtivo } from './TrocarOAtivo.tsx';
 
 export function LadoDoChamado({ ficha, acoes }: { ficha: FichaDoChamado; acoes: AcoesDoAtivo }) {
+  const [secoes, definirSecoes] = useState(lerSecoes);
+  /** A escolha de uma seção, junta à guardada, que outro chamado aberto pode ter mudado. */
+  const mudar = (nome: keyof SecoesDoLado) => (aberta: boolean) => {
+    const novas = { ...lerSecoes(), [nome]: aberta };
+    gravarSecoes(novas);
+    definirSecoes(novas);
+  };
   return (
     <aside className={estilos.lado} aria-label="Detalhes do chamado">
-      <SecaoDoLado titulo="Pessoa" aberta={false}>
+      <SecaoDoLado titulo="Pessoa" aberta={secoes.pessoa} aoMudarAberta={mudar('pessoa')}>
         <SecaoDaPessoa pessoa={ficha.pessoa} />
       </SecaoDoLado>
-      <SecaoDoLado titulo="Ativo ligado" aberta>
+      <SecaoDoLado titulo="Ativo ligado" aberta={secoes.ativo} aoMudarAberta={mudar('ativo')}>
         <SecaoDoAtivo ficha={ficha} acoes={acoes} />
       </SecaoDoLado>
+      <SecaoDoLado titulo="Linha do tempo" aberta={secoes.linha} aoMudarAberta={mudar('linha')}>
+        <LinhaDoTempo ficha={ficha} />
+      </SecaoDoLado>
+      {/* O tipo sem campos não tem o que mostrar nem o que preencher. */}
+      {ficha.formulario.campos.length > 0 && (
+        <CamposDoTipo
+          // Outro chamado começa do zero, depois de gravar o que ficou no anterior.
+          key={ficha.numero}
+          ficha={ficha}
+          preenche={preencheOsCampos(ficha)}
+          aberta={secoes.campos}
+          aoMudarAberta={mudar('campos')}
+        />
+      )}
     </aside>
   );
 }
 
-/** Uma seção que recolhe, como no m04: a legenda em versal pequena, o fio e a seta. */
-function SecaoDoLado({
-  titulo,
-  aberta,
-  children,
-}: {
-  titulo: string;
-  aberta: boolean;
-  children: ReactNode;
-}) {
+/**
+ * A linha do tempo, como no m03 e no m04: o caminho do chamado pelas situações, com o ponto de cada
+ * passo e o fio entre eles; o passo de agora, o último, com o ponto na cor da informação.
+ */
+function LinhaDoTempo({ ficha }: { ficha: FichaDoChamado }) {
+  const agora = useAgora();
+  const dataHora = useDataHora();
+  const passos = linhaDoTempo(ficha.conversa, { pessoa: ficha.pessoa.nome, agora, dataHora });
   return (
-    <details className={estilos.secao} open={aberta}>
-      <summary className={estilos.cabecaDaSecao}>
-        <span>{titulo}</span>
-        <span className={estilos.fio} aria-hidden="true" />
-        <span className={estilos.seta}>
-          <Icone icone={ChevronDown} tamanho={16} />
-        </span>
-      </summary>
-      <div className={estilos.conteudo}>{children}</div>
-    </details>
+    <ol className={estilos.linhaDoTempo} aria-label="Passos do chamado">
+      {passos.map((passo) => (
+        <li
+          key={passo.id}
+          data-agora={passo.agora ? '' : undefined}
+          aria-current={passo.agora ? 'step' : undefined}
+        >
+          <span className={estilos.ponto} aria-hidden="true" />
+          <div>
+            <b>{passo.titulo}</b>
+            <small>{passo.texto}</small>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 

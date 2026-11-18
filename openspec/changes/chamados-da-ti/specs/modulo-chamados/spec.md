@@ -217,8 +217,8 @@ Nas duas formas, a conversa SHALL ter:
 A coluna da direita SHALL ter as seções que recolhem:
 - **"Pessoa":** o nome e o local de trabalho e, a quem vê a pessoa, os contatos e "Abrir a ficha" (spec chamados, requisito "Quem vê e quem atende os chamados");
 - **"Ativo ligado":** o resumo do ativo, com a situação em texto, os suprimentos, como "Toner crítico", o total de páginas e "Trocar o ativo", e, sem o ativo, "Ligar um ativo". A quem vê o estoque e as solicitações, mostra também o saldo do toner e a solicitação pendente, como "CF258A: 3 de 6, abaixo do mínimo; a solicitação 4 está aberta; “Pedir toner” se junta a ela", sem repetir a solicitação que já é a do chamado;
-- **"Linha do tempo":** os eventos do chamado;
-- **"Campos do tipo":** as respostas e os campos só da TI, para preencher, com a contagem, como "3 respondidos, 1 pendente".
+- **"Linha do tempo":** o caminho do chamado pelas situações, do primeiro passo ao de agora, cada passo com a situação, a hora, quem fez e o que houve com o relógio, como "Em atendimento · hoje, 09:40 · assumido por Ana Souza". O assumir desfeito sai da linha, e os outros eventos ficam só na conversa;
+- **"Campos do tipo":** as respostas e os campos só da TI, para preencher, com a contagem, como "3 respondidos, 1 pendente". O pendente é o campo só da TI obrigatório e vazio, que o resolver exige. A escolha grava na hora, e o texto, o número e a data gravam ao sair do campo. O tipo sem campos não tem a seção.
 
 As seções SHALL começar com o Ativo ligado e a Linha do tempo abertos, e a escolha SHALL ficar guardada neste navegador.
 
@@ -236,7 +236,15 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 
 #### Scenario: Mudança que esconde um anexo
 - **WHEN** Ana muda o "Contrato de manutenção" do #1042 para "Sim", e a "Foto da peça", que só aparece com "Não", tem 1 arquivo
-- **THEN** a tela pergunta "A Foto da peça some, e 1 arquivo é apagado." com "Mudar" e "Cancelar", e só grava depois de "Mudar"
+- **THEN** a tela pergunta "Mudar o campo “Contrato de manutenção”?", com "O campo “Foto da peça” some, e 1 arquivo é apagado.", "Mudar" e "Cancelar", e só grava depois de "Mudar"; com "Cancelar", o campo continua com "Não"
+
+#### Scenario: Linha do tempo
+- **WHEN** Ana abre o #1041, que Fernanda Rocha abriu ontem às 17:05, Ana Souza assumiu às 17:20 e aguarda Fernanda desde hoje, 09:21
+- **THEN** a Linha do tempo mostra "Na triagem · ontem, 17:05 · aberto por Fernanda Rocha", "Em atendimento · ontem, 17:20 · assumido por Ana Souza" e "Aguardando o colaborador · hoje, 09:21 · o relógio parou", com o último como o passo de agora
+
+#### Scenario: Seções guardadas neste navegador
+- **WHEN** Ana fecha a Linha do tempo no #1042 e depois abre o #1041
+- **THEN** a Linha do tempo do #1041 começa fechada, e o Ativo ligado, aberto
 
 #### Scenario: Pedir toner sem a pendente
 - **WHEN** Ana usa "Pedir toner" no #1042, e a PAT-00139 não está numa solicitação pendente
