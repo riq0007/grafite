@@ -187,7 +187,7 @@ export function PreviaDoChamado({
                     onPress={() => acoes.aoPassar(quem)}
                   >
                     <span className={estilos.quem}>
-                      <SiglaDaPessoa conta={quem.conta} nome={quem.nome} pequena />
+                      <SiglaDaPessoa conta={quem.conta} nome={quem.nome} tamanho="pequena" />
                       <b>{nomeCurto(quem.nome)}</b>
                       <small>{textoDosAbertos(quem.abertos)}</small>
                     </span>

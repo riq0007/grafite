@@ -103,6 +103,13 @@
   font-weight: var(--peso-forte);
 }
 
+/* A sigla média, como o `.av` de 32 da conversa do m03. */
+.sigla[data-tamanho="media"] {
+  width: 32px;
+  height: 32px;
+  font-size: var(--texto-rotulo);
+}
+
 /* A sigla pequena, como o `.av` de 26 dos botões de "Passar para…" do m01. */
 .sigla[data-tamanho="pequena"] {
   width: 26px;

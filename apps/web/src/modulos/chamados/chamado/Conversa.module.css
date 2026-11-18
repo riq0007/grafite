@@ -1,0 +1,213 @@
+/*
+ * A conversa do chamado aberto (m03 e m04): ocupa o resto da janela, que rola inteira, com os itens
+ * numa coluna de até 720 px, no meio.
+ */
+.conversa {
+  flex: 1 0 auto;
+  padding: var(--esp-4) var(--respiro, var(--esp-6));
+}
+
+.itens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+/* A mensagem, sem balão: a sigla de 32 px e, ao lado, o nome com a hora, o texto e os anexos. */
+.mensagem,
+.nota {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--esp-3);
+  align-items: start;
+}
+
+/* A nota interna, no quadro tracejado da atenção. */
+.nota {
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px dashed var(--cor-atencao-borda);
+  border-radius: var(--raio-controle);
+  background: var(--cor-atencao-fundo);
+}
+
+.corpo {
+  display: grid;
+  min-width: 0;
+}
+
+.quem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.quem b {
+  font-weight: var(--peso-forte);
+}
+
+.hora {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+/* Na nota, o cadeado e o selo ficam no meio da linha, e o selo, à direita. */
+.nota .quem {
+  align-items: center;
+}
+
+.selo {
+  margin-left: auto;
+}
+
+.texto {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.nota .texto {
+  font-size: var(--texto-dado);
+}
+
+/* O evento e o alerta: a frase no meio, entre dois fios; a espera e o alerta, em peso forte. */
+.evento {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  font-size: var(--texto-rotulo);
+}
+
+.evento::before,
+.evento::after {
+  flex: 1;
+  min-width: var(--esp-4);
+  height: 1px;
+  background: var(--cor-linha-forte);
+  content: "";
+}
+
+.evento > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  max-width: 85%;
+  text-align: center;
+}
+
+.evento svg {
+  flex: none;
+}
+
+.evento[data-forte] {
+  font-weight: var(--peso-forte);
+}
+
+/*
+ * O resumo das respostas, logo depois da abertura: cada nome em versalete, pequeno, com a resposta
+ * ao lado; o patrimônio do ativo, na mono.
+ */
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1) var(--esp-5);
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-afundada);
+  font-size: var(--texto-dado);
+}
+
+.resumo > div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.resumo dt {
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.resumo dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Os anexos, como a lista do formulário (Formulario.module.css), com a linha mais baixa, sem os
+ * botões dela: o "Baixar" fica ao lado do nome, e o nome comprido termina nas reticências.
+ */
+.arquivos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--esp-6);
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+}
+
+.arquivo > svg {
+  flex: none;
+}
+
+.nome {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tamanho {
+  flex: none;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.baixar {
+  flex: none;
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+  outline: none;
+}
+
+.baixar:hover {
+  text-decoration: underline;
+}
+
+.baixar:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}

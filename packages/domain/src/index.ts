@@ -451,7 +451,10 @@ export {
   type AtivoDasRespostas,
   type ContextoDasRespostas,
   camposNaAuditoria,
+  comMinuscula,
   conferirTituloDoChamado,
+  type ParteDoResumo,
+  partesDoResumo,
   resumoDasRespostas,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';

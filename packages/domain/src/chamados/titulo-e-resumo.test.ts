@@ -4,6 +4,7 @@ import {
   type ContextoDasRespostas,
   camposNaAuditoria,
   conferirTituloDoChamado,
+  partesDoResumo,
   resumoDasRespostas,
   tituloDasRespostas,
 } from './titulo-e-resumo.ts';
@@ -298,6 +299,22 @@ describe('resumoDasRespostas', () => {
     expect(resumoDasRespostas(impressora(), MANCHANDO_NA_BORDA, contexto)).toBe(
       'Problema: Manchando, na borda · Ativo: PAT-00139',
     );
+  });
+
+  it('as partes dão o nome e a resposta de cada uma, com o patrimônio do ativo na mono', () => {
+    expect(partesDoResumo(impressora(), MANCHANDO_NA_BORDA, contexto)).toEqual([
+      { nome: 'Problema', resposta: 'Manchando, na borda', mono: false },
+      { nome: 'Ativo', resposta: 'PAT-00139', mono: true },
+    ]);
+    const semPatrimonio: ContextoDasRespostas = {
+      ...contexto,
+      ativos: new Map([[IMPRESSORA, { patrimonio: null, rotulo: 'Impressora Financeiro' }]]),
+    };
+    expect(partesDoResumo(impressora(), MANCHANDO_NA_BORDA, semPatrimonio).at(-1)).toEqual({
+      nome: 'Ativo',
+      resposta: 'Impressora Financeiro',
+      mono: false,
+    });
   });
 
   it('sem o nome no resumo, usa o rótulo sem o "?"', () => {

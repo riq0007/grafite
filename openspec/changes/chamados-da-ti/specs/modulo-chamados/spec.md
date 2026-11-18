@@ -204,7 +204,10 @@ As ações SHALL ficar só com quem atende os locais do chamado:
 A conversa SHALL ficar numa coluna central, sem balão:
 - cada mensagem com quem escreveu e a hora;
 - cada nota interna num quadro tracejado, com o cadeado e "Só a TI vê";
-- cada evento numa linha, como "Aguardando Fernanda · 09:21 · o relógio parou".
+- cada evento numa linha, como "Aguardando Fernanda · 09:21 · o relógio parou";
+- a abertura com o resumo das respostas, como "Problema: Manchando, na borda · Ativo: PAT-00139";
+- cada alerta do ativo ligado numa linha, a quem vê os alertas, como "Alerta no ativo PAT-00139: toner preto abaixo de 10% · hoje, 09:36";
+- os anexos de cada mensagem e de cada nota, com o nome, o tamanho e "Baixar".
 
 A coluna da direita SHALL ter as seções que recolhem:
 - **"Pessoa":** o nome e o local de trabalho e, a quem vê a pessoa, os contatos e "Abrir a ficha" (spec chamados, requisito "Quem vê e quem atende os chamados");

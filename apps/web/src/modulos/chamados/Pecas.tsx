@@ -185,25 +185,25 @@ export function IconeDoTipo({
 }
 
 /**
- * As iniciais de quem atende, no círculo da série da conta: a de 38 px da coluna, ou a pequena, de
- * 26, dos botões. É só desenho: o nome vai sempre ao lado, em texto.
+ * As iniciais de quem atende, no círculo da série da conta: a de 38 px da coluna, a média, de 32, da
+ * conversa, ou a pequena, de 26, dos botões. É só desenho: o nome vai sempre ao lado, em texto.
  */
 export function SiglaDaPessoa({
   conta,
   nome,
-  pequena = false,
+  tamanho,
 }: {
   /** A conta de quem atende, que dá a série; nula, como a de quem pediu, o círculo neutro. */
   conta: string | null;
   nome: string;
-  pequena?: boolean;
+  tamanho?: 'media' | 'pequena';
 }) {
   return (
     <span
       className={estilos.sigla}
       aria-hidden="true"
       data-serie={conta === null ? undefined : serieDaConta(conta)}
-      data-tamanho={pequena ? 'pequena' : undefined}
+      data-tamanho={tamanho}
     >
       {iniciais(nome)}
     </span>

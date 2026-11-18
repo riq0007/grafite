@@ -934,6 +934,20 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
   - sem resultado, a lista diz "Nenhum chamado com “impressora”.", e a falha diz a frase dela.
   É a busca do sistema só com os chamados, para quem já está nas telas deles.
 
+**O chamado aberto, a conversa (tarefa 5.11),** com o m03 e o m04:
+- **a coluna,** de até 720 px, no centro da área embaixo do cabeçalho, numa lista na ordem da ficha, que a API já ordena (decisão 8); a janela rola inteira, como nas outras telas da janela inteira, e o campo de escrever da 5.12 fica no pé dela;
+- **a mensagem,** sem balão: a sigla de 32 px (a da conta com a série dela, a da pessoa no círculo neutro), o nome em peso forte, a hora e o texto, com as quebras de linha;
+- **a nota,** no quadro tracejado da atenção: o cadeado, "Nota interna · Ana Souza", a hora e o selo "Só a TI vê" à direita;
+- **a hora,** como no m03: "hoje, 09:21", "ontem, 17:22" e "seg 9 nov, 16:00" nas mensagens, nas notas, na abertura e nos alertas; nos eventos das ações, só a hora no mesmo dia, como no "assumiu o chamado · 09:40" do m04;
+- **o evento,** numa linha no centro entre dois traços, com a frase que a web monta (decisão 8) e o nome sem artigo (decisão 19):
+  - a abertura: "Ana Souza abriu o chamado para Marina Rocha · hoje, 07:40" (a origem é só a TI nesta versão; o "pela aba do computador" do m04 chega com a aba) e, logo depois, o resumo das respostas num quadro, com o nome de cada uma em versal pequena e o patrimônio do ativo na mono (m04). O resumo sai do `partesDoResumo` do domínio, de que o `resumoDasRespostas` passa a ser a junção;
+  - "Ana Souza assumiu o chamado · 09:40 · estava há 2 h na triagem", ou "com Bruno Lima", pelo `desde`; "Bruno Lima passou o chamado para Ana Souza", com "de Diego Martins" quando quem passou não estava com ele; "Ana Souza devolveu o chamado à triagem"; "Ana Souza desfez o assumir · 09:41 · o chamado voltou à triagem", ou "para Bruno Lima";
+  - "Aguardando Fernanda · 09:21 · o relógio parou", em peso forte e com a ampulheta (m03), com o primeiro nome; "Ana Souza retomou o atendimento · o relógio voltou a contar"; "Ana Souza resolveu o chamado"; "Ana Souza reabriu o chamado · o relógio voltou a contar", com "voltou à triagem" ou "para Bruno Lima" quando não fica com quem reabriu;
+  - "Ana Souza ligou o ativo PAT-00139", "trocou o ativo PAT-00139 por PAT-00140" e "tirou o ativo PAT-00139";
+  - "Virou a OS 13 · 10:00 · por Ana Souza", "Juntou-se à solicitação 4", "Pediu toner na solicitação 5" e "Gerou a solicitação 6", como na spec; e "A solicitação não foi gerada: o módulo Operação está desligado", sem o ponto do motivo antes da hora;
+- **o alerta do ativo,** na linha do evento, em peso forte e com o sino: "Alerta no ativo PAT-00139: toner preto abaixo de 10% · hoje, 09:36". O m04 diz "ligado à PAT-00139", e o artigo sai pela regra da decisão 19, porque o rótulo do ativo pode ser de qualquer gênero;
+- **os anexos** da mensagem e da nota, embaixo do texto, como no campo Anexo do formulário: o ícone, o nome, o tamanho e "Baixar", pelo `GET /chamados/:numero/anexos/:arquivo`, sem miniatura, porque a entrega é sempre para baixar (decisão 10). Os mockups não os mostram.
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

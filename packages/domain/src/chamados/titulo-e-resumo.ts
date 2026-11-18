@@ -37,9 +37,9 @@ const umaLinha = (texto: string) => texto.replace(/\s+/gu, ' ').trim();
 
 /**
  * A primeira letra minúscula, fora quando a primeira palavra tem outra letra maiúscula, como em
- * "VPN" e "Wi-Fi".
+ * "VPN" e "Wi-Fi". A conversa do chamado a usa no texto do alerta, depois dos dois-pontos.
  */
-function comMinuscula(texto: string): string {
+export function comMinuscula(texto: string): string {
   const [primeira = '', ...resto] = [...texto];
   const depois = resto.join('');
   const restoDaPalavra = depois.split(/\s/u)[0] ?? '';
@@ -178,29 +178,41 @@ export function tituloDasRespostas(
   return cortar(contexto.nomeDoTipo);
 }
 
+/** Uma parte do resumo das respostas: o nome no resumo e a resposta, ou as respostas juntas. */
+export interface ParteDoResumo {
+  nome: string;
+  resposta: string;
+  /** A resposta é o patrimônio de um ativo, que as telas mostram na fonte mono. */
+  mono: boolean;
+}
+
 /**
- * O resumo das respostas, a linha da abertura na conversa: "<nome no resumo>: <resposta>", na
- * ordem do formulário e separados por " · ". A opção e o texto que aparecem por uma condição vão
- * depois da vírgula, junto da resposta do campo da primeira cláusula que vale, também em cadeia, e
- * as do Ativo vêm por último. A leitura do chamado o monta com os nomes de agora, para a pessoa
- * anonimizada sair dele como sai do chamado.
+ * As partes do resumo das respostas, na ordem do formulário. A opção e o texto que aparecem por uma
+ * condição vão depois da vírgula, junto da resposta do campo da primeira cláusula que vale, também
+ * em cadeia, e as do Ativo vêm por último.
  */
-export function resumoDasRespostas(
+export function partesDoResumo(
   formulario: Formulario,
   respostas: Respostas,
   contexto: ContextoDasRespostas,
-): string {
+): ParteDoResumo[] {
   const porId = new Map(formulario.campos.map((campo) => [campo.id, campo]));
   const campos = camposQueAPessoaVe(formulario, respostas);
   const visiveis = new Set(campos.map((campo) => campo.id));
   const partes: { nome: string; respostas: string[] }[] = [];
   const parteDe = new Map<string, { nome: string; respostas: string[] }>();
-  const ativos: string[] = [];
+  const ativos: ParteDoResumo[] = [];
   for (const campo of campos) {
     const resposta = mostrarResposta(campo, respostaDe(respostas, campo.id), contexto);
     if (resposta === null) continue;
     if (campo.tipo === 'ativo') {
-      ativos.push(`${nomeNoResumo(campo)}: ${resposta}`);
+      const id = respostaDe(respostas, campo.id);
+      const ativo = typeof id === 'string' ? contexto.ativos?.get(id) : undefined;
+      ativos.push({
+        nome: nomeNoResumo(campo),
+        resposta,
+        mono: ativo !== undefined && ativo.patrimonio !== null,
+      });
       continue;
     }
     const clausula = seJunta(campo)
@@ -223,9 +235,25 @@ export function resumoDasRespostas(
     partes.push(parte);
     parteDe.set(campo.id, parte);
   }
-  return [...partes.map((parte) => `${parte.nome}: ${parte.respostas.join(', ')}`), ...ativos].join(
-    ' · ',
-  );
+  return [
+    ...partes.map(({ nome, respostas }) => ({ nome, resposta: respostas.join(', '), mono: false })),
+    ...ativos,
+  ];
+}
+
+/**
+ * O resumo das respostas, a linha da abertura na conversa: as partes (`partesDoResumo`) como
+ * "<nome no resumo>: <resposta>", separadas por " · ". A leitura do chamado o monta com os nomes de
+ * agora, para a pessoa anonimizada sair dele como sai do chamado.
+ */
+export function resumoDasRespostas(
+  formulario: Formulario,
+  respostas: Respostas,
+  contexto: ContextoDasRespostas,
+): string {
+  return partesDoResumo(formulario, respostas, contexto)
+    .map(({ nome, resposta }) => `${nome}: ${resposta}`)
+    .join(' · ');
 }
 
 /**

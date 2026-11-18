@@ -1,8 +1,8 @@
 // O chamado aberto (spec modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O
 // chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
 // notificações, o quadro e a busca abrem, e o cabeçalho, com a trilha, o número e o título, o selo,
-// o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação. A conversa e o
-// campo de escrever chegam na 5.11 e na 5.12.
+// o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação, e, embaixo, a
+// conversa (tarefa 5.11). O campo de escrever chega na 5.12.
 import {
   AreaDeTexto,
   Botao,
@@ -43,6 +43,7 @@ import { chaveDaColuna, textoDosAbertos } from '../quadro/quadro.ts';
 import { TelaDosChamados } from '../TelaDosChamados.tsx';
 import { type RecusaNoDialogo, useAcoesDoChamadoAberto } from './acoes.ts';
 import estilos from './Chamado.module.css';
+import { Conversa } from './Conversa.tsx';
 import { ID_DO_CAMPO_DE_ESCREVER } from './escrever.ts';
 import { quadroDoPrazo } from './prazo.ts';
 
@@ -134,6 +135,7 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         <QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
         {ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
       </header>
+      <Conversa ficha={ficha} />
     </div>
   );
 }
@@ -193,13 +195,13 @@ function DadosDoChamado({
         {tipo.nome}
       </span>
       <span className={estilos.quem}>
-        <SiglaDaPessoa conta={null} nome={pessoa.nome} pequena />
+        <SiglaDaPessoa conta={null} nome={pessoa.nome} tamanho="pequena" />
         <b>{pessoa.nome}</b>
         {pessoa.local && <span>{`· ${pessoa.local}`}</span>}
       </span>
       {responsavel && (
         <span className={estilos.quem}>
-          <SiglaDaPessoa conta={responsavel.conta} nome={responsavel.nome} pequena />
+          <SiglaDaPessoa conta={responsavel.conta} nome={responsavel.nome} tamanho="pequena" />
           <b>{responsavel.nome}</b>
           <span>
             {responsavel.naoAtendeMais
