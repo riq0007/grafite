@@ -26,14 +26,17 @@
   padding: var(--esp-3) var(--respiro);
 }
 
-/* O número em mono e o título, no tamanho grande do m03. */
+/*
+ * O número em mono e o título, no tamanho grande do m03. O título que não cabe na linha quebra ao
+ * lado do número, com as linhas de baixo no começo do título, e o número nunca fica sozinho.
+ */
 .tela [data-titulo-da-janela] {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
   column-gap: var(--esp-3);
   font-size: var(--texto-titulo-grande);
   letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
 }
 
 .estado {
@@ -90,6 +93,7 @@ p.estado {
 }
 
 .numeroDoTitulo {
+  flex: none;
   font-size: var(--texto-titulo);
   font-weight: var(--peso-normal);
   letter-spacing: 0;
