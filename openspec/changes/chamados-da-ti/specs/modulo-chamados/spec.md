@@ -111,7 +111,7 @@ Na coluna, os quadrados SHALL seguir o vencimento, e o empate, o número:
 3. os de relógio parado;
 4. os de prazo ilegível, por último.
 
-Parar o ponteiro num quadrado por 200 ms, ou levar o foco a ele, SHALL abrir a prévia, opaca, sobre a área vazia das colunas. A prévia SHALL ter:
+Parar o ponteiro do mouse num quadrado por 200 ms, ou levar a ele o foco do teclado, SHALL abrir a prévia, opaca, sobre a área vazia das colunas. A prévia SHALL ter:
 - a situação do prazo, como "Estourado há 20 min";
 - o título inteiro;
 - quem pediu, o ativo e quem atende;
@@ -119,9 +119,20 @@ Parar o ponteiro num quadrado por 200 ms, ou levar o foco a ele, SHALL abrir a p
 - "Assumir", a ação principal;
 - "Passar para…", com a carga de cada pessoa, como "Ana · 2 abertos".
 
+"Passar para…" SHALL listar as pessoas que atendem os chamados, na ordem das colunas, fora quem está com o chamado.
+
 Esc SHALL fechar a prévia. Enter e o clique SHALL abrir o chamado.
 
 O menu do botão direito e o do teclado SHALL ter "Abrir o chamado", "Assumir", "Passar para…" e "Devolver à triagem", conforme as ações que o chamado aceita (spec chamados, requisito "Ações do atendimento"): sem "Assumir" no chamado que já está com a conta e sem "Devolver à triagem" no da triagem e no aguardando.
+
+Quem só vê os chamados SHALL ter a prévia e o menu sem "Assumir", "Passar para…" e "Devolver à triagem".
+
+As ações da prévia e do menu SHALL mandar a versão do chamado que a tela mostra (spec chamados, requisito "Ações do atendimento"), e o retorno SHALL vir num aviso:
+- assumir: "Você assumiu o #1033.", com "Desfazer";
+- passar: "Você passou o #1033 a Bruno.";
+- devolver: "Você devolveu o #1033 à triagem.";
+- o "Desfazer": "O #1033 voltou a Renato." ou "O #1042 voltou à triagem.";
+- a recusa: a frase dela, como "O chamado #1038 mudou. Confira antes de assumir.". Depois dela, a tela SHALL reler o quadro e os prazos.
 
 #### Scenario: Idade do mais antigo
 - **WHEN** o #1041, o aberto mais antigo de Ana, foi aberto há 16 h 35 min
@@ -129,7 +140,15 @@ O menu do botão direito e o do teclado SHALL ter "Abrir o chamado", "Assumir", 
 
 #### Scenario: Prévia do estourado
 - **WHEN** Ana para o ponteiro no #1033, com Renato
-- **THEN** a prévia mostra "Estourado há 20 min", o título inteiro, Sandra Melo, o ativo, Renato, a última mensagem de Sandra às 09:12, "Assumir" e "Passar para…" com Ana 2, Bruno 2 e Diego 3 abertos
+- **THEN** a prévia mostra "Estourado há 20 min", o título inteiro, Sandra Vieira, o ativo, Renato, a última mensagem de Sandra às 09:12, "Assumir" e "Passar para…" com Ana 2, Bruno 2 e Diego 3 abertos
+
+#### Scenario: Assumir pela prévia
+- **WHEN** Ana para o ponteiro no #1038, da triagem, e usa "Assumir"
+- **THEN** o #1038 vai para a coluna de Ana, e o aviso diz "Você assumiu o #1038." com "Desfazer"
+
+#### Scenario: Menu do chamado aguardando
+- **WHEN** Ana abre o menu do #1041, que está com ela e aguarda Fernanda
+- **THEN** o menu tem "Abrir o chamado" e "Passar para…", sem "Assumir" e sem "Devolver à triagem"
 
 ### Requirement: Arrastar para passar
 

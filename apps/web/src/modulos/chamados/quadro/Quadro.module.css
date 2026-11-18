@@ -162,6 +162,12 @@
   list-style: none;
 }
 
+/* O item da lista: o quadrado o enche, e a prévia, fixa na janela, fica fora do fluxo dele. */
+.item {
+  display: grid;
+  min-width: 0;
+}
+
 /*
  * O quadrado de 92 de altura: o ícone e o número, o título numa linha e o prazo. Com o prazo em duas
  * linhas, ele cresce. O respiro é de 7 px dos quatro lados (o m01 tem 8 dos lados): o "vence em 2 h"
@@ -178,6 +184,23 @@
   border: 1px solid var(--cor-linha-forte);
   border-radius: var(--raio-controle);
   background: var(--cor-superficie);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* A camada do hover vai por cima da superfície, que continua opaca sobre o fundo da coluna. */
+.quadrado[tabindex]:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+/* O quadrado da prévia aberta, como o `.qd.aberto` do m01: a borda e o anel no destaque. */
+.quadrado[data-aberto] {
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 0 1px var(--cor-destaque);
+}
+
+.quadrado:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
 }
 
 .alto {

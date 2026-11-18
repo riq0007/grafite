@@ -1,6 +1,6 @@
 // A conta do prazo dos chamados nas telas (spec modulo-chamados, "Selos, prazo em texto e
-// movimento"; change chamados-da-ti, design, decisão 20): o relógio da resposta da API, com os
-// instantes em datas, e a situação do prazo agora, que anda na virada do minuto.
+// movimento"; change chamados-da-ti, design, decisões 20 e 22): o relógio da resposta da API, com
+// os instantes em datas, a situação do prazo agora, que anda na virada do minuto, e o selo dela.
 import type { components } from '@grafite/api-client';
 import {
   type HorarioDaTi,
@@ -8,7 +8,7 @@ import {
   type SituacaoDoPrazo,
   situacaoDoPrazo,
 } from '@grafite/domain';
-import { useDataHora } from '@grafite/ui';
+import { type Situacao, useDataHora } from '@grafite/ui';
 import { useMemo } from 'react';
 import { useAgora } from '../../casca/status/useAgora.ts';
 
@@ -47,4 +47,24 @@ export function useContarOPrazo(): ContarOPrazo {
   const agora = useAgora();
   const { fuso } = useDataHora();
   return useMemo(() => contadorDoPrazo(agora, fuso), [agora, fuso]);
+}
+
+/** A marca do selo de cada grupo: o estourado é crítico, e o que vence em até 2 h, atenção. */
+const MARCA_DO_GRUPO: Record<SituacaoDoPrazo['grupo'], Situacao> = {
+  estourado: 'critico',
+  'ate-2-horas': 'atencao',
+  hoje: 'neutra',
+  'depois-de-hoje': 'neutra',
+  parado: 'neutra',
+};
+
+/**
+ * O selo do prazo, como o da prévia do quadrado: a situação inteira, com a primeira letra
+ * maiúscula ("Estourado há 20 min", "Vence em 2 h", "Relógio parado" ou "Prazo ilegível"), na marca
+ * do grupo.
+ */
+export function seloDoPrazo(situacao: SituacaoDoPrazo | null): { texto: string; marca: Situacao } {
+  if (!situacao) return { texto: 'Prazo ilegível', marca: 'neutra' };
+  const { texto, grupo } = situacao;
+  return { texto: texto.charAt(0).toUpperCase() + texto.slice(1), marca: MARCA_DO_GRUPO[grupo] };
 }

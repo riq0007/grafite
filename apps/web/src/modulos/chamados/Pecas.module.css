@@ -102,3 +102,10 @@
   font-size: var(--texto-corpo);
   font-weight: var(--peso-forte);
 }
+
+/* A sigla pequena, como o `.av` de 26 dos botões de "Passar para…" do m01. */
+.sigla[data-tamanho="pequena"] {
+  width: 26px;
+  height: 26px;
+  font-size: var(--texto-rotulo);
+}

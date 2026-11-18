@@ -256,9 +256,11 @@ export {
   Submenu,
 } from './componentes/menu/Menu.tsx';
 export {
+  type AcaoDoMenuDeContexto,
   type ItemDoMenuDeContexto,
   MenuDeContexto,
   type PropsDoMenuDeContexto,
+  type SubmenuDoMenuDeContexto,
 } from './componentes/menu/MenuDeContexto.tsx';
 export {
   MiniaturaDeAtivo,

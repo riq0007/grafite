@@ -1,0 +1,166 @@
+/*
+ * A prévia do quadrado (m01, `.pv`): opaca, sem o vidro, com a superfície elevada, a borda forte,
+ * o raio do menu e a sombra sobreposta, fixa na janela no lugar que a tela mede. Enquanto a tela
+ * mede, ela fica invisível; sem lugar para ela inteira, o resto rola dentro dela.
+ */
+.previa {
+  position: fixed;
+  z-index: 1;
+  display: grid;
+  gap: var(--esp-3);
+  box-sizing: border-box;
+  padding: var(--esp-4);
+  overflow-y: auto;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-normal);
+  text-align: left;
+  cursor: default;
+}
+
+.previa[data-medida] {
+  visibility: hidden;
+}
+
+/* O número, o tipo com o ícone e o selo do prazo, encostado à direita. */
+.alto {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--esp-1) + 2px);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.selo {
+  margin-left: auto;
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: 1.25;
+}
+
+/* "Pediu", "Ativo" e "Atende": o termo em versalete pequeno, à esquerda do que ele diz. */
+.linhas {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+}
+
+.linhas dt {
+  padding-top: 2px;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.linhas dd {
+  margin: 0;
+}
+
+.patrimonio {
+  font-family: var(--fonte-mono);
+}
+
+/* A última mensagem, com quem a escreveu e a hora, na faixa à esquerda. */
+.mensagem {
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--cor-linha-forte);
+  background: var(--cor-superficie-2);
+  line-height: 1.4;
+}
+
+.mensagem figcaption {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.mensagem blockquote {
+  margin: 0;
+}
+
+.semMensagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+.acoes,
+.passar {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+/* "Assumir" ocupa a largura da prévia, com o ícone e o texto no começo, como no m01. */
+.acoes > .assumir {
+  justify-content: flex-start;
+}
+
+.rotulo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Três pessoas por linha, cada uma com a sigla, o primeiro nome e os abertos. */
+.pessoas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--esp-2);
+}
+
+.pessoas > .pessoa {
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: calc(var(--esp-1) + 1px) var(--esp-2);
+  font-weight: var(--peso-normal);
+  white-space: normal;
+}
+
+.quem {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: calc(var(--esp-1) + 2px);
+  min-width: 0;
+  text-align: left;
+}
+
+.quem > :first-child {
+  grid-row: 1 / 3;
+}
+
+.quem b {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+}
+
+.quem small {
+  font-size: var(--texto-legenda);
+  line-height: 1.2;
+}

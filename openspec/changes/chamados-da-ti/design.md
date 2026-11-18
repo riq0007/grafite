@@ -842,7 +842,64 @@ O "2 abertos" e o "mais antigo…" ficam um embaixo do outro, como no mockup, e 
 - o "Buscar nos chamados" entra com a busca (5.10);
 - o "Novo chamado" entra com a gaveta (5.18).
 
-O quadrado ganha o foco, a prévia e o clique na 5.8. Até lá, ele é só para ler, e o botão que não faz nada não entra.
+**A prévia e o menu (tarefa 5.8).** O quadrado é um `article` com o foco, como no m01, com o nome "#1033 Switch Rack 2 sem link na porta 3", e o prazo o descreve ("estourado"), para quem chega a ele pelo foco com o leitor de tela. Com o ponteiro em cima, ele ganha a camada do hover por cima da superfície, que continua opaca sobre o fundo da coluna: o m01 não mostra o hover. O quadrado sem os detalhes da lista ("Carregando…" ou "Detalhes não carregados") fica sem prévia e sem menu, porque o que eles mostram e o que mandam vêm dela.
+
+A prévia abre:
+- **com o ponteiro parado 200 ms sobre o quadrado.** Cada movimento recomeça a conta, e o ponteiro que só passa não abre nada. Só o mouse: o toque e a caneta não a abrem;
+- **na hora, com o foco que vem do teclado.** O foco que vem do aperto do ponteiro não a abre: o botão direito abre o menu, e o arraste (5.9) começa no aperto. A tela guarda se a última interação foi o aperto ou a tecla, como o React Aria faz no anel do foco. O foco posto pelo código segue a última interação, e, antes de qualquer uma, conta como o do teclado.
+
+Não abrem a prévia o foco que volta ao quadrado com o Esc, o que volta quando o menu fecha e o que o clique direito põe nele, nem o foco no quadrado cuja ação espera a resposta.
+
+A prévia fecha:
+- 300 ms depois de o ponteiro sair do quadrado e dela (o `tempos.cartao.fechar` do kit), o tempo de passar de um ao outro;
+- aberta pelo foco, quando o foco sai do quadrado e dela;
+- com Esc, com o foco no quadrado ou nela;
+- aberta pelo ponteiro, com a rolagem de qualquer parte fora dela e com a mudança do tamanho da janela, como o resumo da linha da tabela. A aberta pelo foco fica e acompanha o quadrado, porque o foco que chega a um quadrado fora da área rola as colunas até ele;
+- aberta pelo foco, quando a rolagem tira o quadrado inteiro da área das colunas, de lado ou na altura: o foco que estava nela vai ao quadrado, sem rolar as colunas de volta. O quadrado que encosta na borda, ou fica meio fora, ainda a tem (`foraDaArea`);
+- aberta pelo ponteiro, com a resposta da ação (abaixo);
+- aberta pelo ponteiro, quando o quadrado sai da coluna em que estava, pela ação da conta ou pela mudança de outra pessoa, porque ele sai de baixo do ponteiro, e a espera dele também acaba. A aberta pelo foco acompanha o quadrado;
+- aberta pelo ponteiro ou pelo foco, quando o número sai do quadro, para ela não voltar com ele;
+- quando a de outro quadrado abre: só uma fica aberta.
+
+O relógio dela é puro (`controleDaPrevia`, no `quadro/previa.ts`), e a tela (`PreviaDoChamado.tsx`) só a desenha.
+
+**O lugar da prévia.** Ela vai logo depois do quadrado, no mesmo item da lista, e não numa camada à parte: o Tab passa do quadrado aos botões dela e dela ao quadrado seguinte, na ordem da leitura. Ela fica na posição fixa, a 8 px embaixo do quadrado, e encosta na borda direita das colunas quando não cabe, como a do #1033 no m01. Sem lugar embaixo, ela vai em cima. A conta é pura (`lugarDaPrevia`, no `quadro/previa.ts`), com a caixa do quadrado, a da área das colunas e o tamanho da prévia. Ela é opaca, sem o vidro, com a superfície elevada, a borda forte, o raio do menu e a sombra sobreposta do m01, e tem 388 px de largura, ou a da área, se for menor.
+
+**O conteúdo,** na ordem do m01:
+- o número, o tipo com o ícone e a situação do prazo num selo, com a primeira letra maiúscula ("Estourado há 20 min", "Vence em 2 h", "Relógio parado" ou "Prazo ilegível"). O selo (`SeloDoPrazo`, no `Pecas.tsx`) tem o texto e a marca do `seloDoPrazo`, no `prazo.ts`: crítica no estourado, atenção nos que vencem em até 2 h e neutra no resto, como a cor dos grupos (decisão 20). A ficha (5.10) usa o mesmo;
+- o título inteiro;
+- "Pediu": a pessoa e o local dela;
+- "Ativo": o patrimônio, em mono, o nome e o local, ou "Nenhum ativo ligado". O m01 mostra o IP do ativo, que a lista não traz, e aqui vai o local;
+- "Atende": quem atende, com "não atende mais os chamados" quando o quadrado está na coluna dessa marca, ou "Ninguém ainda, na triagem";
+- a última mensagem, com quem a escreveu e a hora no fuso da conta: "09:12" hoje, "ontem, 15:10" e "seg 9 nov, 16:00" antes, e, noutro ano, "10/11/2025, 16:00" (`momentoDaMensagem`). Sem mensagem, "Nenhuma mensagem ainda.";
+- "Assumir", fora no chamado que já está com a conta;
+- "Passar para…", com um botão por pessoa: a sigla, o primeiro nome e os abertos dela ("Ana · 2 abertos"), com o nome inteiro no nome lido. As pessoas são as das colunas de quem atende, na ordem delas, fora quem está com o chamado, como no m01, em que Ana, a conta da sessão, está na lista do #1033. Quem não atende os locais do chamado recebe a recusa da API ("Bruno não atende os chamados de Jundiaí."). A coluna que não recebe é do arraste (5.9).
+
+A quem só vê os chamados, a prévia vai sem as ações, e o menu não abre. A permissão é a geral (`chamados.atender`, pelo `useAcesso`), como o contrato de módulo pede para uma ação: o local de cada chamado, a API confere.
+
+**O menu** abre com o botão direito, no ponto do clique, e, com o foco no quadrado, com a tecla de menu e com Shift+F10, junto do quadrado, como o da tabela. Ele fecha a prévia e, quando fecha, devolve o foco ao quadrado. Os itens seguem a matriz das ações (spec chamados, "Ações do atendimento"):
+- "Assumir", fora no chamado que já está com a conta;
+- "Passar para…", num submenu com as mesmas pessoas da prévia, cada uma com o nome e os abertos;
+- "Devolver à triagem", só no chamado em atendimento.
+
+O quadrado sem nenhuma ação, como o aguardando da própria conta numa TI de uma pessoa só, não abre o menu, e o clique direito fica com o menu do navegador. O menu de quem só vê os chamados fica sem itens, e não abre, até o "Abrir o chamado" da 5.10.
+
+O `MenuDeContexto` do kit ganha o submenu, que a spec componentes-base já pede ("os mesmos itens com submenu"). A ação fica em cada item, como nos menus da casca, porque a do menu de fora não chega ao submenu.
+
+**As ações** ficam no `acoes.ts` do módulo (`useAcoesDoAtendimento`), que a ficha (5.10) e o painel dos prazos (5.16) também usam. Cada uma manda a versão que a tela mostra. No quadro, ela é a das `versoes`, que é a das colunas: a lista, que pode estar fora de passo, só completa o quadrado. O botão da prévia gira enquanto espera. Com a resposta:
+- **a aberta pelo ponteiro fecha,** porque o quadrado que muda de coluna sai de baixo dele, e o foco que estava nela volta ao quadrado;
+- **a aberta pelo foco fica,** relida, e acompanha o quadrado, com o foco. Assim, depois da recusa, quem usa o teclado lê nela o chamado como ele está.
+
+O retorno vai num aviso:
+- "Você assumiu o #1033.", com "Desfazer", que manda a versão que o assumir devolveu;
+- "Você passou o #1033 a Bruno.";
+- "Você devolveu o #1033 à triagem.";
+- no desfazer, "O #1033 voltou a Renato." ou "O #1042 voltou à triagem.";
+- a recusa, no aviso crítico com a frase da API, como nas outras telas.
+
+Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DOS_CHAMADOS`: o quadro, os prazos e a ficha), sem esperar o `chamados.mudaram`. Assim, depois do `chamado-mudou`, a tela mostra o chamado como ele está, e a conta que agiu vê a mudança na hora. O quadrado que muda de coluna é outro elemento, e o foco nele se perderia: depois da releitura, o foco que se perdeu com ele vai ao quadrado do mesmo número, com a prévia como estava, aberta ou fechada. Assim, a ação pelo menu não abre a prévia que o menu fechou. Se a releitura chega antes de o foco voltar do menu, o foco vai direto ao quadrado relido. O foco que a pessoa tira de um elemento que continua na tela fica onde ela o pôs.
+
+**O que fica para a 5.10:** "Abrir o chamado", no menu, o Enter e o clique, com o endereço `/chamados/<número>`. Até lá, o item que não leva a nada não entra.
 
 ## Risks / Trade-offs
 

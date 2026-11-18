@@ -95,17 +95,31 @@ export function parado(horas: number, contadoMin: number): RelogioDaApi {
 
 type Quem = { conta: string; nome: string } | null;
 
-/** Um chamado aberto da lista dos prazos, como a API o devolve. */
+/**
+ * Um chamado aberto da lista dos prazos, como a API o devolve: sem o local da pessoa, sem o ativo e
+ * sem mensagem, a não ser que o teste os dê.
+ */
 export function chamadoNosPrazos(
   numero: number,
   tipo: keyof typeof TIPOS_DOS_MOCKUPS,
   titulo: string,
   {
     pessoa,
+    local = null,
     responsavel,
     abertoEm,
     relogio,
-  }: { pessoa: string; responsavel: Quem; abertoEm: Date; relogio: RelogioDaApi | null },
+    ativo = null,
+    ultimaMensagem = null,
+  }: {
+    pessoa: string;
+    local?: string | null;
+    responsavel: Quem;
+    abertoEm: Date;
+    relogio: RelogioDaApi | null;
+    ativo?: ChamadoNosPrazosDeTeste['ativo'];
+    ultimaMensagem?: ChamadoNosPrazosDeTeste['ultimaMensagem'];
+  },
 ): ChamadoNosPrazosDeTeste {
   const situacao = relogio
     ? situacaoDoPrazo(
@@ -127,14 +141,14 @@ export function chamadoNosPrazos(
     versao: 1,
     abertoEm: abertoEm.toISOString(),
     tipo: { ...TIPOS_DOS_MOCKUPS[tipo] },
-    pessoa: { id: `0199a6e0-0000-7000-8000-00000000${numero}`, nome: pessoa, local: null },
+    pessoa: { id: `0199a6e0-0000-7000-8000-00000000${numero}`, nome: pessoa, local },
     responsavel,
-    ativo: null,
+    ativo,
     locais: [],
     semLocal: true,
     relogio,
     grupo: situacao?.grupo ?? null,
-    ultimaMensagem: null,
+    ultimaMensagem,
   };
 }
 
@@ -160,9 +174,21 @@ export const CHAMADOS_DOS_MOCKUPS: ChamadoNosPrazosDeTeste[] = [
   }),
   chamadoNosPrazos(1033, 'rede', 'Switch Rack 2 sem link na porta 3', {
     pessoa: 'Sandra Vieira',
+    local: 'Administrativo',
     responsavel: RENATO,
     abertoEm: sp('2026-11-11T01:20:00'),
     relogio: correndo(8, -20),
+    ativo: {
+      id: '0199a6e0-0000-7000-8000-0000000000a1',
+      rotulo: 'Switch Rack 2',
+      patrimonio: 'PAT-00140',
+      local: 'Sala de TI',
+    },
+    ultimaMensagem: {
+      autor: 'Sandra Vieira',
+      em: sp('2026-11-11T09:12:00').toISOString(),
+      texto: 'A sala do Administrativo continua sem rede. Dá para olhar agora?',
+    },
   }),
   chamadoNosPrazos(1034, 'outro', 'Controle da portaria não lê o cartão', {
     pessoa: 'Portaria',
@@ -184,9 +210,15 @@ export const CHAMADOS_DOS_MOCKUPS: ChamadoNosPrazosDeTeste[] = [
   }),
   chamadoNosPrazos(1038, 'rede', 'Wi-Fi cai na Sala Atlântico', {
     pessoa: 'Helena Prado',
+    local: 'Diretoria',
     responsavel: null,
     abertoEm: sp('2026-11-11T03:40:00'),
     relogio: correndo(8, 120),
+    ultimaMensagem: {
+      autor: 'Helena Prado',
+      em: sp('2026-11-11T08:55:00').toISOString(),
+      texto: 'A reunião das 11h usa a videoconferência. O Wi-Fi cai a cada 10 minutos.',
+    },
   }),
   chamadoNosPrazos(1039, 'computador', 'Notebook não liga', {
     pessoa: 'Luiza Farias',
@@ -267,6 +299,64 @@ export const PRAZOS_DOS_MOCKUPS: PrazosDeTeste = {
   horario: { ...HORARIO_DOS_MOCKUPS, dias: [1, 2, 3, 4, 5] },
   chamados: CHAMADOS_DOS_MOCKUPS,
 };
+
+/**
+ * O quadro com o chamado na coluna de quem o recebe, ou de volta na triagem (`null`), com a versão
+ * seguinte. A carga acompanha os abertos; o mais antigo de cada coluna fica como estava.
+ */
+export function passarNoQuadro(quadro: QuadroDeTeste, numero: number, para: Quem): QuadroDeTeste {
+  const semEle = (abertos: readonly number[]) => abertos.filter((outro) => outro !== numero);
+  return {
+    ...quadro,
+    triagem: {
+      ...quadro.triagem,
+      abertos:
+        para === null
+          ? [...semEle(quadro.triagem.abertos), numero]
+          : semEle(quadro.triagem.abertos),
+    },
+    colunas: quadro.colunas.map((coluna) => {
+      const recebe = para !== null && coluna.conta === para.conta && !coluna.naoAtendeMais;
+      const abertos = recebe ? [...semEle(coluna.abertos), numero] : semEle(coluna.abertos);
+      return {
+        ...coluna,
+        abertos,
+        pedacos: { ...coluna.pedacos, cheios: Math.min(abertos.length, coluna.pedacos.total) },
+      };
+    }),
+    versoes: { ...quadro.versoes, [numero]: (quadro.versoes[numero] ?? 0) + 1 },
+  };
+}
+
+/** A lista dos prazos com o chamado com quem o recebe, ou na triagem, com a versão seguinte. */
+export function passarNosPrazos(prazos: PrazosDeTeste, numero: number, para: Quem): PrazosDeTeste {
+  return {
+    ...prazos,
+    chamados: prazos.chamados.map((chamado) => {
+      if (chamado.numero !== numero) return chamado;
+      const situacao =
+        para === null
+          ? 'triagem'
+          : chamado.situacao === 'aguardando'
+            ? 'aguardando'
+            : 'em-atendimento';
+      return { ...chamado, situacao, responsavel: para, versao: chamado.versao + 1 };
+    }),
+  };
+}
+
+/** O que a ação devolve: o chamado com a versão, a situação e quem ficou com ele. */
+export const depoisDaAcao = (
+  numero: number,
+  versao: number,
+  situacao: ChamadoNosPrazosDeTeste['situacao'],
+  quem: Quem,
+) => ({
+  numero,
+  versao,
+  situacao,
+  responsavel: quem && { id: quem.conta, nome: quem.nome },
+});
 
 /**
  * O servidor do quadro e da lista dos prazos: cada um devolve o que o estado tem na hora. O teste
