@@ -176,6 +176,16 @@ export function Quadro() {
   );
 }
 
+/** A coluna de cada número do quadro, pela chave do alvo do arraste. */
+function colunaDeCadaNumero(quadro: QuadroDosChamados): Map<number, string> {
+  const colunas = new Map<number, string>();
+  for (const numero of quadro.triagem.abertos) colunas.set(numero, ALVO_DA_TRIAGEM);
+  for (const coluna of quadro.colunas) {
+    for (const numero of coluna.abertos) colunas.set(numero, chaveDaColuna(coluna));
+  }
+  return colunas;
+}
+
 /** O chamado no ar, na dica do alto. */
 interface ChamadoNoAr {
   numero: number;
@@ -234,6 +244,8 @@ interface InteracaoDoQuadro {
   alcaDoQuadrado: (numero: number) => AlcaDoQuadrado | undefined;
   /** O número do quadrado no ar, que deixa o lugar tracejado. */
   noAr: number | null;
+  /** Os números que mudaram de coluna, ou chegaram ao quadro, desde a leitura anterior. */
+  entrando: ReadonlySet<number>;
 }
 
 interface AlcaDoQuadrado {
@@ -304,6 +316,21 @@ function Colunas({
   for (const { coluna, quadrados } of dasColunas) {
     for (const quadrado of quadrados) porNumero.set(quadrado.numero, { quadrado, coluna });
   }
+  // O quadrado que entra numa coluna, depois da primeira leitura, entra em 200 ms; os outros ficam.
+  const ondeEsta = useMemo(() => colunaDeCadaNumero(quadro), [quadro]);
+  const ondeEstava = useRef<Map<number, string> | null>(null);
+  const entrando = useMemo(() => {
+    const antes = ondeEstava.current;
+    const numeros = new Set<number>();
+    if (!antes) return numeros;
+    for (const [numero, chave] of ondeEsta) {
+      if (antes.get(numero) !== chave) numeros.add(numero);
+    }
+    return numeros;
+  }, [ondeEsta]);
+  useEffect(() => {
+    ondeEstava.current = ondeEsta;
+  }, [ondeEsta]);
 
   const sessao = useSessao();
   const conta = sessao.tipo === 'ativa' ? sessao.conta.id : null;
@@ -592,6 +619,7 @@ function Colunas({
     aberta,
     controle,
     agora,
+    entrando,
     aoMover(numero, evento) {
       // Só o mouse, sem botão apertado, e com o menu fechado.
       if (evento.pointerType !== 'mouse' || evento.buttons !== 0 || menu) return;
@@ -966,6 +994,7 @@ function ItemDoQuadrado({
         data-aberto={aberta || undefined}
         data-arrastavel={alca ? '' : undefined}
         data-no-ar={interacao.noAr === numero || undefined}
+        data-entrando={interacao.entrando.has(numero) || undefined}
         {...(chamado && {
           onPointerMove: (evento: PointerEvent<HTMLElement>) => interacao.aoMover(numero, evento),
           onContextMenu: (evento: MouseEvent<HTMLElement>) => {

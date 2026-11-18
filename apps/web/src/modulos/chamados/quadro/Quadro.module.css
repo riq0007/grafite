@@ -321,6 +321,28 @@
 }
 
 /*
+ * O quadrado que entra numa coluna depois da primeira leitura desce para o lugar em 200 ms e aparece
+ * junto; com o movimento reduzido, só aparece.
+ */
+.quadrado[data-entrando] {
+  animation:
+    descerNaColuna var(--dur-deslocamento) var(--curva-padrao),
+    aparecerNaColuna var(--dur-opacidade) var(--curva-padrao);
+}
+
+@keyframes descerNaColuna {
+  from {
+    transform: translateY(calc(-1 * var(--esp-2)));
+  }
+}
+
+@keyframes aparecerNaColuna {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
  * O quadrado no ar (o `.qd.voando` do m02): fixo na janela, segue o ponteiro, inclinado e com a
  * sombra sobreposta, sem tapar o alvo sob o ponteiro.
  */
