@@ -1,9 +1,10 @@
 // As peças comuns das telas dos chamados (spec modulo-chamados, "Selos, prazo em texto e
-// movimento"; change chamados-da-ti, design, decisão 20): o selo de cada palavra, com a marca e o
-// ícone dela, e o prazo em texto, curto no quadrado e inteiro na linha, que anda a cada minuto pelo
-// contador do prazo.ts. Só componentes e tipos, para a atualização a quente do Vite.
+// movimento"; change chamados-da-ti, design, decisões 20 e 22): o selo de cada palavra, com a marca e
+// o ícone dela; o prazo em texto, curto no quadrado e inteiro na linha, que anda a cada minuto pelo
+// contador do prazo.ts; o ícone do tipo e a sigla de quem atende, nas cores das séries. Só
+// componentes e tipos, para a atualização a quente do Vite.
 import type { GrupoDoPrazo, SituacaoDoPrazo } from '@grafite/domain';
-import { Icone, RotuloDeSituacao, type Situacao } from '@grafite/ui';
+import { Icone, iniciais, RotuloDeSituacao, type Situacao } from '@grafite/ui';
 import {
   Circle,
   CircleAlert,
@@ -17,6 +18,8 @@ import {
   SquarePen,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { iconeDoTipo, SERIE_DO_ICONE, serieDaConta } from './cores.ts';
+import { ICONES_DOS_TIPOS_DE_CHAMADO } from './icones.ts';
 import estilos from './Pecas.module.css';
 
 interface DoSelo {
@@ -77,20 +80,92 @@ export type FormaDoPrazo = 'curta' | 'inteira';
 /**
  * O prazo em texto, na mono, com o ícone e a cor do estado: curto e menor no quadrado
  * ("estourado", "parado" ou "vence em 2 h"), inteiro na linha ("estourado há 20 min"). A situação
- * vem do contador do prazo (`useContarOPrazo`).
+ * vem do contador do prazo (`useContarOPrazo`); sem ela, o chamado veio sem o relógio, porque o
+ * prazo guardado não se lê, e o texto diz "prazo ilegível", sem a cor de um grupo.
  */
 export function PrazoEmTexto({
   situacao,
   forma,
 }: {
-  situacao: SituacaoDoPrazo;
+  situacao: SituacaoDoPrazo | null;
   forma: FormaDoPrazo;
 }) {
+  const tamanho = forma === 'curta' ? 12 : 14;
+  if (!situacao) {
+    return (
+      <span className={estilos.prazo} data-forma={forma}>
+        <Icone icone={Clock} tamanho={tamanho} />
+        <span>prazo ilegível</span>
+      </span>
+    );
+  }
   const { grupo, texto } = situacao;
   return (
     <span className={estilos.prazo} data-grupo={grupo} data-forma={forma}>
-      <Icone icone={ICONE_DO_GRUPO[grupo]} tamanho={forma === 'curta' ? 12 : 14} />
-      {(forma === 'curta' && CURTO[grupo]) || texto}
+      <Icone icone={ICONE_DO_GRUPO[grupo]} tamanho={tamanho} />
+      <span>
+        <TextoComMedidas texto={(forma === 'curta' && CURTO[grupo]) || texto} />
+      </span>
+    </span>
+  );
+}
+
+/** As medidas que não se partem: "35 min", "17 h", "2 d" e "menos de 1 min". */
+const MEDIDA = /(menos de 1 min|\d+ (?:min|h|d)\b)/;
+
+/**
+ * O texto com cada medida numa peça só: quando a linha quebra, "vence em" fica numa e "35 min" na
+ * outra, e não "vence em 35" e "min".
+ */
+export function TextoComMedidas({ texto }: { texto: string }) {
+  // As partes ímpares são as medidas que a expressão separou.
+  return texto.split(MEDIDA).map((parte, indice) =>
+    indice % 2 === 1 ? (
+      // biome-ignore lint/suspicious/noArrayIndexKey: a posição é o lugar da parte no texto.
+      <span key={indice} className={estilos.medida} data-medida="">
+        {parte}
+      </span>
+    ) : (
+      parte
+    ),
+  );
+}
+
+/**
+ * O ícone do tipo, no quadrado da série do ícone (decisão 6), com o nome do tipo para o leitor de
+ * tela. O ícone que a web não conhece e as reticências do "Outro" ficam neutros.
+ */
+export function IconeDoTipo({ icone, nome }: { icone: string; nome: string }) {
+  const conhecido = iconeDoTipo(icone);
+  return (
+    <span
+      className={estilos.iconeDoTipo}
+      role="img"
+      aria-label={nome}
+      data-serie={SERIE_DO_ICONE[conhecido] ?? undefined}
+    >
+      <Icone icone={ICONES_DOS_TIPOS_DE_CHAMADO[conhecido]} tamanho={15} />
+    </span>
+  );
+}
+
+/**
+ * As iniciais de quem atende, no círculo da série da conta. É só desenho: o nome vai sempre ao lado,
+ * em texto.
+ */
+export function SiglaDaPessoa({ conta, nome }: { conta: string; nome: string }) {
+  return (
+    <span className={estilos.sigla} aria-hidden="true" data-serie={serieDaConta(conta)}>
+      {iniciais(nome)}
+    </span>
+  );
+}
+
+/** A bandeja da coluna da triagem, no círculo neutro da sigla. */
+export function BandejaDaTriagem() {
+  return (
+    <span className={estilos.sigla} aria-hidden="true">
+      <Icone icone={Inbox} tamanho={19} />
     </span>
   );
 }

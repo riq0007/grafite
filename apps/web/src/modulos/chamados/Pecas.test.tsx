@@ -18,7 +18,9 @@ import {
   Circle,
   CircleAlert,
   CircleCheck,
+  CircleEllipsis,
   Clock,
+  Globe,
   Headset,
   Hourglass,
   Inbox,
@@ -28,8 +30,16 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PrazoEmTexto, type QualSelo, Selo } from './Pecas.tsx';
-import { type RelogioDaApi, relogioDaApi, useContarOPrazo } from './prazo.ts';
+import { serieDaConta } from './cores.ts';
+import {
+  IconeDoTipo,
+  PrazoEmTexto,
+  type QualSelo,
+  Selo,
+  SiglaDaPessoa,
+  TextoComMedidas,
+} from './Pecas.tsx';
+import { contadorDoPrazo, type RelogioDaApi, relogioDaApi, useContarOPrazo } from './prazo.ts';
 
 afterEach(() => {
   cleanup();
@@ -110,9 +120,14 @@ const desenho = (Svg: LucideIcon) => {
   return tracos;
 };
 
-/** O selo ou o prazo que tem o texto, com a marca e o desenho do ícone. */
+/**
+ * O selo ou o prazo que tem o texto, com a marca e o desenho do ícone. O texto inteiro, porque a
+ * medida do prazo fica num elemento à parte.
+ */
 const marcado = (texto: string, atributo: 'data-situacao' | 'data-grupo') => {
-  const elemento = screen.getByText(texto).closest(`[${atributo}]`);
+  const elemento = [...document.querySelectorAll(`[${atributo}]`)].find(
+    (comAMarca) => comAMarca.textContent === texto,
+  );
   const icones = elemento?.querySelectorAll('svg') ?? [];
   expect(icones).toHaveLength(1);
   return { marca: elemento?.getAttribute(atributo), icone: icones[0]?.innerHTML };
@@ -217,6 +232,92 @@ describe('PrazoEmTexto', () => {
       unmount();
     }
   });
+
+  it('a medida fica numa peça só, para a linha quebrar antes dela, e não no meio', () => {
+    const casos: [RelogioDoChamado, 'curta' | 'inteira', string[]][] = [
+      [N1039, 'curta', ['1 h']],
+      [N1033, 'inteira', ['20 min']],
+      [N1033, 'curta', []],
+      [N1041, 'inteira', []],
+    ];
+    for (const [relogio, forma, medidas] of casos) {
+      const { container, unmount } = naTela(relogio, forma);
+      expect(
+        [...container.querySelectorAll('[data-medida]')].map((medida) => medida.textContent),
+      ).toEqual(medidas);
+      unmount();
+    }
+  });
+
+  it('sem o relógio, "prazo ilegível" nas duas formas, com o relógio e sem a cor de um grupo', () => {
+    for (const [forma, largura] of [
+      ['curta', '12'],
+      ['inteira', '14'],
+    ] as const) {
+      const { container, unmount } = render(<PrazoEmTexto situacao={null} forma={forma} />);
+      const prazo = container.firstElementChild;
+      expect(prazo?.textContent).toBe('prazo ilegível');
+      expect(prazo?.hasAttribute('data-grupo')).toBe(false);
+      expect(prazo?.getAttribute('data-forma')).toBe(forma);
+      expect(prazo?.querySelector('svg')?.innerHTML).toBe(desenho(Clock));
+      expect(prazo?.querySelector('svg')?.getAttribute('width')).toBe(largura);
+      unmount();
+    }
+  });
+});
+
+describe('IconeDoTipo', () => {
+  it('o ícone do tipo na série dele, com o nome do tipo para o leitor de tela', () => {
+    render(<IconeDoTipo icone="globo" nome="Rede e internet" />);
+    const icone = screen.getByRole('img', { name: 'Rede e internet' });
+    expect(icone.getAttribute('data-serie')).toBe('7');
+    expect(icone.querySelector('svg')?.innerHTML).toBe(desenho(Globe));
+  });
+
+  it('as reticências do "Outro" e o ícone que a web não conhece ficam neutros, nas reticências', () => {
+    render(
+      <>
+        <IconeDoTipo icone="reticencias" nome="Outro" />
+        <IconeDoTipo icone="foguete" nome="Lançamento" />
+      </>,
+    );
+    for (const nome of ['Outro', 'Lançamento']) {
+      const icone = screen.getByRole('img', { name: nome });
+      expect(icone.hasAttribute('data-serie')).toBe(false);
+      expect(icone.querySelector('svg')?.innerHTML).toBe(desenho(CircleEllipsis));
+    }
+  });
+});
+
+describe('TextoComMedidas', () => {
+  it('"35 min", "17 h", "2 d" e "menos de 1 min" ficam inteiros, e o resto do texto, como está', () => {
+    const casos: [string, string[]][] = [
+      ['vence em 35 min', ['35 min']],
+      ['vence em menos de 1 min', ['menos de 1 min']],
+      ['vence em 2 d', ['2 d']],
+      ['mais antigo #1041, há 17 h', ['17 h']],
+      ['parado', []],
+    ];
+    for (const [texto, medidas] of casos) {
+      const { container, unmount } = render(<TextoComMedidas texto={texto} />);
+      expect(container.textContent).toBe(texto);
+      expect(
+        [...container.querySelectorAll('[data-medida]')].map((medida) => medida.textContent),
+      ).toEqual(medidas);
+      unmount();
+    }
+  });
+});
+
+describe('SiglaDaPessoa', () => {
+  it('as iniciais na série da conta, só como desenho, porque o nome vai ao lado', () => {
+    const conta = '0199a6e0-0000-7000-8000-0000000000c4';
+    const { container } = render(<SiglaDaPessoa conta={conta} nome="Renato Alves" />);
+    const sigla = container.firstElementChild;
+    expect(sigla?.textContent).toBe('RA');
+    expect(sigla?.getAttribute('aria-hidden')).toBe('true');
+    expect(sigla?.getAttribute('data-serie')).toBe(String(serieDaConta(conta)));
+  });
 });
 
 describe('o contador do prazo', () => {
@@ -262,8 +363,8 @@ describe('o contador do prazo', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(60_000);
     });
-    expect(screen.getByText('estourado há 1 min')).toBeTruthy();
-    expect(screen.getByText('relógio parado')).toBeTruthy();
+    expect(marcado('estourado há 1 min', 'data-grupo').marca).toBe('estourado');
+    expect(marcado('relógio parado', 'data-grupo').marca).toBe('parado');
   });
 
   it('o grupo sai no fuso das preferências, e não no do horário da TI', () => {
@@ -283,6 +384,28 @@ describe('o contador do prazo', () => {
       ).grupo;
     expect(grupoEm('America/Sao_Paulo')).toBe('hoje');
     expect(grupoEm('Europe/Lisbon')).toBe('depois-de-hoje');
+  });
+
+  it('o contador de um momento dado conta como o gancho, para a tela que já lê o agora', () => {
+    const contar = contadorDoPrazo(AGORA, FUSO);
+    for (const relogio of [N1033, N1039, N1041, AMANHA]) {
+      expect(contar(naApi(relogio), HORARIO)).toEqual(
+        situacaoDoPrazo(relogio, HORARIO, AGORA, FUSO),
+      );
+    }
+    // O fuso decide o grupo, como no gancho: às 20:00 de São Paulo, o que vence às 23:30 dali é de
+    // amanhã em Lisboa.
+    const venceAsOnzeEMeia = naApi({
+      prazo: REDE,
+      contadoS: 0,
+      relogioDesde: sp('2026-11-17T15:30:00'),
+      primeiraRespostaEm: sp('2026-11-17T15:40:00'),
+    });
+    const asOito = sp('2026-11-17T20:00:00');
+    expect(contadorDoPrazo(asOito, FUSO)(venceAsOnzeEMeia, HORARIO).grupo).toBe('hoje');
+    expect(contadorDoPrazo(asOito, 'Europe/Lisbon')(venceAsOnzeEMeia, HORARIO).grupo).toBe(
+      'depois-de-hoje',
+    );
   });
 
   it('as datas da resposta viram instantes, e o relógio parado fica sem o "desde"', () => {

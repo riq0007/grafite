@@ -1,0 +1,228 @@
+/*
+ * Quem está com o quê (m01): a raiz pede a janela inteira (`data-janela-inteira`) e vai até as
+ * bordas, por cima do respiro da janela; o cabeçalho é uma faixa de borda a borda, e as colunas
+ * enchem o resto da altura, com o pé de cada uma no fim dela.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+.tela > [data-cabecalho-da-pagina] {
+  padding: var(--esp-4) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.carregando,
+.falha {
+  margin: var(--esp-4) var(--respiro);
+}
+
+.carregando {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--respiro) 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A falha de uma releitura, acima das colunas da última leitura, com o "Tentar de novo" ao lado. */
+.falhaAoReler {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-3) var(--respiro) 0;
+  font-size: var(--texto-dado);
+}
+
+.falhaAoReler > svg {
+  flex: none;
+  color: var(--cor-critico);
+}
+
+.falhaAoReler > p {
+  flex: 1 1 24ch;
+  min-width: 0;
+  margin: 0;
+}
+
+/*
+ * A triagem, um pouco mais larga, e uma coluna por pessoa. Abaixo de 200 px (a triagem, 232 px), as
+ * colunas rolam de lado em vez de estreitar.
+ */
+.colunas {
+  display: grid;
+  flex: 1;
+  grid-auto-flow: column;
+  grid-template-columns: minmax(232px, 1.15fr);
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: var(--esp-3);
+  min-height: 0;
+  padding: var(--esp-4);
+  overflow-x: auto;
+}
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+  padding: var(--esp-2);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-afundada);
+}
+
+/* A triagem, tracejada e sem o fundo, como o `.col.sem` do mockup. */
+.coluna[data-triagem] {
+  border-style: dashed;
+  border-color: var(--cor-linha-forte);
+  background: transparent;
+}
+
+.cabecalho {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-2);
+}
+
+.quem {
+  min-width: 0;
+}
+
+.nome {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.naoAtendeMais {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+}
+
+.linha {
+  display: block;
+}
+
+/* A barra de carga, um pedaço por chamado até a carga cheia; os cheios, na cor do texto. */
+.carga {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: calc(var(--esp-1) - 1px);
+}
+
+/* O raio do rótulo, que o navegador limita à meia altura do pedaço, e reto na base zero. */
+.carga > span {
+  flex: 1;
+  height: 6px;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-rotulo);
+  background: var(--cor-superficie-2);
+}
+
+.carga > [data-cheio] {
+  border-color: var(--cor-texto);
+  background: var(--cor-texto);
+}
+
+/* Dois quadrados por linha, como no m01, quando cabem dois de 112 px; senão, um por linha. */
+.quadrados {
+  display: grid;
+  grid-template-columns: repeat(
+      auto-fill,
+      minmax(max(112px, calc((100% - var(--esp-2)) / 2)), 1fr)
+    );
+  align-content: start;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * O quadrado de 92 de altura: o ícone e o número, o título numa linha e o prazo. Com o prazo em duas
+ * linhas, ele cresce. O respiro é de 7 px dos quatro lados (o m01 tem 8 dos lados): o "vence em 2 h"
+ * tem 95,2 px, e o quadrado de 113 px do m01 dá 95 por dentro. O mockup não deixa o prazo quebrar;
+ * aqui ele quebra antes da medida, e o pixel a mais o deixa numa linha sempre que cabem dois por linha.
+ */
+.quadrado {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--esp-1);
+  min-width: 0;
+  min-height: 92px;
+  padding: calc(var(--esp-2) - 1px);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+}
+
+.alto {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+.numero {
+  margin-left: auto;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.titulo {
+  align-self: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semDetalhes {
+  grid-row: 2 / -1;
+  align-self: center;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.pe {
+  margin: auto 0 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-top: 1px solid var(--cor-linha);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

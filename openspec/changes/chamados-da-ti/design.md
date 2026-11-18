@@ -312,26 +312,28 @@ A 19 (a aba) é a dona das palavras que o colaborador vê. Ela pode trocar os fo
 
 Os ícones dos tipos são uma lista fechada do domínio, mapeada para o lucide na web (`Icone`, traço 1,7):
 
-| Ícone | Lucide |
-|---|---|
-| gota | `Droplet` |
-| notebook | `Laptop` |
-| impressora | `Printer` |
-| cadeado | `LockKeyhole` |
-| janela | `AppWindow` |
-| globo | `Globe` |
-| telefone | `Phone` |
-| reticências | `CircleEllipsis` |
-| setas | `ArrowLeftRight` |
-| computador | `Monitor` |
-| torre | `PcCase` |
-| fone | `Headset` |
-| chave | `KeyRound` |
-| caixa | `Package` |
-| câmera | `Camera` |
-| wi-fi | `Wifi` |
+| Ícone | Lucide | Série |
+|---|---|---|
+| gota | `Droplet` | 4 |
+| notebook | `Laptop` | 1 |
+| impressora | `Printer` | 2 |
+| cadeado | `LockKeyhole` | 3 |
+| janela | `AppWindow` | 5 |
+| globo | `Globe` | 7 |
+| telefone | `Phone` | 6 |
+| reticências | `CircleEllipsis` | nenhuma: o texto secundário |
+| setas | `ArrowLeftRight` | 8 |
+| computador | `Monitor` | 1 |
+| torre | `PcCase` | 8 |
+| fone | `Headset` | 6 |
+| chave | `KeyRound` | 3 |
+| caixa | `Package` | 4 |
+| câmera | `Camera` | 8 |
+| wi-fi | `Wifi` | 7 |
 
 Os mockups usam o Phosphor, mas o Grafite usa o lucide.
+
+A série é a cor do ícone do tipo nas telas da TI (decisão 22). A dos ícones dos tipos de fábrica é a dos mockups (os `t-*` do `ch3.css`), com a torre do "Equipamento novo" do m08 na série da troca de equipamento. Os outros seguem o ícone de fábrica mais perto: o computador o notebook, o fone o telefone, a chave o cadeado, a caixa a gota dos suprimentos, a câmera os equipamentos e o wi-fi o globo da rede. A prévia do colaborador pinta o ícone na cor da aba (decisão 16).
 
 **A conferência do tipo.** O `conferirTipoDeChamado` (`packages/domain/src/chamados/tipo.ts`) recebe o pedido, com o formato conferido pelo esquema da rota, e o que a API lê na transação da gravação:
 - a situação em que a gravação deixa o tipo, porque só o Rascunho aceita a frase vazia; o "Criar o tipo" e o reativar a chamam com o tipo e a situação Em uso;
@@ -733,7 +735,11 @@ As peças comuns das telas (tarefa 5.3) ficam em `apps/web/src/modulos/chamados/
 
 O ícone é o do selo do estado: o círculo com a exclamação no estourado, a ampulheta no parado e o relógio nos outros. A cor entra no estourado, a de perigo, em peso forte, e no que vence em até 2 h, a de atenção; os outros ficam na cor do texto, como no m05.
 
-**A cada minuto.** O `useContarOPrazo()` do `prazo.ts` devolve a conta do prazo agora, `(relogio, horario) => SituacaoDoPrazo`: o `relogioDaApi` converte as datas da resposta, e a situação sai do `useAgora` da casca, que vira na virada do minuto, como a idade das leituras, no fuso das preferências (`useDataHora`), e não no do horário da TI. A tela chama o gancho uma vez e conta cada chamado: no quadro, nos prazos e no Início, o texto, o grupo e a ordem mudam juntos, num relógio só; o chamado aberto, que pode vir sem relógio, conta só quando ele vem. O vencimento cai em qualquer segundo, e o texto muda na virada seguinte: o "vence em menos de 1 min" fica até ela, e o estouro aparece nela, até um minuto depois do vencimento. É a precisão que a spec pede ("a cada minuto"), a mesma da tarefa que avisa o estouro.
+**O âmbar do "vence em 2 h".** O grupo "Vencem em até 2 h" inclui as 2 h exatas, e o texto corta para baixo. Por isso, o âmbar com "vence em 2 h" só aparece com exatamente 2 h, como no m01, às 09:40 com o vencimento às 11:40, e de 1 h a 1 h 59 min o texto diz "vence em 1 h". Cortar é o lado seguro no prazo. Na coluna do quadro, ficam duas contas lado a lado: a idade do mais antigo arredonda para o mais perto (decisão 22), e o prazo corta para baixo (revisão da 5.7).
+
+**A cada minuto.** O `useContarOPrazo()` do `prazo.ts` devolve a conta do prazo agora, `(relogio, horario) => SituacaoDoPrazo`: o `relogioDaApi` converte as datas da resposta, e a situação sai do `useAgora` da casca, que vira na virada do minuto, como a idade das leituras, no fuso das preferências (`useDataHora`), e não no do horário da TI. A tela chama o gancho uma vez e conta cada chamado: no quadro, nos prazos e no Início, o texto, o grupo e a ordem mudam juntos, num relógio só; o chamado aberto, que pode vir sem relógio, conta só quando ele vem. A tela que mostra também uma idade, como a do mais antigo no quadro (decisão 22), lê o `useAgora` uma vez e conta pelo `contadorDoPrazo(agora, fuso)`, o mesmo de dentro do gancho, para a idade e o prazo virarem juntos.
+
+**O prazo ilegível.** O chamado que vem sem o relógio, porque o prazo copiado não se lê (4.10), diz "prazo ilegível", nas duas formas, com o relógio e na cor do texto: o `PrazoEmTexto` recebe a situação nula. O vencimento cai em qualquer segundo, e o texto muda na virada seguinte: o "vence em menos de 1 min" fica até ela, e o estouro aparece nela, até um minuto depois do vencimento. É a precisão que a spec pede ("a cada minuto"), a mesma da tarefa que avisa o estouro.
 
 ### 21. O formulário que se preenche
 
@@ -788,6 +794,55 @@ Todo campo exigido tem a marca de obrigatório, como os campos do kit: as Vária
 - **na prévia,** o arquivo não é enviado. Ele entra na resposta com um id do navegador (`crypto.randomUUID`), para a condição, o título e o resumo o contarem.
 
 **As recusas** chegam de quem usa a peça, na chave do domínio (`campos.<id>`), do `conferirRespostas` ou do 400 da API, e a geral (`formulario`) fica no alto da peça.
+
+### 22. Quem está com o quê
+
+A tela (tarefa 5.7) monta as colunas com dois pedidos, os dois debaixo da chave dos chamados e com o fuso das preferências da conta (`useDataHora`), pelos ganchos do `consultas.ts` que o Início (5.17) e os prazos (5.15) também usam:
+- **o quadro** (`GET /chamados/quadro?fuso=`, 4.9) dá a ordem das colunas e, em cada uma, os números, o mais antigo, os pedaços e os resolvidos hoje, além do aviso do alcance;
+- **a lista dos prazos** (`GET /chamados/prazos?fuso=`, 4.10) dá o tipo, o título e o relógio de cada quadrado.
+
+**Os dois pedidos fora de passo.** Eles são lidos em momentos diferentes, e o `chamados.mudaram` relê os dois, cada um no seu tempo. A tela segue os números do quadro, e a lista só completa os quadrados:
+- o número que o quadro tem e a lista não traz fica num quadrado só com o número: "Carregando…" enquanto um dos dois pedidos é relido, e "Detalhes não carregados" fora disso, que só acontece se os dois ficarem fora de passo sem um evento que os releia;
+- o número que só a lista traz fica de fora, até o quadro o pôr numa coluna.
+
+A primeira leitura espera os dois ("Carregando os chamados…"), e o selo dos abertos entra com as colunas. A falha:
+- **sem as colunas na tela,** a de um dos dois fica no lugar delas, com a frase do erro e o "Tentar de novo", como nas outras telas. Tentar de novo volta ao "Carregando os chamados…";
+- **com as colunas na tela,** a de uma releitura, pelo evento ou pelo foco da janela, vai acima delas, com a frase do erro, "As colunas mostram a última leitura." e o "Tentar de novo", que diz que relê. As colunas e o selo ficam com a última leitura: a tela fica aberta o dia todo, e um soluço da rede não apaga o que quem atende está lendo (revisão da 5.7).
+
+**A chave de cada coluna** é a conta e a marca de quem não atende mais (`<conta>:atende` e `<conta>:nao-atende-mais`), porque a mesma conta pode ter as duas. A 5.9 usa a mesma chave no alvo do arraste.
+
+**A ordem dos quadrados** é a do `compararPrazos`, com o empate pelo número. Depois vêm os de prazo ilegível e os que a lista ainda não trouxe, pelo número.
+
+**Um relógio só.** A tela lê o `useAgora` uma vez. Com o mesmo momento, ela conta o prazo de cada quadrado, pelo `contadorDoPrazo(agora, fuso)` (decisão 20), e a idade do mais antigo. Assim, a idade e o prazo viram juntos.
+
+**A idade do mais antigo** (`idadeDoMaisAntigo`, no `quadro/quadro.ts`) arredonda para o mais perto, como o mockup (16 h 35 min dá "há 17 h"), e não corta como o `idadeRelativa` da casca:
+- em minutos até 59 min, em horas até 23 h e em dias daí em diante;
+- a unidade sobe quando o arredondamento chega à seguinte: 59 min 40 s dá "há 1 h", e 23 h 40 min, "há 1 d";
+- abaixo de meio minuto, "há menos de 1 min", como no prazo. O mockup não mostra idades abaixo de 1 h.
+
+**As cores das pessoas e dos tipos** são as das séries, como no ícone do pacote do Software, e o nome vai sempre junto, em texto:
+- a sigla de quem atende (`SiglaDaPessoa`) fica na série da conta, de 1 a 8, sempre a mesma para a mesma conta. A série sai da soma do id, e não do nome, que muda. A coluna da triagem leva a bandeja, neutra;
+- o ícone do tipo (`IconeDoTipo`) fica na série do ícone (a tabela da decisão 6) e tem o nome do tipo para o leitor de tela. O ícone que a web não conhece fica nas reticências, neutro.
+
+**A coluna:**
+- **a triagem:** a bandeja, "Sem responsável", "3 na triagem" e o mais antigo, sem barra e sem pé;
+- **a pessoa:** a sigla, o nome, "2 abertos" e o mais antigo, a barra, com "Carga: 2 de 5" no nome lido e no título, e o pé;
+- **quem não atende mais:** a mesma coluna, com "não atende mais os chamados" embaixo do nome, também no nome lido da coluna.
+
+O "2 abertos" e o "mais antigo…" ficam um embaixo do outro, como no mockup, e o "·" da spec entre os dois fica só para o leitor de tela. O título é o nível 2 de cada coluna.
+
+**A largura.** As colunas e os quadrados acompanham a janela, como o m01 a 1440 px:
+- a triagem tem no mínimo 232 px, e cada pessoa, 200 px. Abaixo disso, as colunas rolam de lado dentro da tela, em vez de estreitar;
+- dois quadrados por linha quando cabem dois de 112 px, como no m01, e um por linha quando não cabem;
+- o quadrado tem no mínimo 92 px de altura e cresce quando o prazo vai para duas linhas. O respiro dele é de 7 px dos quatro lados, e o do m01, de 8 px dos lados. O "vence em 2 h" tem 95,2 px, e o quadrado de 113 px do m01 dá 95 px por dentro: o mockup não deixa o prazo quebrar, e aqui o pixel a mais o mantém numa linha sempre que cabem dois quadrados por linha;
+- o prazo curto quebra antes da medida ("vence em" numa linha e "35 min" na outra), e nenhuma medida ("35 min", "17 h", "2 d" ou "menos de 1 min") se parte, também no mais antigo (`TextoComMedidas`, no `Pecas.tsx`).
+
+**O que fica para depois.** No cabeçalho do m01:
+- a dica "Arraste um quadrado para passar adiante. Passe o mouse para ler." entra com o arraste (5.9);
+- o "Buscar nos chamados" entra com a busca (5.10);
+- o "Novo chamado" entra com a gaveta (5.18).
+
+O quadrado ganha o foco, a prévia e o clique na 5.8. Até lá, ele é só para ler, e o botão que não faz nada não entra.
 
 ## Risks / Trade-offs
 

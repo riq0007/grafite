@@ -1,5 +1,5 @@
-import { CabecalhoDaPagina } from '@grafite/ui';
 import { PERMISSOES_DE_VER } from './permissoes.ts';
+import { Quadro } from './quadro/Quadro.tsx';
 import { TelaDosChamados } from './TelaDosChamados.tsx';
 
 /** Quem está com o quê (spec modulo-chamados), para quem vê os chamados. */
@@ -10,7 +10,7 @@ export function QuemEstaComOQue() {
       permissoes={PERMISSOES_DE_VER}
       semAcesso="aos chamados"
     >
-      <CabecalhoDaPagina titulo="Quem está com o quê" />
+      <Quadro />
     </TelaDosChamados>
   );
 }

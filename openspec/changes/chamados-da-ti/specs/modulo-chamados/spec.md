@@ -86,7 +86,8 @@ Sem chamados abertos, a tela SHALL dizer "Nenhum chamado aberto.".
 ### Requirement: Quem está com o quê
 
 A tela SHALL ter:
-- **a coluna "Sem responsável",** tracejada, com os chamados da triagem;
+- **no alto, os abertos que a conta vê,** como "12 abertos";
+- **a coluna "Sem responsável",** tracejada, com os chamados da triagem e "3 na triagem · mais antigo #1038, há 6 h", ou só "0 na triagem";
 - **uma coluna por pessoa da TI** (spec chamados, requisito "Carga de cada pessoa"), com:
   - a sigla num círculo;
   - o nome em peso forte;
@@ -96,16 +97,19 @@ A tela SHALL ter:
 - **a coluna de quem não atende mais os chamados** e ainda tem chamados abertos, depois das outras, com "não atende mais os chamados" junto do nome;
 - **"Contando só os chamados dos locais que você vê.",** acima das colunas, a quem não vê os chamados da organização inteira.
 
+A idade do mais antigo SHALL arredondar para o mais perto, e não para baixo, como "há 17 h" para 16 h 35 min: em minutos até 59 min, em horas até 23 h e em dias daí em diante, com "há menos de 1 min" abaixo de meio minuto.
+
 Cada chamado SHALL ser um quadrado com:
 - o ícone do tipo;
 - o número, em mono;
 - uma linha só de título, cortada em reticências;
 - o prazo, em mono, com o ícone e a palavra.
 
-Na coluna, os quadrados SHALL seguir o vencimento:
+Na coluna, os quadrados SHALL seguir o vencimento, e o empate, o número:
 1. os estourados;
 2. os que vencem antes;
-3. os de relógio parado, por último.
+3. os de relógio parado;
+4. os de prazo ilegível, por último.
 
 Parar o ponteiro num quadrado por 200 ms, ou levar o foco a ele, SHALL abrir a prévia, opaca, sobre a área vazia das colunas. A prévia SHALL ter:
 - a situação do prazo, como "Estourado há 20 min";
@@ -118,6 +122,10 @@ Parar o ponteiro num quadrado por 200 ms, ou levar o foco a ele, SHALL abrir a p
 Esc SHALL fechar a prévia. Enter e o clique SHALL abrir o chamado.
 
 O menu do botão direito e o do teclado SHALL ter "Abrir o chamado", "Assumir", "Passar para…" e "Devolver à triagem", conforme as ações que o chamado aceita (spec chamados, requisito "Ações do atendimento"): sem "Assumir" no chamado que já está com a conta e sem "Devolver à triagem" no da triagem e no aguardando.
+
+#### Scenario: Idade do mais antigo
+- **WHEN** o #1041, o aberto mais antigo de Ana, foi aberto há 16 h 35 min
+- **THEN** a coluna de Ana diz "2 abertos · mais antigo #1041, há 17 h", e, 1 h depois, "há 18 h", sem recarregar
 
 #### Scenario: Prévia do estourado
 - **WHEN** Ana para o ponteiro no #1033, com Renato
@@ -423,6 +431,8 @@ O selo de uma contagem SHALL levar a marca da palavra, como "1 estourado" e "3 c
 O prazo de um quadrado e de uma linha SHALL ir em mono, com o ícone e a cor do estado, e a palavra ao lado:
 - no quadrado, curto: "estourado", "parado" ou "vence em 2 h";
 - na linha, inteiro: "estourado há 20 min", "relógio parado" ou "vence em 2 h".
+
+O chamado de prazo ilegível, que não tem o relógio, SHALL dizer "prazo ilegível", no quadrado e na linha.
 
 O ícone SHALL ser o do selo do estado: o círculo com a exclamação no estourado, a ampulheta no parado e o relógio nos outros. A cor SHALL entrar só no estourado, a de perigo, em peso forte, e no que vence em até 2 h, a de atenção; os outros SHALL ficar na cor do texto. O tempo do prazo SHALL avançar sozinho a cada minuto, sem recarregar.
 

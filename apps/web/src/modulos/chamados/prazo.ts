@@ -9,7 +9,7 @@ import {
   situacaoDoPrazo,
 } from '@grafite/domain';
 import { useDataHora } from '@grafite/ui';
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { useAgora } from '../../casca/status/useAgora.ts';
 
 /** O relógio guardado do chamado, como a API o manda, com os instantes em texto. */
@@ -30,6 +30,14 @@ export function relogioDaApi(relogio: RelogioDaApi): RelogioDoChamado {
 export type ContarOPrazo = (relogio: RelogioDaApi, horario: HorarioDaTi) => SituacaoDoPrazo;
 
 /**
+ * A conta do prazo num momento e num fuso: a do gancho, e a da tela que já tem o momento dela, para
+ * a idade do mais antigo e o prazo virarem no mesmo minuto.
+ */
+export function contadorDoPrazo(agora: Date, fuso: string): ContarOPrazo {
+  return (relogio, horario) => situacaoDoPrazo(relogioDaApi(relogio), horario, agora, fuso);
+}
+
+/**
  * A conta do prazo agora, que muda na virada do minuto, como a idade das leituras, sem pedir de
  * novo ao servidor. A tela chama o gancho uma vez e conta cada chamado com ele, para o texto, o
  * grupo e a ordem andarem juntos; o chamado que vem sem relógio não é contado. O grupo sai no fuso
@@ -38,8 +46,5 @@ export type ContarOPrazo = (relogio: RelogioDaApi, horario: HorarioDaTi) => Situ
 export function useContarOPrazo(): ContarOPrazo {
   const agora = useAgora();
   const { fuso } = useDataHora();
-  return useCallback(
-    (relogio, horario) => situacaoDoPrazo(relogioDaApi(relogio), horario, agora, fuso),
-    [agora, fuso],
-  );
+  return useMemo(() => contadorDoPrazo(agora, fuso), [agora, fuso]);
 }

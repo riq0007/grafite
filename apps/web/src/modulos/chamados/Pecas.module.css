@@ -15,8 +15,17 @@
   white-space: nowrap;
 }
 
+/*
+ * No quadrado, o texto quebra a linha quando não cabe, antes da medida ("vence em" e "35 min"), e o
+ * quadrado cresce; a medida não se parte em lugar nenhum.
+ */
 .prazo[data-forma="curta"] {
   font-size: var(--texto-legenda);
+  white-space: normal;
+}
+
+.medida {
+  white-space: nowrap;
 }
 
 .prazo[data-grupo="estourado"] {
@@ -26,4 +35,70 @@
 
 .prazo[data-grupo="ate-2-horas"] {
   color: var(--cor-atencao);
+}
+
+/*
+ * As cores das séries (decisão 22): o ícone do tipo na série do ícone e a sigla na série da conta.
+ * Sem a série, o texto secundário, neutro.
+ */
+:is(.iconeDoTipo, .sigla)[data-serie="1"] {
+  --serie: var(--cor-serie-1);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="2"] {
+  --serie: var(--cor-serie-2);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="3"] {
+  --serie: var(--cor-serie-3);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="4"] {
+  --serie: var(--cor-serie-4);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="5"] {
+  --serie: var(--cor-serie-5);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="6"] {
+  --serie: var(--cor-serie-6);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="7"] {
+  --serie: var(--cor-serie-7);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="8"] {
+  --serie: var(--cor-serie-8);
+}
+
+/* O ícone do tipo, como o `.ti` dos mockups: o desenho na série, num quadrado dela a 18%. */
+.iconeDoTipo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--raio-rotulo);
+  color: var(--serie, var(--cor-texto-2));
+  background: color-mix(in srgb, var(--serie, var(--cor-texto-2)) 18%, transparent);
+}
+
+/*
+ * A sigla de quem atende e a bandeja da triagem, como o `.av` de 38 dos mockups: o círculo com a
+ * série a 26% sobre a superfície e a borda a 55%; sem a série, neutro.
+ */
+.sigla {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--serie, var(--cor-texto-2)) 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--serie, var(--cor-texto-2)) 26%, var(--cor-superficie-2));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
 }
