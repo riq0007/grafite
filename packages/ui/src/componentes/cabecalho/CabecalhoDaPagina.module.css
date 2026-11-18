@@ -76,3 +76,39 @@
   gap: var(--esp-2);
   margin-inline-start: auto;
 }
+
+/* A trilha, numa linha só dela, em cima do título e perto dele, como no m03 dos chamados. */
+.trilha {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.cabecalho:has(> .trilha) {
+  row-gap: var(--esp-2);
+}
+
+/*
+ * Com o quadro, como o do prazo do chamado (m03): o título e as ações numa coluna, com as ações
+ * embaixo do título, a partir da esquerda, e o quadro à direita deles, no meio da altura. O título
+ * fica no alto, no mesmo lugar de quando a tela carrega, também quando o quadro é mais alto que ele.
+ * Quando a largura não comporta os dois, o quadro desce para baixo das ações, ainda à direita.
+ */
+.principal {
+  display: flex;
+  flex: 1 1 24rem;
+  flex-direction: column;
+  align-self: flex-start;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.principal > .acoes {
+  justify-content: flex-start;
+  margin-inline-start: 0;
+}
+
+.quadro {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-inline-start: auto;
+}

@@ -1,7 +1,8 @@
 /*
  * O chamado aberto (m03): a raiz pede a janela inteira (`data-janela-inteira`) e vai até as bordas,
- * por cima do respiro da janela. O cabeçalho é uma faixa de borda a borda: a trilha no alto, o
- * título e os dados do chamado, as ações embaixo, e o quadro do prazo à direita das duas linhas.
+ * por cima do respiro da janela. O cabeçalho da página é uma faixa de borda a borda: a trilha no
+ * alto, o título e os dados do chamado, as ações embaixo, e o quadro do prazo à direita das duas
+ * linhas.
  */
 .tela {
   --respiro: var(--respiro-da-janela, var(--esp-6));
@@ -21,13 +22,18 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.cabecalho {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--esp-2) var(--esp-6);
-  align-items: center;
+.tela > [data-cabecalho-da-pagina] {
   padding: var(--esp-3) var(--respiro);
-  border-bottom: 1px solid var(--cor-linha);
+}
+
+/* O número em mono e o título, no tamanho grande do m03. */
+.tela [data-titulo-da-janela] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--esp-3);
+  font-size: var(--texto-titulo-grande);
+  letter-spacing: -0.015em;
 }
 
 .estado {
@@ -41,7 +47,6 @@ p.estado {
 
 /* A trilha: "Chamados › Acesso e senha › #1041". */
 .trilha {
-  grid-column: 1 / -1;
   font-size: var(--texto-rotulo);
 }
 
@@ -84,35 +89,23 @@ p.estado {
   font-variant-numeric: tabular-nums;
 }
 
-/* O número em mono e o título, no tamanho grande do m03. */
-.identidade {
-  min-width: 0;
-}
-
-.identidade > h1 {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: var(--esp-3);
-  margin: 0;
-  font-size: var(--texto-titulo-grande);
-  letter-spacing: -0.015em;
-}
-
 .numeroDoTitulo {
   font-size: var(--texto-titulo);
   font-weight: var(--peso-normal);
   letter-spacing: 0;
 }
 
-/* O selo, o tipo, quem pediu e quem atende. */
+/*
+ * O selo, o tipo, quem pediu e quem atende, no detalhe do cabeçalho, com o texto principal e a 2
+ * passos do título, como no m03.
+ */
 .dados {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--esp-2) var(--esp-4);
-  margin-top: var(--esp-2);
-  font-size: var(--texto-dado);
+  margin-top: var(--esp-1);
+  color: var(--cor-texto);
 }
 
 .tipo,
@@ -127,22 +120,15 @@ p.estado {
   font-weight: var(--peso-forte);
 }
 
-/* O quadro do prazo, à direita do título e das ações. */
+/* O quadro do prazo, no quadro do cabeçalho, à direita do título e das ações. */
 .prazo {
   display: grid;
-  grid-row: 2 / span 2;
-  grid-column: 2;
-  align-self: center;
   justify-items: end;
   gap: 2px;
   padding: var(--esp-2) var(--esp-4);
   border: 1px solid var(--cor-linha-forte);
   border-radius: var(--raio-controle);
   background: var(--cor-superficie-afundada);
-}
-
-.cabecalho[data-sem-acoes] .prazo {
-  grid-row: 2;
 }
 
 .linhaDoPrazo {
@@ -187,27 +173,7 @@ p.estado {
   color: var(--cor-critico);
 }
 
-.acoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--esp-2);
-}
-
 .formulario {
   display: grid;
   gap: var(--esp-3);
-}
-
-/* Na janela estreita, o quadro do prazo desce para baixo das ações. */
-@media (max-width: 760px) {
-  .cabecalho {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .prazo,
-  .cabecalho[data-sem-acoes] .prazo {
-    grid-row: auto;
-    grid-column: 1;
-    justify-items: start;
-  }
 }

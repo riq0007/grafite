@@ -1,11 +1,12 @@
 // O chamado aberto (spec modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O
 // chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
-// notificações, o quadro e a busca abrem, e o cabeçalho, com a trilha, o número e o título, o selo,
-// o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação, e, embaixo, a
-// conversa (tarefa 5.11). O campo de escrever chega na 5.12.
+// notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, o número e o
+// título, o selo, o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação,
+// e, embaixo, a conversa (tarefa 5.11). O campo de escrever chega na 5.12.
 import {
   AreaDeTexto,
   Botao,
+  CabecalhoDaPagina,
   CampoDeTexto,
   type DataHora,
   Dialogo,
@@ -14,7 +15,6 @@ import {
   ItemDeMenu,
   MensagemDoPasso,
   Menu,
-  TituloDaJanela,
   useDataHora,
 } from '@grafite/ui';
 import { Link, useParams } from '@tanstack/react-router';
@@ -102,18 +102,16 @@ function ConteudoDoChamado() {
   }
   return (
     <div className={estilos.tela} data-janela-inteira="">
-      <header className={estilos.cabecalho}>
-        <Trilha numero={numero === null || sumiu ? null : numero} />
-        <div className={estilos.identidade}>
-          <TituloDaJanela>
-            {numero === null || sumiu ? (
-              'Chamado'
-            ) : (
-              <span className={estilos.numeroDoTitulo}>{`#${numero}`}</span>
-            )}
-          </TituloDaJanela>
-        </div>
-      </header>
+      <CabecalhoDaPagina
+        trilha={<Trilha numero={numero === null || sumiu ? null : numero} />}
+        titulo={
+          numero === null || sumiu ? (
+            'Chamado'
+          ) : (
+            <span className={estilos.numeroDoTitulo}>{`#${numero}`}</span>
+          )
+        }
+      />
       {conteudo}
     </div>
   );
@@ -126,17 +124,17 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
     // Só a conversa rola, entre o cabeçalho e o campo de escrever (design, "O chamado aberto, a
     // conversa (tarefa 5.11)").
     <div className={estilos.tela} data-janela-inteira="rola-por-dentro">
-      <header className={estilos.cabecalho} data-sem-acoes={ficha.permite.atender ? undefined : ''}>
-        <Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />
-        <div className={estilos.identidade}>
-          <TituloDaJanela>
+      <CabecalhoDaPagina
+        trilha={<Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />}
+        titulo={
+          <>
             <span className={estilos.numeroDoTitulo}>{`#${ficha.numero}`}</span> {ficha.titulo}
-          </TituloDaJanela>
-          <DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
-        </div>
-        <QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
-        {ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
-      </header>
+          </>
+        }
+        detalhe={<DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
+        quadro={<QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
+        acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
+      />
       <Conversa key={ficha.numero} ficha={ficha} />
     </div>
   );
@@ -311,22 +309,20 @@ function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
 
   if (situacao === 'resolvido') {
     return (
-      <div className={estilos.acoes}>
-        <Botao
-          icone={RotateCcw}
-          rotuloCarregando="Reabrindo"
-          {...doBotao('reabrir')}
-          onPress={() => void agir('reabrir', () => acoes.reabrir(numero, versao))}
-        >
-          Reabrir
-        </Botao>
-      </div>
+      <Botao
+        icone={RotateCcw}
+        rotuloCarregando="Reabrindo"
+        {...doBotao('reabrir')}
+        onPress={() => void agir('reabrir', () => acoes.reabrir(numero, versao))}
+      >
+        Reabrir
+      </Botao>
     );
   }
 
   const { assumir } = acoesDoChamado({ situacao, responsavel: ficha.responsavel }, conta);
   return (
-    <div className={estilos.acoes}>
+    <>
       {assumir && (
         <Botao
           icone={HandGrab}
@@ -374,7 +370,7 @@ function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
       >
         Responder
       </Botao>
-    </div>
+    </>
   );
 }
 
