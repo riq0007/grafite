@@ -123,7 +123,9 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
   return (
-    <div className={estilos.tela} data-janela-inteira="">
+    // Só a conversa rola, entre o cabeçalho e o campo de escrever (design, "O chamado aberto, a
+    // conversa (tarefa 5.11)").
+    <div className={estilos.tela} data-janela-inteira="rola-por-dentro">
       <header className={estilos.cabecalho} data-sem-acoes={ficha.permite.atender ? undefined : ''}>
         <Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />
         <div className={estilos.identidade}>
@@ -135,7 +137,7 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         <QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
         {ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
       </header>
-      <Conversa ficha={ficha} />
+      <Conversa key={ficha.numero} ficha={ficha} />
     </div>
   );
 }

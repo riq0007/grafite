@@ -1,10 +1,17 @@
 /*
- * A conversa do chamado aberto (m03 e m04): ocupa o resto da janela, que rola inteira, com os itens
- * numa coluna de até 720 px, no meio.
+ * A conversa do chamado aberto (m03 e m04): o meio da tela, entre o cabeçalho e o campo de
+ * escrever, e a única parte que rola, com os itens numa coluna de até 720 px, no meio.
  */
 .conversa {
-  flex: 1 0 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: var(--esp-4) var(--respiro, var(--esp-6));
+  outline: none;
+}
+
+.conversa:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
 }
 
 .itens {

@@ -565,6 +565,67 @@ export const TelaQueOcupaAJanelaInteira: Historia = {
 };
 
 /**
+ * A tela que rola por dentro (`data-janela-inteira="rola-por-dentro"`), como o chamado aberto: o
+ * cabeçalho no alto e o pé no fim da janela, e só o meio rola, com as 40 linhas da conversa.
+ */
+function TelaQueRolaPorDentro() {
+  const respiro = 'calc(-1 * var(--respiro-da-janela, var(--esp-6)))';
+  return (
+    <div
+      data-janela-inteira="rola-por-dentro"
+      style={{
+        display: 'grid',
+        gridTemplateRows: 'auto minmax(0, 1fr) auto',
+        margin: respiro,
+        background: 'var(--cor-superficie-afundada)',
+        ...texto,
+      }}
+    >
+      <header data-cabecalho-da-tela="" style={{ padding: 'var(--esp-4)' }}>
+        Chamado de teste
+      </header>
+      <section
+        data-meio-da-tela=""
+        aria-label="Conversa"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a área que rola recebe o foco para rolar pelo teclado.
+        tabIndex={0}
+        style={{ overflowY: 'auto' }}
+      >
+        <ol style={{ margin: 0 }}>
+          {Array.from({ length: 40 }, (_, indice) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: as linhas de exemplo não mudam.
+            <li key={indice}>{`Mensagem ${indice + 1}`}</li>
+          ))}
+        </ol>
+      </section>
+      <span data-pe-da-tela="" style={{ padding: 'var(--esp-4)' }}>
+        Escreva a resposta
+      </span>
+    </div>
+  );
+}
+
+export const TelaQueRolaPorDentroDaJanela: Historia = {
+  args: {
+    abas: [{ ...ATIVO, conteudo: <TelaQueRolaPorDentro /> }, LOCAL],
+    frente: ATIVO.id,
+    altura: 480,
+  },
+  play: async ({ canvasElement }) => {
+    const area = canvasElement.querySelector('[data-rolagem-da-janela]') as HTMLElement;
+    const tela = canvasElement.querySelector('[data-janela-inteira]') as HTMLElement;
+    const meio = canvasElement.querySelector('[data-meio-da-tela]') as HTMLElement;
+    const pe = canvasElement.querySelector('[data-pe-da-tela]') as HTMLElement;
+    await expect(Math.abs(borda(tela).top - borda(area).top)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(borda(tela).bottom - borda(area).bottom)).toBeLessThanOrEqual(1);
+    // A área da janela não rola: o meio rola, e o pé fica no fim, à vista.
+    await expect(area.scrollHeight - area.clientHeight).toBeLessThanOrEqual(1);
+    await expect(meio.scrollHeight).toBeGreaterThan(meio.clientHeight);
+    await expect(Math.abs(borda(pe).bottom - borda(area).bottom)).toBeLessThanOrEqual(1);
+  },
+};
+
+/**
  * O que a tela põe antes dela no painel, como o cabeçalho, fica do tamanho que tem; só a tela que
  * pede a janela inteira cresce até o fim da área.
  */

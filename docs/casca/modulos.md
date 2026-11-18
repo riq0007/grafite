@@ -1064,6 +1064,7 @@ A tela que vai do topo ao fim da janela, com o pé preso embaixo, põe `data-jan
   - organiza o resto, como uma grade com o meio em `1fr` e o pé no fim;
   - pode ir por cima do respiro, até as bordas, com a margem negativa de `--respiro-da-janela`.
 - **Conteúdo maior que a janela:** a área rola, como em qualquer tela.
+- **A tela que rola por dentro:** com `data-janela-inteira="rola-por-dentro"`, a raiz fica da altura da área, sem crescer com o conteúdo, e as partes dela rolam sozinhas, com `min-height: 0` e `overflow-y: auto`. É o chamado aberto, com o cabeçalho no alto, o campo de escrever no pé e só a conversa rolando no meio (change chamados-da-ti, design, "O chamado aberto, a conversa").
 - **A tela sem o atributo:** continua do tamanho do que tem, com o que ela põe empilhado no alto.
 
 ## Permissões

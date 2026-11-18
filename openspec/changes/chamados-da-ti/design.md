@@ -935,7 +935,7 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
   É a busca do sistema só com os chamados, para quem já está nas telas deles.
 
 **O chamado aberto, a conversa (tarefa 5.11),** com o m03 e o m04:
-- **a coluna,** de até 720 px, no centro da área embaixo do cabeçalho, numa lista na ordem da ficha, que a API já ordena (decisão 8); a janela rola inteira, como nas outras telas da janela inteira, e o campo de escrever da 5.12 fica no pé dela;
+- **a coluna,** de até 720 px, no centro da área embaixo do cabeçalho, numa lista na ordem da ficha, que a API já ordena (decisão 8). Como no m03, a tela fica da altura da janela, com o cabeçalho no alto e o campo de escrever da 5.12 preso no pé, e só a conversa rola, pela tela que rola por dentro do contrato de módulo (`data-janela-inteira="rola-por-dentro"`). Ela abre no fim, na última mensagem, e fica no fim quando chega um item novo ou o campo cresce, se quem lê já estava nele;
 - **a mensagem,** sem balão: a sigla de 32 px (a da conta com a série dela, a da pessoa no círculo neutro), o nome em peso forte, a hora e o texto, com as quebras de linha;
 - **a nota,** no quadro tracejado da atenção: o cadeado, "Nota interna · Ana Souza", a hora e o selo "Só a TI vê" à direita;
 - **a hora,** como no m03: "hoje, 09:21", "ontem, 17:22" e "seg 9 nov, 16:00" nas mensagens, nas notas, na abertura e nos alertas; nos eventos das ações, só a hora no mesmo dia, como no "assumiu o chamado · 09:40" do m04;

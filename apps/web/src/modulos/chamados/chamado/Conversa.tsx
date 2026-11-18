@@ -7,7 +7,14 @@
 import { partesDoResumo } from '@grafite/domain';
 import { type DataHora, formatarTamanho, Icone, RotuloDeSituacao, useDataHora } from '@grafite/ui';
 import { BellRing, FileText, Hourglass, Lock } from 'lucide-react';
-import { Fragment, type ReactNode } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import type { FichaDoChamado } from '../consultas.ts';
 import { enderecoDoAnexo } from '../formulario/anexos.ts';
@@ -23,17 +30,58 @@ import {
 
 type Escrito = Extract<ItemDaConversa, { especie: 'mensagem' | 'nota' }>;
 
-/** A conversa do chamado, com o resumo das respostas depois da abertura. */
+/** A folga, em px, em que quem lê ainda está no fim da conversa. */
+const PERTO_DO_FIM = 32;
+
+/**
+ * A conversa presa ao fim: abre na última mensagem e, com quem lê no fim, continua nele quando chega
+ * um item novo ou a área diminui, como quando o campo de escrever cresce. Quem subiu para ler o
+ * começo fica onde está.
+ */
+function usePresaAoFim(rolagem: RefObject<HTMLElement | null>, itens: unknown) {
+  const noFim = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roda a cada mudança dos itens.
+  useLayoutEffect(() => {
+    const elemento = rolagem.current;
+    if (elemento && noFim.current) elemento.scrollTop = elemento.scrollHeight;
+  }, [rolagem, itens]);
+  useEffect(() => {
+    const elemento = rolagem.current;
+    if (!elemento) return;
+    const medir = () => {
+      noFim.current =
+        elemento.scrollHeight - elemento.scrollTop - elemento.clientHeight <= PERTO_DO_FIM;
+    };
+    const descer = () => {
+      if (noFim.current) elemento.scrollTop = elemento.scrollHeight;
+    };
+    elemento.addEventListener('scroll', medir, { passive: true });
+    const observador = new ResizeObserver(descer);
+    observador.observe(elemento);
+    return () => {
+      elemento.removeEventListener('scroll', medir);
+      observador.disconnect();
+    };
+  }, [rolagem]);
+}
+
+/**
+ * A conversa do chamado, com o resumo das respostas depois da abertura: a única parte da tela que
+ * rola, presa ao fim. Ela recebe o foco para rolar pelo teclado.
+ */
 export function Conversa({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
+  const rolagem = useRef<HTMLElement>(null);
+  usePresaAoFim(rolagem, ficha.conversa);
   const partes = partesDoResumo(ficha.formulario, ficha.respostas, contextoDaFicha(ficha));
   const resumo =
     partes.length === 0 ? null : (
       <li key="resumo">
         <dl className={estilos.resumo} aria-label="Respostas do formulário">
-          {partes.map((parte) => (
-            <div key={parte.nome}>
+          {partes.map((parte, indice) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: dois campos podem ter o mesmo nome no resumo; a posição é a ordem do formulário.
+            <div key={indice}>
               <dt>{parte.nome}</dt>
               <dd className={parte.mono ? estilos.mono : undefined}>{parte.resposta}</dd>
             </div>
@@ -52,7 +100,8 @@ export function Conversa({ ficha }: { ficha: FichaDoChamado }) {
     </Fragment>
   ));
   return (
-    <section className={estilos.conversa} aria-label="Conversa">
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: a área que rola recebe o foco para rolar pelo teclado.
+    <section ref={rolagem} className={estilos.conversa} aria-label="Conversa" tabIndex={0}>
       <ol className={estilos.itens}>
         {abertura === -1 && resumo}
         {itens}

@@ -12,6 +12,15 @@
   margin: calc(-1 * var(--respiro));
 }
 
+/*
+ * O chamado carregado fica da altura da janela (`data-janela-inteira="rola-por-dentro"`): o
+ * cabeçalho no alto, a conversa no meio, a única parte que rola, e o campo de escrever no pé.
+ */
+.tela[data-janela-inteira="rola-por-dentro"] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
 .cabecalho {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
