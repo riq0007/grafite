@@ -4,9 +4,10 @@
 // vencimento. O quadro dá as colunas, os números e as versões; a lista dos prazos completa cada
 // quadrado. Os dois pedidos andam cada um no seu tempo, e o número que a lista ainda não trouxe fica
 // só com o número. A falha de uma releitura vai acima das colunas, que ficam com a última leitura;
-// sem as colunas, a falha fica no lugar delas. Cada quadrado com os detalhes tem a prévia, com o
-// ponteiro parado ou com o foco do teclado, e o menu, com as ações que o chamado aceita. Com o
-// mouse, quem atende arrasta o quadrado para passar o chamado (m02).
+// sem as colunas, a falha fica no lugar delas. Cada quadrado com os detalhes abre o chamado, com o
+// clique e o Enter, e tem a prévia, com o ponteiro parado ou com o foco do teclado, e o menu, com o
+// "Abrir o chamado" e as ações que o chamado aceita. Com o mouse, quem atende arrasta o quadrado
+// para passar o chamado (m02).
 import type { HorarioDaTi } from '@grafite/domain';
 import {
   Botao,
@@ -18,6 +19,7 @@ import {
   RotuloDeSituacao,
   useDataHora,
 } from '@grafite/ui';
+import { useNavigate } from '@tanstack/react-router';
 import { Ban, CircleAlert, CornerDownRight, HandGrab, Info } from 'lucide-react';
 import {
   createContext,
@@ -40,6 +42,7 @@ import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useSessao } from '../../../sessao/useSessao.tsx';
 import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
 import { type ChamadoDepoisDaAcao, useAcoesDoAtendimento } from '../acoes.ts';
+import { BuscaNosChamados } from '../BuscaNosChamados.tsx';
 import {
   type ChamadoNosPrazos,
   type ColunaDoQuadro,
@@ -170,6 +173,7 @@ export function Quadro() {
           )
         }
         apoio={naTela && <Dica noAr={noAr} arrasta={arrasta} />}
+        acoes={<BuscaNosChamados />}
       />
       {conteudo}
     </div>
@@ -238,6 +242,8 @@ interface InteracaoDoQuadro {
   aoDesfocar: (numero: number, evento: FocusEvent<HTMLElement>) => void;
   aoTeclar: (numero: number, evento: KeyboardEvent<HTMLElement>, quadrado: HTMLElement) => void;
   aoPedirMenu: (numero: number, evento: MouseEvent<HTMLElement>, quadrado: HTMLElement) => void;
+  /** O clique no quadrado abre o chamado; o que vem logo depois de um arraste, o arraste engole. */
+  aoAbrir: (numero: number) => void;
   acoesDaPrevia: (numero: number) => AcoesDaPrevia | null;
   medir: (quadrado: HTMLElement | null) => { quadrado: Caixa; area: Caixa } | null;
   /** O que o quadrado faz no aperto do mouse, para o arraste; nada, a quem só vê os chamados. */
@@ -335,6 +341,9 @@ function Colunas({
   const sessao = useSessao();
   const conta = sessao.tipo === 'ativa' ? sessao.conta.id : null;
   const podeAtender = useAcesso().pode('chamados.atender');
+  const navegar = useNavigate();
+  const abrirOChamado = (numero: number) =>
+    void navegar({ to: '/chamados/$numero', params: { numero: String(numero) } });
   const acoes = useAcoesDoAtendimento();
   // Os ramos de quem atende só uns locais, para a coluna que não recebe e o "Passar para…".
   const arvore = useArvoreDosLocais(podeAtender);
@@ -582,14 +591,24 @@ function Colunas({
     return { tipo: 'origem', aviso: avisoDaOrigem(arraste.item.numero, situacao) };
   };
 
+  /**
+   * O menu do quadrado com os detalhes: "Abrir o chamado" no alto e, a quem atende, as ações que o
+   * chamado aceita, separadas dele por uma linha. A quem só vê, só o "Abrir o chamado".
+   */
   const itensDoMenu = (numero: number): ItemDoMenuDeContexto[] => {
+    if (!porNumero.get(numero)?.quadrado.chamado) return [];
+    const abrir: ItemDoMenuDeContexto = {
+      id: 'abrir',
+      rotulo: 'Abrir o chamado',
+      aoEscolher: () => abrirOChamado(numero),
+    };
     const quais = acoesDe(numero);
-    if (!quais) return [];
-    const itens: ItemDoMenuDeContexto[] = [];
+    if (!quais) return [abrir];
+    const acoesDoMenu: ItemDoMenuDeContexto[] = [];
     if (quais.assumir)
-      itens.push({ id: 'assumir', rotulo: 'Assumir', aoEscolher: () => assumir(numero) });
+      acoesDoMenu.push({ id: 'assumir', rotulo: 'Assumir', aoEscolher: () => assumir(numero) });
     if (quais.pessoas.length > 0) {
-      itens.push({
+      acoesDoMenu.push({
         id: 'passar',
         rotulo: 'Passar para…',
         itens: quais.pessoas.map((pessoa) => ({
@@ -601,13 +620,14 @@ function Colunas({
       });
     }
     if (quais.devolver) {
-      itens.push({
+      acoesDoMenu.push({
         id: 'devolver',
         rotulo: 'Devolver à triagem',
         aoEscolher: () => devolver(numero),
       });
     }
-    return itens;
+    const [primeira, ...resto] = acoesDoMenu;
+    return primeira ? [abrir, { ...primeira, separadoAntes: true }, ...resto] : [abrir];
   };
 
   const abrirMenu = (numero: number, posicao: { x: number; y: number }, origem: HTMLElement) => {
@@ -654,7 +674,13 @@ function Colunas({
         if (document.activeElement !== quadrado) focarSemPrevia(quadrado);
         return;
       }
-      // O menu só abre com alguma ação: sem nenhuma, a tecla segue para o navegador.
+      // Enter no quadrado abre o chamado; nos botões da prévia, aperta o botão.
+      if (evento.key === 'Enter' && evento.target === quadrado) {
+        evento.preventDefault();
+        abrirOChamado(numero);
+        return;
+      }
+      // O menu só abre com algum item: sem nenhum, a tecla segue para o navegador.
       const pedeMenu = evento.key === 'ContextMenu' || (evento.shiftKey && evento.key === 'F10');
       if (!pedeMenu || evento.target !== quadrado || itensDoMenu(numero).length === 0) return;
       evento.preventDefault();
@@ -663,12 +689,13 @@ function Colunas({
       abrirMenu(numero, { x: caixa.left + 16, y: caixa.bottom }, quadrado);
     },
     aoPedirMenu(numero, evento, quadrado) {
-      // Sem nenhuma ação, o clique direito fica com o menu do navegador.
+      // Sem nenhum item, o clique direito fica com o menu do navegador.
       if (itensDoMenu(numero).length === 0) return;
       evento.preventDefault();
       focarSemPrevia(quadrado);
       abrirMenu(numero, { x: evento.clientX, y: evento.clientY }, quadrado);
     },
+    aoAbrir: abrirOChamado,
     acoesDaPrevia(numero) {
       const quais = acoesDe(numero);
       if (!quais) return null;
@@ -1000,6 +1027,7 @@ function ItemDoQuadrado({
           onContextMenu: (evento: MouseEvent<HTMLElement>) => {
             if (elemento.current) interacao.aoPedirMenu(numero, evento, elemento.current);
           },
+          onClick: () => interacao.aoAbrir(numero),
         })}
         {...alca}
       >

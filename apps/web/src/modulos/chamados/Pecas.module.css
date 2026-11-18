@@ -109,3 +109,9 @@
   height: 26px;
   font-size: var(--texto-rotulo);
 }
+
+/* O "Buscar nos chamados" dos cabeçalhos, na largura dos mockups. */
+.buscaNosChamados {
+  width: 260px;
+  max-width: 100%;
+}

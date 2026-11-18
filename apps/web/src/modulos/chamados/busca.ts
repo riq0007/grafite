@@ -1,9 +1,15 @@
-// Os Chamados na busca (spec modulo-chamados, "Chamados no dock"; change chamados-da-ti, design,
-// decisão 14, "O módulo na casca"): as telas do menu entram sozinhas, no caminho "Chamados", cada
-// uma a quem a vê; quem atende tem a ação de abrir um chamado, que leva ao Início dos chamados com a
-// gaveta de abrir.
+// Os Chamados na busca (spec modulo-chamados, "Chamados no dock" e "Busca dos chamados"; change
+// chamados-da-ti, design, decisão 14, "O módulo na casca", e "O chamado aberto, o cabeçalho"): as
+// telas do menu entram sozinhas, no caminho "Chamados", cada uma a quem a vê; quem atende tem a ação
+// de abrir um chamado, que leva ao Início dos chamados com a gaveta de abrir; e o provedor acha os
+// chamados pelo número ou pelo título, até 8, cada um levando ao chamado aberto.
+
+import type { components } from '@grafite/api-client';
+import { destinoDoChamado } from '@grafite/domain';
 import { LifeBuoy } from 'lucide-react';
 import type { ContextoDaAcao } from '../../busca/tipos.ts';
+import type { ProvedorDeBusca, ResultadoDoProvedor } from '../tipos.ts';
+import { ROTULO_DA_SITUACAO } from './situacoes.ts';
 
 export const ENTRADAS_DOS_CHAMADOS = [
   {
@@ -17,3 +23,36 @@ export const ENTRADAS_DOS_CHAMADOS = [
     permissoes: ['chamados.atender'],
   },
 ] as const;
+
+/** Quantos caracteres o termo precisa ter para a busca dos chamados. */
+export const MINIMO_DA_BUSCA_DOS_CHAMADOS = 2;
+
+export type ChamadoNaBusca = components['schemas']['ChamadosNaBusca']['itens'][number];
+
+/** "#1042 Impressora manchando", com "Marina Lopes · Em atendimento" no caminho. */
+export const resultadoDoChamado = ({
+  numero,
+  titulo,
+  pessoa,
+  situacao,
+}: ChamadoNaBusca): ResultadoDoProvedor => ({
+  id: `chamado-${numero}`,
+  rotulo: `#${numero} ${titulo}`,
+  caminho: `${pessoa} · ${ROTULO_DA_SITUACAO[situacao]}`,
+  destino: destinoDoChamado(numero),
+});
+
+/** Os chamados que a conta vê, pelo número, com ou sem o "#", ou pelas palavras do título. */
+export const provedorDosChamados: ProvedorDeBusca = {
+  grupo: 'Chamados',
+  permissoes: ['chamados.ver'],
+  buscar: async (termo, sinal, api) => {
+    if (termo.trim().length < MINIMO_DA_BUSCA_DOS_CHAMADOS) return [];
+    const { data, error } = await api.GET('/chamados/busca', {
+      params: { query: { termo } },
+      signal: sinal,
+    });
+    if (error || !data) throw new Error('A busca de chamados falhou.');
+    return data.itens.map(resultadoDoChamado);
+  },
+};

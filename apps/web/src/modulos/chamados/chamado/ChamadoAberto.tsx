@@ -1,0 +1,541 @@
+// O chamado aberto (spec modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O
+// chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
+// notificações, o quadro e a busca abrem, e o cabeçalho, com a trilha, o número e o título, o selo,
+// o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação. A conversa e o
+// campo de escrever chegam na 5.11 e na 5.12.
+import {
+  AreaDeTexto,
+  Botao,
+  CampoDeTexto,
+  type DataHora,
+  Dialogo,
+  EstadoVazio,
+  Icone,
+  ItemDeMenu,
+  MensagemDoPasso,
+  Menu,
+  TituloDaJanela,
+  useDataHora,
+} from '@grafite/ui';
+import { Link, useParams } from '@tanstack/react-router';
+import {
+  ArrowLeftRight,
+  ChevronRight,
+  CircleCheck,
+  HandGrab,
+  type LucideIcon,
+  MessageSquareText,
+  RotateCcw,
+  Wrench,
+} from 'lucide-react';
+import { Fragment, type ReactNode, useState } from 'react';
+import { FalhaDaConsulta } from '../../../api/consultas.ts';
+import { useAgora } from '../../../casca/status/useAgora.ts';
+import { useServidor, useSessao } from '../../../sessao/useSessao.tsx';
+import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
+import { useAcoesDoAtendimento } from '../acoes.ts';
+import { type FichaDoChamado, useFichaDoChamado, useQuadroDosChamados } from '../consultas.ts';
+import { IconeDoPrazo, IconeDoTipo, Selo, SiglaDaPessoa } from '../Pecas.tsx';
+import { PERMISSOES_DE_VER } from '../permissoes.ts';
+import { ALVO_DA_TRIAGEM, type ChamadoArrastado } from '../quadro/arraste.ts';
+import { acoesDoChamado, momentoDaMensagem, pessoasParaPassar } from '../quadro/previa.ts';
+import { chaveDaColuna, textoDosAbertos } from '../quadro/quadro.ts';
+import { TelaDosChamados } from '../TelaDosChamados.tsx';
+import { type RecusaNoDialogo, useAcoesDoChamadoAberto } from './acoes.ts';
+import estilos from './Chamado.module.css';
+import { ID_DO_CAMPO_DE_ESCREVER } from './escrever.ts';
+import { quadroDoPrazo } from './prazo.ts';
+
+const NAO_ENCONTRADO = 'Chamado não encontrado.';
+
+/** O chamado aberto, para quem vê os chamados. */
+export function ChamadoAberto() {
+  return (
+    <TelaDosChamados titulo="Chamado" permissoes={PERMISSOES_DE_VER} semAcesso="aos chamados">
+      <ConteudoDoChamado />
+    </TelaDosChamados>
+  );
+}
+
+/**
+ * O número do endereço que não é de um chamado, o 400 e o 404 da API: o chamado que não existe e o
+ * que a conta não vê dizem o mesmo.
+ */
+const naoEncontrado = (erro: Error | null) =>
+  erro instanceof FalhaDaConsulta &&
+  (erro.falha.problema?.status === 400 || erro.falha.problema?.status === 404);
+
+function ConteudoDoChamado() {
+  const { numero: doEndereco } = useParams({ from: '/chamados/$numero' });
+  const numero = /^\d{1,9}$/.test(doEndereco) ? Number(doEndereco) : null;
+  const consulta = useFichaDoChamado(numero);
+  // O chamado que sai do alcance da conta numa releitura deixa de aparecer.
+  const sumiu = naoEncontrado(consulta.error);
+  if (consulta.data && !sumiu) return <Chamado ficha={consulta.data} />;
+
+  let conteudo: ReactNode;
+  if (numero === null || sumiu) {
+    conteudo = <EstadoVazio className={estilos.estado} titulo={NAO_ENCONTRADO} />;
+  } else if (consulta.isError) {
+    conteudo = (
+      <EstadoVazio
+        className={estilos.estado}
+        titulo={consulta.error.message}
+        acao={
+          <Botao
+            carregando={consulta.isFetching}
+            rotuloCarregando="Tentando de novo"
+            onPress={() => void consulta.refetch()}
+          >
+            Tentar de novo
+          </Botao>
+        }
+      />
+    );
+  } else {
+    conteudo = (
+      <p role="status" className={estilos.estado}>
+        Carregando o chamado…
+      </p>
+    );
+  }
+  return (
+    <div className={estilos.tela} data-janela-inteira="">
+      <header className={estilos.cabecalho}>
+        <Trilha numero={numero === null || sumiu ? null : numero} />
+        <div className={estilos.identidade}>
+          <TituloDaJanela>
+            {numero === null || sumiu ? (
+              'Chamado'
+            ) : (
+              <span className={estilos.numeroDoTitulo}>{`#${numero}`}</span>
+            )}
+          </TituloDaJanela>
+        </div>
+      </header>
+      {conteudo}
+    </div>
+  );
+}
+
+function Chamado({ ficha }: { ficha: FichaDoChamado }) {
+  const agora = useAgora();
+  const dataHora = useDataHora();
+  return (
+    <div className={estilos.tela} data-janela-inteira="">
+      <header className={estilos.cabecalho} data-sem-acoes={ficha.permite.atender ? undefined : ''}>
+        <Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />
+        <div className={estilos.identidade}>
+          <TituloDaJanela>
+            <span className={estilos.numeroDoTitulo}>{`#${ficha.numero}`}</span> {ficha.titulo}
+          </TituloDaJanela>
+          <DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
+        </div>
+        <QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />
+        {ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
+      </header>
+    </div>
+  );
+}
+
+/** "Chamados › Acesso e senha › #1041": o "Chamados" leva ao Início dos chamados. */
+function Trilha({ tipo, numero }: { tipo?: string; numero: number | null }) {
+  const seta = <Icone icone={ChevronRight} tamanho={12} />;
+  return (
+    <nav aria-label="Trilha" className={estilos.trilha}>
+      <ol>
+        <li>
+          <Link to="/chamados">Chamados</Link>
+        </li>
+        {tipo && (
+          <li>
+            {seta}
+            {tipo}
+          </li>
+        )}
+        {numero !== null && (
+          <li>
+            {seta}
+            <span aria-current="page" className={estilos.numero}>{`#${numero}`}</span>
+          </li>
+        )}
+      </ol>
+    </nav>
+  );
+}
+
+/**
+ * O desde de quem atende, na hora da mensagem: "atende desde ontem, 17:20" e, hoje, "atende desde
+ * as 09:40", como no m04.
+ */
+function desdeDeQuemAtende(desde: Date, agora: Date, dataHora: DataHora): string {
+  const momento = momentoDaMensagem(desde, agora, dataHora);
+  return dataHora.grupoDoDia(desde, agora) === 'Hoje'
+    ? `atende desde as ${momento}`
+    : `atende desde ${momento}`;
+}
+
+/** O selo, o tipo, quem pediu e quem atende; na triagem, ninguém atende, e o selo o diz. */
+function DadosDoChamado({
+  ficha: { situacao, tipo, pessoa, responsavel },
+  agora,
+  dataHora,
+}: {
+  ficha: FichaDoChamado;
+  agora: Date;
+  dataHora: DataHora;
+}) {
+  return (
+    <div className={estilos.dados}>
+      <Selo selo={situacao} />
+      <span className={estilos.tipo}>
+        <IconeDoTipo icone={tipo.icone} nome={tipo.nome} decorativo />
+        {tipo.nome}
+      </span>
+      <span className={estilos.quem}>
+        <SiglaDaPessoa conta={null} nome={pessoa.nome} pequena />
+        <b>{pessoa.nome}</b>
+        {pessoa.local && <span>{`· ${pessoa.local}`}</span>}
+      </span>
+      {responsavel && (
+        <span className={estilos.quem}>
+          <SiglaDaPessoa conta={responsavel.conta} nome={responsavel.nome} pequena />
+          <b>{responsavel.nome}</b>
+          <span>
+            {responsavel.naoAtendeMais
+              ? '· não atende mais os chamados'
+              : `· ${desdeDeQuemAtende(new Date(responsavel.desde), agora, dataHora)}`}
+          </span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * O quadro do prazo, à direita: o prazo do tipo, a situação em destaque, com a cor só no estourado
+ * e no que vence em até 2 h, o detalhe no tempo do relógio e a primeira resposta pendente.
+ */
+function QuadroDoPrazoDoChamado({
+  ficha,
+  agora,
+  dataHora,
+}: {
+  ficha: FichaDoChamado;
+  agora: Date;
+  dataHora: DataHora;
+}) {
+  const quadro = quadroDoPrazo(ficha, ficha.horario, agora, dataHora);
+  return (
+    <div
+      className={estilos.prazo}
+      data-marca={quadro.marca === 'neutra' ? undefined : quadro.marca}
+    >
+      {quadro.prazoDoTipo && <span className={estilos.linhaDoPrazo}>{quadro.prazoDoTipo}</span>}
+      <b className={estilos.destaque}>
+        <IconeDoPrazo grupo={quadro.grupo} tamanho={20} />
+        {quadro.destaque}
+      </b>
+      <span className={estilos.linhaDoPrazo}>
+        {quadro.detalhe.map((pedaco, indice) => (
+          <Fragment key={pedaco.texto}>
+            {indice > 0 && ' · '}
+            {pedaco.mono ? <span className={estilos.mono}>{pedaco.texto}</span> : pedaco.texto}
+          </Fragment>
+        ))}
+      </span>
+      {quadro.resposta && (
+        <span
+          className={estilos.linhaDoPrazo}
+          data-atrasada={quadro.resposta.atrasada ? '' : undefined}
+        >
+          {quadro.resposta.texto}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** O chamado como a regra de quem recebe o lê, para o "Transferir". */
+function comoArrastado({
+  numero,
+  situacao,
+  responsavel,
+  pessoa,
+  locais,
+  semLocal,
+}: FichaDoChamado): ChamadoArrastado {
+  return {
+    numero,
+    situacao,
+    responsavel: responsavel?.conta ?? null,
+    origem: responsavel ? chaveDaColuna(responsavel) : ALVO_DA_TRIAGEM,
+    pessoa: pessoa.nome,
+    locais,
+    semLocal,
+  };
+}
+
+/**
+ * As ações de quem atende os locais do chamado, na ordem do m03: "Assumir", fora do que está com a
+ * conta, "Transferir", "Virar OS", com o ativo, sem a OS e com o Operação ligado, "Resolver" e
+ * "Responder", a principal. No resolvido, só "Reabrir". O botão que espera a resposta gira, e os
+ * outros esperam com ele.
+ */
+function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
+  const sessao = useSessao();
+  const conta = sessao.tipo === 'ativa' ? sessao.conta.id : null;
+  const operacaoLigada = !(useServidor()?.modulosDesligados ?? []).includes('operacao');
+  const acoes = useAcoesDoAtendimento();
+  const doChamado = useAcoesDoChamadoAberto();
+  const [esperando, definirEsperando] = useState<string | null>(null);
+  const { numero, versao, situacao, titulo, ativo } = ficha;
+
+  const agir = async (botao: string, fazer: () => Promise<unknown>) => {
+    if (esperando !== null) return;
+    definirEsperando(botao);
+    try {
+      await fazer();
+    } finally {
+      definirEsperando(null);
+    }
+  };
+  const doBotao = (botao: string) => ({
+    carregando: esperando === botao,
+    isDisabled: esperando !== null && esperando !== botao,
+  });
+
+  if (situacao === 'resolvido') {
+    return (
+      <div className={estilos.acoes}>
+        <Botao
+          icone={RotateCcw}
+          rotuloCarregando="Reabrindo"
+          {...doBotao('reabrir')}
+          onPress={() => void agir('reabrir', () => acoes.reabrir(numero, versao))}
+        >
+          Reabrir
+        </Botao>
+      </div>
+    );
+  }
+
+  const { assumir } = acoesDoChamado({ situacao, responsavel: ficha.responsavel }, conta);
+  return (
+    <div className={estilos.acoes}>
+      {assumir && (
+        <Botao
+          icone={HandGrab}
+          rotuloCarregando="Assumindo"
+          {...doBotao('assumir')}
+          onPress={() => void agir('assumir', () => acoes.assumir(numero, versao))}
+        >
+          Assumir
+        </Botao>
+      )}
+      <Transferir
+        ficha={ficha}
+        {...doBotao('transferir')}
+        aoEscolher={(para) => void agir('transferir', () => acoes.passar(numero, versao, para))}
+      />
+      {ativo && !ficha.os && operacaoLigada && (
+        <DialogoComTexto
+          gatilho="Virar OS"
+          icone={Wrench}
+          desligado={esperando !== null}
+          titulo={`Virar o #${numero} em OS`}
+          campo={{
+            rotulo: 'Problema',
+            descricao: `A OS abre no ativo ligado, ${ativo.rotulo}.`,
+            inicial: titulo,
+          }}
+          confirmar={{ rotulo: 'Abrir a OS', carregando: 'Abrindo a OS' }}
+          aoConfirmar={(problema) => doChamado.virarOs(numero, problema)}
+        />
+      )}
+      <DialogoComTexto
+        gatilho="Resolver"
+        icone={CircleCheck}
+        desligado={esperando !== null}
+        titulo={`Resolver o #${numero}`}
+        campo={{ rotulo: 'O que foi feito', inicial: '', multilinha: true }}
+        confirmar={{ rotulo: 'Resolver', carregando: 'Resolvendo' }}
+        aoConfirmar={(feito) => doChamado.resolver(numero, versao, feito)}
+      />
+      <Botao
+        nivel="primario"
+        icone={MessageSquareText}
+        isDisabled={esperando !== null}
+        onPress={() => document.getElementById(ID_DO_CAMPO_DE_ESCREVER)?.focus()}
+      >
+        Responder
+      </Botao>
+    </div>
+  );
+}
+
+/**
+ * "Transferir": o menu do "Passar para…", com as colunas do quadro e a regra do arraste
+ * (`pessoasParaPassar`). Sem ninguém, o menu diz que ninguém mais atende os locais do chamado.
+ */
+function Transferir({
+  ficha,
+  carregando,
+  isDisabled,
+  aoEscolher,
+}: {
+  ficha: FichaDoChamado;
+  carregando: boolean;
+  isDisabled: boolean;
+  aoEscolher: (conta: string) => void;
+}) {
+  const quadro = useQuadroDosChamados();
+  const arvore = useArvoreDosLocais();
+  let itens: ReactNode;
+  if (quadro.data) {
+    const pessoas = pessoasParaPassar(quadro.data.colunas, comoArrastado(ficha), arvore);
+    itens =
+      pessoas.length === 0 ? (
+        <ItemDeMenu id="ninguem" isDisabled>
+          Ninguém mais atende os locais do chamado.
+        </ItemDeMenu>
+      ) : (
+        pessoas.map((pessoa) => (
+          <ItemDeMenu
+            key={pessoa.conta}
+            id={pessoa.conta}
+            descricao={textoDosAbertos(pessoa.abertos)}
+            onAction={() => aoEscolher(pessoa.conta)}
+          >
+            {pessoa.nome}
+          </ItemDeMenu>
+        ))
+      );
+  } else {
+    itens = (
+      <ItemDeMenu id="carregando" isDisabled>
+        {quadro.isError ? quadro.error.message : 'Carregando quem atende…'}
+      </ItemDeMenu>
+    );
+  }
+  return (
+    <Menu
+      rotulo={`Transferir o #${ficha.numero}`}
+      gatilho={
+        <Botao
+          icone={ArrowLeftRight}
+          carregando={carregando}
+          rotuloCarregando="Transferindo"
+          isDisabled={isDisabled}
+        >
+          Transferir
+        </Botao>
+      }
+    >
+      {itens}
+    </Menu>
+  );
+}
+
+/**
+ * O diálogo de uma ação que pede um texto, como o "O que foi feito" do resolver e o problema da OS:
+ * a recusa fica nele, no campo quando é do campo; a ação aceita fecha o diálogo.
+ */
+function DialogoComTexto({
+  gatilho,
+  icone,
+  desligado,
+  titulo,
+  campo,
+  confirmar,
+  aoConfirmar,
+}: {
+  gatilho: string;
+  icone: LucideIcon;
+  desligado: boolean;
+  titulo: string;
+  campo: { rotulo: string; descricao?: string; inicial: string; multilinha?: boolean };
+  confirmar: { rotulo: string; carregando: string };
+  aoConfirmar: (texto: string) => Promise<RecusaNoDialogo | null>;
+}) {
+  const [aberto, definirAberto] = useState(false);
+  const [texto, definirTexto] = useState('');
+  const [erro, definirErro] = useState<string | null>(null);
+  const [falha, definirFalha] = useState<string | null>(null);
+  const [tentativa, definirTentativa] = useState(0);
+  const [enviando, definirEnviando] = useState(false);
+
+  const mudarAberto = (abrir: boolean) => {
+    if (enviando) return;
+    if (abrir) {
+      definirTexto(campo.inicial);
+      definirErro(null);
+      definirFalha(null);
+    }
+    definirAberto(abrir);
+  };
+
+  const enviar = async () => {
+    if (enviando) return;
+    definirEnviando(true);
+    const recusa = await aoConfirmar(texto);
+    definirEnviando(false);
+    if (!recusa) {
+      definirAberto(false);
+      return;
+    }
+    if (recusa.doCampo) {
+      definirErro(recusa.erro);
+      return;
+    }
+    definirFalha(recusa.erro);
+    definirTentativa((anterior) => anterior + 1);
+  };
+
+  const doCampo = {
+    rotulo: campo.rotulo,
+    descricao: campo.descricao,
+    value: texto,
+    onChange: (novo: string) => {
+      definirTexto(novo);
+      definirErro(null);
+    },
+    erro: erro ?? undefined,
+  };
+  return (
+    <Dialogo
+      gatilho={
+        <Botao icone={icone} isDisabled={desligado}>
+          {gatilho}
+        </Botao>
+      }
+      titulo={titulo}
+      aberto={aberto}
+      aoMudarAberto={mudarAberto}
+      acoes={(fechar) => (
+        <>
+          <Botao isDisabled={enviando} onPress={fechar}>
+            Cancelar
+          </Botao>
+          <Botao
+            nivel="primario"
+            carregando={enviando}
+            rotuloCarregando={confirmar.carregando}
+            onPress={() => void enviar()}
+          >
+            {confirmar.rotulo}
+          </Botao>
+        </>
+      )}
+    >
+      <div className={estilos.formulario}>
+        {campo.multilinha ? (
+          <AreaDeTexto {...doCampo} autoFocus />
+        ) : (
+          <CampoDeTexto {...doCampo} autoFocus autoComplete="off" />
+        )}
+        <MensagemDoPasso texto={falha} chave={tentativa} />
+      </div>
+    </Dialogo>
+  );
+}

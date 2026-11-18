@@ -1,6 +1,6 @@
 // As ações do atendimento nas telas dos chamados (spec modulo-chamados, "Quem está com o quê"; spec
 // chamados, "Ações do atendimento"; change chamados-da-ti, design, decisão 22, "As ações"): assumir,
-// passar, devolver à triagem e desfazer o assumir, cada uma com a versão do chamado que a tela
+// passar, devolver à triagem, desfazer o assumir e reabrir, cada uma com a versão do chamado que a tela
 // mostra. O retorno vai num aviso; a recusa, no aviso crítico, com a frase da API. Aceita ou
 // recusada, a tela relê os chamados (o quadro, os prazos e a ficha) sem esperar o
 // `chamados.mudaram`: depois do `chamado-mudou`, ela mostra o chamado como ele está. O quadro, a
@@ -15,12 +15,12 @@ import { useApi } from '../../api/useApi.tsx';
 import { CHAVE_DOS_CHAMADOS } from './consultas.ts';
 
 export type ChamadoDepoisDaAcao = components['schemas']['ChamadoDepoisDaAcao'];
-export type AcaoDoAtendimento = 'assumir' | 'passar' | 'devolver' | 'desfazer';
+export type AcaoDoAtendimento = 'assumir' | 'passar' | 'devolver' | 'desfazer' | 'reabrir';
 
 /**
  * A frase do aviso de cada ação, com o primeiro nome de quem ficou com o chamado: "Você assumiu o
  * #1033.", "Você passou o #1033 a Bruno.", "Você devolveu o #1033 à triagem." e, no desfazer, "O
- * #1033 voltou a Renato." ou "O #1042 voltou à triagem.".
+ * #1033 voltou a Renato." ou "O #1042 voltou à triagem."; e "Você reabriu o #1042.".
  */
 export function retornoDaAcao(
   acao: AcaoDoAtendimento,
@@ -39,6 +39,8 @@ export function retornoDaAcao(
       return responsavel
         ? `O #${numero} voltou a ${nomeCurto(responsavel.nome)}.`
         : `O #${numero} voltou à triagem.`;
+    case 'reabrir':
+      return `Você reabriu o #${numero}.`;
   }
 }
 
@@ -48,6 +50,7 @@ const NO_ERRO: Readonly<Record<AcaoDoAtendimento, string>> = {
   passar: 'passar o chamado',
   devolver: 'devolver o chamado à triagem',
   desfazer: 'desfazer o assumir',
+  reabrir: 'reabrir o chamado',
 };
 
 export interface AcoesDoAtendimento {
@@ -56,6 +59,7 @@ export interface AcoesDoAtendimento {
   passar: (numero: number, versao: number, para: string) => Promise<ChamadoDepoisDaAcao | null>;
   devolver: (numero: number, versao: number) => Promise<ChamadoDepoisDaAcao | null>;
   desfazer: (numero: number, versao: number) => Promise<ChamadoDepoisDaAcao | null>;
+  reabrir: (numero: number, versao: number) => Promise<ChamadoDepoisDaAcao | null>;
 }
 
 /** As ações do atendimento, que avisam o retorno e releem os chamados. */
@@ -106,6 +110,10 @@ export function useAcoesDoAtendimento(): AcoesDoAtendimento {
           api.POST('/chamados/{numero}/devolver', { ...doChamado(numero), body: { versao } }),
         ),
       desfazer,
+      reabrir: (numero, versao) =>
+        agir('reabrir', () =>
+          api.POST('/chamados/{numero}/reabrir', { ...doChamado(numero), body: { versao } }),
+        ),
     };
   }, [api, consultas]);
 }

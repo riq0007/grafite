@@ -40,6 +40,25 @@ export function useQuadroDosChamados() {
   });
 }
 
+export type FichaDoChamado = components['schemas']['FichaDoChamado'];
+
+/**
+ * A ficha do chamado aberto (spec modulo-chamados, "Chamado aberto"): o cabeçalho, o prazo, a
+ * conversa e o que vem das outras capacidades. Só pede com o número do endereço válido.
+ */
+export function useFichaDoChamado(numero: number | null) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DA_FICHA_DO_CHAMADO, numero],
+    enabled: numero !== null,
+    queryFn: () =>
+      consultar(
+        () => api.GET('/chamados/{numero}', { params: { path: { numero: numero ?? 0 } } }),
+        'carregar o chamado',
+      ),
+  });
+}
+
 /** A lista dos abertos que a conta vê, com o tipo, o título e o relógio de cada um, e o horário. */
 export function usePrazosDosChamados() {
   const api = useApi();

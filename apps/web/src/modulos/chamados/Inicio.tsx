@@ -1,6 +1,7 @@
 import { CabecalhoDaPagina } from '@grafite/ui';
 import { Navigate } from '@tanstack/react-router';
 import { useAcesso } from '../../sessao/useAcesso.ts';
+import { BuscaNosChamados } from './BuscaNosChamados.tsx';
 import { PERMISSOES_DE_VER } from './permissoes.ts';
 import { TelaDosChamados } from './TelaDosChamados.tsx';
 
@@ -16,7 +17,7 @@ export function InicioDosChamados() {
   if (!ve && pode('chamados.configurar')) return <Navigate to="/chamados/tipos" replace />;
   return (
     <TelaDosChamados titulo="Chamados" permissoes={PERMISSOES_DE_VER} semAcesso="aos chamados">
-      <CabecalhoDaPagina titulo="Chamados" />
+      <CabecalhoDaPagina titulo="Chamados" acoes={<BuscaNosChamados />} />
     </TelaDosChamados>
   );
 }

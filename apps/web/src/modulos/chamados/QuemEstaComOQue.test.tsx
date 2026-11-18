@@ -857,10 +857,11 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
       expect(previaDo(numero)).toBeNull();
     };
 
-    // O #1041 está com Ana e aguarda Fernanda: só "Passar para…". O "Abrir o chamado" entra com a
-    // ficha (5.10). O clique direito põe o foco no quadrado, sem abrir a prévia.
+    // O #1041 está com Ana e aguarda Fernanda: o "Abrir o chamado" e o "Passar para…". O clique
+    // direito põe o foco no quadrado, sem abrir a prévia.
     clicarComODireito(quadradoDo(1041), 300, 400);
     expect(itensDoMenu(screen.getByRole('menu', { name: 'Ações do #1041' }))).toEqual([
+      'Abrir o chamado',
       'Passar para…',
     ]);
     expect(previaDo(1041)).toBeNull();
@@ -871,6 +872,7 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
     expect(previaDo(1038)).not.toBeNull();
     fireEvent.keyDown(quadradoDo(1038), { key: 'ContextMenu' });
     expect(itensDoMenu(screen.getByRole('menu', { name: 'Ações do #1038' }))).toEqual([
+      'Abrir o chamado',
       'Assumir',
       'Passar para…',
     ]);
@@ -881,7 +883,14 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
     act(() => quadradoDo(1033).focus());
     fireEvent.keyDown(quadradoDo(1033), { key: 'F10', shiftKey: true });
     const menu = screen.getByRole('menu', { name: 'Ações do #1033' });
-    expect(itensDoMenu(menu)).toEqual(['Assumir', 'Passar para…', 'Devolver à triagem']);
+    expect(itensDoMenu(menu)).toEqual([
+      'Abrir o chamado',
+      'Assumir',
+      'Passar para…',
+      'Devolver à triagem',
+    ]);
+    // A linha separa o "Abrir o chamado" das ações.
+    expect(within(menu).getAllByRole('separator')).toHaveLength(1);
     const passar = within(menu).getByRole('menuitem', { name: 'Passar para…' });
     act(() => passar.focus());
     fireEvent.keyDown(passar, { key: 'ArrowRight' });
@@ -1154,7 +1163,7 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
     expect(document.activeElement).toBe(toner);
   });
 
-  it('o quadrado sem nenhuma ação não abre o menu, e o clique direito fica com o do navegador', async () => {
+  it('o quadrado sem nenhuma ação tem o menu só com o "Abrir o chamado"', async () => {
     // Numa TI de uma pessoa só, o #1041 aguarda com a própria Ana: ela não assume, não passa e não
     // devolve.
     const { servidor } = servidorDoQuadro({
@@ -1168,21 +1177,16 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
     });
     abrir(servidor);
     await esperarOQuadro('1 aberto');
-    const daPasta = quadradoDo(1041);
-    expect(clicarComODireito(daPasta, 300, 400)).toBe(true);
-    expect(screen.queryByRole('menu')).toBeNull();
-    fireEvent.keyDown(document.body, { key: 'Tab' });
-    act(() => daPasta.focus());
-    fireEvent.keyDown(daPasta, { key: 'F10', shiftKey: true });
-    expect(screen.queryByRole('menu')).toBeNull();
-    // O menu que não abriu não trava a prévia do ponteiro.
-    act(() => daPasta.blur());
-    pararOMouse(daPasta);
-    await waitFor(() => aPreviaDo(1041));
+    expect(clicarComODireito(quadradoDo(1041), 300, 400)).toBe(false);
+    const menu = screen.getByRole('menu', { name: 'Ações do #1041' });
+    expect(itensDoMenu(menu)).toEqual(['Abrir o chamado']);
+    expect(within(menu).queryByRole('separator')).toBeNull();
   });
 
-  it('a quem só vê os chamados, a prévia vai sem as ações, e o menu não abre', async () => {
+  it('a quem só vê os chamados, a prévia vai sem as ações, e o menu só abre o chamado', async () => {
     const { servidor } = servidorDoQuadro();
+    // A ficha fica carregando: basta o título do chamado aberto.
+    servidor['GET /api/chamados/1033'] = () => new Promise<Response>(() => {});
     abrir(servidor, { permissoes: naOrganizacao('chamados.ver') });
     await esperarOQuadro();
     act(() => quadradoDo(1033).focus());
@@ -1191,6 +1195,27 @@ describe('Quem está com o quê · a prévia e o menu do quadrado', () => {
     expect(within(previa).queryByRole('button')).toBeNull();
     expect(within(previa).queryByText('Passar para…')).toBeNull();
     fireEvent.contextMenu(quadradoDo(1033));
-    expect(screen.queryByRole('menu')).toBeNull();
+    const menu = screen.getByRole('menu', { name: 'Ações do #1033' });
+    expect(itensDoMenu(menu)).toEqual(['Abrir o chamado']);
+    expect(within(menu).queryByRole('separator')).toBeNull();
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Abrir o chamado' }));
+    await screen.findByRole('heading', { level: 1, name: '#1033' });
+  });
+
+  it('o Enter e o clique no quadrado abrem o chamado', async () => {
+    const { servidor } = servidorDoQuadro();
+    servidor['GET /api/chamados/1033'] = () => new Promise<Response>(() => {});
+    servidor['GET /api/chamados/1041'] = () => new Promise<Response>(() => {});
+    abrir(servidor);
+    await esperarOQuadro();
+    act(() => quadradoDo(1033).focus());
+    fireEvent.keyDown(quadradoDo(1033), { key: 'Enter' });
+    await screen.findByRole('heading', { level: 1, name: '#1033' });
+
+    cleanup();
+    abrir(servidor);
+    await esperarOQuadro();
+    fireEvent.click(quadradoDo(1041));
+    await screen.findByRole('heading', { level: 1, name: '#1041' });
   });
 });

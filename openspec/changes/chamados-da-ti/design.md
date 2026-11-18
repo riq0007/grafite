@@ -874,14 +874,14 @@ O relógio dela é puro (`controleDaPrevia`, no `quadro/previa.ts`), e a tela (`
 - "Assumir", fora no chamado que já está com a conta;
 - "Passar para…", com um botão por pessoa: a sigla, o primeiro nome e os abertos dela ("Ana · 2 abertos"), com o nome inteiro no nome lido. As pessoas são as das colunas de quem atende, na ordem delas, fora quem está com o chamado, como no m01, em que Ana, a conta da sessão, está na lista do #1033. Quem não atende os locais do chamado fica de fora, pela mesma regra da coluna que não recebe o arraste (5.9, abaixo).
 
-A quem só vê os chamados, a prévia vai sem as ações, e o menu não abre. A permissão é a geral (`chamados.atender`, pelo `useAcesso`), como o contrato de módulo pede para uma ação: o local de cada chamado, a API confere.
+A quem só vê os chamados, a prévia vai sem as ações, e o menu, desde a 5.10, só com o "Abrir o chamado". A permissão é a geral (`chamados.atender`, pelo `useAcesso`), como o contrato de módulo pede para uma ação: o local de cada chamado, a API confere.
 
 **O menu** abre com o botão direito, no ponto do clique, e, com o foco no quadrado, com a tecla de menu e com Shift+F10, junto do quadrado, como o da tabela. Ele fecha a prévia e, quando fecha, devolve o foco ao quadrado. Os itens seguem a matriz das ações (spec chamados, "Ações do atendimento"):
 - "Assumir", fora no chamado que já está com a conta;
 - "Passar para…", num submenu com as mesmas pessoas da prévia, cada uma com o nome e os abertos;
 - "Devolver à triagem", só no chamado em atendimento.
 
-O quadrado sem nenhuma ação, como o aguardando da própria conta numa TI de uma pessoa só, não abre o menu, e o clique direito fica com o menu do navegador. O menu de quem só vê os chamados fica sem itens, e não abre, até o "Abrir o chamado" da 5.10.
+O quadrado sem nenhuma ação, como o aguardando da própria conta numa TI de uma pessoa só, tem o menu só com o "Abrir o chamado", da 5.10, como o de quem só vê os chamados. Antes dela, esse menu ficava sem itens e não abria.
 
 O `MenuDeContexto` do kit ganha o submenu, que a spec componentes-base já pede ("os mesmos itens com submenu"). A ação fica em cada item, como nos menus da casca, porque a do menu de fora não chega ao submenu.
 
@@ -905,7 +905,33 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **no começo,** a prévia fecha. O quadrado no ar, `aria-hidden` e fixo na janela, parte da caixa do quadrado no aperto, com a inclinação de −2,5°, a sombra sobreposta e a borda do destaque do m02. O de origem fica tracejado, a 60 %, com o aviso embaixo dos quadrados da coluna;
 - **a coluna sob o ponteiro que recebe** ganha a área de soltar no alto (a `.solta` do m02) e o pedaço tracejado. As que não recebem mostram o motivo durante todo o arraste, para quem arrasta saber antes de chegar;
 - **soltar** chama o passar ou o devolver da prévia (5.8), com a versão, o aviso e a releitura;
-- **a dica do cabeçalho** vai no `apoio`, novo, do `CabecalhoDaPagina` do kit, ao lado do título e fora dele, e some sem o mouse (`hover: none`).
+- **a dica do cabeçalho** vai no `apoio`, novo, do `CabecalhoDaPagina` do kit, ao lado do título e fora dele, e some sem o mouse (`hover: none`);
+- **o quadrado que entra numa coluna** (o movimento do quadro), depois da primeira leitura, desce `--esp-2` em `--dur-deslocamento` e aparece em `--dur-opacidade`; com o movimento reduzido, só aparece. Na primeira leitura, nada se move.
+
+**O chamado aberto, o cabeçalho (tarefa 5.10),** com o m03:
+- **o endereço** `/chamados/$numero`, para quem vê ou atende os chamados, com a ficha em `['chamados', 'ficha', número]`, que os eventos da decisão 14 relêem. As notificações já levam a ele (`destinoDoChamado`, 4.8). O número que não tem de 1 a 9 algarismos não pede nada; ele, o 400 e o 404 da API dizem "Chamado não encontrado.", e as outras falhas, a frase delas, com "Tentar de novo";
+- **o cabeçalho é da tela,** o `.cab` do m03, porque o `CabecalhoDaPagina` não tem a trilha nem o quadro ao lado. O título continua no `TituloDaJanela`. A trilha leva ao Início dos chamados pelo "Chamados". Quem atende vem com o desde na hora da mensagem ("ontem, 17:20") e, no mesmo dia, "desde as 09:40", como no m04; na triagem, ele não aparece, e o selo diz "Na triagem";
+- **as ações,** a quem atende os locais do chamado (`permite.atender`), na ordem do m03: "Assumir", fora do que está com a conta, "Transferir", "Virar OS", "Resolver" e "Responder", a principal; no resolvido, só "Reabrir". "Virar OS" fica só com o ativo ligado, sem a OS e com o Operação ligado. O botão que espera a resposta gira, e os outros esperam com ele:
+  - "Transferir" abre o menu do "Passar para…", com as colunas do quadro e a regra do arraste (`pessoasParaPassar`); sem ninguém, o menu diz "Ninguém mais atende os locais do chamado.";
+  - "Virar OS" abre o diálogo com o "Problema", que começa com o título. A OS aberta dá "OS 13 aberta.", com "Abrir", e a recusa fica no diálogo;
+  - "Resolver" abre o diálogo com "O que foi feito", de 1 a 2.000 caracteres. O aviso diz "Você resolveu o #1042.", e a recusa fica no diálogo;
+  - "Reabrir" age direto, com "Você reabriu o #1042.", e "Assumir", com o aviso e o "Desfazer" do quadro;
+  - "Responder" leva o foco ao campo de escrever, que chega na 5.12;
+- **o quadro do prazo** sai de uma função pura (`quadroDoPrazo`, no `chamado/prazo.ts`), com os testes antes:
+  - o prazo do tipo: "Prazo do tipo, 8 h, no horário da TI" ou "em horas corridas";
+  - em destaque, o texto do selo do prazo, com a cor só no estourado e no que vence em até 2 h;
+  - contando, "Abriu às 07:40 · conta das 08:00 · vence às 16:00". O "conta das" aparece só no relógio que ainda não contou nada e voltou a contar fora do horário, e depois do prazo o "vence" vira "venceu";
+  - parado, também no resolvido, "Parou às 09:21 · restam 1 h 44 min" ou "Parou às 09:40 · passou 20 min do prazo", com o que resta em horas e minutos;
+  - o dia vai como na hora da mensagem, também para a frente: "às 16:00" hoje, "ontem às 17:05", "amanhã às 08:12" e "qui 19 nov às 08:12";
+  - o vencimento e o que resta, ou o que passou, vão na fonte mono, como no m04;
+  - sem relógio (o prazo ilegível), "Prazo ilegível" e só o "Abriu às";
+- **no quadro de "Quem está com o quê",** o Enter no quadrado com o foco e o clique abrem o chamado; o clique depois de um arraste, não, porque o `useArrastar` o engole. O menu ganha "Abrir o chamado" no alto, separado das ações por uma linha, e quem só vê os chamados passa a ter o menu só com ele;
+- **o provedor da busca** (`provedorDosChamados`), no grupo "Chamados", com `chamados.ver` e a partir de 2 caracteres: "#1042 Impressora manchando" e, no caminho, "Marina Lopes · Em atendimento", com o rótulo do selo;
+- **o "Buscar nos chamados"** fica nos cabeçalhos do Início, de "Quem está com o quê" e dos Prazos (o m12, o m01, o m02 e o m05). É um campo de 260 px, com a lupa e o texto de exemplo, sem rótulo à vista, o `BuscaComResultados`, novo no kit, com a busca feita por fora:
+  - a partir de 2 caracteres, depois da pausa dos provedores (`tempos.busca`), ele pede a mesma busca e abre embaixo a lista, em duas linhas por chamado, como a do provedor, com o primeiro já escolhido;
+  - as setas andam pela lista, e Enter ou o clique abrem o chamado e limpam o campo. Esc fecha a lista;
+  - sem resultado, a lista diz "Nenhum chamado com “impressora”.", e a falha diz a frase dela.
+  É a busca do sistema só com os chamados, para quem já está nas telas deles.
 
 ## Risks / Trade-offs
 

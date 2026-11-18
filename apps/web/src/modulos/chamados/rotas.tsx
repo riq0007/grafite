@@ -3,6 +3,7 @@ import { raiz } from '../../rotas/raiz.tsx';
 import { HorarioDaTi } from './ajustes/Horario.tsx';
 import { RespostasProntas } from './ajustes/RespostasProntas.tsx';
 import { TiposDeChamado } from './ajustes/Tipos.tsx';
+import { ChamadoAberto } from './chamado/ChamadoAberto.tsx';
 import { InicioDosChamados } from './Inicio.tsx';
 import { PrazosDosChamados } from './Prazos.tsx';
 import { QuemEstaComOQue } from './QuemEstaComOQue.tsx';
@@ -35,6 +36,13 @@ const prazos = createRoute({
   component: PrazosDosChamados,
 });
 
+// O chamado aberto, que as notificações, o quadro e a busca abrem.
+const chamado = createRoute({
+  getParentRoute: () => chamados,
+  path: '$numero',
+  component: ChamadoAberto,
+});
+
 const tipos = createRoute({
   getParentRoute: () => chamados,
   path: 'tipos',
@@ -58,6 +66,7 @@ export const rotasDosChamados = chamados.addChildren([
   inicio,
   quemEstaComOQue,
   prazos,
+  chamado,
   tipos,
   respostasProntas,
   horario,

@@ -1,6 +1,6 @@
 import { LifeBuoy } from 'lucide-react';
 import { definirModulo } from '../tipos.ts';
-import { ENTRADAS_DOS_CHAMADOS } from './busca.ts';
+import { ENTRADAS_DOS_CHAMADOS, provedorDosChamados } from './busca.ts';
 import {
   CHAVE_DA_FICHA_DO_CHAMADO,
   CHAVE_DOS_AJUSTES_DOS_CHAMADOS,
@@ -19,8 +19,8 @@ const aFicha = () => [CHAVE_DA_FICHA_DO_CHAMADO];
  * e "Telas atualizadas e módulo desligado"; change chamados-da-ti, design, decisão 14): o primeiro
  * do dock e do celular, antes do Início, com a boia, para quem vê, atende ou configura os chamados,
  * e a primeira tela ao entrar de quem os vê ou os atende. O menu tem as telas de ver e, depois de
- * uma linha, as de configurar, cada uma a quem tem a permissão dela; na busca, as telas e a ação de
- * abrir um chamado, a quem atende. Os eventos dos chamados e dos ajustes relêem as telas deles, e
+ * uma linha, as de configurar, cada uma a quem tem a permissão dela; na busca, as telas, a ação de
+ * abrir um chamado, a quem atende, e os chamados, pelo número ou pelo título, a quem os vê. Os eventos dos chamados e dos ajustes relêem as telas deles, e
  * os das outras capacidades, o que as telas mostram delas.
  */
 export const chamados = definirModulo({
@@ -53,7 +53,7 @@ export const chamados = definirModulo({
     },
     { rotulo: 'Horário da TI', destino: '/chamados/horario', permissoes: PERMISSOES_DE_CONFIGURAR },
   ],
-  busca: { entradas: ENTRADAS_DOS_CHAMADOS },
+  busca: { entradas: ENTRADAS_DOS_CHAMADOS, provedores: [provedorDosChamados] },
   eventos: {
     'chamados.mudaram': osChamados,
     // O horário fecha os relógios dos chamados, e o tipo dá o nome e o prazo deles.

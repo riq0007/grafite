@@ -190,8 +190,16 @@ O chamado aberto SHALL ter, no cabeçalho:
 - à direita, o quadro do prazo:
   - "Prazo do tipo, 8 h, no horário da TI";
   - a situação em destaque, em mono;
-  - o detalhe: "Abriu às 07:40 · conta das 08:00 · vence às 16:00", "Parou às 09:21 · restam 1 h 44 min" ou, parado depois do prazo, "Parou às 09:40 · passou 20 min do prazo", no tempo do relógio;
+  - o detalhe: "Abriu às 07:40 · conta das 08:00 · vence às 16:00" (depois do prazo, "venceu às 16:00"), "Parou às 09:21 · restam 1 h 44 min" ou, parado depois do prazo, "Parou às 09:40 · passou 20 min do prazo", no tempo do relógio;
   - com a primeira resposta pendente, "Responder até 08:30", ou "Resposta atrasada desde 08:30".
+
+O chamado aberto SHALL responder no endereço `/chamados/<número>`, que as notificações dos chamados, os quadrados de "Quem está com o quê" e a busca abrem. O número que não é de um chamado que a conta vê SHALL dizer "Chamado não encontrado.".
+
+As ações SHALL ficar só com quem atende os locais do chamado:
+- "Transferir" SHALL listar as pessoas do "Passar para…", com os abertos de cada uma;
+- "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL mostrar o problema da OS, que começa com o título do chamado, para corrigir antes de abrir;
+- "Resolver" SHALL pedir "O que foi feito";
+- o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042." e "OS 13 aberta.", com "Abrir", e a recusa SHALL ficar com a frase dela.
 
 A conversa SHALL ficar numa coluna central, sem balão:
 - cada mensagem com quem escreveu e a hora;
@@ -221,6 +229,10 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 #### Scenario: Ver sem atender
 - **WHEN** Carla, que só vê os chamados, abre o #1042
 - **THEN** a tela mostra o chamado e a conversa, sem as ações e sem o campo de escrever
+
+#### Scenario: Chamado que a conta não vê
+- **WHEN** Bruno, que atende só Jundiaí, abre a notificação antiga do #1040, que passou para São Paulo
+- **THEN** a tela diz "Chamado não encontrado."
 
 ### Requirement: Campo de escrever
 
@@ -415,6 +427,12 @@ O provedor de busca dos chamados SHALL achar, no grupo "Chamados", até 8 chamad
 - pelas palavras do título, sem acento e em qualquer ordem.
 
 O chamado do número SHALL vir primeiro, os abertos antes dos resolvidos e, em cada grupo, o mais novo primeiro. Cada resultado SHALL mostrar o número, o título, quem pediu e a situação em texto, e Enter SHALL abrir o chamado. Com o módulo Chamados desligado, a busca SHALL NOT achar chamados.
+
+Os cabeçalhos do Início dos chamados, de "Quem está com o quê" e dos Prazos SHALL ter o campo "Buscar nos chamados", com a mesma busca: a partir de 2 caracteres, os mesmos resultados SHALL aparecer embaixo do campo, e Enter ou o clique SHALL abrir o chamado.
+
+#### Scenario: Busca no cabeçalho
+- **WHEN** Ana digita "1042" no "Buscar nos chamados" de "Quem está com o quê" e tecla Enter
+- **THEN** o #1042 abre, e o campo fica vazio
 
 #### Scenario: Pelo número
 - **WHEN** Ana digita "1042" na busca

@@ -3,13 +3,13 @@
 // escolha de um item, e devolve o foco a quem o abriu. Os itens são os mesmos do menu com submenu:
 // o item com `itens` abre a lista dele, com o mesmo teclado. A ação fica em cada item, como nos
 // menus da casca, porque a do menu de fora não chega ao submenu.
-import { useRef } from 'react';
+import { Fragment, useRef } from 'react';
 import { Menu as MenuDoReactAria } from 'react-aria-components';
 import { createPortal } from 'react-dom';
 import estilosDoFlutuante from '../flutuante/Flutuante.module.css';
 import { PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import estilos from './Menu.module.css';
-import { ItemDeMenu, Submenu } from './Menu.tsx';
+import { ItemDeMenu, Separador, Submenu } from './Menu.tsx';
 
 /** Um item que age quando escolhido. */
 export interface AcaoDoMenuDeContexto {
@@ -20,6 +20,8 @@ export interface AcaoDoMenuDeContexto {
   destrutivo?: boolean;
   /** Texto de apoio abaixo do nome, como "2 abertos". */
   descricao?: string;
+  /** Uma linha antes do item, que o separa dos de cima, como as ações depois do "Abrir". */
+  separadoAntes?: boolean;
 }
 
 /** Um item que abre um submenu, com o nome do item, como "Passar para…". */
@@ -27,6 +29,8 @@ export interface SubmenuDoMenuDeContexto {
   id: string;
   rotulo: string;
   itens: readonly AcaoDoMenuDeContexto[];
+  /** Uma linha antes do item, que o separa dos de cima. */
+  separadoAntes?: boolean;
 }
 
 export type ItemDoMenuDeContexto = AcaoDoMenuDeContexto | SubmenuDoMenuDeContexto;
@@ -103,15 +107,16 @@ export function MenuDeContexto({
           className={estilos.menu}
           onClose={fechar}
         >
-          {itens.map((item) =>
-            'itens' in item ? (
-              <Submenu key={item.id} rotulo={item.rotulo}>
-                {item.itens.map(acao)}
-              </Submenu>
-            ) : (
-              acao(item)
-            ),
-          )}
+          {itens.map((item) => (
+            <Fragment key={item.id}>
+              {item.separadoAntes && <Separador />}
+              {'itens' in item ? (
+                <Submenu rotulo={item.rotulo}>{item.itens.map(acao)}</Submenu>
+              ) : (
+                acao(item)
+              )}
+            </Fragment>
+          ))}
         </MenuDoReactAria>
       </PainelFlutuante>
     </>

@@ -22,6 +22,7 @@ import { iconeDoTipo, SERIE_DO_ICONE, serieDaConta } from './cores.ts';
 import { ICONES_DOS_TIPOS_DE_CHAMADO } from './icones.ts';
 import estilos from './Pecas.module.css';
 import { seloDoPrazo } from './prazo.ts';
+import { ROTULO_DA_SITUACAO } from './situacoes.ts';
 
 interface DoSelo {
   rotulo: string;
@@ -37,10 +38,14 @@ const SELOS = {
   estourado: { rotulo: 'Estourado', situacao: 'critico', icone: CircleAlert },
   'ate-2-horas': { rotulo: 'Vencem em até 2 h', situacao: 'atencao', icone: Clock },
   parado: { rotulo: 'Relógio parado', situacao: 'neutra', icone: Hourglass },
-  triagem: { rotulo: 'Na triagem', situacao: 'neutra', icone: Inbox },
-  'em-atendimento': { rotulo: 'Em atendimento', situacao: 'info', icone: Headset },
-  aguardando: { rotulo: 'Aguardando o colaborador', situacao: 'info', icone: Hourglass },
-  resolvido: { rotulo: 'Resolvido', situacao: 'sucesso', icone: CircleCheck },
+  triagem: { rotulo: ROTULO_DA_SITUACAO.triagem, situacao: 'neutra', icone: Inbox },
+  'em-atendimento': {
+    rotulo: ROTULO_DA_SITUACAO['em-atendimento'],
+    situacao: 'info',
+    icone: Headset,
+  },
+  aguardando: { rotulo: ROTULO_DA_SITUACAO.aguardando, situacao: 'info', icone: Hourglass },
+  resolvido: { rotulo: ROTULO_DA_SITUACAO.resolvido, situacao: 'sucesso', icone: CircleCheck },
   'em-uso': { rotulo: 'Em uso', situacao: 'sucesso', icone: CircleCheck },
   inativo: { rotulo: 'Inativo', situacao: 'neutra', icone: Circle },
   'so-a-ti-abre': { rotulo: 'Só a TI abre', situacao: 'info', icone: Lock },
@@ -127,6 +132,11 @@ export function SeloDoPrazo({ situacao }: { situacao: SituacaoDoPrazo | null }) 
   );
 }
 
+/** O ícone do estado do prazo, o mesmo do selo; sem o grupo, no prazo ilegível, o relógio. */
+export function IconeDoPrazo({ grupo, tamanho }: { grupo: GrupoDoPrazo | null; tamanho?: number }) {
+  return <Icone icone={grupo ? ICONE_DO_GRUPO[grupo] : Clock} tamanho={tamanho} />;
+}
+
 /** As medidas que não se partem: "35 min", "17 h", "2 d" e "menos de 1 min". */
 const MEDIDA = /(menos de 1 min|\d+ (?:min|h|d)\b)/;
 
@@ -183,7 +193,8 @@ export function SiglaDaPessoa({
   nome,
   pequena = false,
 }: {
-  conta: string;
+  /** A conta de quem atende, que dá a série; nula, como a de quem pediu, o círculo neutro. */
+  conta: string | null;
   nome: string;
   pequena?: boolean;
 }) {
@@ -191,7 +202,7 @@ export function SiglaDaPessoa({
     <span
       className={estilos.sigla}
       aria-hidden="true"
-      data-serie={serieDaConta(conta)}
+      data-serie={conta === null ? undefined : serieDaConta(conta)}
       data-tamanho={pequena ? 'pequena' : undefined}
     >
       {iniciais(nome)}

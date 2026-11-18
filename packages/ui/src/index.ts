@@ -120,6 +120,11 @@ export {
   type PropsDoBotaoAlternavel,
 } from './componentes/botao/BotaoAlternavel.tsx';
 export {
+  BuscaComResultados,
+  type PropsDaBuscaComResultados,
+  type ResultadoDaBuscaComResultados,
+} from './componentes/busca/BuscaComResultados.tsx';
+export {
   BuscaComSugestoes,
   type PropsDaBusca,
   type SugeridasDaBusca,

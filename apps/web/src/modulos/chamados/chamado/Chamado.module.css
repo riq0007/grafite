@@ -1,0 +1,204 @@
+/*
+ * O chamado aberto (m03): a raiz pede a janela inteira (`data-janela-inteira`) e vai até as bordas,
+ * por cima do respiro da janela. O cabeçalho é uma faixa de borda a borda: a trilha no alto, o
+ * título e os dados do chamado, as ações embaixo, e o quadro do prazo à direita das duas linhas.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+.cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--esp-2) var(--esp-6);
+  align-items: center;
+  padding: var(--esp-3) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.estado {
+  margin: var(--esp-4) var(--respiro);
+}
+
+p.estado {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A trilha: "Chamados › Acesso e senha › #1041". */
+.trilha {
+  grid-column: 1 / -1;
+  font-size: var(--texto-rotulo);
+}
+
+.trilha ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trilha li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.trilha a {
+  border-radius: var(--raio-controle);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.trilha a:hover {
+  text-decoration: underline;
+}
+
+.trilha a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.numero,
+.numeroDoTitulo,
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O número em mono e o título, no tamanho grande do m03. */
+.identidade {
+  min-width: 0;
+}
+
+.identidade > h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--esp-3);
+  margin: 0;
+  font-size: var(--texto-titulo-grande);
+  letter-spacing: -0.015em;
+}
+
+.numeroDoTitulo {
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-normal);
+  letter-spacing: 0;
+}
+
+/* O selo, o tipo, quem pediu e quem atende. */
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-4);
+  margin-top: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+.tipo,
+.quem {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--esp-1) * 1.5);
+  white-space: nowrap;
+}
+
+.quem b {
+  font-weight: var(--peso-forte);
+}
+
+/* O quadro do prazo, à direita do título e das ações. */
+.prazo {
+  display: grid;
+  grid-row: 2 / span 2;
+  grid-column: 2;
+  align-self: center;
+  justify-items: end;
+  gap: 2px;
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-afundada);
+}
+
+.cabecalho[data-sem-acoes] .prazo {
+  grid-row: 2;
+}
+
+.linhaDoPrazo {
+  font-size: var(--texto-rotulo);
+}
+
+.linhaDoPrazo[data-atrasada] {
+  color: var(--cor-atencao);
+  font-weight: var(--peso-forte);
+}
+
+.destaque {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.destaque > svg {
+  color: var(--cor-info);
+}
+
+.prazo[data-marca="atencao"] {
+  border-color: var(--cor-atencao-borda);
+  background: var(--cor-atencao-fundo);
+}
+
+.prazo[data-marca="atencao"] .destaque,
+.prazo[data-marca="atencao"] .destaque > svg {
+  color: var(--cor-atencao);
+}
+
+.prazo[data-marca="critico"] {
+  border-color: var(--cor-critico-borda);
+  background: var(--cor-critico-fundo);
+}
+
+.prazo[data-marca="critico"] .destaque,
+.prazo[data-marca="critico"] .destaque > svg {
+  color: var(--cor-critico);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/* Na janela estreita, o quadro do prazo desce para baixo das ações. */
+@media (max-width: 760px) {
+  .cabecalho {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prazo,
+  .cabecalho[data-sem-acoes] .prazo {
+    grid-row: auto;
+    grid-column: 1;
+    justify-items: start;
+  }
+}
