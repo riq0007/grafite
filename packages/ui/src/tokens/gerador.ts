@@ -8,7 +8,14 @@ import {
   TINTA_DA_SITUACAO,
   TINTA_DO_ROTULO_NEUTRO,
 } from './escalas.ts';
-import { distancia, distanciaNoCroma, type Oklch, oklchParaHex, paraOklch } from './oklch.ts';
+import {
+  distancia,
+  distanciaNoCroma,
+  type Oklch,
+  oklchParaHex,
+  oklchParaHexCortando,
+  paraOklch,
+} from './oklch.ts';
 import {
   type CoresDoDestaque,
   type CoresDoTema,
@@ -359,6 +366,55 @@ export function gerarSituacoes(tema: TemaGerado): Record<IdDaSituacao, CoresDaSi
     atencao: gerar(MATIZES_DAS_SITUACOES.atencao),
     critico: gerar(MATIZES_DAS_SITUACOES.critico),
     info: gerar(MATIZES_DAS_SITUACOES.info),
+  };
+}
+
+/**
+ * As cores da aba dos chamados (spec design-tokens, "Cores da aba"; change chamados-da-ti, design,
+ * decisão 16), as misturas do mockup aprovado: o fundo da faixa e do que se escolhe, o fundo 2 das
+ * pílulas da trilha, o bloco de quem pede, o texto por cima, o contorno da moldura e dos ícones e a
+ * atenção dos selos, com o texto sobre ela.
+ */
+export interface CoresDaAbaGerada {
+  fundo: string;
+  fundo2: string;
+  bloco: string;
+  texto: string;
+  contorno: string;
+  atencao: string;
+  sobreAtencao: string;
+}
+
+/** A luminosidade e o croma de cada cor da aba, como no `ch3-aba.css` do mockup. */
+export const LUZ_DA_ABA = {
+  fundo: { l: 0.42, c: 0.16 },
+  fundo2: { l: 0.34, c: 0.13 },
+  bloco: { l: 0.49, c: 0.165 },
+  texto: { l: 0.985, c: 0.012 },
+  contorno: { l: 0.8, c: 0.1 },
+  atencao: { l: 0.8, c: 0.145 },
+  sobreAtencao: { l: 0.2, c: 0.04 },
+} as const;
+
+/**
+ * A aba na matiz da informação, e a atenção dela na matiz da atenção, com os canais cortados como o
+ * navegador mostrou o mockup aprovado. Nos temas claros, o contorno claro sumiria nas superfícies:
+ * ele é o próprio fundo, como o mockup faz no Papel.
+ */
+export function gerarAba(tema: Pick<TemaGerado, 'tom'>): CoresDaAbaGerada {
+  const na = (parte: keyof typeof LUZ_DA_ABA, matiz: number) =>
+    oklchParaHexCortando({ ...LUZ_DA_ABA[parte], h: matiz });
+  const info = MATIZES_DAS_SITUACOES.info.matiz;
+  const atencao = MATIZES_DAS_SITUACOES.atencao.matiz;
+  const fundo = na('fundo', info);
+  return {
+    fundo,
+    fundo2: na('fundo2', info),
+    bloco: na('bloco', info),
+    texto: na('texto', info),
+    contorno: tema.tom === 'escuro' ? na('contorno', info) : fundo,
+    atencao: na('atencao', atencao),
+    sobreAtencao: na('sobreAtencao', atencao),
   };
 }
 

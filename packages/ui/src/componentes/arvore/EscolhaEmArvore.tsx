@@ -120,7 +120,7 @@ export function EscolhaEmArvore({
 
   return (
     <div className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}>
-      <span id={ids.rotulo} className={estilosDoCampo.rotulo}>
+      <span id={ids.rotulo} className={estilosDoCampo.rotulo} data-parte="rotulo">
         {rotulo}
         {obrigatorio && (
           <span className={estilosDoCampo.obrigatorio} aria-hidden="true">

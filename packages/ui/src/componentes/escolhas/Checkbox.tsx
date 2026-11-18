@@ -72,7 +72,9 @@ export function GrupoDeCheckboxes({
       className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}
     >
       <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} marcaLida />
-      <div className={estilos.opcoesDoGrupo}>{children}</div>
+      <div className={estilos.opcoesDoGrupo} data-parte="opcoes">
+        {children}
+      </div>
       {descricao && <DescricaoDoCampo>{descricao}</DescricaoDoCampo>}
       <ErroDoCampo erro={erro} tipo="escolha" />
     </CheckboxGroup>

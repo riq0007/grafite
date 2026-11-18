@@ -1,6 +1,10 @@
 // Escalas não cromáticas: raio, densidade, espaço, tipografia, movimento e material.
 
-/** Fatores de raio por elemento, aplicados sobre a base ajustável (Apêndice A.4). */
+/**
+ * Fatores de raio por elemento, aplicados sobre a base ajustável (Apêndice A.4). A cápsula é só das
+ * peças da aba dos chamados, a exceção nomeada do ANTISLOP (seção 15): com qualquer base acima de
+ * zero, ela passa da meia altura da peça, e na base zero fica reta, como o resto.
+ */
 export const fatoresDeRaio = {
   janela: 1,
   controle: 0.58,
@@ -10,6 +14,7 @@ export const fatoresDeRaio = {
   miniatura: 0.58,
   rotulo: 0.42,
   aviso: 1,
+  capsula: 100,
 } as const;
 
 export type ElementoComRaio = keyof typeof fatoresDeRaio;

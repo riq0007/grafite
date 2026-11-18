@@ -1094,6 +1094,7 @@ Cada destaque sai da matiz e do croma e é gerado para cada tema:
   - `tinta-preto`, que é um neutro, visível nos temas escuros.
 
   Todas têm 3:1 contra a `superficie`.
+- **A aba dos chamados** (change chamados-da-ti, decisão 16): `aba-fundo` (luminosidade 0,42 e croma 0,16), `aba-fundo-2` (0,34 e 0,13), `aba-bloco` (0,49 e 0,165) e `aba-texto` (0,985 e 0,012), na matiz da informação; `aba-contorno`, em 0,8 e 0,1 nos temas escuros e o próprio `aba-fundo` nos claros; e `aba-atencao` (0,8 e 0,145) e `aba-sobre-atencao` (0,2 e 0,04), na matiz da atenção. Fora do sRGB, os canais são cortados, como o navegador mostrou o mockup aprovado (o `aba-fundo` fica em #004f9d). O `aba-texto` tem 4,5:1 sobre os fundos e o bloco, e o `aba-contorno`, 3:1 contra as superfícies.
 
 ### A.4 Raios
 
@@ -1109,6 +1110,7 @@ Derivados da base `r` (padrão 10 px desde o D1, ajustável de 0 a 24):
 | Miniatura | 0,58 `r` |
 | Rótulo | 0,42 `r` |
 | Aviso | `r` |
+| Cápsula | 100 `r`: só nas peças da aba dos chamados, a exceção nomeada do ANTISLOP (seção 15); reta na base zero |
 
 ### A.5 Densidade
 

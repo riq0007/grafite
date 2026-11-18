@@ -5,8 +5,8 @@ Gerado por `pnpm tokens:contraste` (`packages/ui/src/tokens/relatorio-contraste.
 | | |
 |---|---|
 | Combinações | 6 temas × 4 destaques = 24 |
-| Pares de uso | 47 |
-| Medições | 1128 |
+| Pares de uso | 56 |
+| Medições | 1344 |
 | Reprovadas | 0 |
 
 ## Menor razão de cada uso
@@ -62,6 +62,15 @@ Entre as 24 combinações. Texto exige 4,5:1, e o texto secundário sobre a afun
 | texto de informação sobre o material (aviso e menu) | 4,50:1 | 6,47:1 | nevoa / grafite |
 | rótulo neutro sobre a superfície tingida | 4,50:1 | 6,24:1 | grafite / grafite |
 | rótulo neutro sobre a superfície 2 tingida | 4,50:1 | 5,53:1 | grafite / grafite |
+| texto da aba sobre o fundo da aba (faixa, número e escolhido) | 4,50:1 | 7,71:1 | grafite / grafite |
+| texto da aba sobre o fundo da aba pressionado (tipo, cartão e chip escolhidos) | 4,50:1 | 6,15:1 | oled / grafite |
+| texto da aba sobre o fundo 2 da aba (pílula da trilha) | 4,50:1 | 10,90:1 | grafite / grafite |
+| texto da aba sobre o bloco da aba (quem pede) | 4,50:1 | 5,74:1 | grafite / grafite |
+| texto da aba sobre o bloco da aba pressionado (Trocar) | 4,50:1 | 4,76:1 | oled / grafite |
+| texto sobre a atenção da aba (selo) | 4,50:1 | 9,57:1 | grafite / grafite |
+| contorno da aba contra a superfície | 3,00:1 | 7,91:1 | nevoa / grafite |
+| contorno da aba contra a superfície 2 (ícone do tipo e "Nenhum") | 3,00:1 | 7,20:1 | alto-contraste / grafite |
+| contorno da aba contra a superfície elevada (moldura) | 3,00:1 | 8,06:1 | nevoa / grafite |
 
 ## Como o contraste é garantido
 

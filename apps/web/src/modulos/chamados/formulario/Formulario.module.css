@@ -138,3 +138,162 @@
   flex-wrap: wrap;
   gap: var(--esp-2);
 }
+
+/*
+ * O visual da aba, na prévia do colaborador (decisão 16): a pergunta numerada no círculo cheio na
+ * cor da aba, sobre o recuo do rótulo; a continuação colada à pergunta de que depende, com as
+ * escolhas em chips na linha do rótulo; fora dela, a Escolha única e o Sim ou não em cartões; e as
+ * Várias opções em chips, que são cápsulas, a exceção nomeada do ANTISLOP (seção 15). As cores são
+ * as da aba (--cor-aba-*). Os seletores levam o visual, para valer sobre as escolhas do kit sem
+ * depender da ordem do CSS.
+ */
+.formulario[data-visual="aba"] .campo {
+  position: relative;
+}
+
+.formulario[data-visual="aba"] .campo[data-continuacao] {
+  margin-block-start: calc(var(--esp-2) * -1);
+}
+
+.numero {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: grid;
+  place-items: center;
+  width: var(--esp-5);
+  height: var(--esp-5);
+  border-radius: 50%;
+  background: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O rótulo da pergunta numerada abre o espaço do número, na altura do círculo. */
+.formulario[data-visual="aba"] .campo:has(> .numero) [data-parte="rotulo"] {
+  align-items: center;
+  min-height: var(--esp-5);
+  padding-inline-start: calc(var(--esp-5) + var(--esp-2));
+}
+
+.formulario[data-visual="aba"] .cartoes [data-parte="opcoes"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: stretch;
+}
+
+.formulario[data-visual="aba"] .chips [data-parte="opcoes"] {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Na continuação, o rótulo menor e os chips na mesma linha, como o m05; a descrição e a recusa
+   ficam na linha de baixo. */
+.formulario[data-visual="aba"] .campo[data-continuacao] .chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.formulario[data-visual="aba"] .campo[data-continuacao] .chips > [data-parte="rotulo"] {
+  margin-inline-end: var(--esp-1);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.formulario[data-visual="aba"]
+  .campo[data-continuacao]
+  .chips
+  > :not([data-parte="rotulo"], [data-parte="opcoes"]) {
+  flex-basis: 100%;
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip) {
+  align-items: center;
+  min-height: var(--altura-controle);
+  border: 1px solid var(--cor-linha-forte);
+  background-color: var(--cor-superficie-2);
+  font-weight: var(--peso-forte);
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.formulario[data-visual="aba"] .cartao {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-dock);
+}
+
+.formulario[data-visual="aba"] .chip {
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-capsula);
+}
+
+/* O controle desenhado sai: o cartão e o chip são o controle, e o visto diz a escolha. */
+.formulario[data-visual="aba"]
+  :is(.cartao, .chip)
+  > :is([data-parte="bolinha"], [data-parte="caixa"]) {
+  display: none;
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-selected] {
+  border-color: var(--cor-aba-fundo);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+/* O "Nenhum" escolhido é a falta de resposta: a borda e o visto, sem o preenchimento. */
+.formulario[data-visual="aba"] .nenhum[data-selected] {
+  border-color: var(--cor-aba-contorno);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-invalid] {
+  border-color: var(--cor-critico);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O visto vem antes das variações, para cada uma valer sobre ele. */
+.visto {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--esp-5);
+  height: var(--esp-5);
+  border-radius: 50%;
+  background-color: var(--cor-aba-texto);
+  color: var(--cor-aba-fundo);
+}
+
+/* No chip, o visto é só o traço, na cor do texto. */
+.chip .visto {
+  width: auto;
+  height: auto;
+  background-color: transparent;
+  color: inherit;
+}
+
+/* No cartão do "Nenhum", sem o preenchimento por trás, o visto é cheio na cor da aba; no chip,
+   fica o traço. */
+.formulario[data-visual="aba"] .cartao.nenhum .visto {
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}

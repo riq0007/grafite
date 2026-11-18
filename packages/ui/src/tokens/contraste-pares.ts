@@ -269,6 +269,58 @@ export const PARES: Par[] = [
     fundo: (c) => sobre(comAlfa(c.texto2 ?? '', TINTA_DO_ROTULO_NEUTRO), c.superficie2 ?? ''),
     minimo: TEXTO,
   },
+  // As cores da aba dos chamados (spec design-tokens, "Cores da aba").
+  {
+    uso: 'texto da aba sobre o fundo da aba (faixa, número e escolhido)',
+    frente: (c) => c.abaTexto ?? '',
+    fundo: (c) => c.abaFundo ?? '',
+    minimo: TEXTO,
+  },
+  {
+    uso: 'texto da aba sobre o fundo da aba pressionado (tipo, cartão e chip escolhidos)',
+    frente: (c) => c.abaTexto ?? '',
+    fundo: (c) => sobre(c.pressionado ?? '', c.abaFundo ?? ''),
+    minimo: TEXTO,
+  },
+  {
+    uso: 'texto da aba sobre o fundo 2 da aba (pílula da trilha)',
+    frente: (c) => c.abaTexto ?? '',
+    fundo: (c) => c.abaFundo2 ?? '',
+    minimo: TEXTO,
+  },
+  {
+    uso: 'texto da aba sobre o bloco da aba (quem pede)',
+    frente: (c) => c.abaTexto ?? '',
+    fundo: (c) => c.abaBloco ?? '',
+    minimo: TEXTO,
+  },
+  // O "Trocar" fica dentro do bloco de quem pede, e o hover dele escurece ou clareia o bloco.
+  {
+    uso: 'texto da aba sobre o bloco da aba pressionado (Trocar)',
+    frente: (c) => c.abaTexto ?? '',
+    fundo: (c) => sobre(c.pressionado ?? '', c.abaBloco ?? ''),
+    minimo: TEXTO,
+  },
+  {
+    uso: 'texto sobre a atenção da aba (selo)',
+    frente: (c) => c.abaSobreAtencao ?? '',
+    fundo: (c) => c.abaAtencao ?? '',
+    minimo: TEXTO,
+  },
+  ...(
+    [
+      ['superficie', 'a superfície'],
+      ['superficie2', 'a superfície 2 (ícone do tipo e "Nenhum")'],
+      ['superficieElevada', 'a superfície elevada (moldura)'],
+    ] as const
+  ).map(
+    ([fundo, nome]): Par => ({
+      uso: `contorno da aba contra ${nome}`,
+      frente: (c) => c.abaContorno ?? '',
+      fundo: (c) => c[fundo] ?? '',
+      minimo: COMPONENTE,
+    }),
+  ),
 ];
 
 export function avaliar(cores: Cores, pares: Par[]): Resultado[] {
@@ -296,11 +348,18 @@ export function coresDaCombinacao(
       [`${id}Fundo`, situacao.fundo],
     ]),
   );
+  const aba = Object.fromEntries(
+    Object.entries(tema.aba).map(([nome, cor]) => [
+      `aba${nome.charAt(0).toUpperCase()}${nome.slice(1)}`,
+      cor,
+    ]),
+  );
   return {
     ...tema.cores,
     ...camadasDeEstado(tema.cores),
     ...coresDoCursor(tema),
     ...situacoes,
+    ...aba,
     ...destaqueDoTema(idTema, idDestaque),
   };
 }

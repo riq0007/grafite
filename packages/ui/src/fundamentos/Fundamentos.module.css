@@ -256,6 +256,97 @@
   text-align: right;
 }
 
+/* Aba dos chamados: cada par em uso, como na tela da aba, com as cápsulas, a exceção nomeada. */
+.molduraDaAba {
+  display: grid;
+  overflow: hidden;
+  border: 2px solid var(--cor-aba-contorno);
+  border-radius: var(--raio-dock);
+  background: var(--cor-superficie-elevada);
+}
+
+.faixaDaAba {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-size: var(--texto-dado);
+}
+
+.pilulaDaAba {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--esp-8);
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-capsula);
+  background: var(--cor-aba-fundo-2);
+}
+
+.pilulaDaAba[data-atual] {
+  background: var(--cor-aba-texto);
+  color: var(--cor-aba-fundo-2);
+  font-weight: var(--peso-forte);
+}
+
+.quemDaAba {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-inline-start: auto;
+  padding: var(--esp-1) var(--esp-1) var(--esp-1) var(--esp-3);
+  border-radius: var(--raio-capsula);
+  background: var(--cor-aba-bloco);
+}
+
+.trocarDaAba {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--esp-8);
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-aba-texto);
+  border-radius: var(--raio-capsula);
+}
+
+.mioloDaAba {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  font-size: var(--texto-dado);
+}
+
+.tipoNovoDaAba {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px dashed var(--cor-aba-contorno);
+  border-radius: var(--raio-dock);
+  background: var(--cor-superficie-2);
+}
+
+.seloDaAba {
+  padding: 0 var(--esp-2);
+  border-radius: var(--raio-capsula);
+  background: var(--cor-aba-atencao);
+  color: var(--cor-aba-sobre-atencao);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+}
+
+.escolhidoDaAba {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-dock);
+  background: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-weight: var(--peso-forte);
+}
+
 /* Tipografia: a escala, com a medida de cada papel à esquerda. */
 .escala {
   display: grid;

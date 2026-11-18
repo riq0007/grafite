@@ -10,6 +10,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  coresDaAba,
   coresDaSituacao,
   coresDoDestaque,
   coresDosDados,
@@ -173,6 +174,7 @@ export function gerarCss(): string {
     ...coresDoTema(padrao),
     ...coresDaSituacao(padrao),
     ...coresDosDados(padrao),
+    ...coresDaAba(padrao),
     ...coresDoDestaque(destaqueDoTema('grafite', DESTAQUE_PADRAO)),
     ...medidasDaDensidade(densidades.normal),
   ]);
@@ -181,6 +183,7 @@ export function gerarCss(): string {
       ...coresDoTema(tema),
       ...coresDaSituacao(tema),
       ...coresDosDados(tema),
+      ...coresDaAba(tema),
       ...coresDoDestaque(destaqueDoTema(id, DESTAQUE_PADRAO)),
     ])}`;
   }
@@ -336,6 +339,14 @@ export function gerarDtcg() {
       padrao.dados.tintas[tinta],
       `--cor-tinta-${tinta}`,
       porTema((id) => temas[id].dados.tintas[tinta]),
+    );
+  }
+  for (const nome of Object.keys(padrao.aba) as Array<keyof Tema['aba']>) {
+    cor[`aba-${kebab(nome)}`] = token(
+      'color',
+      padrao.aba[nome],
+      `--cor-aba-${kebab(nome)}`,
+      porTema((id) => temas[id].aba[nome]),
     );
   }
   cor.neutro = token('color', '{cor.texto-2}', '--cor-neutro');

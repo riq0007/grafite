@@ -16,9 +16,11 @@ import {
   type CitadosDoFormulario,
   camposQueAparecem,
   contextoDoEstado,
+  continuacoesDasPerguntas,
   descricaoDoCampo,
   ESTADO_VAZIO,
   lerNumero,
+  numerosDasPerguntas,
   origemDasSugestoes,
   responderNoEstado,
   respostaDoCampo,
@@ -214,6 +216,128 @@ describe('camposQueAparecem', () => {
       ).toBe(true);
     }
     expect(camposQueAparecem(IMPRESSORA, MANCHANDO, 'chamado', true)).toHaveLength(6);
+  });
+});
+
+describe('numerosDasPerguntas', () => {
+  it('numera as que aparecem, na ordem, e o campo com condição fica sem número', () => {
+    expect(
+      numerosDasPerguntas(camposQueAparecem(IMPRESSORA, { problema: 'manchando' }, 'pessoa')),
+    ).toEqual([1, 2, null, 3]);
+  });
+
+  it('o campo da condição que some não muda a numeração', () => {
+    expect(numerosDasPerguntas(camposQueAparecem(IMPRESSORA, {}, 'pessoa'))).toEqual([1, 2, 3]);
+  });
+
+  it('o campo com condição no fim, ou dois seguidos, também ficam sem número', () => {
+    const formulario: Formulario = {
+      titulo: { comecaPeloTipo: true, campoId: null },
+      campos: [
+        campo('a', 'sim-ou-nao', 'A?'),
+        campo('b', 'texto-curto', 'B?', {
+          condicao: [{ campoId: 'a', juncao: null, valor: true }],
+        }),
+        campo('c', 'texto-curto', 'C?', {
+          condicao: [{ campoId: 'a', juncao: null, valor: true }],
+        }),
+        campo('d', 'sim-ou-nao', 'D?'),
+        campo('e', 'texto-curto', 'E?', {
+          condicao: [{ campoId: 'd', juncao: null, valor: false }],
+        }),
+      ],
+    };
+    const aparecem = formulario.campos.map((deles) => ({ campo: deles, editavel: true }));
+    expect(numerosDasPerguntas(aparecem)).toEqual([1, null, null, 2, null]);
+  });
+
+  it('sem campos, nenhum número', () => {
+    expect(numerosDasPerguntas([])).toEqual([]);
+  });
+});
+
+describe('continuacoesDasPerguntas', () => {
+  const aparecem = (...campos: CampoDoFormulario[]) =>
+    campos.map((deles) => ({ campo: deles, editavel: true }));
+  const quando = (campoId: string) => [{ campoId, juncao: null, valor: true }];
+
+  it('o campo da condição que vem logo depois da base se cola a ela, como no m05', () => {
+    expect(
+      continuacoesDasPerguntas(camposQueAparecem(IMPRESSORA, { problema: 'manchando' }, 'pessoa')),
+    ).toEqual([false, false, true, false]);
+  });
+
+  it('com a base mais acima, o campo não se cola à pergunta de cima', () => {
+    expect(
+      continuacoesDasPerguntas(
+        aparecem(
+          campo('a', 'sim-ou-nao', 'A?'),
+          campo('b', 'texto-curto', 'B?'),
+          campo('c', 'texto-curto', 'C?', { condicao: quando('a') }),
+        ),
+      ),
+    ).toEqual([false, false, false]);
+  });
+
+  it('as continuações da mesma pergunta, em cadeia ou lado a lado, ficam coladas', () => {
+    expect(
+      continuacoesDasPerguntas(
+        aparecem(
+          campo('a', 'sim-ou-nao', 'A?'),
+          campo('b', 'sim-ou-nao', 'B?', { condicao: quando('a') }),
+          campo('c', 'texto-curto', 'C?', { condicao: quando('a') }),
+          campo('d', 'texto-curto', 'D?', { condicao: quando('b') }),
+          campo('e', 'sim-ou-nao', 'E?'),
+          campo('f', 'texto-curto', 'F?', { condicao: quando('e') }),
+        ),
+      ),
+    ).toEqual([false, true, true, true, false, true]);
+  });
+
+  it('o campo que não se cola começa a própria continuação', () => {
+    // O c depende do a, longe dele; o d depende do c, logo depois.
+    expect(
+      continuacoesDasPerguntas(
+        aparecem(
+          campo('a', 'sim-ou-nao', 'A?'),
+          campo('b', 'texto-curto', 'B?'),
+          campo('c', 'sim-ou-nao', 'C?', { condicao: quando('a') }),
+          campo('d', 'texto-curto', 'D?', { condicao: quando('c') }),
+        ),
+      ),
+    ).toEqual([false, false, false, true]);
+  });
+
+  it('na condição com "ou quando", basta uma das bases logo acima', () => {
+    expect(
+      continuacoesDasPerguntas(
+        aparecem(
+          campo('a', 'sim-ou-nao', 'A?'),
+          campo('b', 'sim-ou-nao', 'B?'),
+          campo('c', 'texto-curto', 'C?', {
+            condicao: [
+              { campoId: 'a', juncao: null, valor: true },
+              { campoId: 'b', juncao: 'ou', valor: true },
+            ],
+          }),
+        ),
+      ),
+    ).toEqual([false, false, true]);
+  });
+
+  it('o primeiro campo, mesmo com condição, não se cola a nada', () => {
+    expect(
+      continuacoesDasPerguntas(
+        aparecem(
+          campo('b', 'texto-curto', 'B?', { condicao: quando('a') }),
+          campo('c', 'texto-curto', 'C?'),
+        ),
+      ),
+    ).toEqual([false, false]);
+  });
+
+  it('sem campos, nenhuma', () => {
+    expect(continuacoesDasPerguntas([])).toEqual([]);
   });
 });
 

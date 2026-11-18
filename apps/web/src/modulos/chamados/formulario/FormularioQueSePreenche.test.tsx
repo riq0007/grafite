@@ -99,6 +99,7 @@ interface Desenho {
   servidor?: ServidorDeTeste;
   /** Na StrictMode, como o app: os efeitos montam, desmontam e montam de novo. */
   estrito?: boolean;
+  visual?: 'tela' | 'aba';
 }
 
 /**
@@ -1118,6 +1119,241 @@ describe('o campo Anexo', () => {
       (await laudo.findByRole('link', { name: 'Baixar laudo.pdf' })).getAttribute('href'),
     ).toBe('/api/chamados/anexos/f-9');
     expect(visto.estado.respostas).toEqual({ foto: ['f-1'], laudo: ['f-9'] });
+  });
+});
+
+describe('o visual da aba', () => {
+  const COR = campo('cor', 'escolha-unica', 'Qual cor?', {
+    opcoes: [
+      { id: 'preto', texto: 'Preto' },
+      { id: 'ciano', texto: 'Ciano' },
+    ],
+  });
+  const URGENCIA = campo('urgencia', 'escolha-unica', 'É urgente?', {
+    obrigatorio: true,
+    opcoes: [
+      { id: 'parou', texto: 'Sim, parou tudo' },
+      { id: 'da-para-esperar', texto: 'Dá para esperar' },
+    ],
+  });
+  const GARANTIA = campo('garantia', 'sim-ou-nao', 'Está na garantia?');
+  const PECAS = campo('pecas', 'varias-opcoes', 'Quais peças?', {
+    opcoes: [
+      { id: 'bandeja', texto: 'Bandeja' },
+      { id: 'tampa', texto: 'Tampa' },
+      { id: 'fusor', texto: 'Fusor' },
+    ],
+  });
+
+  /** O número de cada campo na tela, na ordem, ou nulo no campo sem número. */
+  const numeros = () =>
+    camposNaTela().map(
+      (id) => campoNaTela(id ?? '').querySelector('[data-parte="numero"]')?.textContent ?? null,
+    );
+  /** O texto de cada escolha do grupo, na ordem. */
+  const escolhasDe = (grupo: HTMLElement, papel: 'radio' | 'checkbox' = 'radio') =>
+    within(grupo)
+      .getAllByRole(papel)
+      .map((escolha) => escolha.closest('label')?.textContent);
+  /** O texto das escolhas do grupo que mostram o visto. */
+  const comVisto = (grupo: HTMLElement) =>
+    [...grupo.querySelectorAll('[data-parte="visto"]')].map(
+      (visto) => visto.closest('label')?.textContent,
+    );
+  /** A forma das escolhas do grupo na aba: em cartões ou em chips. */
+  const formaDe = (grupo: HTMLElement) => grupo.getAttribute('data-forma');
+  /** Os campos na tela que se colam à pergunta de cima. */
+  const continuacoes = () =>
+    camposNaTela().filter((id) => campoNaTela(id ?? '').hasAttribute('data-continuacao'));
+  const quando = (campoId: string) => [{ campoId, juncao: null, valor: true }];
+  const responderSim = (rotulo: string) =>
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: rotulo })).getByRole('radio', { name: 'Sim' }),
+    );
+
+  it('as perguntas numeradas na ordem, fora do nome lido, e o campo da condição sem número', () => {
+    desenhar({ quem: 'pessoa', visual: 'aba' });
+    expect(camposNaTela()).toEqual(['impressora', 'problema', 'foto']);
+    expect(numeros()).toEqual(['1', '2', '3']);
+    const numero = campoNaTela('problema').querySelector('[data-parte="numero"]');
+    expect(numero?.getAttribute('aria-hidden')).toBe('true');
+    const problema = screen.getByRole('radiogroup', { name: 'O que está acontecendo?' });
+    fireEvent.click(within(problema).getByRole('radio', { name: 'Manchando' }));
+    expect(camposNaTela()).toEqual(['impressora', 'problema', 'manchas', 'foto']);
+    expect(numeros()).toEqual(['1', '2', null, '3']);
+  });
+
+  it('na tela, sem números nem cartões', () => {
+    desenhar({ quem: 'pessoa' });
+    expect(numeros()).toEqual([null, null, null]);
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+  });
+
+  it('a Escolha única em cartões, com o visto na escolhida e o "Nenhum" por último no que não é exigido', () => {
+    const visto = desenhar({
+      formulario: formularioCom(COR, URGENCIA),
+      quem: 'pessoa',
+      visual: 'aba',
+    });
+    const cor = screen.getByRole('radiogroup', { name: 'Qual cor?' });
+    const urgencia = screen.getByRole('radiogroup', { name: 'É urgente?' });
+    expect(escolhasDe(cor)).toEqual(['Preto', 'Ciano', 'Nenhum']);
+    expect(escolhasDe(urgencia)).toEqual(['Sim, parou tudo', 'Dá para esperar']);
+    // Sem resposta, o que não é exigido fica no "Nenhum", como na lista da tela.
+    expect(within(cor).getByRole('radio', { name: 'Nenhum' })).toHaveProperty('checked', true);
+    expect(comVisto(urgencia)).toEqual([]);
+    fireEvent.click(within(cor).getByRole('radio', { name: 'Ciano' }));
+    expect(visto.estado.respostas).toEqual({ cor: 'ciano' });
+    expect(comVisto(cor)).toEqual(['Ciano']);
+    fireEvent.click(within(urgencia).getByRole('radio', { name: 'Dá para esperar' }));
+    expect(visto.estado.respostas).toEqual({ cor: 'ciano', urgencia: 'da-para-esperar' });
+    fireEvent.click(within(cor).getByRole('radio', { name: 'Nenhum' }));
+    expect(visto.estado.respostas).toEqual({ urgencia: 'da-para-esperar' });
+    expect(comVisto(cor)).toEqual(['Nenhum']);
+  });
+
+  it('o Sim ou não em cartões, com o "Nenhum" por último', () => {
+    const visto = desenhar({ formulario: formularioCom(GARANTIA), quem: 'pessoa', visual: 'aba' });
+    const garantia = screen.getByRole('radiogroup', { name: 'Está na garantia?' });
+    expect(escolhasDe(garantia)).toEqual(['Sim', 'Não', 'Nenhum']);
+    fireEvent.click(within(garantia).getByRole('radio', { name: 'Não' }));
+    expect(visto.estado.respostas).toEqual({ garantia: false });
+    expect(comVisto(garantia)).toEqual(['Não']);
+    fireEvent.click(within(garantia).getByRole('radio', { name: 'Sim' }));
+    expect(visto.estado.respostas).toEqual({ garantia: true });
+  });
+
+  it('o Sim ou não exigido, sem o "Nenhum"', () => {
+    desenhar({
+      formulario: formularioCom({ ...GARANTIA, obrigatorio: true }),
+      quem: 'pessoa',
+      visual: 'aba',
+    });
+    const garantia = screen.getByRole('radiogroup', { name: 'Está na garantia?' });
+    expect(escolhasDe(garantia)).toEqual(['Sim', 'Não']);
+  });
+
+  it('as Várias opções em chips, com o visto nas ligadas, na ordem das opções', () => {
+    const visto = desenhar({ formulario: formularioCom(PECAS), quem: 'pessoa', visual: 'aba' });
+    const pecas = screen.getByRole('group', { name: 'Quais peças?' });
+    expect(formaDe(pecas)).toBe('chips');
+    expect(escolhasDe(pecas, 'checkbox')).toEqual(['Bandeja', 'Tampa', 'Fusor']);
+    fireEvent.click(within(pecas).getByRole('checkbox', { name: 'Tampa' }));
+    fireEvent.click(within(pecas).getByRole('checkbox', { name: 'Bandeja' }));
+    expect(visto.estado.respostas).toEqual({ pecas: ['bandeja', 'tampa'] });
+    expect(comVisto(pecas)).toEqual(['Bandeja', 'Tampa']);
+  });
+
+  it('cada tipo de campo tem o rótulo que o número recua, e as escolhas, as opções que a aba arruma', () => {
+    const TODOS = formularioCom(
+      campo('sala', 'texto-curto', 'Qual sala?'),
+      campo('detalhes', 'texto-longo', 'Quer contar mais?'),
+      campo('folhas', 'numero', 'Quantas folhas?'),
+      campo('desde', 'data', 'Desde quando?'),
+      COR,
+      PECAS,
+      GARANTIA,
+      campo('impressora', 'ativo', 'Qual impressora?'),
+      campo('onde', 'local', 'Onde você está?'),
+      campo('quem-usa', 'pessoa', 'Quem usa o computador?'),
+      campo('foto', 'anexo', 'Uma foto ajuda'),
+    );
+    desenhar({
+      formulario: TODOS,
+      quem: 'pessoa',
+      visual: 'aba',
+      servidor: { 'GET /api/locais': () => Response.json(ARVORE) },
+    });
+    expect(numeros()).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']);
+    // Um rótulo só por campo, com o texto da pergunta: é ele que abre o espaço do número.
+    expect(
+      camposNaTela().map((id) =>
+        [...campoNaTela(id ?? '').querySelectorAll('[data-parte="rotulo"]')].map(
+          (rotulo) => rotulo.textContent,
+        ),
+      ),
+    ).toEqual(TODOS.campos.map((deles) => [deles.rotulo]));
+    const opcoesDe = (grupo: HTMLElement) =>
+      [...(grupo.querySelector('[data-parte="opcoes"]')?.querySelectorAll('label') ?? [])].map(
+        (opcao) => opcao.textContent,
+      );
+    expect(opcoesDe(screen.getByRole('radiogroup', { name: 'Qual cor?' }))).toEqual([
+      'Preto',
+      'Ciano',
+      'Nenhum',
+    ]);
+    expect(opcoesDe(screen.getByRole('group', { name: 'Quais peças?' }))).toEqual([
+      'Bandeja',
+      'Tampa',
+      'Fusor',
+    ]);
+    expect(opcoesDe(screen.getByRole('radiogroup', { name: 'Está na garantia?' }))).toEqual([
+      'Sim',
+      'Não',
+      'Nenhum',
+    ]);
+  });
+
+  it('o campo da condição logo depois da base se cola a ela, com as escolhas em chips, como no m05', () => {
+    const visto = desenhar({ quem: 'pessoa', visual: 'aba' });
+    const problema = screen.getByRole('radiogroup', { name: 'O que está acontecendo?' });
+    expect(continuacoes()).toEqual([]);
+    fireEvent.click(within(problema).getByRole('radio', { name: 'Manchando' }));
+    expect(continuacoes()).toEqual(['manchas']);
+    const manchas = screen.getByRole('radiogroup', { name: 'Onde as manchas aparecem?' });
+    expect([formaDe(problema), formaDe(manchas)]).toEqual(['cartoes', 'chips']);
+    // Exigida, a pergunta não tem o "Nenhum".
+    expect(escolhasDe(manchas)).toEqual(['Na borda', 'Na página toda']);
+    expect(comVisto(manchas)).toEqual([]);
+    fireEvent.click(within(manchas).getByRole('radio', { name: 'Na borda' }));
+    expect(visto.estado.respostas).toMatchObject({ problema: 'manchando', manchas: 'borda' });
+    expect(comVisto(manchas)).toEqual(['Na borda']);
+  });
+
+  it('com a base mais acima, o campo da condição fica no vão normal, em cartões', () => {
+    desenhar({
+      formulario: formularioCom(GARANTIA, campo('sala', 'texto-curto', 'Qual sala?'), {
+        ...COR,
+        condicao: quando('garantia'),
+      }),
+      quem: 'pessoa',
+      visual: 'aba',
+    });
+    responderSim('Está na garantia?');
+    expect(camposNaTela()).toEqual(['garantia', 'sala', 'cor']);
+    expect(numeros()).toEqual(['1', '2', null]);
+    expect(continuacoes()).toEqual([]);
+    expect(formaDe(screen.getByRole('radiogroup', { name: 'Qual cor?' }))).toBe('cartoes');
+  });
+
+  it('na continuação, o Sim ou não em chips, com o "Nenhum" por último, e as Várias opções em chips', () => {
+    const visto = desenhar({
+      formulario: formularioCom(
+        { ...GARANTIA, obrigatorio: true },
+        { ...PECAS, condicao: quando('garantia') },
+        campo('troca', 'sim-ou-nao', 'Precisa trocar?', { condicao: quando('garantia') }),
+      ),
+      quem: 'pessoa',
+      visual: 'aba',
+    });
+    responderSim('Está na garantia?');
+    expect(continuacoes()).toEqual(['pecas', 'troca']);
+    const pecas = screen.getByRole('group', { name: 'Quais peças?' });
+    const troca = screen.getByRole('radiogroup', { name: 'Precisa trocar?' });
+    expect([formaDe(pecas), formaDe(troca)]).toEqual(['chips', 'chips']);
+    expect(escolhasDe(troca)).toEqual(['Sim', 'Não', 'Nenhum']);
+    expect(comVisto(troca)).toEqual(['Nenhum']);
+    fireEvent.click(within(troca).getByRole('radio', { name: 'Não' }));
+    expect(visto.estado.respostas).toEqual({ garantia: true, troca: false });
+    expect(comVisto(troca)).toEqual(['Não']);
+  });
+
+  it('na tela, nenhum campo se cola e as escolhas não têm forma', async () => {
+    desenhar({ quem: 'pessoa' });
+    await escolherNaSelecao(/O que está acontecendo\?/, 'Manchando');
+    expect(camposNaTela()).toEqual(['impressora', 'problema', 'manchas', 'foto']);
+    expect(continuacoes()).toEqual([]);
+    expect(document.querySelector('[data-forma]')).toBeNull();
   });
 });
 

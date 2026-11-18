@@ -218,6 +218,24 @@ describe('gerarCss', () => {
     );
   });
 
+  it('cada tema traz as cores da aba, e a raiz, as do Grafite', () => {
+    const raiz = bloco(css, ':root');
+    expect(raiz['--cor-aba-fundo']).toBe(temas.grafite.aba.fundo);
+    expect(raiz['--cor-aba-fundo-2']).toBe(temas.grafite.aba.fundo2);
+    expect(raiz['--cor-aba-sobre-atencao']).toBe(temas.grafite.aba.sobreAtencao);
+    expect(bloco(css, '[data-theme="papel"]')['--cor-aba-contorno']).toBe(temas.papel.aba.fundo);
+    expect(bloco(css, '[data-theme="oled"]')['--cor-aba-contorno']).toBe(temas.oled.aba.contorno);
+    expect(gerarVariaveis()).toContain('--cor-aba-bloco');
+    expect(gerarDtcg().cor['aba-contorno']?.$extensions?.['grafite.modos']?.tema?.nevoa).toBe(
+      temas.nevoa.aba.contorno,
+    );
+  });
+
+  it('o raio da cápsula deriva da base, sem o limite do controle', () => {
+    expect(bloco(css, ':root')['--raio-capsula']).toBe('calc(var(--raio-base) * 100)');
+    expect(gerarDtcg().raio.capsula?.$value).toBe('1000px');
+  });
+
   it('cada tema traz o véu que escurece a tela atrás de diálogos e gavetas', () => {
     expect(bloco(css, '[data-theme="grafite"]')['--cor-veu']).toBe('rgba(0, 0, 0, 0.55)');
     expect(bloco(css, '[data-theme="nevoa"]')['--cor-veu']).toBe(temas.nevoa.cores.veu);

@@ -603,11 +603,48 @@ Os componentes da prévia ficam em `apps/web/src/modulos/chamados/previa/`:
 - o formulário com as condições.
 
 Eles usam:
-- a cor de preenchimento da informação nos tokens, para a faixa, sem token novo;
+- as cores da aba nos tokens (`--cor-aba-*`), feitas na matiz da informação, e o raio da cápsula (`--raio-capsula`);
 - o corpo neutro do tema;
 - as funções do formulário do domínio.
 
 A 19 (a aba, em Tauri 2) pode levá-los para um pacote comum quando precisar deles fora da web. Até lá, eles moram onde são usados.
+
+**As peças (tarefa 5.6)**, no visual da aba da 19 (r3-19, o m01 e o m05) em tamanho de prévia, como o `ch3-aba.css` da r3-16:
+- **a tela da aba** (`TelaDaAba`): uma região com o nome de quem a usa ("Como o colaborador vê"), a moldura com a borda na cor da aba, a faixa no alto, o miolo neutro do tema e, quando há, o rodapé de duas pontas, a frase à esquerda e a ação à direita;
+- **a faixa** (`FaixaDaAba`): a trilha em pílulas, a lista "Onde você está", separadas pela seta, com a atual marcada (`aria-current="step"`). A lista não é um marco de navegação, porque nenhum passo é um link, e a prévia não põe um marco a mais na página de quem administra. Depois vêm o passo em mono à direita ("1 de 3") e, quando há, quem pede: o avatar e "No nome de **Fernanda Rocha** (você)". O "Trocar" só aparece com a ação: na prévia do editor, sem ação, ele não entra, porque o botão que não faz nada engana;
+- **a grade dos tipos** (`GradeDosTipos`): a lista "Sobre o que é o chamado?", com "Aperte 1 a 8 ou clique" (o último atalho é o do último tipo, até o 9; com um tipo só, "Aperte 1 ou clique"), e os tipos em 4 colunas, cada um com o atalho no canto, o ícone na cor da aba (o mapa da decisão 6), o nome e a frase. Só os 9 primeiros têm atalho. "editando" e "novo" são selos cheios de atenção no canto de cima, à direita, e o "novo" tem a borda tracejada. Sem tipos, a grade diz "Nenhum tipo aparece para o colaborador.":
+  - com o `aoEscolher`, cada tipo é um botão, com o nome no nome lido, a frase na descrição e o atalho no `aria-keyshortcuts`; o escolhido fica cheio na cor da aba, com o `aria-pressed` e o visto no canto, para a escolha não ficar só na cor (no tipo com selo, o "editando" ou o "novo" ocupa o canto e já diz qual é). As teclas 1 a 9 escolhem pela posição, sem o Ctrl, o Alt ou o Command (o atalho é do sistema) e fora de um campo do formulário, o `input`, o `textarea`, o `select` e o texto editável (a tecla é do campo), pelas funções puras do `previa/atalhos.ts` (`tipoPeloAtalho`, `ultimoAtalho` e `atalhoDoEvento`), que a gaveta da 5.18 também usa;
+  - sem ele, a grade é só para ver, como na prévia do editor (m07 e m08). O "Aperte 1 a 8 ou clique" fica, como nos dois mockups: é o texto que o colaborador lê, e não um controle. O "Trocar" sai porque é um botão;
+- **o formulário no visual da aba** (`visual="aba"` do `FormularioQueSePreenche`, decisão 21):
+  - as perguntas numeradas na ordem das que aparecem, pelo `numerosDasPerguntas` do `formulario/estado.ts`: o número num círculo cheio na cor da aba, num elemento fora do nome lido (`aria-hidden`), sobre o recuo que o visual da aba dá ao rótulo (`data-parte="rotulo"`, que o rótulo do kit e os do módulo passam a ter, como a bolinha e a caixa);
+  - o campo que tem condição fica sem número, e a numeração não muda enquanto a pessoa responde. Ele se cola à pergunta de cima, como a continuação dela (o m05 da 19), só quando o campo que aparece antes dele é a base da condição ou outra continuação da mesma pergunta, pelo `continuacoesDasPerguntas` do `formulario/estado.ts`; fora disso, fica no vão normal, sem se prender à pergunta errada. Na continuação, a Escolha única, o Sim ou não e as Várias opções vão em chips, na linha do rótulo, como o "Onde as manchas aparecem?" do m05;
+  - fora da continuação, a Escolha única e o Sim ou não em cartões, duas colunas de rádios, com a escolhida cheia na cor da aba e o visto. O "Nenhum" do campo que não é exigido é o último cartão, e não o primeiro, como na lista da tela: na aba, a pessoa lê as respostas antes de pular a pergunta. Escolhido, como vem de saída, o "Nenhum" tem a borda na cor da aba e o visto, sem o preenchimento: é a falta de resposta e não pesa como uma. As Várias opções em chips, a ligada cheia, com o visto. As opções do grupo ganham o `data-parte="opcoes"` no kit, para a aba as arrumar;
+  - os outros campos ficam como na tela, com a marca de obrigatório: a peça é uma só, e a aba da S8 decide a dela.
+
+**As cores da aba** seguem as misturas `--proposta-aba-*` do mockup, por decisão do usuário de 18/11/2026 ("Seguir o mockup"), e viram tokens do tema (spec design-tokens, "Cores da aba"): o gerador as faz na matiz da informação (245), com a luminosidade e o croma do `ch3-aba.css`, e a verificação do contraste as confere nas 24 combinações e na varredura. A cor que não cabe no sRGB tem os canais cortados (`oklchParaHexCortando`), como o navegador mostrou o mockup: o fundo fica no #004f9d da captura aprovada. Com o croma reduzido das outras cores do gerador, ele ficaria no #005182, um azul mais apagado que o do mockup. Os componentes usam só os tokens:
+- o `--cor-aba-fundo` na faixa, no número, no tipo e na escolha escolhidos e no traço do visto;
+- o `--cor-aba-texto` sobre ele e no círculo do visto, que, no cartão do "Nenhum", fica nas cores trocadas;
+- o `--cor-aba-fundo-2` nas pílulas da trilha, com a atual nas cores trocadas;
+- o `--cor-aba-bloco` no bloco de quem pede;
+- o `--cor-aba-contorno` na moldura, nos ícones dos tipos, na borda tracejada do "novo" e na borda do "Nenhum" escolhido: a cor clara do mockup nos temas escuros e o próprio fundo nos claros, como o mockup faz no Papel, para o contorno passar de 3:1 sobre as superfícies claras;
+- o `--cor-aba-atencao` e o `--cor-aba-sobre-atencao` nos selos "editando" e "novo".
+
+As cores são as mesmas em todos os temas, fora o contorno, porque o mockup só tira a matiz do `--cor-info-forte`. Isso vale também no Alto contraste: o texto sobre o bloco fica em 5,74:1, no AA que a spec design-tokens pede a todo texto, sem chegar ao AAA. Foi decidido assim para a aba ser a mesma em qualquer tema, e o mockup não tem o Alto contraste.
+
+**Os raios e as medidas** vêm dos tokens do Grafite. As cápsulas do mockup entram como a exceção nomeada do ANTISLOP (seção 15), pela mesma decisão de 18/11:
+- a trilha, o "Trocar", os chips, os selos e o bloco de quem pede ficam no `--raio-capsula`, que deriva da base como os outros raios. A cápsula não gradua: de 1 px de base em diante ela já é cheia, e só a base zero a deixa reta;
+- a moldura e os cartões, o do tipo e o da escolha, ficam no `--raio-dock`, o maior raio da escala. Na base de fábrica, ele fica a meio pixel dos 14 px do tipo do mockup e a 1,5 px dos 16 px do cartão da escolha. A moldura fica 3,5 px abaixo dos 18 px do mockup, porque um raio só para ela seria um degrau novo na escala;
+- o círculo do número, o visto e o avatar são redondos.
+
+Os controles seguem com 32 px ou mais (`--altura-controle`).
+
+**O que fica para depois:** o "Como vai o chamado" do m05 da 19, o resumo dentro da aba, fica para a S8 (a aba em Tauri): a prévia do m11 mostra embaixo o "O que chegaria para a TI" (5.24). A marca do campo condicional na prévia do editor ("aparece só quando for Manchando") é da 5.23. O cartão da escolha mostra só o texto da opção, sem o ícone e a frase pequena dos cartões do m05: a opção do formulário só guarda o texto, e a falta é do modelo do formulário, e não da peça.
+
+O botão da aba é da 5.24, a primeira a pôr a ação no rodapé da tela da aba (o m11). São dois, os do `ch3-aba.css`:
+- o cheio, de 40 px, na cor da aba e em cápsula, do "Enviar para a TI";
+- o de contorno, das fotos.
+
+Até lá, a `TelaDaAba` recebe a ação pronta. Sem o botão da aba, entraria o botão do kit, na cor do destaque.
 
 ### 17. A busca
 

@@ -1,5 +1,6 @@
 // Um campo do formulário que se preenche (change chamados-da-ti, design, decisão 21): a entrada
-// conforme o tipo do campo, no visual dos campos do kit. O Ativo sugere os ativos da pessoa e busca
+// conforme o tipo do campo, no visual dos campos do kit ou, na prévia do colaborador, no da aba
+// (decisão 16), com as escolhas em cartões e em chips. O Ativo sugere os ativos da pessoa e busca
 // entre os que a conta vê; o Local sugere o local de trabalho dela; a Pessoa se busca pelo nome,
 // com o local de cada uma. O Anexo é o `AnexosDoCampo`.
 import {
@@ -15,9 +16,13 @@ import {
   CampoDeTexto,
   Checkbox,
   GrupoDeCheckboxes,
+  GrupoDeRadios,
+  Icone,
+  Radio,
   Selecao,
 } from '@grafite/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApi } from '../../../api/useApi.tsx';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
@@ -53,7 +58,20 @@ export interface PropsDoCampoQueSePreenche {
   quem: QuemPreenche;
   pessoa: PessoaDoFormulario | null;
   erro?: string;
+  /**
+   * O visual da tela, ou o da aba, na prévia do colaborador (decisão 16): a Escolha única e o Sim
+   * ou não em cartões, e as Várias opções em chips.
+   */
+  visual?: VisualDoFormulario;
+  /**
+   * Na aba, o campo que se cola à pergunta de cima, como a continuação dela (o m05 da 19): as
+   * escolhas, também a Escolha única e o Sim ou não, vão em chips, na linha do rótulo.
+   */
+  continuacao?: boolean;
 }
+
+/** O visual dos campos: o da tela, nos campos do kit, ou o da aba, na prévia do colaborador. */
+export type VisualDoFormulario = 'tela' | 'aba';
 
 /** O que todo campo do kit recebe. */
 interface Comum {
@@ -77,6 +95,8 @@ export function CampoQueSePreenche({
   quem,
   pessoa,
   erro,
+  visual = 'tela',
+  continuacao = false,
 }: PropsDoCampoQueSePreenche) {
   // O campo só da TI é opcional na abertura: só a resposta da pessoa é exigida aqui.
   const exigido = campo.obrigatorio && !campo.soDaTi;
@@ -88,6 +108,8 @@ export function CampoQueSePreenche({
   };
   const texto = typeof resposta === 'string' ? resposta : null;
   const mudarTexto = (valor: string) => responder(valor);
+  const naAba = visual === 'aba';
+  const forma: FormaDaEscolha = continuacao ? 'chips' : 'cartoes';
 
   switch (campo.tipo) {
     case 'texto-curto':
@@ -95,6 +117,20 @@ export function CampoQueSePreenche({
     case 'texto-longo':
       return <AreaDeTexto {...comum} value={texto ?? ''} onChange={mudarTexto} />;
     case 'escolha-unica':
+      if (naAba) {
+        return (
+          <EscolhaDaAba
+            forma={forma}
+            comum={comum}
+            opcoes={[
+              ...campo.opcoes.map((opcao) => ({ id: opcao.id, rotulo: opcao.texto })),
+              ...(exigido ? [] : [NENHUM]),
+            ]}
+            escolhida={chaveEscolhida(texto, exigido)}
+            aoEscolher={(chave) => responder(chave === NENHUM.id ? null : chave)}
+          />
+        );
+      }
       return (
         <Selecao
           {...comum}
@@ -108,26 +144,31 @@ export function CampoQueSePreenche({
           }
         />
       );
-    case 'varias-opcoes':
+    case 'varias-opcoes': {
+      const ligadas = Array.isArray(resposta) ? resposta : [];
       return (
         <GrupoDeCheckboxes
           rotulo={comum.rotulo}
           obrigatorio={comum.obrigatorio}
           descricao={comum.descricao}
           erro={erro}
-          value={Array.isArray(resposta) ? resposta : []}
+          value={ligadas}
           // A resposta vai na ordem das opções, como o domínio a confere.
           onChange={(ids) =>
             responder(campo.opcoes.filter((opcao) => ids.includes(opcao.id)).map((o) => o.id))
           }
+          className={naAba ? estilos.chips : undefined}
+          data-forma={naAba ? 'chips' : undefined}
         >
           {campo.opcoes.map((opcao) => (
-            <Checkbox key={opcao.id} value={opcao.id}>
+            <Checkbox key={opcao.id} value={opcao.id} className={naAba ? estilos.chip : undefined}>
+              {naAba && ligadas.includes(opcao.id) && <Visto />}
               {opcao.texto}
             </Checkbox>
           ))}
         </GrupoDeCheckboxes>
       );
+    }
     case 'ativo':
       return (
         <EscolhaDoAtivo
@@ -172,25 +213,95 @@ export function CampoQueSePreenche({
       );
     case 'sim-ou-nao': {
       const chave = typeof resposta === 'boolean' ? (resposta ? 'sim' : 'nao') : null;
+      const responderSimOuNao = (escolhida: unknown) => {
+        if (escolhida === 'sim' || escolhida === 'nao') responder(escolhida === 'sim');
+        else responder(null);
+      };
+      const simOuNao = [
+        { id: 'sim', rotulo: 'Sim' },
+        { id: 'nao', rotulo: 'Não' },
+      ];
+      if (naAba) {
+        return (
+          <EscolhaDaAba
+            forma={forma}
+            comum={comum}
+            opcoes={[...simOuNao, ...(exigido ? [] : [NENHUM])]}
+            escolhida={chaveEscolhida(chave, exigido)}
+            aoEscolher={responderSimOuNao}
+          />
+        );
+      }
       return (
         <Selecao
           {...comum}
-          opcoes={[
-            ...(exigido ? [] : [NENHUM]),
-            { id: 'sim', rotulo: 'Sim' },
-            { id: 'nao', rotulo: 'Não' },
-          ]}
+          opcoes={[...(exigido ? [] : [NENHUM]), ...simOuNao]}
           selectedKey={chaveEscolhida(chave, exigido)}
-          onSelectionChange={(escolhida) => {
-            if (escolhida === 'sim' || escolhida === 'nao') responder(escolhida === 'sim');
-            else responder(null);
-          }}
+          onSelectionChange={responderSimOuNao}
         />
       );
     }
     case 'anexo':
       return null;
   }
+}
+
+/** O visto da escolha ligada, no visual da aba: o estado não fica só na cor. */
+function Visto() {
+  return (
+    <span className={estilos.visto} data-parte="visto">
+      <Icone icone={Check} tamanho={12} />
+    </span>
+  );
+}
+
+/** A forma das escolhas na aba: em cartões, na pergunta, ou em chips, na continuação. */
+type FormaDaEscolha = 'cartoes' | 'chips';
+
+interface PropsDaEscolhaDaAba {
+  forma: FormaDaEscolha;
+  comum: Comum;
+  opcoes: readonly { id: string; rotulo: string }[];
+  /** A opção escolhida; o "Nenhum" é a chave vazia, e nenhuma, no exigido sem resposta. */
+  escolhida: string | null;
+  aoEscolher: (chave: string) => void;
+}
+
+/**
+ * A Escolha única e o Sim ou não no visual da aba (decisão 16), rádios por baixo, com a escolhida
+ * cheia na cor da aba e o visto: na pergunta, cartões em duas colunas, com o visto depois do
+ * texto; na continuação, chips na linha do rótulo, com o visto antes, como os das Várias opções. O
+ * "Nenhum" do que não é exigido vem por último: na aba, a pessoa lê as respostas antes de pular a
+ * pergunta.
+ */
+function EscolhaDaAba({ forma, comum, opcoes, escolhida, aoEscolher }: PropsDaEscolhaDaAba) {
+  const emChips = forma === 'chips';
+  const classe = emChips ? estilos.chip : estilos.cartao;
+  return (
+    <GrupoDeRadios
+      rotulo={comum.rotulo}
+      obrigatorio={comum.obrigatorio}
+      descricao={comum.descricao}
+      erro={comum.erro}
+      value={escolhida}
+      onChange={aoEscolher}
+      className={emChips ? estilos.chips : estilos.cartoes}
+      data-forma={forma}
+    >
+      {opcoes.map((opcao) => (
+        <Radio
+          key={opcao.id}
+          value={opcao.id}
+          // O "Nenhum" escolhido é a falta de resposta, e não uma resposta: fica sem o preenchimento.
+          className={opcao.id === NENHUM.id ? `${classe} ${estilos.nenhum}` : classe}
+        >
+          {emChips && escolhida === opcao.id && <Visto />}
+          {opcao.rotulo}
+          {!emChips && escolhida === opcao.id && <Visto />}
+        </Radio>
+      ))}
+    </GrupoDeRadios>
+  );
 }
 
 interface PropsDaEscolhaDoAtivo {
@@ -285,7 +396,7 @@ function EscolhaDoAtivo({
     const respondido = textoDaResposta(campo, escolhido ?? undefined, citados);
     return (
       <>
-        <span className={estilos.rotulo}>
+        <span className={estilos.rotulo} data-parte="rotulo">
           {comum.rotulo}
           {comum.obrigatorio && (
             <span className={estilos.obrigatorio} aria-hidden="true">

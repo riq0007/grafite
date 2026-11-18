@@ -133,6 +133,37 @@ export function camposQueAparecem(
     }));
 }
 
+/**
+ * O número de cada pergunta no visual da aba (decisão 16), na ordem das que aparecem: o campo com
+ * condição fica sem número, como a continuação da pergunta anterior, e por isso a numeração não
+ * muda enquanto a pessoa responde.
+ */
+export function numerosDasPerguntas(aparecem: readonly CampoQueAparece[]): (number | null)[] {
+  let numero = 0;
+  return aparecem.map(({ campo }) => {
+    if (campo.condicao.length > 0) return null;
+    numero += 1;
+    return numero;
+  });
+}
+
+/**
+ * Se cada campo, no visual da aba (decisão 16), se cola à pergunta de cima, como a continuação
+ * dela (o m05 da 19): o campo com condição se cola quando o que aparece antes dele é a base da
+ * condição ou outra continuação da mesma pergunta. Fora disso, fica no vão normal, sem se prender
+ * à pergunta errada, e começa a própria continuação.
+ */
+export function continuacoesDasPerguntas(aparecem: readonly CampoQueAparece[]): boolean[] {
+  // A pergunta de cima e as continuações coladas a ela.
+  let deCima = new Set<string>();
+  return aparecem.map(({ campo }) => {
+    const cola = campo.condicao.some(({ campoId }) => deCima.has(campoId));
+    if (cola) deCima.add(campo.id);
+    else deCima = new Set([campo.id]);
+    return cola;
+  });
+}
+
 /** A explicação do campo só da TI, que é opcional na abertura e, obrigatório, exigido para resolver. */
 export function descricaoDoCampo(campo: CampoDoFormulario): string | undefined {
   if (!campo.soDaTi) return undefined;

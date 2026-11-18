@@ -265,7 +265,8 @@ O formulário do tipo SHALL se preencher do mesmo jeito na gaveta da abertura, n
 - **o campo Ativo** com as sugestões da pessoa antes de digitar, sob "Sugerido: de <nome>", "Sugerido: do local de trabalho de <nome>" ou "Sugerido: de <nome> e do local de trabalho", e com a busca pelo texto entre os ativos que a conta vê, só dos tipos do campo. A quem não vê os ativos, o campo SHALL mostrar só para ler a resposta que já tem, com "Você não vê os ativos."; sem resposta, o campo exigido SHALL dizer também quem pode respondê-lo: "Quem vê os ativos pode abrir este chamado." na abertura e "Quem vê os ativos pode responder este campo." no chamado aberto;
 - **o campo Local** com o local de trabalho da pessoa sugerido;
 - **o campo Número** só com os algarismos: os pontos de milhar e os espaços saem, e outro caractere não entra;
-- **o campo Anexo** com cada arquivo enviado na hora, antes da gravação, até 5, cada um com o nome, o tamanho e "Tirar". Na prévia, o arquivo SHALL NOT ser enviado, e o campo SHALL dizer "Na prévia, o arquivo não é enviado.".
+- **o campo Anexo** com cada arquivo enviado na hora, antes da gravação, até 5, cada um com o nome, o tamanho e "Tirar". Na prévia, o arquivo SHALL NOT ser enviado, e o campo SHALL dizer "Na prévia, o arquivo não é enviado.";
+- **na prévia do colaborador, o visual da aba:** as perguntas numeradas na ordem em que aparecem, sem número no campo que aparece pela condição, que se cola à pergunta de que depende quando vem logo depois dela, com as escolhas em chips na linha do rótulo; fora disso, a Escolha única e o Sim ou não em cartões, com o "Nenhum" por último no campo que não é exigido; e as Várias opções em chips.
 
 As recusas SHALL ficar no campo, e a recusa geral do formulário, no alto dele. A recusa do envio de um anexo SHALL dizer o nome do arquivo.
 
@@ -312,7 +313,7 @@ A tabela SHALL ter também:
 Ao lado, "Como o colaborador vê" SHALL mostrar a prévia da aba:
 - a faixa no alto, na cor da aba;
 - o corpo neutro;
-- os tipos que aparecem ao colaborador, em 4 colunas, com o ícone, o nome, a frase e o atalho de 1 a 9;
+- os tipos que aparecem ao colaborador, em 4 colunas, com o ícone, o nome, a frase e o atalho de 1 a 9, sob "Aperte 1 a 8 ou clique", que vai até o atalho do último tipo; sem nenhum, "Nenhum tipo aparece para o colaborador.";
 - o tipo editado marcado "editando", com a frase que se escreve.
 
 "Duplicar" e "Novo tipo" SHALL abrir o Rascunho numa gaveta, sobre a lista escurecida, com:

@@ -2,17 +2,21 @@
 // chamados-da-ti, design, decisão 21): uma peça só para a gaveta da abertura, os "Campos do tipo"
 // do chamado aberto e a prévia do colaborador. O `quem` diz qual dos três: os campos que aparecem,
 // os que mudam e as rotas que as sugestões e a busca da pessoa usam. O estado é de quem usa a peça.
+// O `visual` da aba, na prévia (decisão 16), numera as perguntas, cola a continuação à pergunta de
+// que depende e põe as escolhas em cartões e em chips.
 import type { Formulario, RespostaDoCampo } from '@grafite/domain';
 import { AnexosDoCampo } from './AnexosDoCampo.tsx';
 import type { PessoaDoFormulario } from './buscas.ts';
-import { CampoQueSePreenche } from './CampoQueSePreenche.tsx';
+import { CampoQueSePreenche, type VisualDoFormulario } from './CampoQueSePreenche.tsx';
 import {
   type CampoQueAparece,
   type Citado,
   type CitadosDoFormulario,
   camposQueAparecem,
+  continuacoesDasPerguntas,
   descricaoDoCampo,
   type EstadoDoFormulario,
+  numerosDasPerguntas,
   type QuemPreenche,
   responderNoEstado,
   respostaDoCampo,
@@ -39,6 +43,12 @@ export interface PropsDoFormularioQueSePreenche {
   soLeitura?: boolean;
   /** As recusas, na chave do domínio: `campos.<id>` em cada campo e `formulario` no alto. */
   erros?: Readonly<Record<string, string>>;
+  /**
+   * O visual da tela, ou o da aba, na prévia do colaborador (decisão 16): as perguntas numeradas,
+   * sem número no campo com condição, que se cola à pergunta de que depende quando vem logo depois
+   * dela, e as escolhas em cartões e em chips.
+   */
+  visual?: VisualDoFormulario;
 }
 
 const idsDoAnexo = (resposta: RespostaDoCampo | undefined): readonly string[] =>
@@ -53,6 +63,7 @@ export function FormularioQueSePreenche({
   numero,
   soLeitura = false,
   erros = {},
+  visual = 'tela',
 }: PropsDoFormularioQueSePreenche) {
   /** A resposta nova pela anterior, que um envio acabado pode ter mudado. */
   const mudarResposta = (
@@ -71,22 +82,44 @@ export function FormularioQueSePreenche({
     );
 
   const geral = erros.formulario;
+  const aparecem = camposQueAparecem(formulario, estado.respostas, quem, soLeitura);
+  const naAba = visual === 'aba';
+  const perguntas = naAba ? numerosDasPerguntas(aparecem) : [];
+  const continuacoes = naAba ? continuacoesDasPerguntas(aparecem) : [];
   return (
-    <div className={estilos.formulario}>
+    <div className={estilos.formulario} data-visual={visual}>
       {geral && <Recusa texto={geral} />}
-      {camposQueAparecem(formulario, estado.respostas, quem, soLeitura).map((aparece) => (
-        <div key={aparece.campo.id} data-campo={aparece.campo.id} className={estilos.campo}>
-          <Campo
-            aparece={aparece}
-            estado={estado}
-            mudarResposta={mudarResposta}
-            quem={quem}
-            pessoa={pessoa}
-            numero={numero}
-            erro={erros[`campos.${aparece.campo.id}`]}
-          />
-        </div>
-      ))}
+      {aparecem.map((aparece, indice) => {
+        const pergunta = perguntas[indice] ?? null;
+        const continuacao = continuacoes[indice] ?? false;
+        return (
+          <div
+            key={aparece.campo.id}
+            data-campo={aparece.campo.id}
+            // Na aba, o campo que se cola à pergunta de cima, como a continuação dela.
+            data-continuacao={continuacao ? '' : undefined}
+            className={estilos.campo}
+          >
+            {pergunta !== null && (
+              // O número é desenho: o nome lido do campo é só o rótulo.
+              <span className={estilos.numero} data-parte="numero" aria-hidden="true">
+                {pergunta}
+              </span>
+            )}
+            <Campo
+              aparece={aparece}
+              estado={estado}
+              mudarResposta={mudarResposta}
+              quem={quem}
+              pessoa={pessoa}
+              numero={numero}
+              erro={erros[`campos.${aparece.campo.id}`]}
+              visual={visual}
+              continuacao={continuacao}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -103,6 +136,8 @@ interface PropsDoCampo {
   pessoa: PessoaDoFormulario | null;
   numero?: number;
   erro?: string;
+  visual: VisualDoFormulario;
+  continuacao: boolean;
 }
 
 function Campo({
@@ -113,6 +148,8 @@ function Campo({
   pessoa,
   numero,
   erro,
+  visual,
+  continuacao,
 }: PropsDoCampo) {
   const resposta = respostaDoCampo(estado.respostas, campo.id);
   if (campo.tipo === 'anexo') {
@@ -152,6 +189,8 @@ function Campo({
       quem={quem}
       pessoa={pessoa}
       erro={erro}
+      visual={visual}
+      continuacao={continuacao}
     />
   );
 }
@@ -170,7 +209,9 @@ function RespostaParaLer({ campo, resposta, citados, erro }: PropsDaRespostaPara
   return (
     <>
       <dl className={estilos.paraLer}>
-        <dt className={estilos.rotulo}>{campo.rotulo}</dt>
+        <dt className={estilos.rotulo} data-parte="rotulo">
+          {campo.rotulo}
+        </dt>
         <dd className={estilos.resposta} data-vazia={texto === null ? '' : undefined}>
           {texto ?? 'Sem resposta'}
         </dd>

@@ -2,6 +2,7 @@
 // entradas em escalas de gente, convertidas para o gerador, as variáveis que a web aplica no <html>,
 // o lápis do contraste e a trilha das matizes do controle deslizante.
 import {
+  coresDaAba,
   coresDaSituacao,
   coresDoDestaque,
   coresDosDados,
@@ -92,6 +93,7 @@ export function variaveisDeCor(tema: Tema, destaque: DestaqueGerado): Record<str
     ...coresDoTema(tema).filter(([nome]) => nome.startsWith('--')),
     ...coresDaSituacao(tema),
     ...coresDosDados(tema),
+    ...coresDaAba(tema),
     ...coresDoDestaque(destaque),
   ];
   return Object.fromEntries(declaracoes);

@@ -14,7 +14,13 @@ describe('escalaDeRaio', () => {
       miniatura: 6.96,
       rotulo: 5.04,
       aviso: 12,
+      capsula: 1200,
     });
+  });
+
+  it('a cápsula da aba passa da meia altura do maior controle e fica reta na base zero', () => {
+    expect(escalaDeRaio(1, 28).capsula).toBeGreaterThan(densidades.confortavel.controle / 2);
+    expect(escalaDeRaio(0, 28).capsula).toBe(0);
   });
 
   it('base 0 deixa todos os cantos retos', () => {

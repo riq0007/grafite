@@ -170,7 +170,7 @@ export function AnexosDoCampo({
       aria-describedby={descricao ? `${id}-descricao` : undefined}
       className={estilos.anexos}
     >
-      <span id={`${id}-rotulo`} className={estilos.rotulo}>
+      <span id={`${id}-rotulo`} className={estilos.rotulo} data-parte="rotulo">
         {campo.rotulo}
         {/* O grupo não anuncia a obrigatoriedade pelo controle: a marca é lida com o nome. */}
         {editavel && exigido && (

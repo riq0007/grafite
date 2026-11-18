@@ -464,7 +464,7 @@ cor + texto + ícone.
   O destaque sai da matiz e do croma. O gerador move a luminosidade de cada papel até o mínimo da WCAG contra as superfícies em que ele aparece. Por isso, nenhuma escolha, nem o tema personalizado, deixa o texto ilegível.
 - **O destaque de fábrica é o Grafite, monocromático.** A ação principal fica num quase branco no escuro e num quase preto no claro. Com isso, as únicas cores da tela são as das situações, as do dado e a do destaque que o usuário escolheu.
 - **Um destaque só por tela.** O destaque marca a ação principal, a seleção e o foco. Ele não pinta títulos, ícones de seção nem fundos.
-- **O azul é a informação.** Com o destaque Grafite, o azul só aparece na situação de informação e nas séries de dados.
+- **O azul é a informação.** Com o destaque Grafite, o azul só aparece na situação de informação e nas séries de dados. A exceção nomeada é a aba dos chamados: as cores da aba (`--cor-aba-*`) são feitas na matiz da informação, como nos mockups aprovados, por decisão do usuário de 18/11/2026.
 
 ---
 
@@ -576,6 +576,8 @@ rounded-full deve ser reservado para casos como:
 - indicador específico.
 
 No Grafite (v3), o raio deriva de uma base ajustável (padrão de 10 px, de 0 a 24). A escala por elemento está nos tokens. Mesmo na base máxima, nenhum botão vira cápsula. O raio de fábrica de 10 px deixa o acabamento mais próximo de um instrumento de precisão.
+
+Uma exceção nomeada: na aba dos chamados, na prévia do colaborador e na própria aba, a trilha, os chips, os botões, os selos e o bloco de quem pede são cápsulas, no `--raio-capsula`, como nos mockups aprovados, por decisão do usuário de 18/11/2026. A cápsula deriva da base como os outros raios e, na base zero, fica reta.
 
 ---
 
@@ -1219,7 +1221,7 @@ Não criar variações arbitrárias em cada página.
 
 Os tokens têm três camadas:
 1. **Referência:** as entradas dos temas e dos destaques, as escalas e as cores fixas, como o preto sobre branco da etiqueta. Nenhum componente a lê.
-2. **Sistema:** os papéis que o gerador produz (superfícies, texto, linha, destaque, situações, séries, tintas e material) e as escalas com nome (espaço, raio, tipografia e movimento).
+2. **Sistema:** os papéis que o gerador produz (superfícies, texto, linha, destaque, situações, séries, tintas, material e a aba) e as escalas com nome (espaço, raio, tipografia e movimento).
 3. **Componente:** a medida própria de um componente, como o tamanho do item do dock.
 
 O catálogo (Storybook) é organizado como os sistemas de referência:
