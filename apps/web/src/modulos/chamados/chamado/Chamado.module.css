@@ -7,6 +7,7 @@
 .tela {
   --respiro: var(--respiro-da-janela, var(--esp-6));
 
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -15,11 +16,43 @@
 
 /*
  * O chamado carregado fica da altura da janela (`data-janela-inteira="rola-por-dentro"`): o
- * cabeçalho no alto, a conversa no meio, a única parte que rola, e o campo de escrever no pé.
+ * cabeçalho no alto e, embaixo, a coluna da conversa, com o campo de escrever no pé, e a coluna da
+ * direita, de 370 px (m04). A conversa e a coluna da direita rolam sozinhas.
  */
 .tela[data-janela-inteira="rola-por-dentro"] {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 370px;
+  min-height: 0;
+}
+
+.principal {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Na tela estreita, a coluna da direita desce para baixo do campo de escrever, e o corpo rola até
+ * ela: a conversa e o campo ficam com a altura que sobra, nunca menos de 420 px nem menos que o
+ * campo.
+ */
+@container (width < 900px) {
+  .corpo {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .principal {
+    flex: 1 0 420px;
+    min-height: auto;
+  }
 }
 
 .tela > [data-cabecalho-da-pagina] {

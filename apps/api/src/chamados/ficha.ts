@@ -55,6 +55,7 @@ import {
   veOChamado,
 } from '@grafite/domain';
 import { and, asc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { CAPACIDADE_DOS_CONSUMIVEIS } from '../consumiveis/compativeis.ts';
 import { chamadoNaoEncontrado } from './alcance.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
@@ -197,6 +198,10 @@ export interface FichaDoChamado {
     patrimonio: string | null;
     local: string | null;
     abrir: boolean;
+    /** O tipo do ativo, para a miniatura da seção "Ativo ligado". */
+    tipo: { nome: string; icone: string };
+    /** Se o tipo usa consumíveis, para o "Pedir toner" (spec solicitacoes, "Solicitação pelo chamado"). */
+    usaConsumiveis: boolean;
     /** O resumo da seção "Ativo ligado"; nulo com o Ativos desligado. */
     resumo: ResumoDoAtivo | null;
   } | null;
@@ -315,6 +320,24 @@ export async function ativosPorId(tx: Transacao, ids: ReadonlySet<string>) {
       },
     ]),
   );
+}
+
+/**
+ * O tipo do ativo ligado, com o ícone da miniatura e se usa consumíveis, a toda conta que vê o
+ * chamado, como o rótulo (change chamados-da-ti, design, "A coluna da direita, a pessoa e o ativo").
+ */
+async function tipoDoLigado(tx: Transacao, ativoId: string) {
+  const [lido] = await tx
+    .select({
+      nome: tiposDeAtivo.nome,
+      icone: tiposDeAtivo.icone,
+      usaConsumiveis: sql<boolean>`${CAPACIDADE_DOS_CONSUMIVEIS} = any(${tiposDeAtivo.capacidades})`,
+    })
+    .from(ativos)
+    .innerJoin(tiposDeAtivo, eq(tiposDeAtivo.id, ativos.tipoId))
+    .where(eq(ativos.id, ativoId));
+  if (!lido) throw new Error(`O ativo ${ativoId} do chamado não existe.`);
+  return { tipo: { nome: lido.nome, icone: lido.icone }, usaConsumiveis: lido.usaConsumiveis };
 }
 
 /** O anexo como a ficha o mostra; o do chamado sempre tem o nome, que o envio dá. */
@@ -619,6 +642,7 @@ export async function fichaDoChamado(
 
   const prazo = lerPrazoDoChamado(chamado.prazo);
   const horario = await lerHorarioDaTi(tx);
+  const tipoDoAtivo = ligadoAoChamado ? await tipoDoLigado(tx, ligadoAoChamado.id) : null;
   const resumoDoLigado =
     ligadoAoChamado && ligado('ativos')
       ? await resumoDoAtivo(tx, ligadoAoChamado.id, {
@@ -656,6 +680,8 @@ export async function fichaDoChamado(
           patrimonio: ligadoAoChamado.patrimonio,
           local: caminhoDo(arvore, ligadoAoChamado.localId),
           abrir: ligado('ativos') && podeEm(acesso, 'ativos.ver', ligadoAoChamado.localId, arvore),
+          tipo: tipoDoAtivo?.tipo ?? { nome: '', icone: 'generico' },
+          usaConsumiveis: tipoDoAtivo?.usaConsumiveis ?? false,
           resumo: resumoDoLigado,
         }
       : null,

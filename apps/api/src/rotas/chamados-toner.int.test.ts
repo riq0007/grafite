@@ -507,6 +507,11 @@ describe('a solicitação na ficha do chamado', () => {
     expect(deCarla.json().solicitacao).toBeNull();
     const deAna = await c.cliente.consultar('/chamados/1042', c.como('ana'));
     expect(deAna.json().solicitacao).toMatchObject({ numero: 5, situacao: 'aberta' });
+    // O tipo da impressora, para a miniatura, e o uso dos consumíveis, para o "Pedir toner".
+    expect(deAna.json().ativo).toMatchObject({
+      tipo: { nome: 'Impressora', icone: 'impressora' },
+      usaConsumiveis: true,
+    });
     // Os outros eventos vêm sem a solicitação.
     const outros = (
       deAna.json().conversa as { especie: string; evento?: string; solicitacao?: unknown }[]

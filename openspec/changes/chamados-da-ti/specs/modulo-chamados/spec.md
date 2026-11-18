@@ -198,8 +198,9 @@ O chamado aberto SHALL responder no endereço `/chamados/<número>`, que as noti
 As ações SHALL ficar só com quem atende os locais do chamado:
 - "Transferir" SHALL listar as pessoas do "Passar para…", com os abertos de cada uma;
 - "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL mostrar o problema da OS, que começa com o título do chamado, para corrigir antes de abrir;
+- "Pedir toner" SHALL ficar só no chamado com uma impressora ligada, que usa consumíveis, e sem solicitação, e, sem a solicitação pendente, SHALL abrir o registro do Toner que a solicitação pelo chamado dá, para mudar antes de registrar (spec solicitacoes, "Solicitação pelo chamado");
 - "Resolver" SHALL pedir "O que foi feito";
-- o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042." e "OS 13 aberta.", com "Abrir", e a recusa SHALL ficar com a frase dela.
+- o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042.", "OS 13 aberta." e "Solicitação 5 registrada.", com "Abrir", e a recusa SHALL ficar com a frase dela.
 
 A conversa SHALL ficar na forma que a conta escolheu (spec preferencias-da-interface, "Forma das conversas nas preferências"):
 - **no meio:** numa coluna central, sem balão;
@@ -215,7 +216,7 @@ Nas duas formas, a conversa SHALL ter:
 
 A coluna da direita SHALL ter as seções que recolhem:
 - **"Pessoa":** o nome e o local de trabalho e, a quem vê a pessoa, os contatos e "Abrir a ficha" (spec chamados, requisito "Quem vê e quem atende os chamados");
-- **"Ativo ligado":** o resumo do ativo, com a situação em texto, os suprimentos, como "Toner crítico", o total de páginas, "Virar OS", "Pedir toner" e "Trocar o ativo". A quem vê o estoque e as solicitações, mostra também o saldo do toner e a solicitação pendente, como "CF258A: 3 de 6, abaixo do mínimo; a solicitação 4 está Aberta; 'Pedir toner' se junta a ela";
+- **"Ativo ligado":** o resumo do ativo, com a situação em texto, os suprimentos, como "Toner crítico", o total de páginas e "Trocar o ativo", e, sem o ativo, "Ligar um ativo". A quem vê o estoque e as solicitações, mostra também o saldo do toner e a solicitação pendente, como "CF258A: 3 de 6, abaixo do mínimo; a solicitação 4 está aberta; “Pedir toner” se junta a ela", sem repetir a solicitação que já é a do chamado;
 - **"Linha do tempo":** os eventos do chamado;
 - **"Campos do tipo":** as respostas e os campos só da TI, para preencher, com a contagem, como "3 respondidos, 1 pendente".
 
@@ -236,6 +237,10 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 #### Scenario: Mudança que esconde um anexo
 - **WHEN** Ana muda o "Contrato de manutenção" do #1042 para "Sim", e a "Foto da peça", que só aparece com "Não", tem 1 arquivo
 - **THEN** a tela pergunta "A Foto da peça some, e 1 arquivo é apagado." com "Mudar" e "Cancelar", e só grava depois de "Mudar"
+
+#### Scenario: Pedir toner sem a pendente
+- **WHEN** Ana usa "Pedir toner" no #1042, e a PAT-00139 não está numa solicitação pendente
+- **THEN** a gaveta "Pedir toner para o #1042" abre com Marina Rocha, a PAT-00139 e 1 preto, e "Registrar" grava a solicitação ligada ao #1042, com o aviso "Solicitação 5 registrada."
 
 #### Scenario: Ver sem atender
 - **WHEN** Carla, que só vê os chamados, abre o #1042

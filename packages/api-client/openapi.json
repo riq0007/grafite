@@ -13715,6 +13715,24 @@
                   "abrir": {
                     "type": "boolean"
                   },
+                  "tipo": {
+                    "type": "object",
+                    "properties": {
+                      "nome": {
+                        "type": "string"
+                      },
+                      "icone": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "nome",
+                      "icone"
+                    ]
+                  },
+                  "usaConsumiveis": {
+                    "type": "boolean"
+                  },
                   "resumo": {
                     "anyOf": [
                       {
@@ -13732,6 +13750,8 @@
                   "patrimonio",
                   "local",
                   "abrir",
+                  "tipo",
+                  "usaConsumiveis",
                   "resumo"
                 ]
               },
@@ -40659,6 +40679,25 @@
                   "abrir": {
                     "type": "boolean"
                   },
+                  "tipo": {
+                    "type": "object",
+                    "properties": {
+                      "nome": {
+                        "type": "string"
+                      },
+                      "icone": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "nome",
+                      "icone"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "usaConsumiveis": {
+                    "type": "boolean"
+                  },
                   "resumo": {
                     "anyOf": [
                       {
@@ -40676,6 +40715,8 @@
                   "patrimonio",
                   "local",
                   "abrir",
+                  "tipo",
+                  "usaConsumiveis",
                   "resumo"
                 ],
                 "additionalProperties": false

@@ -440,6 +440,9 @@ describe('GET /chamados/:numero', () => {
       patrimonio: 'PAT-00139',
       local: 'Jundiaí › Recepção',
       abrir: true,
+      tipo: { nome: 'Impressora', icone: 'impressora' },
+      // O tipo do apoio não usa consumíveis; o do toner usa (chamados-toner).
+      usaConsumiveis: false,
       // O resumo tem o teste dele (chamados-resumo-do-ativo).
       resumo: expect.any(Object),
     });
@@ -459,6 +462,9 @@ describe('GET /chamados/:numero', () => {
       patrimonio: 'PAT-00139',
       local: 'Jundiaí › Recepção',
       abrir: false,
+      tipo: { nome: 'Impressora', icone: 'impressora' },
+      // O tipo do apoio não usa consumíveis; o do toner usa (chamados-toner).
+      usaConsumiveis: false,
       resumo: expect.any(Object),
     });
     expect(deDiego.permite).toEqual({ atender: true });

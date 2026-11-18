@@ -442,6 +442,10 @@ const FichaDoChamado = z
         patrimonio: z.string().nullable(),
         local: z.string().nullable(),
         abrir: z.boolean(),
+        /** O tipo do ativo, com o ícone da miniatura. */
+        tipo: z.object({ nome: z.string(), icone: z.string() }),
+        /** Se o tipo usa consumíveis, para o "Pedir toner". */
+        usaConsumiveis: z.boolean(),
         /** O resumo da seção "Ativo ligado", também sem `ativos.ver`; nulo com o Ativos desligado. */
         resumo: ResumoDoAtivo.nullable(),
       })

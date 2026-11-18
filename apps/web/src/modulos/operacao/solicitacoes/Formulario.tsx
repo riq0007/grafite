@@ -1,3 +1,4 @@
+import type { components } from '@grafite/api-client';
 import {
   CORES_DE_CONSUMIVEL,
   type CorDeConsumivel,
@@ -91,6 +92,18 @@ export interface NovaSolicitacao {
   ativo?: string;
 }
 
+/** O registro do Toner que o "Pedir toner" do chamado dá, para quem atende mudar antes de gravar. */
+export type RegistroDoTonerDoChamado = Extract<
+  components['schemas']['TonerDoChamado'],
+  { resultado: 'registro' }
+>['registro'];
+
+/** O chamado do registro do Toner: o número e o que fazer com a solicitação gravada. */
+interface TonerDoChamado {
+  numero: number;
+  aoPedir: (solicitacao: number) => void;
+}
+
 /** As recusas na tela: os campos pelo nome, a impressora por `impressora:<id>` e o item por `item:<id>:<cor>`. */
 type ErrosNoFormulario = Record<string, string>;
 
@@ -113,6 +126,26 @@ function inicialDe({ tipo, ativo }: NovaSolicitacao): DadosNoFormulario {
     quantidade: '',
     motivo: '',
     local: null,
+  };
+}
+
+/** O registro do Toner do chamado: a pessoa, as impressoras e a quantidade de cada cor. */
+function inicialDoRegistro(
+  registro: RegistroDoTonerDoChamado,
+  pessoa: ContaDoSeletor,
+): DadosNoFormulario {
+  return {
+    ...inicialDe({ tipo: 'toner' }),
+    pessoa,
+    observacao: registro.observacao ?? '',
+    impressoras: registro.impressoras.map((id) => ({
+      id,
+      quantidades: Object.fromEntries(
+        registro.itens
+          .filter((item) => item.impressora === id)
+          .map(({ cor, quantidade }) => [cor, String(quantidade)]),
+      ),
+    })),
   };
 }
 
@@ -294,18 +327,51 @@ export function GavetaDaAlteracao({
   );
 }
 
+/**
+ * O registro do Toner do "Pedir toner" do chamado (spec solicitacoes, "Solicitação pelo chamado"),
+ * com o que a API deu: a pessoa do chamado, a impressora e 1 da cor do chamado. Quem atende muda
+ * antes de registrar, e a gravação vai pela rota do chamado, que liga a solicitação a ele.
+ */
+export function GavetaDoTonerDoChamado({
+  chamado,
+  registro,
+  pessoa,
+  aoPedir,
+  aoFechar,
+}: {
+  chamado: number;
+  registro: RegistroDoTonerDoChamado;
+  /** A pessoa do registro, com o nome, que o registro não traz. */
+  pessoa: ContaDoSeletor;
+  aoPedir: (solicitacao: number) => void;
+  aoFechar: () => void;
+}) {
+  const [dados, definirDados] = useState(() => inicialDoRegistro(registro, pessoa));
+  return (
+    <GavetaDoFormulario
+      titulo={`Pedir toner para o #${chamado}`}
+      dados={dados}
+      definirDados={definirDados}
+      doChamado={{ numero: chamado, aoPedir }}
+      aoFechar={aoFechar}
+    />
+  );
+}
+
 /** A gaveta com o formulário e a Nova pessoa numa aba, que a tira da frente enquanto está aberta. */
 function GavetaDoFormulario({
   titulo,
   dados,
   definirDados,
   alteracao,
+  doChamado,
   aoFechar,
 }: {
   titulo: string;
   dados: DadosNoFormulario;
   definirDados: (mudar: (atuais: DadosNoFormulario) => DadosNoFormulario) => void;
   alteracao?: Solicitacao;
+  doChamado?: TonerDoChamado;
   aoFechar: () => void;
 }) {
   const [pedindo, definirPedindo] = useState(false);
@@ -339,6 +405,7 @@ function GavetaDoFormulario({
         dados={dados}
         mudar={mudar}
         alteracao={alteracao}
+        doChamado={doChamado}
         cadastroDaPessoa={pessoaPorCadastro}
         aoRegistrar={aoFechar}
         aoCancelar={aoFechar}
@@ -358,6 +425,7 @@ function FormularioDaSolicitacao({
   dados,
   mudar,
   alteracao,
+  doChamado,
   cadastroDaPessoa,
   aoRegistrar,
   aoCancelar,
@@ -366,6 +434,8 @@ function FormularioDaSolicitacao({
   mudar: (mudanca: Partial<DadosNoFormulario>) => void;
   /** A solicitação alterada; sem ela, o registro de uma nova. */
   alteracao?: Solicitacao;
+  /** O chamado do "Pedir toner": o registro do Toner vai pela rota dele. */
+  doChamado?: TonerDoChamado;
   cadastroDaPessoa?: { link: string; pedir: () => void };
   aoRegistrar: () => void;
   aoCancelar: () => void;
@@ -452,13 +522,23 @@ function FormularioDaSolicitacao({
     try {
       const corpo = limparSolicitacao(solicitacao) as never;
       const resultado = await pedir(
-        () =>
-          alteracao
-            ? api.PATCH('/solicitacoes/{numero}', {
-                params: { path: { numero: alteracao.numero } },
-                body: corpo,
-              })
-            : api.POST('/solicitacoes', { body: corpo }),
+        async () => {
+          if (alteracao) {
+            return api.PATCH('/solicitacoes/{numero}', {
+              params: { path: { numero: alteracao.numero } },
+              body: corpo,
+            });
+          }
+          if (!doChamado) return api.POST('/solicitacoes', { body: corpo });
+          const doToner = await api.POST('/chamados/{numero}/toner', {
+            params: { path: { numero: doChamado.numero } },
+            body: { registro: corpo },
+          });
+          // A rota do chamado dá o número da solicitação gravada.
+          return doToner.data && 'solicitacao' in doToner.data
+            ? { ...doToner, data: { numero: doToner.data.solicitacao.numero } }
+            : { ...doToner, data: undefined };
+        },
         alteracao ? 'alterar a solicitação' : 'registrar a solicitação',
       );
       if ('erro' in resultado) {
@@ -473,10 +553,13 @@ function FormularioDaSolicitacao({
         return;
       }
       await consultas.invalidateQueries({ queryKey: CHAVE_DAS_SOLICITACOES });
-      avisar({
-        situacao: 'sucesso',
-        titulo: alteracao ? 'Solicitação alterada.' : retornoDoRegistro(resultado.dados.numero),
-      });
+      if (doChamado) doChamado.aoPedir(resultado.dados.numero);
+      else {
+        avisar({
+          situacao: 'sucesso',
+          titulo: alteracao ? 'Solicitação alterada.' : retornoDoRegistro(resultado.dados.numero),
+        });
+      }
       aoRegistrar();
     } finally {
       definirEnviando(false);
@@ -486,8 +569,12 @@ function FormularioDaSolicitacao({
   return (
     <div ref={area} className={estilosDaOperacao.tela}>
       <Formulario validationBehavior="aria" onSubmit={aoEnviar}>
-        {alteracao ? (
-          <p className={estilosDaOperacao.informacao}>{resumoDaSolicitacao(alteracao)}</p>
+        {alteracao || doChamado ? (
+          <p className={estilosDaOperacao.informacao}>
+            {alteracao
+              ? resumoDaSolicitacao(alteracao)
+              : `Toner, ligado ao chamado #${doChamado?.numero}.`}
+          </p>
         ) : (
           <GrupoDeRadios
             rotulo="Tipo"

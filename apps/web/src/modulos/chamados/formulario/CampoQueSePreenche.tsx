@@ -3,13 +3,7 @@
 // (decisão 16), com as escolhas em cartões e em chips. O Ativo sugere os ativos da pessoa e busca
 // entre os que a conta vê; o Local sugere o local de trabalho dela; a Pessoa se busca pelo nome,
 // com o local de cada uma. O Anexo é o `AnexosDoCampo`.
-import {
-  type AtivoDasRespostas,
-  type CampoDoFormulario,
-  type FiltroDaVisao,
-  mostrarDecimal,
-  type RespostaDoCampo,
-} from '@grafite/domain';
+import { type CampoDoFormulario, mostrarDecimal, type RespostaDoCampo } from '@grafite/domain';
 import {
   AreaDeTexto,
   CampoDeData,
@@ -21,7 +15,7 @@ import {
   Radio,
   Selecao,
 } from '@grafite/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApi } from '../../../api/useApi.tsx';
@@ -41,13 +35,13 @@ import {
   type CitadosDoFormulario,
   descricaoDoCampo,
   lerNumero,
-  origemDasSugestoes,
   type QuemPreenche,
   rotuloDoAtivoCitado,
   textoDaResposta,
 } from './estado.ts';
 import estilos from './Formulario.module.css';
 import { Recusa } from './Recusa.tsx';
+import { useBuscaDoAtivo } from './useBuscaDoAtivo.ts';
 
 export interface PropsDoCampoQueSePreenche {
   campo: CampoDoFormulario;
@@ -329,67 +323,8 @@ function EscolhaDoAtivo({
   quem,
   pessoa,
 }: PropsDaEscolhaDoAtivo) {
-  const api = useApi();
-  const consultas = useQueryClient();
   const { pode } = useAcesso();
-  // As dependências da busca são textos, para ela ficar a mesma entre as renderizações.
-  const chaveDosTipos = campo.tiposDeAtivo.join(',');
-  const pessoaId = pessoa?.id ?? null;
-  const nome = pessoa?.nome ?? '';
-  // O nome e o patrimônio de cada ativo que a lista mostrou, para a resposta citar o escolhido.
-  const vistos = useRef(new Map<string, AtivoDasRespostas>());
-
-  const buscar = useCallback(
-    async (texto: string, sinal: AbortSignal): Promise<ResultadoDoSeletor> => {
-      const tipos = chaveDosTipos === '' ? [] : chaveDosTipos.split(',');
-      // A falha das sugestões vira "sem sugestões": a busca pelo texto segue.
-      const sugestoes =
-        pessoaId === null
-          ? null
-          : await consultas
-              .fetchQuery(opcoesDasSugestoes(api, quem, pessoaId, tipos))
-              .catch(() => null);
-      const sugeridos = sugestoes?.ativos ?? [];
-      const origem = origemDasSugestoes(
-        sugeridos.map((ativo) => ativo.motivo),
-        nome,
-      );
-      const opcao = (ativo: { id: string; rotulo: string; patrimonio: string | null }) => {
-        vistos.current.set(ativo.id, { rotulo: ativo.rotulo, patrimonio: ativo.patrimonio });
-        return { id: ativo.id, rotulo: rotuloDoAtivoCitado(ativo) };
-      };
-      if (texto === '' && sugeridos.length > 0) {
-        return {
-          itens: sugeridos.map(opcao),
-          sugeridas: { ids: sugeridos.map((ativo) => ativo.id), origem },
-        };
-      }
-      const doTipo: FiltroDaVisao[] =
-        tipos.length > 0 ? [{ chave: 'ativo.tipo', operador: 'qualquer', valores: tipos }] : [];
-      const { data, error } = await api.GET('/ativos', {
-        params: {
-          query: {
-            busca: texto,
-            limite: 20,
-            ...(doTipo.length > 0 && { filtros: JSON.stringify(doTipo) }),
-          },
-        },
-        signal: sinal,
-      });
-      if (error || !data) throw new Error('Não foi possível buscar os ativos.');
-      const itens = data.itens.map(opcao);
-      const achados = new Set(itens.map((item) => item.id));
-      return {
-        itens,
-        total: data.total,
-        sugeridas: {
-          ids: sugeridos.filter((ativo) => achados.has(ativo.id)).map((ativo) => ativo.id),
-          origem,
-        },
-      };
-    },
-    [api, consultas, quem, chaveDosTipos, pessoaId, nome],
-  );
+  const { buscar, vistos } = useBuscaDoAtivo({ quem, pessoa, tipos: campo.tiposDeAtivo });
 
   if (!pode('ativos.ver')) {
     // A resposta que já existe aparece, pelo nome que a ficha traz; sem ela, a falta e a saída.
@@ -423,7 +358,7 @@ function EscolhaDoAtivo({
           : { id: escolhido, rotulo: ativo ? rotuloDoAtivoCitado(ativo) : escolhido }
       }
       aoMudar={(escolha) => {
-        const visto = escolha ? vistos.current.get(escolha.id) : undefined;
+        const visto = escolha ? vistos.get(escolha.id) : undefined;
         if (!escolha) responder(null);
         else responder(escolha.id, visto ? [{ tipo: 'ativo', id: escolha.id, ativo: visto }] : []);
       }}

@@ -1,13 +1,16 @@
-// O resolver e o virar OS do chamado aberto (spec modulo-chamados, "Chamado aberto"; change
-// chamados-da-ti, design, "O chamado aberto, o cabeçalho"): os dois pedem um texto num diálogo, e a
-// recusa volta a ele, no campo quando é do campo; o retorno vai num aviso. Aceita ou recusada, a
-// tela relê os chamados, como nas ações do atendimento.
+// O resolver, o virar OS, a troca do ativo e o pedir toner do chamado aberto (spec
+// modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O chamado aberto, o cabeçalho"
+// e "A coluna da direita, a pessoa e o ativo"): os três primeiros pedem num diálogo, e a recusa
+// volta a ele, no campo quando é do campo; o retorno vai num aviso. Aceita ou recusada, a tela relê
+// os chamados, como nas ações do atendimento.
+import { retornoDoRegistro } from '@grafite/domain';
 import { avisar } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { type FalhaDoPedido, pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
+import type { RegistroDoTonerDoChamado } from '../../operacao/solicitacoes/Formulario.tsx';
 import { CHAVE_DOS_CHAMADOS } from '../consultas.ts';
 
 /** A recusa que volta ao diálogo: a frase, e se ela é do campo do diálogo. */
@@ -27,6 +30,20 @@ export interface AcoesDoChamadoAberto {
   resolver: (numero: number, versao: number, feito: string) => Promise<RecusaNoDialogo | null>;
   /** Nulo quando a OS abriu; senão, a recusa. */
   virarOs: (numero: number, problema: string) => Promise<RecusaNoDialogo | null>;
+  /** Liga, troca ou tira (`null`) o ativo; nulo quando mudou, senão, a recusa. */
+  trocarAtivo: (
+    numero: number,
+    versao: number,
+    ativo: string | null,
+    tinha: boolean,
+  ) => Promise<RecusaNoDialogo | null>;
+  /**
+   * O primeiro passo do "Pedir toner": junta o chamado à pendente, com o aviso, ou dá o registro
+   * do Toner para a gaveta. A recusa vai num aviso, e nada volta.
+   */
+  pedirToner: (numero: number) => Promise<RegistroDoTonerDoChamado | null>;
+  /** O aviso da solicitação que a gaveta do toner do chamado registrou. */
+  tonerPedido: (solicitacao: number) => void;
 }
 
 export function useAcoesDoChamadoAberto(): AcoesDoChamadoAberto {
@@ -69,6 +86,54 @@ export function useAcoesDoChamadoAberto(): AcoesDoChamadoAberto {
           },
         });
         return null;
+      },
+      async trocarAtivo(numero, versao, ativo, tinha) {
+        const resultado = await pedir(
+          () =>
+            api.PUT('/chamados/{numero}/ativo', { ...doChamado(numero), body: { ativo, versao } }),
+          'trocar o ativo do chamado',
+        );
+        reler();
+        if ('erro' in resultado) return recusaNoDialogo(resultado, 'ativo');
+        let titulo = `Você trocou o ativo do #${numero}.`;
+        if (ativo === null) titulo = `Você tirou o ativo do #${numero}.`;
+        else if (!tinha) titulo = `Você ligou um ativo ao #${numero}.`;
+        avisar({ situacao: 'sucesso', titulo });
+        return null;
+      },
+      async pedirToner(numero) {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/toner', { ...doChamado(numero), body: {} }),
+          'pedir o toner do chamado',
+        );
+        if ('erro' in resultado) {
+          reler();
+          avisar({ situacao: 'critico', titulo: resultado.erro });
+          return null;
+        }
+        const dados = resultado.dados;
+        if (dados.resultado === 'registro') return dados.registro;
+        reler();
+        avisar({
+          situacao: 'sucesso',
+          titulo: `O #${numero} se juntou à solicitação ${dados.solicitacao.numero}.`,
+        });
+        return null;
+      },
+      tonerPedido(solicitacao) {
+        reler();
+        avisar({
+          situacao: 'sucesso',
+          titulo: retornoDoRegistro(solicitacao),
+          acao: {
+            rotulo: 'Abrir',
+            aoEscolher: () =>
+              void navegar({
+                to: '/operacao/solicitacoes/$numero',
+                params: { numero: String(solicitacao) },
+              }),
+          },
+        });
       },
     };
   }, [api, consultas, navegar]);

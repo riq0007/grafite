@@ -2,7 +2,8 @@
 // chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
 // notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, o número e o
 // título, o selo, o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação,
-// e, embaixo, a conversa (tarefa 5.11) e o campo de escrever (tarefa 5.12).
+// e, embaixo, a conversa (tarefa 5.11) e o campo de escrever (tarefa 5.12), com a coluna da direita
+// ao lado (tarefa 5.13, m04).
 import {
   AreaDeTexto,
   Botao,
@@ -22,6 +23,7 @@ import {
   ArrowLeftRight,
   ChevronRight,
   CircleCheck,
+  Droplet,
   HandGrab,
   type LucideIcon,
   MessageSquareText,
@@ -31,8 +33,13 @@ import {
 import { Fragment, type ReactNode, useState } from 'react';
 import { FalhaDaConsulta } from '../../../api/consultas.ts';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../../../sessao/useSessao.tsx';
 import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
+import {
+  GavetaDoTonerDoChamado,
+  type RegistroDoTonerDoChamado,
+} from '../../operacao/solicitacoes/Formulario.tsx';
 import { useAcoesDoAtendimento } from '../acoes.ts';
 import { type FichaDoChamado, useFichaDoChamado, useQuadroDosChamados } from '../consultas.ts';
 import { IconeDoPrazo, IconeDoTipo, Selo, SiglaDaPessoa } from '../Pecas.tsx';
@@ -46,6 +53,8 @@ import { CampoDeEscrever } from './CampoDeEscrever.tsx';
 import estilos from './Chamado.module.css';
 import { Conversa } from './Conversa.tsx';
 import { ID_DO_CAMPO_DE_ESCREVER } from './escrever.ts';
+import { LadoDoChamado } from './Lado.tsx';
+import { type AcoesDoAtivo, acoesDoAtivo } from './lado.ts';
 import { quadroDoPrazo } from './prazo.ts';
 
 const NAO_ENCONTRADO = 'Chamado não encontrado.';
@@ -121,11 +130,14 @@ function ConteudoDoChamado() {
 function Chamado({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
+  const { pode } = useAcesso();
+  const operacaoLigada = !(useServidor()?.modulosDesligados ?? []).includes('operacao');
+  const doAtivo = acoesDoAtivo(ficha, { operacaoLigada, pode });
   // Cada envio do campo de escrever leva a conversa à última mensagem.
   const [envios, definirEnvios] = useState(0);
   return (
-    // Só a conversa rola, entre o cabeçalho e o campo de escrever (design, "O chamado aberto, a
-    // conversa (tarefa 5.11)").
+    // A conversa e a coluna da direita rolam sozinhas, entre o cabeçalho e o campo de escrever
+    // (design, "O chamado aberto, a conversa (tarefa 5.11)" e "A coluna da direita").
     <div className={estilos.tela} data-janela-inteira="rola-por-dentro">
       <CabecalhoDaPagina
         trilha={<Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />}
@@ -136,15 +148,20 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         }
         detalhe={<DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
         quadro={<QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
-        acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
+        acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} doAtivo={doAtivo} />}
       />
-      <Conversa key={ficha.numero} ficha={ficha} envios={envios} />
-      <CampoDeEscrever
-        // O rascunho é de um chamado: o outro abre com o campo vazio.
-        key={`campo-${ficha.numero}`}
-        ficha={ficha}
-        aoEnviar={() => definirEnvios((antes) => antes + 1)}
-      />
+      <div className={estilos.corpo}>
+        <div className={estilos.principal}>
+          <Conversa key={ficha.numero} ficha={ficha} envios={envios} />
+          <CampoDeEscrever
+            // O rascunho é de um chamado: o outro abre com o campo vazio.
+            key={`campo-${ficha.numero}`}
+            ficha={ficha}
+            aoEnviar={() => definirEnvios((antes) => antes + 1)}
+          />
+        </div>
+        <LadoDoChamado ficha={ficha} acoes={doAtivo} />
+      </div>
     </div>
   );
 }
@@ -288,18 +305,19 @@ function comoArrastado({
 }
 
 /**
- * As ações de quem atende os locais do chamado, na ordem do m03: "Assumir", fora do que está com a
- * conta, "Transferir", "Virar OS", com o ativo, sem a OS e com o Operação ligado, "Resolver" e
- * "Responder", a principal. No resolvido, só "Reabrir". O botão que espera a resposta gira, e os
- * outros esperam com ele.
+ * As ações de quem atende os locais do chamado, na ordem do m03 e do m04: "Assumir", fora do que
+ * está com a conta, "Transferir", "Virar OS" e "Pedir toner", pela regra do ativo (`acoesDoAtivo`),
+ * "Resolver" e "Responder", a principal. No resolvido, só "Reabrir". O botão que espera a resposta
+ * gira, e os outros esperam com ele.
  */
-function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
+function AcoesDoChamado({ ficha, doAtivo }: { ficha: FichaDoChamado; doAtivo: AcoesDoAtivo }) {
   const sessao = useSessao();
   const conta = sessao.tipo === 'ativa' ? sessao.conta.id : null;
-  const operacaoLigada = !(useServidor()?.modulosDesligados ?? []).includes('operacao');
   const acoes = useAcoesDoAtendimento();
   const doChamado = useAcoesDoChamadoAberto();
   const [esperando, definirEsperando] = useState<string | null>(null);
+  // O registro do Toner que o "Pedir toner" deu, aberto na gaveta.
+  const [registro, definirRegistro] = useState<RegistroDoTonerDoChamado | null>(null);
   const { numero, versao, situacao, titulo, ativo } = ficha;
 
   const agir = async (botao: string, fazer: () => Promise<unknown>) => {
@@ -347,7 +365,7 @@ function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
         {...doBotao('transferir')}
         aoEscolher={(para) => void agir('transferir', () => acoes.passar(numero, versao, para))}
       />
-      {ativo && !ficha.os && operacaoLigada && (
+      {ativo && doAtivo.virarOs && (
         <DialogoComTexto
           gatilho="Virar OS"
           icone={Wrench}
@@ -360,6 +378,30 @@ function AcoesDoChamado({ ficha }: { ficha: FichaDoChamado }) {
           }}
           confirmar={{ rotulo: 'Abrir a OS', carregando: 'Abrindo a OS' }}
           aoConfirmar={(problema) => doChamado.virarOs(numero, problema)}
+        />
+      )}
+      {doAtivo.pedirToner && (
+        <Botao
+          icone={Droplet}
+          rotuloCarregando="Pedindo toner"
+          {...doBotao('toner')}
+          onPress={() =>
+            void agir('toner', async () => {
+              const dado = await doChamado.pedirToner(numero);
+              if (dado) definirRegistro(dado);
+            })
+          }
+        >
+          Pedir toner
+        </Botao>
+      )}
+      {registro && (
+        <GavetaDoTonerDoChamado
+          chamado={numero}
+          registro={registro}
+          pessoa={{ id: registro.pessoa, rotulo: ficha.pessoa.nome }}
+          aoPedir={doChamado.tonerPedido}
+          aoFechar={() => definirRegistro(null)}
         />
       )}
       <DialogoComTexto

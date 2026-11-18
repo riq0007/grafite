@@ -37293,6 +37293,11 @@ export interface components {
                 patrimonio: string | null;
                 local: string | null;
                 abrir: boolean;
+                tipo: {
+                    nome: string;
+                    icone: string;
+                };
+                usaConsumiveis: boolean;
                 resumo: components["schemas"]["ResumoDoAtivoNoChamadoInput"] | null;
             } | null;
             locais: string[];
@@ -42627,6 +42632,11 @@ export interface components {
                 patrimonio: string | null;
                 local: string | null;
                 abrir: boolean;
+                tipo: {
+                    nome: string;
+                    icone: string;
+                };
+                usaConsumiveis: boolean;
                 resumo: components["schemas"]["ResumoDoAtivoNoChamado"] | null;
             } | null;
             locais: string[];
