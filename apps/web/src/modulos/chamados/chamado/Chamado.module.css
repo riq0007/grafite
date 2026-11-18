@@ -53,6 +53,14 @@
     flex: 1 0 420px;
     min-height: auto;
   }
+
+  /*
+   * A conversa não conta no mínimo do .principal: sem isso, a grade dele mede a conversa inteira,
+   * e o corpo rolaria tudo, com o campo no fim da rolagem. O mínimo fica só o campo.
+   */
+  .principal > :first-child {
+    contain: size;
+  }
 }
 
 .tela > [data-cabecalho-da-pagina] {

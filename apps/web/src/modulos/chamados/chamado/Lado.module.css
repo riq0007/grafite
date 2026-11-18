@@ -88,6 +88,11 @@
   color: var(--cor-texto-2);
 }
 
+/* No cartão do ativo, a frase vai na largura toda, embaixo da miniatura e do nome. */
+.ativo > .informacao {
+  grid-column: 1 / -1;
+}
+
 .mono {
   font-family: var(--fonte-mono);
   font-variant-numeric: tabular-nums;

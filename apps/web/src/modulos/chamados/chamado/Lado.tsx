@@ -139,6 +139,8 @@ function SecaoDoAtivo({ ficha, acoes }: { ficha: FichaDoChamado; acoes: AcoesDoA
       })
     : null;
   const total = resumo?.suprimentos?.total ?? null;
+  // O quadro de dados só com algum dado: vazio, ele deixaria uma sobra embaixo do cartão.
+  const temDados = Boolean(ativo?.local || resumo?.disponibilidade || total || resumo?.ordens);
   return (
     <>
       {ativo ? (
@@ -154,29 +156,31 @@ function SecaoDoAtivo({ ficha, acoes }: { ficha: FichaDoChamado; acoes: AcoesDoA
             </div>
           </div>
           {resumo?.suprimentos && <SuprimentosDoAtivo painel={resumo.suprimentos} agora={agora} />}
-          <dl className={estilos.dados}>
-            {ativo.local && <Dado rotulo="Local">{ativo.local}</Dado>}
-            {resumo?.disponibilidade && (
-              <Dado rotulo="Estado">
-                <span className={estilos.estado}>
-                  <SituacaoNaTela disponibilidade={resumo.disponibilidade} />
-                  {resumo.disponibilidade.desde && (
-                    <IdadeDaLeitura momento={resumo.disponibilidade.desde} agora={agora} />
-                  )}
-                  <Desatualizado momento={resumo.disponibilidade.momento} agora={agora} />
-                </span>
-              </Dado>
-            )}
-            {total && (
-              <Dado rotulo="Páginas">
-                <span className={estilos.mono}>{total.paginas.toLocaleString('pt-BR')}</span>
-                {resumo?.paginasPorMes !== null &&
-                  resumo?.paginasPorMes !== undefined &&
-                  ` · cerca de ${resumo.paginasPorMes.toLocaleString('pt-BR')} por mês`}
-              </Dado>
-            )}
-            {resumo?.ordens && <Dado rotulo="OS no ano">{textoDasOrdens(resumo.ordens)}</Dado>}
-          </dl>
+          {temDados && (
+            <dl className={estilos.dados}>
+              {ativo.local && <Dado rotulo="Local">{ativo.local}</Dado>}
+              {resumo?.disponibilidade && (
+                <Dado rotulo="Estado">
+                  <span className={estilos.estado}>
+                    <SituacaoNaTela disponibilidade={resumo.disponibilidade} />
+                    {resumo.disponibilidade.desde && (
+                      <IdadeDaLeitura momento={resumo.disponibilidade.desde} agora={agora} />
+                    )}
+                    <Desatualizado momento={resumo.disponibilidade.momento} agora={agora} />
+                  </span>
+                </Dado>
+              )}
+              {total && (
+                <Dado rotulo="Páginas">
+                  <span className={estilos.mono}>{total.paginas.toLocaleString('pt-BR')}</span>
+                  {resumo?.paginasPorMes !== null &&
+                    resumo?.paginasPorMes !== undefined &&
+                    ` · cerca de ${resumo.paginasPorMes.toLocaleString('pt-BR')} por mês`}
+                </Dado>
+              )}
+              {resumo?.ordens && <Dado rotulo="OS no ano">{textoDasOrdens(resumo.ordens)}</Dado>}
+            </dl>
+          )}
         </div>
       ) : (
         <p className={estilos.informacao}>Nenhum ativo ligado.</p>
