@@ -3,8 +3,10 @@
 // o lugar dela junto do quadrado, a hora da última mensagem, quem pode receber o chamado, as ações
 // que ele aceita e o relógio que a abre e a fecha. Tudo puro, para os testes com o
 // tempo falso; a tela só liga os eventos do ponteiro e do foco a ele.
+import type { ArvoreDeLocais } from '@grafite/domain';
 import { type DataHora, tempos } from '@grafite/ui';
 import type { ChamadoNosPrazos, ColunaDoQuadro } from '../consultas.ts';
+import { type ChamadoArrastado, naColuna } from './arraste.ts';
 
 /** Quanto o ponteiro fica parado sobre o quadrado para a prévia abrir, em ms. */
 export const ESPERA_DA_PREVIA = 200;
@@ -87,16 +89,17 @@ export interface PessoaParaPassar {
 }
 
 /**
- * As pessoas de "Passar para…": as das colunas de quem atende, na ordem delas, fora quem está com o
- * chamado. A coluna de quem não atende mais os chamados não recebe. Quem não atende os locais do
- * chamado recebe a recusa da API.
+ * As pessoas de "Passar para…": as das colunas que recebem o chamado no arraste (`naColuna`), na
+ * ordem delas. Ficam de fora quem está com o chamado, a coluna de quem não atende mais os chamados
+ * e quem não atende os locais do chamado.
  */
 export function pessoasParaPassar(
   colunas: readonly ColunaDoQuadro[],
-  responsavel: string | null,
+  chamado: ChamadoArrastado,
+  arvore?: ArvoreDeLocais,
 ): PessoaParaPassar[] {
   return colunas
-    .filter((coluna) => !coluna.naoAtendeMais && coluna.conta !== responsavel)
+    .filter((coluna) => naColuna(chamado, coluna, arvore).recebe)
     .map(({ conta, nome, abertos }) => ({ conta, nome, abertos: abertos.length }));
 }
 

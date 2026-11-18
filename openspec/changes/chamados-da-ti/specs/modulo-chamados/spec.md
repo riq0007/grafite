@@ -119,7 +119,7 @@ Parar o ponteiro do mouse num quadrado por 200 ms, ou levar a ele o foco do tecl
 - "Assumir", a ação principal;
 - "Passar para…", com a carga de cada pessoa, como "Ana · 2 abertos".
 
-"Passar para…" SHALL listar as pessoas que atendem os chamados, na ordem das colunas, fora quem está com o chamado.
+"Passar para…" SHALL listar as pessoas que atendem os locais do chamado, na ordem das colunas, fora quem está com o chamado: as das colunas que recebem o quadrado no arraste.
 
 Esc SHALL fechar a prévia. Enter e o clique SHALL abrir o chamado.
 
@@ -152,20 +152,26 @@ As ações da prévia e do menu SHALL mandar a versão do chamado que a tela mos
 
 ### Requirement: Arrastar para passar
 
-Arrastar um quadrado para a coluna de uma pessoa SHALL passar o chamado a ela. Arrastá-lo para "Sem responsável" SHALL devolvê-lo à triagem.
+Arrastar um quadrado com o mouse para a coluna de uma pessoa SHALL passar o chamado a ela. Arrastá-lo para "Sem responsável" SHALL devolvê-lo à triagem. No toque e na caneta, o quadrado SHALL NOT se arrastar: as colunas rolam, e o chamado passa pelo "Passar para…".
+
+No alto, a dica SHALL dizer "Arraste um quadrado para passar adiante. Passe o mouse para ler." e, durante o arraste, "Arrastando #1038 Wi-Fi cai na Sala Atlântico". Quem só vê os chamados não arrasta, e a dica dele SHALL dizer só "Passe o mouse para ler.".
 
 Durante o arraste:
 - o lugar de origem SHALL ficar com o contorno tracejado e o aviso "O #1038 está sendo movido. O prazo dele vence em 2 h.";
-- a coluna sob o ponteiro SHALL ganhar a borda forte, o pedaço seguinte da barra tracejado e a frase "Soltar para passar a Renato · o prazo continua contando", ou, no chamado aguardando, "Soltar para passar a Renato · o relógio continua parado";
-- a coluna de quem não atende os locais do chamado SHALL dizer "Renato não atende Jundiaí" e SHALL NOT receber o quadrado;
-- a coluna de quem não atende mais os chamados SHALL NOT receber o quadrado;
+- a coluna sob o ponteiro SHALL ganhar a borda forte, o pedaço seguinte da barra tracejado e a frase "Soltar para passar a Renato · o prazo continua contando", ou, no chamado aguardando, "Soltar para passar a Renato · o relógio continua parado"; a "Sem responsável", "Soltar para devolver à triagem · o prazo continua contando";
+- a coluna de quem não atende os locais do chamado SHALL dizer "Renato não atende Jundiaí", com o caminho do local, ou, no chamado sem local, "Renato não atende os chamados sem local", e SHALL NOT receber o quadrado;
+- a coluna de quem não atende mais os chamados SHALL dizer "Renato não atende mais os chamados" e SHALL NOT receber o quadrado;
 - a coluna "Sem responsável" SHALL dizer, no chamado aguardando, "O #1041 está aguardando Fernanda" e SHALL NOT recebê-lo.
 
-Esc SHALL cancelar o arraste. Soltar fora de uma coluna SHALL deixar o chamado como estava.
+Esc SHALL cancelar o arraste. Soltar fora de uma coluna, ou na de origem, SHALL deixar o chamado como estava.
 
 #### Scenario: Passar arrastando
 - **WHEN** Ana arrasta o #1038 da triagem para a coluna de Renato e solta
 - **THEN** o #1038 entra na coluna de Renato, que passa de 2 para 3 abertos, e Renato é avisado
+
+#### Scenario: Coluna que não recebe
+- **WHEN** Ana arrasta o #1041, que aguarda Fernanda, sobre "Sem responsável" e solta
+- **THEN** a coluna diz "O #1041 está aguardando Fernanda", e o #1041 continua com Ana
 
 ### Requirement: Chamado aberto
 

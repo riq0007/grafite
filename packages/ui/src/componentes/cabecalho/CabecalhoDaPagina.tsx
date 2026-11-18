@@ -11,6 +11,8 @@ export interface PropsDoCabecalhoDaPagina {
   selos?: ReactNode;
   /** Uma linha embaixo do título, no texto secundário. */
   detalhe?: ReactNode;
+  /** Um apoio ao lado do título, e fora dele, como a dica de uma tela. */
+  apoio?: ReactNode;
   /** As ações da tela, à direita, na ordem dada. */
   acoes?: ReactNode;
   /** O título some quando a janela tem abas, como o do TituloDaJanela. */
@@ -27,12 +29,13 @@ export function CabecalhoDaPagina({
   marca,
   selos,
   detalhe,
+  apoio,
   acoes,
   ocultarComAbas,
 }: PropsDoCabecalhoDaPagina) {
   // Só com o título que a barra das abas esconde, o cabeçalho some junto com ele (change
   // cabecalho-em-toda-tela, design, decisão 6).
-  const soOTitulo = !marca && !selos && !detalhe && !acoes;
+  const soOTitulo = !marca && !selos && !detalhe && !apoio && !acoes;
   return (
     // Um div, e não um header: a barra de cima já é o banner da página.
     <div
@@ -55,6 +58,7 @@ export function CabecalhoDaPagina({
           </TituloDaJanela>
           {detalhe && <div className={estilos.detalhe}>{detalhe}</div>}
         </div>
+        {apoio && <div className={estilos.apoio}>{apoio}</div>}
       </div>
       {acoes && <div className={estilos.acoes}>{acoes}</div>}
     </div>

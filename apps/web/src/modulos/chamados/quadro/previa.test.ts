@@ -15,6 +15,8 @@ import {
   RENATO,
   sp,
 } from '../../../teste/chamados.ts';
+import type { ColunaDoQuadro } from '../consultas.ts';
+import { chamadoArrastado } from './arraste.ts';
 import {
   acoesDoChamado,
   controleDaPrevia,
@@ -188,32 +190,52 @@ describe('momentoDaMensagem', () => {
 });
 
 describe('pessoasParaPassar', () => {
+  /** O chamado dos mockups, na coluna dada; sem ela, na triagem. */
+  const naColuna = (numero: number, daColuna: ColunaDoQuadro | null = null) => {
+    const chamado = CHAMADOS_DOS_MOCKUPS.find((candidato) => candidato.numero === numero);
+    if (!chamado) throw new Error(`Sem o #${numero}.`);
+    return chamadoArrastado(chamado, daColuna);
+  };
+  const [, , , colunaDoRenato] = QUADRO_DOS_MOCKUPS.colunas;
+
   it('as pessoas das colunas, na ordem delas, fora quem está com o chamado, com os abertos', () => {
     // O #1033, com Renato: Ana, a conta da sessão, entra, como no m01.
-    expect(pessoasParaPassar(QUADRO_DOS_MOCKUPS.colunas, RENATO.conta)).toEqual([
+    expect(
+      pessoasParaPassar(QUADRO_DOS_MOCKUPS.colunas, naColuna(1033, colunaDoRenato ?? null)),
+    ).toEqual([
       { conta: ANA.conta, nome: 'Ana Souza', abertos: 2 },
       { conta: BRUNO.conta, nome: 'Bruno Lima', abertos: 2 },
       { conta: DIEGO.conta, nome: 'Diego Martins', abertos: 3 },
     ]);
     // Da triagem, todas.
-    expect(pessoasParaPassar(QUADRO_DOS_MOCKUPS.colunas, null).map(({ nome }) => nome)).toEqual([
-      'Ana Souza',
-      'Bruno Lima',
-      'Diego Martins',
-      'Renato Alves',
-    ]);
+    expect(
+      pessoasParaPassar(QUADRO_DOS_MOCKUPS.colunas, naColuna(1038)).map(({ nome }) => nome),
+    ).toEqual(['Ana Souza', 'Bruno Lima', 'Diego Martins', 'Renato Alves']);
   });
 
   it('a coluna de quem não atende mais os chamados não recebe', () => {
     const naoAtendeMais = coluna(RENATO, [1033], null, { naoAtendeMais: true });
-    const colunas = [coluna(ANA, [1031], null), coluna(RENATO, [1037], null), naoAtendeMais];
-    expect(pessoasParaPassar(colunas, ANA.conta)).toEqual([
+    const daAna = coluna(ANA, [1031], null);
+    const colunas = [daAna, coluna(RENATO, [1037], null), naoAtendeMais];
+    expect(pessoasParaPassar(colunas, naColuna(1031, daAna))).toEqual([
       { conta: RENATO.conta, nome: 'Renato Alves', abertos: 1 },
     ]);
     // Quem só tem a coluna de quem não atende mais não aparece.
-    expect(pessoasParaPassar([coluna(ANA, [], null), naoAtendeMais], null)).toEqual([
+    expect(pessoasParaPassar([coluna(ANA, [], null), naoAtendeMais], naColuna(1038))).toEqual([
       { conta: ANA.conta, nome: 'Ana Souza', abertos: 0 },
     ]);
+  });
+
+  it('quem não atende os locais do chamado fica de fora, como no arraste', () => {
+    // Os chamados dos mockups não têm local: só quem atende a organização inteira os recebe.
+    const soUmLocal = coluna(RENATO, [1037], null, {
+      atende: { organizacao: false, locais: ['0199a6e0-0000-7000-8000-0000000000e1'] },
+    });
+    expect(
+      pessoasParaPassar([coluna(ANA, [1031], null), soUmLocal], naColuna(1038)).map(
+        ({ nome }) => nome,
+      ),
+    ).toEqual(['Ana Souza']);
   });
 });
 

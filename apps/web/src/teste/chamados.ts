@@ -377,6 +377,8 @@ export function servidorDoQuadro(inicial: { quadro?: QuadroDeTeste; prazos?: Pra
     'GET /api/chamados/quadro': (pedido) => quadro(pedido),
     'GET /api/chamados/prazos': (pedido) => prazos(pedido),
     'GET /api/acesso/administradores': () => Response.json({ administradores: ['Ana Souza'] }),
+    // A árvore que a coluna que recebe o arraste lê; os chamados dos mockups não têm local.
+    'GET /api/locais': () => Response.json({ locais: [], permite: { cadastrarNaRaiz: false } }),
   };
   return { servidor, estado, quadro, prazos };
 }

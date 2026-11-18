@@ -586,7 +586,7 @@ Como ele funciona (tarefa 5.4):
 - **um alvo por elemento:** o elemento leva o `data-alvo-de` de um arraste só. As listas que soltam coisas diferentes nas mesmas linhas, como a paleta e a ordem dos campos (5.21 e 5.22), usam o mesmo `useArrastar`, com o item numa união;
 - **o Esc** cancela o arraste e não chega a mais ninguém: a janela o pega primeiro, e a prévia ou o painel de trás não fecham. O `pointercancel` também cancela, e um segundo ponteiro não mexe no arraste;
 - **o resto é da tela:** o `touch-action: none` do que se arrasta, o cursor e o texto sem seleção durante o arraste ficam no CSS de cada tela;
-- **o que a 5.9 fecha:** o `touch-action: none` no quadrado inteiro tira, no toque, a rolagem por cima dos quadrados, e a 5.9 decide e escreve aqui o caminho no toque (por exemplo, o arraste só com o `pointerType` que não é `touch`, e o "Passar para…" no toque). A roda do mouse sem mover o ponteiro deixa o alvo velho até o próximo movimento: a soltura recalcula, e só o destaque erra;
+- **no toque (5.9):** o quadrado só se arrasta com o mouse (`pointerType === 'mouse'`) e fica sem o `touch-action: none`, que tiraria a rolagem por cima dos quadrados. No toque e na caneta, as colunas rolam, e o chamado passa pelo "Passar para…" do menu ou do chamado aberto (5.10). A roda do mouse sem mover o ponteiro deixa o alvo velho até o próximo movimento: a soltura recalcula, e só o destaque erra;
 - **o que só o navegador prova** fica para a 5.9, no `pnpm dev` contra o m02, e para o ponta a ponta da 6.3, com o `page.mouse` (apertar, mover e soltar), que dá o clique de verdade: soltar em outra coluna; arrastar 5 px e soltar no mesmo quadrado; o Esc com a prévia aberta; o Alt+Tab e a roda no meio do arraste; e o toque emulado, em que o toque curto pode virar clique numa tarefa seguinte.
 
 O teclado tem a alternativa em cada caso:
@@ -838,7 +838,6 @@ O "2 abertos" e o "mais antigo…" ficam um embaixo do outro, como no mockup, e 
 - o prazo curto quebra antes da medida ("vence em" numa linha e "35 min" na outra), e nenhuma medida ("35 min", "17 h", "2 d" ou "menos de 1 min") se parte, também no mais antigo (`TextoComMedidas`, no `Pecas.tsx`).
 
 **O que fica para depois.** No cabeçalho do m01:
-- a dica "Arraste um quadrado para passar adiante. Passe o mouse para ler." entra com o arraste (5.9);
 - o "Buscar nos chamados" entra com a busca (5.10);
 - o "Novo chamado" entra com a gaveta (5.18).
 
@@ -873,7 +872,7 @@ O relógio dela é puro (`controleDaPrevia`, no `quadro/previa.ts`), e a tela (`
 - "Atende": quem atende, com "não atende mais os chamados" quando o quadrado está na coluna dessa marca, ou "Ninguém ainda, na triagem";
 - a última mensagem, com quem a escreveu e a hora no fuso da conta: "09:12" hoje, "ontem, 15:10" e "seg 9 nov, 16:00" antes, e, noutro ano, "10/11/2025, 16:00" (`momentoDaMensagem`). Sem mensagem, "Nenhuma mensagem ainda.";
 - "Assumir", fora no chamado que já está com a conta;
-- "Passar para…", com um botão por pessoa: a sigla, o primeiro nome e os abertos dela ("Ana · 2 abertos"), com o nome inteiro no nome lido. As pessoas são as das colunas de quem atende, na ordem delas, fora quem está com o chamado, como no m01, em que Ana, a conta da sessão, está na lista do #1033. Quem não atende os locais do chamado recebe a recusa da API ("Bruno não atende os chamados de Jundiaí."). A coluna que não recebe é do arraste (5.9).
+- "Passar para…", com um botão por pessoa: a sigla, o primeiro nome e os abertos dela ("Ana · 2 abertos"), com o nome inteiro no nome lido. As pessoas são as das colunas de quem atende, na ordem delas, fora quem está com o chamado, como no m01, em que Ana, a conta da sessão, está na lista do #1033. Quem não atende os locais do chamado fica de fora, pela mesma regra da coluna que não recebe o arraste (5.9, abaixo).
 
 A quem só vê os chamados, a prévia vai sem as ações, e o menu não abre. A permissão é a geral (`chamados.atender`, pelo `useAcesso`), como o contrato de módulo pede para uma ação: o local de cada chamado, a API confere.
 
@@ -900,6 +899,13 @@ O retorno vai num aviso:
 Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DOS_CHAMADOS`: o quadro, os prazos e a ficha), sem esperar o `chamados.mudaram`. Assim, depois do `chamado-mudou`, a tela mostra o chamado como ele está, e a conta que agiu vê a mudança na hora. O quadrado que muda de coluna é outro elemento, e o foco nele se perderia: depois da releitura, o foco que se perdeu com ele vai ao quadrado do mesmo número, com a prévia como estava, aberta ou fechada. Assim, a ação pelo menu não abre a prévia que o menu fechou. Se a releitura chega antes de o foco voltar do menu, o foco vai direto ao quadrado relido. O foco que a pessoa tira de um elemento que continua na tela fica onde ela o pôs.
 
 **O que fica para a 5.10:** "Abrir o chamado", no menu, o Enter e o clique, com o endereço `/chamados/<número>`. Até lá, o item que não leva a nada não entra.
+
+**O arraste (tarefa 5.9),** no `useArrastar` (decisão 15), com o m02:
+- **quem recebe** sai de uma função pura, `naColuna(chamado, coluna, arvore)`, no `quadro/arraste.ts`: a frase de soltar, ou o motivo da recusa. O alcance de cada coluna é o `atende` do quadro (4.9), com os ramos das raízes pela árvore do `/locais` (`useArvoreDosLocais`). O motivo leva o caminho do primeiro local fora do alcance. Sem a árvore ainda, só o chamado sem local fica de fora, e a API recusa o resto. A mesma função filtra o "Passar para…" da prévia e do menu (`pessoasParaPassar`);
+- **no começo,** a prévia fecha. O quadrado no ar, `aria-hidden` e fixo na janela, parte da caixa do quadrado no aperto, com a inclinação de −2,5°, a sombra sobreposta e a borda do destaque do m02. O de origem fica tracejado, a 60 %, com o aviso embaixo dos quadrados da coluna;
+- **a coluna sob o ponteiro que recebe** ganha a área de soltar no alto (a `.solta` do m02) e o pedaço tracejado. As que não recebem mostram o motivo durante todo o arraste, para quem arrasta saber antes de chegar;
+- **soltar** chama o passar ou o devolver da prévia (5.8), com a versão, o aviso e a releitura;
+- **a dica do cabeçalho** vai no `apoio`, novo, do `CabecalhoDaPagina` do kit, ao lado do título e fora dele, e some sem o mouse (`hover: none`).
 
 ## Risks / Trade-offs
 

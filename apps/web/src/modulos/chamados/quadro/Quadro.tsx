@@ -5,7 +5,8 @@
 // quadrado. Os dois pedidos andam cada um no seu tempo, e o número que a lista ainda não trouxe fica
 // só com o número. A falha de uma releitura vai acima das colunas, que ficam com a última leitura;
 // sem as colunas, a falha fica no lugar delas. Cada quadrado com os detalhes tem a prévia, com o
-// ponteiro parado ou com o foco do teclado, e o menu, com as ações que o chamado aceita.
+// ponteiro parado ou com o foco do teclado, e o menu, com as ações que o chamado aceita. Com o
+// mouse, quem atende arrasta o quadrado para passar o chamado (m02).
 import type { HorarioDaTi } from '@grafite/domain';
 import {
   Botao,
@@ -17,9 +18,10 @@ import {
   RotuloDeSituacao,
   useDataHora,
 } from '@grafite/ui';
-import { CircleAlert, Info } from 'lucide-react';
+import { Ban, CircleAlert, CornerDownRight, HandGrab, Info } from 'lucide-react';
 import {
   createContext,
+  type DragEvent,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -36,6 +38,7 @@ import {
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useSessao } from '../../../sessao/useSessao.tsx';
+import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
 import { type ChamadoDepoisDaAcao, useAcoesDoAtendimento } from '../acoes.ts';
 import {
   type ChamadoNosPrazos,
@@ -52,6 +55,16 @@ import {
   TextoComMedidas,
 } from '../Pecas.tsx';
 import { type ContarOPrazo, contadorDoPrazo } from '../prazo.ts';
+import { useArrastar } from '../useArrastar.ts';
+import {
+  ALVO_DA_TRIAGEM,
+  avisoDaOrigem,
+  type ChamadoArrastado,
+  chamadoArrastado,
+  chaveDoAlvo,
+  type NaColuna,
+  naColuna,
+} from './arraste.ts';
 import { type AcoesDaPrevia, PreviaDoChamado } from './PreviaDoChamado.tsx';
 import {
   acoesDoChamado,
@@ -85,6 +98,9 @@ export function Quadro() {
   const agora = useAgora();
   const { fuso } = useDataHora();
   const contar = useMemo(() => contadorDoPrazo(agora, fuso), [agora, fuso]);
+  const arrasta = useAcesso().pode('chamados.atender');
+  // O chamado no ar, que a dica do alto diz e que pede o cursor de segurar na tela inteira.
+  const [noAr, definirNoAr] = useState<ChamadoNoAr | null>(null);
 
   const falha = quadro.isError ? quadro.error : prazos.isError ? prazos.error : null;
   const relendo = quadro.isFetching || prazos.isFetching;
@@ -122,6 +138,7 @@ export function Quadro() {
           agora={agora}
           contar={contar}
           relendo={relendo}
+          aoArrastar={definirNoAr}
         />
       </>
     );
@@ -136,7 +153,13 @@ export function Quadro() {
   }
 
   return (
-    <div className={estilos.tela} data-janela-inteira="">
+    <div
+      className={estilos.tela}
+      data-janela-inteira=""
+      // No arraste, o cursor do sistema, de segurar, em vez do suavizado.
+      data-arrastando={noAr ? '' : undefined}
+      data-cursor-nativo={noAr ? '' : undefined}
+    >
       <CabecalhoDaPagina
         titulo={TITULO}
         selos={
@@ -146,9 +169,42 @@ export function Quadro() {
             </RotuloDeSituacao>
           )
         }
+        apoio={naTela && <Dica noAr={noAr} arrasta={arrasta} />}
       />
       {conteudo}
     </div>
+  );
+}
+
+/** O chamado no ar, na dica do alto. */
+interface ChamadoNoAr {
+  numero: number;
+  titulo: string;
+}
+
+/**
+ * A dica do alto, com a mão (m01): o que o mouse faz nos quadrados e, no arraste, o chamado no ar
+ * (m02). Quem só vê os chamados não arrasta. Sem o mouse, ela some, pelo CSS.
+ */
+function Dica({ noAr, arrasta }: { noAr: ChamadoNoAr | null; arrasta: boolean }) {
+  return (
+    <p className={estilos.dica}>
+      <Icone icone={HandGrab} tamanho={14} />
+      {/* Os espaços entre as partes ficam para o leitor de tela; o vão é o do CSS. */}
+      {noAr ? (
+        <>
+          <b className={estilos.forteDaDica}>Arrastando</b>{' '}
+          <span className={estilos.numeroDaDica}>{`#${noAr.numero}`}</span>{' '}
+          <span className={estilos.textoDaDica}>{noAr.titulo}</span>
+        </>
+      ) : (
+        <span className={estilos.textoDaDica}>
+          {arrasta
+            ? 'Arraste um quadrado para passar adiante. Passe o mouse para ler.'
+            : 'Passe o mouse para ler.'}
+        </span>
+      )}
+    </p>
   );
 }
 
@@ -174,7 +230,22 @@ interface InteracaoDoQuadro {
   aoPedirMenu: (numero: number, evento: MouseEvent<HTMLElement>, quadrado: HTMLElement) => void;
   acoesDaPrevia: (numero: number) => AcoesDaPrevia | null;
   medir: (quadrado: HTMLElement | null) => { quadrado: Caixa; area: Caixa } | null;
+  /** O que o quadrado faz no aperto do mouse, para o arraste; nada, a quem só vê os chamados. */
+  alcaDoQuadrado: (numero: number) => AlcaDoQuadrado | undefined;
+  /** O número do quadrado no ar, que deixa o lugar tracejado. */
+  noAr: number | null;
 }
+
+interface AlcaDoQuadrado {
+  onPointerDown: (evento: PointerEvent<HTMLElement>) => void;
+  onDragStart: (evento: DragEvent<HTMLElement>) => void;
+}
+
+/** O que a coluna mostra no arraste: a área de soltar, o motivo de não receber, ou o aviso na origem. */
+type NoArraste =
+  | { tipo: 'solta'; frase: string }
+  | { tipo: 'recusa'; motivo: string }
+  | { tipo: 'origem'; aviso: string };
 
 const InteracaoDoQuadroContexto = createContext<InteracaoDoQuadro | null>(null);
 
@@ -211,11 +282,14 @@ function Colunas({
   agora,
   contar,
   relendo,
+  aoArrastar,
 }: DaTela & {
   quadro: QuadroDosChamados;
   chamados: ChamadoNosPrazos[];
   horario: HorarioDaTi;
   contar: ContarOPrazo;
+  /** O chamado que vai ao ar, ou nenhum, quando o arraste acaba. */
+  aoArrastar: (noAr: ChamadoNoAr | null) => void;
 }) {
   const lista = useMemo(() => listaPorNumero({ chamados }), [chamados]);
   const quadradosDe = (numeros: number[]) => quadradosDaColuna(numeros, { lista, horario, contar });
@@ -235,6 +309,9 @@ function Colunas({
   const conta = sessao.tipo === 'ativa' ? sessao.conta.id : null;
   const podeAtender = useAcesso().pode('chamados.atender');
   const acoes = useAcoesDoAtendimento();
+  // Os ramos de quem atende só uns locais, para a coluna que não recebe e o "Passar para…".
+  const arvore = useArvoreDosLocais(podeAtender);
+  const colunaPorChave = new Map(quadro.colunas.map((coluna) => [chaveDaColuna(coluna), coluna]));
 
   const area = useRef<HTMLDivElement>(null);
   const [aberta, definirAberta] = useState<number | null>(null);
@@ -410,18 +487,72 @@ function Colunas({
     const doNumero = porNumero.get(numero);
     const chamado = doNumero?.quadrado.chamado;
     if (!podeAtender || !doNumero || !chamado) return null;
-    const responsavel = doNumero.coluna?.conta ?? null;
+    const { coluna } = doNumero;
     const quais = acoesDoChamado(
-      {
-        situacao: chamado.situacao,
-        responsavel: responsavel === null ? null : { conta: responsavel },
-      },
+      { situacao: chamado.situacao, responsavel: coluna && { conta: coluna.conta } },
       conta,
     );
+    const noAr = chamadoArrastado(chamado, coluna);
     return {
       ...quais,
-      pessoas: quais.passar ? pessoasParaPassar(quadro.colunas, responsavel) : [],
+      pessoas: quais.passar ? pessoasParaPassar(quadro.colunas, noAr, arvore) : [],
     };
+  };
+
+  // O arraste: quem recebe sai da mesma regra do "Passar para…", e soltar passa ou devolve.
+  const naChave = (chamado: ChamadoArrastado, chave: string): NaColuna => {
+    if (chave === ALVO_DA_TRIAGEM) return naColuna(chamado, null, arvore);
+    const coluna = colunaPorChave.get(chave);
+    return coluna ? naColuna(chamado, coluna, arvore) : { recebe: false, motivo: null };
+  };
+  const {
+    arraste,
+    alca,
+    alvo: alvoDoArraste,
+  } = useArrastar<ChamadoArrastado>({
+    recebe: (chamado, chave) => naChave(chamado, chave).recebe,
+    aoSoltar: (chamado, { chave }) => {
+      if (chave === ALVO_DA_TRIAGEM) {
+        devolver(chamado.numero);
+        return;
+      }
+      const coluna = colunaPorChave.get(chave);
+      if (!coluna) return;
+      passar(chamado.numero, {
+        conta: coluna.conta,
+        nome: coluna.nome,
+        abertos: coluna.abertos.length,
+      });
+    },
+  });
+  // O aperto do mouse num quadrado: a caixa e o quadrado de quando ele vai ao ar.
+  const apertado = useRef<{ caixa: DOMRect; quadrado: Quadrado } | null>(null);
+  const numeroNoAr = arraste?.item.numero ?? null;
+  // No começo do arraste, a prévia fecha, e a dica do alto diz o chamado no ar.
+  useLayoutEffect(() => {
+    if (numeroNoAr === null) {
+      aoArrastar(null);
+      return;
+    }
+    controle.fechar();
+    aoArrastar({ numero: numeroNoAr, titulo: apertado.current?.quadrado.chamado?.titulo ?? '' });
+  }, [numeroNoAr, controle, aoArrastar]);
+  useEffect(() => () => aoArrastar(null), [aoArrastar]);
+
+  /** O que a coluna mostra no arraste em curso. */
+  const noArrasteDa = (coluna: ColunaDoQuadro | null): NoArraste | null => {
+    if (!arraste) return null;
+    const chave = chaveDoAlvo(coluna);
+    const nela = naChave(arraste.item, chave);
+    if (nela.recebe)
+      return arraste.alvo?.chave === chave ? { tipo: 'solta', frase: nela.frase } : null;
+    if (nela.motivo !== null) return { tipo: 'recusa', motivo: nela.motivo };
+    if (chave !== arraste.item.origem) return null;
+    const situacao =
+      porNumero.get(arraste.item.numero)?.quadrado.situacao ??
+      apertado.current?.quadrado.situacao ??
+      null;
+    return { tipo: 'origem', aviso: avisoDaOrigem(arraste.item.numero, situacao) };
   };
 
   const itensDoMenu = (numero: number): ItemDoMenuDeContexto[] => {
@@ -526,7 +657,29 @@ function Colunas({
       if (!quadrado || !colunas) return null;
       return { quadrado: quadrado.getBoundingClientRect(), area: areaDasColunas(colunas) };
     },
+    alcaDoQuadrado(numero) {
+      const doNumero = porNumero.get(numero);
+      const chamado = doNumero?.quadrado.chamado;
+      if (!podeAtender || !doNumero || !chamado) return undefined;
+      const { onPointerDown, onDragStart } = alca(chamadoArrastado(chamado, doNumero.coluna));
+      return {
+        onPointerDown(evento) {
+          // Só o mouse: no toque e na caneta, as colunas rolam por cima dos quadrados.
+          if (evento.pointerType !== 'mouse' || evento.button !== 0) return;
+          apertado.current = {
+            caixa: evento.currentTarget.getBoundingClientRect(),
+            quadrado: doNumero.quadrado,
+          };
+          onPointerDown(evento);
+        },
+        onDragStart,
+      };
+    },
+    noAr: numeroNoAr,
   };
+
+  // O quadrado no ar segue o ponteiro, a partir do lugar dele no aperto.
+  const voo = arraste && apertado.current;
 
   return (
     <InteracaoDoQuadroContexto.Provider value={doQuadro}>
@@ -542,6 +695,8 @@ function Colunas({
           quadrados={triagem}
           agora={agora}
           relendo={relendo}
+          alvo={alvoDoArraste(ALVO_DA_TRIAGEM)}
+          noArraste={noArrasteDa(null)}
         />
         {dasColunas.map(({ coluna, quadrados }) => (
           <ColunaDaPessoa
@@ -550,9 +705,25 @@ function Colunas({
             quadrados={quadrados}
             agora={agora}
             relendo={relendo}
+            alvo={alvoDoArraste(chaveDaColuna(coluna))}
+            noArraste={noArrasteDa(coluna)}
           />
         ))}
       </div>
+      {voo && (
+        <div
+          aria-hidden="true"
+          className={`${estilos.quadrado} ${estilos.voando}`}
+          style={{
+            left: voo.caixa.left + arraste.dx,
+            top: voo.caixa.top + arraste.dy,
+            width: voo.caixa.width,
+            height: voo.caixa.height,
+          }}
+        >
+          <ConteudoDoQuadrado quadrado={voo.quadrado} relendo={relendo} />
+        </div>
+      )}
       <MenuDeContexto
         rotulo={menu ? `Ações do #${menu.numero}` : 'Ações do chamado'}
         posicao={menu?.posicao ?? null}
@@ -595,15 +766,57 @@ function Contagem({
   );
 }
 
+/** A coluna como alvo do arraste, e o que ela mostra nele. */
+interface NoArrasteDaColuna {
+  alvo: { 'data-alvo-de': string; 'data-alvo': string };
+  noArraste: NoArraste | null;
+}
+
+/** A área de soltar, no alto da coluna que recebe, ou o motivo de não receber. */
+function NoAltoDaColuna({ noArraste }: { noArraste: NoArraste | null }) {
+  if (noArraste?.tipo === 'solta') {
+    return (
+      <p className={estilos.solta}>
+        <Icone icone={CornerDownRight} tamanho={16} />
+        {noArraste.frase}
+      </p>
+    );
+  }
+  if (noArraste?.tipo === 'recusa') {
+    return (
+      <p className={estilos.recusa}>
+        <Icone icone={Ban} tamanho={14} />
+        {noArraste.motivo}
+      </p>
+    );
+  }
+  return null;
+}
+
+/** O aviso no lugar de origem, embaixo dos quadrados da coluna. */
+function AvisoDaOrigem({ noArraste }: { noArraste: NoArraste | null }) {
+  if (noArraste?.tipo !== 'origem') return null;
+  return <p className={estilos.avisoDaOrigem}>{noArraste.aviso}</p>;
+}
+
 function ColunaDaTriagem({
   triagem,
   quadrados,
   agora,
   relendo,
-}: DaTela & { triagem: QuadroDosChamados['triagem']; quadrados: Quadrado[] }) {
+  alvo,
+  noArraste,
+}: DaTela & NoArrasteDaColuna & { triagem: QuadroDosChamados['triagem']; quadrados: Quadrado[] }) {
   const id = useId();
   return (
-    <section className={estilos.coluna} data-coluna="triagem" data-triagem="" aria-labelledby={id}>
+    <section
+      className={estilos.coluna}
+      data-coluna="triagem"
+      data-triagem=""
+      aria-labelledby={id}
+      {...alvo}
+      data-alvo-ativo={noArraste?.tipo === 'solta' || undefined}
+    >
       <header className={estilos.cabecalho}>
         <BandejaDaTriagem />
         <div className={estilos.quem}>
@@ -617,7 +830,9 @@ function ColunaDaTriagem({
           />
         </div>
       </header>
+      <NoAltoDaColuna noArraste={noArraste} />
       <Quadrados quadrados={quadrados} coluna={null} relendo={relendo} />
+      <AvisoDaOrigem noArraste={noArraste} />
     </section>
   );
 }
@@ -627,11 +842,21 @@ function ColunaDaPessoa({
   quadrados,
   agora,
   relendo,
-}: DaTela & { coluna: ColunaDoQuadro; quadrados: Quadrado[] }) {
+  alvo,
+  noArraste,
+}: DaTela & NoArrasteDaColuna & { coluna: ColunaDoQuadro; quadrados: Quadrado[] }) {
   const id = useId();
   const carga = textoDaCarga(coluna.abertos.length, coluna.pedacos.total);
+  // Na coluna que recebe, o pedaço seguinte da barra fica tracejado.
+  const novo = noArraste?.tipo === 'solta' ? coluna.pedacos.cheios : null;
   return (
-    <section className={estilos.coluna} data-coluna={chaveDaColuna(coluna)} aria-labelledby={id}>
+    <section
+      className={estilos.coluna}
+      data-coluna={chaveDaColuna(coluna)}
+      aria-labelledby={id}
+      {...alvo}
+      data-alvo-ativo={novo !== null || undefined}
+    >
       <header className={estilos.cabecalho}>
         <SiglaDaPessoa conta={coluna.conta} nome={coluna.nome} />
         <div className={estilos.quem}>
@@ -652,12 +877,18 @@ function ColunaDaPessoa({
         </div>
         <span className={estilos.carga} role="img" aria-label={carga} title={carga}>
           {Array.from({ length: coluna.pedacos.total }, (_, indice) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: a posição é o lugar do pedaço na barra.
-            <span key={indice} data-cheio={indice < coluna.pedacos.cheios ? '' : undefined} />
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: a posição é o lugar do pedaço na barra.
+              key={indice}
+              data-cheio={indice < coluna.pedacos.cheios ? '' : undefined}
+              data-novo={indice === novo ? '' : undefined}
+            />
           ))}
         </span>
       </header>
+      <NoAltoDaColuna noArraste={noArraste} />
       <Quadrados quadrados={quadrados} coluna={coluna} relendo={relendo} />
+      <AvisoDaOrigem noArraste={noArraste} />
       <p className={estilos.pe}>{textoDosResolvidosHoje(coluna.resolvidosHoje)}</p>
     </section>
   );
@@ -711,6 +942,7 @@ function ItemDoQuadrado({
   useLayoutEffect(() => () => controle?.quadradoSaiu(numero), [controle, numero]);
   if (!interacao) throw new Error('O quadrado fica dentro das colunas.');
   const aberta = chamado !== null && interacao.aberta === numero;
+  const alca = chamado ? interacao.alcaDoQuadrado(numero) : undefined;
   return (
     <li
       data-numero={numero}
@@ -732,27 +964,21 @@ function ItemDoQuadrado({
         aria-describedby={chamado ? idDoPrazo : undefined}
         tabIndex={chamado ? 0 : undefined}
         data-aberto={aberta || undefined}
+        data-arrastavel={alca ? '' : undefined}
+        data-no-ar={interacao.noAr === numero || undefined}
         {...(chamado && {
           onPointerMove: (evento: PointerEvent<HTMLElement>) => interacao.aoMover(numero, evento),
           onContextMenu: (evento: MouseEvent<HTMLElement>) => {
             if (elemento.current) interacao.aoPedirMenu(numero, evento, elemento.current);
           },
         })}
+        {...alca}
       >
-        <span className={estilos.alto}>
-          {chamado && <IconeDoTipo icone={chamado.tipo.icone} nome={chamado.tipo.nome} />}
-          <span className={estilos.numero}>{`#${numero}`}</span>
-        </span>
-        {chamado ? (
-          <>
-            <span className={estilos.titulo}>{chamado.titulo}</span>
-            <PrazoEmTexto id={idDoPrazo} situacao={situacao} forma="curta" />
-          </>
-        ) : (
-          <span className={estilos.semDetalhes}>
-            {relendo ? 'Carregando…' : 'Detalhes não carregados'}
-          </span>
-        )}
+        <ConteudoDoQuadrado
+          quadrado={{ numero, chamado, situacao }}
+          idDoPrazo={idDoPrazo}
+          relendo={relendo}
+        />
       </article>
       {aberta && (
         <PreviaDoChamado
@@ -766,5 +992,38 @@ function ItemDoQuadrado({
         />
       )}
     </li>
+  );
+}
+
+/**
+ * O que o quadrado mostra: o tipo, o número, o título numa linha e o prazo, ou que os detalhes da
+ * lista faltam. É o mesmo no quadrado no ar.
+ */
+function ConteudoDoQuadrado({
+  quadrado: { numero, chamado, situacao },
+  idDoPrazo,
+  relendo,
+}: {
+  quadrado: Quadrado;
+  idDoPrazo?: string;
+  relendo: boolean;
+}) {
+  return (
+    <>
+      <span className={estilos.alto}>
+        {chamado && <IconeDoTipo icone={chamado.tipo.icone} nome={chamado.tipo.nome} />}
+        <span className={estilos.numero}>{`#${numero}`}</span>
+      </span>
+      {chamado ? (
+        <>
+          <span className={estilos.titulo}>{chamado.titulo}</span>
+          <PrazoEmTexto id={idDoPrazo} situacao={situacao} forma="curta" />
+        </>
+      ) : (
+        <span className={estilos.semDetalhes}>
+          {relendo ? 'Carregando…' : 'Detalhes não carregados'}
+        </span>
+      )}
+    </>
   );
 }
