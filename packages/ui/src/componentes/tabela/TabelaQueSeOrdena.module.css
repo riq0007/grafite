@@ -1,0 +1,97 @@
+/*
+ * A tabela que se ordena pelo arraste: as linhas de 46 px, e as altas, de 56; a escolhida, na
+ * superfície, com as linhas fortes e a barra do destaque à esquerda; a que se arrasta, esmaecida.
+ */
+.tabela {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--texto-corpo);
+  outline: none;
+}
+
+.tabela th {
+  height: 40px;
+  padding: 0 var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.04em;
+  text-align: start;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.tabela th:last-child,
+.tabela td:last-child {
+  padding-right: var(--esp-4);
+}
+
+.colunaDaAlca {
+  width: 36px;
+}
+
+.linha {
+  outline: none;
+  cursor: default;
+}
+
+.linha td {
+  height: 46px;
+  padding: 0 var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alta td {
+  height: 56px;
+}
+
+.linha[data-hovered] td {
+  background-color: var(--cor-hover);
+}
+
+.linha[data-selected] td {
+  background-color: var(--cor-superficie);
+  box-shadow:
+    inset 0 1px 0 var(--cor-linha-forte),
+    inset 0 -1px 0 var(--cor-linha-forte);
+}
+
+.linha[data-selected] td:first-child {
+  box-shadow:
+    inset 3px 0 0 var(--cor-destaque),
+    inset 0 1px 0 var(--cor-linha-forte),
+    inset 0 -1px 0 var(--cor-linha-forte);
+}
+
+.linha[data-focus-visible] td {
+  box-shadow:
+    inset 0 2px 0 var(--cor-foco),
+    inset 0 -2px 0 var(--cor-foco);
+}
+
+.linha[data-dragging] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.celulaDaAlca {
+  padding: 0 0 0 var(--esp-1);
+  color: var(--cor-texto-2);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+}
+
+.indicador {
+  outline: none;
+}
+
+.indicador[data-drop-target] {
+  outline: 1px solid var(--cor-destaque);
+}

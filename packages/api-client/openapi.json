@@ -15268,6 +15268,34 @@
           "tipos"
         ]
       },
+      "ContasQueAtendemOsChamadosInput": {
+        "type": "object",
+        "properties": {
+          "contas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome"
+              ]
+            }
+          }
+        },
+        "required": [
+          "contas"
+        ]
+      },
       "ListaDosTiposDeChamadoInput": {
         "type": "object",
         "properties": {
@@ -42362,6 +42390,36 @@
           "texto",
           "esperaAResposta",
           "tipos"
+        ],
+        "additionalProperties": false
+      },
+      "ContasQueAtendemOsChamados": {
+        "type": "object",
+        "properties": {
+          "contas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "contas"
         ],
         "additionalProperties": false
       },
@@ -80652,6 +80710,73 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TipoDeChamado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chamados/tipos/contas": {
+      "get": {
+        "summary": "As contas que atendem os chamados, para quem atende o tipo por padrão",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContasQueAtendemOsChamados"
                 }
               }
             }

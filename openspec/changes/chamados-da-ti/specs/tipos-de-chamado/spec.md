@@ -63,6 +63,8 @@ O atendimento SHALL ter:
 
 A gravação do tipo SHALL conferir quem atende por padrão como a conta está agora: a conta escolhida que depois foi desativada, ou perdeu o `chamados.atender`, SHALL ser recusada na gravação seguinte. "Fica com <pessoa> mesmo assim" SHALL pedir quem atende por padrão.
 
+Quem atende por padrão SHALL oferecer as contas ativas que têm `chamados.atender` em algum local, pelo nome da pessoa, lidas por quem tem `chamados.configurar`, sem pedir a lista das contas da Administração.
+
 Abaixo da frase, a tela SHALL dizer: "O relógio para quando o chamado fica aguardando o colaborador.".
 
 As recusas SHALL ser:
@@ -77,6 +79,10 @@ As recusas SHALL ser:
 #### Scenario: Resposta maior que a resolução
 - **WHEN** quem configura escreve "Responde em 10 h e resolve em 8 h"
 - **THEN** a gravação é recusada com "A resposta passa da resolução. Use uma resposta menor."
+
+#### Scenario: Quem atende, a quem só configura
+- **WHEN** Gabriel, só com `chamados.configurar`, escolhe quem atende a Impressora por padrão
+- **THEN** a escolha oferece as contas que atendem os chamados, como a de Diego Martins, e não a de Carla, que só vê os chamados
 
 #### Scenario: Quem atende por padrão desativado
 - **WHEN** a conta de Diego Martins, que atende a Impressora por padrão, foi desativada, e quem configura muda a frase da Impressora

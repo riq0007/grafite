@@ -25644,6 +25644,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/tipos/contas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As contas que atendem os chamados, para quem atende o tipo por padrão */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContasQueAtendemOsChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/tipos/ordem": {
         parameters: {
             query?: never;
@@ -37703,6 +37784,13 @@ export interface components {
             esperaAResposta: boolean;
             tipos: string[];
         };
+        ContasQueAtendemOsChamadosInput: {
+            contas: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
         ListaDosTiposDeChamadoInput: {
             tipos: components["schemas"]["TipoDeChamadoInput"][];
         };
@@ -43053,6 +43141,13 @@ export interface components {
             texto: string;
             esperaAResposta: boolean;
             tipos: string[];
+        };
+        ContasQueAtendemOsChamados: {
+            contas: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
         };
         ListaDosTiposDeChamado: {
             tipos: components["schemas"]["TipoDeChamado"][];

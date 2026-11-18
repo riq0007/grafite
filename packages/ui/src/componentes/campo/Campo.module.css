@@ -232,3 +232,36 @@
   font-size: var(--texto-legenda);
   white-space: nowrap;
 }
+
+/* O número na frase: a caixa estreita, em mono, com o texto no meio. */
+.numeroNaFrase {
+  display: inline-flex;
+}
+
+.entradaDoNumeroNaFrase {
+  width: 52px;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-2);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  text-align: center;
+  outline: none;
+}
+
+.entradaDoNumeroNaFrase[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+/* Como nos campos de texto: o anel em qualquer foco, onde a digitação cai. */
+.entradaDoNumeroNaFrase[data-focused] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.entradaDoNumeroNaFrase[data-invalid] {
+  border-color: var(--cor-critico);
+}

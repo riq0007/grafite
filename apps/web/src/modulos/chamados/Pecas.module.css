@@ -92,6 +92,14 @@
   border-radius: var(--raio-controle);
 }
 
+/* O do cabeçalho do editor dos tipos, de 56 px, com a borda da série a 45% (m07). */
+.iconeDoTipo[data-tamanho="cabecalho"] {
+  width: 56px;
+  height: 56px;
+  border: 1px solid color-mix(in srgb, var(--serie, var(--cor-texto-2)) 45%, transparent);
+  border-radius: var(--raio-base);
+}
+
 /*
  * A sigla de quem atende e a bandeja da triagem, como o `.av` de 38 dos mockups: o círculo com a
  * série a 26% sobre a superfície e a borda a 55%; sem a série, neutro.

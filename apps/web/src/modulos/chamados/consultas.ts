@@ -86,3 +86,27 @@ export function usePrazosDosChamados() {
       ),
   });
 }
+
+export type TipoDeChamado = components['schemas']['TipoDeChamado'];
+
+/** A chave dos tipos de chamado, debaixo da dos ajustes, que o evento deles relê. */
+export const CHAVE_DOS_TIPOS_DE_CHAMADO = [...CHAVE_DOS_AJUSTES_DOS_CHAMADOS, 'tipos'] as const;
+
+/** Os tipos de chamado, na ordem, com o prazo, quem atende e as contagens, a quem configura. */
+export function useTiposDeChamado() {
+  const api = useApi();
+  return useQuery({
+    queryKey: CHAVE_DOS_TIPOS_DE_CHAMADO,
+    queryFn: () => consultar(() => api.GET('/chamados/tipos'), 'carregar os tipos de chamado'),
+  });
+}
+
+/** As contas que atendem os chamados, que o editor do tipo oferece em quem atende por padrão. */
+export function useContasQueAtendem() {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DOS_AJUSTES_DOS_CHAMADOS, 'contas-que-atendem'],
+    queryFn: () =>
+      consultar(() => api.GET('/chamados/tipos/contas'), 'carregar quem atende os chamados'),
+  });
+}

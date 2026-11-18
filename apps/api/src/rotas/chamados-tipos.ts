@@ -45,7 +45,7 @@ import {
   formularioDa,
 } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
-import { lerContaQueAtende } from '../chamados/quem-atende.ts';
+import { contasQueAtendem, lerContaQueAtende } from '../chamados/quem-atende.ts';
 import {
   lerTipoDeChamado,
   lerTiposDeChamado,
@@ -59,6 +59,10 @@ import { conflito, dadosInvalidos, naoEncontrado, RespostaDeProblema } from '../
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 const M = MENSAGENS_DO_TIPO_DE_CHAMADO;
+
+const ContasQueAtendem = z
+  .object({ contas: z.array(z.object({ id: z.uuid(), nome: z.string() })) })
+  .meta({ id: 'ContasQueAtendemOsChamados' });
 
 const ListaDosTiposDeChamado = z
   .object({ tipos: z.array(TipoDeChamado) })
@@ -333,6 +337,22 @@ export const rotasDosTiposDeChamado: FastifyPluginAsyncZod<{
     },
     async (requisicao) => ({
       tipos: await naOrganizacao(banco, orgDa(requisicao), (tx) => lerTiposDeChamado(tx, agora())),
+    }),
+  );
+
+  app.get(
+    '/chamados/tipos/contas',
+    {
+      config: { permissao: 'chamados.configurar' },
+      schema: {
+        summary: 'As contas que atendem os chamados, para quem atende o tipo por padrão',
+        response: { 200: ContasQueAtendem, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => ({
+      contas: await naOrganizacao(banco, orgDa(requisicao), async (tx) =>
+        contasQueAtendem(tx, await lerArvore(tx)),
+      ),
     }),
   );
 

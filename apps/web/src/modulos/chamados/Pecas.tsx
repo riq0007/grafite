@@ -172,8 +172,8 @@ export function IconeDoTipo({
   icone: string;
   nome: string;
   decorativo?: boolean;
-  /** O grande, de 34 px, da linha da triagem do Início; sem ele, o de 24 px. */
-  tamanho?: 'grande';
+  /** O grande, de 34 px, da linha da triagem do Início, ou o do cabeçalho do editor, de 56 px; sem ele, o de 24 px. */
+  tamanho?: 'grande' | 'cabecalho';
 }) {
   const conhecido = iconeDoTipo(icone);
   return (
@@ -183,7 +183,10 @@ export function IconeDoTipo({
       data-serie={SERIE_DO_ICONE[conhecido] ?? undefined}
       data-tamanho={tamanho}
     >
-      <Icone icone={ICONES_DOS_TIPOS_DE_CHAMADO[conhecido]} tamanho={tamanho ? 18 : 15} />
+      <Icone
+        icone={ICONES_DOS_TIPOS_DE_CHAMADO[conhecido]}
+        tamanho={tamanho === 'cabecalho' ? 28 : tamanho ? 18 : 15}
+      />
     </span>
   );
 }

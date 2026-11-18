@@ -3,11 +3,12 @@ import { raiz } from '../../rotas/raiz.tsx';
 import { validarAbertura } from './abertura/abertura.ts';
 import { HorarioDaTi } from './ajustes/Horario.tsx';
 import { RespostasProntas } from './ajustes/RespostasProntas.tsx';
-import { TiposDeChamado } from './ajustes/Tipos.tsx';
 import { ChamadoAberto } from './chamado/ChamadoAberto.tsx';
 import { InicioDosChamados } from './Inicio.tsx';
 import { PrazosDosChamados } from './Prazos.tsx';
 import { QuemEstaComOQue } from './QuemEstaComOQue.tsx';
+import { validarTipoEscolhido } from './tipos/edicao.ts';
+import { TiposDeChamado } from './tipos/TiposDeChamado.tsx';
 
 // Cada rota numa constante própria: criadas dentro do addChildren, as filhas perdem os tipos dos
 // endereços, e um menu com destino errado passaria a compilar.
@@ -48,9 +49,11 @@ const chamado = createRoute({
   component: ChamadoAberto,
 });
 
+// Os tipos de chamado, com o tipo escolhido no endereço (`?tipo=<id>`).
 const tipos = createRoute({
   getParentRoute: () => chamados,
   path: 'tipos',
+  validateSearch: validarTipoEscolhido,
   component: TiposDeChamado,
 });
 

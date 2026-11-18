@@ -1,0 +1,326 @@
+/*
+ * A tela dos tipos (change chamados-da-ti, design, "A tela dos tipos (tarefa 5.19)"; m07): a janela
+ * inteira, em três colunas que rolam sozinhas, a tabela (412 px), o editor e a prévia (444 px), como
+ * o m07 a 1440. Em janelas menores, as colunas dos lados encolhem até 340 e 380 px.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: grid;
+  grid-template-columns: clamp(340px, 30%, 412px) minmax(0, 1fr) clamp(380px, 32.3%, 444px);
+  min-width: 0;
+  min-height: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+/* A coluna da tabela, afundada, com o cabeçalho, a tabela que rola e o pé. */
+.lista {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.cabecalhoDaLista {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-5) var(--esp-5) var(--esp-3);
+}
+
+.tituloDaLista {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.tituloDaLista h1 {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.cabecalhoDaLista p {
+  margin: 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/*
+ * As colunas que rolam são o bloco que contém os campos escondidos do React Aria (o input das chaves
+ * e dos rádios, em `position: absolute`): sem isso, eles escapam da rolagem da coluna, dão altura à
+ * área que rola da janela, e o foco neles rola a janela inteira, e não a coluna.
+ */
+.rolagemDaLista {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+}
+
+.carregando {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-5);
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.peDaLista {
+  display: grid;
+  gap: 2px;
+  padding: var(--esp-3) var(--esp-5);
+  border-top: 1px solid var(--cor-linha);
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.peDaLista span:first-child {
+  font-weight: var(--peso-forte);
+}
+
+/* O tipo na linha da tabela: o ícone e o nome, com o selo embaixo. */
+.tipoNaLinha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.nomeNaLinha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  max-width: 100%;
+}
+
+.nomeNaLinha > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* O editor: o cabeçalho do tipo, as seções que rolam e o pé com os botões. */
+.editor {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cabecalhoDoTipo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-3) var(--esp-6);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.nomeDoTipo {
+  min-width: 0;
+}
+
+.nomeDoTipo h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--texto-titulo-grande);
+  font-weight: var(--peso-forte);
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nomeDoTipo p {
+  margin: 2px 0 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.situacaoDoTipo {
+  display: grid;
+  justify-items: end;
+  gap: var(--esp-1);
+}
+
+.situacaoDoTipo small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.secoes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-height: 0;
+  padding: var(--esp-3) var(--esp-6) var(--esp-4);
+  overflow: auto;
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.nomeEIcone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+/* A frase do prazo, com os números em mono e as seleções na frase. */
+.fraseDoPrazo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+.fimDaFrase {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.par {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.ajuda {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+/* As chaves: o nome e a explicação à esquerda, e a chave com "Ligado" ou "Desligado" à direita. */
+.chave {
+  padding: var(--esp-1) 0;
+  border-bottom: 1px dashed var(--cor-linha-forte);
+}
+
+.chave:last-child {
+  border-bottom: 0;
+}
+
+.linhaDaChave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 42px;
+}
+
+.textoDaChave {
+  display: grid;
+  gap: 1px;
+  font-size: var(--texto-corpo);
+}
+
+.textoDaChave small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.interruptor {
+  flex: none;
+  min-width: 104px;
+  font-size: var(--texto-dado);
+}
+
+.solicitacao {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-2) 0 var(--esp-3);
+}
+
+.peDoEditor {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-5);
+  border-top: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.botoesDoEditor {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.formulario {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+  color: var(--cor-texto);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+/* A prévia do colaborador, afundada, com o título, a frase, a aba e as notas. */
+.previa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-5);
+  overflow: auto;
+  border-left: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.previa h2 {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.previa > p:not(.nota) {
+  margin: calc(-1 * var(--esp-1)) 0 0;
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.nota {
+  margin: 0;
+  display: flex;
+  gap: var(--esp-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.nota > :first-child {
+  flex: none;
+  margin-top: 1px;
+}
+
+.informacao {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.5;
+}

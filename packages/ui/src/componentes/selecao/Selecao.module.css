@@ -29,3 +29,42 @@
   display: inline-flex;
   color: var(--cor-texto-2);
 }
+
+/* A seleção na frase: o botão do tamanho do texto da frase, com a borda dos botões. */
+.naFrase {
+  display: inline-flex;
+}
+
+.gatilhoNaFrase {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-2) 0 var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-dado);
+  white-space: nowrap;
+  cursor: default;
+  outline: none;
+}
+
+.gatilhoNaFrase[data-hovered] {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.gatilhoNaFrase[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.gatilhoNaFrase[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+[data-invalid] > .gatilhoNaFrase {
+  border-color: var(--cor-critico);
+}

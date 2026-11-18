@@ -144,6 +144,7 @@ export {
   LinkDeCadastro,
   type PropsDoLinkDeCadastro,
 } from './componentes/campo/LinkDeCadastro.tsx';
+export { NumeroNaFrase, type PropsDoNumeroNaFrase } from './componentes/campo/NumeroNaFrase.tsx';
 export { Carimbo, type PropsDoCarimbo } from './componentes/carimbo/Carimbo.tsx';
 export { CodigoQR, type PropsDoCodigoQR } from './componentes/codigoQR/CodigoQR.tsx';
 export { copiarParaAreaDeTransferencia } from './componentes/copiar/copiar.ts';
@@ -193,6 +194,11 @@ export {
   type OpcaoDeIcone,
   type PropsDaEscolhaDeIcone,
 } from './componentes/escolhas/EscolhaDeIcone.tsx';
+export {
+  EscolhaDeIconeCompacta,
+  type OpcaoDeIconeCompacta,
+  type PropsDaEscolhaDeIconeCompacta,
+} from './componentes/escolhas/EscolhaDeIconeCompacta.tsx';
 export { Interruptor, type PropsDoInterruptor } from './componentes/escolhas/Interruptor.tsx';
 export {
   GrupoDeRadios,
@@ -305,6 +311,10 @@ export {
   Selecao,
 } from './componentes/selecao/Selecao.tsx';
 export {
+  type PropsDaSelecaoNaFrase,
+  SelecaoNaFrase,
+} from './componentes/selecao/SelecaoNaFrase.tsx';
+export {
   type PropsDoRotuloDeSituacao,
   RotuloDeSituacao,
   type Situacao,
@@ -384,6 +394,12 @@ export {
   ProvedorDaTabela,
   Tabela,
 } from './componentes/tabela/Tabela.tsx';
+export {
+  type ColunaQueSeOrdena,
+  type PropsDaTabelaQueSeOrdena,
+  type SolturaNaTabela,
+  TabelaQueSeOrdena,
+} from './componentes/tabela/TabelaQueSeOrdena.tsx';
 export { type PropsDoValorComposto, ValorComposto } from './componentes/tabela/ValorComposto.tsx';
 export { CadastroDosDoisPassos, type PropsDoCadastro } from './entrada/CadastroDosDoisPassos.tsx';
 export { CodigosDeRecuperacao, type PropsDosCodigos } from './entrada/CodigosDeRecuperacao.tsx';

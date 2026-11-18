@@ -81,3 +81,46 @@
   font-size: var(--texto-rotulo);
   line-height: 1.3;
 }
+
+/* A grade compacta: só os desenhos, em quadrados da altura dos controles. */
+.gradeCompacta {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.opcaoCompacta {
+  display: grid;
+  place-items: center;
+  width: var(--altura-controle);
+  height: var(--altura-controle);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto-2);
+  cursor: default;
+  outline: none;
+}
+
+.opcaoCompacta[data-hovered] {
+  background-color: var(--cor-hover);
+}
+
+.opcaoCompacta[data-pressed] {
+  background-color: var(--cor-pressionado);
+}
+
+/* A escolhida tem a borda e o anel do destaque, e o desenho no texto: não só a cor. */
+.opcaoCompacta[data-selected] {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-hover);
+  box-shadow: 0 0 0 1px var(--cor-destaque);
+  color: var(--cor-texto);
+}
+
+.opcaoCompacta[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+[data-invalid] .opcaoCompacta {
+  border-color: var(--cor-critico);
+}
