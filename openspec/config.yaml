@@ -14,7 +14,7 @@ rules:
     - Citar o subprojeto da spec mestre que a change implementa e o que fica fora dela
   tasks:
     - Tarefas de no máximo 2 horas
-    - Toda tarefa com lógica começa pelo teste
+    - Toda tarefa com lógica começa pelo teste (no modo rápido do docs/agentes.md, só a lógica que a tela não mostra)
     - Toda tarefa diz como verificar o resultado (comando, teste ou tela)
 
 # Per-operation guidance (optional)

@@ -12,13 +12,32 @@ O Grafite é escrito por uma sessão só, junto com o usuário, sem subagentes. 
 
 - **Só lê:** não edita, não roda comandos (nem os testes, o build ou o git) e não usa subagentes.
 - **Lê o plano uma vez:** a proposta, o design, as specs e as tarefas da change, antes do código.
-- **Lê cada tarefa antes do commit:** com os testes verdes, a sessão que escreve grava o diff da tarefa em `.grafite/revisoes/<change>/<tarefa>.diff` e manda o caminho, com o resultado dos testes. A revisora devolve os pontos de melhora, com o arquivo e a linha de cada um.
-- **No máximo duas voltas por tarefa:** a sessão que escreve aplica o que aceita e manda o diff novo uma vez. A divergência que sobrar vai para o usuário decidir.
+- **Lê cada tarefa antes do commit:** com os testes verdes, a sessão que escreve grava o diff da tarefa em `.grafite/revisoes/<change>/<tarefa>.diff` e manda o caminho, com o resultado dos testes. A revisora devolve os pontos de melhora, com o arquivo e a linha de cada um. No modo rápido, ela lê o diff do commit, depois dele.
+- **No máximo duas voltas por tarefa:** a sessão que escreve aplica o que aceita e manda o diff novo uma vez. A divergência que sobrar vai para o usuário decidir. No modo rápido, uma volta.
 - **As decisões ficam num arquivo:** cada ponto e o que foi feito com ele, em `.grafite/revisoes/<change>.md`, fora do Git.
+
+## O modo rápido, até a produção-teste da `chamados-da-ti`
+
+Para o projeto ficar pronto logo e ir para a produção-teste, onde o usuário aponta o que estiver errado. Quando a change for para lá, o usuário decide se o fluxo normal volta.
+
+- **Fica:**
+  - a spec antes do código, com as decisões do design em poucas linhas;
+  - a tela no `pnpm dev`, contra o mockup, e o visual do CI, com a referência regravada (`pnpm test:visual --atualizar`) quando a tarefa muda uma tela de propósito;
+  - o lint e o typecheck antes do commit, e o `contrato:verificar` e o `openspec validate` quando a API ou a spec mudam;
+  - o teste antes do código onde a tela não mostra o erro: a conta do prazo, a ordenação e a permissão;
+  - o ponta a ponta da pilha no fim, antes da produção-teste;
+  - os guardas automáticos: os segredos, os termos privados e o isolamento por organização;
+  - um commit por tarefa.
+- **Sai:**
+  - o teste de tela antes do código e as mutações;
+  - as suítes inteiras por tarefa, que rodam no CI do PR rascunho `dev` → `main`, com push depois de cada commit de tarefa;
+  - os casos raros, que vão para `.grafite/revisoes/<change>-pendencias.md`, com a tarefa, o que ficou de fora e como ver o caso;
+  - o diário e o design longos.
+- **A revisão vem depois do commit:** a sessão que escreve commita a tarefa com os testes dela, o lint e o typecheck verdes, grava o diff do commit e começa a próxima. A revisora aponta só o que quebra a tela ou o uso, numa volta. Os pontos e as falhas do CI entram em commits de conserto à parte, com a tarefa de origem no corpo.
 
 ## A entrega
 
-- Cada tarefa: o teste antes do código, a verificação do `tasks.md` feita, a revisão (quando há uma sessão revisora) e um commit, no padrão da regra 8 do `CLAUDE.md`.
+- Cada tarefa: o teste antes do código, a verificação do `tasks.md` feita, a revisão (quando há uma sessão revisora) e um commit, no padrão da regra 8 do `CLAUDE.md`. No modo rápido, o que a seção dele diz.
 - **Ajuste pequeno vai direto para a `main`, sem PR:** a documentação e as specs, um texto da interface, um ajuste visual ou um conserto pontual. O commit passa pelos ganchos, e o CI da `main` roda depois, sem ninguém esperar por ele. Se ele reprovar, o conserto é outro commit.
 - **Change grande ou sensível vai por PR para a `main`, com o CI verde, e o usuário faz o merge:** uma change com várias tarefas de código, uma migration, a operação e o instalador, as contas, as permissões e o cofre, e o próprio CI. Na dúvida, vai por PR.
 - **A release só sai de uma `main` com o CI verde:** só ela chega ao servidor, depois de testar a instalação de verdade.
