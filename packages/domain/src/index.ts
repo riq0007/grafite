@@ -999,6 +999,7 @@ export {
   DESTAQUES,
   DESTAQUES_DA_ESCOLHA,
   type DestaquePersonalizado,
+  FORMAS_DAS_CONVERSAS,
   fusoReconhecido,
   LARGURAS_DO_BLOCO,
   type LarguraDoBloco,

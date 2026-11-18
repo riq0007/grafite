@@ -96,7 +96,10 @@ describe('Ajustes do Sistema', () => {
   it('cada controle de Aparência, Dock e Acessibilidade tem um endereço com foco', async () => {
     noComputador();
     for (const [endereco, focos] of [
-      ['/ajustes/aparencia', ['tema', 'destaque', 'cantos', 'densidade', 'barra-de-rolagem']],
+      [
+        '/ajustes/aparencia',
+        ['tema', 'destaque', 'cantos', 'densidade', 'barra-de-rolagem', 'conversas'],
+      ],
       [
         '/ajustes/dock',
         [

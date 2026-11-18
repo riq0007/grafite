@@ -96,6 +96,8 @@ Fica fora:
 - `arquivos-e-imagens`: os anexos dos chamados, enviados antes da gravação e entregues pelo chamado dono.
 - `eventos-em-tempo-real`: os dois tipos de evento dos chamados na tabela dos tipos, o dos ajustes com o público de uma das permissões.
 - `design-tokens`: as cores da aba, na matiz da informação, e a cápsula da aba, a exceção nomeada ao raio.
+- `preferencias-da-interface`: a forma das conversas, "No meio" ou "Nos cantos", na aparência.
+- `ajustes-do-sistema`: a escolha das conversas na seção Aparência, com a explicação e a entrada na busca.
 - `componentes-base`: o cabeçalho da página ganha a trilha, em cima, e o quadro, à direita do título e das ações, como o do prazo do chamado aberto; com o quadro, as ações vão embaixo do título e a principal fecha o grupo.
 
 ## Impact

@@ -952,6 +952,16 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **o alerta do ativo,** na linha do evento, em peso forte e com o sino: "Alerta no ativo PAT-00139: toner preto abaixo de 10% · hoje, 09:36". O m04 diz "ligado à PAT-00139", e o artigo sai pela regra da decisão 19, porque o rótulo do ativo pode ser de qualquer gênero;
 - **os anexos** da mensagem e da nota, embaixo do texto, como no campo Anexo do formulário: o ícone, o nome, o tamanho e "Baixar", pelo `GET /chamados/:numero/anexos/:arquivo`, sem miniatura, porque a entrega é sempre para baixar (decisão 10). Os mockups não os mostram.
 
+**A conversa no meio ou nos cantos (tarefa 5.29),** um pedido do usuário depois da 5.11, sem mockup:
+- **a escolha** é uma preferência da aparência, `conversas`, com "No meio" (`no-meio`), a de fábrica e a do m03, e "Nos cantos" (`nos-cantos`). Como as outras, a organização define o padrão e a conta escolhe a dela, em Ajustes › Aparência, com a explicação de cada uma e a entrada "Conversas" na busca. Vale na hora, sem salvar, e fica fora do anti-flash, porque a conversa só aparece depois de a ficha chegar. O nome é geral para o chat poder usar a mesma escolha;
+- **no meio,** a conversa da 5.11, sem mudança;
+- **nos cantos,** a conversa ocupa a largura da área, e cada mensagem vai num balão, com a sigla do lado de fora:
+  - a de quem pede (o autor do tipo `pessoa`) à esquerda, no fundo da superfície afundada;
+  - a da TI (o autor do tipo `conta`) e a nota interna à direita, com a sigla à direita: a mensagem no fundo da superfície 2, e a nota no quadro tracejado dela;
+  - a mensagem, com a sigla, vai até 80 % da largura, com no máximo 44rem, e o balão encolhe na mensagem curta, com o texto alinhado à esquerda dentro dele;
+  - o resumo das respostas fica à esquerda, na largura máxima do balão, porque é o que a pessoa respondeu ao abrir; os eventos e os alertas continuam no meio, entre os traços;
+  - cada balão continua com o nome de quem escreveu e a hora: o lado não é a única pista de quem falou.
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

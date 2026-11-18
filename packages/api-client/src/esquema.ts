@@ -34608,6 +34608,8 @@ export interface components {
                 densidade?: "compacta" | "normal" | "confortavel";
                 /** @enum {string} */
                 barraDeRolagem?: "ao-rolar" | "sempre";
+                /** @enum {string} */
+                conversas?: "no-meio" | "nos-cantos";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -34698,6 +34700,7 @@ export interface components {
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
                 barraDeRolagem?: ("ao-rolar" | "sempre") | null;
+                conversas?: ("no-meio" | "nos-cantos") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */
@@ -39938,6 +39941,8 @@ export interface components {
                 densidade?: "compacta" | "normal" | "confortavel";
                 /** @enum {string} */
                 barraDeRolagem?: "ao-rolar" | "sempre";
+                /** @enum {string} */
+                conversas?: "no-meio" | "nos-cantos";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -40028,6 +40033,7 @@ export interface components {
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
                 barraDeRolagem?: ("ao-rolar" | "sempre") | null;
+                conversas?: ("no-meio" | "nos-cantos") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */

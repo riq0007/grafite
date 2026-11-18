@@ -1,6 +1,7 @@
 import {
   BARRAS_DE_ROLAGEM,
   type DestaquePersonalizado,
+  FORMAS_DAS_CONVERSAS,
   type TemaPersonalizado,
 } from '@grafite/domain';
 import {
@@ -55,6 +56,17 @@ const NOMES_DAS_BARRAS_DE_ROLAGEM: Record<BarraDeRolagem, string> = {
 
 const EXPLICACAO_DA_BARRA_DE_ROLAGEM =
   'Ao rolar: aparece com o ponteiro sobre a área ou enquanto ela rola. Sempre visível: fica à vista em toda área que rola.';
+
+type FormaDasConversas = (typeof FORMAS_DAS_CONVERSAS)[number];
+
+const NOMES_DAS_FORMAS_DAS_CONVERSAS: Record<FormaDasConversas, string> = {
+  'no-meio': 'No meio',
+  'nos-cantos': 'Nos cantos',
+};
+
+/** Spec ajustes-do-sistema, "Seção Aparência" (change chamados-da-ti, tarefa 5.29). */
+const EXPLICACAO_DAS_CONVERSAS =
+  'No meio: as mensagens numa coluna, no meio da conversa. Nos cantos: a mensagem de quem pede à esquerda e a da TI à direita, cada uma num balão.';
 
 const IDS_DOS_TEMAS = Object.keys(temas) as IdDoTema[];
 
@@ -168,8 +180,8 @@ function ConstrutorDoDestaque({
 }
 
 /**
- * Seção Aparência: tema, destaque, cantos, densidade e barra de rolagem, com efeito na hora e sem
- * salvar. O tema e o
+ * Seção Aparência: tema, destaque, cantos, densidade, barra de rolagem e conversas, com efeito na
+ * hora e sem salvar. O tema e o
  * destaque Personalizado abrem o construtor, e a leitura do contraste mede o que vale.
  */
 export function SecaoAparencia() {
@@ -327,6 +339,20 @@ export function SecaoAparencia() {
         {valeABarraDoSistema(document) && (
           <p className={estilos.leitura}>Neste aparelho vale a barra de rolagem do sistema.</p>
         )}
+
+        <ControleSegmentado
+          rotulo="Conversas"
+          data-foco="conversas"
+          value={aparencia.conversas}
+          onChange={(valor) => mudar('aparencia', { conversas: valor as FormaDasConversas })}
+          descricao={EXPLICACAO_DAS_CONVERSAS}
+        >
+          {FORMAS_DAS_CONVERSAS.map((id) => (
+            <Segmento key={id} value={id}>
+              {NOMES_DAS_FORMAS_DAS_CONVERSAS[id]}
+            </Segmento>
+          ))}
+        </ControleSegmentado>
 
         <div>
           <RestaurarPadroes secao="aparencia" />

@@ -3,7 +3,9 @@
 // 720 px, na ordem da API, a mensagem sem balão, com a sigla de 32 px, a nota interna no quadro
 // tracejado da atenção, o evento numa linha entre dois fios, o alerta do ativo em peso forte e, logo
 // depois da abertura, o resumo das respostas do formulário. Os anexos de cada mensagem e de cada
-// nota vão numa lista, como a do formulário, com o nome, o tamanho e "Baixar".
+// nota vão numa lista, como a do formulário, com o nome, o tamanho e "Baixar". Com as conversas
+// "Nos cantos" nas preferências (tarefa 5.29), a de quem pede fica à esquerda e as da TI à direita,
+// em balões.
 import { partesDoResumo } from '@grafite/domain';
 import { type DataHora, formatarTamanho, Icone, RotuloDeSituacao, useDataHora } from '@grafite/ui';
 import { BellRing, FileText, Hourglass, Lock } from 'lucide-react';
@@ -16,6 +18,7 @@ import {
   useRef,
 } from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { usePreferencias } from '../../../preferencias/usePreferencias.tsx';
 import type { FichaDoChamado } from '../consultas.ts';
 import { enderecoDoAnexo } from '../formulario/anexos.ts';
 import { SiglaDaPessoa } from '../Pecas.tsx';
@@ -35,16 +38,16 @@ const PERTO_DO_FIM = 32;
 
 /**
  * A conversa presa ao fim: abre na última mensagem e, com quem lê no fim, continua nele quando chega
- * um item novo ou a área diminui, como quando o campo de escrever cresce. Quem subiu para ler o
- * começo fica onde está.
+ * um item novo, a forma muda ou a área diminui, como quando o campo de escrever cresce. Quem subiu
+ * para ler o começo fica onde está.
  */
-function usePresaAoFim(rolagem: RefObject<HTMLElement | null>, itens: unknown) {
+function usePresaAoFim(rolagem: RefObject<HTMLElement | null>, itens: unknown, forma: string) {
   const noFim = useRef(true);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: roda a cada mudança dos itens.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roda a cada mudança dos itens e da forma.
   useLayoutEffect(() => {
     const elemento = rolagem.current;
     if (elemento && noFim.current) elemento.scrollTop = elemento.scrollHeight;
-  }, [rolagem, itens]);
+  }, [rolagem, itens, forma]);
   useEffect(() => {
     const elemento = rolagem.current;
     if (!elemento) return;
@@ -73,11 +76,12 @@ export function Conversa({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
   const rolagem = useRef<HTMLElement>(null);
-  usePresaAoFim(rolagem, ficha.conversa);
+  const forma = usePreferencias().preferencias.aparencia.conversas;
+  usePresaAoFim(rolagem, ficha.conversa, forma);
   const partes = partesDoResumo(ficha.formulario, ficha.respostas, contextoDaFicha(ficha));
   const resumo =
     partes.length === 0 ? null : (
-      <li key="resumo">
+      <li key="resumo" className={estilos.itemDoResumo}>
         <dl className={estilos.resumo} aria-label="Respostas do formulário">
           {partes.map((parte, indice) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: dois campos podem ter o mesmo nome no resumo; a posição é a ordem do formulário.
@@ -100,8 +104,14 @@ export function Conversa({ ficha }: { ficha: FichaDoChamado }) {
     </Fragment>
   ));
   return (
-    // biome-ignore lint/a11y/noNoninteractiveTabindex: a área que rola recebe o foco para rolar pelo teclado.
-    <section ref={rolagem} className={estilos.conversa} aria-label="Conversa" tabIndex={0}>
+    <section
+      ref={rolagem}
+      className={estilos.conversa}
+      aria-label="Conversa"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: a área que rola recebe o foco para rolar pelo teclado.
+      tabIndex={0}
+      data-forma={forma}
+    >
       <ol className={estilos.itens}>
         {abertura === -1 && resumo}
         {itens}
@@ -164,8 +174,10 @@ function LinhaEntreFios({
 }
 
 /**
- * A mensagem, sem balão: a sigla, o nome com a hora, o texto e os anexos. A nota interna, no quadro
- * tracejado, com o cadeado, "Nota interna · Ana Souza", a hora e o selo "Só a TI vê".
+ * A mensagem: a sigla, o nome com a hora, o texto e os anexos, sem balão no meio e num balão nos
+ * cantos. A nota interna, no quadro tracejado, com o cadeado, "Nota interna · Ana Souza", a hora e o
+ * selo "Só a TI vê". O lado é o de quem escreveu, para as conversas nos cantos: a pessoa que pede à
+ * esquerda, a TI à direita.
  */
 function Escrito({
   item,
@@ -185,7 +197,10 @@ function Escrito({
     </time>
   );
   return (
-    <li className={especie === 'nota' ? estilos.nota : estilos.mensagem}>
+    <li
+      className={especie === 'nota' ? estilos.nota : estilos.mensagem}
+      data-lado={autor.tipo === 'pessoa' ? 'esquerda' : 'direita'}
+    >
       <SiglaDaPessoa
         conta={autor.tipo === 'conta' ? autor.id : null}
         nome={autor.nome}

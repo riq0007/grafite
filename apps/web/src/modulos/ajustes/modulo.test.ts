@@ -41,6 +41,16 @@ describe('busca dos Ajustes', () => {
     });
   });
 
+  // Spec ajustes-do-sistema, "Seção Aparência": Conversas pela busca.
+  it('Conversas pela busca: a entrada leva à Aparência, com o foco na escolha', () => {
+    expect(entradas.find((entrada) => entrada.rotulo === 'Conversas')).toMatchObject({
+      grupo: 'ajustes',
+      caminho: 'Ajustes › Aparência',
+      destino: '/ajustes/aparencia',
+      foco: 'conversas',
+    });
+  });
+
   // Spec ajustes-do-sistema, "Seção Dock": Ordem pela busca.
   it('Ordem pela busca: "Módulos do dock" leva à seção Dock, com o foco na lista "No dock"', () => {
     const entrada = entradas.find((candidata) => candidata.rotulo === 'Módulos do dock');

@@ -101,6 +101,13 @@
                   "sempre"
                 ]
               },
+              "conversas": {
+                "type": "string",
+                "enum": [
+                  "no-meio",
+                  "nos-cantos"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -523,6 +530,20 @@
                         "enum": [
                           "ao-rolar",
                           "sempre"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "conversas": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "no-meio",
+                          "nos-cantos"
                         ]
                       },
                       {
@@ -26605,6 +26626,13 @@
                   "sempre"
                 ]
               },
+              "conversas": {
+                "type": "string",
+                "enum": [
+                  "no-meio",
+                  "nos-cantos"
+                ]
+              },
               "raio": {
                 "type": "integer",
                 "minimum": 0,
@@ -27027,6 +27055,20 @@
                         "enum": [
                           "ao-rolar",
                           "sempre"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "conversas": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "no-meio",
+                          "nos-cantos"
                         ]
                       },
                       {

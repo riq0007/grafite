@@ -26,6 +26,11 @@ export const DENSIDADES = ['compacta', 'normal', 'confortavel'] as const;
  * nela, ou sempre (change barra-de-rolagem-propria).
  */
 export const BARRAS_DE_ROLAGEM = ['ao-rolar', 'sempre'] as const;
+/**
+ * A forma das conversas, como a do chamado aberto: no meio, numa coluna, ou nos cantos, com a
+ * mensagem de quem pede à esquerda e a da TI à direita (change chamados-da-ti, tarefa 5.29).
+ */
+export const FORMAS_DAS_CONVERSAS = ['no-meio', 'nos-cantos'] as const;
 export const POSICOES_DO_DOCK = ['embaixo', 'esquerda', 'direita'] as const;
 /** Tempo, em segundos, que um aviso de Atenção ou de Informação fica na tela. */
 export const TEMPOS_DO_AVISO = [6, 10, 20] as const;
@@ -117,6 +122,7 @@ export interface PreferenciasDaInterface {
     destaque: (typeof DESTAQUES_DA_ESCOLHA)[number];
     densidade: (typeof DENSIDADES)[number];
     barraDeRolagem: (typeof BARRAS_DE_ROLAGEM)[number];
+    conversas: (typeof FORMAS_DAS_CONVERSAS)[number];
     raio: number;
     /** As entradas do tema Personalizado, trocadas inteiras, como a ordem da tela inicial. */
     personalizado: TemaPersonalizado;
@@ -210,6 +216,7 @@ export const PADRAO_DE_FABRICA: PreferenciasDaInterface = {
     destaque: 'grafite',
     densidade: 'normal',
     barraDeRolagem: 'ao-rolar',
+    conversas: 'no-meio',
     raio: 10,
     // O personalizado começa como o Grafite, e o destaque personalizado, como o azul.
     personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
@@ -424,6 +431,7 @@ const LEITORES: { [S in SecaoDePreferencias]: Record<keyof PreferenciasDaInterfa
     destaque: umDe(DESTAQUES_DA_ESCOLHA),
     densidade: umDe(DENSIDADES),
     barraDeRolagem: umDe(BARRAS_DE_ROLAGEM),
+    conversas: umDe(FORMAS_DAS_CONVERSAS),
     raio: inteiroEntre(LIMITES_DAS_PREFERENCIAS.raio),
     personalizado: juntos({
       tom: umDe(TONS),

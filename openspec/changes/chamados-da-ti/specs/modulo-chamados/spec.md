@@ -201,7 +201,11 @@ As ações SHALL ficar só com quem atende os locais do chamado:
 - "Resolver" SHALL pedir "O que foi feito";
 - o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042." e "OS 13 aberta.", com "Abrir", e a recusa SHALL ficar com a frase dela.
 
-A conversa SHALL ficar numa coluna central, sem balão:
+A conversa SHALL ficar na forma que a conta escolheu (spec preferencias-da-interface, "Forma das conversas nas preferências"):
+- **no meio:** numa coluna central, sem balão;
+- **nos cantos:** na largura da área, com cada mensagem e cada nota num balão, a de quem pede à esquerda e as da TI à direita, e os eventos e os alertas no meio.
+
+Nas duas formas, a conversa SHALL ter:
 - cada mensagem com quem escreveu e a hora;
 - cada nota interna num quadro tracejado, com o cadeado e "Só a TI vê";
 - cada evento numa linha, como "Aguardando Fernanda · 09:21 · o relógio parou";
@@ -224,6 +228,10 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 #### Scenario: Chamado aguardando
 - **WHEN** Ana abre o #1041, que aguarda Fernanda desde 09:21
 - **THEN** o cabeçalho mostra "Aguardando o colaborador", e o quadro do prazo diz "Relógio parado · Parou às 09:21 · restam 1 h 44 min"
+
+#### Scenario: Conversa nos cantos
+- **WHEN** Ana, com as conversas "Nos cantos", abre o #1041
+- **THEN** as mensagens de Fernanda ficam à esquerda, as de Ana e as notas internas à direita, cada uma num balão com o nome e a hora, e "Aguardando Fernanda · 09:21 · o relógio parou" continua no meio
 
 #### Scenario: Mudança que esconde um anexo
 - **WHEN** Ana muda o "Contrato de manutenção" do #1042 para "Sim", e a "Foto da peça", que só aparece com "Não", tem 1 arquivo

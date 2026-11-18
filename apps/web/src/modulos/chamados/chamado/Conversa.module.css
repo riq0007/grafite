@@ -218,3 +218,56 @@
   outline: 2px solid var(--cor-foco);
   outline-offset: 2px;
 }
+
+/*
+ * As conversas nos cantos (tarefa 5.29): a conversa na largura da área, a mensagem de quem pede à
+ * esquerda e as da TI e as notas à direita, cada uma num balão, com a sigla do lado de fora; o
+ * resumo das respostas, de quem pediu, à esquerda; os eventos e os alertas continuam no meio.
+ */
+.conversa[data-forma="nos-cantos"] .itens {
+  width: 100%;
+}
+
+.conversa[data-forma="nos-cantos"] .mensagem,
+.conversa[data-forma="nos-cantos"] .nota {
+  display: flex;
+  max-width: min(80%, 44rem);
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.conversa[data-forma="nos-cantos"] [data-lado="esquerda"],
+.conversa[data-forma="nos-cantos"] .itemDoResumo {
+  align-self: flex-start;
+}
+
+.conversa[data-forma="nos-cantos"] [data-lado="direita"] {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.conversa[data-forma="nos-cantos"] .itemDoResumo {
+  max-width: min(80%, 44rem);
+}
+
+.conversa[data-forma="nos-cantos"] :is(.mensagem, .nota) > :not(.corpo) {
+  flex: none;
+}
+
+.conversa[data-forma="nos-cantos"] :is(.mensagem, .nota) > .corpo {
+  flex: 0 1 auto;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-afundada);
+}
+
+.conversa[data-forma="nos-cantos"] .nota > .corpo {
+  border: 1px dashed var(--cor-atencao-borda);
+  background: var(--cor-atencao-fundo);
+}
+
+.conversa[data-forma="nos-cantos"] .mensagem[data-lado="direita"] > .corpo {
+  background: var(--cor-superficie-2);
+}

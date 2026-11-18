@@ -7,6 +7,7 @@ import {
   DENSIDADES,
   DESTAQUES,
   DESTAQUES_DA_ESCOLHA,
+  FORMAS_DAS_CONVERSAS,
   fusoReconhecido,
   LIMITES_DAS_PREFERENCIAS,
   lerAjustes,
@@ -25,6 +26,7 @@ describe('opções das preferências', () => {
     expect(DESTAQUES).toContain(PADRAO_DE_FABRICA.aparencia.destaque);
     expect(DENSIDADES).toContain(PADRAO_DE_FABRICA.aparencia.densidade);
     expect(BARRAS_DE_ROLAGEM).toContain(PADRAO_DE_FABRICA.aparencia.barraDeRolagem);
+    expect(FORMAS_DAS_CONVERSAS).toContain(PADRAO_DE_FABRICA.aparencia.conversas);
     expect(POSICOES_DO_DOCK).toContain(PADRAO_DE_FABRICA.dock.posicao);
     expect(TEMPOS_DO_AVISO).toContain(PADRAO_DE_FABRICA.notificacoes.tempo);
     expect(COLUNAS_DA_TELA_INICIAL).toContain(PADRAO_DE_FABRICA.inicio.ordenacao.coluna);
@@ -37,6 +39,7 @@ describe('opções das preferências', () => {
         destaque: 'grafite',
         densidade: 'normal',
         barraDeRolagem: 'ao-rolar',
+        conversas: 'no-meio',
         raio: 10,
         personalizado: { tom: 'escuro', matiz: 265, tingimento: 10, contraste: 45 },
         destaquePersonalizado: { matiz: 258, intensidade: 85 },
@@ -560,6 +563,40 @@ describe('a barra de rolagem nas preferências', () => {
       { aparencia: { barraDeRolagem: null } },
     );
     expect(camada).toEqual({ aparencia: { tema: 'nevoa' } });
+  });
+});
+
+// A forma das conversas (spec preferencias-da-interface, "Forma das conversas nas preferências";
+// change chamados-da-ti, design, "A conversa no meio ou nos cantos (tarefa 5.29)").
+describe('a forma das conversas nas preferências', () => {
+  it('Primeiro acesso às conversas: tem dois valores, e o de fábrica é "No meio"', () => {
+    expect(FORMAS_DAS_CONVERSAS).toEqual(['no-meio', 'nos-cantos']);
+    expect(resolverPreferencias().aparencia.conversas).toBe('no-meio');
+  });
+
+  it('Padrão da organização nas conversas: a conta que nunca mudou fica com o "Nos cantos" dela', () => {
+    const organizacao = { aparencia: { conversas: 'nos-cantos' } };
+    expect(resolverPreferencias(organizacao).aparencia.conversas).toBe('nos-cantos');
+    expect(
+      resolverPreferencias(organizacao, { aparencia: { conversas: 'no-meio' } }).aparencia
+        .conversas,
+    ).toBe('no-meio');
+  });
+
+  it('Valor desconhecido das conversas: ficam no meio, e o dock continua à esquerda', () => {
+    const preferencias = resolverPreferencias(
+      {},
+      { aparencia: { conversas: 'em-lista' }, dock: { posicao: 'esquerda' } },
+    );
+    expect(preferencias.aparencia.conversas).toBe('no-meio');
+    expect(preferencias.dock.posicao).toBe('esquerda');
+  });
+
+  it('lerAjustes guarda só os dois valores', () => {
+    expect(lerAjustes({ aparencia: { conversas: 'nos-cantos' } })).toEqual({
+      aparencia: { conversas: 'nos-cantos' },
+    });
+    expect(lerAjustes({ aparencia: { conversas: 'em-lista' } })).toEqual({});
   });
 });
 
