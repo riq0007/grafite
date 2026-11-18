@@ -247,21 +247,37 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 
 ### Requirement: Campo de escrever
 
-O campo de escrever SHALL ter:
-- a chave "Mensagem para Fernanda | Nota interna";
-- "Respostas prontas", com as do tipo do chamado em botões, como "Pedir o print do erro";
-- o clipe, para os anexos;
-- "Enviar" e "Enviar e esperar a resposta". Ctrl+Enter manda.
+O campo de escrever SHALL ficar no pé do chamado aberto, só para quem atende os locais do chamado, com:
+- a chave "Mensagem para Fernanda | Nota interna" e, na mensagem, "Esperar a resposta", que troca "Enviar" por "Enviar e esperar a resposta";
+- a caixa do texto, que cresce com ele, e embaixo dela os anexos, cada um com o nome, o tamanho e "Tirar", até 5;
+- "Respostas prontas", o menu com todas as do tipo do chamado, e as duas primeiras ao lado, em botões, como "Pedir o print do erro";
+- o clipe, para os anexos, e "Enviar". Ctrl+Enter manda.
 
-A nota interna SHALL mudar o campo para o quadro tracejado da nota. A resposta pronta SHALL entrar no campo, com o primeiro nome da pessoa, e ser mandada só pela ação de quem atende. A que espera a resposta SHALL trocar "Enviar" por "Enviar e esperar a resposta".
+A nota interna SHALL mudar o campo para o quadro tracejado da nota, sem as respostas prontas e sem "Esperar a resposta", e o botão SHALL dizer "Salvar a nota".
+
+A resposta pronta SHALL entrar no campo onde está o cursor, com o primeiro nome da pessoa, e ser mandada só pela ação de quem atende. A que espera a resposta SHALL ligar "Esperar a resposta".
 
 Nesta versão, a ajuda do campo SHALL dizer "Escreva a resposta para Fernanda.".
+
+O que se escreve SHALL continuar no campo quando a conversa se atualiza. Mandado, o campo SHALL esvaziar, e a conversa SHALL ir à última mensagem. A recusa SHALL ficar embaixo do campo, com a frase dela.
 
 No chamado resolvido, o campo SHALL dar lugar a "Reabra o chamado para escrever.", com "Reabrir".
 
 #### Scenario: Nota pelo atalho
 - **WHEN** Ana escolhe "Nota interna", escreve e aperta Ctrl+Enter
 - **THEN** a nota entra na conversa com "Só a TI vê", e o chamado continua na situação em que estava
+
+#### Scenario: Resposta pronta que espera a resposta
+- **WHEN** Ana escolhe "Pedir o print do erro", que espera a resposta, no #1041 de Fernanda Rocha
+- **THEN** o texto entra no campo com "Fernanda", "Esperar a resposta" fica ligado, e o botão diz "Enviar e esperar a resposta"
+
+#### Scenario: Conversa que se atualiza enquanto se escreve
+- **WHEN** chega uma mensagem de Fernanda enquanto Ana escreve no #1041
+- **THEN** a mensagem entra na conversa, e o que Ana escrevia continua no campo
+
+#### Scenario: Escrever no resolvido
+- **WHEN** Ana abre o #1040, resolvido
+- **THEN** no lugar do campo fica "Reabra o chamado para escrever.", com "Reabrir"
 
 ### Requirement: Prazos
 

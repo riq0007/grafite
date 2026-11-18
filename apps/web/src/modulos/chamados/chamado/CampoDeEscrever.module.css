@@ -1,0 +1,77 @@
+/*
+ * O campo de escrever do chamado aberto (m03): a faixa afundada no pé da tela, de ponta a ponta,
+ * com o que se escreve na coluna da conversa, de até 720 px no meio e na largura da área nos cantos.
+ */
+.campo {
+  padding: var(--esp-3) var(--respiro, var(--esp-6)) var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-afundada);
+}
+
+.coluna {
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+
+.campo[data-forma="nos-cantos"] .coluna {
+  width: 100%;
+}
+
+.escrever {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+/* A chave com o "Esperar a resposta", e as respostas prontas com o fim: o clipe, o atalho e "Enviar". */
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.segmento {
+  gap: var(--esp-2);
+}
+
+.fim {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-left: auto;
+}
+
+/* A caixa, sobre a superfície, que cresce com o texto até a metade da janela e, dali, rola. */
+.caixa textarea {
+  min-height: 56px;
+  max-height: 50vh;
+  padding: var(--esp-3);
+  overflow-y: auto;
+  background-color: var(--cor-superficie);
+  resize: none;
+}
+
+/* A nota interna, no quadro tracejado da atenção, como na conversa. */
+.escrever[data-modo="nota"] .caixa textarea {
+  border-style: dashed;
+  background-color: var(--cor-atencao-fundo);
+}
+
+.escrever[data-modo="nota"] .caixa textarea:not([data-invalid]) {
+  border-color: var(--cor-atencao-borda);
+}
+
+/* No resolvido, a frase e o "Reabrir" no lugar do campo. */
+.reabrir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.reabrir p {
+  margin: 0;
+  color: var(--cor-texto-2);
+}

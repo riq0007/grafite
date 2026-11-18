@@ -2,7 +2,7 @@
 // chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
 // notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, o número e o
 // título, o selo, o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação,
-// e, embaixo, a conversa (tarefa 5.11). O campo de escrever chega na 5.12.
+// e, embaixo, a conversa (tarefa 5.11) e o campo de escrever (tarefa 5.12).
 import {
   AreaDeTexto,
   Botao,
@@ -42,6 +42,7 @@ import { acoesDoChamado, momentoDaMensagem, pessoasParaPassar } from '../quadro/
 import { chaveDaColuna, textoDosAbertos } from '../quadro/quadro.ts';
 import { TelaDosChamados } from '../TelaDosChamados.tsx';
 import { type RecusaNoDialogo, useAcoesDoChamadoAberto } from './acoes.ts';
+import { CampoDeEscrever } from './CampoDeEscrever.tsx';
 import estilos from './Chamado.module.css';
 import { Conversa } from './Conversa.tsx';
 import { ID_DO_CAMPO_DE_ESCREVER } from './escrever.ts';
@@ -120,6 +121,8 @@ function ConteudoDoChamado() {
 function Chamado({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
+  // Cada envio do campo de escrever leva a conversa à última mensagem.
+  const [envios, definirEnvios] = useState(0);
   return (
     // Só a conversa rola, entre o cabeçalho e o campo de escrever (design, "O chamado aberto, a
     // conversa (tarefa 5.11)").
@@ -135,7 +138,13 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         quadro={<QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
         acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} />}
       />
-      <Conversa key={ficha.numero} ficha={ficha} />
+      <Conversa key={ficha.numero} ficha={ficha} envios={envios} />
+      <CampoDeEscrever
+        // O rascunho é de um chamado: o outro abre com o campo vazio.
+        key={`campo-${ficha.numero}`}
+        ficha={ficha}
+        aoEnviar={() => definirEnvios((antes) => antes + 1)}
+      />
     </div>
   );
 }

@@ -39,10 +39,21 @@ const PERTO_DO_FIM = 32;
 /**
  * A conversa presa ao fim: abre na última mensagem e, com quem lê no fim, continua nele quando chega
  * um item novo, a forma muda ou a área diminui, como quando o campo de escrever cresce. Quem subiu
- * para ler o começo fica onde está.
+ * para ler o começo fica onde está, até mandar o que escreveu: o envio leva ao fim.
  */
-function usePresaAoFim(rolagem: RefObject<HTMLElement | null>, itens: unknown, forma: string) {
+function usePresaAoFim(
+  rolagem: RefObject<HTMLElement | null>,
+  itens: unknown,
+  forma: string,
+  envios: number,
+) {
   const noFim = useRef(true);
+  useLayoutEffect(() => {
+    const elemento = rolagem.current;
+    if (envios === 0 || !elemento) return;
+    noFim.current = true;
+    elemento.scrollTop = elemento.scrollHeight;
+  }, [rolagem, envios]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: roda a cada mudança dos itens e da forma.
   useLayoutEffect(() => {
     const elemento = rolagem.current;
@@ -70,14 +81,15 @@ function usePresaAoFim(rolagem: RefObject<HTMLElement | null>, itens: unknown, f
 
 /**
  * A conversa do chamado, com o resumo das respostas depois da abertura: a única parte da tela que
- * rola, presa ao fim. Ela recebe o foco para rolar pelo teclado.
+ * rola, presa ao fim. Ela recebe o foco para rolar pelo teclado. `envios` conta o que o campo de
+ * escrever mandou.
  */
-export function Conversa({ ficha }: { ficha: FichaDoChamado }) {
+export function Conversa({ ficha, envios = 0 }: { ficha: FichaDoChamado; envios?: number }) {
   const agora = useAgora();
   const dataHora = useDataHora();
   const rolagem = useRef<HTMLElement>(null);
   const forma = usePreferencias().preferencias.aparencia.conversas;
-  usePresaAoFim(rolagem, ficha.conversa, forma);
+  usePresaAoFim(rolagem, ficha.conversa, forma, envios);
   const partes = partesDoResumo(ficha.formulario, ficha.respostas, contextoDaFicha(ficha));
   const resumo =
     partes.length === 0 ? null : (
