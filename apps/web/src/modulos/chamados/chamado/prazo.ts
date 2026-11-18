@@ -47,7 +47,7 @@ const MS_POR_DIA = 86_400_000;
  * O dia de um momento em relação a agora, no fuso da conta: nulo hoje, "ontem", "amanhã", o dia da
  * semana com o dia e o mês ("qui 19 nov") e, em outro ano, a data inteira.
  */
-function diaDe(momento: Date, agora: Date, dataHora: DataHora): string | null {
+export function diaDe(momento: Date, agora: Date, dataHora: DataHora): string | null {
   const dia = dataHora.formatarData(momento);
   if (dia === dataHora.formatarData(agora)) return null;
   if (dia === dataHora.formatarData(new Date(agora.getTime() - MS_POR_DIA))) return 'ontem';

@@ -1,13 +1,22 @@
 // Os prazos (spec modulo-chamados, "Prazos" e "Selos, prazo em texto e movimento"; change
-// chamados-da-ti, design, "A lista dos prazos (tarefa 5.15)"; mockup m05): os selos do alto, a
-// legenda, a escala e os chamados abertos nos grupos, cada um com a barra até o prazo e o prazo em
-// texto. Um relógio só: o grupo, o texto, a ordem e o apoio das faixas viram no mesmo minuto. A
-// falha de uma releitura vai acima da lista, que fica com a última leitura; sem a lista, a falha fica
-// no lugar dela.
+// chamados-da-ti, design, "A lista dos prazos (tarefa 5.15)" e "O painel dos prazos (tarefa 5.16)";
+// mockups m05 e m06): os selos do alto, a legenda, a escala e os chamados abertos nos grupos, cada
+// um com a barra até o prazo e o prazo em texto. Um relógio só: o grupo, o texto, a ordem e o apoio
+// das faixas viram no mesmo minuto. A falha de uma releitura vai acima da lista, que fica com a
+// última leitura; sem a lista, a falha fica no lugar dela. Escolher um chamado abre o painel ao
+// lado, com a lista compacta; escolher de novo, o "Fechar a prévia" e o Esc o fecham.
 import { Botao, CabecalhoDaPagina, EstadoVazio, Icone, useDataHora } from '@grafite/ui';
-import { Link } from '@tanstack/react-router';
 import { ArrowRight, ArrowUpNarrowWide, CircleAlert } from 'lucide-react';
-import { type CSSProperties, type ReactNode, useId, useMemo } from 'react';
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { BuscaNosChamados } from '../BuscaNosChamados.tsx';
 import { usePrazosDosChamados } from '../consultas.ts';
@@ -25,6 +34,7 @@ import {
   selosDosPrazos,
   type Trecho,
 } from './lista.ts';
+import { type ControleDoPainel, PainelDoPrazo } from './PainelDoPrazo.tsx';
 
 /** A posição do agora e quantos intervalos a escala tem, para a grade e a linha de cada trilha. */
 const DA_ESCALA = {
@@ -37,6 +47,19 @@ export function ListaDosPrazos() {
   const agora = useAgora();
   const dataHora = useDataHora();
   const { fuso } = dataHora;
+  const idDoPainel = useId();
+  const painel = useRef<ControleDoPainel>(null);
+  const coluna = useRef<HTMLDivElement>(null);
+  // O chamado do painel e a mensagem que a conta mudou, que fica até a escolha de outro chamado
+  // ou até o envio, também com o painel fechado.
+  const [escolhido, definirEscolhido] = useState<number | null>(null);
+  const [mudada, definirMudada] = useState<{ numero: number; texto: string } | null>(null);
+  // O foco depois do desenho: no título do painel que abriu, ou na linha do painel que fechou.
+  const focoDepois = useRef<{ painel: true } | { linha: number } | null>(null);
+
+  const chamados = prazos.data?.chamados;
+  const naLista =
+    escolhido !== null && chamados?.some((chamado) => chamado.numero === escolhido) === true;
   const contar = useMemo(() => contadorDoPrazo(agora, fuso), [agora, fuso]);
   const grupos = useMemo(
     () =>
@@ -46,10 +69,56 @@ export function ListaDosPrazos() {
             contar,
             agora,
             dataHora,
+            compacto: naLista,
           })
         : null,
-    [prazos.data, contar, agora, dataHora],
+    [prazos.data, contar, agora, dataHora, naLista],
   );
+  const escolhida =
+    naLista && grupos
+      ? (grupos
+          .flatMap(({ linhas }) => linhas)
+          .find(({ chamado }) => chamado.numero === escolhido) ?? null)
+      : null;
+
+  // O chamado que sai da lista, resolvido ou fora do alcance, fecha o painel. O foco que estava
+  // nele, e que sumiu com ele, vai à primeira linha da lista.
+  useEffect(() => {
+    if (escolhido === null || !chamados || naLista) return;
+    definirEscolhido(null);
+    if (document.activeElement === document.body) {
+      coluna.current?.querySelector<HTMLElement>('button[data-numero]')?.focus();
+    }
+  }, [escolhido, chamados, naLista]);
+
+  useEffect(() => {
+    const pedido = focoDepois.current;
+    if (!pedido) return;
+    focoDepois.current = null;
+    if ('painel' in pedido) painel.current?.focar();
+    else coluna.current?.querySelector<HTMLElement>(`[data-numero="${pedido.linha}"]`)?.focus();
+  });
+
+  const fechar = () => {
+    if (escolhido === null) return;
+    focoDepois.current = { linha: escolhido };
+    definirEscolhido(null);
+  };
+  // Escolher de novo fecha; escolher outro troca o painel, e a mensagem mudada no outro fica para trás.
+  const escolher = (numero: number) => {
+    if (escolhido === numero) {
+      fechar();
+      return;
+    }
+    focoDepois.current = { painel: true };
+    definirEscolhido(numero);
+    definirMudada((antes) => (antes?.numero === numero ? antes : null));
+  };
+  const fecharComEsc = (evento: KeyboardEvent) => {
+    if (evento.key !== 'Escape' || evento.defaultPrevented || escolhida === null) return;
+    evento.preventDefault();
+    fechar();
+  };
 
   const tentarDeNovo = (
     <Botao
@@ -61,6 +130,7 @@ export function ListaDosPrazos() {
     </Botao>
   );
   const falha = prazos.isError ? prazos.error : null;
+  const compacto = escolhida !== null;
 
   let conteudo: ReactNode;
   if (grupos) {
@@ -79,9 +149,16 @@ export function ListaDosPrazos() {
           <>
             <Legenda />
             <div className={estilos.lista} style={DA_ESCALA}>
-              <CabecaDaLista />
+              <CabecaDaLista compacto={compacto} />
               {grupos.map((grupo) => (
-                <GrupoNaLista key={grupo.grupo} grupo={grupo} />
+                <GrupoNaLista
+                  key={grupo.grupo}
+                  grupo={grupo}
+                  compacto={compacto}
+                  escolhido={escolhida?.chamado.numero ?? null}
+                  idDoPainel={idDoPainel}
+                  aoEscolher={escolher}
+                />
               ))}
             </div>
           </>
@@ -100,20 +177,46 @@ export function ListaDosPrazos() {
 
   const selos = grupos ? selosDosPrazos(grupos) : [];
   return (
-    <div className={estilos.tela} data-janela-inteira="">
-      <CabecalhoDaPagina
-        titulo="Prazos"
-        selos={
-          selos.length > 0 &&
-          selos.map(({ selo, texto }) => (
-            <Selo key={selo} selo={selo}>
-              {texto}
-            </Selo>
-          ))
-        }
-        acoes={<BuscaNosChamados />}
-      />
-      {conteudo}
+    // biome-ignore lint/a11y/noStaticElementInteractions: o Esc em qualquer parte da tela fecha o painel, como o "Fechar a prévia".
+    <div
+      className={estilos.tela}
+      data-janela-inteira="rola-por-dentro"
+      data-com-painel={compacto ? '' : undefined}
+      onKeyDown={fecharComEsc}
+    >
+      <div ref={coluna} className={estilos.coluna} data-compacta={compacto ? '' : undefined}>
+        <CabecalhoDaPagina
+          titulo="Prazos"
+          selos={
+            selos.length > 0 &&
+            selos.map(({ selo, texto }) => (
+              <Selo key={selo} selo={selo}>
+                {texto}
+              </Selo>
+            ))
+          }
+          acoes={<BuscaNosChamados />}
+        />
+        {conteudo}
+      </div>
+      {escolhida && prazos.data && (
+        <PainelDoPrazo
+          key={escolhida.chamado.numero}
+          id={idDoPainel}
+          controle={painel}
+          chamado={escolhida.chamado}
+          situacao={escolhida.situacao}
+          horario={prazos.data.horario}
+          agora={agora}
+          mensagemMudada={mudada?.numero === escolhida.chamado.numero ? mudada.texto : null}
+          aoMudarAMensagem={(numero, texto) =>
+            definirMudada((antes) =>
+              texto !== null ? { numero, texto } : antes?.numero === numero ? null : antes,
+            )
+          }
+          aoFechar={fechar}
+        />
+      )}
     </div>
   );
 }
@@ -147,30 +250,45 @@ function Legenda() {
   );
 }
 
-/** A cabeça das colunas, só desenho: cada linha diz o número, o chamado e o prazo em texto. */
-function CabecaDaLista() {
+/**
+ * A cabeça das colunas, só desenho: cada linha diz o número, o chamado e o prazo em texto. Na lista
+ * compacta, as marcas de 4 em 4 h.
+ */
+function CabecaDaLista({ compacto }: { compacto: boolean }) {
   return (
     <div className={estilos.cabecaDaLista} aria-hidden="true">
       <span>Nº</span>
       <span>Chamado</span>
       <span className={estilos.escala}>
-        {MARCAS_DA_ESCALA.map(({ texto, posicao }) => (
-          <span
-            key={texto}
-            style={{ left: `${posicao}%` }}
-            data-agora={texto === 'agora' || undefined}
-          >
-            {texto}
-          </span>
-        ))}
+        {MARCAS_DA_ESCALA.filter(({ compacta }) => !compacto || compacta).map(
+          ({ texto, posicao }) => (
+            <span
+              key={texto}
+              style={{ left: `${posicao}%` }}
+              data-agora={texto === 'agora' || undefined}
+            >
+              {texto}
+            </span>
+          ),
+        )}
       </span>
       <span className={estilos.cabecaDoPrazo}>Prazo</span>
     </div>
   );
 }
 
+interface PropsDaEscolha {
+  compacto: boolean;
+  escolhido: number | null;
+  idDoPainel: string;
+  aoEscolher: (numero: number) => void;
+}
+
 /** Um grupo numa faixa, com o título e o apoio, e os chamados dele. */
-function GrupoNaLista({ grupo: { grupo, titulo, apoio, linhas } }: { grupo: GrupoDosPrazos }) {
+function GrupoNaLista({
+  grupo: { grupo, titulo, apoio, linhas },
+  ...escolha
+}: { grupo: GrupoDosPrazos } & PropsDaEscolha) {
   const idDoTitulo = useId();
   return (
     <section aria-labelledby={idDoTitulo} className={estilos.grupo} data-grupo={grupo}>
@@ -180,22 +298,35 @@ function GrupoNaLista({ grupo: { grupo, titulo, apoio, linhas } }: { grupo: Grup
       </div>
       <ul className={estilos.linhas}>
         {linhas.map((linha) => (
-          <LinhaDoPrazo key={linha.chamado.numero} linha={linha} />
+          <LinhaDoPrazo key={linha.chamado.numero} linha={linha} {...escolha} />
         ))}
       </ul>
     </section>
   );
 }
 
-/** O chamado: o link para ele, com o número, o tipo, o título, quem, a barra e o prazo em texto. */
-function LinhaDoPrazo({ linha: { chamado, situacao } }: { linha: LinhaDosPrazos }) {
+/**
+ * O chamado: o botão que abre o painel dele, com o número, o tipo, o título, quem, a barra e o
+ * prazo em texto. Na lista compacta, o relógio parado fica sem o "sem contagem de prazo".
+ */
+function LinhaDoPrazo({
+  linha: { chamado, situacao },
+  compacto,
+  escolhido,
+  idDoPainel,
+  aoEscolher,
+}: { linha: LinhaDosPrazos } & PropsDaEscolha) {
   const barra = situacao && barraDoPrazo(situacao);
+  const aberto = escolhido === chamado.numero;
   return (
     <li>
-      <Link
-        to="/chamados/$numero"
-        params={{ numero: String(chamado.numero) }}
+      <button
+        type="button"
         className={estilos.linha}
+        aria-expanded={aberto}
+        aria-controls={aberto ? idDoPainel : undefined}
+        data-numero={chamado.numero}
+        onClick={() => aoEscolher(chamado.numero)}
       >
         <span className={estilos.numero}>#{chamado.numero}</span>
         <span className={estilos.chamado}>
@@ -205,17 +336,17 @@ function LinhaDoPrazo({ linha: { chamado, situacao } }: { linha: LinhaDosPrazos 
             <span>{quemNaLinha(chamado)}</span>
           </span>
         </span>
-        <span className={estilos.trilha} aria-hidden="true">
+        <span className={estilos.trilha} data-sem-barra={barra ? undefined : ''} aria-hidden="true">
           {barra ? (
             <Barra barra={barra} />
           ) : (
-            <span className={estilos.semContagem}>sem contagem de prazo</span>
+            !compacto && <span className={estilos.semContagem}>sem contagem de prazo</span>
           )}
         </span>
         <span className={estilos.prazo}>
           <PrazoEmTexto situacao={situacao} forma="inteira" />
         </span>
-      </Link>
+      </button>
     </li>
   );
 }

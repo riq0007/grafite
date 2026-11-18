@@ -55,7 +55,8 @@ function limiteDasDuasHoras(agora: Date, dataHora: Pick<DataHora, 'formatarHora'
  * Os grupos na ordem da tela, só os que têm chamados. A situação de cada chamado sai do contador da
  * tela, e não do grupo da leitura, para o grupo, o texto e a ordem andarem juntos. No grupo, o
  * vencimento, e o empate, o número (`compararPrazos`); no parado, o que resta; no ilegível, o
- * número.
+ * número. Na lista compacta, a do painel aberto, o apoio do estourado e o do parado são os curtos
+ * do m06.
  */
 export function gruposDosPrazos(
   chamados: readonly ChamadoNosPrazos[],
@@ -64,11 +65,13 @@ export function gruposDosPrazos(
     contar,
     agora,
     dataHora,
+    compacto = false,
   }: {
     horario: HorarioDaTi;
     contar: ContarOPrazo;
     agora: Date;
     dataHora: Pick<DataHora, 'formatarHora' | 'grupoDoDia'>;
+    compacto?: boolean;
   },
 ): GrupoDosPrazos[] {
   const porGrupo = new Map<GrupoDaLista, LinhaDosPrazos[]>();
@@ -79,13 +82,18 @@ export function gruposDosPrazos(
   }
   const limite = limiteDasDuasHoras(agora, dataHora);
   const textos: Record<GrupoDaLista, Pick<GrupoDosPrazos, 'titulo' | 'apoio'>> = {
-    estourado: { titulo: 'Estourado', apoio: 'passou do prazo e ainda está aberto' },
+    estourado: {
+      titulo: 'Estourado',
+      apoio: compacto ? 'passou do prazo' : 'passou do prazo e ainda está aberto',
+    },
     'ate-2-horas': { titulo: 'Vence em até 2 horas', apoio: limite.ate },
     hoje: { titulo: 'Vence hoje', apoio: limite.depois },
     'depois-de-hoje': { titulo: 'Vence depois de hoje', apoio: null },
     parado: {
       titulo: 'Relógio parado',
-      apoio: 'aguardando o colaborador: o prazo volta a contar ao retomar',
+      apoio: compacto
+        ? 'aguardando o colaborador'
+        : 'aguardando o colaborador: o prazo volta a contar ao retomar',
     },
     ilegivel: { titulo: 'Prazo ilegível', apoio: 'o prazo guardado no chamado não se lê' },
   };
@@ -129,15 +137,16 @@ function posicao(horas: number): number {
   return ((cortado - ESCALA.de) / (ESCALA.ate - ESCALA.de)) * 100;
 }
 
-/** As marcas da escala, de 2 em 2 h: "−10 h", …, "agora", …, "+8 h". */
-export const MARCAS_DA_ESCALA: readonly { texto: string; posicao: number }[] = Array.from(
-  { length: (ESCALA.ate - ESCALA.de) / ESCALA.passo + 1 },
-  (_, indice) => {
+/**
+ * As marcas da escala, de 2 em 2 h: "−10 h", …, "agora", …, "+8 h". A lista compacta, a do painel
+ * aberto, mostra as de 4 em 4 h (`compacta`), como o m06.
+ */
+export const MARCAS_DA_ESCALA: readonly { texto: string; posicao: number; compacta: boolean }[] =
+  Array.from({ length: (ESCALA.ate - ESCALA.de) / ESCALA.passo + 1 }, (_, indice) => {
     const horas = ESCALA.de + indice * ESCALA.passo;
     const texto = horas === 0 ? 'agora' : `${horas > 0 ? '+' : '−'}${Math.abs(horas)} h`;
-    return { texto, posicao: posicao(horas) };
-  },
-);
+    return { texto, posicao: posicao(horas), compacta: horas % 4 === 0 };
+  });
 
 /** Um trecho da barra, em porcentagem da largura da escala. */
 export interface Trecho {

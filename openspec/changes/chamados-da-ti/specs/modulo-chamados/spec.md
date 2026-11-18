@@ -326,8 +326,10 @@ Sem chamados abertos, a tela SHALL dizer "Nenhum chamado aberto.".
 - **WHEN** o prazo guardado do #1045 não se lê
 - **THEN** o #1045 fica no grupo "Prazo ilegível", depois do "Relógio parado", sem a barra e com "prazo ilegível" à direita, e nenhum selo o conta
 
-Escolher um chamado SHALL abrir o painel ao lado, sem cobrir a lista. O painel SHALL ter:
-- o prazo do tipo, como "Prazo do tipo, 8 h corridas", e a barra dele;
+Escolher um chamado SHALL abrir o painel ao lado, sem cobrir a lista, com o chamado marcado nela. Escolher o mesmo chamado de novo, "Fechar a prévia" e Esc SHALL fechar o painel. Com o painel aberto, a lista SHALL ficar compacta, como no m06: a escala de 4 em 4 h, o apoio curto das faixas ("passou do prazo" e "aguardando o colaborador") e o relógio parado sem o "sem contagem de prazo". Na janela que não comporta os dois lado a lado, o painel SHALL ocupar a tela, e fechá-lo SHALL voltar à lista. O chamado que sai da lista, como o resolvido por outra conta, SHALL fechar o painel.
+
+O painel SHALL ter:
+- o prazo do tipo, como no chamado aberto ("Prazo do tipo, 8 h, em horas corridas"), a situação em destaque, a barra do prazo, com o tempo gasto e o que resta, ou o tempo além do prazo, hachurado, e o detalhe ("Abriu às 01:20 · venceu às 09:20");
 - quem pediu, quem atende e o ativo;
 - a última mensagem;
 - "Passar para…", com a carga de cada pessoa;
@@ -335,9 +337,23 @@ Escolher um chamado SHALL abrir o painel ao lado, sem cobrir a lista. O painel S
 - "Avisar Sandra", a ação principal, que manda a mensagem;
 - "Abrir o chamado".
 
+A quem só vê os chamados, o painel SHALL ir sem o "Passar para…", sem a mensagem pronta e sem o "Avisar".
+
+A mensagem pronta SHALL partir da situação do prazo, com o primeiro nome de quem pediu e o de quem atende, "na fila da TI" na triagem e "comigo" com a própria conta:
+- no estourado, "Sandra, o chamado passou do prazo e já está com Renato. Voltamos com uma posição até as 10:30.", com a primeira meia hora cheia a partir de 30 min depois de agora;
+- no que ainda vence, "Sandra, o chamado está com Renato. A previsão é resolver até as 16:00.", com o vencimento;
+- no relógio parado, "Sandra, o chamado está esperando a sua resposta. Assim que você responder, a TI retoma o atendimento.";
+- no prazo ilegível, "Sandra, o chamado está com Renato. Voltamos com uma posição até as 10:30.".
+
+A mensagem mudada SHALL ficar até a escolha de outro chamado ou até o envio.
+
 #### Scenario: Avisar quem pediu
 - **WHEN** Ana escolhe o #1033 nos prazos e usa "Avisar Sandra"
-- **THEN** a mensagem entra na conversa do #1033 como mensagem para Sandra, e o painel continua aberto
+- **THEN** a mensagem entra na conversa do #1033 como mensagem para Sandra, e o painel continua aberto, com a mensagem pronta de volta
+
+#### Scenario: Mensagem recusada
+- **WHEN** Ana apaga a mensagem pronta do #1033 e usa "Avisar Sandra"
+- **THEN** a recusa da API fica no campo da mensagem, e o painel continua aberto
 
 ### Requirement: Abrir um chamado
 

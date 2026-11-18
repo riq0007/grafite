@@ -1,5 +1,7 @@
 /*
- * Os prazos (m05): a raiz pede a janela inteira e vai até as bordas, como o quadro. Embaixo do
+ * Os prazos (m05 e m06): a raiz pede a janela inteira, vai até as bordas, como o quadro, e rola por
+ * dentro (`data-janela-inteira="rola-por-dentro"`): a coluna da lista, com o cabeçalho, rola sozinha,
+ * e o painel do chamado escolhido fica ao lado, da altura da janela. Na coluna, embaixo do
  * cabeçalho, a legenda; depois, a cabeça das colunas, as faixas dos grupos e as linhas, numa grade de
  * quatro colunas: o número, o chamado, a trilha com a escala e o prazo em texto.
  */
@@ -7,15 +9,38 @@
   --respiro: var(--respiro-da-janela, var(--esp-6));
   --colunas-da-lista: 76px minmax(240px, 1fr) minmax(300px, 1.6fr) 180px;
 
+  position: relative;
   display: flex;
-  flex-direction: column;
   min-width: 0;
   margin: calc(-1 * var(--respiro));
-  container-type: inline-size;
+  container: prazos / inline-size;
 }
 
-.tela > [data-cabecalho-da-pagina] {
+/* As consultas de largura da lista medem a coluna dela, e não a tela. */
+.coluna {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  container: lista-dos-prazos / inline-size;
+}
+
+/* A lista compacta, a do painel aberto, com as colunas do m06. */
+.coluna[data-compacta] {
+  --colunas-da-lista: 72px minmax(300px, 1.25fr) minmax(190px, 1fr) 176px;
+}
+
+.coluna > [data-cabecalho-da-pagina] {
   padding: var(--esp-4) var(--respiro) var(--esp-3);
+}
+
+/* Na tela estreita, o painel cobre a lista, que sai do foco e da leitura até ele fechar. */
+@container prazos (width < 900px) {
+  .tela[data-com-painel] > .coluna {
+    visibility: hidden;
+  }
 }
 
 .carregando,
@@ -201,20 +226,28 @@
   list-style: none;
 }
 
-/* A linha do chamado, que abre o chamado: a grade das colunas, de 40 px. */
+/* A linha do chamado, o botão que abre o painel dele: a grade das colunas, de 40 px. */
 .linha {
   display: grid;
   grid-template-columns: var(--colunas-da-lista);
   align-items: center;
+  box-sizing: border-box;
+  width: 100%;
   min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-bottom: 1px solid var(--cor-linha);
+  background: none;
   color: inherit;
-  text-decoration: none;
+  font: inherit;
+  text-align: left;
   outline: none;
 }
 
+/* A camada do hover vai por cima do fundo, também o da linha escolhida. */
 .linha:hover {
-  background: var(--cor-hover);
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
 }
 
 .linha:focus-visible {
@@ -228,10 +261,22 @@
 }
 
 .linha > .numero {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
   padding-left: var(--respiro);
   font-family: var(--fonte-mono);
   font-size: var(--texto-rotulo);
   font-variant-numeric: tabular-nums;
+}
+
+/* A linha do painel aberto: o fundo da superfície e a marca do destaque no número, como no m06. */
+.linha[aria-expanded="true"] {
+  background-color: var(--cor-superficie);
+}
+
+.linha[aria-expanded="true"] > .numero {
+  box-shadow: inset 3px 0 0 var(--cor-destaque);
 }
 
 .chamado {
@@ -278,7 +323,7 @@
   );
 }
 
-.linha > .trilha:has(.semContagem) {
+.linha > .trilha[data-sem-barra] {
   background: none;
 }
 
@@ -382,17 +427,26 @@
 }
 
 /*
- * Na janela estreita, sem a escala e sem as barras: o prazo em texto diz o estado. A consulta mede a
- * .tela, que não consulta a si mesma: a troca das colunas vai na .lista, dentro dela.
+ * Na coluna estreita, sem a escala e sem as barras: o prazo em texto diz o estado. A consulta mede a
+ * coluna, que não consulta a si mesma: a troca das colunas vai na .lista, dentro dela. A lista
+ * compacta, de colunas menores, fica com as barras até os 760 px.
  */
-@container (width < 860px) {
-  .lista {
+@container lista-dos-prazos (width < 860px) {
+  .coluna:not([data-compacta]) .lista {
     --colunas-da-lista: 76px minmax(0, 1fr) auto;
   }
 
-  .escala,
-  .linha > .trilha,
-  .legenda ul {
+  .coluna:not([data-compacta]) :is(.escala, .linha > .trilha, .legenda ul) {
+    display: none;
+  }
+}
+
+@container lista-dos-prazos (width < 760px) {
+  .coluna[data-compacta] .lista {
+    --colunas-da-lista: 72px minmax(0, 1fr) auto;
+  }
+
+  .coluna[data-compacta] :is(.escala, .linha > .trilha, .legenda ul) {
     display: none;
   }
 }

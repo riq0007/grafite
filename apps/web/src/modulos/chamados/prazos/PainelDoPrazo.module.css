@@ -1,0 +1,279 @@
+/*
+ * O painel dos prazos (m06, `.dir`): ao lado da lista, da altura da janela, opaco, com a borda forte
+ * à esquerda. O alto, o título e o rodapé ficam; o meio rola sozinho.
+ */
+.painel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 440px;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--cor-linha-forte);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}
+
+/* O número, o tipo com o ícone e o "Fechar a prévia", encostado à direita. */
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-4) var(--esp-5) 0;
+}
+
+.numero,
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.numero {
+  font-size: var(--texto-rotulo);
+}
+
+.tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--esp-1) + 2px);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.fechar {
+  flex: none;
+  margin-left: auto;
+}
+
+/* O título recebe o foco quando a lista escolhe o chamado; o contorno só no foco do teclado. */
+.titulo {
+  margin: var(--esp-3) var(--esp-5);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  outline: none;
+}
+
+.titulo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bloco {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-5);
+  border-top: 1px solid var(--cor-linha);
+}
+
+/* O prazo do tipo à esquerda e o destaque à direita, a barra e o detalhe embaixo. */
+.linhaDoPrazo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-1) var(--esp-3);
+  font-size: var(--texto-rotulo);
+}
+
+.destaque {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.destaque > svg {
+  color: var(--cor-info);
+}
+
+.prazo[data-marca="atencao"] .destaque,
+.prazo[data-marca="atencao"] .destaque > svg {
+  color: var(--cor-atencao);
+}
+
+.prazo[data-marca="critico"] .destaque,
+.prazo[data-marca="critico"] .destaque > svg {
+  color: var(--cor-critico);
+}
+
+/* A barra em proporção do prazo: o gasto, o que resta e o além do prazo, hachurado. */
+.barra {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+}
+
+.barra > i {
+  flex-basis: 0;
+}
+
+.barra > [data-parte="gasto"] {
+  background: var(--cor-texto-2);
+}
+
+.barra > [data-parte="resta"] {
+  background: color-mix(in srgb, var(--cor-texto-2) 35%, transparent);
+}
+
+.barra > [data-parte="gasto"][data-tom="atencao"] {
+  background: var(--cor-atencao);
+}
+
+.barra > [data-parte="resta"][data-tom="atencao"] {
+  background: color-mix(in srgb, var(--cor-atencao) 35%, transparent);
+}
+
+.barra > [data-parte="gasto"][data-tom="critico"] {
+  background: var(--cor-critico-forte);
+}
+
+.barra > [data-parte="estouro"] {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cor-critico-forte) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.detalhe {
+  font-size: var(--texto-rotulo);
+}
+
+/* "Pediu", "Atende" e "Ativo": o termo em versalete pequeno, à esquerda do que ele diz. */
+.dados {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: calc(var(--esp-1) + 2px) var(--esp-3);
+  margin: 0;
+}
+
+.dados dt {
+  padding-top: 2px;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dados dd {
+  margin: 0;
+}
+
+.dados dd.comSigla {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--esp-1) + 2px);
+}
+
+/* A última mensagem, com quem a escreveu e a hora, na faixa à esquerda. */
+.mensagem {
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--cor-linha-forte);
+  background: var(--cor-superficie-2);
+  line-height: 1.4;
+}
+
+.mensagem figcaption {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.mensagem blockquote {
+  margin: 0;
+}
+
+.semMensagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+.rotulo {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Três pessoas por linha, cada uma com a sigla, o primeiro nome e os abertos. */
+.pessoas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--esp-2);
+}
+
+.pessoas > .pessoa {
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: calc(var(--esp-1) + 1px) var(--esp-2);
+  font-weight: var(--peso-normal);
+  white-space: normal;
+}
+
+.quem {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: calc(var(--esp-1) + 2px);
+  min-width: 0;
+  text-align: left;
+}
+
+.quem > :first-child {
+  grid-row: 1 / 3;
+}
+
+.quem b {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+}
+
+.quem small {
+  font-size: var(--texto-legenda);
+  line-height: 1.2;
+}
+
+.mensagemPronta {
+  margin: 0;
+}
+
+/* "Avisar <nome>", a principal, e "Abrir o chamado", no pé do painel. */
+.rodape {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-5) var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+}
+
+/*
+ * Na tela estreita, o painel cobre a lista, opaco, e fechar volta a ela. A consulta mede a tela dos
+ * prazos, a dona do painel.
+ */
+@container prazos (width < 900px) {
+  .painel {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: auto;
+    border-left: 0;
+  }
+}

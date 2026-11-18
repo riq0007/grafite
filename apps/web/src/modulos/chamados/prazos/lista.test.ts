@@ -122,6 +122,23 @@ describe('os grupos da lista', () => {
       ['Vence em até 2 horas', 'até amanhã, 01:00', [1051]],
     ]);
   });
+
+  it('com o painel aberto, a lista compacta leva o apoio curto do m06', () => {
+    const compacta = gruposDosPrazos([...CHAMADOS_DOS_MOCKUPS, ilegivel(1045)], {
+      horario,
+      contar: contadorDoPrazo(AGORA_DOS_MOCKUPS, FUSO_DOS_MOCKUPS),
+      agora: AGORA_DOS_MOCKUPS,
+      dataHora,
+      compacto: true,
+    });
+    expect(compacta.map(({ titulo, apoio }) => [titulo, apoio])).toEqual([
+      ['Estourado', 'passou do prazo'],
+      ['Vence em até 2 horas', 'até as 11:40'],
+      ['Vence hoje', 'depois das 11:40'],
+      ['Relógio parado', 'aguardando o colaborador'],
+      ['Prazo ilegível', 'o prazo guardado no chamado não se lê'],
+    ]);
+  });
 });
 
 describe('os selos do alto', () => {
@@ -167,6 +184,14 @@ describe('a escala e a barra', () => {
     expect(MARCAS_DA_ESCALA[0]?.posicao).toBe(0);
     expect(MARCAS_DA_ESCALA[5]?.posicao).toBeCloseTo(55.556, 2);
     expect(MARCAS_DA_ESCALA[9]?.posicao).toBe(100);
+    // Na lista compacta, a do painel aberto, de 4 em 4 h, como no m06.
+    expect(MARCAS_DA_ESCALA.filter(({ compacta }) => compacta).map(({ texto }) => texto)).toEqual([
+      '−8 h',
+      '−4 h',
+      'agora',
+      '+4 h',
+      '+8 h',
+    ]);
   });
 
   it('o estourado do #1033: o gasto até a marca do prazo e o hachurado dela até o agora', () => {
