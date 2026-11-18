@@ -562,7 +562,7 @@ Alternativa recusada: mudar o Início para `/inicio` e fazer da raiz um redireci
 
 ### 15. Arrastar sem biblioteca
 
-Um hook da web, `useArrastar`, com os eventos de ponteiro (`pointerdown`, `pointermove`, `pointerup` e a captura do ponteiro), serve às três listas:
+Um hook da web, `useArrastar` (`apps/web/src/modulos/chamados/useArrastar.ts`), com os eventos de ponteiro (`pointerdown`, `pointermove`, `pointerup` e `pointercancel`), serve às três listas:
 - os tipos;
 - os campos;
 - as respostas prontas;
@@ -570,10 +570,22 @@ Um hook da web, `useArrastar`, com os eventos de ponteiro (`pointerdown`, `point
 e às colunas de "Quem está com o quê".
 
 Ele dá:
-- a posição do encaixe;
+- a posição do encaixe: a metade do alvo em que o ponteiro está, antes ou depois, que diz onde a linha de encaixe das listas fica;
 - o alvo sob o ponteiro;
 - o Esc para cancelar;
 - o limiar de 4 px antes de começar, para o clique continuar sendo clique.
+
+Como ele funciona (tarefa 5.4):
+- **as peças:** `const { arraste, alca, alvo } = useArrastar<T>({ recebe, aoSoltar })`. O `alca(item)` vai no que se arrasta (o quadrado ou a alça da linha), e o `alvo(chave)`, em cada lugar que recebe (a coluna ou a linha). Parado, o `arraste` é `null`; no arraste, traz o item, o ponteiro na janela, quanto ele andou desde o aperto, o alvo sob ele (a chave e a metade) e se esse alvo recebe o item;
+- **o alvo que recusa:** o `recebe(item, chave)` diz se o alvo aceita o item, como a coluna de quem não atende os locais do chamado; sem ele, todo alvo aceita. Soltar num alvo que recusa, ou fora de um alvo, não faz nada;
+- **o alvo sob o ponteiro** sai do `document.elementFromPoint`, subindo até um alvo deste arraste: cada `useArrastar` marca os seus alvos com o próprio id, e o alvo de outro arraste na mesma tela não conta. O quadrado no ar, que segue o ponteiro, fica com `pointer-events: none`, para não tapar o alvo;
+- **os ouvintes na janela,** do aperto até soltar, e não a captura do ponteiro: a janela já recebe o movimento fora do item, e a captura no aperto mandaria o clique ao item, e não aos botões de dentro dele, como os do quadrado. Sem a captura, a soltura pode se perder (o Alt+Tab, um diálogo, o menu do botão direito), e o arraste preso soltaria o chamado no clique seguinte: o movimento sem o botão principal e a janela que perde o foco acabam o aperto, sem soltar;
+- **o clique depois do arraste** não chega a ninguém, nem no arraste cancelado: nem ao item, nem a um botão dele, nem ao quadro, que o recebe quando a soltura cai fora do item. O ouvinte é da janela, na captura, e sai no primeiro clique, no fim da tarefa ou no aperto seguinte; o clique de teclado, que vem depois, chega. O arrastar do próprio navegador, o de um link ou de uma imagem dentro do item, fica desligado, porque ele cancelaria o ponteiro;
+- **um alvo por elemento:** o elemento leva o `data-alvo-de` de um arraste só. As listas que soltam coisas diferentes nas mesmas linhas, como a paleta e a ordem dos campos (5.21 e 5.22), usam o mesmo `useArrastar`, com o item numa união;
+- **o Esc** cancela o arraste e não chega a mais ninguém: a janela o pega primeiro, e a prévia ou o painel de trás não fecham. O `pointercancel` também cancela, e um segundo ponteiro não mexe no arraste;
+- **o resto é da tela:** o `touch-action: none` do que se arrasta, o cursor e o texto sem seleção durante o arraste ficam no CSS de cada tela;
+- **o que a 5.9 fecha:** o `touch-action: none` no quadrado inteiro tira, no toque, a rolagem por cima dos quadrados, e a 5.9 decide e escreve aqui o caminho no toque (por exemplo, o arraste só com o `pointerType` que não é `touch`, e o "Passar para…" no toque). A roda do mouse sem mover o ponteiro deixa o alvo velho até o próximo movimento: a soltura recalcula, e só o destaque erra;
+- **o que só o navegador prova** fica para a 5.9, no `pnpm dev` contra o m02, e para o ponta a ponta da 6.3, com o `page.mouse` (apertar, mover e soltar), que dá o clique de verdade: soltar em outra coluna; arrastar 5 px e soltar no mesmo quadrado; o Esc com a prévia aberta; o Alt+Tab e a roda no meio do arraste; e o toque emulado, em que o toque curto pode virar clique numa tarefa seguinte.
 
 O teclado tem a alternativa em cada caso:
 - "Subir" e "Descer" no menu do item;
