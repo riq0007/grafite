@@ -300,18 +300,31 @@ A tela dos prazos SHALL ter, no alto, três selos em texto, como "1 estourado", 
 - o prazo do tipo;
 - o tempo além do prazo, hachurado.
 
-Os chamados abertos SHALL ficar em grupos, cada um numa faixa:
+O selo de um grupo sem chamados SHALL sair.
+
+Os chamados abertos SHALL ficar em grupos, cada um numa faixa, só os grupos com chamados:
 - "Estourado";
 - "Vence em até 2 horas · até as 11:40";
 - "Vence hoje · depois das 11:40";
 - "Vence depois de hoje";
-- "Relógio parado".
+- "Relógio parado";
+- "Prazo ilegível", por último, com o chamado cujo prazo guardado não se lê.
+
+No grupo, os chamados SHALL seguir o vencimento, e o empate, o número; os de relógio parado, o que resta do prazo, e os de prazo ilegível, o número.
 
 Cada chamado SHALL ter:
 - a barra até o prazo, com a linha do "agora";
 - o prazo à direita, em mono, com o ícone e a palavra.
 
+O de relógio parado e o de prazo ilegível SHALL ficar sem a barra, com "sem contagem de prazo".
+
 A cor SHALL entrar só no estourado, a de perigo, e nos que vencem em até 2 h, a de atenção. Nos outros, a barra SHALL ficar em cinza, e o prazo, na cor do texto.
+
+Sem chamados abertos, a tela SHALL dizer "Nenhum chamado aberto.".
+
+#### Scenario: Prazo ilegível na lista
+- **WHEN** o prazo guardado do #1045 não se lê
+- **THEN** o #1045 fica no grupo "Prazo ilegível", depois do "Relógio parado", sem a barra e com "prazo ilegível" à direita, e nenhum selo o conta
 
 Escolher um chamado SHALL abrir o painel ao lado, sem cobrir a lista. O painel SHALL ter:
 - o prazo do tipo, como "Prazo do tipo, 8 h corridas", e a barra dele;
