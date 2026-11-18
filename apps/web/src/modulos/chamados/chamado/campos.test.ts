@@ -14,6 +14,7 @@ import type { FichaDoChamado } from '../consultas.ts';
 import {
   campoQueMudou,
   confirmacaoDosAnexos,
+  destinoDaFalha,
   estadoDaFicha,
   gravaNaHora,
   pedidoDosCampos,
@@ -246,5 +247,28 @@ describe('a recusa dos campos', () => {
       recusados: ['contador-de-paginas', 'laudo'],
       deVolta: [],
     });
+  });
+});
+
+describe('a falha da gravação', () => {
+  it('sem resposta da API, ou no erro do servidor, nada foi recusado: o pedido volta', () => {
+    expect(destinoDaFalha(null)).toBe('tentar-de-novo');
+    expect(destinoDaFalha({ status: 500 })).toBe('tentar-de-novo');
+    expect(destinoDaFalha({ status: 503, campos: { 'campos.laudo': 'Sem o AD.' } })).toBe(
+      'tentar-de-novo',
+    );
+  });
+
+  it('a recusa que diz os campos, ou o formulário, fica neles', () => {
+    const doContador = { 'campos.contador-de-paginas': 'O contador não pode voltar.' };
+    expect(destinoDaFalha({ status: 400, campos: doContador })).toBe('nos-campos');
+    expect(destinoDaFalha({ status: 400, campos: { formulario: 'Esse campo não é da TI.' } })).toBe(
+      'nos-campos',
+    );
+  });
+
+  it('a recusa do pedido inteiro, como o chamado resolvido por outra conta, devolve a ficha', () => {
+    expect(destinoDaFalha({ status: 409 })).toBe('a-ficha-vale');
+    expect(destinoDaFalha({ status: 400, campos: {} })).toBe('a-ficha-vale');
   });
 });

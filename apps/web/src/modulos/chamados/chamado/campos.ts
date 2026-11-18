@@ -10,6 +10,7 @@ import {
   type RespostaDoCampo,
   type RespostasDoFormulario,
 } from '@grafite/domain';
+import type { Problema } from '../../../api/cliente.ts';
 import type { FichaDoChamado } from '../consultas.ts';
 import { type EstadoDoFormulario, respostaDoCampo } from '../formulario/estado.ts';
 
@@ -109,6 +110,21 @@ export function separarARecusa(
   );
   if (recusados.length === 0) return { recusados: ids, deVolta: [] };
   return { recusados, deVolta: ids.filter((id) => !recusados.includes(id)) };
+}
+
+/**
+ * O que a falha de um pedido dos campos faz com a tela: a recusa que diz os campos, ou o formulário,
+ * fica neles (`separarARecusa`); a recusa do pedido inteiro, como a do chamado resolvido por outra
+ * conta, devolve a tela à ficha; sem resposta da API, ou no erro do servidor, nada foi recusado, e
+ * o que a conta escreveu fica na tela e volta no próximo pedido.
+ */
+export type DestinoDaFalha = 'nos-campos' | 'a-ficha-vale' | 'tentar-de-novo';
+
+export function destinoDaFalha(
+  problema: Pick<Problema, 'status' | 'campos'> | null,
+): DestinoDaFalha {
+  if (!problema || problema.status >= 500) return 'tentar-de-novo';
+  return Object.keys(problema.campos ?? {}).length > 0 ? 'nos-campos' : 'a-ficha-vale';
 }
 
 /** As respostas que a API tem depois do pedido aceito: o nulo apagou a resposta do campo. */

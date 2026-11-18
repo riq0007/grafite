@@ -17,6 +17,7 @@ import {
   type ConfirmacaoDosAnexos,
   campoQueMudou,
   confirmacaoDosAnexos,
+  destinoDaFalha,
   estadoDaFicha,
   gravaNaHora,
   pedidoDosCampos,
@@ -34,6 +35,8 @@ export interface PropsDosCamposDoTipo {
   aoMudarAberta: (aberta: boolean) => void;
 }
 
+const SEM_ERROS: Readonly<Record<string, string>> = {};
+
 /** A escolha que esconde um campo com arquivo, à espera do "Mudar". */
 interface Pergunta extends ConfirmacaoDosAnexos {
   depois: EstadoDoFormulario;
@@ -47,7 +50,8 @@ export function CamposDoTipo({ ficha, preenche, aberta, aoMudarAberta }: PropsDo
   const [mudado, definirMudado] = useState<EstadoDoFormulario | null>(null);
   const [erros, definirErros] = useState<Readonly<Record<string, string>>>({});
   const [pergunta, definirPergunta] = useState<Pergunta | null>(null);
-  const estado = mudado ?? base;
+  // Quem não preenche, como no chamado resolvido, vê o que está gravado, sem a mudança nem a recusa.
+  const estado = preenche ? (mudado ?? base) : base;
 
   // O que a gravação lê sem esperar o React: o estado de agora, os campos mudados e ainda não
   // mandados, os recusados, que ficam na tela até a conta mudá-los, as respostas que a API tem,
@@ -85,18 +89,24 @@ export function CamposDoTipo({ ficha, preenche, aberta, aoMudarAberta }: PropsDo
       salvas.current = respostasGravadas(salvas.current, pedido);
       return;
     }
-    const doCampo = resultado.problema?.campos ?? {};
-    if (Object.keys(doCampo).length > 0) {
+    const destino = destinoDaFalha(resultado.problema);
+    if (destino === 'nos-campos') {
       // A recusa fica no campo, com a resposta da conta, para ela corrigir, e o campo fica fora
       // dos próximos pedidos até ela mudá-lo (`separarARecusa`).
+      const doCampo = resultado.problema?.campos ?? {};
       const separados = separarARecusa(pedido, doCampo);
       for (const id of separados.recusados) recusados.current.add(id);
       for (const id of separados.deVolta) mudados.current.add(id);
       definirErros((anteriores) => ({ ...anteriores, ...doCampo }));
       return;
     }
-    // A recusa que não é de um campo, como o chamado resolvido por outra conta: a ficha relida vale.
     avisar({ situacao: 'critico', titulo: resultado.erro });
+    if (destino === 'tentar-de-novo') {
+      // Nada foi recusado: o que a conta escreveu fica na tela e volta no próximo pedido.
+      for (const id of Object.keys(pedido)) mudados.current.add(id);
+      return;
+    }
+    // A recusa do pedido inteiro, como o chamado resolvido por outra conta: a ficha relida vale.
     recusados.current.clear();
     definirErros({});
     if (enviando.current === 0) definirMudado(null);
@@ -172,7 +182,7 @@ export function CamposDoTipo({ ficha, preenche, aberta, aoMudarAberta }: PropsDo
           pessoa={pessoa}
           numero={ficha.numero}
           soLeitura={!preenche}
-          erros={erros}
+          erros={preenche ? erros : SEM_ERROS}
         />
       </div>
       {pergunta && (
