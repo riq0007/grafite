@@ -85,6 +85,13 @@
   background: color-mix(in srgb, var(--serie, var(--cor-texto-2)) 18%, transparent);
 }
 
+/* O grande, de 34 px, da linha da triagem do Início (m12). */
+.iconeDoTipo[data-tamanho="grande"] {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--raio-controle);
+}
+
 /*
  * A sigla de quem atende e a bandeja da triagem, como o `.av` de 38 dos mockups: o círculo com a
  * série a 26% sobre a superfície e a borda a 55%; sem a série, neutro.

@@ -70,18 +70,22 @@ Com a sessão desconhecida na primeira carga, porque o servidor não respondeu, 
 
 O Início dos chamados SHALL ter, no alto:
 - a saudação ao primeiro nome da conta: "Bom dia" das 05:00 às 11:59, "Boa tarde" das 12:00 às 17:59 e "Boa noite" no resto, no fuso da conta;
-- a contagem: os que esperam na triagem, os que já passaram do prazo, os abertos e os resolvidos hoje, como "3 esperam na triagem, 1 já passou do prazo, 12 abertos, 1 resolvido hoje", com "Contando só os chamados dos locais que você vê." a quem não vê os da organização inteira (spec chamados, requisito "Carga de cada pessoa").
+- a contagem: os que esperam na triagem e os que já passaram do prazo, em peso forte quando há algum, e depois os abertos e os resolvidos hoje, como "3 esperam na triagem e 1 já passou do prazo. 12 chamados abertos na equipe, 1 resolvido hoje.", com "Contando só os chamados dos locais que você vê." a quem não vê os da organização inteira (spec chamados, requisito "Carga de cada pessoa").
 
 Abaixo:
-- **à esquerda,** as colunas por pessoa, como em "Quem está com o quê", sem a coluna da triagem;
-- **à direita, a triagem:** uma linha por chamado, com "Assumir" e "Passar para…";
-- **à direita, os prazos:** compactos e sem os parados, com a frase dos parados, como "3 com o relógio parado".
+- **à esquerda, "Quem está com o quê":** as colunas por pessoa, como na tela dele, sem a coluna da triagem, com os abertos delas, como "9 abertos";
+- **à direita, a triagem:** uma linha por chamado, na ordem do vencimento, com o tipo, o título, o número, quem pediu, o prazo, "Assumir" e "Passar para…";
+- **à direita, os prazos:** compactos e sem os parados, com a frase dos parados, como "3 com o relógio parado, esperando o colaborador: #1041, #1032 e #1029.".
 
-Sem chamados abertos, a tela SHALL dizer "Nenhum chamado aberto.".
+Sem chamados abertos, a contagem SHALL dizer "Nenhum chamado aberto.".
 
 #### Scenario: Triagem no Início
 - **WHEN** Ana assume o #1040 na triagem do Início
 - **THEN** o #1040 sai da triagem e entra na coluna de Ana, e a contagem passa a "2 esperam na triagem"
+
+#### Scenario: Quem só vê os chamados
+- **WHEN** uma conta que vê os chamados e não os atende abre o Início
+- **THEN** a triagem lista os chamados sem "Assumir" e sem "Passar para…"
 
 ### Requirement: Quem está com o quê
 

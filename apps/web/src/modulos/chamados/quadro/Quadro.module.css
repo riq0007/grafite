@@ -124,6 +124,12 @@
   overflow-x: auto;
 }
 
+/* No Início, só as pessoas, sem o respiro: o bloco do Início dá o dele. */
+.colunas[data-sem-triagem] {
+  grid-template-columns: none;
+  padding: 0;
+}
+
 .coluna {
   display: flex;
   flex-direction: column;

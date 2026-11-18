@@ -22,6 +22,7 @@ import {
   type GrupoDosPrazos,
   gruposDosPrazos,
   MARCAS_DA_ESCALA,
+  marcasDaEscala,
   quemNaLinha,
   selosDosPrazos,
 } from './lista.ts';
@@ -185,13 +186,16 @@ describe('a escala e a barra', () => {
     expect(MARCAS_DA_ESCALA[5]?.posicao).toBeCloseTo(55.556, 2);
     expect(MARCAS_DA_ESCALA[9]?.posicao).toBe(100);
     // Na lista compacta, a do painel aberto, de 4 em 4 h, como no m06.
-    expect(MARCAS_DA_ESCALA.filter(({ compacta }) => compacta).map(({ texto }) => texto)).toEqual([
+    expect(marcasDaEscala(4).map(({ texto }) => texto)).toEqual([
       '−8 h',
       '−4 h',
       'agora',
       '+4 h',
       '+8 h',
     ]);
+    // No Início, de 8 em 8 h, como no m12.
+    expect(marcasDaEscala(8).map(({ texto }) => texto)).toEqual(['−8 h', 'agora', '+8 h']);
+    expect(marcasDaEscala(2)).toEqual(MARCAS_DA_ESCALA);
   });
 
   it('o estourado do #1033: o gasto até a marca do prazo e o hachurado dela até o agora', () => {

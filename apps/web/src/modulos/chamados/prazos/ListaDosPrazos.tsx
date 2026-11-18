@@ -6,9 +6,8 @@
 // última leitura; sem a lista, a falha fica no lugar dela. Escolher um chamado abre o painel ao
 // lado, com a lista compacta; escolher de novo, o "Fechar a prévia" e o Esc o fecham.
 import { Botao, CabecalhoDaPagina, EstadoVazio, Icone, useDataHora } from '@grafite/ui';
-import { ArrowRight, ArrowUpNarrowWide, CircleAlert } from 'lucide-react';
+import { ArrowUpNarrowWide, CircleAlert } from 'lucide-react';
 import {
-  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
   useEffect,
@@ -20,27 +19,12 @@ import {
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { BuscaNosChamados } from '../BuscaNosChamados.tsx';
 import { usePrazosDosChamados } from '../consultas.ts';
-import { IconeDoTipo, PrazoEmTexto, Selo } from '../Pecas.tsx';
+import { Selo } from '../Pecas.tsx';
 import { contadorDoPrazo } from '../prazo.ts';
 import estilos from './ListaDosPrazos.module.css';
-import {
-  type BarraDoPrazo,
-  barraDoPrazo,
-  type GrupoDosPrazos,
-  gruposDosPrazos,
-  type LinhaDosPrazos,
-  MARCAS_DA_ESCALA,
-  quemNaLinha,
-  selosDosPrazos,
-  type Trecho,
-} from './lista.ts';
+import { gruposDosPrazos, selosDosPrazos } from './lista.ts';
 import { type ControleDoPainel, PainelDoPrazo } from './PainelDoPrazo.tsx';
-
-/** A posição do agora e quantos intervalos a escala tem, para a grade e a linha de cada trilha. */
-const DA_ESCALA = {
-  '--agora': `${MARCAS_DA_ESCALA.find(({ texto }) => texto === 'agora')?.posicao ?? 0}%`,
-  '--intervalos': MARCAS_DA_ESCALA.length - 1,
-} as CSSProperties;
+import { TabelaDosPrazos } from './TabelaDosPrazos.tsx';
 
 export function ListaDosPrazos() {
   const prazos = usePrazosDosChamados();
@@ -148,19 +132,15 @@ export function ListaDosPrazos() {
         ) : (
           <>
             <Legenda />
-            <div className={estilos.lista} style={DA_ESCALA}>
-              <CabecaDaLista compacto={compacto} />
-              {grupos.map((grupo) => (
-                <GrupoNaLista
-                  key={grupo.grupo}
-                  grupo={grupo}
-                  compacto={compacto}
-                  escolhido={escolhida?.chamado.numero ?? null}
-                  idDoPainel={idDoPainel}
-                  aoEscolher={escolher}
-                />
-              ))}
-            </div>
+            <TabelaDosPrazos
+              grupos={grupos}
+              forma={compacto ? 'compacta' : 'inteira'}
+              escolha={{
+                escolhido: escolhida?.chamado.numero ?? null,
+                idDoPainel,
+                aoEscolher: escolher,
+              }}
+            />
           </>
         )}
       </>
@@ -247,130 +227,5 @@ function Legenda() {
         <Icone icone={ArrowUpNarrowWide} tamanho={14} />A fila segue o que vence primeiro
       </p>
     </div>
-  );
-}
-
-/**
- * A cabeça das colunas, só desenho: cada linha diz o número, o chamado e o prazo em texto. Na lista
- * compacta, as marcas de 4 em 4 h.
- */
-function CabecaDaLista({ compacto }: { compacto: boolean }) {
-  return (
-    <div className={estilos.cabecaDaLista} aria-hidden="true">
-      <span>Nº</span>
-      <span>Chamado</span>
-      <span className={estilos.escala}>
-        {MARCAS_DA_ESCALA.filter(({ compacta }) => !compacto || compacta).map(
-          ({ texto, posicao }) => (
-            <span
-              key={texto}
-              style={{ left: `${posicao}%` }}
-              data-agora={texto === 'agora' || undefined}
-            >
-              {texto}
-            </span>
-          ),
-        )}
-      </span>
-      <span className={estilos.cabecaDoPrazo}>Prazo</span>
-    </div>
-  );
-}
-
-interface PropsDaEscolha {
-  compacto: boolean;
-  escolhido: number | null;
-  idDoPainel: string;
-  aoEscolher: (numero: number) => void;
-}
-
-/** Um grupo numa faixa, com o título e o apoio, e os chamados dele. */
-function GrupoNaLista({
-  grupo: { grupo, titulo, apoio, linhas },
-  ...escolha
-}: { grupo: GrupoDosPrazos } & PropsDaEscolha) {
-  const idDoTitulo = useId();
-  return (
-    <section aria-labelledby={idDoTitulo} className={estilos.grupo} data-grupo={grupo}>
-      <div className={estilos.faixa}>
-        <h2 id={idDoTitulo}>{titulo}</h2>
-        {apoio && <p>{apoio}</p>}
-      </div>
-      <ul className={estilos.linhas}>
-        {linhas.map((linha) => (
-          <LinhaDoPrazo key={linha.chamado.numero} linha={linha} {...escolha} />
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/**
- * O chamado: o botão que abre o painel dele, com o número, o tipo, o título, quem, a barra e o
- * prazo em texto. Na lista compacta, o relógio parado fica sem o "sem contagem de prazo".
- */
-function LinhaDoPrazo({
-  linha: { chamado, situacao },
-  compacto,
-  escolhido,
-  idDoPainel,
-  aoEscolher,
-}: { linha: LinhaDosPrazos } & PropsDaEscolha) {
-  const barra = situacao && barraDoPrazo(situacao);
-  const aberto = escolhido === chamado.numero;
-  return (
-    <li>
-      <button
-        type="button"
-        className={estilos.linha}
-        aria-expanded={aberto}
-        aria-controls={aberto ? idDoPainel : undefined}
-        data-numero={chamado.numero}
-        onClick={() => aoEscolher(chamado.numero)}
-      >
-        <span className={estilos.numero}>#{chamado.numero}</span>
-        <span className={estilos.chamado}>
-          <IconeDoTipo icone={chamado.tipo.icone} nome={chamado.tipo.nome} />
-          <span className={estilos.tituloEQuem}>
-            <b>{chamado.titulo}</b>
-            <span>{quemNaLinha(chamado)}</span>
-          </span>
-        </span>
-        <span className={estilos.trilha} data-sem-barra={barra ? undefined : ''} aria-hidden="true">
-          {barra ? (
-            <Barra barra={barra} />
-          ) : (
-            !compacto && <span className={estilos.semContagem}>sem contagem de prazo</span>
-          )}
-        </span>
-        <span className={estilos.prazo}>
-          <PrazoEmTexto situacao={situacao} forma="inteira" />
-        </span>
-      </button>
-    </li>
-  );
-}
-
-const noTrecho = ({ de, ate }: Trecho): CSSProperties => ({
-  left: `${de}%`,
-  width: `${ate - de}%`,
-});
-
-/** A barra até o prazo: o gasto, o que resta ou o estouro hachurado, a marca e a seta. */
-function Barra({ barra }: { barra: BarraDoPrazo }) {
-  return (
-    <>
-      <i className={estilos.gasto} data-tom={barra.tom} style={noTrecho(barra.gasto)} />
-      {barra.resta && (
-        <i className={estilos.resta} data-tom={barra.tom} style={noTrecho(barra.resta)} />
-      )}
-      {barra.estouro && <i className={estilos.estouro} style={noTrecho(barra.estouro)} />}
-      <i className={estilos.marca} data-tom={barra.tom} style={{ left: `${barra.marca}%` }} />
-      {barra.alemDaEscala && (
-        <span className={estilos.alem}>
-          <Icone icone={ArrowRight} tamanho={12} />
-        </span>
-      )}
-    </>
   );
 }

@@ -33,6 +33,13 @@ function idDaContaDeExemplo(): string {
   return CONTA_DE_EXEMPLO.id;
 }
 
+/**
+ * O título do Início dos chamados: a saudação ao primeiro nome, que muda com a hora do dia em que o
+ * teste roda.
+ */
+export const saudacaoDoInicio = (primeiroNome: string) =>
+  new RegExp(`^(Bom dia|Boa tarde|Boa noite), ${primeiroNome}$`);
+
 /** As contas da TI; Ana Souza é a conta da sessão de exemplo. */
 export const ANA = { conta: idDaContaDeExemplo(), nome: 'Ana Souza' };
 export const BRUNO = { conta: '0199a6e0-0000-7000-8000-0000000000c2', nome: 'Bruno Lima' };

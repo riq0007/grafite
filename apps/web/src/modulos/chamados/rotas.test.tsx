@@ -5,6 +5,7 @@ import { App } from '../../App.tsx';
 import { criarClienteDeConsultas } from '../../api/consultas.ts';
 import { criarRoteador } from '../../rotas/arvore.ts';
 import type { PermissaoDaSessao } from '../../sessao/useAcesso.ts';
+import { saudacaoDoInicio } from '../../teste/chamados.ts';
 import { noCelular, noComputador } from '../../teste/postura.ts';
 import { naOrganizacao, sessaoAtiva } from '../../teste/sessao.ts';
 
@@ -49,6 +50,8 @@ function abrir(
 }
 
 const titulo = (nome: string) => screen.findByRole('heading', { level: 1, name: nome });
+/** O Início dos chamados, pela saudação a Ana. */
+const inicio = () => screen.findByRole('heading', { level: 1, name: saudacaoDoInicio('Ana') });
 
 const rotulos = (lugar: HTMLElement) =>
   within(lugar)
@@ -58,7 +61,7 @@ const rotulos = (lugar: HTMLElement) =>
 describe('os endereços dos chamados', () => {
   it('quem vê os chamados fica no Início dos chamados', async () => {
     const roteador = abrir('/chamados', naOrganizacao('chamados.ver'));
-    expect(await titulo('Chamados')).toBeTruthy();
+    expect(await inicio()).toBeTruthy();
     expect(roteador.state.location.pathname).toBe('/chamados');
     expect(screen.queryByText(/Você não tem acesso/)).toBeNull();
     cleanup();
@@ -67,12 +70,12 @@ describe('os endereços dos chamados', () => {
       '/chamados',
       naOrganizacao('chamados.atender', 'chamados.configurar'),
     );
-    expect(await titulo('Chamados')).toBeTruthy();
+    expect(await inicio()).toBeTruthy();
     expect(doQueConfigura.state.location.pathname).toBe('/chamados');
     cleanup();
     // A ação da busca leva ao Início com o ?abrir=1, que abre a gaveta (tarefa 5.18).
     const pelaBusca = abrir('/chamados?abrir=1', naOrganizacao('chamados.atender'));
-    expect(await titulo('Chamados')).toBeTruthy();
+    expect(await inicio()).toBeTruthy();
     expect(pelaBusca.state.location.pathname).toBe('/chamados');
   });
 
@@ -141,7 +144,7 @@ describe('os endereços dos chamados', () => {
 
   it('com o módulo ligado, o dock começa pelo Chamados', async () => {
     abrir('/chamados', naOrganizacao('chamados.atender'));
-    expect(await titulo('Chamados')).toBeTruthy();
+    expect(await inicio()).toBeTruthy();
     await waitFor(() =>
       expect(rotulos(screen.getByRole('navigation', { name: 'Dock' }))).toEqual([
         'Chamados',

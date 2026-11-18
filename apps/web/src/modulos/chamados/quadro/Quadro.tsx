@@ -191,7 +191,7 @@ function colunaDeCadaNumero(quadro: QuadroDosChamados): Map<number, string> {
 }
 
 /** O chamado no ar, na dica do alto. */
-interface ChamadoNoAr {
+export interface ChamadoNoAr {
   numero: number;
   titulo: string;
 }
@@ -200,7 +200,7 @@ interface ChamadoNoAr {
  * A dica do alto, com a mão (m01): o que o mouse faz nos quadrados e, no arraste, o chamado no ar
  * (m02). Quem só vê os chamados não arrasta. Sem o mouse, ela some, pelo CSS.
  */
-function Dica({ noAr, arrasta }: { noAr: ChamadoNoAr | null; arrasta: boolean }) {
+export function Dica({ noAr, arrasta }: { noAr: ChamadoNoAr | null; arrasta: boolean }) {
   return (
     <p className={estilos.dica}>
       <Icone icone={HandGrab} tamanho={14} />
@@ -293,7 +293,12 @@ function areaDasColunas(colunas: HTMLElement): Caixa {
   };
 }
 
-function Colunas({
+/**
+ * As colunas do quadro, com a prévia, o menu e o arraste. No Início (5.17), sem a coluna da triagem,
+ * que é uma lista ao lado, sem o aviso do alcance, que vai para o alto, e com os nomes das colunas
+ * em títulos de nível 3, embaixo do "Quem está com o quê".
+ */
+export function Colunas({
   quadro,
   chamados,
   horario,
@@ -301,6 +306,9 @@ function Colunas({
   contar,
   relendo,
   aoArrastar,
+  comTriagem = true,
+  comAviso = true,
+  nivel = 2,
 }: DaTela & {
   quadro: QuadroDosChamados;
   chamados: ChamadoNosPrazos[];
@@ -308,10 +316,15 @@ function Colunas({
   contar: ContarOPrazo;
   /** O chamado que vai ao ar, ou nenhum, quando o arraste acaba. */
   aoArrastar: (noAr: ChamadoNoAr | null) => void;
+  comTriagem?: boolean;
+  /** O "Contando só os chamados dos locais que você vê.", acima das colunas. */
+  comAviso?: boolean;
+  /** O nível do nome de cada coluna. */
+  nivel?: 2 | 3;
 }) {
   const lista = useMemo(() => listaPorNumero({ chamados }), [chamados]);
   const quadradosDe = (numeros: number[]) => quadradosDaColuna(numeros, { lista, horario, contar });
-  const triagem = quadradosDe(quadro.triagem.abertos);
+  const triagem = comTriagem ? quadradosDe(quadro.triagem.abertos) : [];
   const dasColunas = quadro.colunas.map((coluna) => ({
     coluna,
     quadrados: quadradosDe(coluna.abertos),
@@ -738,24 +751,27 @@ function Colunas({
 
   return (
     <InteracaoDoQuadroContexto.Provider value={doQuadro}>
-      {quadro.contandoSoOsLocaisQueVe && (
+      {comAviso && quadro.contandoSoOsLocaisQueVe && (
         <p className={estilos.aviso}>
           <Icone icone={Info} tamanho={14} />
           Contando só os chamados dos locais que você vê.
         </p>
       )}
-      <div ref={area} className={estilos.colunas}>
-        <ColunaDaTriagem
-          triagem={quadro.triagem}
-          quadrados={triagem}
-          agora={agora}
-          relendo={relendo}
-          alvo={alvoDoArraste(ALVO_DA_TRIAGEM)}
-          noArraste={noArrasteDa(null)}
-        />
+      <div ref={area} className={estilos.colunas} data-sem-triagem={comTriagem ? undefined : ''}>
+        {comTriagem && (
+          <ColunaDaTriagem
+            triagem={quadro.triagem}
+            quadrados={triagem}
+            agora={agora}
+            relendo={relendo}
+            alvo={alvoDoArraste(ALVO_DA_TRIAGEM)}
+            noArraste={noArrasteDa(null)}
+          />
+        )}
         {dasColunas.map(({ coluna, quadrados }) => (
           <ColunaDaPessoa
             key={chaveDaColuna(coluna)}
+            nivel={nivel}
             coluna={coluna}
             quadrados={quadrados}
             agora={agora}
@@ -899,8 +915,10 @@ function ColunaDaPessoa({
   relendo,
   alvo,
   noArraste,
-}: DaTela & NoArrasteDaColuna & { coluna: ColunaDoQuadro; quadrados: Quadrado[] }) {
+  nivel,
+}: DaTela & NoArrasteDaColuna & { coluna: ColunaDoQuadro; quadrados: Quadrado[]; nivel: 2 | 3 }) {
   const id = useId();
+  const Nome = nivel === 3 ? 'h3' : 'h2';
   const carga = textoDaCarga(coluna.abertos.length, coluna.pedacos.total);
   // Na coluna que recebe, o pedaço seguinte da barra fica tracejado.
   const novo = noArraste?.tipo === 'solta' ? coluna.pedacos.cheios : null;
@@ -915,7 +933,7 @@ function ColunaDaPessoa({
       <header className={estilos.cabecalho}>
         <SiglaDaPessoa conta={coluna.conta} nome={coluna.nome} />
         <div className={estilos.quem}>
-          <h2 id={id} className={estilos.nome}>
+          <Nome id={id} className={estilos.nome}>
             {coluna.nome}
             {coluna.naoAtendeMais && (
               <>
@@ -923,7 +941,7 @@ function ColunaDaPessoa({
                 <span className={estilos.naoAtendeMais}>não atende mais os chamados</span>
               </>
             )}
-          </h2>
+          </Nome>
           <Contagem
             abertos={textoDosAbertos(coluna.abertos.length)}
             maisAntigo={coluna.maisAntigo}

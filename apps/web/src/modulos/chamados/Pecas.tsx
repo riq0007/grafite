@@ -167,10 +167,13 @@ export function IconeDoTipo({
   icone,
   nome,
   decorativo = false,
+  tamanho,
 }: {
   icone: string;
   nome: string;
   decorativo?: boolean;
+  /** O grande, de 34 px, da linha da triagem do Início; sem ele, o de 24 px. */
+  tamanho?: 'grande';
 }) {
   const conhecido = iconeDoTipo(icone);
   return (
@@ -178,8 +181,9 @@ export function IconeDoTipo({
       className={estilos.iconeDoTipo}
       {...(decorativo ? { 'aria-hidden': true } : { role: 'img', 'aria-label': nome })}
       data-serie={SERIE_DO_ICONE[conhecido] ?? undefined}
+      data-tamanho={tamanho}
     >
-      <Icone icone={ICONES_DOS_TIPOS_DE_CHAMADO[conhecido]} tamanho={15} />
+      <Icone icone={ICONES_DOS_TIPOS_DE_CHAMADO[conhecido]} tamanho={tamanho ? 18 : 15} />
     </span>
   );
 }

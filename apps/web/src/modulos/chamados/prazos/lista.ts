@@ -137,16 +137,29 @@ function posicao(horas: number): number {
   return ((cortado - ESCALA.de) / (ESCALA.ate - ESCALA.de)) * 100;
 }
 
-/**
- * As marcas da escala, de 2 em 2 h: "−10 h", …, "agora", …, "+8 h". A lista compacta, a do painel
- * aberto, mostra as de 4 em 4 h (`compacta`), como o m06.
- */
-export const MARCAS_DA_ESCALA: readonly { texto: string; posicao: number; compacta: boolean }[] =
-  Array.from({ length: (ESCALA.ate - ESCALA.de) / ESCALA.passo + 1 }, (_, indice) => {
+/** Uma marca da escala: o texto, o lugar em porcentagem da largura e as horas a partir do agora. */
+export interface MarcaDaEscala {
+  texto: string;
+  posicao: number;
+  horas: number;
+}
+
+/** As marcas da escala, de 2 em 2 h: "−10 h", …, "agora", …, "+8 h". */
+export const MARCAS_DA_ESCALA: readonly MarcaDaEscala[] = Array.from(
+  { length: (ESCALA.ate - ESCALA.de) / ESCALA.passo + 1 },
+  (_, indice) => {
     const horas = ESCALA.de + indice * ESCALA.passo;
     const texto = horas === 0 ? 'agora' : `${horas > 0 ? '+' : '−'}${Math.abs(horas)} h`;
-    return { texto, posicao: posicao(horas), compacta: horas % 4 === 0 };
-  });
+    return { texto, posicao: posicao(horas), horas };
+  },
+);
+
+/**
+ * As marcas de cada forma da lista: de 2 em 2 h na inteira, de 4 em 4 h na compacta, a do painel
+ * aberto (m06), e de 8 em 8 h na do Início (m12), que é a mais estreita.
+ */
+export const marcasDaEscala = (passo: 2 | 4 | 8): MarcaDaEscala[] =>
+  MARCAS_DA_ESCALA.filter(({ horas }) => horas % passo === 0);
 
 /** Um trecho da barra, em porcentagem da largura da escala. */
 export interface Trecho {

@@ -9,6 +9,7 @@ import { criarRoteador } from '../rotas/arvore.ts';
 import { raiz } from '../rotas/raiz.tsx';
 import { criarLojaDaSessao, type LojaDaSessao } from '../sessao/loja.ts';
 import { bloquearArmazenamento } from '../teste/armazenamento.ts';
+import { saudacaoDoInicio } from '../teste/chamados.ts';
 import {
   CONTA_DE_EXEMPLO,
   naOrganizacao,
@@ -124,6 +125,9 @@ describe('a primeira tela ao entrar', () => {
   }
 
   const titulo = (nome: string) => screen.findByRole('heading', { level: 1, name: nome });
+  /** O Início dos chamados, pela saudação ao primeiro nome. */
+  const saudacao = (primeiroNome = 'Ana') =>
+    screen.findByRole('heading', { level: 1, name: saudacaoDoInicio(primeiroNome) });
   const dock = () => screen.findByRole('navigation', { name: 'Dock' });
   /** O tempo de uma troca que viesse depois da tela aparecer. */
   const umInstante = () => new Promise((resolver) => setTimeout(resolver, 50));
@@ -131,7 +135,7 @@ describe('a primeira tela ao entrar', () => {
   /** Ana entra pela raiz, vai aos chamados e escolhe o Início no dock. */
   async function entrarEVoltarAoInicio(sessao: LojaDaSessao = sessaoAtiva(ATENDE)) {
     const roteador = abrir('/', sessao);
-    await titulo('Chamados');
+    await saudacao();
     fireEvent.click(within(await dock()).getByRole('button', { name: 'Início' }));
     await titulo('O que resolver agora');
     return roteador;
@@ -139,7 +143,7 @@ describe('a primeira tela ao entrar', () => {
 
   it('Ana, que atende os chamados, entra pela raiz e vê o Início dos chamados', async () => {
     const roteador = abrir('/', sessaoAtiva(ATENDE));
-    await titulo('Chamados');
+    await saudacao();
     expect(roteador.state.location.pathname).toBe('/chamados');
     // A troca toma o lugar da raiz: o voltar do navegador não leva a ela.
     expect(roteador.history.length).toBe(1);
@@ -150,14 +154,14 @@ describe('a primeira tela ao entrar', () => {
     const carregados: string[] = [];
     roteador.subscribe('onBeforeLoad', ({ toLocation }) => carregados.push(toLocation.pathname));
     render(<App roteador={roteador} sessao={sessaoAtiva(ATENDE)} />);
-    await titulo('Chamados');
+    await saudacao();
     expect(carregados).toContain('/chamados');
     expect(carregados).not.toContain('/');
   });
 
   it('a troca faz parte da abertura: o foco fica onde estava, para o primeiro Tab', async () => {
     abrir('/', sessaoAtiva(ATENDE));
-    await titulo('Chamados');
+    await saudacao();
     await umInstante();
     expect(document.activeElement).toBe(document.body);
   });
@@ -184,7 +188,7 @@ describe('a primeira tela ao entrar', () => {
     // Cada aba tem o próprio sessionStorage.
     sessionStorage.clear();
     const abaNova = abrir('/', sessaoAtiva(ATENDE));
-    await titulo('Chamados');
+    await saudacao();
     expect(abaNova.state.location.pathname).toBe('/chamados');
   });
 
@@ -193,7 +197,7 @@ describe('a primeira tela ao entrar', () => {
     cleanup();
     const bruno = sessaoAtiva(ATENDE, {}, {}, { usuario: 'bruno.lima', nome: 'Bruno Lima' });
     const roteador = abrir('/', bruno);
-    await titulo('Chamados');
+    await saudacao('Bruno');
     expect(roteador.state.location.pathname).toBe('/chamados');
   });
 
@@ -244,7 +248,7 @@ describe('a primeira tela ao entrar', () => {
     await entrarEVoltarAoInicio();
     cleanup();
     const recarregado = abrir('/', sessaoAtiva(ATENDE));
-    await titulo('Chamados');
+    await saudacao();
     expect(recarregado.state.location.pathname).toBe('/chamados');
   });
 });
