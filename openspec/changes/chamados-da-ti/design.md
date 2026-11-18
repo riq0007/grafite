@@ -930,6 +930,7 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **o "Buscar nos chamados"** fica nos cabeçalhos do Início, de "Quem está com o quê" e dos Prazos (o m12, o m01, o m02 e o m05). É um campo de 260 px, com a lupa e o texto de exemplo, sem rótulo à vista, o `BuscaComResultados`, novo no kit, com a busca feita por fora:
   - a partir de 2 caracteres, depois da pausa dos provedores (`tempos.busca`), ele pede a mesma busca e abre embaixo a lista, em duas linhas por chamado, como a do provedor, com o primeiro já escolhido;
   - as setas andam pela lista, e Enter ou o clique abrem o chamado e limpam o campo. Esc fecha a lista;
+  - o Enter no "Buscando…", de quem digita "1042" e tecla Enter em seguida, abre o primeiro resultado quando ele chega; sem resultado ou na falha, o Enter não fecha a lista, que diz o aviso;
   - sem resultado, a lista diz "Nenhum chamado com “impressora”.", e a falha diz a frase dela.
   É a busca do sistema só com os chamados, para quem já está nas telas deles.
 

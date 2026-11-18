@@ -2,10 +2,11 @@
 // modulo-chamados, "Busca dos chamados"; change chamados-da-ti, design, "O chamado aberto, o
 // cabeçalho"): a busca do sistema só com os chamados, para quem já está nas telas deles. A partir
 // de 2 caracteres, depois da pausa dos provedores, ela pede a busca do provedor dos chamados e mostra
-// os resultados embaixo; o escolhido abre o chamado.
+// os resultados embaixo; o escolhido abre o chamado. O Enter antes de os resultados chegarem abre o
+// primeiro deles quando chegam; sem resultado ou na falha, a lista diz o aviso.
 import { BuscaComResultados } from '@grafite/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApi } from '../../api/useApi.tsx';
 import { criarExecutor, type EstadoDoProvedor } from '../../busca/provedores.ts';
 import type { ResultadoDoProvedor } from '../tipos.ts';
@@ -43,6 +44,26 @@ export function BuscaNosChamados() {
     ),
   );
   useEffect(() => () => executor.parar(), [executor]);
+  // O Enter que chegou no "Buscando…": abre o primeiro resultado do termo, e a busca vazia, a falha
+  // ou outro termo o esquecem.
+  const abrirOPrimeiro = useRef(false);
+
+  const mudarTermo = (novo: string) => {
+    abrirOPrimeiro.current = false;
+    definirTermo(novo);
+    executor.pedir(novo);
+  };
+  const abrir = (resultado: ResultadoDoProvedor) => {
+    mudarTermo('');
+    void navegar({ href: resultado.destino });
+  };
+
+  useEffect(() => {
+    if (!abrirOPrimeiro.current || estado.tipo === 'buscando') return;
+    abrirOPrimeiro.current = false;
+    const [primeiro] = estado.tipo === 'pronto' ? estado.resultados : [];
+    if (primeiro) abrir(primeiro);
+  });
 
   const resultados = estado.tipo === 'pronto' ? estado.resultados : [];
   return (
@@ -50,10 +71,7 @@ export function BuscaNosChamados() {
       rotulo="Buscar nos chamados"
       className={estilos.buscaNosChamados}
       termo={termo}
-      aoMudarTermo={(novo) => {
-        definirTermo(novo);
-        executor.pedir(novo);
-      }}
+      aoMudarTermo={mudarTermo}
       resultados={resultados.map(({ id, rotulo, caminho }) => ({
         id,
         rotulo,
@@ -63,6 +81,9 @@ export function BuscaNosChamados() {
       aoEscolher={(id) => {
         const escolhido = resultados.find((resultado) => resultado.id === id);
         if (escolhido) void navegar({ href: escolhido.destino });
+      }}
+      aoEnterSemResultados={() => {
+        if (estado.tipo === 'buscando') abrirOPrimeiro.current = true;
       }}
     />
   );

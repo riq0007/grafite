@@ -2,7 +2,8 @@
 // de buscar de um cabeçalho, como o "Buscar nos chamados", sem rótulo à vista, com a lupa e o texto
 // de exemplo, que abre embaixo os resultados de uma busca feita por fora, em duas linhas cada um,
 // com o primeiro já escolhido. As setas andam pela lista, Enter ou o clique escolhem e limpam o
-// campo, e Esc fecha a lista. Buscando, sem resultado e na falha, a lista diz o aviso de quem usa.
+// campo, e Esc fecha a lista. Buscando, sem resultado e na falha, a lista diz o aviso de quem usa, e
+// o Enter não a fecha.
 import { Search } from 'lucide-react';
 import { useContext, useEffect } from 'react';
 import {
@@ -39,6 +40,11 @@ export interface PropsDaBuscaComResultados {
   aviso: string | null;
   /** O resultado escolhido; o campo se limpa depois. */
   aoEscolher: (id: string) => void;
+  /**
+   * O Enter sem resultados, como no "Buscando…": a lista continua aberta, com o aviso, e quem usa
+   * decide, como abrir o primeiro resultado quando ele chegar.
+   */
+  aoEnterSemResultados?: () => void;
   className?: string;
 }
 
@@ -49,6 +55,7 @@ export function BuscaComResultados({
   resultados,
   aviso,
   aoEscolher,
+  aoEnterSemResultados,
   className,
 }: PropsDaBuscaComResultados) {
   return (
@@ -73,7 +80,19 @@ export function BuscaComResultados({
     >
       <div className={estilosDoCampo.busca}>
         <Icone icone={Search} />
-        <Input className={estilosDoCampo.entradaDaBusca} placeholder={rotulo} />
+        <Input
+          className={estilosDoCampo.entradaDaBusca}
+          placeholder={rotulo}
+          // O Enter sem resultados não chega ao React Aria: ele fecharia a lista do aviso, e ela não
+          // voltaria com os resultados, porque só reabre quando o texto muda.
+          onKeyDownCapture={(evento) => {
+            if (evento.key !== 'Enter' || evento.nativeEvent.isComposing) return;
+            if (resultados.length > 0) return;
+            evento.preventDefault();
+            evento.stopPropagation();
+            aoEnterSemResultados?.();
+          }}
+        />
       </div>
       <PainelFlutuante placement="bottom start" className={estilos.painel}>
         <ListaDosResultados resultados={resultados} aviso={aviso} />

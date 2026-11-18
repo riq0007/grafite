@@ -36,7 +36,13 @@ function achar(termo: string): ResultadoDaBuscaComResultados[] {
   return CHAMADOS.filter((chamado) => chamado.rotulo.toLowerCase().includes(texto));
 }
 
-function Busca({ aoEscolher }: { aoEscolher: (id: string) => void }) {
+function Busca({
+  aoEscolher,
+  aoEnterSemResultados,
+}: {
+  aoEscolher: (id: string) => void;
+  aoEnterSemResultados?: () => void;
+}) {
   const [termo, definirTermo] = useState('');
   const resultados = achar(termo);
   const aviso =
@@ -50,6 +56,7 @@ function Busca({ aoEscolher }: { aoEscolher: (id: string) => void }) {
         resultados={resultados}
         aviso={aviso}
         aoEscolher={aoEscolher}
+        {...(aoEnterSemResultados && { aoEnterSemResultados })}
       />
     </div>
   );
@@ -88,14 +95,30 @@ export const EnterAbreOPrimeiro: Historia = {
   },
 };
 
-/** Sem resultado, a lista diz o termo. */
+/** Sem resultado, a lista diz o termo, e o Enter não a fecha: ele chega a quem usa. */
 export const SemResultado: Historia = {
-  render: () => <Busca aoEscolher={() => {}} />,
+  render: () => {
+    const Historia = () => {
+      const [enter, definirEnter] = useState(0);
+      return (
+        <>
+          <Busca
+            aoEscolher={() => {}}
+            aoEnterSemResultados={() => definirEnter((vezes) => vezes + 1)}
+          />
+          <p>{`Enter sem resultados: ${enter}.`}</p>
+        </>
+      );
+    };
+    return <Historia />;
+  },
   play: async ({ canvasElement }) => {
     const campo = within(canvasElement).getByRole('combobox', { name: 'Buscar nos chamados' });
     await userEvent.type(campo, 'toner');
-    await expect(
-      await corpo(canvasElement).findByText('Nenhum chamado com “toner”.'),
-    ).toBeVisible();
+    const aviso = await corpo(canvasElement).findByText('Nenhum chamado com “toner”.');
+    await expect(aviso).toBeVisible();
+    await userEvent.keyboard('{Enter}');
+    await expect(await within(canvasElement).findByText('Enter sem resultados: 1.')).toBeVisible();
+    await expect(aviso).toBeVisible();
   },
 };
