@@ -1,14 +1,14 @@
 /*
- * A tabela que se ordena: as linhas de 46 px, e as altas, de 56; a escolhida, na superfície, com
- * as linhas fortes e a barra do destaque à esquerda; no arraste, a linha no ar esmaecida e a linha de
- * encaixe.
+ * A tabela que se ordena: as linhas de 46 px, e as altas, de 56, no texto dos dados, como o m07; a
+ * escolhida, na superfície, com as linhas fortes e a barra do destaque à esquerda; no arraste, a
+ * linha no ar esmaecida e a linha de encaixe.
  */
 .tabela {
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: var(--texto-corpo);
+  font-size: var(--texto-dado);
   outline: none;
 }
 
@@ -95,9 +95,12 @@
   user-select: none;
 }
 
-/* A célula da alça vence a das linhas: sem o respiro da direita, a alça cabe, e nada vira reticências. */
+/*
+ * A célula da alça vence a das linhas: sem o respiro da direita, a alça cabe, e nada vira reticências;
+ * o desenho fica a 16 px da borda, como no m07.
+ */
 .linha .celulaDaAlca {
-  padding: 0 0 0 var(--esp-1);
+  padding: 0 0 0 var(--esp-3);
   text-overflow: clip;
 }
 

@@ -80,13 +80,17 @@
   font-weight: var(--peso-forte);
 }
 
-/* O tipo na linha da tabela: o ícone e o nome, com o selo embaixo. */
+/*
+ * O tipo na linha da tabela: o ícone e o nome, com o selo embaixo. Numa janela mais estreita que a do
+ * m07, o nome quebra em duas linhas, entre as palavras, e não some em reticências.
+ */
 .tipoNaLinha {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--esp-1);
   min-width: 0;
+  white-space: normal;
 }
 
 .nomeNaLinha {
@@ -94,11 +98,12 @@
   align-items: center;
   gap: var(--esp-1);
   max-width: 100%;
+  line-height: 1.3;
 }
 
 .nomeNaLinha > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* O editor: o cabeçalho do tipo, as seções que rolam e o pé com os botões. */
@@ -150,7 +155,9 @@
   color: var(--cor-texto);
 }
 
+/* As seções medem a largura delas: o nome e o ícone ficam lado a lado só quando o nome tem espaço. */
 .secoes {
+  container: secoes / inline-size;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -170,6 +177,13 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--esp-3);
+}
+
+/* Sem os 140 px do nome ao lado dos 16 ícones, o nome fica na linha inteira, e os ícones embaixo. */
+@container secoes (width < 470px) {
+  .nomeEIcone {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* A frase do prazo, com os números em mono e as seleções na frase. */
@@ -290,6 +304,11 @@
   overflow: auto;
   border-left: 1px solid var(--cor-linha);
   background-color: var(--cor-superficie-afundada);
+}
+
+/* Os pedaços da prévia não encolhem: numa janela baixa, a prévia rola, e a aba não corta os cartões. */
+.previa > * {
+  flex: none;
 }
 
 .previa h2 {

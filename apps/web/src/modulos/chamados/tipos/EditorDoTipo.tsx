@@ -58,7 +58,7 @@ export interface PropsDoEditorDoTipo {
   tiposDeAtivo: OpcoesLidas<OpcaoDeSelecao>;
   mudou: boolean;
   salvando: boolean;
-  /** A falha sem campo, antes dos botões; a chave muda a cada tentativa. */
+  /** A falha sem recusa, antes dos botões, onde vai também a recusa geral; a chave muda a cada tentativa. */
   falha: { texto: string | null; chave: number };
   aoDescartar: () => void;
   aoSalvar: () => void;
@@ -263,7 +263,7 @@ export function EditorDoTipo({
       </div>
 
       <div className={estilos.peDoEditor}>
-        <MensagemDoPasso texto={falha.texto} chave={falha.chave} />
+        <MensagemDoPasso texto={falha.texto ?? erros.geral ?? null} chave={falha.chave} />
         <div className={estilos.botoesDoEditor}>
           <span className={estilos.formulario}>
             <Icone icone={ListChecks} tamanho={14} />
@@ -334,7 +334,7 @@ function FraseDoPrazo({
   };
 
   return (
-    <div data-recusado={erros.resposta || erros.resolucao ? '' : undefined}>
+    <div>
       <div className={estilos.fraseDoPrazo}>
         Responde em
         <NumeroDoPrazo
@@ -385,7 +385,10 @@ function FraseDoPrazo({
   );
 }
 
-/** Um número da frase: só algarismos, até três, como o 1 a 999 da spec. */
+/**
+ * Um número da frase: só algarismos, até três, como o 1 a 999 da spec. Cada número recusado é marcado
+ * sozinho, para o foco ir ao da recusa, e não ao primeiro da frase.
+ */
 function NumeroDoPrazo({
   rotulo,
   numero,
@@ -405,6 +408,7 @@ function NumeroDoPrazo({
       algarismos={3}
       invalido={idDoErro !== undefined}
       aria-describedby={idDoErro}
+      data-recusado={idDoErro !== undefined ? '' : undefined}
     />
   );
 }

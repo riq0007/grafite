@@ -45,7 +45,7 @@ const COLUNAS: readonly ColunaQueSeOrdena<TipoDeChamado>[] = [
     },
   },
   { id: 'prazo', titulo: 'Prazo', largura: 54, mono: true, celula: prazoNaTabela },
-  { id: 'atende', titulo: 'Atende', largura: 68, celula: quemAtendeNaTabela },
+  { id: 'atende', titulo: 'Atende', largura: 72, celula: quemAtendeNaTabela },
   { id: 'abertos', titulo: 'Abertos', largura: 70, mono: true, celula: (tipo) => tipo.abertos },
 ];
 
