@@ -15,6 +15,7 @@ import { fraseNoLugarDaCaixa, nomeNoChat } from '@grafite/domain';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
 import { ContaDoChat, contaDoChat, lerContas } from '../chat/contas.ts';
 import { lerConversaDaConta, travarADireta, travarParaAMensagem } from '../chat/conversa.ts';
 import {
@@ -69,8 +70,18 @@ const ParametrosDaDireta = z.object({ conta: z.uuid({ error: 'Pessoa não encont
 /** O texto passa pelo domínio, que conta os caracteres sem os espaços das pontas. */
 const TextoDaMensagem = z.string().max(40_000, { error: 'Use até 4.000 caracteres.' });
 
+/**
+ * Os anexos enviados antes (`POST /chat/anexos`), até 5 pelo domínio; o teto aqui só barra o pedido
+ * absurdo antes de o ler.
+ */
+const AnexosDaMensagem = z
+  .array(z.uuid({ error: ANEXO_NAO_ENCONTRADO }))
+  .max(50, { error: 'Anexe até 5 arquivos.' })
+  .optional();
+
 const NovaMensagem = z.object({
   texto: TextoDaMensagem,
+  anexos: AnexosDaMensagem,
   /** A mensagem respondida, da mesma conversa. */
   respondeA: z.uuid({ error: 'A mensagem respondida não está nesta conversa.' }).nullish(),
 });
@@ -182,7 +193,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
     {
       config: { permissao: 'chat.usar' },
       schema: {
-        summary: 'Manda a mensagem na conversa, com a resposta a outra dela',
+        summary: 'Manda a mensagem na conversa, com os anexos e a resposta a outra dela',
         params: ParametrosDaConversa,
         body: NovaMensagem,
         response: { 201: MensagemDoChat, ...PROBLEMAS },
@@ -197,6 +208,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
           contaId: conta.id,
           texto: requisicao.body.texto,
           respondeA: requisicao.body.respondeA ?? null,
+          anexos: requisicao.body.anexos ?? [],
           momento,
         });
         const [lida] = await mensagensParaAConta(tx, conta, conversa.linha.id, [gravada], momento);
@@ -214,7 +226,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
       schema: {
         summary: 'Manda a mensagem à pessoa: a primeira cria a conversa direta',
         params: ParametrosDaDireta,
-        body: z.object({ texto: TextoDaMensagem }),
+        body: z.object({ texto: TextoDaMensagem, anexos: AnexosDaMensagem }),
         response: { 201: MensagemNaDireta, ...PROBLEMAS },
       },
     },
@@ -247,6 +259,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
           contaId: conta.id,
           texto: requisicao.body.texto,
           respondeA: null,
+          anexos: requisicao.body.anexos ?? [],
           momento,
         });
         const [mensagem] = await mensagensParaAConta(

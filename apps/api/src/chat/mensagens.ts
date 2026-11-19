@@ -34,6 +34,7 @@ import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
+import { tomarAnexosDoChat } from './anexos.ts';
 import { ContaDoChat, type ContaLida, contaDoChat, lerContas } from './contas.ts';
 import {
   type ContaQueLe,
@@ -437,19 +438,29 @@ export async function lerPagina(
 
 /**
  * Grava a mensagem na conversa já travada (`travarParaAMensagem` ou `travarADireta`): a recusa de
- * quem só lê, o texto do domínio, a respondida, que é uma mensagem da mesma conversa, e o
- * `chat.mudou` a quem participa. As recusas desfazem a trava e a direta que nascia.
+ * quem só lê, o texto e o número de anexos do domínio, a respondida, que é uma mensagem da mesma
+ * conversa, os anexos, tomados depois da mensagem gravada, porque a chave estrangeira do anexo pede a
+ * mensagem, e o `chat.mudou` a quem participa. As recusas desfazem a trava e a direta que nascia.
  */
 export async function gravarMensagem(
   tx: Transacao,
   { linha, participacao: daConta }: Pick<ConversaDaConta, 'linha' | 'participacao'>,
-  pedido: { contaId: string; texto: string; respondeA: string | null; momento: Date },
+  pedido: {
+    contaId: string;
+    texto: string;
+    respondeA: string | null;
+    anexos: readonly string[];
+    momento: Date;
+  },
 ): Promise<LinhaDaMensagem> {
   if (daConta.participa && !daConta.escreve) {
     throw conflito(mensagemDaRecusaDaEscrita(daConta.recusa));
   }
   const conferida = conferirMensagem({ texto: pedido.texto, anexos: 0 });
   if (!conferida.ok) throw dadosInvalidos({ texto: conferida.erro });
+  const anexos = [...new Set(pedido.anexos.map((id) => id.toLowerCase()))];
+  const comOsAnexos = conferirMensagem({ texto: pedido.texto, anexos: anexos.length });
+  if (!comOsAnexos.ok) throw dadosInvalidos({ anexos: comOsAnexos.erro });
   if (pedido.respondeA !== null) {
     const [respondida] = await tx
       .select({ id: mensagensDoChat.id })
@@ -478,6 +489,12 @@ export async function gravarMensagem(
     })
     .returning();
   if (!gravada) throw new Error('A mensagem não foi gravada.');
+  await tomarAnexosDoChat(tx, {
+    arquivos: anexos,
+    contaId: pedido.contaId,
+    conversaId: linha.id,
+    mensagemId: gravada.id,
+  });
   await registrarEvento(tx, {
     tipo: 'chat.mudou',
     alvo: { tipo: 'conversa', id: linha.id },

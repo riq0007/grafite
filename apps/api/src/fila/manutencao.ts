@@ -29,6 +29,7 @@ import { and, asc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { chaveDoArquivo, VARIANTES, type Variante } from '../arquivos/armazenamento.ts';
 import { removerAnexosEsquecidos } from '../chamados/anexos.ts';
+import { removerAnexosDoChatEsquecidos } from '../chat/anexos.ts';
 import { avisarQuemImportou } from '../eventos/importacoes.ts';
 import { FILA_DAS_FALHAS } from './falhas.ts';
 import type { ContextoDasTarefas, DefinicaoDeTarefa } from './tarefas.ts';
@@ -341,6 +342,9 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
       const anexosEsquecidos = await naOrganizacao(banco, orgId, (tx) =>
         removerAnexosEsquecidos(tx, momento),
       );
+      const anexosDoChatEsquecidos = await naOrganizacao(banco, orgId, (tx) =>
+        removerAnexosDoChatEsquecidos(tx, momento),
+      );
       const arquivosApagados = await apagarArquivosRemovidos(contexto, orgId, momento, sinal);
       const rascunhosDescartados = await descartarRascunhosEsquecidos(banco, orgId, momento);
       const cadastrosParados = await apagarRascunhosDeCadastroParados(banco, orgId, momento);
@@ -357,6 +361,7 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
           orgId,
           eventos: eventosApagados,
           anexos: anexosEsquecidos,
+          anexosDoChat: anexosDoChatEsquecidos,
           arquivos: arquivosApagados,
           rascunhos: rascunhosDescartados,
           rascunhosDeCadastro: cadastrosParados,
