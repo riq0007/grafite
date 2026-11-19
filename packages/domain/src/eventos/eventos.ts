@@ -346,6 +346,15 @@ export const EVENTO_DA_ACAO = {
   'chamado.campos-trocados': 'chamados.mudaram',
   'chamado.virou-os': 'chamados.mudaram',
   'chamado.pediu-toner': 'chamados.mudaram',
+  // As equipes e os canais: a quem configura; quem participa, antes e depois, recebe da rota
+  'equipe.criada': 'chat.mudou',
+  'equipe.alterada': 'chat.mudou',
+  'equipe.arquivada': 'chat.mudou',
+  'equipe.reativada': 'chat.mudou',
+  'canal.criado': 'chat.mudou',
+  'canal.alterado': 'chat.mudou',
+  'canal.arquivado': 'chat.mudou',
+  'canal.reativado': 'chat.mudou',
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

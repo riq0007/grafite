@@ -15,6 +15,8 @@ export type Trava =
   | 'horario-da-ti'
   | `pacote:${string}`
   | `toner:${string}`
+  /** O teto de 100 equipes e canais ativos do chat (change chat-com-chamados). */
+  | 'equipes-e-canais'
   /** As reações de uma mensagem do chat, com o teto de 10 textos (change chat-com-chamados). */
   | `mensagem:${string}`;
 

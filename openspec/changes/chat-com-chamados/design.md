@@ -202,6 +202,13 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **As reações** são de quem participa, também de quem só lê, como no canal de avisos, onde o "visto" serve; a equipe e o canal arquivados as recusam pela frase da arquivada. A trava da mensagem é a trava transacional da organização (`mensagem:<id>`, em `travas.ts`), e não o `for update`, que o papel da aplicação não pode na `mensagens_do_chat`, sem o `update`. A resposta é a mensagem com as reações de agora.
 - **A leitura** marca as notificações da conversa até a última lida a cada pedido, também quando a lida não anda: a notificação que a tarefa gravou depois de ler a `lida_ate` de antes fica lida na próxima leitura. O `chat.mudou` à conta vai só quando a lida anda, e o silenciar, só quando muda.
 - **Os anexos do chat** seguem os dos chamados: o envio e a entrega ficaram em `arquivos/anexos-sem-dono.ts`, com o mesmo `AnexoEnviado` (`POST /chat/anexos`, `GET /chat/anexos/:arquivo` e `GET /chat/conversas/:id/anexos/:arquivo`). A mensagem confere o número de anexos depois do texto, com a recusa em `anexos`, e os toma depois de gravada, porque a chave estrangeira do anexo pede a mensagem. O anexo pela conversa de que a conta não participa, ou de outra conversa, responde "Arquivo não encontrado.".
+- **As equipes e os canais:**
+  - a lista do cadastro traz as ativas primeiro, cada parte pelo nome; a gaveta lê o grupo e o grupo que escreve com o nome e a situação de agora;
+  - o reativar não recebe o pedido: volta como está gravado, com o nome e o teto conferidos. Ele toma a trava do teto antes da linha, como o cadastro, que só tem a trava;
+  - o nome repetido e o teto respondem 409, o nome no campo dele, como no tipo de chamado; a alteração que não muda nada não grava nem audita;
+  - a auditoria tem as ações `equipe.*` e `canal.*`, com o alvo `conversa` pelo nome de agora e o retrato nos termos da tela ("Todos que participam", "Ativo" e "Arquivado"). O `chat.mudou` da auditoria vai a quem tem o `chat.configurar`, para a tela do cadastro, e a rota manda o de quem participa depois e, se o grupo mudou, o de antes;
+  - a vista Equipes conta, no canal, todas as contas que usam o chat;
+  - as abas Arquivos e "Chamados da equipe" vêm de 50 em 50, o mais novo primeiro, e servem a qualquer conversa de que a conta participa; com o módulo Chamados desligado, a segunda fica vazia.
 - **As notificações,** nos casos que a spec não escreve:
   - os títulos levam o nome sem o "(TI)" do chat, como nos exemplos da spec ("Ana Souza em Avisos da TI");
   - a mensagem da espera ("Aguardando o colaborador") é mensagem da TI para a pessoa e notifica como a resposta; o resolver notifica só o resolvido, e não a resposta pelo "O que foi feito";
