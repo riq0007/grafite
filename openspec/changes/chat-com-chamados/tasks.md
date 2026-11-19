@@ -29,7 +29,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 2. Domínio
 
-- [ ] 2.1 Quem usa o chat e quem participa (decisão 3): o `usaOChat`, quem participa da direta, da equipe (pelo grupo ativo) e do canal, a arquivada só para ler, quem escreve (com "Só TI escreve neste canal." e a frase da equipe), o "(TI)" e o `participaDoChamado`. Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
+- [x] 2.1 Quem usa o chat e quem participa (decisão 3): o `usaOChat`, quem participa da direta, da equipe (pelo grupo ativo) e do canal, a arquivada só para ler, quem escreve (com "Só TI escreve neste canal." e a frase da equipe), o "(TI)" e o `participaDoChamado`. Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.2 As mensagens, as reações e as citações:
   - o `conferirMensagem`: de 1 a 4.000 caracteres sem os espaços das pontas, até 5 anexos e as frases;
   - o `conferirReacao`: as três de sempre, a escrita de 1 a 20 e o teto de 10 textos;

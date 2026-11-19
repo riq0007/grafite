@@ -465,6 +465,25 @@ export {
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
 export {
+  type ChamadoParaParticipar,
+  type ContaDaDireta,
+  type ContaNoChat,
+  type ContaQueUsaOChat,
+  type ConversaParaParticipar,
+  daTi,
+  type GrupoDaConversa,
+  mensagemDaRecusaDaEscrita,
+  nomeDaConversa,
+  nomeNoChat,
+  type Participacao,
+  participacao,
+  participaDoChamado,
+  type RecusaDaEscrita,
+  TIPOS_DE_CONVERSA,
+  type TipoDeConversa,
+  usaOChat,
+} from './chat/participacao.ts';
+export {
   type AcessoAoSegredo,
   alcancaOSegredo,
   DURACAO_DA_LIBERACAO_DO_COFRE,
