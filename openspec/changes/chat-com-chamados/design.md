@@ -215,7 +215,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - a mensagem da espera ("Aguardando o colaborador") é mensagem da TI para a pessoa e notifica como a resposta; o resolver notifica só o resolvido, e não a resposta pelo "O que foi feito";
   - o "Chamado #1045 com você" da reabertura, também pela mensagem da pessoa, não é mensagem: vai por push nas severidades escolhidas, como o de qualquer chamado passado;
   - a mensagem vai por push também quando a conta não escolheu nenhuma severidade: a spec diz "qualquer que seja a severidade escolhida", e quem não quer o push de nenhuma mensagem liga o Foco ou não inscreve o aparelho;
-  - a tarefa `chat.notificar` lê quem participa quando roda, pela mesma consulta da aba das pessoas (`idsDeQuemParticipa`, em `chat/conversa.ts`). A equipe ou o canal arquivado nos 10 s não notifica ninguém, porque o arquivado sai da lista de quem participa; o módulo Chat desligado também não. Ela roda numa transação só, e a nova tentativa vem só depois de uma falha, que nada gravou.
+  - a tarefa `chat.notificar` lê quem participa quando roda, pela mesma consulta da aba das pessoas (`idsDeQuemParticipa`, em `chat/conversa.ts`). A equipe ou o canal arquivado nos 10 s não notifica ninguém, porque o arquivado sai da lista de quem participa; o módulo Chat desligado também não. Ela roda numa transação só, e a nova tentativa depois de uma falha não acha nada gravado; a que gravou e caiu antes de a fila a dar como concluída roda de novo sem repetir o aviso, porque quem já tem a notificação da mensagem fica de fora.
 
 ## Risks / Trade-offs
 

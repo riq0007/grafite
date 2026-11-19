@@ -11,10 +11,11 @@ import {
   leiturasDasConversas,
   mensagensDoChat,
   naOrganizacao,
+  notificacoes,
   type Transacao,
 } from '@grafite/db';
 import { type ConversaQueNotifica, notificacoesDaMensagemDoChat } from '@grafite/domain';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, gte, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { FILA_DAS_FALHAS } from '../fila/falhas.ts';
@@ -52,8 +53,8 @@ const conversaQueNotifica = (linha: LinhaDaConversa): ConversaQueNotifica =>
 
 /**
  * Notifica a mensagem a quem participa da conversa agora, fora quem escreveu, quem silenciou e quem
- * já a leu. A tarefa roda numa transação só: a nova tentativa vem depois de uma falha, que nada
- * gravou.
+ * já a leu, ou já foi notificado dela. A tarefa roda numa transação só: a nova tentativa depois de
+ * uma falha não acha nada gravado.
  */
 export async function notificarMensagemDoChat(
   banco: Banco,
@@ -68,6 +69,7 @@ export async function notificarMensagemDoChat(
         conversaId: mensagensDoChat.conversaId,
         autorConta: mensagensDoChat.autorConta,
         texto: mensagensDoChat.texto,
+        criadaEm: mensagensDoChat.criadaEm,
       })
       .from(mensagensDoChat)
       .where(and(eq(mensagensDoChat.id, mensagemId), eq(mensagensDoChat.especie, 'mensagem')));
@@ -80,9 +82,25 @@ export async function notificarMensagemDoChat(
     }
     const montada = (await conversasParaParticipar(tx, [linha])).get(linha.id);
     if (!montada) return { notificadas: 0 };
-    const ids = (await idsDeQuemParticipa(tx, montada.conversa)).filter(
+    const participam = (await idsDeQuemParticipa(tx, montada.conversa)).filter(
       (id) => id !== mensagem.autorConta,
     );
+    if (participam.length === 0) return { notificadas: 0 };
+    // A tarefa que gravou e caiu antes de a fila a dar como concluída roda de novo: quem já tem a
+    // notificação desta mensagem fica de fora. A hora da mensagem limita a leitura pelo índice das
+    // notificações da conta.
+    const jaNotificadas = await tx
+      .select({ contaId: notificacoes.contaId })
+      .from(notificacoes)
+      .where(
+        and(
+          inArray(notificacoes.contaId, participam),
+          gte(notificacoes.criadaEm, mensagem.criadaEm),
+          eq(notificacoes.mensagemDoChatId, mensagem.id),
+        ),
+      );
+    const ja = new Set(jaNotificadas.map(({ contaId }) => contaId));
+    const ids = participam.filter((id) => !ja.has(id));
     if (ids.length === 0) return { notificadas: 0 };
     const leituras = await tx
       .select({

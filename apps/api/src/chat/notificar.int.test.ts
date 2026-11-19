@@ -119,6 +119,10 @@ describe('a tarefa chat.notificar', () => {
       assunto: `conversa:${direta}`,
       mensagemDoChatId: mensagem,
     });
+
+    // A tarefa que gravou e não chegou a ser dada como concluída roda de novo sem repetir o aviso.
+    expect(await rodarATarefa(mensagem)).toEqual({ notificadas: 0 });
+    expect(await quemRecebeu(mensagem)).toEqual(['fernanda']);
   });
 
   it('a equipe com o aviso notifica quem participa, fora quem silenciou e quem já leu', async () => {
