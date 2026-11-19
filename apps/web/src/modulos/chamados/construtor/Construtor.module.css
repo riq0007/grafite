@@ -438,12 +438,19 @@
 /* A recusa, com o ícone, na cor crítica, junto do que recusa. */
 .erro {
   display: flex;
-  align-items: center;
+  /* Na frase que quebra, o ícone fica na primeira linha. */
+  align-items: start;
   gap: var(--esp-1);
   margin: var(--esp-1) 0 0;
   font-size: var(--texto-dado);
   line-height: 1.4;
   color: var(--cor-critico);
+}
+
+/* O ícone não encolhe com a frase comprida e fica no meio da primeira linha. */
+.erro > svg {
+  flex: none;
+  height: 1lh;
 }
 
 .recusasDoCampo,

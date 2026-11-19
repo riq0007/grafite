@@ -761,6 +761,9 @@ function CampoDaLista({
         data-campo={campo.id}
         {...alvo}
         onContextMenu={(evento) => {
+          // No campo aberto, o botão direito é o do navegador, com o colar e a correção.
+          const doAberto = document.getElementById(idDoAberto);
+          if (evento.target instanceof Node && doAberto?.contains(evento.target)) return;
           const origem = botao.current;
           if (!origem || !aoPedirOMenu({ x: evento.clientX, y: evento.clientY }, origem)) return;
           evento.preventDefault();
