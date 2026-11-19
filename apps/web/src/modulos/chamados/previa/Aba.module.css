@@ -171,7 +171,9 @@
   list-style: none;
 }
 
+/* Cada cartão mede a largura dele: o nome desce um passo de texto quando o cartão estreita. */
 .item {
+  container-type: inline-size;
   display: grid;
   min-width: 0;
 }
@@ -198,6 +200,24 @@
   transition:
     background-color var(--dur-rapida) var(--curva-padrao),
     border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/*
+ * Num cartão mais estreito que o da prévia a 1440 (89 px), como a 1366 (83 px), o nome desce um passo;
+ * no mais estreito, como a 1280 (76 px), mais um, com metade do respiro dos lados, e o "Computador"
+ * cabe inteiro. Só o que não cabe nem assim quebra no meio.
+ */
+@container (width < 88px) {
+  .tipo {
+    font-size: var(--texto-rotulo);
+  }
+}
+
+@container (width < 80px) {
+  .tipo {
+    padding-inline: calc(var(--esp-1) / 2);
+    font-size: var(--texto-legenda);
+  }
 }
 
 .tipo[data-marca="novo"] {

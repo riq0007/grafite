@@ -4,6 +4,7 @@
  * linha no ar esmaecida e a linha de encaixe.
  */
 .tabela {
+  --altura-do-cabecalho: 40px;
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
@@ -12,9 +13,17 @@
   outline: none;
 }
 
+/*
+ * O cabeçalho fica no alto enquanto a lista rola, no fundo afundado da coluna da lista do m07, para as
+ * linhas passarem por baixo sem vazar.
+ */
 .tabela th {
-  height: 40px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--altura-do-cabecalho);
   padding: 0 var(--esp-2);
+  background-color: var(--cor-superficie-afundada);
   border-bottom: 1px solid var(--cor-linha);
   font-size: var(--texto-legenda);
   font-weight: var(--peso-forte);
@@ -33,9 +42,11 @@
   width: 36px;
 }
 
+/* A linha que rola até a vista para embaixo do cabeçalho fixo, e não atrás dele. */
 .linha {
   outline: none;
   cursor: default;
+  scroll-margin-top: var(--altura-do-cabecalho);
 }
 
 .linha td {

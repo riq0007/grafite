@@ -6,7 +6,11 @@
 .tela {
   --respiro: var(--respiro-da-janela, var(--esp-6));
 
-  /* A gaveta do Rascunho abre dentro da tela, com o véu sobre ela inteira. */
+  /*
+   * A gaveta do Rascunho abre dentro da tela, com o véu sobre ela inteira. A tela é o contêiner que
+   * dá à prévia da gaveta a mesma largura da prévia de baixo, pela mesma conta.
+   */
+  container: tela / inline-size;
   position: relative;
   display: grid;
   grid-template-columns: clamp(340px, 30%, 412px) minmax(0, 1fr) clamp(380px, 32.3%, 444px);
@@ -116,7 +120,15 @@
   overflow-wrap: break-word;
 }
 
-/* A origem de um Rascunho duplicado, embaixo do nome, como no m08. */
+/* O selo da exceção e a origem de um Rascunho duplicado, embaixo do nome, lado a lado. */
+.marcasNaLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+/* A origem de um Rascunho duplicado, como no m08. */
 .copiadoDaqui {
   display: inline-flex;
   align-items: center;
@@ -127,6 +139,7 @@
 
 /* O editor: o cabeçalho do tipo, as seções que rolam e o pé com os botões. */
 .editor {
+  container: editor / inline-size;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
@@ -146,14 +159,26 @@
   min-width: 0;
 }
 
+/*
+ * O nome inteiro, como no m07 e no m08, em até duas linhas, e cortado com reticências só depois delas.
+ * O nome longo, como o "Troca de equipamento (cópia)", desce um passo para caber nelas.
+ */
 .nomeDoTipo h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   margin: 0;
   overflow: hidden;
   font-size: var(--texto-titulo-grande);
   font-weight: var(--peso-forte);
+  line-height: 1.2;
   letter-spacing: -0.01em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+}
+
+.nomeDoTipo h2[data-longo] {
+  font-size: var(--texto-titulo);
 }
 
 .nomeDoTipo p {
@@ -163,15 +188,42 @@
   color: var(--cor-texto);
 }
 
+/* A contagem quebra em duas linhas antes de tirar a largura do nome. */
 .situacaoDoTipo {
   display: grid;
   justify-items: end;
   gap: var(--esp-1);
+  max-width: 13em;
 }
 
 .situacaoDoTipo small {
   font-size: var(--texto-rotulo);
+  line-height: 1.3;
   color: var(--cor-texto);
+  text-align: end;
+}
+
+/*
+ * Num editor mais estreito que o do m07 (522 px a 1440), como a 1280, a situação desce para baixo do
+ * nome, na linha dela, e o nome fica com a largura toda.
+ */
+@container editor (width < 500px) {
+  .cabecalhoDoTipo {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .situacaoDoTipo {
+    grid-column: 2;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    gap: var(--esp-2);
+    max-width: none;
+  }
+
+  .situacaoDoTipo small {
+    text-align: start;
+  }
 }
 
 /* As seções medem a largura delas: o nome e o ícone ficam lado a lado só quando o nome tem espaço. */
@@ -336,7 +388,9 @@
 
 /*
  * A gaveta do Rascunho cobre as colunas do editor e da prévia, da borda da tabela até o fim da tela,
- * com o editor e a prévia nas larguras das colunas de baixo.
+ * com o editor e a prévia nas larguras das colunas de baixo: a prévia com a conta da coluna dela, na
+ * largura da tela (`cqi`), e não numa parte da gaveta, que a deixava meio pixel mais estreita e
+ * quebrava o "Computador" no meio.
  */
 .gaveta {
   inset-inline-start: clamp(340px, 30%, 412px);
@@ -344,7 +398,7 @@
 
 .conteudoDaGaveta {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(380px, 46%, 444px);
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 32.3cqi, 444px);
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
   min-height: 0;

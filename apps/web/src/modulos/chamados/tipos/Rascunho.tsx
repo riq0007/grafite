@@ -119,15 +119,20 @@ export function PeDoRascunho({
       <div className={`${estilos.botoesDoEditor} ${estilos.botoesDoRascunho}`}>
         <span className={estilos.formulario}>Só aparece para o colaborador depois de criado.</span>
         <span className={estilos.acoes}>
-          <Confirmacao
-            acao="Descartar rascunho"
-            titulo={`Descartar o rascunho ${nome}?`}
-            confirmando="Descartando o rascunho"
-            nivelDoGatilho="secundario"
-            fazer={aoDescartar}
-          >
-            <p className={estilos.informacao}>O rascunho sai da lista, com o formulário dele.</p>
-          </Confirmacao>
+          {/* Com o "Salvar rascunho" ou o "Criar o tipo" em curso, o descarte espera a resposta. */}
+          {ocupado ? (
+            <Botao isDisabled>Descartar rascunho</Botao>
+          ) : (
+            <Confirmacao
+              acao="Descartar rascunho"
+              titulo={`Descartar o rascunho ${nome}?`}
+              confirmando="Descartando o rascunho"
+              nivelDoGatilho="secundario"
+              fazer={aoDescartar}
+            >
+              <p className={estilos.informacao}>O rascunho sai da lista, com o formulário dele.</p>
+            </Confirmacao>
+          )}
           <Botao
             ref={botaoDeSalvar}
             onPress={aoSalvar}

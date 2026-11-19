@@ -45,17 +45,22 @@ function colunasDosTipos(origens: ReadonlySet<string>): ColunaQueSeOrdena<TipoDe
       nomeDaLinha: true,
       celula: (tipo) => {
         const selo = seloDoTipo(tipo);
+        const origem = origens.has(tipo.id);
         return (
           <span className={estilos.tipoNaLinha}>
             <span className={estilos.nomeNaLinha}>
               <IconeDoTipo icone={tipo.icone} nome={tipo.nome} decorativo />
               <span>{tipo.nome}</span>
             </span>
-            {selo && <Selo selo={selo} />}
-            {!selo && origens.has(tipo.id) && (
-              <span className={estilos.copiadoDaqui}>
-                <Icone icone={Copy} tamanho={12} />
-                copiado daqui
+            {(selo || origem) && (
+              <span className={estilos.marcasNaLinha}>
+                {selo && <Selo selo={selo} />}
+                {origem && (
+                  <span className={estilos.copiadoDaqui}>
+                    <Icone icone={Copy} tamanho={12} />
+                    copiado daqui
+                  </span>
+                )}
               </span>
             )}
           </span>

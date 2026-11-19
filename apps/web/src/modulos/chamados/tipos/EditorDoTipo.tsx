@@ -104,6 +104,12 @@ function unidades(numero: NumeroDoPrazoNaEdicao, modo: ModoDoPrazo): OpcaoDeSele
   }));
 }
 
+/**
+ * O nome com mais letras que isso desce um passo no cabeçalho, para caber em duas linhas: o
+ * "Troca de equipamento (cópia)" de um duplicado, e não o "Equipamento novo" do m08.
+ */
+const NOME_LONGO = 20;
+
 /** "Formulário: 6 campos", até o construtor (5.21) dar o "Editar os campos". */
 function textoDoFormulario(campos: number): string {
   if (campos === 0) return 'Formulário: nenhum campo';
@@ -132,7 +138,9 @@ export function EditorDoTipo({
       <header className={estilos.cabecalhoDoTipo}>
         <IconeDoTipo icone={edicao.icone} nome={nome} decorativo tamanho="cabecalho" />
         <div className={estilos.nomeDoTipo}>
-          <h2 id={idDoTitulo}>{nome === '' ? 'Sem nome' : nome}</h2>
+          <h2 id={idDoTitulo} data-longo={nome.length > NOME_LONGO ? '' : undefined}>
+            {nome === '' ? 'Sem nome' : nome}
+          </h2>
           {edicao.frase.trim() !== '' && <p>{edicao.frase.trim()}</p>}
         </div>
         <div className={estilos.situacaoDoTipo}>

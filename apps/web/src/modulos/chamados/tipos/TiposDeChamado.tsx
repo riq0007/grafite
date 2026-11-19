@@ -14,7 +14,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useBlocker, useNavigate, useSearch } from '@tanstack/react-router';
 import { Copy, EyeOff, Plus, TriangleAlert } from 'lucide-react';
-import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useEffectEvent, useId, useMemo, useRef, useState } from 'react';
 import { type FalhaDoPedido, pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
 import { useSessao } from '../../../sessao/useSessao.tsx';
@@ -241,6 +241,21 @@ function TiposCarregados({
     irPara(id);
   };
 
+  // O Rascunho que acabou de entrar abre quando a lista já o tem: o endereço chega antes da lista
+  // relida, e o tipo do endereço que falta nela cairia no primeiro, que piscaria na tela.
+  const [aAbrir, definirAAbrir] = useState<{ id: string; solicitacaoDesligada: boolean } | null>(
+    null,
+  );
+  const abrirONovo = useEffectEvent((novo: { id: string; solicitacaoDesligada: boolean }) => {
+    abrirORascunho(novo.id);
+    if (novo.solicitacaoDesligada) definirSolicitacaoDesligada(novo.id);
+  });
+  useEffect(() => {
+    if (aAbrir === null || !tipos.some(({ id }) => id === aAbrir.id)) return;
+    definirAAbrir(null);
+    abrirONovo(aAbrir);
+  }, [aAbrir, tipos]);
+
   const fazer = (pedido: AcaoDaTela) => {
     if (pedido.acao === 'escolher') {
       const escolhido = tipos.find(({ id }) => id === pedido.id);
@@ -341,7 +356,7 @@ function TiposCarregados({
         return;
       }
       guardarNaLista(resultado.dados);
-      abrirORascunho(resultado.dados.id);
+      definirAAbrir({ id: resultado.dados.id, solicitacaoDesligada: false });
     } finally {
       definirAndamento(null);
     }
@@ -367,8 +382,7 @@ function TiposCarregados({
       }
       const { tipo: duplicado, solicitacaoDesligada: desligada } = resultado.dados;
       guardarNaLista(duplicado);
-      abrirORascunho(duplicado.id);
-      if (desligada) definirSolicitacaoDesligada(duplicado.id);
+      definirAAbrir({ id: duplicado.id, solicitacaoDesligada: desligada });
     } finally {
       definirAndamento(null);
     }

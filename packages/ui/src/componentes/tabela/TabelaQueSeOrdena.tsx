@@ -11,6 +11,8 @@ import {
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
+  useEffect,
+  useRef,
   useState,
 } from 'react';
 import { VisuallyHidden } from 'react-aria';
@@ -95,6 +97,27 @@ export function TabelaQueSeOrdena<T extends object>({
   const porId = new Map(itens.map((item) => [idDe(item), item]));
   const [menu, definirMenu] = useState<MenuAberto | null>(null);
   const doMenu = menu ? porId.get(menu.id) : undefined;
+  const area = useRef<HTMLDivElement>(null);
+
+  // A linha escolhida fora da vista, como a que acabou de entrar no fim da lista, rola até aparecer,
+  // uma vez a cada escolha; a lista relida não rola. O React Aria desenha a linha nova depois da
+  // lista que a trouxe: enquanto ela não está na tabela, a rolagem espera por ela.
+  useEffect(() => {
+    const raiz = area.current;
+    if (escolhido === null || !raiz) return;
+    const rolar = () => {
+      const linhas = raiz.querySelectorAll<HTMLElement>('[role="row"][data-key]');
+      const linha = [...linhas].find((cada) => cada.dataset.key === escolhido);
+      linha?.scrollIntoView?.({ block: 'nearest' });
+      return linha !== undefined;
+    };
+    if (rolar()) return;
+    const observador = new MutationObserver(() => {
+      if (rolar()) observador.disconnect();
+    });
+    observador.observe(raiz, { childList: true, subtree: true });
+    return () => observador.disconnect();
+  }, [escolhido]);
 
   const abrirOMenu = (linha: HTMLElement, posicao: { x: number; y: number }) => {
     const id = linha.dataset.key;
@@ -122,6 +145,7 @@ export function TabelaQueSeOrdena<T extends object>({
 
   return (
     <div
+      ref={area}
       className={estilos.area}
       onKeyDownCapture={aoTeclar}
       onContextMenuCapture={aoPedirOMenu}
