@@ -1,8 +1,8 @@
 // A escolha do ativo no chamado aberto, no "Trocar o ativo" e no "Virar OS" (change chamados-da-ti,
 // design, "A busca do ativo com mais opções (tarefa 5.30)"): a busca do campo Ativo do formulário,
-// com o detalhe de cada ativo achado, e "Mais opções de busca", com o tipo, o local e o
-// responsável. Esconder as opções limpa os filtros, para nada filtrar fora da vista.
-import { Botao, Selecao } from '@grafite/ui';
+// com o detalhe de cada ativo achado, e "Mais opções de busca", na linha do rótulo, com o tipo, o
+// local e o responsável. Esconder as opções limpa os filtros, para nada filtrar fora da vista.
+import { Selecao } from '@grafite/ui';
 import { ListFilter } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import {
@@ -71,17 +71,14 @@ export function EscolhaDoAtivo({ valor, aoMudar, pessoa, descricao, erro }: Prop
         placeholder="Nome, patrimônio, série ou hostname"
         descricao={descricao}
         erro={erro}
+        acaoDoRotulo={{
+          texto: maisOpcoes ? 'Esconder as opções de busca' : 'Mais opções de busca',
+          icone: ListFilter,
+          expandida: maisOpcoes,
+          controla: maisOpcoes ? idDasOpcoes : undefined,
+          aoPressionar: alternar,
+        }}
       />
-      <Botao
-        nivel="terciario"
-        icone={ListFilter}
-        className={estilos.alternar}
-        aria-expanded={maisOpcoes}
-        aria-controls={maisOpcoes ? idDasOpcoes : undefined}
-        onPress={alternar}
-      >
-        {maisOpcoes ? 'Esconder as opções de busca' : 'Mais opções de busca'}
-      </Botao>
       {maisOpcoes && (
         <fieldset id={idDasOpcoes} aria-label="Mais opções de busca" className={estilos.opcoes}>
           <Selecao

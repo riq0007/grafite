@@ -1,4 +1,4 @@
-import { BuscaComSugestoes, type SugeridasDaBusca } from '@grafite/ui';
+import { type AcaoDoRotuloDaBusca, BuscaComSugestoes, type SugeridasDaBusca } from '@grafite/ui';
 import { useEffect, useState } from 'react';
 
 export interface ContaDoSeletor {
@@ -33,6 +33,8 @@ export interface PropsDoSeletorDeConta {
   placeholder?: string;
   obrigatorio?: boolean;
   erro?: string;
+  /** Uma ação na linha do rótulo, à direita, como "Mais opções de busca". */
+  acaoDoRotulo?: AcaoDoRotuloDaBusca;
 }
 
 /**
@@ -53,6 +55,7 @@ export function SeletorDeConta({
   placeholder,
   obrigatorio,
   erro,
+  acaoDoRotulo,
 }: PropsDoSeletorDeConta) {
   const [texto, definirTexto] = useState(valor?.rotulo ?? '');
   // A conta escolhida mudou, por uma escolha ou de fora: o campo passa a mostrar o rótulo dela.
@@ -122,6 +125,7 @@ export function SeletorDeConta({
       placeholder={placeholder}
       obrigatorio={obrigatorio}
       erro={erro ?? falha ?? undefined}
+      acaoDoRotulo={acaoDoRotulo}
     />
   );
 }

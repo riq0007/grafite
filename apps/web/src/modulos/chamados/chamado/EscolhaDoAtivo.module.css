@@ -1,11 +1,7 @@
-/* O campo Ativo, o botão das opções e, embaixo, os filtros, um sob o outro. */
+/* O campo Ativo, com o botão das opções na linha do rótulo, e, embaixo, os filtros. */
 .escolha {
   display: grid;
-  gap: var(--esp-2);
-}
-
-.alternar {
-  justify-self: start;
+  gap: var(--esp-3);
 }
 
 /* Os filtros, recuados e com a linha à esquerda, para se lerem como parte da busca do ativo. */

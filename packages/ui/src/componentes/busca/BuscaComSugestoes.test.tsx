@@ -44,4 +44,43 @@ describe('BuscaComSugestoes', () => {
     const semDetalhe = screen.getByRole('option', { name: 'Switch 140' });
     expect(semDetalhe.getAttribute('aria-describedby')).toBeNull();
   });
+
+  it('a ação na linha do rótulo faz só o dela, sem abrir a lista, e diz se a área dela está à vista', () => {
+    const pressionadas: string[] = [];
+    const { rerender } = render(
+      <BuscaComSugestoes
+        rotulo="Ativo"
+        sugestoes={locais}
+        acaoDoRotulo={{
+          texto: 'Mais opções de busca',
+          expandida: false,
+          aoPressionar: () => pressionadas.push('mais'),
+        }}
+      />,
+    );
+    const acao = screen.getByRole('button', { name: 'Mais opções de busca' });
+    expect(acao.getAttribute('aria-expanded')).toBe('false');
+    expect(acao.getAttribute('aria-controls')).toBeNull();
+    fireEvent.click(acao);
+    expect(pressionadas).toEqual(['mais']);
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.getByRole('combobox', { name: 'Ativo' }).getAttribute('aria-expanded')).toBe(
+      'false',
+    );
+    rerender(
+      <BuscaComSugestoes
+        rotulo="Ativo"
+        sugestoes={locais}
+        acaoDoRotulo={{
+          texto: 'Esconder as opções de busca',
+          expandida: true,
+          controla: 'filtros',
+          aoPressionar: () => pressionadas.push('esconder'),
+        }}
+      />,
+    );
+    const esconder = screen.getByRole('button', { name: 'Esconder as opções de busca' });
+    expect(esconder.getAttribute('aria-expanded')).toBe('true');
+    expect(esconder.getAttribute('aria-controls')).toBe('filtros');
+  });
 });

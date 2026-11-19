@@ -81,3 +81,12 @@
   color: var(--cor-texto-2);
   font-size: var(--texto-dado);
 }
+
+/* O rótulo e, à direita, a ação dele, como "Mais opções de busca", na linha do texto. */
+.linhaDoRotulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  min-width: 0;
+}
