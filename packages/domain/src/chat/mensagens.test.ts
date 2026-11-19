@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   citacoesDeChamados,
@@ -134,6 +135,20 @@ describe('as citações de chamados', () => {
       [1047, '#1047'],
       [1048, '#1048'],
     ]);
+  });
+
+  it('as citações coladas por uma vírgula ou numa linha nova seguem achadas, e a colada noutra não', () => {
+    expect(trechos('#1045,#1046\n#1047')).toEqual([
+      [1045, '#1045'],
+      [1046, '#1046'],
+      [1047, '#1047'],
+    ]);
+    expect(trechos('#1045#1046')).toEqual([[1045, '#1045']]);
+  });
+
+  it('a expressão não usa o lookbehind, que o Safari só aceita a partir do 16.4', () => {
+    const fonte = readFileSync(new URL('./mensagens.ts', import.meta.url), 'utf8');
+    expect(fonte).not.toMatch(/\(\?<[=!]/);
   });
 
   it('o "#" colado numa palavra, o número com zero à esquerda e o que não cabe não citam', () => {

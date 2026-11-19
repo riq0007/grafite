@@ -87,9 +87,11 @@ export interface CitacaoDeChamado {
   fim: number;
 }
 
-// O "#" sem letra, número, sublinhado ou outro "#" antes, e o número sem zero à esquerda, que cabe
-// no número do chamado, sem letra, número ou sublinhado depois.
-const CITACAO = /(?<![\p{L}\p{N}_#])#([1-9]\d{0,8})(?![\p{L}\p{N}_])/gu;
+// O "#" no começo do texto ou depois do que não é letra, número, sublinhado nem outro "#", e o
+// número sem zero à esquerda, que cabe no número do chamado, sem letra, número ou sublinhado
+// depois. O que vem antes é um grupo, e não o lookbehind, que o Safari só aceita a partir do 16.4:
+// a expressão inválida derrubaria o módulo inteiro, e não só o chip.
+const CITACAO = /(^|[^\p{L}\p{N}_#])#([1-9]\d{0,8})(?![\p{L}\p{N}_])/gu;
 
 /**
  * As citações de chamados na mensagem, na ordem do texto: o "#" seguido do número, separado das
@@ -100,12 +102,13 @@ export function citacoesDeChamados(texto: string): CitacaoDeChamado[] {
   const numeros = new Set<number>();
   const citacoes: CitacaoDeChamado[] = [];
   for (const achado of texto.matchAll(CITACAO)) {
-    const numero = Number(achado[1]);
+    const numero = Number(achado[2]);
     if (!numeros.has(numero)) {
       if (numeros.size === LIMITE_DE_CITACOES) continue;
       numeros.add(numero);
     }
-    citacoes.push({ numero, inicio: achado.index, fim: achado.index + achado[0].length });
+    const inicio = achado.index + (achado[1] ?? '').length;
+    citacoes.push({ numero, inicio, fim: achado.index + achado[0].length });
   }
   return citacoes;
 }
