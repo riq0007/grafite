@@ -54,7 +54,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `resumoDosTempos`, em horas corridas, com o "sem resposta".
 
   Começa pelos testes unitários da previsão, do resumo dos tempos e das horas das etapas. Verificar: esses testes, os das palavras, o lint e o typecheck. Os níveis da avaliação entraram aqui, porque a frase do `avaliou` os cita, e a conferência deles fica na 2.7.
-- [ ] 2.6 O fechamento (decisão 7): o `momentoDoFechamento`, o `ultimoDiaParaReabrir`, a `situacaoDoChamado` pelo `fechado_em` e o `estaFechado`, com o resolvido vencido que a tarefa ainda não fechou. Começa pelos testes unitários: o #1045 de 11/11, o horário de verão de `America/New_York`, a virada do mês e do ano e a resolução às 23:59. Verificar: esses testes, o lint e o typecheck.
+- [x] 2.6 O fechamento (decisão 7): o `momentoDoFechamento`, o `ultimoDiaParaReabrir`, a `situacaoDoChamado` pelo `fechado_em` e o `estaFechado`, com o resolvido vencido que a tarefa ainda não fechou. Começa pelos testes unitários: o #1045 de 11/11, o horário de verão de `America/New_York`, a virada do mês e do ano e a resolução às 23:59. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.7 As ações de quem participa (decisão 9), na matriz do `acoes.ts`:
   - responder, escolher, reabrir, avaliar e marcar como vista, por situação, com o fechado;
   - as recusas e as frases;

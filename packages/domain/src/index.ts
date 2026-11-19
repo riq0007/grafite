@@ -329,6 +329,17 @@ export {
   type TipoDeChamadoDeFabrica,
 } from './chamados/fabrica.ts';
 export {
+  type ChamadoParaOFechamento,
+  DIAS_PARA_REABRIR,
+  type DiaDoCalendario,
+  estaFechado,
+  limiteDoFechamento,
+  momentoDoFechamento,
+  type SituacaoComOFechado,
+  situacaoDoChamado,
+  ultimoDiaParaReabrir,
+} from './chamados/fechamento.ts';
+export {
   type CampoDoFormulario,
   type ClausulaDaCondicao,
   type ConferenciaDoFormulario,
@@ -827,7 +838,7 @@ export {
   nomeNormalizadoDoFornecedor,
   validarFornecedor,
 } from './fornecedores/fornecedor.ts';
-export { comecoDoAno, comecoDoDia, nomeDoFuso } from './fuso.ts';
+export { comecoDoAno, comecoDoDia, comecoDoDiaDoCalendario, nomeDoFuso } from './fuso.ts';
 export {
   type AtivoNoIndice,
   type CampoDoCasamento,
