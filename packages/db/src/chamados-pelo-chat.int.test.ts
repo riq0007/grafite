@@ -450,6 +450,26 @@ describe('Conversa do chamado', () => {
     // Reaberto e resolvido de novo, o chamado pede outra avaliação.
     await avaliacao('2026-11-12T12:00:00.000Z');
   });
+
+  // Com a chave nula, o índice único não compararia a linha (pontos da revisão da tarefa 1.2).
+  it('a escolha e a avaliação sempre têm a chave do índice', async () => {
+    const chamado = await resolvido(orgA, deA);
+    const semChave = 'mensagens_dos_chamados_chaves_dos_eventos';
+    const semDados = (nome: string) =>
+      linha(orgA, chamado, {
+        especie: 'evento',
+        autor_conta: deA.quemAbre,
+        evento: nome,
+        dados: null,
+      });
+    const doEvento = (nome: string, dados: object) =>
+      evento(orgA, chamado, deA.quemAbre, nome, dados);
+    expect(await recusada(doEvento('escolheu', { opcao: 0 }))).toBe(semChave);
+    expect(await recusada(doEvento('escolheu', { mensagem: null, opcao: 0 }))).toBe(semChave);
+    expect(await recusada(semDados('escolheu'))).toBe(semChave);
+    expect(await recusada(doEvento('avaliou', { nivel: 'otimo', comentario: '' }))).toBe(semChave);
+    expect(await recusada(semDados('avaliou'))).toBe(semChave);
+  });
 });
 
 describe('Leitura dos chamados', () => {

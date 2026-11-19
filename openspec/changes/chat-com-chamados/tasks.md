@@ -122,6 +122,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   Começa pelos testes de integração da permissão (o chamado de outra pessoa como inexistente, a nota e o anexo dela, que não vão) e da ordem. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [ ] 3.9 As ações de quem participa:
   - responder, com os anexos, escolher, reabrir, avaliar e marcar como vista, com o chamado travado;
+  - a chave da escolha e da avaliação vem da linha lida com o chamado travado, e nunca do pedido: o `dados.mensagem` é o id da mensagem como o banco o devolve (o UUID do pedido em maiúsculas seria outro texto para o índice), e o `dados.resolucao` é o `toISOString()` do `resolvido_em` lido;
   - a retomada, a reabertura e a versão;
   - os eventos da conversa e a auditoria do retomar e do reabrir pela pessoa;
   - a notificação a quem atende;

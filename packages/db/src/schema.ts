@@ -4379,6 +4379,15 @@ export const mensagensDosChamados = orgScoped(
       'mensagens_dos_chamados_evento_valido',
       sql`${t.evento} is null or ${t.evento} ~ '^[a-z][a-z-]{0,39}$'`,
     ),
+    // A chave dos índices da escolha e da avaliação nunca é nula: com ela nula, o índice único não
+    // compararia a linha, e a segunda escolha ou a segunda avaliação entraria sem recusa. A versão
+    // anterior não grava esses eventos.
+    check(
+      'mensagens_dos_chamados_chaves_dos_eventos',
+      sql`${t.evento} is null
+        or ((${t.evento} <> 'escolheu' or (${t.dados} ->> 'mensagem') is not null)
+          and (${t.evento} <> 'avaliou' or (${t.dados} ->> 'resolucao') is not null))`,
+    ),
     check(
       'mensagens_dos_chamados_dados_validos',
       sql`${t.dados} is null or (${documentoAte(t.dados, 1048576)})`,
