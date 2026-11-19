@@ -6,6 +6,8 @@
 .tela {
   --respiro: var(--respiro-da-janela, var(--esp-6));
 
+  /* A gaveta do Rascunho abre dentro da tela, com o véu sobre ela inteira. */
+  position: relative;
   display: grid;
   grid-template-columns: clamp(340px, 30%, 412px) minmax(0, 1fr) clamp(380px, 32.3%, 444px);
   min-width: 0;
@@ -46,6 +48,14 @@
   font-size: var(--texto-dado);
   line-height: 1.4;
   color: var(--cor-texto);
+}
+
+/* "Novo tipo" e "Duplicar", embaixo da frase, como no m07 e no m08. */
+.acoesDaLista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  padding-top: var(--esp-1);
 }
 
 /*
@@ -104,6 +114,15 @@
 .nomeNaLinha > span:last-child {
   min-width: 0;
   overflow-wrap: break-word;
+}
+
+/* A origem de um Rascunho duplicado, embaixo do nome, como no m08. */
+.copiadoDaqui {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
 }
 
 /* O editor: o cabeçalho do tipo, as seções que rolam e o pé com os botões. */
@@ -290,6 +309,134 @@
   display: flex;
   gap: var(--esp-2);
   margin-left: auto;
+}
+
+/* No pé do Rascunho, sem espaço para a frase e os três botões, os botões descem para a linha de baixo. */
+.botoesDoRascunho {
+  flex-wrap: wrap;
+}
+
+.botoesDoRascunho .acoes {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* A 1280, o editor da gaveta tem 461 px: com 16 px dos lados, os três botões cabem numa linha só. */
+.conteudoDaGaveta .peDoEditor {
+  padding-inline: var(--esp-4);
+}
+
+/* A situação do tipo, em texto, com o botão que a troca. */
+.linhaDaSituacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+/*
+ * A gaveta do Rascunho cobre as colunas do editor e da prévia, da borda da tabela até o fim da tela,
+ * com o editor e a prévia nas larguras das colunas de baixo.
+ */
+.gaveta {
+  inset-inline-start: clamp(340px, 30%, 412px);
+}
+
+.conteudoDaGaveta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 46%, 444px);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+/* "Duplicado de Computador.", em azul de informação, antes das seções. */
+.avisoDoDuplicado {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-info-borda);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-info-fundo);
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+}
+
+.avisoDoDuplicado > :first-child {
+  flex: none;
+  margin-top: 1px;
+  color: var(--cor-info);
+}
+
+.avisoDoDuplicado p {
+  margin: 0;
+}
+
+.avisoDoDuplicado p + p {
+  margin-top: var(--esp-1);
+}
+
+.avisoDoDuplicado strong {
+  font-weight: var(--peso-forte);
+}
+
+/* "3 campos, a partir do tipo Computador", com os campos e os tipos embaixo. */
+.copiaDoFormulario {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.copiaDoFormulario small {
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/* "Depois de escolher Equipamento novo:", com os campos numerados, na linha, como no m08. */
+.depoisDeEscolher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  margin: 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+}
+
+.depoisDeEscolher ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.depoisDeEscolher li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.depoisDeEscolher li small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.numeroDoCampo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
 }
 
 /* A prévia do colaborador, afundada, com o título, a frase, a aba e as notas. */

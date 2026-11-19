@@ -1,6 +1,7 @@
-// O editor do tipo (change chamados-da-ti, design, "A tela dos tipos (tarefa 5.19)"; m07): o
-// cabeçalho com o tipo como está sendo escrito, as quatro seções e o pé, com "Descartar" e "Salvar
-// o tipo". Quem guarda o que se escreve, grava e confere as recusas é a tela.
+// O editor do tipo (change chamados-da-ti, design, "A tela dos tipos (tarefa 5.19)" e "O rascunho,
+// o duplicar e a situação (tarefa 5.20)"; m07 e m08): o cabeçalho com o tipo como está sendo
+// escrito, as quatro seções, o que vem antes e depois delas, e o pé, do tipo criado ("Descartar" e
+// "Salvar o tipo") ou do Rascunho. Quem guarda o que se escreve, grava e confere as recusas é a tela.
 import {
   ICONES_DO_TIPO_DE_CHAMADO,
   type IconeDoTipoDeChamado,
@@ -28,16 +29,19 @@ import {
 } from '@grafite/ui';
 import { CircleAlert, ListChecks } from 'lucide-react';
 import { type ReactNode, type Ref, useId } from 'react';
+import { Confirmacao } from '../../administracao/Confirmacao.tsx';
 import { ICONES_DOS_TIPOS_DE_CHAMADO, NOMES_DOS_ICONES_DOS_TIPOS } from '../icones.ts';
 import { IconeDoTipo, Selo } from '../Pecas.tsx';
 import {
   type ContaQueAtende,
+  consequenciaDaInativacao,
   contagemDoTipo,
   type EdicaoDoTipo,
   NINGUEM,
   type NumeroDoPrazoNaEdicao,
   opcoesDeQuemAtende,
   type TipoDeChamado,
+  textoDaSituacao,
   trocarQuemAtende,
 } from './edicao.ts';
 import estilos from './Tipos.module.css';
@@ -56,14 +60,22 @@ export interface PropsDoEditorDoTipo {
   erros: Readonly<Record<string, string>>;
   contas: OpcoesLidas<ContaQueAtende>;
   tiposDeAtivo: OpcoesLidas<OpcaoDeSelecao>;
-  mudou: boolean;
-  salvando: boolean;
-  /** A falha sem recusa, antes dos botões, onde vai também a recusa geral; a chave muda a cada tentativa. */
-  falha: { texto: string | null; chave: number };
-  aoDescartar: () => void;
-  aoSalvar: () => void;
   /** A área das seções, onde a tela procura o primeiro campo recusado. */
   area: Ref<HTMLDivElement>;
+  /** O id do nome do tipo no cabeçalho, que dá o nome ao editor e à gaveta do Rascunho. */
+  idDoTitulo: string;
+  /** O que vem antes das seções, como o aviso do duplicado. */
+  antes?: ReactNode;
+  /** As seções depois de "Quem vê": o formulário do Rascunho ou a situação do tipo. */
+  depois?: ReactNode;
+  /** O pé: a falha e os botões, do tipo ou do Rascunho. */
+  pe: ReactNode;
+}
+
+/** A falha sem recusa e a recusa geral, antes dos botões; a chave muda a cada tentativa. */
+export interface FalhaDoEditor {
+  texto: string | null;
+  chave: number;
 }
 
 /** Os 16 ícones dos tipos, com o nome que o leitor de tela lê. */
@@ -105,32 +117,38 @@ export function EditorDoTipo({
   erros,
   contas,
   tiposDeAtivo,
-  mudou,
-  salvando,
-  falha,
-  aoDescartar,
-  aoSalvar,
   area,
+  idDoTitulo,
+  antes,
+  depois,
+  pe,
 }: PropsDoEditorDoTipo) {
   const id = useId();
   const mudar = (mudanca: Partial<EdicaoDoTipo>) => aoMudar({ ...edicao, ...mudanca });
   const nome = edicao.nome.trim();
 
   return (
-    <section className={estilos.editor} aria-labelledby={`${id}-nome`}>
+    <section className={estilos.editor} aria-labelledby={idDoTitulo}>
       <header className={estilos.cabecalhoDoTipo}>
         <IconeDoTipo icone={edicao.icone} nome={nome} decorativo tamanho="cabecalho" />
         <div className={estilos.nomeDoTipo}>
-          <h2 id={`${id}-nome`}>{nome === '' ? 'Sem nome' : nome}</h2>
+          <h2 id={idDoTitulo}>{nome === '' ? 'Sem nome' : nome}</h2>
           {edicao.frase.trim() !== '' && <p>{edicao.frase.trim()}</p>}
         </div>
         <div className={estilos.situacaoDoTipo}>
-          <Selo selo={tipo.situacao} />
-          <small>{contagemDoTipo(tipo)}</small>
+          {tipo.situacao === 'rascunho' ? (
+            <Selo selo="ainda-nao-criado" />
+          ) : (
+            <>
+              <Selo selo={tipo.situacao} />
+              <small>{contagemDoTipo(tipo)}</small>
+            </>
+          )}
         </div>
       </header>
 
       <div ref={area} className={estilos.secoes}>
+        {antes}
         <section aria-labelledby={`${id}-identificacao`} className={estilos.secao}>
           <Carimbo nivel={3} id={`${id}-identificacao`}>
             Identificação
@@ -260,30 +278,117 @@ export function EditorDoTipo({
             aoMudar={(soATiAbre) => mudar({ soATiAbre })}
           />
         </section>
+        {depois}
       </div>
 
-      <div className={estilos.peDoEditor}>
-        <MensagemDoPasso texto={falha.texto ?? erros.geral ?? null} chave={falha.chave} />
-        <div className={estilos.botoesDoEditor}>
-          <span className={estilos.formulario}>
-            <Icone icone={ListChecks} tamanho={14} />
-            {textoDoFormulario(tipo.campos)}
-          </span>
-          <span className={estilos.acoes}>
-            <Botao onPress={aoDescartar} isDisabled={!mudou || salvando}>
-              Descartar
-            </Botao>
-            <Botao
-              nivel="primario"
-              onPress={aoSalvar}
-              isDisabled={!mudou}
-              carregando={salvando}
-              rotuloCarregando="Salvando o tipo"
-            >
-              Salvar o tipo
-            </Botao>
-          </span>
-        </div>
+      {pe}
+    </section>
+  );
+}
+
+/** O pé do tipo criado: o formulário, "Descartar" e "Salvar o tipo", desligados sem mudança. */
+export function PeDoTipo({
+  tipo,
+  erros,
+  falha,
+  mudou,
+  salvando,
+  aoDescartar,
+  aoSalvar,
+}: {
+  tipo: TipoDeChamado;
+  erros: Readonly<Record<string, string>>;
+  falha: FalhaDoEditor;
+  mudou: boolean;
+  salvando: boolean;
+  aoDescartar: () => void;
+  aoSalvar: () => void;
+}) {
+  return (
+    <div className={estilos.peDoEditor}>
+      <MensagemDoPasso texto={falha.texto ?? erros.geral ?? null} chave={falha.chave} />
+      <div className={estilos.botoesDoEditor}>
+        <span className={estilos.formulario}>
+          <Icone icone={ListChecks} tamanho={14} />
+          {textoDoFormulario(tipo.campos)}
+        </span>
+        <span className={estilos.acoes}>
+          <Botao onPress={aoDescartar} isDisabled={!mudou || salvando}>
+            Descartar
+          </Botao>
+          <Botao
+            nivel="primario"
+            onPress={aoSalvar}
+            isDisabled={!mudou}
+            carregando={salvando}
+            rotuloCarregando="Salvando o tipo"
+          >
+            Salvar o tipo
+          </Botao>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A situação do tipo criado, a última seção: em texto, o que ela quer dizer, e o botão que a troca.
+ * Inativar pede a confirmação; reativar grava, e as recusas ficam no campo. Com mudanças no editor,
+ * os dois ficam desligados: a reativação confere o tipo gravado.
+ */
+export function SecaoDaSituacao({
+  tipo,
+  mudou,
+  reativando,
+  aoInativar,
+  aoReativar,
+}: {
+  tipo: TipoDeChamado;
+  mudou: boolean;
+  reativando: boolean;
+  aoInativar: () => Promise<{ ok: true } | { erro: string }>;
+  aoReativar: () => void;
+}) {
+  const id = useId();
+  const inativo = tipo.situacao === 'inativo';
+  let botao: ReactNode;
+  if (inativo) {
+    botao = (
+      <Botao
+        onPress={aoReativar}
+        isDisabled={mudou}
+        carregando={reativando}
+        rotuloCarregando="Reativando o tipo"
+      >
+        Reativar o tipo
+      </Botao>
+    );
+  } else if (mudou) {
+    botao = <Botao isDisabled>Inativar o tipo</Botao>;
+  } else {
+    botao = (
+      <Confirmacao
+        acao="Inativar o tipo"
+        titulo={`Inativar o tipo ${tipo.nome}?`}
+        confirmando="Inativando o tipo"
+        nivelDoGatilho="secundario"
+        fazer={aoInativar}
+      >
+        <p className={estilos.informacao}>{consequenciaDaInativacao(tipo.abertos)}</p>
+      </Confirmacao>
+    );
+  }
+  return (
+    <section aria-labelledby={`${id}-situacao`} className={estilos.secao}>
+      <Carimbo nivel={3} id={`${id}-situacao`}>
+        Situação
+      </Carimbo>
+      <div className={estilos.linhaDaSituacao}>
+        <span className={estilos.textoDaChave}>
+          <span>{textoDaSituacao(tipo.situacao)}</span>
+          {mudou && <small>Salve ou descarte as mudanças para mudar a situação.</small>}
+        </span>
+        {botao}
       </div>
     </section>
   );

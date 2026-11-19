@@ -101,6 +101,24 @@ export function useTiposDeChamado() {
   });
 }
 
+/**
+ * O formulário de um tipo de chamado, a quem configura: a gaveta do Rascunho mostra os campos dele.
+ * Sem o id, nada é pedido.
+ */
+export function useFormularioDoTipo(id: string | null) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DOS_TIPOS_DE_CHAMADO, id, 'formulario'],
+    queryFn: () =>
+      consultar(
+        () =>
+          api.GET('/chamados/tipos/{id}/formulario', { params: { path: { id: id as string } } }),
+        'carregar o formulário do tipo',
+      ),
+    enabled: id !== null,
+  });
+}
+
 /** As contas que atendem os chamados, que o editor do tipo oferece em quem atende por padrão. */
 export function useContasQueAtendem() {
   const api = useApi();

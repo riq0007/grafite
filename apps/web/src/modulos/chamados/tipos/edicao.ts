@@ -2,12 +2,13 @@
 // 5.19)"): a ordem nova do arraste, o que a tabela escreve, o tipo como o editor o escreve e o
 // pedido da gravação, as recusas que valem e a prévia do colaborador com o tipo que se edita.
 import type { components } from '@grafite/api-client';
-import type {
-  IconeDoTipoDeChamado,
-  ModoDoPrazo,
-  SemNinguem,
-  SolicitacaoDoTipoDeChamado,
-  UnidadeDoPrazo,
+import {
+  type IconeDoTipoDeChamado,
+  type ModoDoPrazo,
+  ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO,
+  type SemNinguem,
+  type SolicitacaoDoTipoDeChamado,
+  type UnidadeDoPrazo,
 } from '@grafite/domain';
 import type { OpcaoDeSelecao } from '@grafite/ui';
 import type { TipoNaGrade } from '../previa/GradeDosTipos.tsx';
@@ -281,9 +282,14 @@ function comoSeEscreve(tipo: TipoDeChamado, editado: TipoEditado | null) {
   return { nome, icone, frase, soATiAbre };
 }
 
+/** Entra na escolha do tipo: o Em uso, e o Rascunho que se edita, como ficará depois de criado. */
+const entraNaEscolha = (tipo: TipoDeChamado, editado: TipoEditado | null) =>
+  tipo.situacao === 'em-uso' || (tipo.situacao === 'rascunho' && editado?.id === tipo.id);
+
 /**
  * A grade da prévia: os tipos em uso que o colaborador escolhe, na ordem, com o que se edita
- * marcado "editando" e como se escreve. Ligar o "Só a TI abre" o tira da grade na hora.
+ * marcado "editando", ou "novo", no Rascunho, e como se escreve. Ligar o "Só a TI abre" o tira da
+ * grade na hora.
  */
 export function tiposNaPrevia(
   tipos: readonly TipoDeChamado[],
@@ -291,14 +297,15 @@ export function tiposNaPrevia(
 ): TipoNaGrade[] {
   return tipos.flatMap((tipo) => {
     const vivo = comoSeEscreve(tipo, editado);
-    if (tipo.situacao !== 'em-uso' || vivo.soATiAbre) return [];
+    if (!entraNaEscolha(tipo, editado) || vivo.soATiAbre) return [];
     const naGrade: TipoNaGrade = {
       id: tipo.id,
       nome: vivo.nome,
       icone: vivo.icone,
       frase: vivo.frase,
     };
-    return [editado?.id === tipo.id ? { ...naGrade, marca: 'editando' } : naGrade];
+    if (editado?.id !== tipo.id) return [naGrade];
+    return [{ ...naGrade, marca: tipo.situacao === 'rascunho' ? 'novo' : 'editando' }];
   });
 }
 
@@ -313,7 +320,7 @@ export function notasDaPrevia(
   editado: TipoEditado | null,
 ): { soDaTi: string | null; abertos: string | null } {
   const soDaTi = tipos
-    .filter((tipo) => tipo.situacao === 'em-uso' && comoSeEscreve(tipo, editado).soATiAbre)
+    .filter((tipo) => entraNaEscolha(tipo, editado) && comoSeEscreve(tipo, editado).soATiAbre)
     .map((tipo) => comoSeEscreve(tipo, editado).nome);
   const abertos = tipos.find((tipo) => tipo.id === editado?.id)?.abertos ?? 0;
   return {
@@ -332,6 +339,131 @@ export function notasDaPrevia(
               : `Os ${abertos} abertos mantêm o formulário atual.`
           }`,
   };
+}
+
+/** A contagem do título da tabela, como "9 tipos": os Rascunhos não contam. */
+export function contagemDaLista(tipos: readonly TipoDeChamado[]): string {
+  const quantos = tipos.filter((tipo) => tipo.situacao !== 'rascunho').length;
+  return quantos === 1 ? '1 tipo' : `${quantos} tipos`;
+}
+
+/** O tipo da tela sem o tipo no endereço: o primeiro que não é Rascunho, ou o primeiro. */
+export function tipoPadrao(tipos: readonly TipoDeChamado[]): TipoDeChamado | null {
+  return tipos.find((tipo) => tipo.situacao !== 'rascunho') ?? tipos[0] ?? null;
+}
+
+/** Os tipos de onde um Rascunho foi duplicado, que a tabela marca "copiado daqui". */
+export function origensDosRascunhos(tipos: readonly TipoDeChamado[]): ReadonlySet<string> {
+  return new Set(
+    tipos.flatMap((tipo) =>
+      tipo.situacao === 'rascunho' && tipo.duplicadoDe ? [tipo.duplicadoDe] : [],
+    ),
+  );
+}
+
+/**
+ * Para onde a tela vai quando a gaveta do Rascunho fecha: o tipo de antes, ou o de onde ele foi
+ * duplicado, ou o padrão, sempre um que não é Rascunho, para a gaveta não abrir de novo.
+ */
+export function tipoAoFecharORascunho(
+  tipos: readonly TipoDeChamado[],
+  rascunho: Pick<TipoDeChamado, 'id' | 'duplicadoDe'>,
+  anterior: string | null,
+): string | null {
+  const vale = (id: string | null) =>
+    id !== null && tipos.some((tipo) => tipo.id === id && tipo.situacao !== 'rascunho');
+  if (vale(anterior)) return anterior;
+  if (vale(rascunho.duplicadoDe)) return rascunho.duplicadoDe;
+  const padrao = tipoPadrao(tipos.filter((tipo) => tipo.id !== rascunho.id));
+  return padrao && padrao.situacao !== 'rascunho' ? padrao.id : null;
+}
+
+const ORDINAIS = [
+  'primeiro',
+  'segundo',
+  'terceiro',
+  'quarto',
+  'quinto',
+  'sexto',
+  'sétimo',
+  'oitavo',
+  'nono',
+  'décimo',
+  'décimo primeiro',
+  'décimo segundo',
+  'décimo terceiro',
+  'décimo quarto',
+  'décimo quinto',
+  'décimo sexto',
+  'décimo sétimo',
+  'décimo oitavo',
+  'décimo nono',
+  'vigésimo',
+];
+
+/**
+ * A frase da prévia da gaveta, com o lugar do Rascunho na grade, como "já com o nono tipo"; fora
+ * da grade (o "Só a TI abre" ligado), só a grade, e a nota diz por quê.
+ */
+export function fraseDaGradeDoRascunho(lugar: number | null): string {
+  if (lugar === null) return 'A grade da aba, em Abrir chamado.';
+  const ordinal = ORDINAIS[lugar - 1];
+  return ordinal
+    ? `A grade da aba, em Abrir chamado, já com o ${ordinal} tipo.`
+    : 'A grade da aba, em Abrir chamado, já com o tipo novo.';
+}
+
+/** Um campo do formulário, só com o que a gaveta do Rascunho mostra. */
+export type CampoNaGaveta = Pick<
+  components['schemas']['FormularioDeChamado']['campos'][number],
+  'id' | 'rotulo' | 'tipo' | 'soDaTi'
+>;
+
+/** O tipo do campo como a frase o lê: "pessoa", "escolha única". */
+const tipoDoCampo = ({ tipo }: CampoNaGaveta) =>
+  ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[tipo].toLocaleLowerCase('pt-BR');
+
+/** "3 campos, a partir do tipo Computador", na seção do formulário do Rascunho. */
+export function textoDoFormularioDoRascunho(quantos: number, origem: string | null): string {
+  if (quantos === 0) return 'Nenhum campo ainda.';
+  const campos = quantos === 1 ? '1 campo' : `${quantos} campos`;
+  return origem ? `${campos}, a partir do tipo ${origem}` : campos;
+}
+
+/** Os campos, cada um com o tipo, como "Quem vai usar? (pessoa) · Setor (escolha única)". */
+export function listaDosCampos(campos: readonly CampoNaGaveta[]): string {
+  return campos
+    .map((campo) =>
+      campo.soDaTi
+        ? `${campo.rotulo} (${tipoDoCampo(campo)}, só a TI vê)`
+        : `${campo.rotulo} (${tipoDoCampo(campo)})`,
+    )
+    .join(' · ');
+}
+
+/** O que a pessoa responde depois de escolher o tipo: os campos que ela vê, na ordem, com o tipo. */
+export function camposQueAPessoaVe(
+  campos: readonly CampoNaGaveta[],
+): { id: string; rotulo: string; tipo: string }[] {
+  return campos
+    .filter((campo) => !campo.soDaTi)
+    .map((campo) => ({ id: campo.id, rotulo: campo.rotulo, tipo: tipoDoCampo(campo) }));
+}
+
+/** A situação do tipo em texto, na seção dela, com o que ela quer dizer. */
+export function textoDaSituacao(situacao: TipoDeChamado['situacao']): string {
+  if (situacao === 'inativo')
+    return 'Inativo: não recebe chamados novos, e os abertos seguem até resolvidos.';
+  return situacao === 'em-uso' ? 'Em uso: recebe chamados novos.' : 'Rascunho: ainda não criado.';
+}
+
+/** O que a confirmação do inativar diz, com os abertos do tipo. */
+export function consequenciaDaInativacao(abertos: number): string {
+  const sai = 'O tipo sai da escolha ao abrir um chamado';
+  if (abertos === 0) return `${sai}.`;
+  return abertos === 1
+    ? `${sai}, e o 1 aberto segue até resolvido.`
+    : `${sai}, e os ${abertos} abertos seguem até resolvidos.`;
 }
 
 /** A busca do endereço dos tipos: o tipo escolhido. */

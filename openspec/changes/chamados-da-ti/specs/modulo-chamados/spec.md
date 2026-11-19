@@ -444,7 +444,7 @@ Ao lado, "Como o colaborador vê" SHALL mostrar a prévia da aba:
 - o aviso "Duplicado de Computador.", ao duplicar;
 - o editor;
 - a prévia com o tipo novo marcado "novo" e "Depois de escolher Equipamento novo:", com os campos que a pessoa vê, numerados, e o tipo de cada um;
-- "Criar o tipo", a ação principal, e "Descartar rascunho".
+- "Criar o tipo", a ação principal, "Salvar rascunho" e "Descartar rascunho".
 
 Sair com mudanças sem salvar SHALL pedir confirmação.
 

@@ -280,6 +280,10 @@ export {
 export { Dialogo, type PropsDoDialogo } from './componentes/modal/Dialogo.tsx';
 export { Gaveta, type PropsDaGaveta } from './componentes/modal/Gaveta.tsx';
 export {
+  GavetaNaJanela,
+  type PropsDaGavetaNaJanela,
+} from './componentes/modal/GavetaNaJanela.tsx';
+export {
   EditorDeOpcoes,
   type OpcaoEditavel,
   type PropsDoEditorDeOpcoes,

@@ -1,24 +1,35 @@
 // O que a tela dos tipos decide sem a API (change chamados-da-ti, design, "A tela dos tipos (tarefa
-// 5.19)"): a ordem nova do arraste, a tabela, a gravação, as recusas que valem e a prévia do
-// colaborador com o tipo que se edita.
+// 5.19)" e "O rascunho, o duplicar e a situação (tarefa 5.20)"): a ordem nova do arraste, a tabela,
+// a gravação, as recusas que valem, a prévia do colaborador com o tipo que se edita, a gaveta do
+// Rascunho e a situação.
 import { describe, expect, it } from 'vitest';
 import {
+  camposQueAPessoaVe,
+  consequenciaDaInativacao,
+  contagemDaLista,
   contagemDoTipo,
   edicaoDoTipo,
   errosDoTipo,
   errosQueValem,
+  fraseDaGradeDoRascunho,
   fraseDosAbertos,
+  listaDosCampos,
   moverNaOrdem,
   movimentosNaOrdem,
   mudouOTipo,
   notasDaPrevia,
   opcoesDeQuemAtende,
+  origensDosRascunhos,
   pedidoDoTipo,
   prazoNaTabela,
   quemAtendeNaTabela,
   reordenar,
   seloDoTipo,
   type TipoDeChamado,
+  textoDaSituacao,
+  textoDoFormularioDoRascunho,
+  tipoAoFecharORascunho,
+  tipoPadrao,
   tiposNaPrevia,
   trocarQuemAtende,
 } from './edicao.ts';
@@ -378,5 +389,125 @@ describe('a prévia do colaborador', () => {
     expect(
       notasDaPrevia([semAbertos], { id: semAbertos.id, edicao: edicaoDoTipo(semAbertos) }),
     ).toEqual({ soDaTi: null, abertos: null });
+  });
+});
+
+describe('o rascunho (5.20)', () => {
+  const TONER = tipo('Toner', { icone: 'gota' });
+  const COMPUTADOR = tipo('Computador', { icone: 'computador' });
+  const TROCA = tipo('Troca de equipamento', { soATiAbre: true });
+  const TELEFONE = tipo('Telefone', { situacao: 'inativo' });
+  const NOVO = tipo('Equipamento novo', {
+    situacao: 'rascunho',
+    duplicadoDe: 'Computador',
+    abertos: 0,
+  });
+  const OUTRO = tipo('Novo tipo', { situacao: 'rascunho', abertos: 0 });
+  const TIPOS = [TONER, COMPUTADOR, TROCA, TELEFONE, NOVO, OUTRO];
+
+  it('a contagem deixa os Rascunhos de fora', () => {
+    expect(contagemDaLista(TIPOS)).toBe('4 tipos');
+    expect(contagemDaLista([TONER, OUTRO])).toBe('1 tipo');
+  });
+
+  it('sem o tipo no endereço, a tela fica no primeiro que não é Rascunho', () => {
+    expect(tipoPadrao([OUTRO, NOVO, TONER])?.id).toBe('Toner');
+    expect(tipoPadrao([OUTRO])?.id).toBe('Novo tipo');
+    expect(tipoPadrao([])).toBeNull();
+  });
+
+  it('a origem de um Rascunho duplicado fica marcada', () => {
+    expect([...origensDosRascunhos(TIPOS)]).toEqual(['Computador']);
+    const criado = { ...NOVO, situacao: 'em-uso' as const };
+    expect([...origensDosRascunhos([COMPUTADOR, criado])]).toEqual([]);
+  });
+
+  it('fechar a gaveta volta ao tipo de antes, ou à origem, ou ao padrão, nunca a um Rascunho', () => {
+    expect(tipoAoFecharORascunho(TIPOS, NOVO, 'Telefone')).toBe('Telefone');
+    expect(tipoAoFecharORascunho(TIPOS, NOVO, null)).toBe('Computador');
+    expect(tipoAoFecharORascunho(TIPOS, NOVO, 'Novo tipo')).toBe('Computador');
+    expect(tipoAoFecharORascunho(TIPOS, OUTRO, 'sumiu')).toBe('Toner');
+    expect(tipoAoFecharORascunho([NOVO, OUTRO], OUTRO, null)).toBeNull();
+  });
+
+  it('a prévia mostra o Rascunho que se edita marcado "novo", no lugar dele, e nenhum outro', () => {
+    const edicao = { ...edicaoDoTipo(NOVO), nome: 'Equipamento' };
+    expect(tiposNaPrevia(TIPOS, { id: NOVO.id, edicao })).toEqual([
+      { id: 'Toner', nome: 'Toner', icone: 'gota', frase: 'A frase de Toner' },
+      {
+        id: 'Computador',
+        nome: 'Computador',
+        icone: 'computador',
+        frase: 'A frase de Computador',
+      },
+      {
+        id: 'Equipamento novo',
+        nome: 'Equipamento',
+        icone: 'impressora',
+        frase: 'A frase de Equipamento novo',
+        marca: 'novo',
+      },
+    ]);
+    const so = { ...edicaoDoTipo(NOVO), soATiAbre: true };
+    expect(tiposNaPrevia(TIPOS, { id: NOVO.id, edicao: so }).map((cada) => cada.id)).toEqual([
+      'Toner',
+      'Computador',
+    ]);
+    expect(notasDaPrevia(TIPOS, { id: NOVO.id, edicao: so }).soDaTi).toBe(
+      'Troca de equipamento e Equipamento novo são só da TI e não aparecem nesta grade.',
+    );
+  });
+
+  it('a frase da grade diz o lugar do Rascunho por extenso até o vigésimo', () => {
+    expect(fraseDaGradeDoRascunho(9)).toBe('A grade da aba, em Abrir chamado, já com o nono tipo.');
+    expect(fraseDaGradeDoRascunho(11)).toBe(
+      'A grade da aba, em Abrir chamado, já com o décimo primeiro tipo.',
+    );
+    expect(fraseDaGradeDoRascunho(20)).toBe(
+      'A grade da aba, em Abrir chamado, já com o vigésimo tipo.',
+    );
+    expect(fraseDaGradeDoRascunho(21)).toBe(
+      'A grade da aba, em Abrir chamado, já com o tipo novo.',
+    );
+    expect(fraseDaGradeDoRascunho(null)).toBe('A grade da aba, em Abrir chamado.');
+  });
+
+  it('o formulário: os campos com o tipo, e só os que a pessoa vê depois de escolher', () => {
+    const campos = [
+      { id: 'quem', rotulo: 'Quem vai usar?', tipo: 'pessoa' as const, soDaTi: false },
+      { id: 'setor', rotulo: 'Setor', tipo: 'escolha-unica' as const, soDaTi: false },
+      { id: 'patrimonio', rotulo: 'Patrimônio', tipo: 'texto-curto' as const, soDaTi: true },
+    ];
+    expect(listaDosCampos(campos)).toBe(
+      'Quem vai usar? (pessoa) · Setor (escolha única) · Patrimônio (texto curto, só a TI vê)',
+    );
+    expect(camposQueAPessoaVe(campos)).toEqual([
+      { id: 'quem', rotulo: 'Quem vai usar?', tipo: 'pessoa' },
+      { id: 'setor', rotulo: 'Setor', tipo: 'escolha única' },
+    ]);
+    expect(textoDoFormularioDoRascunho(3, 'Computador')).toBe(
+      '3 campos, a partir do tipo Computador',
+    );
+    expect(textoDoFormularioDoRascunho(1, null)).toBe('1 campo');
+    expect(textoDoFormularioDoRascunho(0, 'Computador')).toBe('Nenhum campo ainda.');
+  });
+});
+
+describe('a situação (5.20)', () => {
+  it('em texto, com o que ela quer dizer', () => {
+    expect(textoDaSituacao('em-uso')).toBe('Em uso: recebe chamados novos.');
+    expect(textoDaSituacao('inativo')).toBe(
+      'Inativo: não recebe chamados novos, e os abertos seguem até resolvidos.',
+    );
+  });
+
+  it('o inativar diz o que acontece aos abertos', () => {
+    expect(consequenciaDaInativacao(0)).toBe('O tipo sai da escolha ao abrir um chamado.');
+    expect(consequenciaDaInativacao(1)).toBe(
+      'O tipo sai da escolha ao abrir um chamado, e o 1 aberto segue até resolvido.',
+    );
+    expect(consequenciaDaInativacao(3)).toBe(
+      'O tipo sai da escolha ao abrir um chamado, e os 3 abertos seguem até resolvidos.',
+    );
   });
 });

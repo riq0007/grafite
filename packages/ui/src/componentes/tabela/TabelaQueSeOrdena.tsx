@@ -156,10 +156,11 @@ export function TabelaQueSeOrdena<T extends object>({
             </Column>
           ))}
         </TableHeader>
-        {/* O React Aria guarda as linhas desenhadas: as marcas do arraste só mudam com elas. */}
+        {/* O React Aria guarda as linhas desenhadas: as colunas novas e as marcas do arraste só
+            chegam a elas pelas dependências. */}
         <TableBody
           items={itens}
-          dependencies={[arraste?.noAr, arraste?.encaixe?.id, arraste?.encaixe?.metade]}
+          dependencies={[colunas, arraste?.noAr, arraste?.encaixe?.id, arraste?.encaixe?.metade]}
         >
           {(item) => {
             const id = idDe(item);
