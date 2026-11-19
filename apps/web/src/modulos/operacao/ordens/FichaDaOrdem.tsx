@@ -13,6 +13,7 @@ import { type ReactNode, useState } from 'react';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { VerNaAuditoria } from '../../administracao/auditoria/VerNaAuditoria.tsx';
 import { SemPermissao } from '../../administracao/SemPermissao.tsx';
+import { DosChamados } from '../DosChamados.tsx';
 import { rotuloDoAtivo } from '../estoque/apresentacao.ts';
 import estilos from '../Operacao.module.css';
 import { GavetaDaAcaoDaOrdem } from './Acoes.tsx';
@@ -86,7 +87,15 @@ function ConteudoDaFicha() {
       <CabecalhoDaPagina
         titulo={`OS ${ficha.numero}`}
         selos={<RotuloDeSituacao situacao={situacao.tipo}>{situacao.texto}</RotuloDeSituacao>}
-        detalhe={ativoEmTexto(ficha)}
+        detalhe={
+          ficha.chamado ? (
+            <>
+              {ativoEmTexto(ficha)} · <DosChamados chamados={[ficha.chamado]} />
+            </>
+          ) : (
+            ativoEmTexto(ficha)
+          )
+        }
         acoes={
           acoes.length > 0 &&
           acoes.map((acao, indice) => (
@@ -136,7 +145,8 @@ function DadosDaOrdem({ ficha }: { ficha: OrdemDeServico }) {
       ),
     ),
     dado('Local', ficha.local?.caminho),
-    dado('Problema', ficha.problema),
+    // O problema do "Virar OS" vem com uma linha por resposta do formulário do chamado.
+    dado('Problema', <span className={estilos.emLinhas}>{ficha.problema}</span>),
   ];
   if (ficha.solicitacao) {
     itens.push(

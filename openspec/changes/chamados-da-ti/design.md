@@ -1173,6 +1173,12 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **Sem mudança,** a tela mostra o horário gravado, ou o padrão, na organização que nunca gravou o dela. O evento `ajustes-dos-chamados.mudaram` relê o horário: sem mudança na tela, ela mostra o novo; com mudança, segue com o que se escreveu, e o "Salvar" compara com o novo.
 - **Sair da tela com mudança** pede "Descartar as mudanças no horário?", com "Continuar editando" e "Descartar mudanças" (`useBlocker`), como na gaveta das respostas.
 
+**Os chamados na OS e na solicitação (tarefa 5.27),** sem mockup:
+- **o lugar** é a linha embaixo do título, no cabeçalho da ficha, depois do que já está nela: "NB-0031 · Dell Latitude 5440 · Do chamado #1042" na OS e "Toner · Dos chamados #1040 e #1042" na solicitação. A frase diz sozinha de onde elas vêm, e o cabeçalho a mostra logo ao abrir, junto do ativo e do tipo. Na lista de dados, ela pediria um rótulo que a repete ("Chamado: Do chamado #1042") ou que não vale para o chamado que se juntou a uma solicitação pendente ("Origem");
+- **o texto:** os números em ordem, com a vírgula e o "e", como "Dos chamados #1040, #1041 e #1042". Cada número é o link para o chamado quando a API diz que a conta o vê (o `abrir`, com `chamados.ver` nos locais dele), com o nome "Chamado #1042" para a lista de links do leitor de tela; sem ele, o número fica em texto;
+- **sem chamado,** ou com o módulo Chamados desligado, a API manda o `chamado` nulo e o `chamados` vazio, e a linha fica como era. A ficha relê o chamado pelos eventos de hoje: o das OS, no "Virar OS", e o `solicitacoes.mudaram`, quando um chamado se junta à solicitação (decisão 11);
+- **o problema da OS do chamado,** que o "Virar OS" escreve com uma linha por resposta do formulário (5.31), fica em linhas na ficha da OS, como foi escrito. A lista de dados juntava as linhas numa só ("Impressora manchando Problema: Manchando, na borda").
+
 **A busca do ativo com mais opções (tarefa 5.30),** um pedido do usuário depois da 5.20, sem mockup:
 - **o lugar:** o campo Ativo do "Trocar o ativo" e do "Ligar um ativo", e o da gaveta do "Virar OS" (5.31). O campo Ativo do formulário fica como está, com as sugestões da pessoa e a busca;
 - **o texto** acha pelo nome, o patrimônio, o número de série, o hostname e o modelo, como a busca da lista dos ativos, e o texto de exemplo do campo dá os quatro mais usados: "Nome, patrimônio, série ou hostname";
