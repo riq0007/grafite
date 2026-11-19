@@ -103,7 +103,10 @@ export interface ChamadoParaQuemParticipa extends LocaisComNome {
   situacao: SituacaoDoChamado;
   /** O resolvido vencido, pelo `estaFechado`: também o que a tarefa do fechamento ainda não fechou. */
   fechado: boolean;
-  /** A conta de quem atende; no resolvido, a de quem resolveu, ou nulo, sem ninguém. */
+  /**
+   * A conta de quem atende, ou nulo, sem ninguém. No resolvido, a de quem atendia, que o resolver
+   * mantém; a reabertura volta a quem resolveu, que vem no pedido.
+   */
   responsavel: string | null;
   /** A resolução de agora, a chave da avaliação; nula fora do resolvido. */
   resolvidoEm: Date | null;
