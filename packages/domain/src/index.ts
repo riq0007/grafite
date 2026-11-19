@@ -288,6 +288,7 @@ export {
   textoDoResolvidoHoje,
   textoDosAbertos,
 } from './chamados/carga.ts';
+export { type ComandoDoAtivo, comandoDoAtivo } from './chamados/cartao-do-ativo.ts';
 export { type CorDoTonerPedida, corDoToner } from './chamados/cor-do-toner.ts';
 export {
   type AntesDoAssumir,
@@ -464,6 +465,20 @@ export {
   resumoDasRespostas,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
+export {
+  type CitacaoDeChamado,
+  citacoesDeChamados,
+  comecoDoTexto,
+  conferirMensagem,
+  conferirReacao,
+  ESPECIES_DO_CHAT,
+  type EspecieDoChat,
+  LIMITE_DE_CITACOES,
+  LIMITE_DO_COMECO,
+  LIMITES_DA_MENSAGEM,
+  LIMITES_DA_REACAO,
+  REACOES_DE_SEMPRE,
+} from './chat/mensagens.ts';
 export {
   type ChamadoParaParticipar,
   type ContaDaDireta,
