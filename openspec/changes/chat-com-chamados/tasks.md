@@ -79,6 +79,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - o `GET /chat/resumo`;
   - o `GET /chat/conversas`, com as seções, os contadores, a última mensagem e o silenciar;
   - o `GET /chat/pessoas?busca=`: até 20, pela ordem do nome, sem a própria conta.
+  - quem usa o chat, na consulta das outras contas (a escolha da direta, o canal e quem recebe, depois), com o mesmo corte do `carregarAcesso`: a conta ativa, o perfil ativo, a atribuição e a participação no grupo sem encerramento, o grupo ativo e o `chat.usar` na organização, e não num local. As arquivadas ficam fora das listas, embora a `participacao` da 2.1 as abra para ler.
   - as listas do chat no banco (`TIPOS_DE_CONVERSA_NO_BANCO` e `ESPECIES_DO_CHAT_NO_BANCO`, da 1.1) comparadas com as do domínio, como em `chamados/listas.test.ts`.
 
   Começa pelos testes de integração da permissão: a conta sem `chat.usar`, o módulo desligado, a conversa de outros como inexistente e quem saiu do grupo. Verificar: esses testes, o lint, o typecheck e o contrato.
