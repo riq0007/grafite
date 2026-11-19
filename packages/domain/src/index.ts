@@ -477,6 +477,22 @@ export {
   recusaDoTeto,
 } from './chat/equipes-e-canais.ts';
 export {
+  type ChamadoNaLista,
+  chamadoAberto,
+  chamadosComRespostaNova,
+  contadorDoChat,
+  GRUPOS_DA_VISTA_CHAMADOS,
+  type GrupoDaVistaChamados,
+  gruposDaVistaChamados,
+  type LinhaParaARespostaNova,
+  MAXIMO_NO_CONTADOR,
+  ordemDasEquipesECanais,
+  ordemDasRecentes,
+  respostaNova,
+  secoesDoChat,
+  totalDoChat,
+} from './chat/listas.ts';
+export {
   type CitacaoDeChamado,
   citacoesDeChamados,
   comecoDoTexto,
