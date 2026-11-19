@@ -8,6 +8,7 @@ Deixar cada organização ligar e desligar os módulos opcionais, para usar só 
 ### Requirement: Módulos opcionais
 
 Os módulos opcionais SHALL ser definidos pelo sistema, cada um com o nome e uma descrição em pt-BR. Neste momento, os módulos opcionais SHALL ser:
+- o Chamados, descrito como "Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.";
 - o Ativos, descrito como "O catálogo, o cadastro e a lista dos ativos.";
 - o Cofre, descrito como "Os segredos da organização, com o acesso por segredo.";
 - o Alertas, descrito como "As regras de alerta e os alertas dos ativos e dos coletores.";
@@ -40,6 +41,10 @@ O Início, a Administração e os Ajustes SHALL NOT ser opcionais. Um módulo op
 #### Scenario: Painéis numa organização que já existia
 - **WHEN** a versão com os painéis é instalada numa organização que já existia
 - **THEN** o módulo Painéis começa ligado, e quem tem `paineis.ver` o vê no dock
+
+#### Scenario: Chamados numa organização que já existia
+- **WHEN** a versão com os chamados é instalada numa organização que já existia
+- **THEN** o módulo Chamados começa ligado, com os 9 tipos de fábrica, e quem tem `chamados.ver`, `chamados.atender` ou `chamados.configurar` o vê no dock
 
 ### Requirement: Ligar e desligar um módulo
 
