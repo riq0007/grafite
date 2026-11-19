@@ -174,8 +174,10 @@ function partesDoPasso(
   const quem = item.autor.nome;
   switch (item.evento) {
     case 'abertura':
+      // Quem nasce atendendo, fora quem abriu com o "Fica comigo" (chat-com-chamados, decisão 15).
       return [
         item.autor.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
+        item.para && item.para.conta !== item.autor.id ? `com ${item.para.nome}` : null,
       ];
     case 'assumiu':
       return [`assumido por ${quem}`];
@@ -202,9 +204,9 @@ function partesDoPasso(
 /**
  * A linha do tempo (change chamados-da-ti, design, "A linha do tempo, os campos do tipo e as seções
  * guardadas"): o caminho do chamado pelas situações, montado dos eventos da conversa, na ordem
- * dela, pela regra do domínio (`caminhoDaSituacao`), a mesma das etapas de quem participa: o
- * assumir e o passar no aguardando continuam nele, a reabertura sem ninguém volta à triagem, e o
- * desfazer tira o passo do assumir que ele desfaz.
+ * dela, pela regra do domínio (`caminhoDaSituacao`), a mesma das etapas de quem participa: a
+ * abertura com quem atende nasce Em atendimento, o assumir e o passar no aguardando continuam nele,
+ * a reabertura sem ninguém volta à triagem, e o desfazer tira o passo do assumir que ele desfaz.
  */
 export function linhaDoTempo(
   conversa: readonly ItemDaConversa[],

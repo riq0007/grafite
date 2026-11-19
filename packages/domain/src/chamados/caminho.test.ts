@@ -32,6 +32,21 @@ describe('o caminho do chamado pelas situações', () => {
     );
   });
 
+  it('a abertura com quem atende, pelo "Fica comigo" ou pelo tipo, nasce Em atendimento', () => {
+    const passos = caminhoDaSituacao([
+      ev('abertura', hoje('10:32'), 'conta-diego'),
+      ev('assumiu', hoje('10:40')),
+      ev('aguardando', hoje('10:50')),
+    ]);
+    expect(passos.map(({ evento, estava, situacao }) => [evento.evento, estava, situacao])).toEqual(
+      [
+        ['abertura', 'triagem', 'em-atendimento'],
+        ['assumiu', 'em-atendimento', 'em-atendimento'],
+        ['aguardando', 'em-atendimento', 'aguardando'],
+      ],
+    );
+  });
+
   it('o assumir e o passar no aguardando continuam nele, e o reabrir sem ninguém volta à triagem', () => {
     const passos = caminhoDaSituacao([
       ev('abertura', ontem('17:05')),
@@ -123,6 +138,31 @@ describe('as etapas para quem participa', () => {
     expect(resumo(etapas)).toEqual([
       ['triagem', hoje('10:32').toISOString()],
       ['em-atendimento', hoje('10:40').toISOString()],
+      ['aguardando', 'pulada'],
+      ['resolvido', hoje('11:20').toISOString(), 'agora'],
+    ]);
+  });
+
+  it('o chamado que nasce Em atendimento chega na abertura ao Aberto e ao Em andamento', () => {
+    expect(
+      resumo(etapasDoChamado([ev('abertura', hoje('10:32'), 'conta-diego')], 'em-atendimento')),
+    ).toEqual([
+      ['triagem', hoje('10:32').toISOString()],
+      ['em-atendimento', hoje('10:32').toISOString(), 'agora'],
+      ['aguardando', 'ainda-nao'],
+      ['resolvido', 'ainda-nao'],
+    ]);
+    // Resolvido sem outro passo, o Em andamento tem a hora da abertura, e não fica como pulado.
+    expect(
+      resumo(
+        etapasDoChamado(
+          [ev('abertura', hoje('10:32'), 'conta-ana'), ev('resolveu', hoje('11:20'))],
+          'resolvido',
+        ),
+      ),
+    ).toEqual([
+      ['triagem', hoje('10:32').toISOString()],
+      ['em-atendimento', hoje('10:32').toISOString()],
       ['aguardando', 'pulada'],
       ['resolvido', hoje('11:20').toISOString(), 'agora'],
     ]);

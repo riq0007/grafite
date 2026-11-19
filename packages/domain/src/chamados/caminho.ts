@@ -3,10 +3,16 @@
 // linha do tempo da TI e as etapas de quem participa leem a situação pela mesma regra.
 import { SITUACOES_DO_CHAMADO, type SituacaoDoChamado } from './acoes.ts';
 
-/** O evento da conversa, no que o caminho lê: o código e, no reabrir, quem recebe o chamado. */
+/**
+ * O evento da conversa, no que o caminho lê: o código e, na abertura e no reabrir, quem recebe o
+ * chamado.
+ */
 export interface EventoNoCaminho {
   evento: string;
-  /** No reabrir, quem recebe o chamado; sem ninguém, ele volta à triagem. */
+  /**
+   * Na abertura, quem nasce atendendo, pelo "Fica comigo" ou pelo tipo; no reabrir, quem recebe o
+   * chamado. Sem ninguém, ele fica na triagem ou volta a ela, como a abertura de antes do `para`.
+   */
   para?: unknown;
 }
 
@@ -21,6 +27,8 @@ export interface PassoDoCaminho<Evento> {
 function situacaoDepois(evento: EventoNoCaminho, estava: SituacaoDoChamado) {
   switch (evento.evento) {
     case 'abertura':
+    case 'reabriu':
+      return evento.para ? 'em-atendimento' : 'triagem';
     case 'devolveu':
       return 'triagem';
     case 'assumiu':
@@ -33,8 +41,6 @@ function situacaoDepois(evento: EventoNoCaminho, estava: SituacaoDoChamado) {
       return 'em-atendimento';
     case 'resolveu':
       return 'resolvido';
-    case 'reabriu':
-      return evento.para ? 'em-atendimento' : 'triagem';
     default:
       return null;
   }
@@ -84,10 +90,10 @@ export function etapasDoChamado(
 ): EtapaDoChamado[] {
   const chegadas = new Map<SituacaoDoChamado, Date>();
   for (const passo of caminhoDaSituacao(eventos)) {
-    // A abertura chega à triagem; o passar e o assumir no aguardando não chegam de novo.
-    if (passo.situacao !== passo.estava || passo.evento.evento === 'abertura') {
-      chegadas.set(passo.situacao, passo.evento.em);
-    }
+    // A abertura chega sempre ao Aberto e, quando nasce com alguém, também ao Em andamento; o passar
+    // e o assumir no aguardando não chegam de novo.
+    if (passo.evento.evento === 'abertura') chegadas.set('triagem', passo.evento.em);
+    if (passo.situacao !== passo.estava) chegadas.set(passo.situacao, passo.evento.em);
   }
   const deAgora = SITUACOES_DO_CHAMADO.indexOf(situacao);
   return SITUACOES_DO_CHAMADO.map((etapa, indice): EtapaDoChamado => {

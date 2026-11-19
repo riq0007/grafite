@@ -111,6 +111,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
 - [ ] 3.7 Abrir pelo chat (decisão 8):
   - o `GET /chat/chamados/tipos` e o `GET /chat/chamados/sugestoes`, só com o id, o nome e o patrimônio;
   - o `POST /chat/mensagens/:id/chamado`, pela abertura com a origem `chat`;
+  - o evento `abertura` com o `dados.para`, a conta de quem nasce atendendo ou nulo na triagem, na abertura pelo chat e na da TI (`apps/api/src/chamados/abertura.ts`), que a ficha já lê no `para` (decisão 15);
   - na mesma transação: a linha `origem`, os anexos da mensagem, o evento `virou-chamado`, a auditoria, os eventos e as notificações da abertura;
   - a recusa da segunda abertura.
 
@@ -119,6 +120,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - o `GET /chat/chamados`: os abertos, os que ainda reabrem e os fechados paginados, na ordem do domínio, com o `fechado` do `ChamadoNaLista` pelo `estaFechado(chamado, agora, fuso)`, e não só pelo `fechado_em`: o resolvido vencido que a tarefa ainda não fechou já não reabre;
   - o `GET /chat/chamados/:numero`: a conversa sem o que é só da TI, os eventos para o colaborador, a resposta nova e o "Reabrir até";
   - as etapas, pelo `etapasDoChamado` com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê, a previsão e o resumo dos tempos de cada resolvido;
+  - no resumo de cada resolvido, a hora e o "Atendeu" do próprio evento `resolveu`, e não o `resolvido_em` e o `resolvido_por` do chamado, que são só do último; e a primeira resposta pela primeira `mensagem` com a `autor_conta` da conversa, e não pela `primeira_resposta_em`, que na abertura pela TI é a hora da abertura (decisão 15);
   - o anexo;
   - o resumo do chip.
 
@@ -170,7 +172,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.5 Transformar em chamado (m02 e m03): o diálogo, os tipos em chips, o título com o contador, o ativo sugerido e "Trocar", "No nome de", e o evento e a marca na conversa. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.6 O chamado no chat (m04, m06, m07 e m10):
-  - o cabeçalho, as etapas com as horas e "Seus outros chamados";
+  - o cabeçalho, as etapas com as horas e "Seus outros chamados"; a hora da etapa como a spec a escreve, "ontem 17:05", sem a vírgula do `momentoNaConversa` da TI ("ontem, 17:05");
   - a conversa, com a espera em "Aguardando você", a resposta nova e "Marcar como vista";
   - a pergunta pelo teclado e o cartão do ativo;
   - o resolvido, com a avaliação;

@@ -384,6 +384,32 @@ describe('a linha do tempo (spec modulo-chamados, "Chamado aberto")', () => {
     ]);
   });
 
+  it('a abertura com quem atende nasce Em atendimento, com quem atende quando não é quem abriu', () => {
+    // O "Fica comigo": quem abriu é quem atende.
+    expect(
+      linha(
+        [evento('abertura', '2026-11-18T10:40:00Z', ANA, { para: contaDe(ANA) })],
+        'Marina Rocha',
+      ),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha',
+        agora: true,
+      },
+    ]);
+    // Quem atende o tipo por padrão.
+    expect(
+      linha([evento('abertura', '2026-11-18T10:40:00Z', FERNANDA, { para: contaDe(BRUNO) })]),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Fernanda Rocha · com Bruno Lima',
+        agora: true,
+      },
+    ]);
+  });
+
   it('o assumir e o passar no aguardando continuam no aguardando, e o devolver volta à triagem', () => {
     const passos = linha([
       evento('abertura', '2026-11-18T10:40:00Z', FERNANDA),

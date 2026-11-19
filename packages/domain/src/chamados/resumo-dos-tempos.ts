@@ -28,8 +28,10 @@ const minutosEntre = (de: Date, ate: Date) =>
 
 /**
  * O resumo dos tempos, em horas corridas, com a noite e o fim de semana, e o tempo como a tela o
- * escreve (`textoDoTempo`). A primeira resposta é a do chamado (`primeira_resposta_em`), a mesma do
- * prazo: a primeira mensagem da TI para a pessoa, também o "O que foi feito" do resolver.
+ * escreve (`textoDoTempo`). A primeira resposta é a primeira mensagem da TI para a pessoa na
+ * conversa (a `mensagem` com a `autor_conta`), também o "O que foi feito" do resolver. Na origem
+ * `chat`, ela é a `primeira_resposta_em` do prazo; na origem `ti`, não: a abertura pela TI grava a
+ * `primeira_resposta_em` na hora da abertura, sem nenhuma mensagem.
  */
 export function resumoDosTempos(pedido: {
   abertoEm: Date;
