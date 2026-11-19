@@ -4,6 +4,7 @@ import { validarAbertura } from './abertura/abertura.ts';
 import { HorarioDaTi } from './ajustes/Horario.tsx';
 import { RespostasProntas } from './ajustes/RespostasProntas.tsx';
 import { ChamadoAberto } from './chamado/ChamadoAberto.tsx';
+import { ConstrutorDoFormulario } from './construtor/ConstrutorDoFormulario.tsx';
 import { InicioDosChamados } from './Inicio.tsx';
 import { PrazosDosChamados } from './Prazos.tsx';
 import { QuemEstaComOQue } from './QuemEstaComOQue.tsx';
@@ -57,6 +58,14 @@ const tipos = createRoute({
   component: TiposDeChamado,
 });
 
+// O construtor do formulário do tipo, que a tela dos tipos abre (design, "O construtor, a paleta
+// (tarefa 5.21)").
+const formularioDoTipo = createRoute({
+  getParentRoute: () => chamados,
+  path: 'tipos/$id/formulario',
+  component: ConstrutorDoFormulario,
+});
+
 const respostasProntas = createRoute({
   getParentRoute: () => chamados,
   path: 'respostas-prontas',
@@ -76,6 +85,7 @@ export const rotasDosChamados = chamados.addChildren([
   prazos,
   chamado,
   tipos,
+  formularioDoTipo,
   respostasProntas,
   horario,
 ]);

@@ -1,0 +1,332 @@
+/*
+ * O construtor do formulário (change chamados-da-ti, design, "O construtor, a paleta (tarefa
+ * 5.21)"; m09): a janela inteira, com o cabeçalho de borda a borda e, embaixo, três colunas que
+ * rolam sozinhas, a paleta (176 px), os campos (520 px) e a prévia, como o m09 a 1440. Em janelas
+ * menores, a coluna dos campos encolhe até 360 px.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+.tela[data-janela-inteira="rola-por-dentro"] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.tela > [data-cabecalho-da-pagina] {
+  padding: var(--esp-3) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.estado {
+  margin: var(--esp-4) var(--respiro);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A trilha: "Tipos de chamado › Impressora › Formulário". */
+.trilha {
+  font-size: var(--texto-rotulo);
+}
+
+.trilha ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trilha li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.trilha a {
+  border-radius: var(--raio-controle);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.trilha a:hover {
+  text-decoration: underline;
+}
+
+.trilha a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O tipo no título, com o ícone de 24 px e o nome, como o `.tp` do m09. */
+.tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  white-space: nowrap;
+}
+
+.corpo {
+  display: grid;
+  grid-template-columns: 176px clamp(360px, 37.8%, 520px) minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A paleta, afundada, com os tipos de campo em botões com o ícone. */
+.paleta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-height: 0;
+  padding: var(--esp-4);
+  overflow-y: auto;
+  border-right: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.paleta > * {
+  flex: none;
+}
+
+.paleta > h2 {
+  margin-bottom: var(--esp-1);
+}
+
+/*
+ * O botão da paleta tem a cara do secundário do kit, cru, porque o aperto vai ao `useArrastar`: a
+ * superfície neutra com a linha forte, as camadas do hover e do aperto e o anel do foco do teclado.
+ */
+.botaoDaPaleta {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  text-align: start;
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  outline: none;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.botaoDaPaleta:hover:not(:disabled) {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.botaoDaPaleta:active:not(:disabled) {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.botaoDaPaleta:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.botaoDaPaleta:disabled {
+  cursor: default;
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* O botão de onde saiu o campo no ar, tracejado e apagado, como no m09. */
+.botaoDaPaleta[data-no-ar] {
+  border-style: dashed;
+  opacity: var(--opacidade-desabilitado);
+}
+
+.avisoDaPaleta {
+  margin: var(--esp-2) 0 0;
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/* Os campos, no meio, numa lista que rola sozinha. */
+.campos {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-3) var(--esp-5);
+  overflow-y: auto;
+}
+
+.listaDosCampos {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * O lugar de cada campo é o alvo do arraste, com o espaço até o próximo dentro dele: sem vão entre
+ * os alvos, a linha de encaixe não some entre dois campos.
+ */
+.lugar {
+  padding-bottom: 6px;
+}
+
+.campo {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 52px;
+  padding: 6px var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+}
+
+.iconeDoCampo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--raio-miniatura);
+  background-color: var(--cor-superficie-2);
+}
+
+.textosDoCampo {
+  display: grid;
+  min-width: 0;
+}
+
+.textosDoCampo b {
+  overflow: hidden;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.textosDoCampo small {
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+  color: var(--cor-texto-2);
+}
+
+/* A linha de encaixe do m09: tracejada no destaque, no lugar onde o campo vai entrar. */
+.linhaDeEncaixe {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  min-height: 36px;
+  padding: 0 var(--esp-5);
+  border: 1px dashed var(--cor-destaque);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-hover);
+  font-size: var(--texto-dado);
+}
+
+/* O espaço depois do último campo, que solta o campo no fim. */
+.fim {
+  flex: 1 0 52px;
+}
+
+.vazio {
+  margin: var(--esp-2) 0 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-texto-2);
+}
+
+/*
+ * O campo no ar, que segue o ponteiro com ele no fim, embaixo: inclinado, com a borda do destaque e
+ * a sombra sobreposta, sem tapar o alvo sob o ponteiro.
+ */
+.noAr {
+  position: fixed;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  height: 36px;
+  padding: 0 var(--esp-4);
+  border: 1px solid var(--cor-destaque);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+  transform: translate(-90%, -75%) rotate(-2deg);
+  pointer-events: none;
+}
+
+/* A prévia do colaborador, afundada, à direita. */
+.previa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-4) var(--esp-5);
+  overflow-y: auto;
+  border-left: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.previa > * {
+  flex: none;
+}
+
+.cabecalhoDaPrevia {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  font-size: var(--texto-dado);
+}
+
+.cabecalhoDaPrevia h2 {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.notaDaPrevia {
+  margin-left: auto;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* No arraste, o cursor de segurar em toda a tela, e nenhum texto se seleciona. */
+.corpo[data-arrastando],
+.corpo[data-arrastando] * {
+  cursor: grabbing;
+  user-select: none;
+}

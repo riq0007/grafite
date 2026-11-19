@@ -436,6 +436,15 @@
 }
 
 /* "3 campos, a partir do tipo Computador", com os campos e os tipos embaixo. */
+/* Os campos do Rascunho e "Editar os campos" à direita, como no m08. */
+.formularioDoRascunho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 46px;
+}
+
 .copiaDoFormulario {
   display: grid;
   gap: 2px;

@@ -498,6 +498,12 @@ A chave "Prévia do colaborador" SHALL mostrar a prévia em tamanho real, sem ne
 
 No pé, "Descartar" e "Salvar o formulário", a ação principal, SHALL vir com a frase de quantos chamados abertos mantêm o formulário anterior.
 
+O campo acrescentado pela paleta SHALL nascer opcional, com o nome do tipo de campo como rótulo, único no formulário ("Número", e "Número 2" quando já há um "Número"). Com 20 campos, a paleta SHALL ficar desligada, com "O formulário tem no máximo 20 campos.".
+
+#### Scenario: Campo pelo arraste
+- **WHEN** quem configura arrasta "Número" da paleta até a metade de baixo de "Uma foto ajuda", no formulário da Impressora
+- **THEN** "Solte o campo 'Número' aqui" aparece entre "Uma foto ajuda" e "Contador de páginas", e, ao soltar, o campo "Número", opcional, entra ali, e a prévia o mostra depois de "Uma foto ajuda"
+
 #### Scenario: Campo condicional na prévia
 - **WHEN** quem configura escolhe "Atolando" em "O que está acontecendo?" na prévia em tamanho real
 - **THEN** "Onde as manchas aparecem?" some da prévia, e "O que chegaria para a TI" passa a "Impressora atolando"

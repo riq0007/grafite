@@ -1,23 +1,34 @@
 // Os ícones dos tipos de chamado (change chamados-da-ti, design, decisão 6): a lista fechada do
-// domínio no lucide, porque os mockups usam o Phosphor.
-import type { IconeDoTipoDeChamado } from '@grafite/domain';
+// domínio no lucide, porque os mockups usam o Phosphor. No fim, os dos tipos de campo do formulário
+// (design, "O construtor, a paleta (tarefa 5.21)").
+import type { IconeDoTipoDeChamado, TipoDeCampoDoChamado } from '@grafite/domain';
 import {
+  AlignLeft,
   AppWindow,
   ArrowLeftRight,
+  Calendar,
   Camera,
   CircleEllipsis,
   Droplet,
   Globe,
+  Hash,
   Headset,
   KeyRound,
   Laptop,
+  List,
+  ListChecks,
   LockKeyhole,
   type LucideIcon,
+  MapPin,
   Monitor,
   Package,
+  Paperclip,
   PcCase,
   Phone,
   Printer,
+  ToggleLeft,
+  Type,
+  User,
   Wifi,
 } from 'lucide-react';
 
@@ -58,4 +69,19 @@ export const NOMES_DOS_ICONES_DOS_TIPOS: Readonly<Record<IconeDoTipoDeChamado, s
   caixa: 'Caixa',
   camera: 'Câmera',
   'wi-fi': 'Wi-Fi',
+};
+
+/** O ícone de cada tipo de campo, na paleta e nos campos do construtor (m09). */
+export const ICONES_DOS_TIPOS_DE_CAMPO: Readonly<Record<TipoDeCampoDoChamado, LucideIcon>> = {
+  'texto-curto': Type,
+  'texto-longo': AlignLeft,
+  'escolha-unica': List,
+  'varias-opcoes': ListChecks,
+  ativo: Package,
+  local: MapPin,
+  pessoa: User,
+  data: Calendar,
+  numero: Hash,
+  anexo: Paperclip,
+  'sim-ou-nao': ToggleLeft,
 };

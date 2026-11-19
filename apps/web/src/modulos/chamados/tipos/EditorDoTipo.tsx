@@ -27,6 +27,7 @@ import {
   Selecao,
   SelecaoNaFrase,
 } from '@grafite/ui';
+import { useNavigate } from '@tanstack/react-router';
 import { CircleAlert, ListChecks } from 'lucide-react';
 import { type ReactNode, type Ref, useId } from 'react';
 import { Confirmacao } from '../../administracao/Confirmacao.tsx';
@@ -294,7 +295,10 @@ export function EditorDoTipo({
   );
 }
 
-/** O pé do tipo criado: o formulário, "Descartar" e "Salvar o tipo", desligados sem mudança. */
+/**
+ * O pé do tipo criado: o formulário, que abre o construtor (tarefa 5.21), "Descartar" e "Salvar o
+ * tipo", desligados sem mudança.
+ */
 export function PeDoTipo({
   tipo,
   erros,
@@ -312,14 +316,19 @@ export function PeDoTipo({
   aoDescartar: () => void;
   aoSalvar: () => void;
 }) {
+  const navegar = useNavigate();
   return (
     <div className={estilos.peDoEditor}>
       <MensagemDoPasso texto={falha.texto ?? erros.geral ?? null} chave={falha.chave} />
       <div className={estilos.botoesDoEditor}>
-        <span className={estilos.formulario}>
-          <Icone icone={ListChecks} tamanho={14} />
+        <Botao
+          icone={ListChecks}
+          onPress={() =>
+            void navegar({ to: '/chamados/tipos/$id/formulario', params: { id: tipo.id } })
+          }
+        >
           {textoDoFormulario(tipo.campos)}
-        </span>
+        </Botao>
         <span className={estilos.acoes}>
           <Botao onPress={aoDescartar} isDisabled={!mudou || salvando}>
             Descartar

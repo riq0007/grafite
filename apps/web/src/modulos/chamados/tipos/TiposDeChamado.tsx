@@ -540,7 +540,9 @@ function TiposCarregados({
               />
             )
           }
-          depois={<SecaoDoFormulario formulario={lido} origem={origem?.nome ?? null} />}
+          depois={
+            <SecaoDoFormulario formulario={lido} origem={origem?.nome ?? null} tipo={rascunho.id} />
+          }
           pe={
             <PeDoRascunho
               nome={edicao.nome.trim() || rascunho.nome}

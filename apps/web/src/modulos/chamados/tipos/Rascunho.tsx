@@ -4,7 +4,8 @@
 // pessoa responde depois de escolhê-lo. Quem grava é a tela.
 import { AVISO_DA_SOLICITACAO_NO_DUPLICAR } from '@grafite/domain';
 import { Botao, Carimbo, Icone, MensagemDoPasso } from '@grafite/ui';
-import { Check, Copy, EyeOff } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Check, Copy, EyeOff, Pencil } from 'lucide-react';
 import { useEffect, useId, useRef } from 'react';
 import { Confirmacao } from '../../administracao/Confirmacao.tsx';
 import { GradeDosTipos } from '../previa/GradeDosTipos.tsx';
@@ -51,25 +52,42 @@ export type FormularioLido =
   | { estado: 'falha'; texto: string }
   | { estado: 'lido'; campos: readonly CampoNaGaveta[] };
 
-/** "Formulário": quantos campos, de onde vieram e cada um com o tipo. */
+/**
+ * "Formulário": quantos campos, de onde vieram e cada um com o tipo, e "Editar os campos", que abre
+ * o construtor (tarefa 5.21).
+ */
 export function SecaoDoFormulario({
   formulario,
   origem,
+  tipo,
 }: {
   formulario: FormularioLido;
   origem: string | null;
+  /** O id do Rascunho, cujo formulário o construtor abre. */
+  tipo: string;
 }) {
   const id = useId();
+  const navegar = useNavigate();
   return (
     <section aria-labelledby={`${id}-formulario`} className={estilos.secao}>
       <Carimbo nivel={3} id={`${id}-formulario`}>
         Formulário
       </Carimbo>
       {formulario.estado === 'lido' ? (
-        <p className={estilos.copiaDoFormulario}>
-          <span>{textoDoFormularioDoRascunho(formulario.campos.length, origem)}</span>
-          {formulario.campos.length > 0 && <small>{listaDosCampos(formulario.campos)}</small>}
-        </p>
+        <div className={estilos.formularioDoRascunho}>
+          <p className={estilos.copiaDoFormulario}>
+            <span>{textoDoFormularioDoRascunho(formulario.campos.length, origem)}</span>
+            {formulario.campos.length > 0 && <small>{listaDosCampos(formulario.campos)}</small>}
+          </p>
+          <Botao
+            icone={Pencil}
+            onPress={() =>
+              void navegar({ to: '/chamados/tipos/$id/formulario', params: { id: tipo } })
+            }
+          >
+            Editar os campos
+          </Botao>
+        </div>
       ) : (
         <p className={estilos.ajuda}>
           {formulario.estado === 'falha' ? formulario.texto : 'Carregando o formulário…'}
