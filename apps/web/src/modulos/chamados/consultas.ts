@@ -126,6 +126,22 @@ export function useFormularioDoTipo(id: string | null) {
   });
 }
 
+/** A chave das respostas prontas, debaixo da dos ajustes, que o evento deles relê. */
+export const CHAVE_DAS_RESPOSTAS_PRONTAS = [
+  ...CHAVE_DOS_AJUSTES_DOS_CHAMADOS,
+  'respostas-prontas',
+] as const;
+
+/** As respostas prontas, na ordem, com os tipos pelo nome, a quem configura (tarefa 5.25). */
+export function useRespostasProntas() {
+  const api = useApi();
+  return useQuery({
+    queryKey: CHAVE_DAS_RESPOSTAS_PRONTAS,
+    queryFn: () =>
+      consultar(() => api.GET('/chamados/respostas-prontas'), 'carregar as respostas prontas'),
+  });
+}
+
 /** As contas que atendem os chamados, que o editor do tipo oferece em quem atende por padrão. */
 export function useContasQueAtendem() {
   const api = useApi();

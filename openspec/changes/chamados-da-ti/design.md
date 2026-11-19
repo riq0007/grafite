@@ -1137,6 +1137,28 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **Os dois consertos da prévia pequena** que a revisão da 5.21 deixou para aqui: o campo acrescentado vem à vista também na prévia; e, sem campo que a pessoa veja, as duas prévias mostram "O formulário ainda não tem campos." ou "A pessoa não vê nenhum campo: só a TI vê os deste formulário." no lugar da faixa vazia (`previaVazia`).
 - **O "Como vai o chamado"** do m11, ao lado do formulário, fica para a S8, como na 5.6.
 
+**As respostas prontas (tarefa 5.25),** sem mockup próprio, no molde da tabela dos tipos (m07) e da gaveta do kit:
+- **A tela** pede a janela inteira e rola por dentro, como a dos tipos, com a lista numa coluna só. No alto: o título "Respostas prontas", a contagem ("6 respostas"), a frase "Quem atende as usa no campo de escrever do chamado, nesta ordem. Arraste as linhas para mudar a ordem." e "Nova resposta", primário, com o mais. Com 100 respostas, o botão desliga, e "A organização já tem 100 respostas prontas." aparece embaixo dele (`limiteDasRespostas`), em vez de a recusa vir só depois de a resposta estar escrita.
+- **A tabela** é a `TabelaQueSeOrdena` da 5.19:
+  - a alça;
+  - a resposta: o rótulo em peso forte, com o selo "Espera a resposta" ao lado, e, embaixo, o começo do texto numa linha, com as quebras juntadas (`textoNumaLinha`) e as reticências do CSS. O selo tem o relógio de areia na tinta da informação, como "Aguardando o colaborador", que é a situação que a resposta dá ao chamado. O `{nome}` aparece como foi escrito, porque a lista é de quem configura;
+  - os tipos: "Todos os tipos", ou os nomes, até dois, e depois "e mais N" (`tiposNaLista`). Os nomes vão separados por vírgula, porque muitos têm o "e", como "Acesso e senha" e "Rede e internet".
+
+  A ordem muda pela alça, com o `useArrastar`, e, no teclado, pelo "Subir" e pelo "Descer" do menu da linha. Ela aparece na hora, e a resposta da API fica no lugar dela; se a API recusar, a ordem gravada volta, com o aviso "A ordem não mudou.", como nos tipos.
+- **O kit:** a `TabelaQueSeOrdena` ganha o `aoAbrir`. Com ele, nenhuma linha fica escolhida, as setas só andam pelas linhas, e o clique e o Enter abrem a linha (o `onRowAction` do React Aria). Na escolha dos tipos, as setas trocam a linha escolhida, e aqui cada tecla abriria a gaveta. Sem o `aoAbrir`, a tabela segue como nos tipos. O selo "Espera a resposta" entra na lista dos selos dos chamados (`Pecas.tsx`).
+- **Sem respostas,** a tela diz "Nenhuma resposta pronta.", com "Crie as que a TI manda sempre, como o pedido do print do erro." e "Nova resposta".
+- **A gaveta** é a do kit (`Gaveta`), com o título "Nova resposta" ou o rótulo gravado. Ela fecha pelo ×, pelo Esc e pelo clique fora. Dentro:
+  - "Rótulo", obrigatório, com a ajuda "Aparece no menu e nos botões do campo de escrever.";
+  - "Texto", obrigatório, na área de texto, com a ajuda "{nome} vira o primeiro nome da pessoa do chamado.";
+  - "Espera a resposta", o interruptor, com a ajuda "Mandar a resposta põe o chamado em Aguardando o colaborador, e o relógio para.";
+  - "Tipos em que aparece": as caixas de marcar dos tipos Em uso e Inativos, na ordem dos tipos, com "inativo" escrito depois do nome (`tiposParaEscolher`). A ajuda diz "Sem nenhum marcado, a resposta aparece em todos os tipos.". O Rascunho fica de fora, como na API. Nenhum marcado vale como todos, como na API, e a ajuda diz isso em vez de uma recusa nova;
+  - o pé: "Remover", só na resposta gravada, e "Salvar", primário.
+- **O que "Salvar" faz:** cria a resposta nova, no fim da ordem, com "Resposta pronta criada.", ou grava a escolhida, com "Resposta pronta salva."; nos dois casos, a gaveta fecha.
+- **As recusas da API** ficam nos campos (o rótulo, o texto e os tipos), com o foco no primeiro, e valem enquanto o campo não muda (`recusasQueValem`). A que não é de campo fica no pé, em texto: o limite de 100, a falta de conexão ou a resposta que outra conta removeu.
+- **"Remover"** pede a confirmação "Remover “Pedir o print do erro”?", com "Ela sai do campo de escrever de todos os chamados. As mensagens já mandadas ficam na conversa." e o botão "Remover a resposta". Depois, o aviso é "Resposta pronta removida.".
+- **Fechar com mudanças** pede a confirmação, como no editor dos tipos, com "Continuar editando" e "Descartar mudanças". O título é "Descartar as mudanças na resposta?", ou "Descartar a resposta nova?" na nova. Sair da tela com a gaveta mudada pede o mesmo (`useBlocker`).
+- **O evento** `ajustes-dos-chamados.mudaram` relê a lista, e a gaveta aberta segue com o que se escreveu.
+
 **A busca do ativo com mais opções (tarefa 5.30),** um pedido do usuário depois da 5.20, sem mockup:
 - **o lugar:** o campo Ativo do "Trocar o ativo" e do "Ligar um ativo", e o da gaveta do "Virar OS" (5.31). O campo Ativo do formulário fica como está, com as sugestões da pessoa e a busca;
 - **o texto** acha pelo nome, o patrimônio, o número de série, o hostname e o modelo, como a busca da lista dos ativos, e o texto de exemplo do campo dá os quatro mais usados: "Nome, patrimônio, série ou hostname";

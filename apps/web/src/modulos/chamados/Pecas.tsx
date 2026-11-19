@@ -60,6 +60,8 @@ const SELOS = {
   obrigatorio: { rotulo: 'Obrigatório', situacao: 'info', icone: Info },
   opcional: { rotulo: 'Opcional', situacao: 'neutra', icone: Circle },
   automatico: { rotulo: 'Automático', situacao: 'neutra', icone: Lock },
+  // O da resposta pronta que põe o chamado em Aguardando o colaborador, com a marca dessa situação.
+  'espera-a-resposta': { rotulo: 'Espera a resposta', situacao: 'info', icone: Hourglass },
 } as const satisfies Record<string, DoSelo>;
 
 export type QualSelo = keyof typeof SELOS;

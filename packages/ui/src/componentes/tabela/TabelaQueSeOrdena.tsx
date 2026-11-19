@@ -16,7 +16,16 @@ import {
   useState,
 } from 'react';
 import { VisuallyHidden } from 'react-aria';
-import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import {
+  Cell,
+  Column,
+  type Key,
+  Row,
+  type Selection,
+  Table,
+  TableBody,
+  TableHeader,
+} from 'react-aria-components';
 import { Icone } from '../../icones/Icone.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from '../menu/MenuDeContexto.tsx';
 import estilos from './TabelaQueSeOrdena.module.css';
@@ -47,7 +56,18 @@ export interface ArrasteNaTabela {
   encaixe: { id: string; metade: 'antes' | 'depois' } | null;
 }
 
-export interface PropsDaTabelaQueSeOrdena<T> {
+/**
+ * A linha escolhida, que o clique e as setas trocam, como o tipo do editor ao lado; ou, com o
+ * `aoAbrir` (tarefa 5.25), nenhuma: as setas só andam pelas linhas, e o clique e o Enter abrem a
+ * linha, como a resposta pronta, que abre numa gaveta e não pode abrir a cada tecla.
+ */
+type EscolhaDaTabela =
+  | { escolhido: string | null; aoEscolher: (id: string) => void; aoAbrir?: undefined }
+  | { aoAbrir: (id: string) => void; escolhido?: undefined; aoEscolher?: undefined };
+
+export type PropsDaTabelaQueSeOrdena<T> = PropsDasLinhas<T> & EscolhaDaTabela;
+
+interface PropsDasLinhas<T> {
   /** O id do título que dá o nome da tabela. */
   'aria-labelledby': string;
   itens: readonly T[];
@@ -55,8 +75,6 @@ export interface PropsDaTabelaQueSeOrdena<T> {
   /** O nome do item, que o leitor de tela lê na linha e no menu dela ("Ações de Impressora"). */
   nomeDe: (item: T) => string;
   colunas: readonly ColunaQueSeOrdena<T>[];
-  escolhido: string | null;
-  aoEscolher: (id: string) => void;
   /** O aperto na alça da linha, para o arraste de quem usa a tabela. */
   alca: (item: T) => PropsDaAlca;
   /** As marcas da linha como alvo do arraste (`data-*`), que acham a linha sob o ponteiro. */
@@ -86,8 +104,9 @@ export function TabelaQueSeOrdena<T extends object>({
   idDe,
   nomeDe,
   colunas,
-  escolhido,
+  escolhido = null,
   aoEscolher,
+  aoAbrir,
   alca,
   alvo,
   arraste,
@@ -95,6 +114,23 @@ export function TabelaQueSeOrdena<T extends object>({
   alta,
 }: PropsDaTabelaQueSeOrdena<T>) {
   const porId = new Map(itens.map((item) => [idDe(item), item]));
+  // Com o `aoAbrir`, a linha não se escolhe: o clique e o Enter são a ação dela.
+  const escolha = aoAbrir
+    ? {
+        selectionMode: 'none' as const,
+        onRowAction: (id: Key) => aoAbrir(String(id)),
+      }
+    : {
+        selectionMode: 'single' as const,
+        selectionBehavior: 'replace' as const,
+        disallowEmptySelection: true,
+        selectedKeys: escolhido === null ? [] : [escolhido],
+        onSelectionChange: (chaves: Selection) => {
+          if (chaves === 'all') return;
+          const [id] = chaves;
+          if (id !== undefined && String(id) !== escolhido) aoEscolher?.(String(id));
+        },
+      };
   const [menu, definirMenu] = useState<MenuAberto | null>(null);
   const doMenu = menu ? porId.get(menu.id) : undefined;
   const area = useRef<HTMLDivElement>(null);
@@ -152,19 +188,7 @@ export function TabelaQueSeOrdena<T extends object>({
       data-arrastando={arraste ? '' : undefined}
       data-cursor-nativo={arraste ? '' : undefined}
     >
-      <Table
-        aria-labelledby={rotuladaPor}
-        selectionMode="single"
-        selectionBehavior="replace"
-        disallowEmptySelection
-        selectedKeys={escolhido === null ? [] : [escolhido]}
-        onSelectionChange={(chaves) => {
-          if (chaves === 'all') return;
-          const [id] = chaves;
-          if (id !== undefined && String(id) !== escolhido) aoEscolher(String(id));
-        }}
-        className={estilos.tabela}
-      >
+      <Table aria-labelledby={rotuladaPor} {...escolha} className={estilos.tabela}>
         <TableHeader>
           <Column id="alca" className={estilos.colunaDaAlca}>
             <VisuallyHidden>Ordem</VisuallyHidden>
