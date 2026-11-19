@@ -56,6 +56,9 @@ export function notificacoesDosAlertas(
         origem: ORIGEM_DOS_ALERTAS,
         destino: DESTINO_DOS_ALERTAS_ABERTOS,
         alertaId: null,
+        mensagem: false,
+        assunto: null,
+        mensagemDoChatId: null,
       });
       continue;
     }
@@ -68,6 +71,9 @@ export function notificacoesDosAlertas(
         origem: ORIGEM_DOS_ALERTAS,
         destino: alerta.destino,
         alertaId: alerta.id,
+        mensagem: false,
+        assunto: null,
+        mensagemDoChatId: null,
       });
     }
   }

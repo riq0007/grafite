@@ -194,6 +194,11 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o "Reabrir" fora do resolvido recusa com a frase do reabrir da TI ("O chamado #1045 não está resolvido."), e a avaliação, com a da spec dela, sem o número ("O chamado não está resolvido.");
   - a escolha compara a opção como foi gravada, e as opções de uma pergunta são diferentes sem contar os acentos e as maiúsculas: "Sim" e "sim" seriam a mesma resposta;
   - a célula recusa antes do conteúdo, como na TI: no fechado, a mensagem vazia recusa pelo fechado; e a avaliação já feita recusa antes do nível.
+- **As notificações,** nos casos que a spec não escreve:
+  - os títulos levam o nome sem o "(TI)" do chat, como nos exemplos da spec ("Ana Souza em Avisos da TI");
+  - a mensagem da espera ("Aguardando o colaborador") é mensagem da TI para a pessoa e notifica como a resposta; o resolver notifica só o resolvido, e não a resposta pelo "O que foi feito";
+  - o "Chamado #1045 com você" da reabertura, também pela mensagem da pessoa, não é mensagem: vai por push nas severidades escolhidas, como o de qualquer chamado passado;
+  - a mensagem vai por push também quando a conta não escolheu nenhuma severidade: a spec diz "qualquer que seja a severidade escolhida", e quem não quer o push de nenhuma mensagem liga o Foco ou não inscreve o aparelho.
 
 ## Risks / Trade-offs
 

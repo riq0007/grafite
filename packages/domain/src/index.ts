@@ -385,14 +385,19 @@ export {
 } from './chamados/formulario.ts';
 export {
   type AcaoQueNotifica,
+  assuntoDoChamado,
   type ChamadoQueNotifica,
+  type ChamadoQueNotificaAMensagem,
   type ContaQueRecebeATriagem,
   destinoDoChamado,
+  destinoDoChamadoNoChat,
   notificacaoDoPassado,
   notificacoesDaAbertura,
   notificacoesDaAcao,
   notificacoesDaTriagem,
+  notificacoesDeQuemParticipa,
   notificacoesDoEstouro,
+  notificacoesParaQuemParticipa,
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';
 export {
@@ -572,6 +577,15 @@ export {
   LIMITES_DA_REACAO,
   REACOES_DE_SEMPRE,
 } from './chat/mensagens.ts';
+export {
+  assuntoDaConversa,
+  type ContaQueRecebeAMensagem,
+  type ConversaQueNotifica,
+  destinoDaMensagem,
+  type MensagemQueNotifica,
+  notificacoesDaMensagemDoChat,
+  ORIGEM_DO_CHAT,
+} from './chat/notificacoes.ts';
 export {
   type ChamadoParaParticipar,
   type ContaDaDireta,
@@ -1026,6 +1040,7 @@ export {
   type CanaisDoServidor,
   canaisNaHora,
   type DestinoDosCanais,
+  type NotificacaoDosCanais,
   recebeResumo,
 } from './notificacoes/canais.ts';
 export {

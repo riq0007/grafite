@@ -79,6 +79,9 @@ const critica = (contaId: string, dados: Partial<NovaNotificacao> = {}): NovaNot
   origem: 'Alertas',
   destino: DESTINO,
   alertaId: null,
+  mensagem: false,
+  assunto: null,
+  mensagemDoChatId: null,
   ...dados,
 });
 

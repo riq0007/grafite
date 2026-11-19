@@ -61,13 +61,13 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - as opções da pergunta (`conferirOpcoes`, em `pergunta.ts`) e a avaliação (`conferirAvaliacao`): os quatro níveis e o comentário até 500.
 
   Começa pelos testes unitários, uma célula por teste. Verificar: esses testes, o lint e o typecheck.
-- [ ] 2.8 As notificações (decisão 6):
+- [x] 2.8 As notificações (decisão 6):
   - o `canaisNaHora` com a mensagem;
   - os títulos e os começos de cada notificação do chat e dos chamados;
   - quem recebe: fora quem escreveu (também a conta da TI que é a pessoa do chamado), quem silenciou e quem já leu, e sem a resposta do chamado na triagem;
   - o "com você" sozinho na mensagem que reabre.
 
-  Começa pelos testes unitários de quem recebe. Verificar: esses testes, os dos títulos, o lint e o typecheck.
+  Começa pelos testes unitários de quem recebe. Verificar: esses testes, os dos títulos, o lint e o typecheck. A `NovaNotificacao` ganhou a `mensagem`, o `assunto` e a `mensagemDoChatId`, com as colunas da tabela; o chat ficou em `chat/notificacoes.ts`, e os chamados, em `chamados/notificacoes.ts` (`notificacoesDeQuemParticipa` e `notificacoesParaQuemParticipa`). A entrega já passa a `mensagem` ao `canaisNaHora`.
 - [x] 2.9 As permissões e o módulo (decisão 14): o `chat.usar` e o `chat.configurar` na área "Chat" e o `chamados.pedir` na área "Chamados", no catálogo, nos enums do contrato da API e na lista da ficha do perfil, na web; o Chat nos módulos opcionais. Começa pelo teste do catálogo. Verificar: esse teste, o da ficha do perfil, o `contrato:verificar`, o lint e o typecheck. Feita antes da 2.1, porque o `usaOChat` pede o `chat.usar` e o módulo Chat.
 
 ## 3. API
@@ -104,8 +104,8 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   Começa pelos testes de integração da permissão. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [ ] 3.6 A notificação do chat (decisão 6):
   - a tarefa `chat.notificar`, 10 s depois da mensagem, pelo `startAfter`, que o `enviar` da fila (`fila.ts`) passa a aceitar, a quem não leu, fora o autor e quem silenciou;
-  - o assunto, a mensagem do chat e o destino;
-  - a mensagem no push, também com a severidade fora das escolhas e nunca no Foco, e o título do push sem a severidade.
+  - o assunto, a mensagem do chat e o destino, pelo `notificacoesDaMensagemDoChat`, com as contas que participam, o silenciar e a `lida_ate` de cada uma; o `notificar` grava a `mensagem`, o `assunto` e a `mensagemDoChatId` da `NovaNotificacao`;
+  - a mensagem no push, também com a severidade fora das escolhas e nunca no Foco, pela `mensagem` que a entrega já passa ao `canaisNaHora` (2.8), com o teste da entrega, e o título do push sem a severidade.
 
   Verificar: os testes da tarefa e da entrega, o lint e o typecheck.
 - [ ] 3.7 Abrir pelo chat (decisão 8):
@@ -130,14 +130,14 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - a chave da escolha e da avaliação vem da linha lida com o chamado travado, e nunca do pedido: o `dados.mensagem` é o id da mensagem como o banco o devolve (o UUID do pedido em maiúsculas seria outro texto para o índice), e o `dados.resolucao` é o `toISOString()` do `resolvido_em` lido;
   - a retomada, a reabertura e a versão, pelo `decidirAcaoDeQuemParticipa`, com o `fechado` do `estaFechado`, quem resolveu como a conta está agora e a pergunta e o `avaliado` lidos com o chamado travado; as recusas por campo (o texto, os anexos, a opção, o nível e o comentário) e as outras como conflito, como o `problemaDaRecusa` da TI; o `desdeDeQuemAtende` passa a aceitar a mudança de quem participa;
   - os eventos da conversa e a auditoria do retomar e do reabrir pela pessoa;
-  - a notificação a quem atende;
+  - a notificação a quem atende, pelo `notificacoesDeQuemParticipa` com a mudança decidida, e as contas da triagem lidas só na reabertura que vai à triagem (o `reabriu` sem o `para`);
   - a `vista_ate`, a última linha da conversa lida com o chamado travado, que anda também no "Reabrir" e na avaliação e marca as notificações do chamado, com o teste da mensagem da TI que espera a trava da marcação.
 
   Começa pelos testes de integração da permissão: quem não participa e o fechado. Verificar: esses testes, o da escolha ao mesmo tempo em duas conexões, o lint, o typecheck e o contrato.
 - [ ] 3.10 O lado da TI (decisões 10 e 13):
   - a mensagem com as opções e o cartão, e o `GET /chamados/:numero/cartao` com o retrato;
   - as respostas prontas com as opções;
-  - a notificação da mensagem da TI e do resolvido à pessoa e a quem abriu, fora o autor;
+  - a notificação da mensagem da TI e do resolvido à pessoa e a quem abriu, fora o autor, pelo `notificacoesParaQuemParticipa` com a mudança decidida e as contas da pessoa e de quem abriu, com o `usaOChat`, ao lado do `notificacoesDaAcao`;
   - a ficha com a origem, as mensagens de quem participa, a escolha, a avaliação, o resumo dos tempos, o "usa o chat" da pessoa e o Fechado; o `EventoGravado` da ficha ganha os eventos de quem participa (`EventoDeQuemParticipa`), para o guarda dos eventos reprovar o que ela não lê.
 
   Começa pelos testes de integração da permissão: o cartão (a prévia e o envio) de um ativo que a conta não vê e o "Abrir a conversa" da origem só a quem participa dela. Verificar: esses testes, os outros de integração, o lint, o typecheck e o contrato.

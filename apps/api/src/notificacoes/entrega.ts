@@ -106,6 +106,7 @@ export function tarefasDaEntrega({
             id: notificacoes.id,
             contaId: notificacoes.contaId,
             severidade: notificacoes.severidade,
+            mensagem: notificacoes.mensagem,
             emailEm: notificacoes.emailEm,
           })
           .from(notificacoes)
@@ -147,7 +148,7 @@ export function tarefasDaEntrega({
             conta.preferencias,
           ).notificacoes;
           const canaisDela = canaisNaHora(
-            notificacao.severidade,
+            notificacao,
             { email: conta.email, aparelhos: daConta.length, preferencias },
             servidor,
           );
