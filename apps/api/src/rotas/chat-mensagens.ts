@@ -5,26 +5,20 @@
 // ligado, pela guarda do escopo; a conversa de que a conta não participa responde como inexistente.
 import {
   type Banco,
-  contas,
   conversas,
   leiturasDasConversas,
   membrosDoGrupo,
   naOrganizacao,
   TIPOS_DE_CONVERSA_NO_BANCO,
-  type Transacao,
 } from '@grafite/db';
 import { fraseNoLugarDaCaixa, nomeNoChat } from '@grafite/domain';
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { carregarGrupos } from '../acesso/acesso.ts';
-import { sessaoDa } from '../acesso/escopo.ts';
 import { ContaDoChat, contaDoChat, lerContas } from '../chat/contas.ts';
 import { lerConversaDaConta, travarADireta, travarParaAMensagem } from '../chat/conversa.ts';
 import {
   BuscaDaPagina,
-  type ContaQueLeAsMensagens,
   gravarMensagem,
   lerPagina,
   MensagemDoChat,
@@ -33,6 +27,7 @@ import {
   PaginaDeMensagens,
 } from '../chat/mensagens.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
+import { contaDaSessao } from '../chat/sessao.ts';
 import { naoEncontrado, ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
@@ -87,24 +82,6 @@ const PROBLEMAS = {
 } as const;
 
 const pessoaNaoEncontrada = () => naoEncontrado('Pessoa não encontrada.');
-
-/** A conta da sessão, com a pessoa, o acesso de agora e os grupos ativos de que ela é. */
-async function contaDaSessao(
-  tx: Transacao,
-  requisicao: FastifyRequest,
-): Promise<ContaQueLeAsMensagens> {
-  const { contaId, acesso } = sessaoDa(requisicao);
-  const [conta] = await tx
-    .select({ pessoaId: contas.pessoaId })
-    .from(contas)
-    .where(eq(contas.id, contaId));
-  return {
-    id: contaId,
-    pessoaId: conta?.pessoaId ?? '',
-    acesso,
-    grupos: await carregarGrupos(tx, contaId),
-  };
-}
 
 export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
   banco: Banco;

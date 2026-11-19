@@ -11,11 +11,12 @@ import {
   mensagensDoChat,
   mensagensDosChamados,
   naOrganizacao,
+  notificacoes,
   numeracaoDosChamados,
   reacoesDasMensagens,
   tiposDeChamado,
 } from '@grafite/db';
-import { normalizarTexto } from '@grafite/domain';
+import { assuntoDaConversa, normalizarTexto } from '@grafite/domain';
 import { and, eq, isNull } from 'drizzle-orm';
 import { expect } from 'vitest';
 import { criarTiposDeFabrica } from '../src/chamados/fabrica.ts';
@@ -312,6 +313,37 @@ export async function montarChat(api: ApiDeTeste, host: string) {
           criadaEm: api.relogio.agora(),
         }),
       ),
+
+    /** A equipe ou o canal arquivado, no momento do relógio, direto no banco. */
+    arquivar: (conversaId: string) =>
+      naOrg((tx) =>
+        tx
+          .update(conversas)
+          .set({ arquivadaEm: api.relogio.agora() })
+          .where(eq(conversas.id, conversaId)),
+      ),
+
+    /** A notificação da mensagem do chat à conta, como a tarefa `chat.notificar` grava. */
+    notificarMensagem: async (usuario: UsuarioDoChat, conversaId: string, mensagemId: string) => {
+      const [linha] = await naOrg((tx) =>
+        tx
+          .insert(notificacoes)
+          .values({
+            orgId: org,
+            contaId: contasDe[usuario],
+            severidade: 'info',
+            titulo: 'Mensagem no chat',
+            origem: 'chat',
+            destino: `/chat/c/${conversaId}?m=${mensagemId}`,
+            mensagem: true,
+            assunto: assuntoDaConversa(conversaId),
+            mensagemDoChatId: mensagemId,
+            criadaEm: api.relogio.agora(),
+          })
+          .returning({ id: notificacoes.id }),
+      );
+      return linha?.id ?? '';
+    },
 
     /**
      * O chamado passa a ser da mensagem, como a abertura pelo chat grava a origem: a conversa e a

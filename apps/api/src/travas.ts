@@ -14,7 +14,9 @@ export type Trava =
   | 'respostas-prontas'
   | 'horario-da-ti'
   | `pacote:${string}`
-  | `toner:${string}`;
+  | `toner:${string}`
+  /** As reações de uma mensagem do chat, com o teto de 10 textos (change chat-com-chamados). */
+  | `mensagem:${string}`;
 
 /** Espera a trava na organização da transação. Toda leitura que decide vem depois dela. */
 export async function travar(tx: Transacao, trava: Trava) {
