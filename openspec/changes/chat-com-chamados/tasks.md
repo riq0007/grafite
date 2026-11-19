@@ -213,7 +213,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
 - [ ] 5.1 A documentação:
   - a linha do S7 na spec mestre;
-  - o runbook: o perfil "Colaborador" e o grupo do AD, o app do chat instalado, com o "Receber neste aparelho", e a exceção da volta à versão anterior, com o erro ao reabrir um fechado nela;
+  - o runbook: o perfil "Colaborador" e o grupo do AD, com a atribuição na organização inteira, porque as três permissões são da organização e a atribuição num local as deixa de fora, o app do chat instalado, com o "Receber neste aparelho", e a exceção da volta à versão anterior, com o erro ao reabrir um fechado nela;
   - o `docs/mapa.md`, com as specs novas;
   - o contrato de módulo (`docs/casca/modulos.md`), com o público por grupo e o app próprio.
 
