@@ -209,7 +209,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - a auditoria tem as ações `equipe.*` e `canal.*`, com o alvo `conversa` pelo nome de agora e o retrato nos termos da tela ("Todos que participam", "Ativo" e "Arquivado"). O `chat.mudou` da auditoria vai a quem tem o `chat.configurar`, para a tela do cadastro, e a rota manda o de quem participa depois e, se o grupo mudou, o de antes;
   - a vista Equipes conta, no canal, todas as contas que usam o chat;
   - as abas Arquivos e "Chamados da equipe" vêm de 50 em 50, o mais novo primeiro, e servem a qualquer conversa de que a conta participa; com o módulo Chamados desligado, a segunda fica vazia.
-- **A espera no chip e em "Chamados da equipe"** (a confirmar com o usuário; a spec chat foi mudada com ela): "Aguardando você" só a quem participa do chamado, a pessoa e quem o abriu pelo chat. Quem o vê por ser da conversa de origem ou pelo `chamados.ver` lê "Aguardando o colaborador", a palavra da TI, porque a resposta não é dele (`situacaoNoChat`).
+- **A espera no chip e em "Chamados da equipe"** (confirmada pelo usuário em 19/11, com a spec chat mudada): "Aguardando você" só a quem participa do chamado, a pessoa e quem o abriu pelo chat. Quem o vê por ser da conversa de origem ou pelo `chamados.ver` lê "Aguardando o colaborador", a palavra da TI, porque a resposta não é dele (`situacaoNoChat`).
 - **As notificações,** nos casos que a spec não escreve:
   - os títulos levam o nome sem o "(TI)" do chat, como nos exemplos da spec ("Ana Souza em Avisos da TI");
   - a mensagem da espera ("Aguardando o colaborador") é mensagem da TI para a pessoa e notifica como a resposta; o resolver notifica só o resolvido, e não a resposta pelo "O que foi feito";
