@@ -217,4 +217,37 @@ describe('eventos', () => {
       permissoes: ['chamados.ver', 'chamados.configurar'],
     });
   });
+
+  // Os grupos da equipe do chat (change chat-com-chamados, design, decisão 4).
+  const grupo = (i: number) => `0199a3f0-0000-7000-8000-00000000010${i}`;
+
+  it('os grupos valem só com a permissão, com no máximo 8', async () => {
+    await expect(
+      emTransacao(app, orgA, (c) =>
+        gravarEvento(c, orgA, { permissao: null, locais: null, todas: true, grupos: [grupo(1)] }),
+      ),
+    ).rejects.toThrow(/eventos_publico_valido/);
+    const nove = Array.from({ length: 9 }, (_, i) => grupo(i));
+    await expect(
+      emTransacao(app, orgA, (c) => gravarEvento(c, orgA, { locais: null, grupos: nove })),
+    ).rejects.toThrow(/eventos_publico_curto/);
+  });
+
+  it('o aviso leva os grupos do público', async () => {
+    await emTransacao(app, orgA, (c) =>
+      gravarEvento(c, orgA, {
+        tipo: 'chat.mudou',
+        alvo_tipo: 'conversa',
+        permissao: 'chat.usar',
+        locais: null,
+        contas: null,
+        grupos: [grupo(1), grupo(2)],
+      }),
+    );
+    const [aviso] = await avisosAte(1);
+    expect(JSON.parse(aviso ?? '{}').publico).toEqual({
+      permissao: 'chat.usar',
+      grupos: [grupo(1), grupo(2)],
+    });
+  });
 });

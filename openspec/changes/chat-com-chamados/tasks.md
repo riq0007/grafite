@@ -17,7 +17,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - as listas do banco, com o teste que as compara com o domínio.
 
   Verificar: esses testes, o teste da migration, o lint e o typecheck.
-- [ ] 1.3 As notificações e os eventos (decisões 4 e 6):
+- [x] 1.3 As notificações e os eventos (decisões 4 e 6):
   - a `mensagem`, o `assunto` e a `mensagem_do_chat_id` nas notificações, com o índice;
   - os `grupos` nos eventos, com o CHECK;
   - os `grupos` no `PublicoDoEvento` e no `podeReceber`, que restringem a `permissao`;

@@ -16,7 +16,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { z } from 'zod';
-import { carregarAcesso } from './acesso/acesso.ts';
+import { carregarAcesso, carregarGrupos } from './acesso/acesso.ts';
 import { instalarAcesso } from './acesso/escopo.ts';
 import { exigirModuloLigado } from './acesso/modulos.ts';
 import {
@@ -253,7 +253,11 @@ export async function criarApp({
   // às conexões abertas.
   const distribuidor = criarDistribuidor({
     lerArvore: (orgId) => naOrganizacao(banco, orgId, lerArvore),
-    lerAcesso: (orgId, contaId) => naOrganizacao(banco, orgId, (tx) => carregarAcesso(tx, contaId)),
+    lerAcesso: (orgId, contaId) =>
+      naOrganizacao(banco, orgId, async (tx) => ({
+        acesso: await carregarAcesso(tx, contaId),
+        grupos: await carregarGrupos(tx, contaId),
+      })),
     avisar: (erro) => app.log.warn({ err: erro }, 'falha na distribuição dos eventos'),
   });
   const ouvinte =

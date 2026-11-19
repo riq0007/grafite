@@ -1813,6 +1813,7 @@ export const TIPOS_DE_EVENTO = [
   'software.mudou',
   'chamados.mudaram',
   'ajustes-dos-chamados.mudaram',
+  'chat.mudou',
 ] as const;
 ```
 

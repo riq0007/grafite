@@ -40,6 +40,7 @@ export const TIPOS_DE_EVENTO = [
   'software.mudou',
   'chamados.mudaram',
   'ajustes-dos-chamados.mudaram',
+  'chat.mudou',
 ] as const;
 
 export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
@@ -50,6 +51,8 @@ export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
  * - `permissao`: quem tem a permissão, em algum escopo; com `locais`, só quem a tem no ramo de um
  *   deles (o local de antes e o de depois da mudança), e `null` é o registro sem local, que só a
  *   organização inteira alcança;
+ * - `grupos`: com a `permissao`, só quem também é de um deles, como na equipe do chat, que é do
+ *   grupo dela (change chat-com-chamados, design, decisão 4); com os `locais`, valem os dois;
  * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
  *   design, decisão 13);
  * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
@@ -58,6 +61,7 @@ export interface PublicoDoEvento {
   todas?: boolean;
   permissao?: Permissao;
   locais?: readonly (string | null)[];
+  grupos?: readonly string[];
   permissoes?: readonly Permissao[];
   contas?: readonly string[];
   sessoes?: readonly string[];
@@ -357,7 +361,8 @@ export type TipoComPublicoDado =
   | 'ordens.mudaram'
   | 'metas.mudaram'
   | 'controlid.mudaram'
-  | 'chamados.mudaram';
+  | 'chamados.mudaram'
+  | 'chat.mudou';
 
 /** As ações auditadas cujo evento precisa do público dado por quem grava, como as das pessoas. */
 export type AcaoComPublicoDado = {
@@ -374,8 +379,9 @@ export type AcaoComPublicoDado = {
  * notificações, que são as contas notificadas ou a que leu, o do estoque, que são os locais da
  * movimentação, a origem e o destino, ou o do mínimo, o das solicitações, que são os locais
  * dela, os de antes e os de depois da mudança, o das OS, que é o local guardado na abertura, o
- * das metas, que é quem vê o indicador: os alertas, as OS ou o estoque, e o dos chamados, que são
- * os locais dele, os de antes e os de depois.
+ * das metas, que é quem vê o indicador: os alertas, as OS ou o estoque, o dos chamados, que são
+ * os locais dele, os de antes e os de depois, e o do chat, que são as contas da direta, o grupo da
+ * equipe, o de antes e o de depois, ou quem usa o chat, no canal.
  */
 export function publicoDerivado(
   tipo: TipoDeEvento,
@@ -428,6 +434,7 @@ export function publicoDerivado(
     case 'metas.mudaram':
     case 'controlid.mudaram':
     case 'chamados.mudaram':
+    case 'chat.mudou':
       return null;
   }
 }
@@ -438,6 +445,8 @@ export interface ConexaoQueRecebe {
   contaId: string;
   sessaoId: string;
   acesso: Acesso;
+  /** Os grupos ativos de que a conta é agora, lidos com o acesso (change chat-com-chamados). */
+  grupos: readonly string[];
 }
 
 /** Se a conexão pode receber o evento: a mesma organização e uma das partes do público. */
@@ -447,12 +456,15 @@ export function podeReceber(
   arvore: Pick<ArvoreDeLocais, 'ancestrais'>,
 ): boolean {
   if (evento.orgId !== conexao.orgId) return false;
-  const { todas, permissao, locais, permissoes, contas, sessoes } = evento.publico;
+  const { todas, permissao, locais, grupos, permissoes, contas, sessoes } = evento.publico;
   if (todas) return true;
   if (sessoes?.includes(conexao.sessaoId)) return true;
   if (contas?.includes(conexao.contaId)) return true;
   if (permissoes?.some((chave) => pode(conexao.acesso, chave))) return true;
   if (!permissao) return false;
+  if (grupos !== undefined && !grupos.some((grupoId) => conexao.grupos.includes(grupoId))) {
+    return false;
+  }
   if (locais === undefined) return pode(conexao.acesso, permissao);
   return locais.some((localId) => podeEm(conexao.acesso, permissao, localId, arvore));
 }

@@ -696,6 +696,11 @@ export const eventos = orgScoped(
     /** Os locais dos registros, com `null` para o registro sem local. */
     locais: uuid('locais').array(),
     /**
+     * Com a `permissao`, só quem também é de um dos grupos, como na equipe do chat (change
+     * chat-com-chamados, design, decisão 4).
+     */
+    grupos: uuid('grupos').array(),
+    /**
      * Quem tem uma das permissões, em algum escopo, sem os locais (change chamados-da-ti, design,
      * decisão 13).
      */
@@ -710,11 +715,13 @@ export const eventos = orgScoped(
       'eventos_publico_valido',
       sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
           or ${t.contas} is not null or ${t.sessoes} is not null)
-        and (${t.locais} is null or ${t.permissao} is not null)`,
+        and (${t.locais} is null or ${t.permissao} is not null)
+        and (${t.grupos} is null or ${t.permissao} is not null)`,
     ),
     check(
       'eventos_publico_curto',
       sql`coalesce(cardinality(${t.locais}), 0) <= 8
+        and coalesce(cardinality(${t.grupos}), 0) <= 8
         and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
         and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
@@ -1904,7 +1911,10 @@ export const silenciosDosAtivos = orgScoped(
  * uma linha por conta, com o que a central e o aviso mostram, o alerta de que trata e a leitura.
  * A manutenção diária apaga as de mais de 90 dias, pelo índice do momento. As marcas do envio
  * (change p3c-email-e-push, design, decisão 3) dizem quando ela foi por e-mail, na hora ou no
- * resumo, e quando a entrega decidiu o push dela.
+ * resumo, e quando a entrega decidiu o push dela. A de uma mensagem do chat ou de um chamado
+ * (change chat-com-chamados, design, decisão 6) diz o assunto, `conversa:<id>` ou `chamado:<id>`,
+ * que a leitura da conversa ou do chamado marca como lido, e, no chat, a mensagem de que trata:
+ * a leitura marca só as notificações até a mensagem lida.
  */
 export const notificacoes = orgScoped(
   'notificacoes',
@@ -1916,6 +1926,10 @@ export const notificacoes = orgScoped(
     origem: text('origem').notNull(),
     destino: text('destino'),
     alertaId: uuid('alerta_id'),
+    /** A notificação de uma mensagem, que vai por push qualquer que seja a severidade. */
+    mensagem: boolean('mensagem').notNull().default(false),
+    assunto: text('assunto'),
+    mensagemDoChatId: uuid('mensagem_do_chat_id'),
     criadaEm: momento('criada_em').notNull().defaultNow(),
     lidaEm: momento('lida_em'),
     emailEm: momento('email_em'),
@@ -1932,8 +1946,15 @@ export const notificacoes = orgScoped(
       columns: [t.orgId, t.alertaId],
       foreignColumns: [alertas.orgId, alertas.id],
     }),
+    foreignKey({
+      name: 'notificacoes_mensagem_do_chat_fk',
+      columns: [t.orgId, t.mensagemDoChatId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id],
+    }),
     index('notificacoes_da_conta_idx').on(t.orgId, t.contaId, t.criadaEm.desc(), t.id.desc()),
-    index('notificacoes_nao_lidas_idx').on(t.orgId, t.contaId).where(sql`${t.lidaEm} is null`),
+    index('notificacoes_nao_lidas_idx')
+      .on(t.orgId, t.contaId, t.assunto)
+      .where(sql`${t.lidaEm} is null`),
     index('notificacoes_antigas_idx').on(t.orgId, t.criadaEm),
     index('notificacoes_para_o_resumo_idx')
       .on(t.orgId, t.contaId)
@@ -1951,6 +1972,18 @@ export const notificacoes = orgScoped(
     check(
       'notificacoes_destino_valido',
       sql`${t.destino} is null or (${t.destino} like '/%' and length(${t.destino}) <= 500)`,
+    ),
+    // O assunto leva o id como o banco o devolve, em minúsculas: a leitura o compara por igualdade.
+    check(
+      'notificacoes_assunto_valido',
+      sql`${t.assunto} is null or (length(${t.assunto}) <= 80 and ${t.assunto} ~ '^[a-z-]+:[0-9a-z-]+$')`,
+    ),
+    // A mensagem tem o assunto; a mensagem do chat, o de uma conversa.
+    check(
+      'notificacoes_mensagem_coerente',
+      sql`(not ${t.mensagem} or ${t.assunto} is not null)
+        and (${t.mensagemDoChatId} is null
+          or (${t.mensagem} and ${t.assunto} is not null and ${t.assunto} like 'conversa:%'))`,
     ),
   ],
 );

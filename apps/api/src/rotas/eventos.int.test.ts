@@ -1,6 +1,7 @@
 // A conexão de eventos (spec eventos-em-tempo-real; design do F2c, decisão 11): o GET /api/eventos,
 // só com a sessão que vale, que entrega em até 2 s depois do commit o que a conta pode receber,
-// manda o sinal de vida, não conta como uso da sessão e termina com ela.
+// manda o sinal de vida, não conta como uso da sessão e termina com ela. Os grupos da conta, que a
+// equipe do chat pede (change chat-com-chamados), são lidos na abertura.
 import { contas, naOrganizacao, sessoes } from '@grafite/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -12,13 +13,16 @@ import {
   atribuir,
   clienteDaApi,
   criarConta,
+  criarGrupo,
   criarLocal,
   criarOrganizacao,
   criarPerfil,
   criarPessoa,
   type Entrada,
+  incluirNoGrupo,
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
+import { registrarEvento } from '../eventos/saida.ts';
 
 const host = 'grafite.eventos.local';
 const MINUTO = 60_000;
@@ -44,6 +48,7 @@ beforeAll(async () => {
   const daAna = await criarConta(api, org, { usuario: 'ana', nome: 'Ana Souza' });
   await atribuir(api, org, { perfilId: administrador, contaId: daAna.id });
   const doBruno = await criarConta(api, org, { usuario: 'bruno', nome: 'Bruno Costa' });
+  ids.bruno = doBruno.id;
   await atribuir(api, org, { perfilId: leitura, contaId: doBruno.id, localId: ids.jundiai });
   ana = await cliente.entrar('ana');
   bruno = await cliente.entrar('bruno');
@@ -136,6 +141,29 @@ describe('GET /eventos', () => {
       .filter((m) => m.evento === 'pessoas.mudaram')
       .map((m) => (m.dados as { alvo: { id: string } }).alvo.id);
     expect(alvos).toEqual([joao]);
+  });
+
+  // A permissão do chat chega na tarefa das permissões; aqui vale a das pessoas.
+  it('o evento com os grupos vai só a quem tem a permissão e é de um deles', async () => {
+    const suporte = await criarGrupo(api, org, { nome: 'Suporte' });
+    await incluirNoGrupo(api, org, { grupoId: suporte, contaId: ids.bruno ?? '' });
+    const doBruno = await eventosDe(bruno);
+    const daAna = await eventosDe(ana);
+    const gravar = (evento: Parameters<typeof registrarEvento>[1]) =>
+      naOrganizacao(api.banco, org, (tx) => registrarEvento(tx, evento));
+    await gravar({
+      tipo: 'chat.mudou',
+      alvo: { tipo: 'conversa', id: suporte },
+      publico: { permissao: 'pessoas.ver', grupos: [suporte] },
+    });
+    // Os eventos saem na ordem: quando o seguinte chega, o da equipe já teria chegado.
+    await gravar({ tipo: 'padroes.mudaram', alvo: null, publico: { todas: true } });
+    for (const fluxo of [doBruno, daAna]) {
+      await vi.waitFor(() => expect(tipos(fluxo)).toContain('padroes.mudaram'), { timeout: 2000 });
+    }
+    expect(tipos(doBruno)).toContain('chat.mudou');
+    // A administradora tem a permissão, mas não é do grupo.
+    expect(tipos(daAna)).not.toContain('chat.mudou');
   });
 
   it('manda o sinal de vida', async () => {
