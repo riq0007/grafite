@@ -81,6 +81,11 @@ export const OrdemDeServico = z
         pessoa: z.object({ id: z.uuid(), nome: z.string() }),
       })
       .nullable(),
+    /**
+     * O chamado de que ela nasceu ("Virar OS"), a toda conta que vê a OS, com o `abrir` só para quem
+     * vê o chamado; nulo sem ele ou com o módulo Chamados desligado.
+     */
+    chamado: z.object({ numero: z.number().int(), abrir: z.boolean() }).nullable(),
     problema: z.string(),
     fornecedor: Fornecedor.nullable(),
     osDoFornecedor: z.string().nullable(),

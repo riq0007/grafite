@@ -1,0 +1,352 @@
+/*
+ * As peças da prévia do colaborador (change chamados-da-ti, design, decisão 16), no visual da aba
+ * (r3-19, m01 e m05) em tamanho de prévia, com as cores da aba (--cor-aba-*) e o miolo neutro. Os
+ * raios vêm dos tokens: a trilha, o "Trocar", o bloco de quem pede e os selos são cápsulas, a exceção
+ * nomeada do ANTISLOP (seção 15); a moldura e os tipos ficam no raio do dock, o maior da escala; e o
+ * visto e o avatar são redondos.
+ */
+.tela {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  overflow: hidden;
+  border: 2px solid var(--cor-aba-contorno);
+  border-radius: var(--raio-dock);
+  background-color: var(--cor-superficie-elevada);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}
+
+.faixa {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+.alto {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.passoDaTrilha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+/* As pílulas no fundo 2 da aba; a atual, com as cores trocadas. */
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--esp-8);
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-aba-fundo-2);
+  white-space: nowrap;
+}
+
+.passoDaTrilha[aria-current] .pilula {
+  background-color: var(--cor-aba-texto);
+  color: var(--cor-aba-fundo-2);
+}
+
+.passo {
+  margin-inline-start: auto;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.quem {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-1) var(--esp-1) var(--esp-1) var(--esp-2);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-aba-bloco);
+  font-size: var(--texto-corpo);
+}
+
+.quem b {
+  font-weight: var(--peso-forte);
+}
+
+.trocar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--altura-controle);
+  margin-inline-start: auto;
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-aba-texto);
+  border-radius: var(--raio-capsula);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--peso-forte);
+  outline: none;
+}
+
+.trocar:hover {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.trocar:focus-visible {
+  outline: 2px solid var(--cor-aba-texto);
+  outline-offset: 2px;
+}
+
+.miolo {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-3);
+  min-width: 0;
+  padding: var(--esp-3) var(--esp-4) var(--esp-4);
+}
+
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: 0 var(--esp-4) var(--esp-3);
+  font-size: var(--texto-rotulo);
+}
+
+.acaoDoRodape {
+  margin-inline-start: auto;
+}
+
+/*
+ * O botão da aba, os dois do `ch3-aba.css`, em cápsula, a exceção nomeada do ANTISLOP (seção 15),
+ * como as pílulas da trilha: o de contorno, na linha forte, com o ícone na cor do contorno da aba; e
+ * o cheio, de 40 px, na cor da aba, da ação do rodapé.
+ */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1.5px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  background-color: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+  outline: none;
+}
+
+.botao > svg {
+  flex: none;
+  color: var(--cor-aba-contorno);
+}
+
+.botao:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.botao:active {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.botao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.botao[data-cheio] {
+  min-height: var(--esp-10);
+  padding: 0 var(--esp-4) 0 var(--esp-5);
+  border-color: var(--cor-aba-fundo);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+.botao[data-cheio] > svg {
+  color: inherit;
+}
+
+.botao[data-cheio]:hover,
+.botao[data-cheio]:active {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.grade {
+  display: grid;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.pergunta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.pergunta small {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+}
+
+.semTipos {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto-2);
+}
+
+.tipos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada cartão mede a largura dele: o nome desce um passo de texto quando o cartão estreita. */
+.item {
+  container-type: inline-size;
+  display: grid;
+  min-width: 0;
+}
+
+.tipo {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--esp-1);
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-1) var(--esp-2);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-dock);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  outline: none;
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/*
+ * Num cartão mais estreito que o da prévia a 1440 (89 px), como a 1366 (83 px), o nome desce um passo;
+ * no mais estreito, como a 1280 (76 px), mais um, com metade do respiro dos lados, e o "Computador"
+ * cabe inteiro. Só o que não cabe nem assim quebra no meio.
+ */
+@container (width < 88px) {
+  .tipo {
+    font-size: var(--texto-rotulo);
+  }
+}
+
+@container (width < 80px) {
+  .tipo {
+    padding-inline: calc(var(--esp-1) / 2);
+    font-size: var(--texto-legenda);
+  }
+}
+
+.tipo[data-marca="novo"] {
+  border-style: dashed;
+  border-color: var(--cor-aba-contorno);
+}
+
+/* O escolhido guarda a borda na cor da aba, como o cartão escolhido do formulário. */
+button.tipo:not([data-escolhido]):hover {
+  border-color: var(--cor-texto-2);
+}
+
+button.tipo:active {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+button.tipo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.tipo[data-escolhido] {
+  border-color: var(--cor-aba-fundo);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+.atalho {
+  position: absolute;
+  inset-block-start: var(--esp-1);
+  inset-inline-start: var(--esp-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+}
+
+.marca {
+  position: absolute;
+  inset-block-start: var(--esp-1);
+  inset-inline-end: var(--esp-1);
+  padding: 0 var(--esp-2);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-aba-atencao);
+  color: var(--cor-aba-sobre-atencao);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+}
+
+.vistoDoTipo {
+  position: absolute;
+  inset-block-start: var(--esp-1);
+  inset-inline-end: var(--esp-1);
+  display: grid;
+  place-items: center;
+  width: var(--esp-4);
+  height: var(--esp-4);
+  border-radius: 50%;
+  background-color: var(--cor-aba-texto);
+  color: var(--cor-aba-fundo);
+}
+
+.icone {
+  display: grid;
+  color: var(--cor-aba-contorno);
+}
+
+.tipo[data-escolhido] .icone {
+  color: inherit;
+}
+
+.frase {
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+  line-height: 1.3;
+}

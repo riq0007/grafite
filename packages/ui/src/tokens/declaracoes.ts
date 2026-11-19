@@ -61,6 +61,14 @@ export function coresDosDados(tema: Tema): Declaracoes {
   ];
 }
 
+/** As cores da aba dos chamados, todas no `--cor-aba-*`. */
+export function coresDaAba(tema: Tema): Declaracoes {
+  return Object.entries(tema.aba).map(([nome, cor]): [string, string] => [
+    `--cor-aba-${kebab(nome)}`,
+    cor,
+  ]);
+}
+
 export function coresDoDestaque(cores: DestaqueGerado): Declaracoes {
   return Object.entries(cores).map(([nome, valor]) => [`--cor-${kebab(nome)}`, valor]);
 }

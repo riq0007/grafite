@@ -1,0 +1,364 @@
+/*
+ * A lista dos prazos (m05, m06 e m12): a cabeça das colunas, as faixas dos grupos e as linhas, numa
+ * grade de quatro colunas: o número, o chamado, a trilha com a escala e o prazo em texto. O respiro
+ * da primeira coluna e das faixas vem de quem a põe (`--respiro`). A tabela mede a si mesma: abaixo
+ * da largura de cada forma, a grade perde a trilha e a cabeça perde a escala.
+ */
+.tabela {
+  container: tabela-dos-prazos / inline-size;
+}
+
+.tabela[data-forma="inteira"] {
+  --colunas-da-lista: 76px minmax(240px, 1fr) minmax(300px, 1.6fr) 180px;
+}
+
+/* A compacta, a do painel aberto, com as colunas do m06. */
+.tabela[data-forma="compacta"] {
+  --colunas-da-lista: 72px minmax(300px, 1.25fr) minmax(190px, 1fr) 176px;
+}
+
+/* A do Início, com as colunas do m12; as linhas de 38 px e o apoio do grupo vão no fim do arquivo. */
+.tabela[data-forma="inicio"] {
+  --colunas-da-lista: 72px minmax(0, 320px) minmax(110px, 1fr) 176px;
+}
+
+.lista {
+  display: grid;
+  align-content: start;
+}
+
+/* A cabeça das colunas, em versal pequena, que fica no alto quando a lista rola. */
+.cabecaDaLista {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: var(--colunas-da-lista);
+  border-bottom: 1px solid var(--cor-linha-forte);
+  background: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cabecaDaLista > span {
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.cabecaDaLista > span:first-child {
+  padding-left: var(--respiro);
+}
+
+.escala {
+  position: relative;
+  min-height: 30px;
+  padding: 0;
+}
+
+.cabecaDaLista > .escala {
+  padding: 0;
+}
+
+.escala > span {
+  position: absolute;
+  top: 50%;
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.escala > span[data-agora] {
+  color: var(--cor-texto);
+}
+
+.cabecaDoPrazo {
+  text-align: right;
+}
+
+/* A faixa do grupo: o título em peso forte e o apoio; a cor só no estourado e no até 2 h. */
+.faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--esp-3);
+  padding: calc(var(--esp-1) * 1.25) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+  background: var(--cor-superficie-2);
+}
+
+.grupo[data-grupo="estourado"] .faixa,
+.grupo[data-grupo="ate-2-horas"] .faixa {
+  padding-left: calc(var(--respiro) - 4px);
+  border-left: 4px solid var(--cor-critico-forte);
+}
+
+.grupo[data-grupo="ate-2-horas"] .faixa {
+  border-left-color: var(--cor-atencao-forte);
+}
+
+.faixa :is(h2, h3) {
+  margin: 0;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.faixa p {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+}
+
+.linhas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A linha do chamado, o botão do painel ou o link do chamado: a grade das colunas, de 40 px. */
+.linha {
+  display: grid;
+  grid-template-columns: var(--colunas-da-lista);
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--cor-linha);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  outline: none;
+}
+
+/* A camada do hover vai por cima do fundo, também o da linha escolhida. */
+.linha:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.linha:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.linha > span {
+  min-width: 0;
+  padding: 0 var(--esp-3);
+}
+
+.linha > .numero {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding-left: var(--respiro);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A linha do painel aberto: o fundo da superfície e a marca do destaque no número, como no m06. */
+.linha[aria-expanded="true"] {
+  background-color: var(--cor-superficie);
+}
+
+.linha[aria-expanded="true"] > .numero {
+  box-shadow: inset 3px 0 0 var(--cor-destaque);
+}
+
+.chamado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  font-size: var(--texto-dado);
+}
+
+.tituloEQuem {
+  display: grid;
+  min-width: 0;
+}
+
+.tituloEQuem > b,
+.tituloEQuem > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tituloEQuem > b {
+  font-weight: var(--peso-forte);
+}
+
+.tituloEQuem > span {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  line-height: 1.25;
+}
+
+/*
+ * A trilha: a grade de 2 em 2 h, a linha do agora por cima de tudo e a barra, sem o respiro das
+ * outras colunas, para casar com a escala da cabeça.
+ */
+.linha > .trilha {
+  position: relative;
+  align-self: stretch;
+  padding: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(100% / var(--intervalos) - 1px),
+    var(--cor-linha) calc(100% / var(--intervalos) - 1px) calc(100% / var(--intervalos))
+  );
+}
+
+.linha > .trilha[data-sem-barra] {
+  background: none;
+}
+
+.trilha::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--agora);
+  z-index: 2;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--cor-texto);
+}
+
+.semContagem {
+  position: absolute;
+  top: 50%;
+  left: var(--esp-3);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.gasto,
+.resta,
+.estouro {
+  position: absolute;
+  top: 50%;
+  height: 12px;
+  margin-top: -6px;
+}
+
+.gasto {
+  border-radius: var(--raio-capsula) 0 0 var(--raio-capsula);
+  background: var(--cor-texto-2);
+}
+
+.resta {
+  border-radius: 0 var(--raio-capsula) var(--raio-capsula) 0;
+  background: color-mix(in srgb, var(--cor-texto-2) 35%, transparent);
+}
+
+.gasto[data-tom="atencao"] {
+  background: var(--cor-atencao);
+}
+
+.resta[data-tom="atencao"] {
+  background: color-mix(in srgb, var(--cor-atencao) 35%, transparent);
+}
+
+.gasto[data-tom="critico"] {
+  background: var(--cor-critico-forte);
+}
+
+.estouro {
+  box-sizing: border-box;
+  border-block: 1px solid var(--cor-critico-forte);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cor-critico-forte) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+/* A marca do prazo do tipo, mais alta que a barra. */
+.marca {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 3px;
+  height: 24px;
+  margin: -12px 0 0 -1px;
+  border-radius: var(--raio-capsula);
+  background: var(--cor-texto);
+}
+
+.marca[data-tom="atencao"] {
+  background: var(--cor-atencao);
+}
+
+.marca[data-tom="critico"] {
+  background: var(--cor-critico);
+}
+
+/* O prazo depois do fim da escala: a seta na borda. */
+.alem {
+  position: absolute;
+  top: 50%;
+  right: var(--esp-2);
+  z-index: 1;
+  display: inline-flex;
+  color: var(--cor-texto);
+  transform: translateY(-50%);
+}
+
+.linha > .prazo {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* A do Início, como no m12: as linhas de 38 px e o apoio do grupo na ponta direita da faixa. */
+.tabela[data-forma="inicio"] .linha {
+  min-height: 38px;
+}
+
+.tabela[data-forma="inicio"] .faixa p {
+  margin-left: auto;
+}
+
+/*
+ * Na tabela estreita, sem a escala e sem as barras: o prazo em texto diz o estado. A tabela não
+ * consulta a si mesma: a troca das colunas vai na .lista, dentro dela. Cada forma tem o seu limite:
+ * a compacta, de colunas menores, fica com as barras até os 760 px, e a do Início, até os 600 px.
+ */
+@container tabela-dos-prazos (width < 860px) {
+  .tabela[data-forma="inteira"] .lista {
+    --colunas-da-lista: 76px minmax(0, 1fr) auto;
+  }
+
+  .tabela[data-forma="inteira"] :is(.escala, .linha > .trilha) {
+    display: none;
+  }
+}
+
+@container tabela-dos-prazos (width < 760px) {
+  .tabela[data-forma="compacta"] .lista {
+    --colunas-da-lista: 72px minmax(0, 1fr) auto;
+  }
+
+  .tabela[data-forma="compacta"] :is(.escala, .linha > .trilha) {
+    display: none;
+  }
+}
+
+@container tabela-dos-prazos (width < 600px) {
+  .tabela[data-forma="inicio"] .lista {
+    --colunas-da-lista: 72px minmax(0, 1fr) auto;
+  }
+
+  .tabela[data-forma="inicio"] :is(.escala, .linha > .trilha) {
+    display: none;
+  }
+}

@@ -1,0 +1,416 @@
+/*
+ * Quem está com o quê (m01): a raiz pede a janela inteira (`data-janela-inteira`) e vai até as
+ * bordas, por cima do respiro da janela; o cabeçalho é uma faixa de borda a borda, e as colunas
+ * enchem o resto da altura, com o pé de cada uma no fim dela.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+.tela > [data-cabecalho-da-pagina] {
+  padding: var(--esp-4) var(--respiro);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.carregando,
+.falha {
+  margin: var(--esp-4) var(--respiro);
+}
+
+.carregando {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/*
+ * A dica do alto, com a mão (m01); no arraste, o chamado no ar (m02). Ela fala do mouse e some sem
+ * ele.
+ */
+.dica {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  margin: 0;
+}
+
+.dica > svg,
+.forteDaDica,
+.numeroDaDica {
+  flex: none;
+}
+
+.textoDaDica {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--peso-normal);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forteDaDica {
+  font-weight: var(--peso-forte);
+}
+
+/* O número em mono, como o `.num` dos mockups. */
+.numeroDaDica {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: none) {
+  .dica {
+    display: none;
+  }
+}
+
+/* No arraste, o cursor de segurar em toda a tela, e nenhum texto se seleciona. */
+.tela[data-arrastando],
+.tela[data-arrastando] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--respiro) 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A falha de uma releitura, acima das colunas da última leitura, com o "Tentar de novo" ao lado. */
+.falhaAoReler {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-3) var(--respiro) 0;
+  font-size: var(--texto-dado);
+}
+
+.falhaAoReler > svg {
+  flex: none;
+  color: var(--cor-critico);
+}
+
+.falhaAoReler > p {
+  flex: 1 1 24ch;
+  min-width: 0;
+  margin: 0;
+}
+
+/*
+ * A triagem, um pouco mais larga, e uma coluna por pessoa. Abaixo de 200 px (a triagem, 232 px), as
+ * colunas rolam de lado em vez de estreitar.
+ */
+.colunas {
+  display: grid;
+  flex: 1;
+  grid-auto-flow: column;
+  grid-template-columns: minmax(232px, 1.15fr);
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: var(--esp-3);
+  min-height: 0;
+  padding: var(--esp-4);
+  overflow-x: auto;
+}
+
+/* No Início, só as pessoas, sem o respiro: o bloco do Início dá o dele. */
+.colunas[data-sem-triagem] {
+  grid-template-columns: none;
+  padding: 0;
+}
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+  padding: var(--esp-2);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-afundada);
+}
+
+/* A triagem, tracejada e sem o fundo, como o `.col.sem` do mockup. */
+.coluna[data-triagem] {
+  border-style: dashed;
+  border-color: var(--cor-linha-forte);
+  background: transparent;
+}
+
+/* A coluna sob o quadrado no ar que o recebe, como a `.col.alvo` do m02. */
+.coluna[data-alvo-ativo] {
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 0 1px var(--cor-destaque);
+}
+
+/* A área de soltar, no alto da coluna que recebe (a `.solta` do m02), com a frase embaixo. */
+.solta {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: var(--esp-2);
+  min-height: 168px;
+  margin: 0;
+  padding: var(--esp-3);
+  border: 1px dashed var(--cor-destaque);
+  border-radius: var(--raio-controle);
+  background: var(--cor-hover);
+  font-size: var(--texto-dado);
+  line-height: 1.3;
+}
+
+.solta > svg {
+  flex: none;
+  margin-bottom: 1px;
+}
+
+/* A coluna que não recebe o quadrado no ar diz por quê, no alto, durante todo o arraste. */
+.recusa {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px dashed var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+}
+
+.recusa > svg {
+  flex: none;
+}
+
+/* O aviso no lugar de origem, embaixo dos quadrados (o `.col .aviso` do m02). */
+.avisoDaOrigem {
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+}
+
+.cabecalho {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-2);
+}
+
+.quem {
+  min-width: 0;
+}
+
+.nome {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.naoAtendeMais {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+}
+
+.linha {
+  display: block;
+}
+
+/* A barra de carga, um pedaço por chamado até a carga cheia; os cheios, na cor do texto. */
+.carga {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: calc(var(--esp-1) - 1px);
+}
+
+/* O raio do rótulo, que o navegador limita à meia altura do pedaço, e reto na base zero. */
+.carga > span {
+  flex: 1;
+  height: 6px;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-rotulo);
+  background: var(--cor-superficie-2);
+}
+
+.carga > [data-cheio] {
+  border-color: var(--cor-texto);
+  background: var(--cor-texto);
+}
+
+/* O pedaço que o quadrado no ar ocupa, tracejado, na coluna que o recebe. */
+.carga > [data-novo] {
+  border-style: dashed;
+  border-color: var(--cor-destaque);
+  background: transparent;
+}
+
+/* Dois quadrados por linha, como no m01, quando cabem dois de 112 px; senão, um por linha. */
+.quadrados {
+  display: grid;
+  grid-template-columns: repeat(
+      auto-fill,
+      minmax(max(112px, calc((100% - var(--esp-2)) / 2)), 1fr)
+    );
+  align-content: start;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* O item da lista: o quadrado o enche, e a prévia, fixa na janela, fica fora do fluxo dele. */
+.item {
+  display: grid;
+  min-width: 0;
+}
+
+/*
+ * O quadrado de 92 de altura: o ícone e o número, o título numa linha e o prazo. Com o prazo em duas
+ * linhas, ele cresce. O respiro é de 7 px dos quatro lados (o m01 tem 8 dos lados): o "vence em 2 h"
+ * tem 95,2 px, e o quadrado de 113 px do m01 dá 95 por dentro. O mockup não deixa o prazo quebrar;
+ * aqui ele quebra antes da medida, e o pixel a mais o deixa numa linha sempre que cabem dois por linha.
+ */
+.quadrado {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--esp-1);
+  min-width: 0;
+  min-height: 92px;
+  padding: calc(var(--esp-2) - 1px);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* A camada do hover vai por cima da superfície, que continua opaca sobre o fundo da coluna. */
+.quadrado[tabindex]:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+/* O quadrado da prévia aberta, como o `.qd.aberto` do m01: a borda e o anel no destaque. */
+.quadrado[data-aberto] {
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 0 1px var(--cor-destaque);
+}
+
+/* O quadrado que se arrasta não seleciona o texto no aperto. */
+.quadrado[data-arrastavel] {
+  user-select: none;
+}
+
+/* O lugar do quadrado no ar, tracejado e apagado (o `.qd.fantasma` do m02). */
+.quadrado[data-no-ar] {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+/*
+ * O quadrado que entra numa coluna depois da primeira leitura desce para o lugar em 200 ms e aparece
+ * junto; com o movimento reduzido, só aparece.
+ */
+.quadrado[data-entrando] {
+  animation:
+    descerNaColuna var(--dur-deslocamento) var(--curva-padrao),
+    aparecerNaColuna var(--dur-opacidade) var(--curva-padrao);
+}
+
+@keyframes descerNaColuna {
+  from {
+    transform: translateY(calc(-1 * var(--esp-2)));
+  }
+}
+
+@keyframes aparecerNaColuna {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * O quadrado no ar (o `.qd.voando` do m02): fixo na janela, segue o ponteiro, inclinado e com a
+ * sombra sobreposta, sem tapar o alvo sob o ponteiro.
+ */
+.voando {
+  position: fixed;
+  z-index: 2;
+  margin: 0;
+  border-color: var(--cor-destaque);
+  background: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+  transform: rotate(-2.5deg);
+  pointer-events: none;
+}
+
+.quadrado:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.alto {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+.numero {
+  margin-left: auto;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-rotulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.titulo {
+  align-self: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semDetalhes {
+  grid-row: 2 / -1;
+  align-self: center;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.pe {
+  margin: auto 0 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-top: 1px solid var(--cor-linha);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

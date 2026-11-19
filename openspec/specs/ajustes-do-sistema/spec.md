@@ -33,7 +33,8 @@ A seção Aparência SHALL ajustar:
 - a cor de destaque (azul, verde, laranja e grafite), e a Personalizada;
 - os cantos, com o raio base de 0 a 24 px;
 - a densidade (compacta, normal e confortável);
-- a barra de rolagem, com "Ao rolar" e "Sempre visível" (spec componentes-base, "Barra de rolagem própria").
+- a barra de rolagem, com "Ao rolar" e "Sempre visível" (spec componentes-base, "Barra de rolagem própria");
+- as conversas, com "No meio" e "Nos cantos" (spec preferencias-da-interface, "Forma das conversas nas preferências").
 
 Com o tema Personalizado, a seção SHALL mostrar:
 - o tom, escuro ou claro;
@@ -46,6 +47,8 @@ Com o destaque Personalizado, a seção SHALL mostrar a matiz e a intensidade, e
 A seção SHALL mostrar a razão de contraste do texto, do texto secundário e do destaque contra a superfície, no tema e no destaque que valem, como "Texto 15,2:1".
 
 A escolha da barra de rolagem SHALL explicar cada opção em texto: "Ao rolar: aparece com o ponteiro sobre a área ou enquanto ela rola." e "Sempre visível: fica à vista em toda área que rola.". Onde vale a barra do sistema, a seção SHALL dizer "Neste aparelho vale a barra de rolagem do sistema.", e a escolha SHALL continuar valendo nos outros aparelhos.
+
+A escolha das conversas SHALL explicar cada opção em texto: "No meio: as mensagens numa coluna, no meio da conversa." e "Nos cantos: a mensagem de quem pede à esquerda e a da TI à direita, cada uma num balão.". Ela SHALL valer na hora, sem salvar, na conversa que estiver aberta.
 
 #### Scenario: Trocar o destaque
 - **WHEN** o usuário escolhe o destaque verde
@@ -74,6 +77,14 @@ A escolha da barra de rolagem SHALL explicar cada opção em texto: "Ao rolar: a
 #### Scenario: Barra de rolagem pela busca
 - **WHEN** o usuário digita "rolagem" na busca e escolhe "Barra de rolagem"
 - **THEN** a seção Aparência abre, com o foco na escolha da barra
+
+#### Scenario: Escolher Nos cantos
+- **WHEN** Ana escolhe "Nos cantos" nas conversas, com o #1041 aberto numa janela
+- **THEN** a conversa do #1041 passa na hora a mostrar as mensagens de Fernanda à esquerda e as de Ana à direita, sem botão de salvar
+
+#### Scenario: Conversas pela busca
+- **WHEN** o usuário digita "conversas" na busca e escolhe "Conversas"
+- **THEN** a seção Aparência abre, com o foco na escolha das conversas
 
 ### Requirement: Seção Dock
 

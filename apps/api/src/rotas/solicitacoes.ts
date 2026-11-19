@@ -4,9 +4,7 @@
 // atende, o contador das impressoras e a sugestão de cada item, e grava a solicitação, a auditoria e
 // o evento.
 import { type Banco, naOrganizacao } from '@grafite/db';
-import type { DadosDaSolicitacao } from '@grafite/domain';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import type { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { modulosDesligados } from '../acesso/modulos.ts';
 import { lerArvore } from '../arvore.ts';
@@ -38,7 +36,7 @@ import {
   Solicitacao,
   SolicitacoesDoAtivo,
 } from '../solicitacoes/esquemas.ts';
-import { alterar, registrar } from '../solicitacoes/registro.ts';
+import { alterar, comoDados, registrar } from '../solicitacoes/registro.ts';
 import {
   cancelar,
   concluir,
@@ -53,41 +51,6 @@ const PROBLEMAS_DA_SOLICITACAO = {
   409: RespostaDeProblema,
   ...PROBLEMAS_DO_ACESSO,
 };
-
-/** O pedido da API como o domínio o confere, com o vazio como nulo. */
-function comoDados(pedido: z.infer<typeof PedidoDaSolicitacao>): DadosDaSolicitacao {
-  const comum = { pessoa: pedido.pessoa ?? null, observacao: pedido.observacao ?? null };
-  switch (pedido.tipo) {
-    case 'toner':
-      return {
-        tipo: 'toner',
-        ...comum,
-        impressoras: pedido.impressoras ?? [],
-        itens: (pedido.itens ?? []).map((item) => ({
-          impressora: item.impressora ?? null,
-          cor: item.cor ?? null,
-          quantidade: item.quantidade ?? null,
-          consumivel: item.consumivel ?? null,
-        })),
-      };
-    case 'conserto':
-      return {
-        tipo: 'conserto',
-        ...comum,
-        ativo: pedido.ativo ?? null,
-        defeito: pedido.defeito ?? null,
-      };
-    case 'equipamento':
-      return {
-        tipo: 'equipamento',
-        ...comum,
-        tipoDeAtivo: pedido.tipoDeAtivo ?? null,
-        quantidade: pedido.quantidade ?? null,
-        motivo: pedido.motivo ?? null,
-        local: pedido.local ?? null,
-      };
-  }
-}
 
 export const rotasDasSolicitacoes: FastifyPluginAsyncZod<{
   banco: Banco;

@@ -22,7 +22,8 @@ const SEM_ACESSO: Acesso = { pode: () => false, permissoes: [] };
  */
 const SO_NA_OPERADORA: readonly Permissao[] = ['backup.administrar'];
 
-function acessoDe({ permissoes }: AcessoDaSessao, operaOServidor: boolean): Acesso {
+/** O acesso de uma sessão que vale, fora do React, como na primeira carga do roteador. */
+export function acessoDe({ permissoes }: AcessoDaSessao, operaOServidor: boolean): Acesso {
   const chaves = new Set<string>(
     permissoes
       .filter((permissao) => permissao.organizacao || permissao.locais.length > 0)

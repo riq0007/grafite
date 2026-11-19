@@ -58,6 +58,46 @@ describe('os rótulos das situações', () => {
   });
 });
 
+describe('as cores da aba', () => {
+  it('o "Trocar" sob o ponteiro é medido sobre o bloco, e o escolhido apertado, sobre o fundo', () => {
+    const cores = {
+      pressionado: 'rgba(238, 239, 241, 0.1)',
+      abaFundo: '#004f9d',
+      abaBloco: '#0064b6',
+    };
+    const fundoDoPar = (uso: string) => PARES.find((p) => p.uso === uso)?.fundo(cores);
+    expect(fundoDoPar('texto da aba sobre o bloco da aba pressionado (Trocar)')).toEqual({
+      camada: 'rgba(238, 239, 241, 0.1)',
+      sobre: '#0064b6',
+    });
+    expect(
+      fundoDoPar('texto da aba sobre o fundo da aba pressionado (tipo, cartão e chip escolhidos)'),
+    ).toEqual({ camada: 'rgba(238, 239, 241, 0.1)', sobre: '#004f9d' });
+  });
+
+  it('cada combinação traz as cores da aba do tema', () => {
+    const cores = coresDaCombinacao('papel', 'azul');
+    expect(cores.abaFundo).toBe(temas.papel.aba.fundo);
+    expect(cores.abaFundo2).toBe(temas.papel.aba.fundo2);
+    expect(cores.abaContorno).toBe(temas.papel.aba.contorno);
+    expect(cores.abaSobreAtencao).toBe(temas.papel.aba.sobreAtencao);
+  });
+
+  it('entram nos pares: o texto sobre os fundos e o bloco, soltos e pressionados, o selo e o contorno', () => {
+    expect(PARES.map((par) => par.uso).filter((uso) => uso.includes('aba'))).toEqual([
+      'texto da aba sobre o fundo da aba (faixa, número e escolhido)',
+      'texto da aba sobre o fundo da aba pressionado (tipo, cartão e chip escolhidos)',
+      'texto da aba sobre o fundo 2 da aba (pílula da trilha)',
+      'texto da aba sobre o bloco da aba (quem pede)',
+      'texto da aba sobre o bloco da aba pressionado (Trocar)',
+      'texto sobre a atenção da aba (selo)',
+      'contorno da aba contra a superfície',
+      'contorno da aba contra a superfície 2 (ícone do tipo e "Nenhum")',
+      'contorno da aba contra a superfície elevada (moldura)',
+    ]);
+  });
+});
+
 describe('as 24 combinações de tema × destaque', () => {
   it('passam em todos os pares de uso', () => {
     const reprovados = avaliarTudo()

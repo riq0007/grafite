@@ -1,3 +1,4 @@
+import { descreverFuso } from '@grafite/ui';
 import { describe, expect, it } from 'vitest';
 import { camposDoDetalhe, type Registro, textoDoAlvo } from './registro.ts';
 
@@ -490,6 +491,440 @@ describe('o registro das ordens de serviço na auditoria', () => {
     ).toEqual([
       { rotulo: 'Situação', valor: 'Aberta → Em atendimento' },
       { rotulo: 'Ordem de serviço', valor: '— → 12' },
+    ]);
+  });
+});
+
+// Os registros dos chamados (change chamados-da-ti, design, "Os registros dos chamados na
+// Auditoria (tarefa 5.28)"): sem JSON e sem chave crua, nos termos das telas dos chamados.
+describe('o registro dos chamados na auditoria', () => {
+  const doChamado = (extras: Partial<Registro>): Registro => ({
+    id: 'r9',
+    momento: '2026-11-19T12:00:00.000Z',
+    acao: 'chamado.aberto',
+    rotulo: 'Chamado aberto',
+    ator: { tipo: 'conta', id: 'c-ana', nome: 'Ana Souza', usuario: 'ana.souza' },
+    alvo: { tipo: 'chamado', id: 'ch1', nome: '#1042 · Toner preto', usuario: null },
+    antes: null,
+    depois: null,
+    dados: null,
+    ip: null,
+    codigoDeRastreio: null,
+    ...extras,
+  });
+  const doTipo = (extras: Partial<Registro>) =>
+    doChamado({
+      acao: 'tipo-de-chamado.criado',
+      rotulo: 'Tipo de chamado criado',
+      alvo: { tipo: 'tipo-de-chamado', id: 't1', nome: 'Toner', usuario: null },
+      ...extras,
+    });
+
+  /** O Toner de fábrica, como a visão do tipo que a API grava. */
+  const toner = {
+    nome: 'Toner',
+    icone: 'gota',
+    frase: 'A impressora está sem toner',
+    situacao: 'em-uso',
+    ordem: 1,
+    prazo: {
+      modo: 'corridas',
+      resposta: { valor: 30, unidade: 'min' },
+      resolucao: { valor: 8, unidade: 'h' },
+    },
+    atendePorPadrao: null,
+    semNinguem: 'triagem',
+    podeVirarOs: false,
+    geraSolicitacao: 'toner',
+    tipoDeAtivoDoEquipamento: null,
+    pedeOAtivo: true,
+    apareceParaOColaborador: true,
+    soATiAbre: false,
+  };
+
+  /** Um campo do formulário com o que a gravação guarda. */
+  const campo = (id: string, rotulo: string, extras: Record<string, unknown> = {}) => ({
+    id,
+    tipo: 'texto-curto',
+    rotulo,
+    nomeNoResumo: null,
+    obrigatorio: false,
+    soDaTi: false,
+    apagarSeSumir: false,
+    opcoes: [],
+    tiposDeAtivo: [],
+    condicao: [],
+    ...extras,
+  });
+  const PRETO = { id: 'preto', texto: 'Preto' };
+  const CIANO = { id: 'ciano', texto: 'Ciano' };
+
+  it('os alvos pelo tipo e pelo nome; os sem id, só pelo tipo', () => {
+    const alvo = (tipo: string, nome: string | null = null) => ({
+      tipo,
+      id: nome ? 'x1' : null,
+      nome,
+      usuario: null,
+    });
+    expect(textoDoAlvo(alvo('chamado', '#1042 · Toner preto'))).toBe(
+      'Chamado: #1042 · Toner preto',
+    );
+    expect(textoDoAlvo(alvo('tipo-de-chamado', 'Toner'))).toBe('Tipo de chamado: Toner');
+    expect(textoDoAlvo(alvo('resposta-pronta', 'Pedir o print'))).toBe(
+      'Resposta pronta: Pedir o print',
+    );
+    expect(textoDoAlvo(alvo('tipos-de-chamado'))).toBe('Ordem dos tipos de chamado');
+    expect(textoDoAlvo(alvo('respostas-prontas'))).toBe('Ordem das respostas prontas');
+    expect(textoDoAlvo(alvo('horario-da-ti'))).toBe('Horário da TI');
+  });
+
+  it('Chamado aberto: o número com o "#", a pessoa, a situação pelo texto e quem atende', () => {
+    const registro = doChamado({
+      depois: {
+        numero: 1042,
+        tipo: 'Toner',
+        titulo: 'Toner preto',
+        pessoa: 'Marina Lopes',
+        situacao: 'em-atendimento',
+        responsavel: 'Ana Souza',
+        ativo: 'HP LaserJet M404 · PAT-00139',
+        solicitacao: 1005,
+      },
+    });
+    expect(doRegistro(registro)).toEqual([
+      { rotulo: 'Número', valor: '#1042' },
+      { rotulo: 'Tipo', valor: 'Toner' },
+      { rotulo: 'Título', valor: 'Toner preto' },
+      { rotulo: 'Pessoa', valor: 'Marina Lopes' },
+      { rotulo: 'Situação', valor: 'Em atendimento' },
+      { rotulo: 'Quem atende', valor: 'Ana Souza' },
+      { rotulo: 'Ativo', valor: 'HP LaserJet M404 · PAT-00139' },
+      { rotulo: 'Solicitação', valor: '1005' },
+    ]);
+  });
+
+  it('as chaves na ordem das telas, e não na do banco, que guarda o JSON com as curtas primeiro', () => {
+    // A ordem em que o jsonb devolve as chaves: pelo tamanho e, no mesmo tamanho, pelo alfabeto.
+    const doBanco = (visao: Record<string, unknown>) =>
+      Object.fromEntries(
+        Object.entries(visao).sort(
+          ([uma], [outra]) => uma.length - outra.length || (uma < outra ? -1 : 1),
+        ),
+      );
+    const rotulos = (registro: Registro) => doRegistro(registro).map(({ rotulo }) => rotulo);
+    expect(
+      rotulos(
+        doChamado({
+          depois: doBanco({
+            numero: 4,
+            tipo: 'Impressora',
+            titulo: 'Impressora manchando',
+            pessoa: 'Marina Lopes',
+            situacao: 'triagem',
+            ativo: 'Impressora 131 · PAT-00131',
+          }),
+        }),
+      ),
+    ).toEqual(['Número', 'Tipo', 'Título', 'Pessoa', 'Situação', 'Ativo']);
+    expect(rotulos(doTipo({ depois: doBanco({ ...toner, duplicadoDe: 'Toner' }) }))).toEqual([
+      'Nome',
+      'Ícone',
+      'Frase',
+      'Situação',
+      'Posição na lista',
+      'Prazo',
+      'Quem atende por padrão',
+      'Se não houver ninguém',
+      'Pode virar OS',
+      'Gera uma Solicitação',
+      'Tipo de ativo do equipamento',
+      'Pede o ativo',
+      'Aparece para o colaborador',
+      'Só a TI abre',
+      'Duplicado de',
+    ]);
+  });
+
+  it('as ações: a situação e quem atende, a OS, o toner e o título, em texto', () => {
+    expect(
+      doRegistro(
+        doChamado({
+          acao: 'chamado.assumido',
+          antes: { situacao: 'triagem' },
+          depois: { situacao: 'em-atendimento', responsavel: 'Ana Souza' },
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Situação', valor: 'Na triagem → Em atendimento' },
+      { rotulo: 'Quem atende', valor: '— → Ana Souza' },
+    ]);
+    expect(
+      doRegistro(
+        doChamado({
+          acao: 'chamado.aguardando',
+          antes: { situacao: 'em-atendimento', responsavel: 'Ana Souza' },
+          depois: { situacao: 'aguardando', responsavel: 'Ana Souza' },
+        }),
+      ),
+    ).toEqual([{ rotulo: 'Situação', valor: 'Em atendimento → Aguardando o colaborador' }]);
+    expect(doRegistro(doChamado({ acao: 'chamado.virou-os', depois: { os: 1013 } }))).toEqual([
+      { rotulo: 'Ordem de serviço', valor: '1013' },
+    ]);
+    expect(
+      doRegistro(
+        doChamado({ acao: 'chamado.pediu-toner', depois: { solicitacao: 5, como: 'juntou' } }),
+      ),
+    ).toEqual([
+      { rotulo: 'Solicitação', valor: '5' },
+      { rotulo: 'Pedido', valor: 'Juntou-se à solicitação pendente' },
+    ]);
+    expect(
+      doRegistro(
+        doChamado({ acao: 'chamado.pediu-toner', depois: { solicitacao: 6, como: 'pediu' } }),
+      ).at(-1),
+    ).toEqual({ rotulo: 'Pedido', valor: 'Solicitação nova' });
+    expect(
+      doRegistro(
+        doChamado({
+          acao: 'chamado.titulo-trocado',
+          antes: { titulo: 'Toner' },
+          depois: { titulo: 'Toner preto' },
+        }),
+      ),
+    ).toEqual([{ rotulo: 'Título', valor: 'Toner → Toner preto' }]);
+  });
+
+  it('Tipo de fábrica criado: cada parte do tipo pelo nome da tela, com os valores em texto', () => {
+    expect(doRegistro(doTipo({ depois: toner }))).toEqual([
+      { rotulo: 'Nome', valor: 'Toner' },
+      { rotulo: 'Ícone', valor: 'Gota' },
+      { rotulo: 'Frase', valor: 'A impressora está sem toner' },
+      { rotulo: 'Situação', valor: 'Em uso' },
+      { rotulo: 'Posição na lista', valor: '1' },
+      { rotulo: 'Prazo', valor: 'Responde em 30 min e resolve em 8 h, em horas corridas' },
+      { rotulo: 'Quem atende por padrão', valor: 'Ninguém' },
+      { rotulo: 'Se não houver ninguém', valor: 'Cai na triagem' },
+      { rotulo: 'Pode virar OS', valor: 'Não' },
+      { rotulo: 'Gera uma Solicitação', valor: 'Toner' },
+      { rotulo: 'Tipo de ativo do equipamento', valor: '—' },
+      { rotulo: 'Pede o ativo', valor: 'Sim' },
+      { rotulo: 'Aparece para o colaborador', valor: 'Sim' },
+      { rotulo: 'Só a TI abre', valor: 'Não' },
+    ]);
+  });
+
+  it('o tipo alterado e o duplicado: só o que mudou, com o antes → depois', () => {
+    const rascunho = {
+      ...toner,
+      nome: 'Toner colorido',
+      situacao: 'rascunho',
+      ordem: 10,
+      geraSolicitacao: 'nao',
+    };
+    expect(
+      doRegistro(
+        doTipo({
+          acao: 'tipo-de-chamado.alterado',
+          antes: rascunho,
+          depois: {
+            ...rascunho,
+            situacao: 'em-uso',
+            atendePorPadrao: 'Ana Souza',
+            semNinguem: 'fica',
+            geraSolicitacao: 'equipamento',
+            tipoDeAtivoDoEquipamento: 'Notebook',
+            prazo: { ...toner.prazo, modo: 'horario' },
+          },
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Situação', valor: 'Rascunho → Em uso' },
+      {
+        rotulo: 'Prazo',
+        valor:
+          'Responde em 30 min e resolve em 8 h, em horas corridas → Responde em 30 min e resolve em 8 h, no horário da TI',
+      },
+      { rotulo: 'Quem atende por padrão', valor: 'Ninguém → Ana Souza' },
+      {
+        rotulo: 'Se não houver ninguém',
+        valor: 'Cai na triagem → Fica com quem atende por padrão mesmo assim',
+      },
+      { rotulo: 'Gera uma Solicitação', valor: 'Não → Equipamento' },
+      { rotulo: 'Tipo de ativo do equipamento', valor: '— → Notebook' },
+    ]);
+    expect(doRegistro(doTipo({ depois: { ...rascunho, duplicadoDe: 'Toner' } })).at(-1)).toEqual({
+      rotulo: 'Duplicado de',
+      valor: 'Toner',
+    });
+  });
+
+  it('Formulário salvo: campo a campo pelo rótulo, acrescentado, tirado e mudado, e o título do chamado', () => {
+    const registro = doTipo({
+      acao: 'tipo-de-chamado.formulario-salvo',
+      antes: {
+        formulario: {
+          titulo: { comecaPeloTipo: true, campoId: 'cor' },
+          campos: [
+            campo('cor', 'Qual cor acabou?', { tipo: 'escolha-unica', opcoes: [PRETO, CIANO] }),
+            campo('obs', 'Observação', { tipo: 'texto-longo' }),
+          ],
+        },
+      },
+      depois: {
+        formulario: {
+          titulo: { comecaPeloTipo: false, campoId: 'cor' },
+          campos: [
+            campo('cor', 'Cor do toner', {
+              tipo: 'escolha-unica',
+              obrigatorio: true,
+              opcoes: [PRETO, CIANO, { id: 'magenta', texto: 'Magenta' }],
+            }),
+            campo('foto', 'Foto da impressora', { tipo: 'anexo' }),
+          ],
+        },
+      },
+      dados: { tipo: 'Toner' },
+    });
+    expect(doRegistro(registro)).toEqual([
+      {
+        rotulo: 'Título do chamado',
+        valor: 'O nome do tipo e a resposta de “Qual cor acabou?” → A resposta de “Cor do toner”',
+      },
+      {
+        rotulo: 'Cor do toner',
+        valor: 'Mudado: o rótulo (antes, “Qual cor acabou?”), agora obrigatório e as opções',
+      },
+      { rotulo: 'Foto da impressora', valor: 'Acrescentado: Anexo' },
+      { rotulo: 'Observação', valor: 'Tirado' },
+      { rotulo: 'Tipo', valor: 'Toner' },
+    ]);
+  });
+
+  it('o formulário com a ordem mudada, o que cada campo muda e o rótulo repetido com o "(2)"', () => {
+    const local = campo('local', 'Onde?', { tipo: 'local' });
+    const pessoa = campo('pessoa', 'Para quem?', { tipo: 'pessoa', soDaTi: true });
+    const registro = doTipo({
+      acao: 'tipo-de-chamado.formulario-salvo',
+      antes: {
+        formulario: { titulo: { comecaPeloTipo: false, campoId: null }, campos: [local, pessoa] },
+      },
+      depois: {
+        formulario: {
+          titulo: { comecaPeloTipo: true, campoId: null },
+          campos: [
+            { ...pessoa, soDaTi: false, apagarSeSumir: true, nomeNoResumo: 'Pessoa' },
+            { ...local, tipo: 'ativo', tiposDeAtivo: ['impressora'], condicao: [{ campoId: 'x' }] },
+            campo('obs1', 'Observação'),
+            campo('obs2', 'Observação'),
+          ],
+        },
+      },
+    });
+    expect(doRegistro(registro)).toEqual([
+      {
+        rotulo: 'Para quem?',
+        valor:
+          'Mudado: o nome no resumo, agora a pessoa também vê e agora apaga a resposta se o campo sumir',
+      },
+      {
+        rotulo: 'Onde?',
+        valor: 'Mudado: o tipo (antes, Local), os tipos de ativo e a condição',
+      },
+      { rotulo: 'Observação', valor: 'Acrescentado: Texto curto' },
+      { rotulo: 'Observação (2)', valor: 'Acrescentado: Texto curto' },
+      { rotulo: 'Ordem dos campos', valor: 'Onde?, Para quem? → Para quem?, Onde?' },
+    ]);
+  });
+
+  it('as respostas prontas: a espera, os tipos (sem nenhum, todos) e a ordem', () => {
+    const resposta = (extras: Partial<Registro>) =>
+      doChamado({
+        acao: 'resposta-pronta.criada',
+        alvo: { tipo: 'resposta-pronta', id: 'rp1', nome: 'Pedir o print', usuario: null },
+        ...extras,
+      });
+    expect(
+      doRegistro(
+        resposta({
+          depois: {
+            rotulo: 'Pedir o print',
+            texto: 'Oi, {nome}! Pode mandar o print?',
+            esperaAResposta: true,
+            tipos: [],
+          },
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Rótulo', valor: 'Pedir o print' },
+      { rotulo: 'Texto', valor: 'Oi, {nome}! Pode mandar o print?' },
+      { rotulo: 'Espera a resposta', valor: 'Sim' },
+      { rotulo: 'Tipos', valor: 'Todos os tipos' },
+    ]);
+    expect(
+      doRegistro(
+        resposta({
+          acao: 'resposta-pronta.alterada',
+          antes: { rotulo: 'Pedir o print', texto: 'a', esperaAResposta: true, tipos: [] },
+          depois: {
+            rotulo: 'Pedir o print',
+            texto: 'a',
+            esperaAResposta: false,
+            tipos: ['Toner', 'Impressora'],
+          },
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Espera a resposta', valor: 'Sim → Não' },
+      { rotulo: 'Tipos', valor: 'Todos os tipos → Toner, Impressora' },
+    ]);
+    expect(
+      doRegistro(
+        resposta({
+          acao: 'respostas-prontas.ordenadas',
+          alvo: { tipo: 'respostas-prontas', id: null, nome: null, usuario: null },
+          antes: { ordem: ['Pedir o print', 'Pedir o caminho'] },
+          depois: { ordem: ['Pedir o caminho', 'Pedir o print'] },
+        }),
+      ),
+    ).toEqual([
+      {
+        rotulo: 'Ordem',
+        valor: 'Pedir o print, Pedir o caminho → Pedir o caminho, Pedir o print',
+      },
+    ]);
+  });
+
+  it('Horário da TI alterado: os dias na frase, as horas, o fuso pelo nome e os relógios da troca', () => {
+    const agora = new Date();
+    const registro = doChamado({
+      acao: 'horario-da-ti.alterado',
+      alvo: { tipo: 'horario-da-ti', id: null, nome: null, usuario: null },
+      antes: {
+        dias: [1, 2, 3, 4, 5],
+        inicio: 480,
+        fim: 1080,
+        fuso: 'America/Sao_Paulo',
+        cargaCheia: 5,
+      },
+      depois: {
+        dias: [1, 2, 3, 4, 5, 6],
+        inicio: 480,
+        fim: 1020,
+        fuso: 'America/Manaus',
+        cargaCheia: 6,
+      },
+      dados: { relogiosFechados: 3 },
+    });
+    const fuso = (id: string) => descreverFuso(id, agora).rotulo;
+    expect(doRegistro(registro)).toEqual([
+      { rotulo: 'Dias', valor: 'De segunda a sexta → De segunda a sábado' },
+      { rotulo: 'Fim', valor: '18:00 → 17:00' },
+      {
+        rotulo: 'Fuso horário',
+        valor: `${fuso('America/Sao_Paulo')} → ${fuso('America/Manaus')}`,
+      },
+      { rotulo: 'Carga cheia', valor: '5 → 6' },
+      { rotulo: 'Chamados que contavam no horário da TI', valor: '3' },
     ]);
   });
 });

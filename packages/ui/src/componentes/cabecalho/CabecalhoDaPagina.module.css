@@ -43,8 +43,17 @@
 }
 
 /* O título da janela traz a margem de quando vem sozinho; aqui, o espaço é o do cabeçalho. */
-.textos > [data-titulo-da-janela] {
+.textos > [data-titulo-da-janela],
+.linhaComVoltar > [data-titulo-da-janela] {
   margin: 0;
+}
+
+/* A seta de voltar e o título, na mesma linha, com o detalhe embaixo, a partir da seta. */
+.linhaComVoltar {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
 }
 
 .linhaDoTitulo {
@@ -60,6 +69,13 @@
   font-size: var(--texto-dado);
 }
 
+/* O apoio, ao lado do título, como a dica de "Quem está com o quê" (m01). */
+.apoio {
+  min-width: 0;
+  margin-inline-start: var(--esp-1);
+  font-size: var(--texto-dado);
+}
+
 /* As ações juntas, à direita, também quando quebram para a linha de baixo. */
 .acoes {
   display: flex;
@@ -67,5 +83,41 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--esp-2);
+  margin-inline-start: auto;
+}
+
+/* A trilha, numa linha só dela, em cima do título e perto dele, como no m03 dos chamados. */
+.trilha {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.cabecalho:has(> .trilha) {
+  row-gap: var(--esp-2);
+}
+
+/*
+ * Com o quadro, como o do prazo do chamado (m03): o título e as ações numa coluna, com as ações
+ * embaixo do título, a partir da esquerda, e o quadro à direita deles, no meio da altura. O título
+ * fica no alto, no mesmo lugar de quando a tela carrega, também quando o quadro é mais alto que ele.
+ * Quando a largura não comporta os dois, o quadro desce para baixo das ações, ainda à direita.
+ */
+.principal {
+  display: flex;
+  flex: 1 1 24rem;
+  flex-direction: column;
+  align-self: flex-start;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.principal > .acoes {
+  justify-content: flex-start;
+  margin-inline-start: 0;
+}
+
+.quadro {
+  flex: 0 1 auto;
+  min-width: 0;
   margin-inline-start: auto;
 }

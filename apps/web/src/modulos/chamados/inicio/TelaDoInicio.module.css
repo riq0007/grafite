@@ -1,0 +1,312 @@
+/*
+ * O Início dos chamados (m12): a raiz pede a janela inteira (`data-janela-inteira`), dentro do
+ * respiro dela; embaixo do cabeçalho, as colunas à esquerda, que enchem a altura, com o pé no fim,
+ * e, à direita, a triagem no alto e os prazos, que enchem o resto. A largura da direita sai da do
+ * Início: a de 740 px do m12 a 1920, a de 460 px a 1440, em que o m12 não cabe, e, abaixo, a direita
+ * desce para baixo das colunas.
+ */
+.tela {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+  container: inicio / inline-size;
+}
+
+/* A saudação no tamanho do m12. */
+.tela > [data-cabecalho-da-pagina] [data-titulo-da-janela] {
+  font-size: var(--texto-titulo-grande);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+/* No arraste, o cursor de segurar em toda a tela, e nenhum texto se seleciona. */
+.tela[data-arrastando],
+.tela[data-arrastando] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* A contagem, na cor do texto e no corpo, e o aviso do alcance embaixo, no secundário. */
+.contagem {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.contagem > p {
+  margin: 0;
+}
+
+.contagem > p:first-child {
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.contagem b {
+  font-weight: var(--peso-forte);
+}
+
+.alcance {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.alcance > svg {
+  flex: none;
+}
+
+.carregando {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A falha de uma releitura, acima do que a última leitura trouxe, com o "Tentar de novo" ao lado. */
+.falhaAoReler {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  font-size: var(--texto-dado);
+}
+
+.falhaAoReler > svg {
+  flex: none;
+  color: var(--cor-critico);
+}
+
+.falhaAoReler > p {
+  flex: 1 1 24ch;
+  min-width: 0;
+  margin: 0;
+}
+
+.meio {
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-columns: minmax(0, 1fr) 740px;
+  gap: var(--esp-4);
+  min-height: 0;
+}
+
+/* As pessoas: a cabeça do bloco e as colunas do quadro, que enchem a altura. */
+.pessoas {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cabecaDoBloco,
+.cabecaDaCaixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-1) var(--esp-3);
+}
+
+.cabecaDoBloco {
+  padding-bottom: var(--esp-3);
+}
+
+.cabecaDoBloco h2,
+.cabecaDaCaixa h2 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  outline: none;
+}
+
+.cabecaDaCaixa h2:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-controle);
+}
+
+/* Os abertos das colunas e a dica do quadro, à direita do título. */
+.apoioDoBloco {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+  margin-left: auto;
+  font-size: var(--texto-rotulo);
+}
+
+.cabecaDaCaixa > p {
+  margin: 0 0 0 auto;
+  font-size: var(--texto-rotulo);
+}
+
+.direita {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+/* A caixa da triagem e a dos prazos, como as `.caixa` do m12. */
+.caixa {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  overflow: clip;
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-base);
+  background: var(--cor-superficie-afundada);
+}
+
+.cabecaDaCaixa {
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.vazioDaCaixa {
+  margin: 0;
+  padding: var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A triagem, tracejada e sem o fundo, como a coluna dela no quadro. */
+.triagem {
+  border-style: dashed;
+  border-color: var(--cor-linha-forte);
+  background: transparent;
+  container: triagem-do-inicio / inline-size;
+}
+
+.linhasDaTriagem {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A linha: o ícone, o título e quem pediu, o prazo e os botões, numa faixa. */
+.linhaDaTriagem {
+  display: grid;
+  grid-template-areas: "icone texto prazo acoes";
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+}
+
+.linhaDaTriagem:first-child {
+  border-top: 0;
+}
+
+.linhaDaTriagem > :first-child {
+  grid-area: icone;
+}
+
+.textoDaTriagem {
+  display: grid;
+  grid-area: texto;
+  min-width: 0;
+}
+
+.tituloDaTriagem,
+.quemDaTriagem {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tituloDaTriagem {
+  color: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  text-decoration: none;
+  outline: none;
+}
+
+.tituloDaTriagem:hover {
+  text-decoration: underline;
+}
+
+.tituloDaTriagem:focus-visible {
+  border-radius: var(--raio-rotulo);
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.quemDaTriagem {
+  font-size: var(--texto-rotulo);
+}
+
+.prazoDaTriagem {
+  grid-area: prazo;
+  white-space: nowrap;
+}
+
+.acoesDaTriagem {
+  display: flex;
+  grid-area: acoes;
+  gap: var(--esp-2);
+}
+
+/* O número que a lista ainda não trouxe, só com ele, como o quadrado do quadro. */
+.semDetalhes {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--esp-3);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Na caixa estreita, os botões descem para uma faixa embaixo do título. */
+@container triagem-do-inicio (width < 600px) {
+  .linhaDaTriagem {
+    grid-template-areas:
+      "icone texto prazo"
+      ". acoes acoes";
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+  }
+}
+
+/* Os prazos, com o respiro do m12 na primeira coluna da lista, e o pé com os parados. */
+.prazos {
+  --respiro: var(--esp-6);
+
+  grid-template-rows: auto 1fr auto;
+}
+
+.corpoDosPrazos {
+  min-width: 0;
+}
+
+.peDosPrazos {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+  font-size: var(--texto-rotulo);
+}
+
+.peDosPrazos > svg {
+  flex: none;
+}
+
+/* A 1440, a direita mais estreita, em que as linhas da triagem quebram e os prazos ficam sem barras. */
+@container inicio (width < 1600px) {
+  .meio {
+    grid-template-columns: minmax(0, 1fr) 460px;
+  }
+}
+
+/* Abaixo, a direita desce para baixo das colunas, na largura inteira. */
+@container inicio (width < 1200px) {
+  .meio {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+}

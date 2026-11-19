@@ -18,6 +18,7 @@ import { type ReactNode, useState } from 'react';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { VerNaAuditoria } from '../../administracao/auditoria/VerNaAuditoria.tsx';
 import { SemPermissao } from '../../administracao/SemPermissao.tsx';
+import { DosChamados } from '../DosChamados.tsx';
 import { lidoEmCurto, rotuloDoAtivo } from '../estoque/apresentacao.ts';
 import estilos from '../Operacao.module.css';
 import { useAbrirOS } from '../ordens/useAbrirOS.ts';
@@ -97,7 +98,16 @@ function ConteudoDaFicha() {
       <CabecalhoDaPagina
         titulo={`Solicitação ${ficha.numero}`}
         selos={<RotuloDeSituacao situacao={situacao.tipo}>{situacao.texto}</RotuloDeSituacao>}
-        detalhe={ROTULOS_DOS_TIPOS_DE_SOLICITACAO[ficha.tipo]}
+        detalhe={
+          ficha.chamados.length > 0 ? (
+            <>
+              {ROTULOS_DOS_TIPOS_DE_SOLICITACAO[ficha.tipo]} ·{' '}
+              <DosChamados chamados={ficha.chamados} />
+            </>
+          ) : (
+            ROTULOS_DOS_TIPOS_DE_SOLICITACAO[ficha.tipo]
+          )
+        }
         acoes={
           acoes.length > 0 &&
           acoes.map((acao, indice) => (

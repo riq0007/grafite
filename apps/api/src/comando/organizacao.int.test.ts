@@ -10,7 +10,9 @@ import {
   perfis,
   pessoas,
   regrasDeAlerta,
+  tiposDeChamado,
 } from '@grafite/db';
+import { TIPOS_DE_CHAMADO_DE_FABRICA } from '@grafite/domain';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type ApiDeTeste, abrirApi } from '../../test/integracao.ts';
@@ -110,6 +112,47 @@ describe('grafite organizacao criar', () => {
         'Mídia',
       ].map((nome, posicao) => ({ nome, ordem: posicao + 1 })),
     );
+    // E os 9 tipos de chamado de fábrica, Em uso e na ordem, com o formulário de cada um (change
+    // chamados-da-ti, design, decisão 6).
+    const tipos = await naOrganizacao(api.banco, org ?? '', (tx) =>
+      tx
+        .select({
+          id: tiposDeChamado.id,
+          nome: tiposDeChamado.nome,
+          situacao: tiposDeChamado.situacao,
+          ordem: tiposDeChamado.ordem,
+          modo: tiposDeChamado.modo,
+          resolucaoValor: tiposDeChamado.resolucaoValor,
+          resolucaoUnidade: tiposDeChamado.resolucaoUnidade,
+          formulario: tiposDeChamado.formulario,
+        })
+        .from(tiposDeChamado)
+        .orderBy(tiposDeChamado.ordem),
+    );
+    expect(tipos.map(({ nome, situacao, ordem }) => ({ nome, situacao, ordem }))).toEqual(
+      [
+        'Toner',
+        'Computador',
+        'Impressora',
+        'Acesso e senha',
+        'Software',
+        'Rede e internet',
+        'Telefone',
+        'Outro',
+        'Troca de equipamento',
+      ].map((nome, posicao) => ({ nome, situacao: 'em-uso', ordem: posicao + 1 })),
+    );
+    expect(tipos.map(({ formulario }) => formulario)).toEqual(
+      TIPOS_DE_CHAMADO_DE_FABRICA.map(({ formulario }) => formulario),
+    );
+    // A Impressora do cenário da spec: no terceiro lugar, em 8 h no horário da TI.
+    expect(tipos[2]).toMatchObject({
+      nome: 'Impressora',
+      ordem: 3,
+      modo: 'horario',
+      resolucaoValor: 8,
+      resolucaoUnidade: 'h',
+    });
     expect(pessoa).toMatchObject({
       nome: 'Ana Souza',
       email: 'ana@empresa.com',
@@ -148,7 +191,26 @@ describe('grafite organizacao criar', () => {
       'atribuicao.criada',
       ...Array.from({ length: 8 }, () => 'regra-de-alerta.criada'),
       ...Array.from({ length: 7 }, () => 'categoria-de-software.criada'),
+      ...Array.from({ length: 9 }, () => 'tipo-de-chamado.criado'),
     ]);
+    // A criação de cada tipo de fábrica, na ordem, com a visão do tipo das gravações da API: tudo
+    // o que a lista do domínio põe, fora o formulário, Em uso e na posição dele.
+    expect(
+      registros
+        .filter((registro) => registro.acao === 'tipo-de-chamado.criado')
+        .map(({ alvoTipo, alvoId, antes, depois }) => ({ alvoTipo, alvoId, antes, depois })),
+    ).toEqual(
+      tipos.map(({ id, ordem }, posicao) => {
+        const { formulario: _formulario, ...deFabrica } =
+          TIPOS_DE_CHAMADO_DE_FABRICA[posicao] ?? {};
+        return {
+          alvoTipo: 'tipo-de-chamado',
+          alvoId: id,
+          antes: null,
+          depois: { ...deFabrica, situacao: 'em-uso', ordem },
+        };
+      }),
+    );
     for (const registro of registros) {
       expect(registro).toMatchObject({
         atorTipo: 'sistema',

@@ -183,6 +183,34 @@ describe('a ficha da OS', () => {
     expect(screen.getByText('Dell Assistência · OS DL-5521')).toBeTruthy();
   });
 
+  // Spec ordens-de-servico, "OS pelo chamado" (change chamados-da-ti, design, "Os chamados na OS
+  // e na solicitação (tarefa 5.27)").
+  it('OS do chamado: a linha do cabeçalho diz "Do chamado #1042", com o link para quem vê o chamado', async () => {
+    const { servidor } = servidorDaFicha([ordem(12, { chamado: { numero: 1042, abrir: true } })]);
+    abrir('/operacao/ordens/12', servidor, ATENDE);
+    const cabecalho = (await titulo()).closest('[data-cabecalho-da-pagina]');
+    expect(cabecalho?.textContent).toContain('NB-0031 · Dell Latitude 5440 · Do chamado #1042');
+    const link = screen.getByRole('link', { name: 'Chamado #1042' });
+    expect(link.textContent).toBe('#1042');
+    expect(link.getAttribute('href')).toBe('/chamados/1042');
+  });
+
+  it('sem ver o chamado, o número fica em texto, sem o link; a OS sem chamado não diz nada', async () => {
+    const { servidor } = servidorDaFicha([
+      ordem(12, { chamado: { numero: 1042, abrir: false } }),
+      ordem(13),
+    ]);
+    abrir('/operacao/ordens/12', servidor, VE);
+    const cabecalho = (await titulo()).closest('[data-cabecalho-da-pagina]');
+    expect(cabecalho?.textContent).toContain('NB-0031 · Dell Latitude 5440 · Do chamado #1042');
+    expect(screen.queryByRole('link', { name: /#1042/ })).toBeNull();
+    cleanup();
+    abrir('/operacao/ordens/13', servidor, VE);
+    const daOutra = await screen.findByRole('heading', { level: 1, name: /OS 13/ });
+    await screen.findByRole('region', { name: 'Histórico' });
+    expect(daOutra.closest('[data-cabecalho-da-pagina]')?.textContent).not.toContain('chamado');
+  });
+
   it('o histórico diz a reabertura e o encerramento sem resolver', async () => {
     const base = ordem(12);
     const [abertura] = base.historico;

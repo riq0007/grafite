@@ -40,17 +40,22 @@ export type ConsumivelCompativel = z.infer<typeof ConsumivelCompativel>;
 /** Onde a conta vê o estoque: a organização inteira, os locais do ramo, ou nada. */
 export type AlcanceDoEstoque = 'organizacao' | ReadonlySet<string> | null;
 
-/** O saldo de cada consumível, somado nos locais do alcance. */
+/**
+ * O saldo e o mínimo de cada consumível, somados nos locais do alcance, e se algum desses locais está
+ * abaixo do mínimo, como as telas do estoque o marcam (o `abaixo_desde` do saldo).
+ */
 async function saldosNoAlcance(
   tx: Transacao,
   consumivelIds: readonly string[],
   estoque: 'organizacao' | ReadonlySet<string>,
-): Promise<Map<string, number>> {
+): Promise<Map<string, { saldo: number; minimo: number; abaixo: boolean }>> {
   if (consumivelIds.length === 0) return new Map();
   const linhas = await tx
     .select({
       consumivelId: saldosDoEstoque.consumivelId,
       saldo: sql<number>`sum(${saldosDoEstoque.saldo})::int`,
+      minimo: sql<number>`sum(${saldosDoEstoque.minimo})::int`,
+      abaixo: sql<boolean>`bool_or(${saldosDoEstoque.abaixoDesde} is not null)`,
     })
     .from(saldosDoEstoque)
     .where(
@@ -60,7 +65,12 @@ async function saldosNoAlcance(
       ),
     )
     .groupBy(saldosDoEstoque.consumivelId);
-  return new Map(linhas.map(({ consumivelId, saldo }) => [consumivelId, saldo]));
+  return new Map(
+    linhas.map(({ consumivelId, saldo, minimo, abaixo }) => [
+      consumivelId,
+      { saldo, minimo, abaixo },
+    ]),
+  );
 }
 
 /** Os consumíveis ativos que têm o modelo, pelo tipo e pelo código, com o saldo do alcance. */
@@ -90,8 +100,45 @@ export async function compativeisDoModelo(
           estoque,
         );
   return ordenarConsumiveis(
-    linhas.map((linha) => ({ ...linha, saldo: saldos ? (saldos.get(linha.id) ?? 0) : null })),
+    linhas.map((linha) => ({
+      ...linha,
+      saldo: saldos ? (saldos.get(linha.id)?.saldo ?? 0) : null,
+    })),
   );
+}
+
+/**
+ * Um compatível com o saldo e o mínimo somados nos locais em que a conta vê o estoque, e se algum
+ * deles está abaixo do mínimo.
+ */
+export type CompativelComOMinimo = Omit<ConsumivelCompativel, 'saldo'> & {
+  saldo: number;
+  minimo: number;
+  abaixo: boolean;
+};
+
+/**
+ * Os compatíveis do modelo, na ordem do domínio, com o saldo e o mínimo somados no alcance do
+ * estoque e o "abaixo" de cada local, para o resumo do ativo no chamado (change chamados-da-ti,
+ * design, decisão 5): a tela diz "3 de 6, abaixo do mínimo".
+ */
+export async function compativeisComOMinimo(
+  tx: Transacao,
+  modeloId: string,
+  estoque: 'organizacao' | ReadonlySet<string>,
+): Promise<CompativelComOMinimo[]> {
+  const compativeis = await compativeisDoModelo(tx, modeloId);
+  const saldos = await saldosNoAlcance(
+    tx,
+    compativeis.map(({ id }) => id),
+    estoque,
+  );
+  return compativeis.map((compativel) => ({
+    ...compativel,
+    saldo: saldos.get(compativel.id)?.saldo ?? 0,
+    minimo: saldos.get(compativel.id)?.minimo ?? 0,
+    abaixo: saldos.get(compativel.id)?.abaixo ?? false,
+  }));
 }
 
 /** O tipo liga a capacidade dos consumíveis compatíveis. */

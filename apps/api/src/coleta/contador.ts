@@ -5,11 +5,14 @@
 import { estadoDosAtivos, type Transacao } from '@grafite/db';
 import { and, eq } from 'drizzle-orm';
 
-/** O total de páginas lido e o momento da leitura; nulo sem a leitura válida. */
+/**
+ * O total de páginas lido, o momento da leitura e o item do contador, que a média por mês do resumo
+ * do ativo no chamado segue nos agregados; nulo sem a leitura válida.
+ */
 export async function lerContador(
   tx: Transacao,
   ativoId: string,
-): Promise<{ paginas: number; lidoEm: Date } | null> {
+): Promise<{ paginas: number; lidoEm: Date; item: string } | null> {
   const linhas = await tx
     .select({
       item: estadoDosAtivos.item,
@@ -23,5 +26,5 @@ export async function lerContador(
     );
   const [total] = linhas.sort((a, b) => Number(a.item) - Number(b.item));
   if (total?.situacao !== 'valida' || total.valor === null) return null;
-  return { paginas: Math.round(total.valor), lidoEm: total.momento };
+  return { paginas: Math.round(total.valor), lidoEm: total.momento, item: total.item };
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Printer } from 'lucide-react';
+import { ArrowLeft, Printer } from 'lucide-react';
 import { expect, within } from 'storybook/test';
-import { Icone } from '../../icones/Icone.tsx';
+import { BotaoDeIcone, Icone } from '../../icones/Icone.tsx';
 import { Botao } from '../botao/Botao.tsx';
 import { RotuloDeSituacao } from '../situacao/RotuloDeSituacao.tsx';
 import { CabecalhoDaPagina } from './CabecalhoDaPagina.tsx';
@@ -12,6 +12,9 @@ const meta: Meta = { title: 'Componentes/Cabeçalho da página' };
 export default meta;
 
 type Historia = StoryObj;
+
+/** O número do chamado, montado no texto: "#1041" escrito direto parece uma cor ao verificador. */
+const numero = (valor: number) => `#${valor}`;
 
 /** A ficha de uma OS: o título com o selo, o detalhe embaixo e as ações juntas, à direita. */
 export const FichaDeUmaOrdem: Historia = {
@@ -71,4 +74,133 @@ export const ListaComAcao: Historia = {
       <CabecalhoDaPagina titulo="Pessoas" acoes={<Botao nivel="primario">Nova pessoa</Botao>} />
     </div>
   ),
+};
+
+/**
+ * Com a trilha e o quadro, como o chamado aberto (m03 dos chamados): a trilha em cima, o quadro à
+ * direita do título e das ações, e as ações embaixo do título, a partir da esquerda, com a principal
+ * fechando o grupo.
+ */
+export const ComTrilhaEQuadro: Historia = {
+  render: () => (
+    <div style={{ display: 'grid', gap: 'var(--esp-6)', background: 'var(--cor-superficie)' }}>
+      {(
+        [
+          ['larga', 960],
+          ['estreita', 480],
+          ['sem-acoes', 960],
+        ] as const
+      ).map(([caso, largura]) => (
+        <div key={caso} data-caso={caso} style={{ width: largura, padding: 'var(--esp-4)' }}>
+          <CabecalhoDaPagina
+            trilha={
+              <nav aria-label={`Trilha ${caso}`}>Chamados › Acesso e senha › {numero(1041)}</nav>
+            }
+            titulo={`${numero(1041)} Sem acesso à pasta do Financeiro`}
+            detalhe="Aguardando o colaborador · Fernanda Rocha · Financeiro, 2º andar"
+            quadro={
+              <div data-quadro style={{ display: 'grid', justifyItems: 'end' }}>
+                <span>Prazo do tipo, 4 h, no horário da TI</span>
+                <b>Relógio parado</b>
+                <span>Parou às 09:21 · restam 1 h 44 min</span>
+                {caso === 'sem-acoes' && <span>Resposta atrasada desde 08:30</span>}
+              </div>
+            }
+            acoes={
+              caso !== 'sem-acoes' && (
+                <>
+                  <Botao>Transferir</Botao>
+                  <Botao>Resolver</Botao>
+                  <Botao nivel="primario">Responder</Botao>
+                </>
+              )
+            }
+          />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const caixa = (elemento: Element) => elemento.getBoundingClientRect();
+    const medir = (caso: string) => {
+      const area = canvasElement.querySelector(`[data-caso="${caso}"]`) as HTMLElement;
+      const cabecalho = area.querySelector('[data-cabecalho-da-pagina]') as HTMLElement;
+      const botoes = within(area).queryAllByRole('button');
+      return {
+        cabecalho: caixa(cabecalho),
+        direita:
+          caixa(cabecalho).right - Number.parseFloat(getComputedStyle(cabecalho).paddingRight),
+        trilha: caixa(within(area).getByRole('navigation')),
+        titulo: caixa(within(area).getByRole('heading', { level: 1 })),
+        textos: caixa(within(area).getByRole('heading', { level: 1 }).parentElement as HTMLElement),
+        quadro: caixa(area.querySelector('[data-quadro]') as HTMLElement),
+        primeira: botoes[0] && caixa(botoes[0]),
+        ultima: botoes.at(-1) && caixa(botoes.at(-1) as HTMLElement),
+      };
+    };
+
+    // Na largura que comporta: a trilha em cima, o quadro à direita, encostado na borda, e as ações
+    // embaixo do título, a partir da esquerda, na mesma linha.
+    const larga = medir('larga');
+    const [primeira, ultima] = [larga.primeira as DOMRect, larga.ultima as DOMRect];
+    await expect(larga.trilha.bottom).toBeLessThanOrEqual(larga.titulo.top);
+    await expect(larga.quadro.left).toBeGreaterThan(larga.titulo.right);
+    await expect(Math.abs(larga.quadro.right - larga.direita)).toBeLessThanOrEqual(1);
+    await expect(larga.quadro.top).toBeGreaterThanOrEqual(larga.trilha.bottom);
+    await expect(primeira.top).toBeGreaterThanOrEqual(larga.titulo.bottom);
+    await expect(Math.abs(primeira.left - larga.titulo.left)).toBeLessThanOrEqual(1);
+    await expect(ultima.top).toBe(primeira.top);
+
+    // Na estreita, o quadro desce para baixo das ações, ainda à direita.
+    const estreita = medir('estreita');
+    await expect(estreita.quadro.top).toBeGreaterThanOrEqual((estreita.ultima as DOMRect).bottom);
+    await expect(Math.abs(estreita.quadro.right - estreita.direita)).toBeLessThanOrEqual(1);
+    await expect(
+      Math.abs((estreita.primeira as DOMRect).left - estreita.titulo.left),
+    ).toBeLessThanOrEqual(1);
+
+    // Sem as ações, com o quadro mais alto que o título e o detalhe, o título fica no alto, no mesmo
+    // lugar.
+    const semAcoes = medir('sem-acoes');
+    await expect(semAcoes.quadro.height).toBeGreaterThan(semAcoes.textos.height);
+    await expect(semAcoes.titulo.top - semAcoes.cabecalho.top).toBe(
+      larga.titulo.top - larga.cabecalho.top,
+    );
+  },
+};
+
+/**
+ * A seta de voltar do chamado aberto (change chamados-da-ti, design, "A seta de voltar no chamado
+ * aberto (tarefa 5.32)"): antes do título, na linha dele, e fora do título da janela.
+ */
+export const ComVoltar: Historia = {
+  render: () => (
+    <div style={{ width: 960, padding: 'var(--esp-4)', background: 'var(--cor-superficie)' }}>
+      <CabecalhoDaPagina
+        trilha={<nav aria-label="Trilha">Chamados › Toner › {numero(2)}</nav>}
+        voltar={<BotaoDeIcone icone={ArrowLeft} rotulo="Voltar" />}
+        titulo={`Toner preto ${numero(2)}`}
+        detalhe="Em atendimento · Toner · Ana Souza"
+        acoes={<Botao nivel="primario">Responder</Botao>}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const titulo = tela.getByRole('heading', { level: 1 });
+    const voltar = tela.getByRole('button', { name: 'Voltar' });
+    // O leitor de tela lê o título sem a seta.
+    await expect(titulo.textContent).toBe(`Toner preto ${numero(2)}`);
+    await expect(titulo.contains(voltar)).toBe(false);
+    // A seta vem antes do título, na linha dele, e o detalhe começa embaixo dela.
+    const seta = voltar.getBoundingClientRect();
+    const doTitulo = titulo.getBoundingClientRect();
+    const detalhe = tela.getByText('Em atendimento · Toner · Ana Souza').getBoundingClientRect();
+    await expect(seta.right).toBeLessThanOrEqual(doTitulo.left);
+    await expect(
+      Math.abs(seta.top + seta.height / 2 - (doTitulo.top + doTitulo.height / 2)),
+    ).toBeLessThanOrEqual(2);
+    await expect(detalhe.top).toBeGreaterThanOrEqual(doTitulo.bottom);
+    await expect(Math.abs(detalhe.left - seta.left)).toBeLessThanOrEqual(1);
+  },
 };

@@ -54,6 +54,11 @@
   text-underline-offset: 2px;
 }
 
+/* O texto com as quebras de linha dele, como o problema que o "Virar OS" escreve. */
+.emLinhas {
+  white-space: pre-line;
+}
+
 /* Os fornecedores e os modelos: o título do grupo, os itens e a busca que inclui mais um. */
 .lista {
   display: grid;

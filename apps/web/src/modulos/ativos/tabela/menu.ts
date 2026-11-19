@@ -2,7 +2,7 @@
 // uma linha, "Prévia" e "Copiar linhas" sempre, "Copiar patrimônio" com uma linha que tem
 // patrimônio, com os retornos, e "Imprimir etiqueta" ou "Imprimir etiquetas" (spec
 // etiquetas-de-ativos).
-import { avisar, copiarParaAreaDeTransferencia, type ItemDoMenuDeContexto } from '@grafite/ui';
+import { type AcaoDoMenuDeContexto, avisar, copiarParaAreaDeTransferencia } from '@grafite/ui';
 
 export interface PropsDoMenuDosAtivos {
   /** As linhas do menu, na ordem da tabela: a seleção, ou a linha onde ele abriu. */
@@ -42,7 +42,7 @@ export function itensDoMenuDosAtivos({
   imprimirEtiquetas,
   copiar = copiarParaAreaDeTransferencia,
   origem = window.location.origin,
-}: PropsDoMenuDosAtivos): ItemDoMenuDeContexto[] {
+}: PropsDoMenuDosAtivos): AcaoDoMenuDeContexto[] {
   const [primeira] = chaves;
   if (primeira === undefined) return [];
   const umaSo = chaves.length === 1 ? ativos.get(primeira) : undefined;

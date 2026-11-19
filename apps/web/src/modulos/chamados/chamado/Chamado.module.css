@@ -1,0 +1,224 @@
+/*
+ * O chamado aberto (m03): a raiz pede a janela inteira (`data-janela-inteira`) e vai até as bordas,
+ * por cima do respiro da janela. O cabeçalho da página é uma faixa de borda a borda: a trilha no
+ * alto, o título e os dados do chamado, as ações embaixo, e o quadro do prazo à direita das duas
+ * linhas.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+/*
+ * O chamado carregado fica da altura da janela (`data-janela-inteira="rola-por-dentro"`): o
+ * cabeçalho no alto e, embaixo, a coluna da conversa, com o campo de escrever no pé, e a coluna da
+ * direita, de 370 px (m04). A conversa e a coluna da direita rolam sozinhas.
+ */
+.tela[data-janela-inteira="rola-por-dentro"] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 370px;
+  min-height: 0;
+}
+
+.principal {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Na tela estreita, a coluna da direita desce para baixo do campo de escrever, e o corpo rola até
+ * ela: a conversa e o campo ficam com a altura que sobra, nunca menos de 420 px nem menos que o
+ * campo.
+ */
+@container (width < 900px) {
+  .corpo {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .principal {
+    flex: 1 0 420px;
+    min-height: auto;
+  }
+
+  /*
+   * A conversa não conta no mínimo do .principal: sem isso, a grade dele mede a conversa inteira,
+   * e o corpo rolaria tudo, com o campo no fim da rolagem. O mínimo fica só o campo.
+   */
+  .principal > :first-child {
+    contain: size;
+  }
+}
+
+.tela > [data-cabecalho-da-pagina] {
+  padding: var(--esp-3) var(--respiro);
+}
+
+/*
+ * O número em mono e o título, no tamanho grande do m03. O título que não cabe na linha quebra ao
+ * lado do número, com as linhas de baixo no começo do título, e o número nunca fica sozinho.
+ */
+.tela [data-titulo-da-janela] {
+  display: flex;
+  align-items: baseline;
+  column-gap: var(--esp-3);
+  font-size: var(--texto-titulo-grande);
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.estado {
+  margin: var(--esp-4) var(--respiro);
+}
+
+p.estado {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A trilha: "Chamados › Acesso e senha › #1041". */
+.trilha {
+  font-size: var(--texto-rotulo);
+}
+
+.trilha ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trilha li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.trilha a {
+  border-radius: var(--raio-controle);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.trilha a:hover {
+  text-decoration: underline;
+}
+
+.trilha a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.numero,
+.numeroDoTitulo,
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.numeroDoTitulo {
+  flex: none;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-normal);
+  letter-spacing: 0;
+}
+
+/*
+ * O selo, o tipo, quem pediu e quem atende, no detalhe do cabeçalho, com o texto principal e a 2
+ * passos do título, como no m03.
+ */
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-4);
+  margin-top: var(--esp-1);
+  color: var(--cor-texto);
+}
+
+.tipo,
+.quem {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--esp-1) * 1.5);
+  white-space: nowrap;
+}
+
+.quem b {
+  font-weight: var(--peso-forte);
+}
+
+/* O quadro do prazo, no quadro do cabeçalho, à direita do título e das ações. */
+.prazo {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: var(--cor-superficie-afundada);
+}
+
+.linhaDoPrazo {
+  font-size: var(--texto-rotulo);
+}
+
+.linhaDoPrazo[data-atrasada] {
+  color: var(--cor-atencao);
+  font-weight: var(--peso-forte);
+}
+
+.destaque {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.destaque > svg {
+  color: var(--cor-info);
+}
+
+.prazo[data-marca="atencao"] {
+  border-color: var(--cor-atencao-borda);
+  background: var(--cor-atencao-fundo);
+}
+
+.prazo[data-marca="atencao"] .destaque,
+.prazo[data-marca="atencao"] .destaque > svg {
+  color: var(--cor-atencao);
+}
+
+.prazo[data-marca="critico"] {
+  border-color: var(--cor-critico-borda);
+  background: var(--cor-critico-fundo);
+}
+
+.prazo[data-marca="critico"] .destaque,
+.prazo[data-marca="critico"] .destaque > svg {
+  color: var(--cor-critico);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}

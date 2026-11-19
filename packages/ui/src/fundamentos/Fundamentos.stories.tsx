@@ -207,6 +207,63 @@ export const Dados: Historia = {
   ),
 };
 
+const CORES_DA_ABA: Array<[string, string]> = [
+  ['Fundo', '--cor-aba-fundo'],
+  ['Fundo 2', '--cor-aba-fundo-2'],
+  ['Bloco', '--cor-aba-bloco'],
+  ['Texto', '--cor-aba-texto'],
+  ['Contorno', '--cor-aba-contorno'],
+  ['Atenção', '--cor-aba-atencao'],
+  ['Texto sobre a atenção', '--cor-aba-sobre-atencao'],
+];
+
+/**
+ * As cores e a cápsula da aba dos chamados (change chamados-da-ti, spec design-tokens, "Cores da
+ * aba"), a exceção nomeada do ANTISLOP (seção 15), com cada par em uso, como na tela da aba.
+ */
+export const AbaDosChamados: Historia = {
+  name: 'Aba dos chamados',
+  render: () => (
+    <div className={estilos.pagina}>
+      <section className={estilos.secao}>
+        <Carimbo>Aba dos chamados</Carimbo>
+        <p className={estilos.nota}>
+          A exceção nomeada do ANTISLOP: a aba tem cores próprias, na matiz da informação, e as
+          cápsulas (--raio-capsula). As cores são as mesmas em todos os temas, fora o contorno, que
+          nos temas claros é o próprio fundo.
+        </p>
+        <div className={estilos.grade}>
+          {CORES_DA_ABA.map(([nome, variavel]) => (
+            <Amostra key={variavel} nome={nome} variavel={variavel} />
+          ))}
+        </div>
+      </section>
+      <section className={estilos.secao}>
+        <Carimbo>Em uso</Carimbo>
+        <div className={estilos.molduraDaAba}>
+          <div className={estilos.faixaDaAba}>
+            <span className={estilos.pilulaDaAba}>Tipo</span>
+            <span className={estilos.pilulaDaAba} data-atual="">
+              Detalhes
+            </span>
+            <span className={estilos.quemDaAba}>
+              No nome de Fernanda Rocha
+              <span className={estilos.trocarDaAba}>Trocar</span>
+            </span>
+          </div>
+          <div className={estilos.mioloDaAba}>
+            <span className={estilos.tipoNovoDaAba}>
+              Tipo novo
+              <span className={estilos.seloDaAba}>novo</span>
+            </span>
+            <span className={estilos.escolhidoDaAba}>Escolhido</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  ),
+};
+
 const ESCALA = [
   ['Legenda', '--texto-legenda', 'Marcas da escala · 25 50 75'],
   ['Rótulo', '--texto-rotulo', 'Patrimônio'],

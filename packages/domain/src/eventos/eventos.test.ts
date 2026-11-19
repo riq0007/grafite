@@ -102,6 +102,8 @@ describe('tipos de evento', () => {
       'paineis.mudaram',
       'diretorio.mudou',
       'software.mudou',
+      'chamados.mudaram',
+      'ajustes-dos-chamados.mudaram',
     ]);
   });
 
@@ -196,6 +198,32 @@ describe('tipos de evento', () => {
     ['ordem.reaberta', 'ordens.mudaram'],
     ['ordem.encerrada', 'ordens.mudaram'],
     ['meta-de-indicador.alterada', 'metas.mudaram'],
+    ['tipo-de-chamado.criado', 'ajustes-dos-chamados.mudaram'],
+    ['tipos-de-chamado.ordenados', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.alterado', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.inativado', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.reativado', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.descartado', 'ajustes-dos-chamados.mudaram'],
+    ['tipo-de-chamado.formulario-salvo', 'ajustes-dos-chamados.mudaram'],
+    ['resposta-pronta.criada', 'ajustes-dos-chamados.mudaram'],
+    ['resposta-pronta.alterada', 'ajustes-dos-chamados.mudaram'],
+    ['resposta-pronta.removida', 'ajustes-dos-chamados.mudaram'],
+    ['respostas-prontas.ordenadas', 'ajustes-dos-chamados.mudaram'],
+    ['horario-da-ti.alterado', 'ajustes-dos-chamados.mudaram'],
+    ['chamado.aberto', 'chamados.mudaram'],
+    ['chamado.assumido', 'chamados.mudaram'],
+    ['chamado.assumir-desfeito', 'chamados.mudaram'],
+    ['chamado.passado', 'chamados.mudaram'],
+    ['chamado.devolvido', 'chamados.mudaram'],
+    ['chamado.aguardando', 'chamados.mudaram'],
+    ['chamado.retomado', 'chamados.mudaram'],
+    ['chamado.resolvido', 'chamados.mudaram'],
+    ['chamado.reaberto', 'chamados.mudaram'],
+    ['chamado.ativo-trocado', 'chamados.mudaram'],
+    ['chamado.titulo-trocado', 'chamados.mudaram'],
+    ['chamado.campos-trocados', 'chamados.mudaram'],
+    ['chamado.virou-os', 'chamados.mudaram'],
+    ['chamado.pediu-toner', 'chamados.mudaram'],
     ['backup.solicitado', null],
     ['entrada.recusada', null],
     ['permissao.recusada', null],
@@ -243,6 +271,12 @@ describe('publicoDerivado', () => {
     });
   });
 
+  it('manda os ajustes dos chamados a quem tem uma das permissões dos chamados (change chamados-da-ti)', () => {
+    expect(
+      publicoDerivado('ajustes-dos-chamados.mudaram', { tipo: 'tipo-de-chamado', id: 't1' }),
+    ).toEqual({ permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'] });
+  });
+
   it('deixa a quem grava o público das pessoas e das preferências', () => {
     expect(publicoDerivado('pessoas.mudaram', { tipo: 'pessoa', id: 'joao' })).toBeNull();
     expect(publicoDerivado('preferencias.mudaram', { tipo: 'conta', id: 'c1' })).toBeNull();
@@ -261,6 +295,8 @@ describe('publicoDerivado', () => {
     // O da meta é quem vê o indicador: os alertas, as OS ou o estoque (change
     // p4f-indicadores-da-operacao).
     expect(publicoDerivado('metas.mudaram', { tipo: 'indicador', id: 'i1' })).toBeNull();
+    // O dos chamados são os locais dele, os de antes e os de depois (change chamados-da-ti).
+    expect(publicoDerivado('chamados.mudaram', { tipo: 'chamado', id: 'c1' })).toBeNull();
   });
 });
 
@@ -295,6 +331,21 @@ describe('podeReceber', () => {
       true,
     );
     expect(podeReceber(tarefas, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
+  });
+
+  it('entrega a quem tem uma das permissões, em qualquer escopo', () => {
+    const ajustes = evento(
+      { permissoes: ['chamados.ver', 'chamados.configurar'] },
+      { tipo: 'ajustes-dos-chamados.mudaram', alvo: { tipo: 'tipo-de-chamado', id: 't1' } },
+    );
+    expect(podeReceber(ajustes, conexao(acessoCom({ 'chamados.ver': ['exp'] })), ARVORE)).toBe(
+      true,
+    );
+    expect(podeReceber(ajustes, conexao(acessoCom({ 'chamados.configurar': true })), ARVORE)).toBe(
+      true,
+    );
+    expect(podeReceber(ajustes, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
+    expect(podeReceber(ajustes, conexao(SEM_PERMISSOES), ARVORE)).toBe(false);
   });
 
   it.each([

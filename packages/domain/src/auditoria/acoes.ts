@@ -238,6 +238,33 @@ export const ACOES_DA_AUDITORIA = {
   // As máquinas da distribuição (change software-por-pacote)
   'distribuicao.maquina-tentada-de-novo': 'Máquina da distribuição tentada de novo',
   'distribuicao.maquina-tirada-da-fila': 'Máquina tirada da fila da distribuição',
+  // Os chamados (change chamados-da-ti)
+  'tipo-de-chamado.criado': 'Tipo de chamado criado',
+  'tipos-de-chamado.ordenados': 'Tipos de chamado reordenados',
+  'tipo-de-chamado.alterado': 'Tipo de chamado alterado',
+  'tipo-de-chamado.inativado': 'Tipo de chamado inativado',
+  'tipo-de-chamado.reativado': 'Tipo de chamado reativado',
+  'tipo-de-chamado.descartado': 'Tipo de chamado descartado',
+  'tipo-de-chamado.formulario-salvo': 'Formulário do tipo de chamado salvo',
+  'resposta-pronta.criada': 'Resposta pronta criada',
+  'resposta-pronta.alterada': 'Resposta pronta alterada',
+  'resposta-pronta.removida': 'Resposta pronta removida',
+  'respostas-prontas.ordenadas': 'Respostas prontas reordenadas',
+  'horario-da-ti.alterado': 'Horário da TI alterado',
+  'chamado.aberto': 'Chamado aberto',
+  'chamado.assumido': 'Chamado assumido',
+  'chamado.assumir-desfeito': 'Assumir desfeito',
+  'chamado.passado': 'Chamado passado',
+  'chamado.devolvido': 'Chamado devolvido à triagem',
+  'chamado.aguardando': 'Chamado aguardando o colaborador',
+  'chamado.retomado': 'Chamado retomado',
+  'chamado.resolvido': 'Chamado resolvido',
+  'chamado.reaberto': 'Chamado reaberto',
+  'chamado.ativo-trocado': 'Ativo do chamado trocado',
+  'chamado.titulo-trocado': 'Título do chamado trocado',
+  'chamado.campos-trocados': 'Campos da TI do chamado trocados',
+  'chamado.virou-os': 'Chamado virou OS',
+  'chamado.pediu-toner': 'Chamado pediu toner',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

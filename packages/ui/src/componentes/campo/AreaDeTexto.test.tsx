@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { createRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AreaDeTexto } from './AreaDeTexto.tsx';
 
@@ -16,5 +17,14 @@ describe('AreaDeTexto', () => {
     expect((area as HTMLTextAreaElement).required).toBe(true);
     expect(area.getAttribute('aria-invalid')).toBe('true');
     expect(screen.getByText('Explique o motivo da baixa.')).toBeDefined();
+  });
+
+  it('com o rótulo oculto, o nome vem dele sem o rótulo à vista; o id e o ref ficam na caixa', () => {
+    const caixa = createRef<HTMLTextAreaElement>();
+    render(<AreaDeTexto rotulo="Mensagem para Fernanda" ocultarRotulo id="campo" ref={caixa} />);
+    const area = screen.getByRole('textbox', { name: 'Mensagem para Fernanda' });
+    expect(screen.queryByText('Mensagem para Fernanda')).toBeNull();
+    expect(area.id).toBe('campo');
+    expect(caixa.current).toBe(area);
   });
 });

@@ -64,6 +64,7 @@ function solicitacao(numero: number, extras: Partial<SolicitacaoDeTeste>): Solic
     encerradaEm: null,
     permite: { atender: true },
     ordem: null,
+    chamados: [],
     ...extras,
   };
 }

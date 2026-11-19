@@ -3,6 +3,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { criarClienteDeConsultas } from './api/consultas.ts';
 import { ProvedorDaApi } from './api/useApi.tsx';
+import { PrimeiraCarga } from './casca/primeiraTela.ts';
 import { type CanalDeEventos, criarCanalDeEventos } from './eventos/canal.ts';
 import { ligarEventosDosModulos } from './eventos/modulos.ts';
 import { ProvedorDoCanal } from './eventos/useCanal.tsx';
@@ -17,7 +18,7 @@ import { ProvedorDaSessao } from './sessao/useSessao.tsx';
 /**
  * O app inteiro: as preferências por cima de tudo, com as camadas da sessão, a sessão, o cliente
  * da API e as consultas, as notificações da sessão e, atrás da porta da entrada, o roteador com a
- * casca e os módulos.
+ * casca e os módulos, que carrega pela primeira vez já na primeira tela da conta.
  */
 export function App({
   roteador,
@@ -54,7 +55,9 @@ export function App({
             <ProvedorDoCanal canal={canal}>
               <ProvedorDeNotificacoes navegar={navegar}>
                 <Porta>
-                  <RouterProvider router={roteador} />
+                  <PrimeiraCarga roteador={roteador}>
+                    <RouterProvider router={roteador} />
+                  </PrimeiraCarga>
                 </Porta>
               </ProvedorDeNotificacoes>
             </ProvedorDoCanal>

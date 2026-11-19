@@ -126,7 +126,7 @@ export function EscolhaDeImagem({
       className={estilos.escolha}
     >
       {rotuloAVista && (
-        <span id={`${id}-rotulo`} className={estilosDoCampo.rotulo}>
+        <span id={`${id}-rotulo`} className={estilosDoCampo.rotulo} data-parte="rotulo">
           {rotulo}
         </span>
       )}

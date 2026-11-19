@@ -1,21 +1,39 @@
 // O menu de contexto (spec componentes-base e tabelas-configuraveis): o mesmo menu, aberto no ponto
 // do clique direito ou junto do elemento em foco, que fecha com Esc, com o clique fora e com a
-// escolha de um item, e devolve o foco a quem o abriu.
-import { useRef } from 'react';
+// escolha de um item, e devolve o foco a quem o abriu. Os itens são os mesmos do menu com submenu:
+// o item com `itens` abre a lista dele, com o mesmo teclado. A ação fica em cada item, como nos
+// menus da casca, porque a do menu de fora não chega ao submenu.
+import { Fragment, useRef } from 'react';
 import { Menu as MenuDoReactAria } from 'react-aria-components';
 import { createPortal } from 'react-dom';
 import estilosDoFlutuante from '../flutuante/Flutuante.module.css';
 import { PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import estilos from './Menu.module.css';
-import { ItemDeMenu } from './Menu.tsx';
+import { ItemDeMenu, Separador, Submenu } from './Menu.tsx';
 
-export interface ItemDoMenuDeContexto {
+/** Um item que age quando escolhido. */
+export interface AcaoDoMenuDeContexto {
   id: string;
   rotulo: string;
   aoEscolher: () => void;
   /** Ação que apaga ou encerra algo: texto na cor crítica. */
   destrutivo?: boolean;
+  /** Texto de apoio abaixo do nome, como "2 abertos". */
+  descricao?: string;
+  /** Uma linha antes do item, que o separa dos de cima, como as ações depois do "Abrir". */
+  separadoAntes?: boolean;
 }
+
+/** Um item que abre um submenu, com o nome do item, como "Passar para…". */
+export interface SubmenuDoMenuDeContexto {
+  id: string;
+  rotulo: string;
+  itens: readonly AcaoDoMenuDeContexto[];
+  /** Uma linha antes do item, que o separa dos de cima. */
+  separadoAntes?: boolean;
+}
+
+export type ItemDoMenuDeContexto = AcaoDoMenuDeContexto | SubmenuDoMenuDeContexto;
 
 export interface PropsDoMenuDeContexto {
   /** O nome do menu para o leitor de tela. */
@@ -41,6 +59,21 @@ export function MenuDeContexto({
     aoFechar();
     requestAnimationFrame(() => origem?.focus());
   };
+  // O menu fecha antes da ação, para a ação achar o foco já de volta em quem o abriu.
+  const acao = ({ id, rotulo: nome, aoEscolher, destrutivo, descricao }: AcaoDoMenuDeContexto) => (
+    <ItemDeMenu
+      key={id}
+      id={id}
+      destrutivo={destrutivo}
+      descricao={descricao}
+      onAction={() => {
+        fechar();
+        aoEscolher();
+      }}
+    >
+      {nome}
+    </ItemDeMenu>
+  );
   return (
     <>
       {createPortal(
@@ -72,17 +105,17 @@ export function MenuDeContexto({
           aria-label={rotulo}
           autoFocus="first"
           className={estilos.menu}
-          onAction={(id) => {
-            const item = itens.find((candidato) => candidato.id === id);
-            fechar();
-            item?.aoEscolher();
-          }}
           onClose={fechar}
         >
           {itens.map((item) => (
-            <ItemDeMenu key={item.id} id={item.id} destrutivo={item.destrutivo}>
-              {item.rotulo}
-            </ItemDeMenu>
+            <Fragment key={item.id}>
+              {item.separadoAntes && <Separador />}
+              {'itens' in item ? (
+                <Submenu rotulo={item.rotulo}>{item.itens.map(acao)}</Submenu>
+              ) : (
+                acao(item)
+              )}
+            </Fragment>
           ))}
         </MenuDoReactAria>
       </PainelFlutuante>

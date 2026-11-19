@@ -88,23 +88,7 @@ export function sessaoAtiva(
 ): LojaDaSessao {
   return criarLojaDaSessao({
     servidor: { ...SERVIDOR_DE_EXEMPLO, ...doServidor },
-    buscar: async (pedido) => {
-      const caminho = `${pedido.method} ${new URL(pedido.url).pathname}`;
-      const responder = servidor[caminho];
-      if (responder) return responder(pedido);
-      if (caminho === 'GET /api/conta') return Response.json(DADOS_DA_CONTA_DE_EXEMPLO);
-      if (caminho === 'GET /api/notificacoes') {
-        return Response.json({ itens: [], naoLidas: 0, proximo: null });
-      }
-      // Os canais de fora (change p3c-email-e-push): sem a configuração deles, de fábrica.
-      if (caminho === 'GET /api/conta/canais') {
-        return Response.json({
-          email: { situacao: 'sem-configuracao', endereco: null },
-          push: { situacao: 'sem-configuracao', chavePublica: null, aparelhos: [] },
-        });
-      }
-      throw new Error(`O teste não preparou o servidor para ${caminho}.`);
-    },
+    buscar: buscarNoServidorDeTeste(servidor),
     estado: {
       tipo: 'ativa',
       organizacao: 'Empresa de exemplo',
@@ -114,4 +98,42 @@ export function sessaoAtiva(
       acesso: { permissoes },
     },
   });
+}
+
+/**
+ * A sessão desconhecida, porque o servidor não respondeu na abertura. Quando ele volta, a loja
+ * valida de novo, e ele responde a sessão da conta de exemplo, valendo, com as permissões dadas.
+ */
+export function sessaoDesconhecida(
+  permissoes: PermissaoDaSessao[] = [],
+  servidor: ServidorDeTeste = {},
+): LojaDaSessao {
+  return criarLojaDaSessao({
+    buscar: buscarNoServidorDeTeste({
+      'GET /api/sessao': () => estadoDaSessaoAtiva(permissoes),
+      ...servidor,
+    }),
+    estado: { tipo: 'desconhecida' },
+  });
+}
+
+/** O servidor dos testes: os pedidos que o teste preparou, a conta, as notificações e os canais. */
+function buscarNoServidorDeTeste(servidor: ServidorDeTeste) {
+  return async (pedido: Request): Promise<Response> => {
+    const caminho = `${pedido.method} ${new URL(pedido.url).pathname}`;
+    const responder = servidor[caminho];
+    if (responder) return responder(pedido);
+    if (caminho === 'GET /api/conta') return Response.json(DADOS_DA_CONTA_DE_EXEMPLO);
+    if (caminho === 'GET /api/notificacoes') {
+      return Response.json({ itens: [], naoLidas: 0, proximo: null });
+    }
+    // Os canais de fora (change p3c-email-e-push): sem a configuração deles, de fábrica.
+    if (caminho === 'GET /api/conta/canais') {
+      return Response.json({
+        email: { situacao: 'sem-configuracao', endereco: null },
+        push: { situacao: 'sem-configuracao', chavePublica: null, aparelhos: [] },
+      });
+    }
+    throw new Error(`O teste não preparou o servidor para ${caminho}.`);
+  };
 }

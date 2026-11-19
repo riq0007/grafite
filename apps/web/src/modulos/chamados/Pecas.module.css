@@ -1,0 +1,139 @@
+/*
+ * O prazo em texto (change chamados-da-ti, design, decisão 20): na mono, com algarismos tabulares,
+ * a exceção nomeada do ANTISLOP, numa linha só; o ícone e a palavra na cor do estado: a de perigo,
+ * em peso forte, no estourado, a de atenção no que vence em até 2 h e a do texto nos outros. No
+ * quadrado, menor.
+ */
+.prazo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-1);
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+}
+
+/*
+ * No quadrado, o texto quebra a linha quando não cabe, antes da medida ("vence em" e "35 min"), e o
+ * quadrado cresce; a medida não se parte em lugar nenhum.
+ */
+.prazo[data-forma="curta"] {
+  font-size: var(--texto-legenda);
+  white-space: normal;
+}
+
+.medida {
+  white-space: nowrap;
+}
+
+.prazo[data-grupo="estourado"] {
+  color: var(--cor-critico);
+  font-weight: var(--peso-forte);
+}
+
+.prazo[data-grupo="ate-2-horas"] {
+  color: var(--cor-atencao);
+}
+
+/*
+ * As cores das séries (decisão 22): o ícone do tipo na série do ícone e a sigla na série da conta.
+ * Sem a série, o texto secundário, neutro.
+ */
+:is(.iconeDoTipo, .sigla)[data-serie="1"] {
+  --serie: var(--cor-serie-1);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="2"] {
+  --serie: var(--cor-serie-2);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="3"] {
+  --serie: var(--cor-serie-3);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="4"] {
+  --serie: var(--cor-serie-4);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="5"] {
+  --serie: var(--cor-serie-5);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="6"] {
+  --serie: var(--cor-serie-6);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="7"] {
+  --serie: var(--cor-serie-7);
+}
+
+:is(.iconeDoTipo, .sigla)[data-serie="8"] {
+  --serie: var(--cor-serie-8);
+}
+
+/* O ícone do tipo, como o `.ti` dos mockups: o desenho na série, num quadrado dela a 18%. */
+.iconeDoTipo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--raio-rotulo);
+  color: var(--serie, var(--cor-texto-2));
+  background: color-mix(in srgb, var(--serie, var(--cor-texto-2)) 18%, transparent);
+}
+
+/* O grande, de 34 px, da linha da triagem do Início (m12). */
+.iconeDoTipo[data-tamanho="grande"] {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--raio-controle);
+}
+
+/* O do cabeçalho do editor dos tipos, de 56 px, com a borda da série a 45% (m07). */
+.iconeDoTipo[data-tamanho="cabecalho"] {
+  width: 56px;
+  height: 56px;
+  border: 1px solid color-mix(in srgb, var(--serie, var(--cor-texto-2)) 45%, transparent);
+  border-radius: var(--raio-base);
+}
+
+/*
+ * A sigla de quem atende e a bandeja da triagem, como o `.av` de 38 dos mockups: o círculo com a
+ * série a 26% sobre a superfície e a borda a 55%; sem a série, neutro.
+ */
+.sigla {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--serie, var(--cor-texto-2)) 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--serie, var(--cor-texto-2)) 26%, var(--cor-superficie-2));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+/* A sigla média, como o `.av` de 32 da conversa do m03. */
+.sigla[data-tamanho="media"] {
+  width: 32px;
+  height: 32px;
+  font-size: var(--texto-rotulo);
+}
+
+/* A sigla pequena, como o `.av` de 26 dos botões de "Passar para…" do m01. */
+.sigla[data-tamanho="pequena"] {
+  width: 26px;
+  height: 26px;
+  font-size: var(--texto-rotulo);
+}
+
+/* O "Buscar nos chamados" dos cabeçalhos, na largura dos mockups. */
+.buscaNosChamados {
+  width: 260px;
+  max-width: 100%;
+}

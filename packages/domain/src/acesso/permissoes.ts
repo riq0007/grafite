@@ -367,6 +367,30 @@ export const PERMISSOES = [
     escopo: 'organizacao',
     inclui: ['paineis.ver'],
   },
+  // Os chamados da TI (change chamados-da-ti): o chamado vale nos locais dele, e os ajustes, na
+  // organização inteira.
+  {
+    chave: 'chamados.ver',
+    area: 'Chamados',
+    descricao: 'Ver os chamados, com as notas internas',
+    escopo: 'local',
+    inclui: [],
+  },
+  {
+    chave: 'chamados.atender',
+    area: 'Chamados',
+    descricao: 'Abrir, assumir, passar, responder e resolver os chamados',
+    escopo: 'local',
+    inclui: ['chamados.ver'],
+  },
+  {
+    chave: 'chamados.configurar',
+    area: 'Chamados',
+    descricao:
+      'Configurar os tipos de chamado, o formulário, as respostas prontas e o horário da TI',
+    escopo: 'organizacao',
+    inclui: [],
+  },
 ] as const satisfies readonly DefinicaoDePermissao[];
 
 export type Permissao = (typeof PERMISSOES)[number]['chave'];

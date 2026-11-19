@@ -13,6 +13,8 @@ export interface PropsDaGaveta {
   aberta?: boolean;
   aoMudarAberta?: (aberta: boolean) => void;
   titulo: string;
+  /** A de 576 px, para o conteúdo em duas colunas, como a grade dos tipos da abertura do chamado. */
+  larga?: boolean;
   children: ReactNode;
 }
 
@@ -20,7 +22,14 @@ export interface PropsDaGaveta {
  * Painel lateral que mantém o contexto da tela (ANTISLOP §22). Prende o foco, fecha com Esc,
  * pelo botão ou clicando fora, e devolve o foco a quem abriu.
  */
-export function Gaveta({ gatilho, aberta, aoMudarAberta, titulo, children }: PropsDaGaveta) {
+export function Gaveta({
+  gatilho,
+  aberta,
+  aoMudarAberta,
+  titulo,
+  larga = false,
+  children,
+}: PropsDaGaveta) {
   const camada = (
     <ModalOverlay
       isDismissable
@@ -28,7 +37,7 @@ export function Gaveta({ gatilho, aberta, aoMudarAberta, titulo, children }: Pro
       onOpenChange={gatilho ? undefined : aoMudarAberta}
       className={`${estilos.veu} ${estilos.veuDaGaveta}`}
     >
-      <Modal className={estilos.gaveta}>
+      <Modal className={larga ? `${estilos.gaveta} ${estilos.gavetaLarga}` : estilos.gaveta}>
         <Dialog className={estilos.dialogo}>
           <div className={estilos.cabecalho}>
             <Heading slot="title" className={estilos.titulo}>

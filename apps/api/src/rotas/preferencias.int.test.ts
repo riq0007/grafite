@@ -157,6 +157,18 @@ describe('PATCH /conta/preferencias', () => {
     expect(await salvas(anaId)).toEqual(camada);
   });
 
+  // Spec preferencias-da-interface, "Forma das conversas nas preferências".
+  it('as conversas gravam "nos-cantos", e outro valor recusa, com a mensagem no campo', async () => {
+    const r = await mudar(ana, { aparencia: { conversas: 'nos-cantos' } });
+    expect(r.statusCode).toBe(200);
+    const camada = { dock: { posicao: 'esquerda' }, aparencia: { conversas: 'nos-cantos' } };
+    expect(r.json()).toEqual(camada);
+    const emLista = await mudar(ana, { aparencia: { conversas: 'em-lista' } });
+    expect(emLista.statusCode).toBe(400);
+    expect(emLista.json().campos).toHaveProperty(['mudancas.aparencia.conversas']);
+    expect(await salvas(anaId)).toEqual(camada);
+  });
+
   // Spec preferencias-da-interface, "Blocos do Início nas preferências".
   it('os blocos do Início gravam inteiros, e o bloco repetido recusa', async () => {
     const blocos = [

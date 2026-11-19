@@ -6,6 +6,7 @@ import {
   ativos,
   auditoria,
   type Banco,
+  chamados,
   contas,
   grupos,
   modelos,
@@ -13,10 +14,13 @@ import {
   ordensDeServico,
   perfis,
   pessoas,
+  respostasProntas,
   segredos,
   sessoes,
   solicitacoes,
+  type Transacao,
   tiposDeAtivo,
+  tiposDeChamado,
 } from '@grafite/db';
 import {
   descreverDispositivo,
@@ -67,8 +71,9 @@ const RegistroDeAuditoria = z
       tipo: z.string(),
       id: z.uuid().nullable(),
       /**
-       * O nome atual do alvo: a pessoa, o perfil, o grupo, o caminho do local, o ativo ou o
-       * dispositivo.
+       * O nome atual do alvo, quando ele tem nome: a pessoa, a conta, o perfil, o grupo, o caminho
+       * do local, o dispositivo, o ativo, o segredo, a solicitação, a OS, o chamado, o tipo de
+       * chamado ou a resposta pronta.
        */
       nome: z.string().nullable(),
       /** O usuário, quando o alvo é uma conta. */
@@ -143,7 +148,135 @@ const perfilAlvo = alias(perfis, 'perfil_alvo');
 const grupoAlvo = alias(grupos, 'grupo_alvo');
 const sessaoAlvo = alias(sessoes, 'sessao_alvo');
 
-/** O texto como padrão do `like`, com os curingas escapados. */
+/** Os nomes atuais dos alvos de um tipo, pelo id, como pares [id, nome]. */
+type LeitorDosNomes = (tx: Transacao, ids: string[]) => Promise<(readonly [string, string])[]>;
+
+/**
+ * Os alvos cujo nome é lido à parte, com uma consulta por tipo que aparece na página. O alvo que
+ * não tem mais a linha, como o Rascunho descartado e a resposta pronta removida, fica sem o nome:
+ * o antes do registro o guarda.
+ */
+const LEITORES_DOS_NOMES = new Map<string, LeitorDosNomes>([
+  [
+    'ativo',
+    async (tx, ids) =>
+      (await consultarAtivos(tx).where(inArray(ativos.id, ids))).map((ativo) => [
+        ativo.ativo.id,
+        rotuloDoAtivo({ nome: ativo.ativo.nome, modelo: ativo.modelo, tipo: ativo.tipo }),
+      ]),
+  ],
+  // O segredo do cofre pelo nome: os dados dele, nunca o valor.
+  [
+    'segredo',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({ id: segredos.id, nome: segredos.nome })
+          .from(segredos)
+          .where(inArray(segredos.id, ids))
+      ).map(({ id, nome }) => [id, nome]),
+  ],
+  // A solicitação pelo número, pelo tipo e por quem pediu, como está agora: as mudanças de situação
+  // só guardam a situação.
+  [
+    'solicitacao',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({
+            id: solicitacoes.id,
+            numero: solicitacoes.numero,
+            tipo: solicitacoes.tipo,
+            pessoa: pessoas.nome,
+          })
+          .from(solicitacoes)
+          .innerJoin(pessoas, eq(pessoas.id, solicitacoes.pessoaId))
+          .where(inArray(solicitacoes.id, ids))
+      ).map(({ id, numero, tipo, pessoa }) => [
+        id,
+        `${numero} · ${ROTULOS_DOS_TIPOS_DE_SOLICITACAO[tipo]} · ${pessoa}`,
+      ]),
+  ],
+  // A OS pelo número, pelo patrimônio do ativo e pelo problema, como está agora.
+  [
+    'ordem',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({
+            id: ordensDeServico.id,
+            numero: ordensDeServico.numero,
+            problema: ordensDeServico.problema,
+            patrimonio: ativos.patrimonio,
+            nome: ativos.nome,
+            tipo: { nome: tiposDeAtivo.nome },
+            modelo: { fabricante: modelos.fabricante, nome: modelos.nome },
+          })
+          .from(ordensDeServico)
+          .innerJoin(ativos, eq(ativos.id, ordensDeServico.ativoId))
+          .innerJoin(tiposDeAtivo, eq(tiposDeAtivo.id, ativos.tipoId))
+          .leftJoin(modelos, eq(modelos.id, ativos.modeloId))
+          .where(inArray(ordensDeServico.id, ids))
+      ).map(({ id, numero, problema, patrimonio, nome, tipo, modelo }) => [
+        id,
+        nomeDaOrdem({
+          numero,
+          ativo: patrimonio ?? rotuloDoAtivo({ nome, modelo, tipo }),
+          problema,
+        }),
+      ]),
+  ],
+  // O chamado pelo número e pelo título de agora, como "#1042 · Impressora manchando" (spec
+  // chamados, "Permissões, auditoria e eventos dos chamados"), com o título inteiro, que já é curto.
+  [
+    'chamado',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({ id: chamados.id, numero: chamados.numero, titulo: chamados.titulo })
+          .from(chamados)
+          .where(inArray(chamados.id, ids))
+      ).map(({ id, numero, titulo }) => [id, `#${numero} · ${titulo}`]),
+  ],
+  [
+    'tipo-de-chamado',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({ id: tiposDeChamado.id, nome: tiposDeChamado.nome })
+          .from(tiposDeChamado)
+          .where(inArray(tiposDeChamado.id, ids))
+      ).map(({ id, nome }) => [id, nome]),
+  ],
+  [
+    'resposta-pronta',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({ id: respostasProntas.id, rotulo: respostasProntas.rotulo })
+          .from(respostasProntas)
+          .where(inArray(respostasProntas.id, ids))
+      ).map(({ id, rotulo }) => [id, rotulo]),
+  ],
+]);
+
+/** Os nomes atuais dos alvos da página lidos à parte, pelo tipo do alvo e pelo id. */
+async function lerNomesDosAlvos(
+  tx: Transacao,
+  linhas: readonly { alvoTipo: string; alvoId: string | null }[],
+): Promise<Map<string, Map<string, string>>> {
+  const idsPorTipo = new Map<string, Set<string>>();
+  for (const { alvoTipo, alvoId } of linhas) {
+    if (alvoId === null || !LEITORES_DOS_NOMES.has(alvoTipo)) continue;
+    idsPorTipo.set(alvoTipo, (idsPorTipo.get(alvoTipo) ?? new Set<string>()).add(alvoId));
+  }
+  const nomes = new Map<string, Map<string, string>>();
+  for (const [tipo, ids] of idsPorTipo) {
+    const ler = LEITORES_DOS_NOMES.get(tipo);
+    if (ler) nomes.set(tipo, new Map(await ler(tx, [...ids])));
+  }
+  return nomes;
+}
 
 /** Os filtros da consulta, sem o cursor: valem também para o total. */
 function condicoesDaConsulta(filtros: z.infer<typeof FiltrosDaAuditoria>): SQL[] {
@@ -295,87 +428,7 @@ export const rotasDaAuditoria: FastifyPluginAsyncZod<{ banco: Banco }> = async (
           linha.momentoExato,
           linha.id,
         ]);
-        const ativosDaPagina = daPagina.flatMap((linha) =>
-          linha.alvoTipo === 'ativo' && linha.alvoId ? [linha.alvoId] : [],
-        );
-        const nomesDosAtivos = new Map(
-          ativosDaPagina.length === 0
-            ? []
-            : (await consultarAtivos(tx).where(inArray(ativos.id, ativosDaPagina))).map((ativo) => [
-                ativo.ativo.id,
-                rotuloDoAtivo({ nome: ativo.ativo.nome, modelo: ativo.modelo, tipo: ativo.tipo }),
-              ]),
-        );
-        // O segredo do cofre pelo nome atual: os dados dele, nunca o valor.
-        const segredosDaPagina = daPagina.flatMap((linha) =>
-          linha.alvoTipo === 'segredo' && linha.alvoId ? [linha.alvoId] : [],
-        );
-        const nomesDosSegredos = new Map(
-          segredosDaPagina.length === 0
-            ? []
-            : (
-                await tx
-                  .select({ id: segredos.id, nome: segredos.nome })
-                  .from(segredos)
-                  .where(inArray(segredos.id, segredosDaPagina))
-              ).map((segredo) => [segredo.id, segredo.nome]),
-        );
-        // A solicitação pelo número, pelo tipo e por quem pediu, como está agora: as mudanças de
-        // situação só guardam a situação.
-        const solicitacoesDaPagina = daPagina.flatMap((linha) =>
-          linha.alvoTipo === 'solicitacao' && linha.alvoId ? [linha.alvoId] : [],
-        );
-        const nomesDasSolicitacoes = new Map(
-          solicitacoesDaPagina.length === 0
-            ? []
-            : (
-                await tx
-                  .select({
-                    id: solicitacoes.id,
-                    numero: solicitacoes.numero,
-                    tipo: solicitacoes.tipo,
-                    pessoa: pessoas.nome,
-                  })
-                  .from(solicitacoes)
-                  .innerJoin(pessoas, eq(pessoas.id, solicitacoes.pessoaId))
-                  .where(inArray(solicitacoes.id, solicitacoesDaPagina))
-              ).map(({ id, numero, tipo, pessoa }) => [
-                id,
-                `${numero} · ${ROTULOS_DOS_TIPOS_DE_SOLICITACAO[tipo]} · ${pessoa}`,
-              ]),
-        );
-        // A OS pelo número, pelo patrimônio do ativo e pelo problema, como está agora.
-        const ordensDaPagina = daPagina.flatMap((linha) =>
-          linha.alvoTipo === 'ordem' && linha.alvoId ? [linha.alvoId] : [],
-        );
-        const nomesDasOrdens = new Map(
-          ordensDaPagina.length === 0
-            ? []
-            : (
-                await tx
-                  .select({
-                    id: ordensDeServico.id,
-                    numero: ordensDeServico.numero,
-                    problema: ordensDeServico.problema,
-                    patrimonio: ativos.patrimonio,
-                    nome: ativos.nome,
-                    tipo: { nome: tiposDeAtivo.nome },
-                    modelo: { fabricante: modelos.fabricante, nome: modelos.nome },
-                  })
-                  .from(ordensDeServico)
-                  .innerJoin(ativos, eq(ativos.id, ordensDeServico.ativoId))
-                  .innerJoin(tiposDeAtivo, eq(tiposDeAtivo.id, ativos.tipoId))
-                  .leftJoin(modelos, eq(modelos.id, ativos.modeloId))
-                  .where(inArray(ordensDeServico.id, ordensDaPagina))
-              ).map(({ id, numero, problema, patrimonio, nome, tipo, modelo }) => [
-                id,
-                nomeDaOrdem({
-                  numero,
-                  ativo: patrimonio ?? rotuloDoAtivo({ nome, modelo, tipo }),
-                  problema,
-                }),
-              ]),
-        );
+        const nomesDosAlvos = await lerNomesDosAlvos(tx, daPagina);
         return {
           itens: daPagina.map((linha) => {
             const local = linha.alvoTipo === 'local' && linha.alvoId !== null;
@@ -390,17 +443,8 @@ export const rotasDaAuditoria: FastifyPluginAsyncZod<{ banco: Banco }> = async (
               (linha.alvoTipo === 'sessao' && linha.alvoId !== null
                 ? descreverDispositivo(linha.agenteAlvo)
                 : null) ??
-              (linha.alvoTipo === 'ativo' && linha.alvoId
-                ? (nomesDosAtivos.get(linha.alvoId) ?? null)
-                : null) ??
-              (linha.alvoTipo === 'segredo' && linha.alvoId
-                ? (nomesDosSegredos.get(linha.alvoId) ?? null)
-                : null) ??
-              (linha.alvoTipo === 'solicitacao' && linha.alvoId
-                ? (nomesDasSolicitacoes.get(linha.alvoId) ?? null)
-                : null) ??
-              (linha.alvoTipo === 'ordem' && linha.alvoId
-                ? (nomesDasOrdens.get(linha.alvoId) ?? null)
+              (linha.alvoId !== null
+                ? (nomesDosAlvos.get(linha.alvoTipo)?.get(linha.alvoId) ?? null)
                 : null);
             return {
               id: linha.id,

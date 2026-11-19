@@ -163,7 +163,10 @@ const prefixar = (prefixo: string, erros: Record<string, string>) =>
   );
 
 /** A recusa do ativo de um tipo que o campo não aceita, com os nomes dos aceitos, na ordem dele. */
-async function recusaDosTiposAceitos(tx: Transacao, aceitos: readonly string[]): Promise<string> {
+export async function recusaDosTiposAceitos(
+  tx: Transacao,
+  aceitos: readonly string[],
+): Promise<string> {
   const linhas = await tx
     .select({ id: tiposDeAtivo.id, nome: tiposDeAtivo.nome })
     .from(tiposDeAtivo)

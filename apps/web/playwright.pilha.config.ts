@@ -14,9 +14,10 @@ export default defineConfig({
   reporter: [['list']],
   // Um caminho só, em ordem, sobre o mesmo banco.
   workers: 1,
-  // O caminho cresce a cada subprojeto: com a ficha do ativo (P1d), passa de 1,5 min no CI, e com
-  // as contagens dos locais (relacoes-vivas), passa de 2,5 min no executor próprio.
-  timeout: 300_000,
+  // O caminho cresce a cada subprojeto: com a ficha do ativo (P1d), passa de 1,5 min no CI; com as
+  // contagens dos locais (relacoes-vivas), de 2,5 min; e com os chamados (chamados-da-ti), de 3 min
+  // no CI e de 3,5 min na máquina.
+  timeout: 420_000,
   globalSetup: './e2e-pilha/subir.ts',
   use: { baseURL: `http://localhost:${PORTA_DA_PILHA}`, serviceWorkers: 'block' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

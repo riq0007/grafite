@@ -80,6 +80,10 @@
   outline: none;
 }
 
+.gavetaLarga {
+  width: min(100%, calc(var(--esp-12) * 12));
+}
+
 .gaveta[data-entering] {
   animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-padrao);
 }
@@ -93,6 +97,51 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--esp-2);
+}
+
+/*
+ * Gaveta dentro da janela: o véu cobre só a tela onde ela abre, e a gaveta, na superfície elevada,
+ * com a borda e a sombra das camadas sobrepostas, fica presa à borda direita, na altura toda; quem a
+ * usa diz onde ela começa. Entra deslizando, como a outra.
+ */
+.veuNaJanela {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-color: var(--cor-veu);
+}
+
+.veuNaJanela[data-entering] {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao);
+}
+
+.veuNaJanela[data-exiting] {
+  animation: aparecer var(--dur-opacidade) var(--curva-saida) reverse;
+}
+
+.gavetaNaJanela {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  min-width: 0;
+  border-left: 1px solid var(--cor-linha-forte);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+  outline: none;
+}
+
+.gavetaNaJanela[data-entering] {
+  animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.gavetaNaJanela[data-exiting] {
+  animation: entrarPelaDireita var(--dur-deslocamento) var(--curva-saida) reverse;
+}
+
+.dialogoNaJanela {
+  height: 100%;
+  min-height: 0;
+  outline: none;
 }
 
 @keyframes aparecer {

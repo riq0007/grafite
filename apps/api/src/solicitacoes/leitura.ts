@@ -1,9 +1,11 @@
-// A leitura das solicitações (spec solicitacoes; change p4d-solicitacoes, design, decisões 6 e 7):
-// várias de uma vez, com quem pediu e as contas pelo nome, as impressoras com o contador congelado e
-// os itens com a entrega, o ativo, o tipo, o local e o fornecedor como referência, e se a conta
+// A leitura das solicitações (spec solicitacoes; change p4d-solicitacoes, design, decisões 6 e 7;
+// change chamados-da-ti, design, "Os chamados na leitura da solicitação"): várias de uma vez, com
+// quem pediu e as contas pelo nome, as impressoras com o contador congelado e os itens com a
+// entrega, o ativo, o tipo, o local e o fornecedor como referência, os chamados ligados e se a conta
 // atende cada uma.
 import {
   ativos,
+  chamados,
   consumiveis,
   contas,
   fornecedores,
@@ -26,9 +28,11 @@ import {
   pode,
   podeEm,
   rotuloDoAtivo,
+  veOChamado,
 } from '@grafite/domain';
 import { asc, eq, inArray } from 'drizzle-orm';
 import type { z } from 'zod';
+import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import type { AtivoDaSolicitacao, ItemDaSolicitacao, Solicitacao } from './esquemas.ts';
 
 /** O que a leitura sabe da conta: o acesso e a árvore dos locais. */
@@ -101,6 +105,39 @@ function conferido<T>(valor: T | undefined): T {
   return valor;
 }
 
+type ChamadoDaSolicitacao = z.infer<typeof Solicitacao>['chamados'][number];
+
+/**
+ * Os chamados ligados às solicitações, pela solicitação, na ordem do número, com o `abrir` só para
+ * quem vê o chamado. Com o módulo Chamados desligado, nenhum.
+ */
+async function chamadosDasSolicitacoes(
+  tx: Transacao,
+  { acesso, arvore }: LeitorDasSolicitacoes,
+  ids: readonly string[],
+): Promise<Map<string, ChamadoDaSolicitacao[]>> {
+  if (!(await ligadoNaTransacao(tx, 'chamados'))) return new Map();
+  const linhas = await tx
+    .select({
+      solicitacaoId: chamados.solicitacaoId,
+      numero: chamados.numero,
+      locais: chamados.locais,
+      semLocal: chamados.semLocal,
+    })
+    .from(chamados)
+    .where(inArray(chamados.solicitacaoId, [...ids]))
+    .orderBy(asc(chamados.numero));
+  const quemVe = alcance(acesso, 'chamados.ver', arvore);
+  const porSolicitacao = new Map<string, ChamadoDaSolicitacao[]>();
+  for (const { solicitacaoId, numero, locais, semLocal } of linhas) {
+    if (solicitacaoId === null) continue;
+    const daSolicitacao = porSolicitacao.get(solicitacaoId) ?? [];
+    daSolicitacao.push({ numero, abrir: veOChamado(quemVe, { locais, semLocal }) });
+    porSolicitacao.set(solicitacaoId, daSolicitacao);
+  }
+  return porSolicitacao;
+}
+
 /** As solicitações dadas, na ordem dos ids, como a API as devolve. */
 export async function lerSolicitacoes(
   tx: Transacao,
@@ -146,6 +183,7 @@ export async function lerSolicitacoes(
     ]),
   );
 
+  const chamadosLigados = await chamadosDasSolicitacoes(tx, leitor, ids);
   const ativosLidos = await lerAtivos(
     tx,
     [
@@ -269,6 +307,7 @@ export async function lerSolicitacoes(
         encerradaEm: linha.encerradaEm?.toISOString() ?? null,
         permite: { atender: atendeASolicitacao(atender, linha) },
         ordem: ordens.get(linha.id) ?? null,
+        chamados: chamadosLigados.get(linha.id) ?? [],
       },
     ];
   });

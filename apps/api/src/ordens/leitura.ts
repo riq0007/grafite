@@ -1,9 +1,10 @@
 // A leitura das ordens de serviço (spec ordens-de-servico; change p4e-ordens-de-servico, design,
-// decisão 7): várias de uma vez, com o ativo, o local, a solicitação de origem, o fornecedor e as
-// contas pelo nome, o histórico das situações, as peças com a saída do estoque e se a conta atende
-// cada uma.
+// decisão 7; change chamados-da-ti, design, "O chamado na leitura da OS"): várias de uma vez, com o
+// ativo, o local, a solicitação e o chamado de origem, o fornecedor e as contas pelo nome, o
+// histórico das situações, as peças com a saída do estoque e se a conta atende cada uma.
 import {
   ativos,
+  chamados,
   consumiveis,
   contas,
   fornecedores,
@@ -16,9 +17,18 @@ import {
   type Transacao,
   tiposDeAtivo,
 } from '@grafite/db';
-import { type Acesso, type ArvoreDeLocais, pode, podeEm, rotuloDoAtivo } from '@grafite/domain';
+import {
+  type Acesso,
+  type ArvoreDeLocais,
+  alcance,
+  pode,
+  podeEm,
+  rotuloDoAtivo,
+  veOChamado,
+} from '@grafite/domain';
 import { asc, desc, eq, inArray } from 'drizzle-orm';
 import type { z } from 'zod';
+import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import type { AtivoDaOrdem, OrdemDeServico } from './esquemas.ts';
 
 /** O que a leitura sabe da conta: o acesso e a árvore dos locais. */
@@ -109,6 +119,7 @@ export async function lerOrdens(
     tx,
     linhas.map(({ solicitacaoId }) => solicitacaoId),
   );
+  const doChamado = await chamadosDasOrdens(tx, leitor, ids);
 
   const ativosLidos = await lerAtivos(
     tx,
@@ -163,6 +174,7 @@ export async function lerOrdens(
         ativo: conferido(ativosLidos.get(linha.ativoId)),
         local: linha.localId ? local(linha.localId) : null,
         solicitacao: linha.solicitacaoId ? conferido(deOrigem.get(linha.solicitacaoId)) : null,
+        chamado: doChamado.get(id) ?? null,
         problema: linha.problema,
         fornecedor: fornecedor(linha.fornecedorId),
         osDoFornecedor: linha.osDoFornecedor,
@@ -199,6 +211,33 @@ export async function lerOrdens(
       },
     ];
   });
+}
+
+/**
+ * Os chamados de que as OS nasceram, pela OS, com o número a toda conta que vê a OS e o `abrir` só
+ * para quem vê o chamado. Com o módulo Chamados desligado, nenhum.
+ */
+async function chamadosDasOrdens(
+  tx: Transacao,
+  { acesso, arvore }: LeitorDasOrdens,
+  ids: readonly string[],
+): Promise<Map<string, NonNullable<OrdemLida['chamado']>>> {
+  if (!(await ligadoNaTransacao(tx, 'chamados'))) return new Map();
+  const linhas = await tx
+    .select({
+      osId: chamados.osId,
+      numero: chamados.numero,
+      locais: chamados.locais,
+      semLocal: chamados.semLocal,
+    })
+    .from(chamados)
+    .where(inArray(chamados.osId, [...ids]));
+  const quemVe = alcance(acesso, 'chamados.ver', arvore);
+  return new Map(
+    linhas.flatMap(({ osId, numero, locais, semLocal }) =>
+      osId === null ? [] : [[osId, { numero, abrir: veOChamado(quemVe, { locais, semLocal }) }]],
+    ),
+  );
 }
 
 /** As solicitações de origem pelo id, com o número e quem pediu. */

@@ -367,6 +367,22 @@ A avaliação das 7h, a mesma dos indicadores dos alertas, avalia os da operaç�
 
 Na volta à versão anterior, a tela e a permissão deixam de existir, e as metas da operação mudadas depois da atualização se perdem com a restauração. Depois dessa atualização, o caminho é restaurar a produção com o backup de antes dela, como diz "Restauração da produção".
 
+### A versão com os chamados
+
+A versão que traz os chamados (S7) acrescenta o módulo Chamados, ligado, com os 9 tipos de fábrica e o horário da TI de fábrica, sem mudar os dados que já existem. Para quem vê os chamados, o Chamados passa a ser a primeira tela ao entrar e o primeiro módulo do dock; o Início continua no dock. Depois de atualizar:
+1. em Administração › Perfis:
+   - dê `chamados.atender` aos perfis da TI que atendem, no ramo dos locais de que cada pessoa cuida;
+   - dê `chamados.ver` aos que só acompanham, como os gestores;
+   - dê `chamados.configurar` a quem cuida dos tipos, das respostas prontas e do horário da TI.
+
+   O Administrador já tem as três, na organização inteira;
+2. confira o horário da TI em **Chamados › Horário da TI** antes do primeiro chamado (veja "Chamados");
+3. em **Chamados › Tipos de chamado**, confira os tipos de fábrica: quem atende por padrão, o prazo e o formulário de cada um;
+4. para o "Virar OS", quem atende o chamado precisa também de `ordens.atender` no local do ativo; para o "Pedir toner", de `solicitacoes.atender` nos locais da impressora;
+5. a organização que ainda não usa os chamados os desliga em **Administração › Módulos**.
+
+Na volta à versão anterior, os chamados deixam de aparecer, e os abertos depois da atualização se perdem com a restauração, com os anexos, as OS e as solicitações abertas por eles. Depois dessa atualização, o caminho é restaurar a produção com o backup de antes dela, como diz "Restauração da produção".
+
 ### Atualização que falhou
 
 Uma falha antes da parada não muda nada. Depois da parada, o app e o coletor ficam parados, e a mensagem diz o que falhou e onde está o backup de antes. Então:
@@ -694,6 +710,16 @@ A API de cada ambiente avalia as regras de alerta de cada organização a cada m
 | Coletor sem contato | o coletor não fala com a API há 10 minutos | Crítico |
 
 **Silêncio na manutenção:** antes de desligar um equipamento para a manutenção, silencie os alertas dele na ficha do ativo, no bloco Alertas, por "Silenciar alertas", até uma data e hora ou até alguém retomar, com o motivo. A coleta e o motor continuam: os alertas do ativo abrem e se resolvem na ficha e na lista dos alertas, mas saem de "O que resolver agora". O silêncio com data termina sozinho; o sem data, só por "Retomar alertas". Para tirar um alerta só da tela inicial por pouco tempo, adie-o por 15, 30 ou 60 minutos.
+
+## Chamados
+
+**Horário da TI.** Os tipos que contam o prazo no horário da TI só contam o tempo dos dias e das horas dele. O horário usa o fuso dele, com o horário de verão, e o fuso do servidor não muda a conta. O de fábrica é de segunda a sexta, das 08:00 às 18:00, no fuso de São Paulo, com a carga cheia de 5 chamados por pessoa. Quem tem `chamados.configurar` o muda em **Chamados › Horário da TI**. A mudança vale daí em diante: o tempo já contado dos chamados abertos fica como estava, e o vencimento passa a contar pelo horário novo. A auditoria guarda o horário de antes e o de depois, com quantos chamados contavam o prazo no horário da TI. Fora do horário, o chamado de um tipo com "Se não houver ninguém: Cai na triagem" nasce na triagem, mesmo com quem atende por padrão.
+
+**Prazo estourado.** A API de cada ambiente confere os prazos a cada minuto, pela tarefa `chamados.prazo` da fila, que aparece em **Administração › Tarefas** como a rotina "Prazo dos chamados". O chamado que passa do prazo avisa uma vez quem o atende ou, na triagem, quem atende os locais dele, pelas notificações, conforme o que cada pessoa escolhe em **Ajustes › Notificações**. A falha numa organização fica no log do app e não segura as outras; a do minuto seguinte tenta de novo. Com o módulo desligado, nada é avisado; ao religar, quem passou do prazo nesse tempo é avisado.
+
+**O relógio do servidor.** O prazo conta pelo relógio do servidor. Confira que ele acerta a hora pela rede: no Windows, `w32tm /query /status`; no Linux, `timedatectl status`, com "System clock synchronized: yes".
+
+**Anexos.** Os anexos das mensagens e dos campos dos chamados ficam com os outros arquivos (`C:\Grafite\producao\arquivos` no Windows e `/opt/grafite/producao/arquivos` no Linux) e entram no backup, no `arquivos.zip`.
 
 ## E-mail e push
 

@@ -22,6 +22,7 @@ describe('temaPersonalizado', () => {
     expect(tema.sombraMaterial).toBe(temas.grafite.sombraMaterial);
     expect(tema.situacoes).toEqual(temas.grafite.situacoes);
     expect(tema.dados).toEqual(temas.grafite.dados);
+    expect(tema.aba).toEqual(temas.grafite.aba);
   });
 
   it('montar o próprio tema: claro, na matiz 80, com o texto a pelo menos 7:1', () => {
@@ -29,6 +30,8 @@ describe('temaPersonalizado', () => {
     expect(tema.tom).toBe('claro');
     expect(contraste(tema.cores.texto, tema.cores.superficie)).toBeGreaterThanOrEqual(7);
     expect(contraste(tema.cores.texto2, tema.cores.superficie)).toBeGreaterThanOrEqual(4.5);
+    // A aba do tema claro, com o contorno no próprio fundo.
+    expect(tema.aba.contorno).toBe(tema.aba.fundo);
   });
 
   it('a mesma entrada devolve o mesmo tema, sem gerar de novo', () => {
@@ -67,6 +70,7 @@ describe('variaveisDeCor', () => {
     expect(variaveis['--cor-ok-fundo']).toBe(temas.nevoa.situacoes.ok.fundo);
     expect(variaveis['--cor-serie-1']).toBe(temas.nevoa.dados.series[0]);
     expect(variaveis['--cor-tinta-ciano']).toBe(temas.nevoa.dados.tintas.ciano);
+    expect(variaveis['--cor-aba-contorno']).toBe(temas.nevoa.aba.contorno);
     expect(variaveis['--cor-destaque']).toBe(destaqueDoTema('nevoa', 'verde').destaque);
     expect(variaveis['--sombra-elevada']).toBe(temas.nevoa.sombraElevada);
   });

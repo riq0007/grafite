@@ -241,6 +241,51 @@ describe('a ficha da solicitação', () => {
     expect(await screen.findByRole('dialog', { name: 'Conclusão' })).toBeTruthy();
   });
 
+  // Spec solicitacoes, "Solicitação pelo chamado" (change chamados-da-ti, design, "Os chamados na
+  // OS e na solicitação (tarefa 5.27)").
+  it('Toner de três chamados: "Dos chamados #1040, #1041 e #1042", em ordem, com o link só dos que a conta vê', async () => {
+    const { servidor } = servidorDaFicha([
+      toner(42, {
+        chamados: [
+          { numero: 1042, abrir: true },
+          { numero: 1040, abrir: true },
+          { numero: 1041, abrir: false },
+        ],
+      }),
+    ]);
+    abrir('/operacao/solicitacoes/42', servidor, VE);
+    await fichaCarregada();
+    const titulo = screen.getByRole('heading', { level: 1, name: /Solicitação 42/ });
+    expect(titulo.closest('[data-cabecalho-da-pagina]')?.textContent).toContain(
+      'Toner · Dos chamados #1040, #1041 e #1042',
+    );
+    expect(screen.getByRole('link', { name: 'Chamado #1040' }).getAttribute('href')).toBe(
+      '/chamados/1040',
+    );
+    expect(screen.getByRole('link', { name: 'Chamado #1042' }).getAttribute('href')).toBe(
+      '/chamados/1042',
+    );
+    expect(screen.queryByRole('link', { name: /#1041/ })).toBeNull();
+  });
+
+  it('um chamado só: "Do chamado #1042"; sem chamado, só o tipo', async () => {
+    const { servidor } = servidorDaFicha([
+      toner(42, { chamados: [{ numero: 1042, abrir: true }] }),
+      toner(43),
+    ]);
+    abrir('/operacao/solicitacoes/42', servidor, VE);
+    await fichaCarregada();
+    const cabecalho = () =>
+      screen
+        .getByRole('heading', { level: 1, name: /Solicitação 4/ })
+        .closest('[data-cabecalho-da-pagina]')?.textContent;
+    expect(cabecalho()).toContain('Toner · Do chamado #1042');
+    cleanup();
+    abrir('/operacao/solicitacoes/43', servidor, VE);
+    await fichaCarregada();
+    expect(cabecalho()).not.toContain('chamado');
+  });
+
   it('Solicitação que não existe: a ficha diz que ela não foi encontrada', async () => {
     const { servidor } = servidorDaFicha([]);
     abrir('/operacao/solicitacoes/9999', servidor, VE);

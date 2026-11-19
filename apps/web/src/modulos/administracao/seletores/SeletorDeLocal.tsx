@@ -1,4 +1,4 @@
-import { montarArvore } from '@grafite/domain';
+import { type ArvoreDeLocais, montarArvore } from '@grafite/domain';
 import { EscolhaEmArvore, type ItemDaArvore } from '@grafite/ui';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
@@ -24,6 +24,17 @@ export function useCaminhoDoLocal(): (id: string) => string | undefined {
   const { data } = useQuery({ ...opcoesDosLocais(api), enabled: false });
   const arvore = useMemo(() => (data ? montarArvore(data.locais) : null), [data]);
   return useCallback((id) => (arvore?.local(id) ? arvore.caminho(id) : undefined), [arvore]);
+}
+
+/**
+ * A árvore dos locais da organização, para a tela que confere um local fora de um campo, como a
+ * coluna que recebe o chamado no arraste (change chamados-da-ti, design, decisão 22): `undefined`
+ * enquanto ela não chega. Com `ligado` falso, não pede nada.
+ */
+export function useArvoreDosLocais(ligado = true): ArvoreDeLocais | undefined {
+  const api = useApi();
+  const { data } = useQuery({ ...opcoesDosLocais(api), enabled: ligado });
+  return useMemo(() => (data ? montarArvore(data.locais) : undefined), [data]);
 }
 
 /** Os locais ativos da organização: a árvore, como a escolha a mostra, e os ids deles. */

@@ -67,6 +67,17 @@ export function oklchParaHex(cor: Oklch): string {
   return `#${paraRgbLinear(noGamute(cor)).map(doisDigitos).join('')}`;
 }
 
+/**
+ * A cor como o navegador mostra o `oklch()` que não cabe no sRGB: cada canal cortado no limite, o
+ * que puxa a matiz um pouco. Só as cores da aba dos chamados a usam, para ficarem nos azuis que o
+ * mockup aprovado mostrou (change chamados-da-ti, design, decisão 16).
+ */
+export function oklchParaHexCortando(cor: Oklch): string {
+  return `#${paraRgbLinear({ ...cor, l: limitar(cor.l, 0, 1) })
+    .map(doisDigitos)
+    .join('')}`;
+}
+
 /** A cor em OKLab: a luminosidade e os dois eixos do plano do croma. */
 function paraOklab(hex: string): { l: number; a: number; b: number } {
   const texto = hex.replace('#', '');

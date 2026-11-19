@@ -64,6 +64,13 @@ export const conflito = (detalhe: string, campos?: Record<string, string>) =>
 export const propriaConta = (detalhe: string) =>
   new ProblemaDaApi({ codigo: 'propria-conta', status: 409, titulo: 'Própria conta', detalhe });
 
+/**
+ * O chamado mudou depois do que a tela mostra: a versão que ela mandou não é mais a dele, ou o
+ * desfazer chegou depois de outra ação (409 `chamado-mudou`). A tela relê o chamado.
+ */
+export const chamadoMudou = (detalhe: string) =>
+  new ProblemaDaApi({ codigo: 'chamado-mudou', status: 409, titulo: 'Chamado mudou', detalhe });
+
 /** O registro não existe nesta organização (404 `nao-encontrado`). */
 export const naoEncontrado = (detalhe: string) =>
   new ProblemaDaApi({ codigo: 'nao-encontrado', status: 404, titulo: 'Não encontrado', detalhe });

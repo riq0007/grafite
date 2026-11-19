@@ -121,7 +121,7 @@ describe('a OS na solicitação de conserto', () => {
     );
     expect(aberturas).toEqual([43]);
     await waitFor(() => expect(roteador.state.location.pathname).toBe('/operacao/ordens/12'));
-    expect(await screen.findByText('Não liga', { selector: 'dd' })).toBeTruthy();
+    expect(await screen.findByText('Não liga', { selector: 'dd > span' })).toBeTruthy();
   });
 
   it('Conserto com a OS: a ficha mostra "OS 12 · Aguardando peça", que leva à OS, sem nenhuma ação', async () => {

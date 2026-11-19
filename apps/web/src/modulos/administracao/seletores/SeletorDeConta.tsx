@@ -1,10 +1,12 @@
-import { BuscaComSugestoes, type SugeridasDaBusca } from '@grafite/ui';
+import { type AcaoDoRotuloDaBusca, BuscaComSugestoes, type SugeridasDaBusca } from '@grafite/ui';
 import { useEffect, useState } from 'react';
 
 export interface ContaDoSeletor {
   id: string;
   /** Como a conta aparece, como "Ana Souza". */
   rotulo: string;
+  /** Uma segunda linha na lista, como o tipo, o local e o responsável de um ativo. */
+  detalhe?: string;
 }
 
 /** O que a busca acha: as contas e, quando a API diz, o total e as sugeridas pelo contexto. */
@@ -27,8 +29,12 @@ export interface PropsDoSeletorDeConta {
    */
   buscar: (texto: string, sinal: AbortSignal) => Promise<ContaDoSeletor[] | ResultadoDoSeletor>;
   descricao?: string;
+  /** O texto de exemplo do campo vazio, como o que a busca acha. */
+  placeholder?: string;
   obrigatorio?: boolean;
   erro?: string;
+  /** Uma ação na linha do rótulo, à direita, como "Mais opções de busca". */
+  acaoDoRotulo?: AcaoDoRotuloDaBusca;
 }
 
 /**
@@ -46,8 +52,10 @@ export function SeletorDeConta({
   aoMudar,
   buscar,
   descricao,
+  placeholder,
   obrigatorio,
   erro,
+  acaoDoRotulo,
 }: PropsDoSeletorDeConta) {
   const [texto, definirTexto] = useState(valor?.rotulo ?? '');
   // A conta escolhida mudou, por uma escolha ou de fora: o campo passa a mostrar o rótulo dela.
@@ -95,14 +103,29 @@ export function SeletorDeConta({
       sugeridas={achado.sugeridas}
       aceitaTextoLivre={false}
       selectedKey={valor?.id ?? null}
-      onSelectionChange={(chave) =>
-        aoMudar(chave === null ? null : (contas.find((conta) => conta.id === chave) ?? null))
-      }
+      onSelectionChange={(chave) => {
+        // Com o texto e a escolha controlados, o React Aria repete a escolha de agora ao sair do
+        // campo, quando o texto não é o dela, e deixa o texto com quem controla: com uma escolha,
+        // ele volta ao rótulo dela; sem escolha, fica, para a busca seguir com ele, como ao ir
+        // dele aos filtros de "Mais opções de busca".
+        if (chave === (valor?.id ?? null)) {
+          if (valor) definirTexto(valor.rotulo);
+          return;
+        }
+        aoMudar(chave === null ? null : (contas.find((conta) => conta.id === chave) ?? null));
+      }}
       inputValue={texto}
-      onInputChange={definirTexto}
+      onInputChange={(novo) => {
+        definirTexto(novo);
+        // O campo vazio tira a escolha, como o React Aria faz quando não é controlado: o que a
+        // tela mostra é o que está escolhido, e um filtro some ao apagar o texto dele.
+        if (novo === '' && valor) aoMudar(null);
+      }}
       descricao={descricao}
+      placeholder={placeholder}
       obrigatorio={obrigatorio}
       erro={erro ?? falha ?? undefined}
+      acaoDoRotulo={acaoDoRotulo}
     />
   );
 }

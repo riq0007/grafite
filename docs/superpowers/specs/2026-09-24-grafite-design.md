@@ -119,6 +119,7 @@ A inspeção 3D e o painel de switch andam numa trilha paralela, sem travar a pa
 | **S4** | Diretório (AD) | O diretório da organização pela Administração: a conta de serviço do Cofre e o teste da conexão, os grupos do AD mapeados para os grupos do Grafite, a entrada com o usuário do AD, com a conta criada e sincronizada, e a gerência dos usuários e dos grupos do AD pela tela, em servidor Linux ou Windows (change integracao-ad-ldap) | F2a, F2b, P6 |
 | **S5** | Inventário pelo agente do GLPI | O agente do GLPI que já está nas máquinas manda o inventário também ao Grafite: o endereço com o token no `server` do agente, o protocolo JSON, os agentes ligados ao ativo pela série ou pelo hostname, os campos do inventário de hardware com a origem do agente e a aba Software na ficha. A TI pode escolher tipo/local para cadastrar novos computadores no primeiro inventário completo, sem duplicar identidades ambíguas ou inativas; IP, MAC, UUID, usuário e inicialização acompanham o inventário, e fabricante/modelo preenchem o catálogo (changes inventario-pelo-agente-glpi e cadastrar-computadores-pelo-agente) | P1, P2 |
 | **S6** | Distribuição de software | A base dos pacotes de software, com o arquivo em partes, o comando silencioso, os códigos de sucesso, as categorias e cada pacote frente ao inventário das máquinas, e a distribuição a uma ou várias máquinas pela tarefa Deploy do agente do GLPI que já está nelas: o assistente, com as máquinas por local, por visão, pela busca ou pela lista colada, e o quando (agora, a janela da noite ou um dia marcado); o agente chamado pela porta 62354 na hora em que o pedido pode seguir; a situação, a etapa e o log de cada máquina, o tentar de novo e o tirar da fila; a matriz dos pacotes por máquina; o agente sem contato, com o prazo da organização; e o histórico na ficha do ativo (changes distribuicao-de-software e software-por-pacote) | P1, S5 |
+| **S7** | Chamados | O módulo opcional Chamados, a primeira tela de quem atende. O Início dos chamados traz a saudação, a triagem e os prazos; "Quem está com o quê" mostra uma coluna por pessoa, com a carga, e o chamado passa de uma pessoa a outra arrastado. O chamado aberto tem a conversa, a nota interna, as respostas prontas e o quadro do prazo. Os prazos aparecem em barras. Cada tipo tem um prazo, contado em horas corridas ou no horário da TI, e o relógio para enquanto o chamado aguarda o colaborador. Os tipos de chamado têm o formulário montado no construtor, com a condição e o título, e saem de fábrica. O "Virar OS" e o "Pedir toner" ligam o chamado à OS e à solicitação. A abertura é em nome da pessoa, com as notificações e a auditoria (change chamados-da-ti; o chat do chamado, na chat-com-chamados) | F1, F2, P1, P3, P4 |
 | **D1** | Linguagem visual v3 | O redesenho de todo o sistema, pedido em 29/10/2026 e organizado como os design systems de referência (Material, Fluent, Atlassian, Carbon, Linear, Anthropic e Kimi). Vem em etapas: as fundações, com os temas gerados em OKLCH, o contraste garantido, o destaque Grafite de fábrica, a elevação, as situações completas e a paleta de dados (change fundamentos-v3); os instrumentos de dados (change visualizacoes-de-dados); os toners, os rostos do Control iD e os backups com eles (change suprimentos-rostos-e-backups); os componentes e o dock (change componentes-v3); e o controle do usuário, com o tema personalizado (change tema-personalizado) e o Início ajustável (change inicio-ajustavel). Arquivado em 29/10/2026 | F0, F1 |
 | **T1** | Inspeção 3D | Pipeline Blender → GLB; visualizador com modos explodido, carrossel, visão geral, grade e lista; peças ligadas a dados | P1 |
 | **T2** | Rede física | Painel de switch 2.5D gerado de um JSON por modelo; KPIs por porta via SNMP; rack U a U | P1, P2, P3 |
@@ -630,6 +631,8 @@ Cada organização pode definir os próprios padrões, e cada usuário muda os s
 
 **"O que resolver agora"** é a primeira tela depois do login. Ela lista as ocorrências abertas dos módulos, com a imagem do ativo, por severidade e, dentro dela, a mais antiga primeiro. O usuário reordena pelas colunas, e a escolha fica gravada.
 
+**Os chamados primeiro (S7, change chamados-da-ti):** quem vê os chamados, com o módulo ligado, entra pelo Início dos chamados, que é a primeira tela da TI. A troca vale só na primeira carga de cada aba e quando outra conta entra nela. O Início continua no dock e no endereço dele, e escolhê-lo no dock não volta aos chamados. As outras contas entram pelo Início.
+
 Os indicadores só aparecem quando existe uma decisão ligada a eles, conforme o ANTISLOP (§5 e §30).
 
 **Início ajustável (D1, change inicio-ajustavel):** o Início abre com a busca no topo e é feito de blocos. "O que resolver agora" é o primeiro e fica sempre à vista; os módulos registram os outros, como os suprimentos que acabam primeiro, numa prateleira de cartuchos com a estimativa, e os backups do Control iD, com os rostos e os dias sem backup. Cada conta sobe, desce e oculta os blocos em "Personalizar o Início".
@@ -1094,6 +1097,7 @@ Cada destaque sai da matiz e do croma e é gerado para cada tema:
   - `tinta-preto`, que é um neutro, visível nos temas escuros.
 
   Todas têm 3:1 contra a `superficie`.
+- **A aba dos chamados** (change chamados-da-ti, decisão 16): `aba-fundo` (luminosidade 0,42 e croma 0,16), `aba-fundo-2` (0,34 e 0,13), `aba-bloco` (0,49 e 0,165) e `aba-texto` (0,985 e 0,012), na matiz da informação; `aba-contorno`, em 0,8 e 0,1 nos temas escuros e o próprio `aba-fundo` nos claros; e `aba-atencao` (0,8 e 0,145) e `aba-sobre-atencao` (0,2 e 0,04), na matiz da atenção. Fora do sRGB, os canais são cortados, como o navegador mostrou o mockup aprovado (o `aba-fundo` fica em #004f9d). O `aba-texto` tem 4,5:1 sobre os fundos e o bloco, e o `aba-contorno`, 3:1 contra as superfícies.
 
 ### A.4 Raios
 
@@ -1109,6 +1113,7 @@ Derivados da base `r` (padrão 10 px desde o D1, ajustável de 0 a 24):
 | Miniatura | 0,58 `r` |
 | Rótulo | 0,42 `r` |
 | Aviso | `r` |
+| Cápsula | 100 `r`: só nas peças da aba dos chamados, a exceção nomeada do ANTISLOP (seção 15); reta na base zero |
 
 ### A.5 Densidade
 

@@ -63,3 +63,16 @@ export function textoDeBusca({
 }: Pick<DadosDaPessoa, 'nome' | 'matricula' | 'email'>): string {
   return normalizarTexto([nome, matricula, email].filter(Boolean).join(' '));
 }
+
+/** O nome que a anonimização dá à pessoa, antes do código, como em "Pessoa anonimizada 7KQ2". */
+export const NOME_DA_PESSOA_ANONIMIZADA = 'Pessoa anonimizada';
+
+/**
+ * O nome das frases, como "aguardando Fernanda" e "Bruno não atende": o primeiro nome. A pessoa
+ * anonimizada fica com o nome inteiro, que tem o código.
+ */
+export function nomeCurto(nome: string): string {
+  const limpo = nome.trim();
+  if (limpo.startsWith(`${NOME_DA_PESSOA_ANONIMIZADA} `)) return limpo;
+  return limpo.split(/\s+/)[0] ?? limpo;
+}

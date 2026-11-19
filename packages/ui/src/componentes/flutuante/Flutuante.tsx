@@ -43,16 +43,30 @@ export interface PropsDaOpcao extends Omit<ListBoxItemProps, 'children' | 'class
    * outro jeito, como num cabeçalho.
    */
   descricaoOculta?: string;
+  /**
+   * Uma segunda linha, no texto secundário, como o tipo, o local e o responsável de um ativo, que o
+   * leitor de tela lê como a descrição da opção.
+   */
+  detalhe?: string;
 }
 
 /** Opção de lista, com a marca de escolhida à esquerda, como nos menus do macOS. */
-export function Opcao({ children, descricaoOculta, ...resto }: PropsDaOpcao) {
+export function Opcao({ children, descricaoOculta, detalhe, ...resto }: PropsDaOpcao) {
   return (
     <ListBoxItem {...resto} textValue={children} className={estilos.opcao}>
       <span className={estilos.marca}>
         <Icone icone={Check} />
       </span>
-      {descricaoOculta ? (
+      {detalhe ? (
+        // A descrição é uma só: o detalhe à vista e, depois dele, o que só o leitor de tela lê.
+        <span className={estilos.textosDaOpcao}>
+          <Text slot="label">{children}</Text>
+          <Text slot="description" className={estilos.detalheDaOpcao}>
+            {detalhe}
+            {descricaoOculta && <VisuallyHidden>{` · ${descricaoOculta}`}</VisuallyHidden>}
+          </Text>
+        </span>
+      ) : descricaoOculta ? (
         <>
           <Text slot="label">{children}</Text>
           <VisuallyHidden>

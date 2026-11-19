@@ -40,7 +40,11 @@ export function ControleSegmentado({
       aria-label={ocultarRotulo ? rotulo : undefined}
       className={[estilos.segmentado, className].filter(Boolean).join(' ')}
     >
-      {!ocultarRotulo && <Label className={estilosDoCampo.rotulo}>{rotulo}</Label>}
+      {!ocultarRotulo && (
+        <Label className={estilosDoCampo.rotulo} data-parte="rotulo">
+          {rotulo}
+        </Label>
+      )}
       <div className={estilos.trilhoSegmentado}>{children}</div>
       {descricao && <DescricaoDoCampo>{descricao}</DescricaoDoCampo>}
     </RadioGroup>

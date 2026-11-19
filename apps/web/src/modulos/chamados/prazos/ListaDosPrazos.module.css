@@ -1,0 +1,140 @@
+/*
+ * Os prazos (m05 e m06): a raiz pede a janela inteira, vai até as bordas, como o quadro, e rola por
+ * dentro (`data-janela-inteira="rola-por-dentro"`): a coluna da lista, com o cabeçalho, rola sozinha,
+ * e o painel do chamado escolhido fica ao lado, da altura da janela. Na coluna, embaixo do
+ * cabeçalho, a legenda; depois, a cabeça das colunas, as faixas dos grupos e as linhas, numa grade de
+ * quatro colunas: o número, o chamado, a trilha com a escala e o prazo em texto.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+  position: relative;
+  display: flex;
+  min-width: 0;
+  margin: calc(-1 * var(--respiro));
+  container: prazos / inline-size;
+}
+
+/* As consultas de largura da lista medem a coluna dela, e não a tela. */
+.coluna {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  container: lista-dos-prazos / inline-size;
+}
+
+.coluna > [data-cabecalho-da-pagina] {
+  padding: var(--esp-4) var(--respiro) var(--esp-3);
+}
+
+/* Na tela estreita, o painel cobre a lista, que sai do foco e da leitura até ele fechar. */
+@container prazos (width < 900px) {
+  .tela[data-com-painel] > .coluna {
+    visibility: hidden;
+  }
+}
+
+.carregando,
+.vazio {
+  margin: var(--esp-4) var(--respiro);
+}
+
+.carregando {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A falha de uma releitura, acima da lista da última leitura, com o "Tentar de novo" ao lado. */
+.falhaAoReler {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: 0 var(--respiro) var(--esp-3);
+  font-size: var(--texto-dado);
+}
+
+.falhaAoReler > svg {
+  flex: none;
+  color: var(--cor-critico);
+}
+
+.falhaAoReler > p {
+  flex: 1 1 24ch;
+  min-width: 0;
+  margin: 0;
+}
+
+/* A legenda escrita das barras e, à direita, a ordem da fila. */
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2) var(--esp-5);
+  padding: 0 var(--respiro) var(--esp-3);
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-rotulo);
+}
+
+.legenda ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legenda li,
+.legenda p {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--esp-1) * 1.5);
+  margin: 0;
+}
+
+.legenda i {
+  width: 22px;
+  height: 8px;
+  border-radius: var(--raio-capsula);
+  background: var(--cor-texto-2);
+}
+
+.legenda i[data-parte="resta"] {
+  background: color-mix(in srgb, var(--cor-texto-2) 35%, transparent);
+}
+
+.legenda i[data-parte="marca"] {
+  width: 3px;
+  height: 14px;
+  background: var(--cor-texto);
+}
+
+.legenda i[data-parte="estouro"] {
+  border-block: 1px solid var(--cor-critico-forte);
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cor-critico-forte) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+/*
+ * Na coluna estreita, a legenda fica só com a ordem da fila, porque a lista perde as barras (a
+ * tabela, que mede a si mesma, com a largura da coluna). A compacta fica com elas até os 760 px.
+ */
+@container lista-dos-prazos (width < 860px) {
+  .coluna:not([data-compacta]) .legenda ul {
+    display: none;
+  }
+}
+
+@container lista-dos-prazos (width < 760px) {
+  .coluna[data-compacta] .legenda ul {
+    display: none;
+  }
+}

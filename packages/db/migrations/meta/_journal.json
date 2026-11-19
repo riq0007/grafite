@@ -421,6 +421,41 @@
       "when": 1794712341217,
       "tag": "0059_casamento_do_software",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794799038241,
+      "tag": "0060_chamados",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1794799912314,
+      "tag": "0061_apoio_dos_chamados",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1794830787650,
+      "tag": "0062_tipos_de_chamado_de_fabrica",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1794832446682,
+      "tag": "0063_eventos_com_permissoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1794869810353,
+      "tag": "0064_local_da_pessoa_no_chamado",
+      "breakpoints": true
     }
   ]
 }

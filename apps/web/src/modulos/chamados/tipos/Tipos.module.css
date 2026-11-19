@@ -1,0 +1,555 @@
+/*
+ * A tela dos tipos (change chamados-da-ti, design, "A tela dos tipos (tarefa 5.19)"; m07): a janela
+ * inteira, em três colunas que rolam sozinhas, a tabela (412 px), o editor e a prévia (444 px), como
+ * o m07 a 1440. Em janelas menores, as colunas dos lados encolhem até 340 e 380 px.
+ */
+.tela {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  /*
+   * A gaveta do Rascunho abre dentro da tela, com o véu sobre ela inteira. A tela é o contêiner que
+   * dá à prévia da gaveta a mesma largura da prévia de baixo, pela mesma conta.
+   */
+  container: tela / inline-size;
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(340px, 30%, 412px) minmax(0, 1fr) clamp(380px, 32.3%, 444px);
+  min-width: 0;
+  min-height: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+/* A coluna da tabela, afundada, com o cabeçalho, a tabela que rola e o pé. */
+.lista {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.cabecalhoDaLista {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-5) var(--esp-5) var(--esp-3);
+}
+
+.tituloDaLista {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.tituloDaLista h1 {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+}
+
+.cabecalhoDaLista p {
+  margin: 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/* "Novo tipo" e "Duplicar", embaixo da frase, como no m07 e no m08. */
+.acoesDaLista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  padding-top: var(--esp-1);
+}
+
+/*
+ * As colunas que rolam são o bloco que contém os campos escondidos do React Aria (o input das chaves
+ * e dos rádios, em `position: absolute`): sem isso, eles escapam da rolagem da coluna, dão altura à
+ * área que rola da janela, e o foco neles rola a janela inteira, e não a coluna.
+ */
+.rolagemDaLista {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+}
+
+.carregando {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-5);
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.peDaLista {
+  display: grid;
+  gap: 2px;
+  padding: var(--esp-3) var(--esp-5);
+  border-top: 1px solid var(--cor-linha);
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.peDaLista span:first-child {
+  font-weight: var(--peso-forte);
+}
+
+/*
+ * O tipo na linha da tabela: o ícone e o nome, com o selo embaixo. Numa janela mais estreita que a do
+ * m07, o nome quebra em duas linhas, entre as palavras, e não some em reticências.
+ */
+.tipoNaLinha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-1);
+  min-width: 0;
+  white-space: normal;
+}
+
+.nomeNaLinha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+.nomeNaLinha > span:last-child {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* O selo da exceção e a origem de um Rascunho duplicado, embaixo do nome, lado a lado. */
+.marcasNaLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+/* A origem de um Rascunho duplicado, como no m08. */
+.copiadoDaqui {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  font-size: var(--texto-legenda);
+  color: var(--cor-texto-2);
+}
+
+/* O editor: o cabeçalho do tipo, as seções que rolam e o pé com os botões. */
+.editor {
+  container: editor / inline-size;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cabecalhoDoTipo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-3) var(--esp-6);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+.nomeDoTipo {
+  min-width: 0;
+}
+
+/*
+ * O nome inteiro, como no m07 e no m08, em até duas linhas, e cortado com reticências só depois delas.
+ * O nome longo, como o "Troca de equipamento (cópia)", desce um passo para caber nelas.
+ */
+.nomeDoTipo h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--texto-titulo-grande);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+
+.nomeDoTipo h2[data-longo] {
+  font-size: var(--texto-titulo);
+}
+
+.nomeDoTipo p {
+  margin: 2px 0 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/* A contagem quebra em duas linhas antes de tirar a largura do nome. */
+.situacaoDoTipo {
+  display: grid;
+  justify-items: end;
+  gap: var(--esp-1);
+  max-width: 13em;
+}
+
+.situacaoDoTipo small {
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+  color: var(--cor-texto);
+  text-align: end;
+}
+
+/*
+ * Num editor mais estreito que o do m07 (522 px a 1440), como a 1280, a situação desce para baixo do
+ * nome, na linha dela, e o nome fica com a largura toda.
+ */
+@container editor (width < 500px) {
+  .cabecalhoDoTipo {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .situacaoDoTipo {
+    grid-column: 2;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    gap: var(--esp-2);
+    max-width: none;
+  }
+
+  .situacaoDoTipo small {
+    text-align: start;
+  }
+}
+
+/* As seções medem a largura delas: o nome e o ícone ficam lado a lado só quando o nome tem espaço. */
+.secoes {
+  container: secoes / inline-size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-height: 0;
+  padding: var(--esp-3) var(--esp-6) var(--esp-4);
+  overflow: auto;
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.nomeEIcone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+/* Sem os 140 px do nome ao lado dos 16 ícones, o nome fica na linha inteira, e os ícones embaixo. */
+@container secoes (width < 470px) {
+  .nomeEIcone {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A frase do prazo, com os números em mono e as seleções na frase. */
+.fraseDoPrazo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+.fimDaFrase {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.par {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.ajuda {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+/* As chaves: o nome e a explicação à esquerda, e a chave com "Ligado" ou "Desligado" à direita. */
+.chave {
+  padding: var(--esp-1) 0;
+  border-bottom: 1px dashed var(--cor-linha-forte);
+}
+
+.chave:last-child {
+  border-bottom: 0;
+}
+
+.linhaDaChave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 42px;
+}
+
+.textoDaChave {
+  display: grid;
+  gap: 1px;
+  font-size: var(--texto-corpo);
+}
+
+.textoDaChave small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.interruptor {
+  flex: none;
+  min-width: 104px;
+  font-size: var(--texto-dado);
+}
+
+.solicitacao {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-2) 0 var(--esp-3);
+}
+
+.peDoEditor {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-5);
+  border-top: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.botoesDoEditor {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.formulario {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+  color: var(--cor-texto);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+/* No pé do Rascunho, sem espaço para a frase e os três botões, os botões descem para a linha de baixo. */
+.botoesDoRascunho {
+  flex-wrap: wrap;
+}
+
+.botoesDoRascunho .acoes {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* A 1280, o editor da gaveta tem 461 px: com 16 px dos lados, os três botões cabem numa linha só. */
+.conteudoDaGaveta .peDoEditor {
+  padding-inline: var(--esp-4);
+}
+
+/* A situação do tipo, em texto, com o botão que a troca. */
+.linhaDaSituacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+/*
+ * A gaveta do Rascunho cobre as colunas do editor e da prévia, da borda da tabela até o fim da tela,
+ * com o editor e a prévia nas larguras das colunas de baixo: a prévia com a conta da coluna dela, na
+ * largura da tela (`cqi`), e não numa parte da gaveta, que a deixava meio pixel mais estreita e
+ * quebrava o "Computador" no meio.
+ */
+.gaveta {
+  inset-inline-start: clamp(340px, 30%, 412px);
+}
+
+.conteudoDaGaveta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 32.3cqi, 444px);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+/* "Duplicado de Computador.", em azul de informação, antes das seções. */
+.avisoDoDuplicado {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-info-borda);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-info-fundo);
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+}
+
+.avisoDoDuplicado > :first-child {
+  flex: none;
+  margin-top: 1px;
+  color: var(--cor-info);
+}
+
+.avisoDoDuplicado p {
+  margin: 0;
+}
+
+.avisoDoDuplicado p + p {
+  margin-top: var(--esp-1);
+}
+
+.avisoDoDuplicado strong {
+  font-weight: var(--peso-forte);
+}
+
+/* "3 campos, a partir do tipo Computador", com os campos e os tipos embaixo. */
+/* Os campos do Rascunho e "Editar os campos" à direita, como no m08. */
+.formularioDoRascunho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 46px;
+}
+
+.copiaDoFormulario {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.copiaDoFormulario small {
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+/* "Depois de escolher Equipamento novo:", com os campos numerados, na linha, como no m08. */
+.depoisDeEscolher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  margin: 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+}
+
+.depoisDeEscolher ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.depoisDeEscolher li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.depoisDeEscolher li small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.numeroDoCampo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+}
+
+/* A prévia do colaborador, afundada, com o título, a frase, a aba e as notas. */
+.previa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-5);
+  overflow: auto;
+  border-left: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+/* Os pedaços da prévia não encolhem: numa janela baixa, a prévia rola, e a aba não corta os cartões. */
+.previa > * {
+  flex: none;
+}
+
+.previa h2 {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.previa > p:not(.nota) {
+  margin: calc(-1 * var(--esp-1)) 0 0;
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.nota {
+  margin: 0;
+  display: flex;
+  gap: var(--esp-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.nota > :first-child {
+  flex: none;
+  margin-top: 1px;
+}
+
+.informacao {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.5;
+}

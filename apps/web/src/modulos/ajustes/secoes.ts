@@ -73,6 +73,11 @@ export const SECOES = [
         rotulo: 'Barra de rolagem',
         palavrasChave: ['rolar', 'polegar', 'sempre visível', 'scroll'],
       },
+      {
+        foco: 'conversas',
+        rotulo: 'Conversas',
+        palavrasChave: ['mensagens', 'chamados', 'chat', 'balões', 'no meio', 'nos cantos'],
+      },
     ] as readonly AjusteDaSecao[],
   },
   {

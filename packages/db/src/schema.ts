@@ -695,6 +695,11 @@ export const eventos = orgScoped(
     permissao: text('permissao'),
     /** Os locais dos registros, com `null` para o registro sem local. */
     locais: uuid('locais').array(),
+    /**
+     * Quem tem uma das permissões, em algum escopo, sem os locais (change chamados-da-ti, design,
+     * decisão 13).
+     */
+    permissoes: text('permissoes').array(),
     contas: uuid('contas').array(),
     sessoes: uuid('sessoes').array(),
   },
@@ -703,13 +708,14 @@ export const eventos = orgScoped(
     check('eventos_tipo_valido', sql`${t.tipo} ~ '^[a-z-]+[.][a-z-]+$'`),
     check(
       'eventos_publico_valido',
-      sql`(${t.todas} or ${t.permissao} is not null or ${t.contas} is not null
-          or ${t.sessoes} is not null)
+      sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
+          or ${t.contas} is not null or ${t.sessoes} is not null)
         and (${t.locais} is null or ${t.permissao} is not null)`,
     ),
     check(
       'eventos_publico_curto',
       sql`coalesce(cardinality(${t.locais}), 0) <= 8
+        and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
         and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
     ),
@@ -3884,6 +3890,500 @@ export const maquinasDasDistribuicoes = orgScoped(
     check(
       'maquinas_das_distribuicoes_situacao_valida',
       sql`${t.situacao} in (${lista(SITUACOES_DA_MAQUINA_NA_DISTRIBUICAO)})`,
+    ),
+  ],
+);
+
+/** Os ícones dos tipos de chamado, os mesmos do domínio (change chamados-da-ti, decisão 6). */
+export const ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO = [
+  'gota',
+  'notebook',
+  'impressora',
+  'cadeado',
+  'janela',
+  'globo',
+  'telefone',
+  'reticencias',
+  'setas',
+  'computador',
+  'torre',
+  'fone',
+  'chave',
+  'caixa',
+  'camera',
+  'wi-fi',
+] as const;
+
+/** As situações do tipo de chamado, as mesmas do domínio. */
+export const SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO = ['rascunho', 'em-uso', 'inativo'] as const;
+
+/** As unidades e os modos de contar o prazo, os mesmos do domínio. */
+export const UNIDADES_DO_PRAZO_NO_BANCO = ['min', 'h', 'd'] as const;
+export const MODOS_DO_PRAZO_NO_BANCO = ['corridas', 'horario'] as const;
+
+/** O que o tipo faz quando não há ninguém para atender e a solicitação que ele gera. */
+export const SEM_NINGUEM_NO_BANCO = ['triagem', 'fica'] as const;
+export const SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO = ['nao', 'toner', 'equipamento'] as const;
+
+/** As situações e as origens do chamado e as espécies da conversa, as mesmas do domínio. */
+export const SITUACOES_DO_CHAMADO_NO_BANCO = [
+  'triagem',
+  'em-atendimento',
+  'aguardando',
+  'resolvido',
+] as const;
+export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti'] as const;
+export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as const;
+
+/**
+ * O documento JSON com o tipo e o tamanho conferidos; o conteúdo, quem confere é o domínio. O teto
+ * conta os bytes do texto e só serve de rede: fica acima do pior caso que o domínio aceita, como
+ * 20 respostas de 4.000 caracteres de até 6 bytes cada no texto do JSON, perto de 480 KB.
+ */
+const documentoAte = (coluna: unknown, limite: number) =>
+  sql`jsonb_typeof(${coluna}) = 'object' and octet_length(${coluna}::text) <= ${sql.raw(String(limite))}`;
+
+/**
+ * O tipo de chamado (spec tipos-de-chamado; change chamados-da-ti, design, decisões 1, 2 e 6): o
+ * nome, único sem acento e maiúsculas, o ícone e a frase para o colaborador, que só o Rascunho do
+ * "Novo tipo" deixa vazia; a situação e a ordem; o prazo da resposta e da resolução, com o modo de
+ * contar; quem atende por padrão e o que acontece sem ninguém; o que acontece depois; quem vê; o
+ * formulário, que o domínio confere; e a origem da cópia. O papel da aplicação apaga o Rascunho
+ * descartado, e o tipo com chamados não sai.
+ */
+export const tiposDeChamado = orgScoped(
+  'tipos_de_chamado',
+  {
+    nome: text('nome').notNull(),
+    nomeNormalizado: text('nome_normalizado').notNull(),
+    icone: text('icone', { enum: ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO }).notNull(),
+    frase: text('frase'),
+    situacao: text('situacao', { enum: SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO }).notNull(),
+    ordem: integer('ordem').notNull(),
+    respostaValor: integer('resposta_valor').notNull(),
+    respostaUnidade: text('resposta_unidade', { enum: UNIDADES_DO_PRAZO_NO_BANCO }).notNull(),
+    resolucaoValor: integer('resolucao_valor').notNull(),
+    resolucaoUnidade: text('resolucao_unidade', { enum: UNIDADES_DO_PRAZO_NO_BANCO }).notNull(),
+    modo: text('modo', { enum: MODOS_DO_PRAZO_NO_BANCO }).notNull(),
+    atendePorPadrao: uuid('atende_por_padrao'),
+    semNinguem: text('sem_ninguem', { enum: SEM_NINGUEM_NO_BANCO }).notNull(),
+    podeVirarOs: boolean('pode_virar_os').notNull().default(false),
+    geraSolicitacao: text('gera_solicitacao', {
+      enum: SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO,
+    }).notNull(),
+    tipoDeAtivoDoEquipamento: uuid('tipo_de_ativo_do_equipamento'),
+    pedeOAtivo: boolean('pede_o_ativo').notNull().default(false),
+    apareceParaOColaborador: boolean('aparece_para_o_colaborador').notNull().default(true),
+    soATiAbre: boolean('so_a_ti_abre').notNull().default(false),
+    formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
+    duplicadoDe: uuid('duplicado_de'),
+    criadoEm: momento('criado_em').notNull().defaultNow(),
+    criadoPor: uuid('criado_por'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'tipos_de_chamado_atende_por_padrao_fk',
+      columns: [t.orgId, t.atendePorPadrao],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_tipo_de_ativo_fk',
+      columns: [t.orgId, t.tipoDeAtivoDoEquipamento],
+      foreignColumns: [tiposDeAtivo.orgId, tiposDeAtivo.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_duplicado_de_fk',
+      columns: [t.orgId, t.duplicadoDe],
+      foreignColumns: [t.orgId, t.id],
+    }),
+    foreignKey({
+      name: 'tipos_de_chamado_criado_por_fk',
+      columns: [t.orgId, t.criadoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    unique('tipos_de_chamado_nome_unico').on(t.orgId, t.nomeNormalizado),
+    check('tipos_de_chamado_nome_valido', sql`length(trim(${t.nome})) between 1 and 40`),
+    check(
+      'tipos_de_chamado_frase_valida',
+      sql`(${t.frase} is null and ${t.situacao} = 'rascunho')
+        or (${t.frase} is not null and length(trim(${t.frase})) between 1 and 80)`,
+    ),
+    check(
+      'tipos_de_chamado_icone_valido',
+      sql`${t.icone} in (${lista(ICONES_DO_TIPO_DE_CHAMADO_NO_BANCO)})`,
+    ),
+    check(
+      'tipos_de_chamado_situacao_valida',
+      sql`${t.situacao} in (${lista(SITUACOES_DO_TIPO_DE_CHAMADO_NO_BANCO)})`,
+    ),
+    check(
+      'tipos_de_chamado_prazo_valido',
+      sql`${t.respostaValor} between 1 and 999 and ${t.resolucaoValor} between 1 and 999
+        and ${t.respostaUnidade} in (${lista(UNIDADES_DO_PRAZO_NO_BANCO)})
+        and ${t.resolucaoUnidade} in (${lista(UNIDADES_DO_PRAZO_NO_BANCO)})
+        and ${t.modo} in (${lista(MODOS_DO_PRAZO_NO_BANCO)})`,
+    ),
+    // "Fica com <pessoa> mesmo assim" precisa de quem atende por padrão.
+    check(
+      'tipos_de_chamado_atendimento_valido',
+      sql`${t.semNinguem} in (${lista(SEM_NINGUEM_NO_BANCO)})
+        and (${t.semNinguem} <> 'fica' or ${t.atendePorPadrao} is not null)`,
+    ),
+    // O Equipamento leva o tipo de ativo pedido, e o Toner pede o ativo.
+    check(
+      'tipos_de_chamado_solicitacao_coerente',
+      sql`${t.geraSolicitacao} in (${lista(SOLICITACOES_DO_TIPO_DE_CHAMADO_NO_BANCO)})
+        and (${t.geraSolicitacao} = 'equipamento') = (${t.tipoDeAtivoDoEquipamento} is not null)
+        and (${t.geraSolicitacao} <> 'toner' or ${t.pedeOAtivo})`,
+    ),
+    check('tipos_de_chamado_formulario_valido', documentoAte(t.formulario, 524288)),
+  ],
+);
+
+/**
+ * O chamado (spec chamados; change chamados-da-ti, design, decisões 1, 3, 4 e 5): o número
+ * sequencial na organização, o tipo, o título, a pessoa que pediu, a origem e quem abriu; o
+ * formulário da abertura e as respostas; o ativo ligado, o local da pessoa na abertura (migration
+ * 0064) e os locais em que ele vale para ver e para atender; a situação e quem atende; o prazo
+ * copiado em minutos e o relógio guardado; a resolução; a OS e a solicitação; e a versão, que sobe
+ * nas ações que mudam a situação ou quem atende e na troca do ativo. Quem
+ * atende e o relógio seguem a tabela da spec, e as checagens são implicações, para a situação
+ * desconhecida ficar com a checagem da situação. O papel da aplicação não apaga (migration 0060).
+ */
+export const chamados = orgScoped(
+  'chamados',
+  {
+    numero: integer('numero').notNull(),
+    tipoId: uuid('tipo_id').notNull(),
+    titulo: text('titulo').notNull(),
+    tituloNormalizado: text('titulo_normalizado').notNull(),
+    pessoaId: uuid('pessoa_id').notNull(),
+    origem: text('origem', { enum: ORIGENS_DO_CHAMADO_NO_BANCO }).notNull(),
+    abertoPor: uuid('aberto_por'),
+    abertoEm: momento('aberto_em').notNull().defaultNow(),
+    formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
+    respostas: jsonb('respostas').$type<Record<string, unknown>>().notNull().default({}),
+    ativoId: uuid('ativo_id'),
+    locais: uuid('locais').array().notNull().default(sql`'{}'::uuid[]`),
+    semLocal: boolean('sem_local').notNull().default(false),
+    /** O local de trabalho da pessoa na abertura, que a troca do ativo usa; nulo, a pessoa sem local. */
+    localDaPessoa: uuid('local_da_pessoa'),
+    situacao: text('situacao', { enum: SITUACOES_DO_CHAMADO_NO_BANCO }).notNull(),
+    responsavelId: uuid('responsavel_id'),
+    responsavelDesde: momento('responsavel_desde'),
+    prazo: jsonb('prazo').$type<Record<string, unknown>>().notNull(),
+    contadoS: integer('contado_s').notNull().default(0),
+    relogioDesde: momento('relogio_desde'),
+    primeiraRespostaEm: momento('primeira_resposta_em'),
+    estouroAvisadoEm: momento('estouro_avisado_em'),
+    resolvidoEm: momento('resolvido_em'),
+    resolvidoPor: uuid('resolvido_por'),
+    osId: uuid('os_id'),
+    solicitacaoId: uuid('solicitacao_id'),
+    versao: integer('versao').notNull().default(1),
+  },
+  (t) => [
+    foreignKey({
+      name: 'chamados_tipo_fk',
+      columns: [t.orgId, t.tipoId],
+      foreignColumns: [tiposDeChamado.orgId, tiposDeChamado.id],
+    }),
+    foreignKey({
+      name: 'chamados_pessoa_fk',
+      columns: [t.orgId, t.pessoaId],
+      foreignColumns: [pessoas.orgId, pessoas.id],
+    }),
+    foreignKey({
+      name: 'chamados_aberto_por_fk',
+      columns: [t.orgId, t.abertoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_ativo_fk',
+      columns: [t.orgId, t.ativoId],
+      foreignColumns: [ativos.orgId, ativos.id],
+    }),
+    foreignKey({
+      name: 'chamados_responsavel_fk',
+      columns: [t.orgId, t.responsavelId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_local_da_pessoa_fk',
+      columns: [t.orgId, t.localDaPessoa],
+      foreignColumns: [locais.orgId, locais.id],
+    }),
+    foreignKey({
+      name: 'chamados_resolvido_por_fk',
+      columns: [t.orgId, t.resolvidoPor],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'chamados_os_fk',
+      columns: [t.orgId, t.osId],
+      foreignColumns: [ordensDeServico.orgId, ordensDeServico.id],
+    }),
+    foreignKey({
+      name: 'chamados_solicitacao_fk',
+      columns: [t.orgId, t.solicitacaoId],
+      foreignColumns: [solicitacoes.orgId, solicitacoes.id],
+    }),
+    unique('chamados_numero_unico').on(t.orgId, t.numero),
+    // Uma OS sai de um chamado só; uma solicitação junta os chamados que pedem o mesmo toner.
+    unique('chamados_os_unica').on(t.orgId, t.osId),
+    // Os abertos de cada situação, para o quadro, a triagem e os prazos.
+    index('chamados_situacao_idx').on(t.orgId, t.situacao),
+    // Os abertos e os do último ano de cada tipo.
+    index('chamados_tipo_idx').on(t.orgId, t.tipoId, t.abertoEm),
+    index('chamados_pessoa_idx').on(t.orgId, t.pessoaId),
+    index('chamados_ativo_idx').on(t.orgId, t.ativoId).where(sql`${t.ativoId} is not null`),
+    index('chamados_solicitacao_idx')
+      .on(t.orgId, t.solicitacaoId)
+      .where(sql`${t.solicitacaoId} is not null`),
+    // Os resolvidos hoje, na carga de cada pessoa.
+    index('chamados_resolvido_idx')
+      .on(t.orgId, t.resolvidoEm)
+      .where(sql`${t.resolvidoEm} is not null`),
+    index('chamados_locais_idx').using('gin', t.locais),
+    check('chamados_numero_valido', sql`${t.numero} >= 1`),
+    check('chamados_titulo_valido', sql`length(trim(${t.titulo})) between 1 and 120`),
+    check('chamados_origem_valida', sql`${t.origem} in (${lista(ORIGENS_DO_CHAMADO_NO_BANCO)})`),
+    check(
+      'chamados_situacao_valida',
+      sql`${t.situacao} in (${lista(SITUACOES_DO_CHAMADO_NO_BANCO)})`,
+    ),
+    check('chamados_contado_valido', sql`${t.contadoS} >= 0`),
+    check('chamados_versao_valida', sql`${t.versao} >= 1`),
+    // A TI abre em nome da pessoa, que já falou com ela: quem abriu e a primeira resposta vêm na
+    // abertura (spec chamados, "Abrir um chamado pela TI").
+    check(
+      'chamados_abertura_coerente',
+      sql`${t.origem} <> 'ti' or (${t.abertoPor} is not null and ${t.primeiraRespostaEm} is not null)`,
+    ),
+    // Ninguém atende na triagem; alguém atende no atendimento e no aguardando, sempre.
+    check(
+      'chamados_atendimento_coerente',
+      sql`(${t.responsavelId} is null) = (${t.responsavelDesde} is null)
+        and (${t.situacao} <> 'triagem' or ${t.responsavelId} is null)
+        and (${t.situacao} not in ('em-atendimento', 'aguardando') or ${t.responsavelId} is not null)`,
+    ),
+    // O relógio conta na triagem e no atendimento e para no aguardando e no resolvido.
+    check(
+      'chamados_relogio_coerente',
+      sql`(${t.situacao} not in ('triagem', 'em-atendimento') or ${t.relogioDesde} is not null)
+        and (${t.situacao} not in ('aguardando', 'resolvido') or ${t.relogioDesde} is null)`,
+    ),
+    // O resolvido tem quem resolveu e quando; o reaberto os perde.
+    check(
+      'chamados_resolucao_coerente',
+      sql`(${t.resolvidoEm} is null) = (${t.resolvidoPor} is null)
+        and (${t.situacao} <> 'resolvido' or ${t.resolvidoEm} is not null)
+        and (${t.situacao} = 'resolvido' or ${t.resolvidoEm} is null)`,
+    ),
+    check('chamados_formulario_valido', documentoAte(t.formulario, 524288)),
+    check('chamados_respostas_validas', documentoAte(t.respostas, 1048576)),
+    check('chamados_prazo_valido', documentoAte(t.prazo, 1024)),
+  ],
+);
+
+/**
+ * A conversa de cada chamado (spec chamados, "Conversa do chamado"; change chamados-da-ti, design,
+ * decisões 1 e 8): a mensagem para a pessoa, de uma conta ou da pessoa, pelo chat; a nota interna,
+ * de uma conta; e o evento, com o código e os dados, da conta que agiu. Nenhum evento desta change
+ * é do sistema: o chat e a aba trazem os autores deles junto com as origens novas. O papel da
+ * aplicação só inclui e lê (migration 0060).
+ */
+export const mensagensDosChamados = orgScoped(
+  'mensagens_dos_chamados',
+  {
+    chamadoId: uuid('chamado_id').notNull(),
+    especie: text('especie', { enum: ESPECIES_DA_CONVERSA_NO_BANCO }).notNull(),
+    autorConta: uuid('autor_conta'),
+    autorPessoa: uuid('autor_pessoa'),
+    texto: text('texto'),
+    evento: text('evento'),
+    dados: jsonb('dados').$type<Record<string, unknown>>(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'mensagens_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'mensagens_dos_chamados_autor_conta_fk',
+      columns: [t.orgId, t.autorConta],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'mensagens_dos_chamados_autor_pessoa_fk',
+      columns: [t.orgId, t.autorPessoa],
+      foreignColumns: [pessoas.orgId, pessoas.id],
+    }),
+    index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
+    // Para o anexo da mensagem ser do mesmo chamado (anexos_dos_chamados_mensagem_fk).
+    unique('mensagens_dos_chamados_id_chamado_unico').on(t.orgId, t.id, t.chamadoId),
+    check(
+      'mensagens_dos_chamados_especie_valida',
+      sql`${t.especie} in (${lista(ESPECIES_DA_CONVERSA_NO_BANCO)})`,
+    ),
+    check(
+      'mensagens_dos_chamados_autoria_valida',
+      sql`(${t.especie} <> 'mensagem' or num_nonnulls(${t.autorConta}, ${t.autorPessoa}) = 1)
+        and (${t.especie} <> 'nota' or (${t.autorConta} is not null and ${t.autorPessoa} is null))
+        and (${t.especie} <> 'evento' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
+    ),
+    check(
+      'mensagens_dos_chamados_conteudo_valido',
+      sql`(${t.especie} not in ('mensagem', 'nota') or (${t.texto} is not null
+          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null and ${t.dados} is null))
+        and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null))`,
+    ),
+    check(
+      'mensagens_dos_chamados_evento_valido',
+      sql`${t.evento} is null or ${t.evento} ~ '^[a-z][a-z-]{0,39}$'`,
+    ),
+    check(
+      'mensagens_dos_chamados_dados_validos',
+      sql`${t.dados} is null or (${documentoAte(t.dados, 1048576)})`,
+    ),
+  ],
+);
+
+/**
+ * O último número de chamado de cada organização (change chamados-da-ti, design, decisão 1): sem
+ * buraco nem repetição, como o das OS.
+ */
+export const numeracaoDosChamados = orgScoped(
+  'numeracao_dos_chamados',
+  {
+    ultimo: integer('ultimo').notNull(),
+  },
+  (t) => [
+    unique('numeracao_dos_chamados_org_unica').on(t.orgId),
+    check('numeracao_dos_chamados_ultimo_valido', sql`${t.ultimo} >= 1`),
+  ],
+);
+
+/**
+ * As respostas prontas de quem atende (spec chamados, "Respostas prontas"; change chamados-da-ti,
+ * design, decisão 1): o rótulo, único sem acento e maiúsculas; o texto, em que `{nome}` vira o
+ * primeiro nome da pessoa; a espera da resposta, que põe o chamado em Aguardando; os tipos em que
+ * ela aparece, ou todos, com a lista vazia; e a ordem. O limite de 100 por organização é do domínio.
+ */
+export const respostasProntas = orgScoped(
+  'respostas_prontas',
+  {
+    rotulo: text('rotulo').notNull(),
+    rotuloNormalizado: text('rotulo_normalizado').notNull(),
+    texto: text('texto').notNull(),
+    esperaAResposta: boolean('espera_a_resposta').notNull().default(false),
+    tipos: uuid('tipos').array().notNull().default(sql`'{}'::uuid[]`),
+    ordem: integer('ordem').notNull(),
+  },
+  (t) => [
+    unique('respostas_prontas_rotulo_unico').on(t.orgId, t.rotuloNormalizado),
+    check('respostas_prontas_rotulo_valido', sql`length(trim(${t.rotulo})) between 1 and 60`),
+    check('respostas_prontas_texto_valido', sql`length(trim(${t.texto})) between 1 and 2000`),
+  ],
+);
+
+/** Os dias da semana do horário da TI, de segunda (1) a domingo (7), os mesmos do domínio. */
+export const DIAS_DA_SEMANA_NO_BANCO = [1, 2, 3, 4, 5, 6, 7] as const;
+
+/**
+ * O horário da TI (spec chamados, "Horário da TI"; change chamados-da-ti, design, decisões 1 e 3):
+ * os dias da semana; o início e o fim, em minutos do dia, os mesmos em todos os dias; o fuso; e a
+ * carga cheia, o número de chamados abertos que enche a barra de carga de uma pessoa. Uma linha por
+ * organização, opcional: sem ela, vale o padrão do domínio, que também confere o fuso na lista.
+ */
+export const horarioDaTi = orgScoped(
+  'horario_da_ti',
+  {
+    dias: smallint('dias').array().notNull(),
+    inicio: smallint('inicio').notNull(),
+    fim: smallint('fim').notNull(),
+    fuso: text('fuso').notNull(),
+    cargaCheia: smallint('carga_cheia').notNull(),
+  },
+  (t) => [
+    unique('horario_da_ti_org_unica').on(t.orgId),
+    // Ao menos um dia, sem repetir; o `<@` recusa também o dia fora da semana e o nulo.
+    check(
+      'horario_da_ti_dias_validos',
+      sql`cardinality(${t.dias}) between 1 and 7
+        and ${t.dias} <@ '{1,2,3,4,5,6,7}'::smallint[]
+        and ${sql.join(
+          DIAS_DA_SEMANA_NO_BANCO.map(
+            (dia) =>
+              sql`cardinality(array_positions(${t.dias}, ${sql.raw(String(dia))}::smallint)) <= 1`,
+          ),
+          sql` and `,
+        )}`,
+    ),
+    // Das 00:00 às 23:59: o fim não chega à meia-noite (24:00), que um campo de hora não escreve.
+    check(
+      'horario_da_ti_horas_validas',
+      sql`${t.inicio} >= 0 and ${t.fim} <= 1439 and ${t.inicio} < ${t.fim}`,
+    ),
+    check('horario_da_ti_fuso_valido', textoAte(t.fuso, 64)),
+    check('horario_da_ti_carga_cheia_valida', sql`${t.cargaCheia} between 1 and 20`),
+  ],
+);
+
+/**
+ * O anexo de um chamado (spec arquivos-e-imagens, "Anexos dos chamados"; change chamados-da-ti,
+ * design, decisão 10): o arquivo, de um dono só, que nasce sem dono no envio e passa ao chamado na
+ * gravação, com a mensagem (ou a nota) do mesmo chamado ou com o id do campo do formulário. O papel
+ * da aplicação não apaga o anexo (migration 0061): a linha liga o arquivo ao dono, e o anexo que
+ * sai de um campo ganha o `removido_em` no arquivo.
+ */
+export const anexosDosChamados = orgScoped(
+  'anexos_dos_chamados',
+  {
+    arquivoId: uuid('arquivo_id').notNull(),
+    chamadoId: uuid('chamado_id'),
+    mensagemId: uuid('mensagem_id'),
+    campoId: text('campo_id'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'anexos_dos_chamados_arquivo_fk',
+      columns: [t.orgId, t.arquivoId],
+      foreignColumns: [arquivos.orgId, arquivos.id],
+    }),
+    foreignKey({
+      name: 'anexos_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'anexos_dos_chamados_mensagem_fk',
+      columns: [t.orgId, t.mensagemId, t.chamadoId],
+      foreignColumns: [
+        mensagensDosChamados.orgId,
+        mensagensDosChamados.id,
+        mensagensDosChamados.chamadoId,
+      ],
+    }),
+    unique('anexos_dos_chamados_arquivo_unico').on(t.orgId, t.arquivoId),
+    index('anexos_dos_chamados_chamado_idx')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.chamadoId} is not null`),
+    index('anexos_dos_chamados_sem_dono_idx')
+      .on(t.orgId, t.arquivoId)
+      .where(sql`${t.chamadoId} is null`),
+    // Sem dono, ou o chamado com a mensagem ou com o campo.
+    check(
+      'anexos_dos_chamados_dono_valido',
+      sql`(${t.chamadoId} is null and ${t.mensagemId} is null and ${t.campoId} is null)
+        or (${t.chamadoId} is not null and num_nonnulls(${t.mensagemId}, ${t.campoId}) = 1)`,
+    ),
+    // O id curto e estável do campo (design, decisão 2).
+    check(
+      'anexos_dos_chamados_campo_valido',
+      sql`${t.campoId} is null or ${t.campoId} ~ '^[A-Za-z0-9_-]{1,40}$'`,
     ),
   ],
 );

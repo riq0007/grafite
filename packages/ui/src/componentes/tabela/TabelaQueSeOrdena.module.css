@@ -1,0 +1,137 @@
+/*
+ * A tabela que se ordena: as linhas de 46 px, e as altas, de 56, no texto dos dados, como o m07; a
+ * escolhida, na superfície, com as linhas fortes e a barra do destaque à esquerda; no arraste, a
+ * linha no ar esmaecida e a linha de encaixe.
+ */
+.tabela {
+  --altura-do-cabecalho: 40px;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--texto-dado);
+  outline: none;
+}
+
+/*
+ * O cabeçalho fica no alto enquanto a lista rola, no fundo afundado da coluna da lista do m07, para as
+ * linhas passarem por baixo sem vazar.
+ */
+.tabela th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--altura-do-cabecalho);
+  padding: 0 var(--esp-2);
+  background-color: var(--cor-superficie-afundada);
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.04em;
+  text-align: start;
+  text-transform: uppercase;
+  color: var(--cor-texto-2);
+}
+
+.tabela th:last-child,
+.tabela td:last-child {
+  padding-right: var(--esp-4);
+}
+
+.colunaDaAlca {
+  width: 36px;
+}
+
+/* A linha que rola até a vista para embaixo do cabeçalho fixo, e não atrás dele. */
+.linha {
+  outline: none;
+  cursor: default;
+  scroll-margin-top: var(--altura-do-cabecalho);
+}
+
+.linha td {
+  height: 46px;
+  padding: 0 var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alta td {
+  height: 56px;
+}
+
+.linha[data-hovered] td {
+  background-color: var(--cor-hover);
+}
+
+.linha[data-selected] td {
+  background-color: var(--cor-superficie);
+  box-shadow:
+    inset 0 1px 0 var(--cor-linha-forte),
+    inset 0 -1px 0 var(--cor-linha-forte);
+}
+
+.linha[data-selected] td:first-child {
+  box-shadow:
+    inset 3px 0 0 var(--cor-destaque),
+    inset 0 1px 0 var(--cor-linha-forte),
+    inset 0 -1px 0 var(--cor-linha-forte);
+}
+
+.linha[data-focus-visible] td {
+  box-shadow:
+    inset 0 2px 0 var(--cor-foco),
+    inset 0 -2px 0 var(--cor-foco);
+}
+
+/* No arraste: a linha no ar, esmaecida, e a linha de encaixe no alto ou embaixo da linha sob o ponteiro. */
+.linha[data-no-ar] td {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.linha[data-encaixe="antes"] td {
+  box-shadow: inset 0 2px 0 var(--cor-destaque);
+}
+
+.linha[data-encaixe="depois"] td {
+  box-shadow: inset 0 -2px 0 var(--cor-destaque);
+}
+
+/* No arraste, o cursor de segurar, o do sistema, em toda a tabela, e nenhum texto se seleciona. */
+.area[data-arrastando],
+.area[data-arrastando] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/*
+ * A célula da alça vence a das linhas: sem o respiro da direita, a alça cabe, e nada vira reticências;
+ * o desenho fica a 16 px da borda, como no m07.
+ */
+.linha .celulaDaAlca {
+  padding: 0 0 0 var(--esp-3);
+  text-overflow: clip;
+}
+
+/* A alça, só do ponteiro, como no m07: o ícone de 14 px, sem botão em volta. */
+.alca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 32px;
+  color: var(--cor-texto-2);
+  cursor: grab;
+  touch-action: none;
+}
+
+.alca:hover {
+  color: var(--cor-texto);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-dado);
+}

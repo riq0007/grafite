@@ -1,6 +1,6 @@
 # Contrato de módulo da casca
 
-Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor e as etapas da chegada também têm contratos prontos, descritos abaixo.
+Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor, a primeira tela ao entrar e as etapas da chegada também têm contratos prontos, descritos abaixo.
 
 ## Passo a passo
 
@@ -10,7 +10,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 4. **Telas.** Toda tela começa pelo `CabecalhoDaPagina`, que leva o título da janela, em todos os estados: carregando, com erro, vazia e sem acesso. O foco vai para o título depois de cada navegação, e o teste-guarda `casca/cabecalhoDasTelas.test.ts` reprova o `TituloDaJanela` solto, fora do Início (change cabecalho-em-toda-tela). Nenhum item leva a uma tela em construção: o módulo só entra no registro quando cada destino tem uma tela que funciona.
    - **Rolagem.** A tela rola dentro da janela, na área abaixo da barra das abas, que esmaece o conteúdo perto da borda e volta ao começo quando a tela muda (change janela-rolavel-e-campos-em-colunas). A tela não cria uma rolagem própria para a página. A peça presa, com `position: sticky`, usa `top: 0`, que já fica abaixo da faixa esmaecida de cima.
    - **Título com a barra das abas.** A tela cujo título a primeira aba já repete, como o cadastro do ativo, pede `<CabecalhoDaPagina titulo={…} ocultarComAbas />`: com a barra das abas, o título sai da vista e continua para o leitor de tela e para o foco.
-   - **Cabeçalho.** O `CabecalhoDaPagina` (change cabecalhos-e-fichas) põe o título à esquerda, com os selos ao lado e o detalhe embaixo, e as ações da tela juntas, à direita, na ordem dada, com a principal num `Botao` primário. Uma linha separa o cabeçalho do conteúdo. As seções da tela usam o `Carimbo`, e os dados só para leitura, a `ListaDeDados`.
+   - **Cabeçalho.** O `CabecalhoDaPagina` (change cabecalhos-e-fichas) põe o título à esquerda, com os selos ao lado e o detalhe embaixo, e as ações da tela juntas, à direita, na ordem dada, com a principal num `Botao` primário. Uma linha separa o cabeçalho do conteúdo. A `trilha` vai numa linha em cima do título, e o `quadro`, como o do prazo do chamado aberto, à direita do título e das ações, que descem para baixo do título, com a principal fechando o grupo; na largura estreita, o quadro desce para baixo das ações (change chamados-da-ti). As seções da tela usam o `Carimbo`, e os dados só para leitura, a `ListaDeDados`.
    - **Tabela.** A coluna da tabela redimensionável só recebe `largura` quando a conta a guardou, como na visão. Sem ela, as colunas dividem a largura da área, e a principal fica com o dobro.
 5. **Busca.** O módulo e os itens dos menus entram na busca sozinhos. Ações, atalhos para telas e ajustes entram pelas entradas de busca, e os registros de negócio, pelos provedores.
 6. **Tela inicial.** As ocorrências abertas do módulo entram em "O que resolver agora" por uma fonte de ocorrências.
@@ -32,6 +32,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 | `rotas` | A subárvore de rotas do módulo |
 | `menu` | Menu em árvore do item do dock (opcional) |
 | `menuDinamico` | Os itens do menu do dock que vêm dos dados, como as visões fixadas: a permissão, as consultas e o `montar` (opcional) |
+| `primeiraTela` | As permissões com que o módulo é a primeira tela ao entrar, no lugar do Início (opcional; veja Primeira tela ao entrar) |
 | `menusDaBarra` | Menus do módulo na barra superior, como Visualizar e Ações (opcional) |
 | `busca` | Entradas de busca e os provedores de busca, cada um com o grupo dele (opcional) |
 | `ocorrencias` | Fonte das ocorrências abertas do módulo, para a tela inicial (opcional) |
@@ -42,7 +43,7 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 
 ### Menus em árvore
 
-Cada item leva a um destino (`{ rotulo, destino }`) ou abre um submenu (`{ rotulo, filhos }`). Com `separadoAntes: true`, uma linha separa o item dos anteriores. Os destinos são endereços das rotas do próprio módulo, conferidos na compilação.
+Cada item leva a um destino (`{ rotulo, destino }`) ou abre um submenu (`{ rotulo, filhos }`). Com `separadoAntes: true`, uma linha separa o item dos anteriores; o primeiro item que a conta vê, no menu e em cada submenu, fica sem ela, porque os anteriores são os que a conta não vê. Os destinos são endereços das rotas do próprio módulo, conferidos na compilação.
 
 A casca decide como o menu abre:
 - **Dock:** abre ao parar o ponteiro sobre o item.
@@ -529,6 +530,23 @@ As regras:
 ### Largura do bloco
 
 Cada bloco de módulo tem a largura "Inteira", de fábrica, ou "Metade", que a conta escolhe no modo Personalizar e fica em `inicio.blocos`. No computador, com a área a partir de 1.200 px, o Início é uma grade de duas colunas: dois blocos de metade seguidos ficam lado a lado, e o inteiro ocupa as duas. No tablet, no celular e na área estreita, todo bloco é inteiro. O bloco não precisa fazer nada: ele deve caber na metade da área, e a prateleira dos suprimentos, por exemplo, quebra em linhas.
+
+## Primeira tela ao entrar
+
+Um módulo pode ser a primeira tela de quem entra, no lugar do Início (change chamados-da-ti, design, decisão 14). Ele declara o `primeiraTela`, com as permissões dela, e a casca faz o resto. O Chamados é a primeira tela de quem vê ou atende os chamados; quem só os configura fica no Início:
+
+```ts
+// apps/web/src/modulos/chamados/modulo.ts (trecho)
+  permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'],
+  primeiraTela: { permissoes: PERMISSOES_DE_VER },
+```
+
+As regras:
+- **Só a raiz pura:** a casca troca só o endereço da organização sem caminho nem parâmetros, `/`, como o `start_url` da PWA. Um endereço salvo, com busca ou com âncora abre onde aponta.
+- **Só na primeira carga da aba:** a casca marca a aba com a conta, no `sessionStorage`, em qualquer endereço. A marca é da casca, e não do módulo. Recarregar fica onde estava; a aba nova e outra conta na mesma aba voltam à primeira tela. Sem o `sessionStorage`, a raiz leva à primeira tela a cada carga.
+- **Quem:** vale o primeiro módulo do registro da conta que declara a primeira tela, para quem tem uma das permissões dela; o módulo desligado sai com o resto dele. Quem não tem nenhuma fica no Início.
+- **Antes do roteador:** a `PrimeiraCarga` (`apps/web/src/casca/primeiraTela.ts`) troca a raiz no histórico antes de o roteador montar, e ele já carrega a tela do módulo. O Início não começa a carregar, o voltar do navegador não leva à raiz e o foco da abertura fica onde estava.
+- **A sessão desconhecida:** sem resposta do servidor na abertura, a casca fica no Início, também quando ele volta.
 
 ## Notificações
 
@@ -1046,6 +1064,7 @@ A tela que vai do topo ao fim da janela, com o pé preso embaixo, põe `data-jan
   - organiza o resto, como uma grade com o meio em `1fr` e o pé no fim;
   - pode ir por cima do respiro, até as bordas, com a margem negativa de `--respiro-da-janela`.
 - **Conteúdo maior que a janela:** a área rola, como em qualquer tela.
+- **A tela que rola por dentro:** com `data-janela-inteira="rola-por-dentro"`, a raiz fica da altura da área, sem crescer com o conteúdo, e as partes dela rolam sozinhas, com `min-height: 0` e `overflow-y: auto`. É o chamado aberto, com o cabeçalho no alto, o campo de escrever no pé e só a conversa rolando no meio (change chamados-da-ti, design, "O chamado aberto, a conversa").
 - **A tela sem o atributo:** continua do tamanho do que tem, com o que ela põe empilhado no alto.
 
 ## Permissões
@@ -1397,6 +1416,12 @@ Cada organização pode desligar um módulo opcional, para usar só o que precis
 ```ts
 // packages/domain/src/modulos/modulos.ts (trecho)
 export const MODULOS_OPCIONAIS = [
+  {
+    id: 'chamados',
+    nome: 'Chamados',
+    descricao:
+      'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
+  },
   { id: 'ativos', nome: 'Ativos', descricao: 'O catálogo, o cadastro e a lista dos ativos.' },
   {
     id: 'cofre',
@@ -1786,6 +1811,8 @@ export const TIPOS_DE_EVENTO = [
   'paineis.mudaram',
   'diretorio.mudou',
   'software.mudou',
+  'chamados.mudaram',
+  'ajustes-dos-chamados.mudaram',
 ] as const;
 ```
 
@@ -2484,6 +2511,7 @@ import { administracao } from './administracao/modulo.ts';
 import { ajustes } from './ajustes/modulo.ts';
 import { alertas } from './alertas/modulo.ts';
 import { ativos } from './ativos/modulo.ts';
+import { chamados } from './chamados/modulo.ts';
 import { cofre } from './cofre/modulo.ts';
 import { gestao } from './gestao/modulo.ts';
 import { inicio } from './inicio/modulo.ts';
@@ -2496,9 +2524,10 @@ import { salas } from './salas/modulo.ts';
  * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
  * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
  * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
- * dock.
+ * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI.
  */
 export const REGISTRO = [
+  chamados,
   inicio,
   ativos,
   gestao,

@@ -57,17 +57,18 @@ test('a ordem do dock muda pelos Ajustes, o foco acompanha o módulo, e o tirado
       .getByRole('button')
       .evaluateAll((itens) => itens.map((item) => item.getAttribute('aria-label')));
   const botao = (nome: string) => page.getByRole('button', { name: nome, exact: true });
-  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Ativos']);
+  // Os Chamados vêm antes do Início na ordem de fábrica (change chamados-da-ti).
+  expect((await noDock()).slice(0, 2)).toEqual(['Chamados', 'Início']);
 
   // Primeiro da lista: o dock muda na hora, o Subir fica desabilitado, e o foco vai ao Descer.
-  await botao('Subir Ativos').focus();
+  await botao('Subir Início').focus();
   await page.keyboard.press('Enter');
-  await expect(botao('Subir Ativos')).toBeDisabled();
-  await expect(botao('Descer Ativos')).toBeFocused();
-  expect((await noDock()).slice(0, 2)).toEqual(['Ativos', 'Início']);
+  await expect(botao('Subir Início')).toBeDisabled();
+  await expect(botao('Descer Início')).toBeFocused();
+  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Chamados']);
   await page.keyboard.press('Enter');
-  await expect(botao('Descer Ativos')).toBeFocused();
-  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Ativos']);
+  await expect(botao('Descer Início')).toBeFocused();
+  expect((await noDock()).slice(0, 2)).toEqual(['Chamados', 'Início']);
 
   // No meio da lista, a linha muda de lugar, e o foco continua no mesmo botão.
   await botao('Subir Operação').focus();
@@ -75,7 +76,8 @@ test('a ordem do dock muda pelos Ajustes, o foco acompanha o módulo, e o tirado
   await expect(botao('Subir Operação')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(botao('Subir Operação')).toBeFocused();
-  expect((await noDock()).slice(0, 4)).toEqual([
+  expect((await noDock()).slice(0, 5)).toEqual([
+    'Chamados',
     'Início',
     'Ativos',
     'Operação',

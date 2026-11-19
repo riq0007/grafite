@@ -1,0 +1,58 @@
+/*
+ * A busca com resultados: o campo de busca do kit, na largura de quem usa, e a lista em material
+ * translúcido, com o nome e o detalhe de cada resultado em duas linhas.
+ */
+.busca {
+  min-width: 0;
+}
+
+.painel {
+  width: max(var(--trigger-width), 360px);
+  max-width: calc(100vw - 2 * var(--esp-4));
+}
+
+.lista {
+  outline: none;
+}
+
+.resultado {
+  display: grid;
+  gap: 2px;
+  padding: var(--esp-2);
+  /* Raio concêntrico ao do painel: o de fora menos o respiro. */
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  color: var(--cor-texto);
+  outline: none;
+  cursor: default;
+}
+
+.resultado[data-focused] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.rotulo {
+  overflow: hidden;
+  font-size: var(--texto-corpo);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detalhe {
+  overflow: hidden;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultado[data-focused] .detalhe {
+  color: inherit;
+}
+
+.aviso {
+  margin: 0;
+  padding: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

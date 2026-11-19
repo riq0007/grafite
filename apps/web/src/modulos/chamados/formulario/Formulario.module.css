@@ -1,0 +1,322 @@
+/*
+ * O formulário que se preenche (change chamados-da-ti, design, decisão 21): os campos em coluna, na
+ * ordem do formulário, com a recusa geral no alto. A resposta só para ler e o campo Anexo têm o
+ * rótulo e o texto dos campos do kit, e a resposta vazia, "Sem resposta", vai na cor secundária.
+ */
+.formulario {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.campo {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+/* A marca do campo condicional, que só a prévia do construtor mostra (m10): tracejada, nas cores
+   do selo "Condicional", com o ramo. */
+.marca {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: var(--esp-1);
+  max-width: 100%;
+  margin: 0;
+  padding: 2px var(--esp-2);
+  border: 1px dashed var(--cor-atencao-borda);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-atencao-fundo);
+  color: var(--cor-atencao);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  overflow-wrap: anywhere;
+}
+
+.marca > svg {
+  flex: none;
+}
+
+/* O grupo do Anexo, sem a borda e o recuo do fieldset do navegador. */
+.anexos {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.paraLer {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+}
+
+.rotulo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-normal);
+  color: var(--cor-texto-2);
+}
+
+/* O texto longo guarda as quebras de linha da pessoa. */
+.resposta {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.resposta[data-vazia] {
+  color: var(--cor-texto-2);
+}
+
+.descricao {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.recusa {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+.arquivos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--altura-controle);
+  font-size: var(--texto-corpo);
+  color: var(--cor-texto);
+}
+
+.nome {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tamanho {
+  flex: none;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.progresso {
+  flex: none;
+  width: calc(var(--esp-12) * 2);
+}
+
+/* O download é um link no destaque, sem a caixa de um botão, como o link de cadastro do kit. */
+.baixar {
+  flex: none;
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+  outline: none;
+}
+
+.baixar:hover {
+  text-decoration: underline;
+}
+
+.baixar:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+/*
+ * O visual da aba, na prévia do colaborador (decisão 16): a pergunta numerada no círculo cheio na
+ * cor da aba, sobre o recuo do rótulo; a continuação colada à pergunta de que depende, com as
+ * escolhas em chips na linha do rótulo; fora dela, a Escolha única e o Sim ou não em cartões; e as
+ * Várias opções em chips, que são cápsulas, a exceção nomeada do ANTISLOP (seção 15). As cores são
+ * as da aba (--cor-aba-*). Os seletores levam o visual, para valer sobre as escolhas do kit sem
+ * depender da ordem do CSS.
+ */
+.formulario[data-visual="aba"] .campo {
+  position: relative;
+}
+
+.formulario[data-visual="aba"] .campo[data-continuacao] {
+  margin-block-start: calc(var(--esp-2) * -1);
+}
+
+.numero {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: grid;
+  place-items: center;
+  width: var(--esp-5);
+  height: var(--esp-5);
+  border-radius: 50%;
+  background: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O rótulo da pergunta numerada abre o espaço do número, na altura do círculo. */
+.formulario[data-visual="aba"] .campo:has(> .numero) [data-parte="rotulo"] {
+  align-items: center;
+  min-height: var(--esp-5);
+  padding-inline-start: calc(var(--esp-5) + var(--esp-2));
+}
+
+.formulario[data-visual="aba"] .cartoes [data-parte="opcoes"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: stretch;
+}
+
+.formulario[data-visual="aba"] .chips [data-parte="opcoes"] {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Na continuação, o rótulo menor e os chips na mesma linha, como o m05; a descrição e a recusa
+   ficam na linha de baixo. */
+.formulario[data-visual="aba"] .campo[data-continuacao] .chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.formulario[data-visual="aba"] .campo[data-continuacao] .chips > [data-parte="rotulo"] {
+  margin-inline-end: var(--esp-1);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.formulario[data-visual="aba"]
+  .campo[data-continuacao]
+  .chips
+  > :not([data-parte="rotulo"], [data-parte="opcoes"]) {
+  flex-basis: 100%;
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip) {
+  align-items: center;
+  min-height: var(--altura-controle);
+  border: 1px solid var(--cor-linha-forte);
+  background-color: var(--cor-superficie-2);
+  font-weight: var(--peso-forte);
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.formulario[data-visual="aba"] .cartao {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-dock);
+}
+
+.formulario[data-visual="aba"] .chip {
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-capsula);
+}
+
+/* O controle desenhado sai: o cartão e o chip são o controle, e o visto diz a escolha. */
+.formulario[data-visual="aba"]
+  :is(.cartao, .chip)
+  > :is([data-parte="bolinha"], [data-parte="caixa"]) {
+  display: none;
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-pressed] {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-selected] {
+  border-color: var(--cor-aba-fundo);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+/* O "Nenhum" escolhido é a falta de resposta: a borda e o visto, sem o preenchimento. */
+.formulario[data-visual="aba"] .nenhum[data-selected] {
+  border-color: var(--cor-aba-contorno);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-invalid] {
+  border-color: var(--cor-critico);
+}
+
+.formulario[data-visual="aba"] :is(.cartao, .chip)[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O visto vem antes das variações, para cada uma valer sobre ele. */
+.visto {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--esp-5);
+  height: var(--esp-5);
+  border-radius: 50%;
+  background-color: var(--cor-aba-texto);
+  color: var(--cor-aba-fundo);
+}
+
+/* No chip, o visto é só o traço, na cor do texto. */
+.chip .visto {
+  width: auto;
+  height: auto;
+  background-color: transparent;
+  color: inherit;
+}
+
+/* No cartão do "Nenhum", sem o preenchimento por trás, o visto é cheio na cor da aba; no chip,
+   fica o traço. */
+.formulario[data-visual="aba"] .cartao.nenhum .visto {
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}

@@ -104,7 +104,9 @@ export async function carregarAcesso(tx: Transacao, contaId: string): Promise<Ac
 /**
  * O acesso de cada conta ativa, de pessoa ativa, da organização do contexto, numa leitura só das
  * atribuições diretas e de outra das dos grupos (design do P3b, decisão 3): a avaliação dos
- * alertas decide quem recebe cada notificação sem uma consulta por conta.
+ * alertas decide quem recebe cada notificação sem uma consulta por conta. As contas vêm na ordem da
+ * criação (o id é uuidv7), e não na do plano da consulta, que muda com as estatísticas: as
+ * notificações de um mesmo momento saem sempre na mesma ordem.
  */
 export async function carregarAcessosDaOrganizacao(
   tx: Transacao,
@@ -113,7 +115,8 @@ export async function carregarAcessosDaOrganizacao(
     .select({ id: contas.id })
     .from(contas)
     .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
-    .where(and(eq(contas.situacao, 'ativa'), eq(pessoas.situacao, 'ativa')));
+    .where(and(eq(contas.situacao, 'ativa'), eq(pessoas.situacao, 'ativa')))
+    .orderBy(contas.id);
   if (ativas.length === 0) return [];
 
   const diretas = await tx

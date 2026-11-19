@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, type LucideIcon, Search } from 'lucide-react';
 import { useContext, useEffect } from 'react';
 import {
   Button,
@@ -9,6 +9,7 @@ import {
 } from 'react-aria-components';
 import { Icone } from '../../icones/Icone.tsx';
 import estilosDoCampo from '../campo/Campo.module.css';
+import estilosDoLink from '../campo/LinkDeCadastro.module.css';
 import { DescricaoDoCampo, ErroDoCampo, RotuloDoCampo } from '../campo/partes.tsx';
 import { ListaDeOpcoes, Opcao, PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import type { OpcaoDeSelecao } from '../selecao/Selecao.tsx';
@@ -28,7 +29,7 @@ export interface PropsDaBusca
     'children' | 'className' | 'isRequired' | 'isInvalid' | 'items' | 'defaultItems'
   > {
   rotulo: string;
-  sugestoes: OpcaoDeSelecao[];
+  sugestoes: OpcaoDaBuscaComSugestoes[];
   /**
    * As sugestões vêm de fora, como da API enquanto se digita: a busca as mostra como chegam, sem
    * filtrar de novo nem reordenar. Quem usa acompanha o texto por `onInputChange`.
@@ -53,11 +54,33 @@ export interface PropsDaBusca
    */
   aceitaTextoLivre?: boolean;
   placeholder?: string;
+  /**
+   * Uma ação na linha do rótulo, à direita, como "Mais opções de busca", que mostra os filtros. Ela
+   * fica acima do campo, onde a lista aberta não a cobre.
+   */
+  acaoDoRotulo?: AcaoDoRotuloDaBusca;
   className?: string;
 }
 
+/** A ação na linha do rótulo da busca. */
+export interface AcaoDoRotuloDaBusca {
+  texto: string;
+  icone?: LucideIcon;
+  /** A ação mostra e esconde uma área: se ela está à vista, para o `aria-expanded`. */
+  expandida?: boolean;
+  /** O id da área que ela mostra, para o `aria-controls`, quando a área está à vista. */
+  controla?: string;
+  aoPressionar: () => void;
+}
+
+/** Uma opção da busca, com o detalhe opcional embaixo do nome. */
+export interface OpcaoDaBuscaComSugestoes extends OpcaoDeSelecao {
+  /** Uma segunda linha, no texto secundário, como o tipo, o local e o responsável de um ativo. */
+  detalhe?: string;
+}
+
 /** Uma opção da lista, com a marca de sugerida. */
-interface OpcaoDaBusca extends OpcaoDeSelecao {
+interface OpcaoDaBusca extends OpcaoDaBuscaComSugestoes {
   sugerida: boolean;
 }
 
@@ -69,7 +92,7 @@ const ordemAlfabetica = new Intl.Collator('pt-BR', { sensitivity: 'base' });
  * cabeçalho do painel e pela linha que as separa das outras.
  */
 function opcoesDa(
-  sugestoes: OpcaoDeSelecao[],
+  sugestoes: OpcaoDaBuscaComSugestoes[],
   sugeridas: SugeridasDaBusca | undefined,
   ordenar: boolean,
 ): OpcaoDaBusca[] {
@@ -102,6 +125,7 @@ export function BuscaComSugestoes({
   erro,
   aceitaTextoLivre = true,
   placeholder,
+  acaoDoRotulo,
   className,
   ...resto
 }: PropsDaBusca) {
@@ -121,7 +145,27 @@ export function BuscaComSugestoes({
       isInvalid={erro ? true : undefined}
       className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}
     >
-      <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />
+      {acaoDoRotulo ? (
+        <div className={estilos.linhaDoRotulo}>
+          <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />
+          {/*
+           * O slot nulo tira o botão do contexto da busca, que faria dele o botão de abrir a lista.
+           * A ação tem a cara do link de cadastro, a outra ação que um campo leva junto.
+           */}
+          <Button
+            slot={null}
+            className={estilosDoLink.link}
+            aria-expanded={acaoDoRotulo.expandida}
+            aria-controls={acaoDoRotulo.controla}
+            onPress={acaoDoRotulo.aoPressionar}
+          >
+            {acaoDoRotulo.icone && <Icone icone={acaoDoRotulo.icone} tamanho={14} />}
+            {acaoDoRotulo.texto}
+          </Button>
+        </div>
+      ) : (
+        <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />
+      )}
       <div className={estilos.caixa}>
         <span className={estilos.lupa}>
           <Icone icone={Search} />
@@ -149,6 +193,7 @@ export function BuscaComSugestoes({
               id={opcao.id}
               data-sugerida={opcao.sugerida ? '' : undefined}
               descricaoOculta={opcao.sugerida ? sugerido : undefined}
+              detalhe={opcao.detalhe}
             >
               {opcao.rotulo}
             </Opcao>
@@ -206,7 +251,7 @@ function AbrirQuandoChegarem({
   sugestoes,
   temOpcoes,
 }: {
-  sugestoes: OpcaoDeSelecao[];
+  sugestoes: OpcaoDaBuscaComSugestoes[];
   temOpcoes: boolean;
 }) {
   const estado = useContext(ComboBoxStateContext);

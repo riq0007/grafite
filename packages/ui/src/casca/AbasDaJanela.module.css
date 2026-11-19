@@ -147,6 +147,16 @@
   flex: 1 0 auto;
 }
 
+/*
+ * A tela que rola por dentro (`data-janela-inteira="rola-por-dentro"`), como o chamado aberto, com
+ * o cabeçalho no alto e o campo de escrever no pé: fica da altura da área, sem crescer com o
+ * conteúdo, e as partes dela rolam sozinhas.
+ */
+.painel:not([hidden]) > [data-janela-inteira="rola-por-dentro"] {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .painel:focus-visible {
   outline: 2px solid var(--cor-foco);
   outline-offset: 2px;

@@ -77,6 +77,7 @@ export {
   FORMATOS_DE_ARQUIVO,
   LIMITE_DOS_ARQUIVOS,
   type PropsDaEscolhaDeArquivo,
+  recusaAntesDoEnvio,
 } from './componentes/arquivo/EscolhaDeArquivo.tsx';
 export { formatarTamanho } from './componentes/arquivo/tamanho.ts';
 export {
@@ -119,7 +120,14 @@ export {
   type PropsDoBotaoAlternavel,
 } from './componentes/botao/BotaoAlternavel.tsx';
 export {
+  BuscaComResultados,
+  type PropsDaBuscaComResultados,
+  type ResultadoDaBuscaComResultados,
+} from './componentes/busca/BuscaComResultados.tsx';
+export {
+  type AcaoDoRotuloDaBusca,
   BuscaComSugestoes,
+  type OpcaoDaBuscaComSugestoes,
   type PropsDaBusca,
   type SugeridasDaBusca,
 } from './componentes/busca/BuscaComSugestoes.tsx';
@@ -127,9 +135,10 @@ export {
   CabecalhoDaPagina,
   type PropsDoCabecalhoDaPagina,
 } from './componentes/cabecalho/CabecalhoDaPagina.tsx';
-export { AreaDeTexto } from './componentes/campo/AreaDeTexto.tsx';
+export { AreaDeTexto, type PropsDaAreaDeTexto } from './componentes/campo/AreaDeTexto.tsx';
 export { CampoDeBusca, type PropsDoCampoDeBusca } from './componentes/campo/CampoDeBusca.tsx';
 export { CampoDeData, type PropsDoCampoDeData } from './componentes/campo/CampoDeData.tsx';
+export { CampoDeHora, type PropsDoCampoDeHora } from './componentes/campo/CampoDeHora.tsx';
 export { CampoDeSenha, type PropsDoCampoDeSenha } from './componentes/campo/CampoDeSenha.tsx';
 export { CampoDeTexto, type PropsDoCampoDeTexto } from './componentes/campo/CampoDeTexto.tsx';
 export { Formulario, type PropsDoFormulario } from './componentes/campo/Formulario.tsx';
@@ -138,6 +147,7 @@ export {
   LinkDeCadastro,
   type PropsDoLinkDeCadastro,
 } from './componentes/campo/LinkDeCadastro.tsx';
+export { NumeroNaFrase, type PropsDoNumeroNaFrase } from './componentes/campo/NumeroNaFrase.tsx';
 export { Carimbo, type PropsDoCarimbo } from './componentes/carimbo/Carimbo.tsx';
 export { CodigoQR, type PropsDoCodigoQR } from './componentes/codigoQR/CodigoQR.tsx';
 export { copiarParaAreaDeTransferencia } from './componentes/copiar/copiar.ts';
@@ -187,6 +197,11 @@ export {
   type OpcaoDeIcone,
   type PropsDaEscolhaDeIcone,
 } from './componentes/escolhas/EscolhaDeIcone.tsx';
+export {
+  EscolhaDeIconeCompacta,
+  type OpcaoDeIconeCompacta,
+  type PropsDaEscolhaDeIconeCompacta,
+} from './componentes/escolhas/EscolhaDeIconeCompacta.tsx';
 export { Interruptor, type PropsDoInterruptor } from './componentes/escolhas/Interruptor.tsx';
 export {
   GrupoDeRadios,
@@ -255,9 +270,11 @@ export {
   Submenu,
 } from './componentes/menu/Menu.tsx';
 export {
+  type AcaoDoMenuDeContexto,
   type ItemDoMenuDeContexto,
   MenuDeContexto,
   type PropsDoMenuDeContexto,
+  type SubmenuDoMenuDeContexto,
 } from './componentes/menu/MenuDeContexto.tsx';
 export {
   MiniaturaDeAtivo,
@@ -265,6 +282,10 @@ export {
 } from './componentes/miniatura/MiniaturaDeAtivo.tsx';
 export { Dialogo, type PropsDoDialogo } from './componentes/modal/Dialogo.tsx';
 export { Gaveta, type PropsDaGaveta } from './componentes/modal/Gaveta.tsx';
+export {
+  GavetaNaJanela,
+  type PropsDaGavetaNaJanela,
+} from './componentes/modal/GavetaNaJanela.tsx';
 export {
   EditorDeOpcoes,
   type OpcaoEditavel,
@@ -296,6 +317,10 @@ export {
   type PropsDaSelecao,
   Selecao,
 } from './componentes/selecao/Selecao.tsx';
+export {
+  type PropsDaSelecaoNaFrase,
+  SelecaoNaFrase,
+} from './componentes/selecao/SelecaoNaFrase.tsx';
 export {
   type PropsDoRotuloDeSituacao,
   RotuloDeSituacao,
@@ -376,6 +401,13 @@ export {
   ProvedorDaTabela,
   Tabela,
 } from './componentes/tabela/Tabela.tsx';
+export {
+  type ArrasteNaTabela,
+  type ColunaQueSeOrdena,
+  type PropsDaAlca,
+  type PropsDaTabelaQueSeOrdena,
+  TabelaQueSeOrdena,
+} from './componentes/tabela/TabelaQueSeOrdena.tsx';
 export { type PropsDoValorComposto, ValorComposto } from './componentes/tabela/ValorComposto.tsx';
 export { CadastroDosDoisPassos, type PropsDoCadastro } from './entrada/CadastroDosDoisPassos.tsx';
 export { CodigosDeRecuperacao, type PropsDosCodigos } from './entrada/CodigosDeRecuperacao.tsx';

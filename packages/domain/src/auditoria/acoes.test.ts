@@ -141,6 +141,37 @@ describe('ações da auditoria', () => {
     expect(rotuloDaAcao('visao.removida')).toBe('Visão removida');
   });
 
+  it('cobrem as ações dos chamados', () => {
+    expect(rotuloDaAcao('tipo-de-chamado.criado')).toBe('Tipo de chamado criado');
+    expect(rotuloDaAcao('tipos-de-chamado.ordenados')).toBe('Tipos de chamado reordenados');
+    expect(rotuloDaAcao('tipo-de-chamado.alterado')).toBe('Tipo de chamado alterado');
+    expect(rotuloDaAcao('tipo-de-chamado.inativado')).toBe('Tipo de chamado inativado');
+    expect(rotuloDaAcao('tipo-de-chamado.reativado')).toBe('Tipo de chamado reativado');
+    expect(rotuloDaAcao('tipo-de-chamado.descartado')).toBe('Tipo de chamado descartado');
+    expect(rotuloDaAcao('tipo-de-chamado.formulario-salvo')).toBe(
+      'Formulário do tipo de chamado salvo',
+    );
+    expect(rotuloDaAcao('resposta-pronta.criada')).toBe('Resposta pronta criada');
+    expect(rotuloDaAcao('resposta-pronta.alterada')).toBe('Resposta pronta alterada');
+    expect(rotuloDaAcao('resposta-pronta.removida')).toBe('Resposta pronta removida');
+    expect(rotuloDaAcao('respostas-prontas.ordenadas')).toBe('Respostas prontas reordenadas');
+    expect(rotuloDaAcao('horario-da-ti.alterado')).toBe('Horário da TI alterado');
+    expect(rotuloDaAcao('chamado.aberto')).toBe('Chamado aberto');
+    expect(rotuloDaAcao('chamado.assumido')).toBe('Chamado assumido');
+    expect(rotuloDaAcao('chamado.assumir-desfeito')).toBe('Assumir desfeito');
+    expect(rotuloDaAcao('chamado.passado')).toBe('Chamado passado');
+    expect(rotuloDaAcao('chamado.devolvido')).toBe('Chamado devolvido à triagem');
+    expect(rotuloDaAcao('chamado.aguardando')).toBe('Chamado aguardando o colaborador');
+    expect(rotuloDaAcao('chamado.retomado')).toBe('Chamado retomado');
+    expect(rotuloDaAcao('chamado.resolvido')).toBe('Chamado resolvido');
+    expect(rotuloDaAcao('chamado.reaberto')).toBe('Chamado reaberto');
+    expect(rotuloDaAcao('chamado.ativo-trocado')).toBe('Ativo do chamado trocado');
+    expect(rotuloDaAcao('chamado.titulo-trocado')).toBe('Título do chamado trocado');
+    expect(rotuloDaAcao('chamado.campos-trocados')).toBe('Campos da TI do chamado trocados');
+    expect(rotuloDaAcao('chamado.virou-os')).toBe('Chamado virou OS');
+    expect(rotuloDaAcao('chamado.pediu-toner')).toBe('Chamado pediu toner');
+  });
+
   it('dá a própria chave para a ação desconhecida', () => {
     expect(rotuloDaAcao('ativo.excluido')).toBe('ativo.excluido');
     expect(acaoConhecida('ativo.excluido')).toBe(false);

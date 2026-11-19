@@ -25498,6 +25498,4126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos de chamado, na ordem, com os abertos e os do último ano */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDosTiposDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Criar um Rascunho de tipo de chamado, com os padrões do "Novo tipo" */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/contas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As contas que atendem os chamados, para quem atende o tipo por padrão */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContasQueAtendemOsChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ordenar os tipos de chamado, com todos, uma vez cada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDosTiposDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}/duplicacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicar um tipo de chamado como Rascunho, com o formulário */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamadoDuplicado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Salvar o tipo de chamado, na situação em que ele está */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoTipoDeChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Descartar o Rascunho de tipo de chamado */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}/criacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Criar o tipo: o Rascunho passa a Em uso, com as conferências da gravação */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoTipoDeChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}/inativacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inativar o tipo de chamado; os chamados dele seguem até resolvidos */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}/reativacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reativar o tipo de chamado, com as conferências da gravação */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/{id}/formulario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O formulário do tipo de chamado, com o "Pede o ativo" e os chamados abertos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FormularioDoTipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Salvar o formulário do tipo; os chamados abertos mantêm o formulário com que abriram */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoFormularioDeChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FormularioDoTipoDeChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/respostas-prontas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As respostas prontas, na ordem */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDasRespostasProntas"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Criar uma resposta pronta, no fim da ordem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaRespostaProntaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RespostaPronta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/respostas-prontas/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ordenar as respostas prontas, com todas, uma vez cada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDasRespostasProntas"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/respostas-prontas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Gravar uma resposta pronta */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaRespostaProntaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RespostaPronta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remover uma resposta pronta */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/horario-da-ti": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O horário da TI, ou o padrão enquanto a organização não grava o dela */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HorarioDaTi"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Gravar o horário da TI, com os relógios que contam no horário fechados */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoHorarioDaTiInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HorarioDaTi"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/anexos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enviar um anexo, sem dono até a gravação que o usa */
+        post: {
+            parameters: {
+                query?: {
+                    nome?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnexoEnviado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/anexos/{arquivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O anexo ainda sem dono, para baixar, só a quem o enviou */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O anexo, para baixar, no tipo conferido e com o nome original */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/anexos/{arquivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um anexo do chamado, para baixar, a quem vê o chamado */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O anexo, para baixar, no tipo conferido e com o nome original */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir um chamado em nome de uma pessoa, com o tipo e as respostas */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeAberturaDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAberto"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/abertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos que a abertura aceita, na ordem, com o formulário de cada um */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TiposDaAbertura"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/sugestoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As sugestões dos campos Ativo e Local pela pessoa do chamado */
+        get: {
+            parameters: {
+                query: {
+                    pessoa: string;
+                    tipos?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SugestoesDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/sugestoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As sugestões dos campos Ativo e Local na prévia do colaborador, pela pessoa */
+        get: {
+            parameters: {
+                query: {
+                    pessoa: string;
+                    tipos?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SugestoesDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/pessoas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A busca da pessoa do chamado pelo nome, para abrir o chamado */
+        get: {
+            parameters: {
+                query: {
+                    busca: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PessoasNaBuscaDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/tipos/pessoas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A busca da pessoa pelo nome, para o "Ver como" da prévia do colaborador */
+        get: {
+            parameters: {
+                query: {
+                    busca: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PessoasNaBuscaDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/busca": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A busca dos chamados pelo número, com ou sem o "#", ou pelas palavras do título */
+        get: {
+            parameters: {
+                query: {
+                    termo: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadosNaBusca"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/quadro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O quadro: a triagem, a carga de cada pessoa da TI e os resolvidos hoje */
+        get: {
+            parameters: {
+                query: {
+                    fuso: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuadroDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/prazos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os prazos: os chamados abertos pelo vencimento, nos grupos do dia */
+        get: {
+            parameters: {
+                query: {
+                    fuso: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrazosDosChamados"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A ficha do chamado, com o prazo, as respostas, a conversa e as respostas prontas */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FichaDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/assumir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assumir o chamado: ele fica com quem assume */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/passar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Passar o chamado a uma conta que atende os locais dele */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoPassarDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/devolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devolver o chamado à triagem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/desfazer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desfazer o assumir, se nada mudou o chamado depois dele */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoDesfazerDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/mensagem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enviar uma mensagem à pessoa do chamado, com os anexos */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaConversaDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/esperar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enviar a mensagem e esperar a resposta: o chamado fica aguardando a pessoa */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaConversaDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/nota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gravar uma nota interna no chamado, com os anexos */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaConversaDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/retomar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retomar o chamado que aguarda a pessoa: ele volta ao atendimento */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/resolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolver o chamado, com o que foi feito, que vai à pessoa */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoResolverDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/reabrir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reabrir o chamado resolvido: ele volta a quem resolveu, ou à triagem */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAcaoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/ativo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ligar, trocar ou tirar o ativo do chamado: os locais seguem a pessoa e o ativo */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaTrocaDoAtivoDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/titulo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Trocar o título do chamado */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaTrocaDoTituloDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/campos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Preencher os campos só da TI do chamado: só os que mudam, com o vazio para apagar */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDosCamposDaTiDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoDepoisDaAcao"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/chamados/{numero}/os": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Virar OS: abrir a OS no ativo do chamado, ou noutro só para ela, com o problema, ou o título dele, e a situação em que nasce, e ligar os dois */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoVirarOsDoChamadoInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrdemDeServico"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chamados/{numero}/toner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pedir toner: juntar o chamado à solicitação pendente da impressora, ou dar o registro do Toner e gravá-lo */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoPedirTonerInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TonerDoChamado"];
+                    };
+                };
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TonerPedidoPeloChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -30650,6 +34770,8 @@ export interface components {
                 densidade?: "compacta" | "normal" | "confortavel";
                 /** @enum {string} */
                 barraDeRolagem?: "ao-rolar" | "sempre";
+                /** @enum {string} */
+                conversas?: "no-meio" | "nos-cantos";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -30740,6 +34862,7 @@ export interface components {
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
                 barraDeRolagem?: ("ao-rolar" | "sempre") | null;
+                conversas?: ("no-meio" | "nos-cantos") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */
@@ -31417,7 +35540,7 @@ export interface components {
         AcessoDaSessaoInput: {
             permissoes: {
                 /** @enum {string} */
-                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar";
+                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
                 organizacao: boolean;
                 locais: string[];
             }[];
@@ -32396,7 +36519,7 @@ export interface components {
         };
         AtribuicaoCriadaInput: {
             atribuicao: components["schemas"]["AtribuicaoInput"];
-            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
         };
         PedidoDeAtribuicaoInput: {
             /** Format: uuid */
@@ -32460,7 +36583,7 @@ export interface components {
         };
         PermissaoEfetivaInput: {
             /** @enum {string} */
-            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar";
+            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
             organizacao: boolean;
             locais: {
                 /** Format: uuid */
@@ -32621,6 +36744,1110 @@ export interface components {
         };
         AvisoDeTesteInput: {
             aparelhos: number;
+        };
+        FormularioDeChamadoInput: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
+        TipoDeChamadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        TipoDaAberturaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+        };
+        LocalDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        MudancaDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            texto: string | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            mudadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            mudadaEm: string;
+        };
+        PecaDaOrdemInput: {
+            /** Format: uuid */
+            id: string;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            };
+            quantidade: number;
+            local: components["schemas"]["LocalDaOrdemInput"];
+            /** Format: uuid */
+            movimento: string;
+            lancadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            lancadaEm: string;
+        };
+        OrdemDeServicoInput: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            ativo: components["schemas"]["AtivoDaOrdemInput"];
+            local: components["schemas"]["LocalDaOrdemInput"] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+            } | null;
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+            problema: string;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            solucao: string | null;
+            motivoDoEncerramento: string | null;
+            abertaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            abertaEm: string;
+            resolvidaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            resolvidaEm: string | null;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            historico: components["schemas"]["MudancaDaOrdemInput"][];
+            pecas: components["schemas"]["PecaDaOrdemInput"][];
+            permite: {
+                atender: boolean;
+            };
+        };
+        PedidoDeAberturaDaOrdemInput: {
+            ativo?: string | null;
+            problema?: string | null;
+        };
+        PedidoDeCorrecaoDaOrdemInput: {
+            problema?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeSituacaoDaOrdemInput: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            observacao?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDePecaDaOrdemInput: {
+            consumivel?: string | null;
+            local?: string | null;
+            quantidade?: number | null;
+        };
+        PedidoDeResolucaoDaOrdemInput: {
+            solucao?: string | null;
+        };
+        PedidoDeReaberturaDaOrdemInput: {
+            motivo?: string | null;
+        };
+        PedidoDeEncerramentoDaOrdemInput: {
+            /** @default false */
+            semResolver: boolean;
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeOrdensInput: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
+        };
+        RetornoDoLoteDeOrdensInput: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        ListaDeOrdensInput: {
+            itens: components["schemas"]["OrdemDeServicoInput"][];
+            total: number;
+            proximo: string | null;
+        };
+        OrdensDoAtivoInput: {
+            emAberto: components["schemas"]["OrdemDeServicoInput"][];
+            resolvidasOuEncerradas: components["schemas"]["OrdemDeServicoInput"][];
+        };
+        LocalDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        ItemDaSolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+            quantidade: number;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            } | null;
+            entrega: {
+                /** @enum {string} */
+                origem: "estoque" | "fornecedor";
+                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+                movimento: string | null;
+                fornecedor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    abrir: boolean;
+                } | null;
+                entreguePor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                entregueEm: string;
+            } | null;
+        };
+        ImpressoraDaSolicitacaoInput: {
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            itens: components["schemas"]["ItemDaSolicitacaoInput"][];
+        };
+        SolicitacaoInput: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            tipo: "toner" | "conserto" | "equipamento";
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            observacao: string | null;
+            locais: components["schemas"]["LocalDaSolicitacaoInput"][];
+            semLocal: boolean;
+            impressoras: components["schemas"]["ImpressoraDaSolicitacaoInput"][];
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"] | null;
+            defeito: string | null;
+            tipoDeAtivo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            quantidade: number | null;
+            motivo: string | null;
+            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            oQueFoiFeito: string | null;
+            motivoDoCancelamento: string | null;
+            registradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            registradaEm: string;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            permite: {
+                atender: boolean;
+            };
+            ordem: {
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                abrir: boolean;
+            } | null;
+            chamados: {
+                numero: number;
+                abrir: boolean;
+            }[];
+        };
+        PedidoDaSolicitacaoInput: {
+            /** @constant */
+            tipo: "toner";
+            pessoa?: string | null;
+            observacao?: string | null;
+            impressoras?: string[];
+            itens?: {
+                impressora?: string | null;
+                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                quantidade?: number | null;
+                consumivel?: string | null;
+            }[];
+        } | {
+            /** @constant */
+            tipo: "conserto";
+            pessoa?: string | null;
+            observacao?: string | null;
+            ativo?: string | null;
+            defeito?: string | null;
+        } | {
+            /** @constant */
+            tipo: "equipamento";
+            pessoa?: string | null;
+            observacao?: string | null;
+            tipoDeAtivo?: string | null;
+            quantidade?: number | null;
+            motivo?: string | null;
+            local?: string | null;
+        };
+        PedidoDeSituacaoDaSolicitacaoInput: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega";
+        };
+        PedidoAoFornecedorInput: {
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeConclusaoDaSolicitacaoInput: {
+            oQueFoiFeito?: string | null;
+        };
+        PedidoDeCancelamentoDaSolicitacaoInput: {
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeSolicitacoesInput: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            motivo?: string | null;
+        };
+        RetornoDoLoteDeSolicitacoesInput: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        PedidoDeEntregaDaSolicitacaoInput: {
+            entregas: ({
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "estoque";
+                consumivel?: string | null;
+                local?: string | null;
+            } | {
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "fornecedor";
+                fornecedor?: string | null;
+                consumivel?: string | null;
+            })[];
+        };
+        ListaDeSolicitacoesInput: {
+            itens: components["schemas"]["SolicitacaoInput"][];
+            total: number;
+            proximo: string | null;
+        };
+        ImpressorasParaSolicitacaoInput: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            }[];
+        };
+        ImpressoraParaSolicitacaoInput: {
+            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
+            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            cores: {
+                /** @enum {string} */
+                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                sugerido: string | null;
+                compativeis: {
+                    /** Format: uuid */
+                    id: string;
+                    codigo: string;
+                    nome: string | null;
+                    saldo: number | null;
+                }[];
+            }[];
+        };
+        SolicitacoesDoAtivoInput: {
+            pendentes: components["schemas"]["SolicitacaoInput"][];
+            encerradas: components["schemas"]["SolicitacaoInput"][];
+            usaConsumiveis: boolean;
+        };
+        HorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTiInput: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDeAberturaDoChamadoInput: {
+            pessoa?: string | null;
+            tipo?: string | null;
+            titulo?: string | null;
+            respostas?: {
+                [key: string]: unknown;
+            };
+            /** @default true */
+            ficaComigo: boolean;
+        };
+        ChamadoAbertoInput: {
+            numero: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
+        TiposDaAberturaInput: {
+            tipos: components["schemas"]["TipoDaAberturaInput"][];
+        };
+        ChamadosNaBuscaInput: {
+            itens: {
+                numero: number;
+                titulo: string;
+                pessoa: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            }[];
+        };
+        SugestoesDoChamadoInput: {
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                /** Format: uuid */
+                tipoId: string;
+                /** @enum {string} */
+                motivo: "responsavel" | "local";
+            }[];
+        };
+        PessoasNaBuscaDosChamadosInput: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+            }[];
+            total: number;
+        };
+        QuadroDosChamadosInput: {
+            triagem: {
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+            };
+            colunas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                naoAtendeMais: boolean;
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+                pedacos: {
+                    total: number;
+                    cheios: number;
+                };
+                resolvidosHoje: number[];
+                atende: {
+                    organizacao: boolean;
+                    locais: string[];
+                };
+            }[];
+            resolvidosHoje: number[];
+            versoes: {
+                [key: string]: number;
+            };
+            contandoSoOsLocaisQueVe: boolean;
+        };
+        PrazosDosChamadosInput: {
+            horario: components["schemas"]["HorarioDaTiInput"];
+            chamados: {
+                numero: number;
+                titulo: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                versao: number;
+                /** Format: date-time */
+                abertoEm: string;
+                tipo: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    icone: string;
+                };
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    local: string | null;
+                };
+                responsavel: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                    local: string | null;
+                } | null;
+                locais: string[];
+                semLocal: boolean;
+                relogio: {
+                    prazo: {
+                        /** @enum {string} */
+                        modo: "corridas" | "horario";
+                        respostaMin: number;
+                        resolucaoMin: number;
+                        resposta: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                        resolucao: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                    };
+                    contadoS: number;
+                    relogioDesde: string | null;
+                    primeiraRespostaEm: string | null;
+                } | null;
+                grupo: ("estourado" | "ate-2-horas" | "hoje" | "depois-de-hoje" | "parado") | null;
+                ultimaMensagem: {
+                    autor: string;
+                    /** Format: date-time */
+                    em: string;
+                    texto: string;
+                } | null;
+            }[];
+        };
+        CompativelNoResumoDoAtivoInput: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number;
+            minimo: number;
+            abaixo: boolean;
+        };
+        ResumoDoAtivoNoChamadoInput: {
+            disponibilidade: components["schemas"]["DisponibilidadeDoAtivoInput"] | null;
+            suprimentos: components["schemas"]["SuprimentosDoAtivoInput"] | null;
+            paginasPorMes: number | null;
+            tonerCritico: boolean | null;
+            ordens: {
+                abertas: number;
+                concluidas: number;
+            } | null;
+            compativeis: components["schemas"]["CompativelNoResumoDoAtivoInput"][] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+        };
+        FichaDoChamadoInput: {
+            numero: number;
+            titulo: string;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            versao: number;
+            /** @enum {string} */
+            origem: "ti";
+            /** Format: date-time */
+            abertoEm: string;
+            tipo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                icone: string;
+                podeVirarOs: boolean;
+            };
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+                abrir: boolean;
+                contatos: {
+                    email: string | null;
+                    telefone: string | null;
+                } | null;
+            };
+            responsavel: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                /** Format: date-time */
+                desde: string;
+                naoAtendeMais: boolean;
+            } | null;
+            ativo: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: string | null;
+                abrir: boolean;
+                tipo: {
+                    nome: string;
+                    icone: string;
+                };
+                usaConsumiveis: boolean;
+                resumo: components["schemas"]["ResumoDoAtivoNoChamadoInput"] | null;
+            } | null;
+            locais: string[];
+            semLocal: boolean;
+            permite: {
+                atender: boolean;
+            };
+            relogio: {
+                prazo: {
+                    /** @enum {string} */
+                    modo: "corridas" | "horario";
+                    respostaMin: number;
+                    resolucaoMin: number;
+                    resposta: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                    resolucao: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                };
+                contadoS: number;
+                relogioDesde: string | null;
+                primeiraRespostaEm: string | null;
+            } | null;
+            parouEm: string | null;
+            horario: components["schemas"]["HorarioDaTiInput"];
+            os: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                };
+            } | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+            respostas: {
+                [key: string]: unknown;
+            };
+            citados: {
+                ativos: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                }[];
+                locais: {
+                    /** Format: uuid */
+                    id: string;
+                    caminho: string;
+                }[];
+                pessoas: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                }[];
+            };
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            resumo: string;
+            conversa: ({
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "mensagem";
+            } | {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "nota";
+            } | {
+                /** @constant */
+                especie: "evento";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                /** @enum {string} */
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                de: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                para: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                desde: string | null;
+                ativo: {
+                    antes: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                    depois: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                } | null;
+                os: {
+                    numero: number;
+                } | null;
+                solicitacao: {
+                    numero: number;
+                    /** @enum {string} */
+                    como: "juntou" | "pediu" | "gerou";
+                } | null;
+                motivo: string | null;
+            } | {
+                /** @constant */
+                especie: "alerta";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                texto: string;
+                /** @enum {string} */
+                severidade: "critico" | "atencao" | "info";
+            })[];
+            respostasProntas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                texto: string;
+                esperaAResposta: boolean;
+            }[];
+        };
+        PedidoDaAcaoDoChamadoInput: {
+            versao?: number;
+        };
+        PedidoDoPassarDoChamadoInput: {
+            /** Format: uuid */
+            para: string;
+            versao?: number;
+        };
+        PedidoDoDesfazerDoChamadoInput: {
+            versao: number;
+        };
+        PedidoDoResolverDoChamadoInput: {
+            /** @default  */
+            feito: string;
+            versao?: number;
+        };
+        PedidoDaConversaDoChamadoInput: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+        };
+        PedidoDaTrocaDoAtivoDoChamadoInput: {
+            ativo: string | null;
+            versao?: number;
+        };
+        PedidoDaTrocaDoTituloDoChamadoInput: {
+            /** @default  */
+            titulo: string;
+        };
+        PedidoDosCamposDaTiDoChamadoInput: {
+            respostas: {
+                [key: string]: unknown;
+            };
+        };
+        PedidoDoVirarOsDoChamadoInput: {
+            problema?: string;
+            /** Format: uuid */
+            ativo?: string;
+            /** @enum {string} */
+            situacao?: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDoPedirTonerInput: {
+            registro?: {
+                /** @constant */
+                tipo: "toner";
+                pessoa?: string | null;
+                observacao?: string | null;
+                impressoras?: string[];
+                itens?: {
+                    impressora?: string | null;
+                    cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                    quantidade?: number | null;
+                    consumivel?: string | null;
+                }[];
+            };
+        };
+        TonerDoChamadoInput: {
+            /** @constant */
+            resultado: "juntou";
+            solicitacao: {
+                numero: number;
+            };
+        } | {
+            /** @constant */
+            resultado: "registro";
+            registro: {
+                /** @constant */
+                tipo: "toner";
+                /** Format: uuid */
+                pessoa: string;
+                observacao: string | null;
+                impressoras: string[];
+                itens: {
+                    /** Format: uuid */
+                    impressora: string;
+                    /** @enum {string} */
+                    cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                    quantidade: number;
+                    consumivel: string | null;
+                }[];
+            };
+        };
+        TonerPedidoPeloChamadoInput: {
+            /** @constant */
+            resultado: "pediu";
+            solicitacao: {
+                numero: number;
+            };
+        };
+        ChamadoDepoisDaAcaoInput: {
+            numero: number;
+            versao: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
+        AnexoEnviadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        RespostaProntaInput: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDasRespostasProntasInput: {
+            respostas: components["schemas"]["RespostaProntaInput"][];
+        };
+        PedidoDaRespostaProntaInput: {
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: string[];
+        };
+        ContasQueAtendemOsChamadosInput: {
+            contas: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDosTiposDeChamadoInput: {
+            tipos: components["schemas"]["TipoDeChamadoInput"][];
+        };
+        PedidoDoTipoDeChamadoInput: {
+            nome: string;
+            icone: string;
+            frase: string | null;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: string | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: string | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+        };
+        TipoDeChamadoDuplicadoInput: {
+            tipo: components["schemas"]["TipoDeChamadoInput"];
+            solicitacaoDesligada: boolean;
+        };
+        PedidoDoFormularioDeChamadoInput: {
+            titulo?: unknown;
+            campos?: unknown;
+        };
+        FormularioDoTipoDeChamadoInput: {
+            formulario: components["schemas"]["FormularioDeChamadoInput"];
+            pedeOAtivo: boolean;
+            abertos: number;
         };
         PessoaDoSegredoInput: {
             /** Format: uuid */
@@ -34146,387 +39373,6 @@ export interface components {
             horario: string;
             diaDoTeste: number;
         };
-        LocalDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        MudancaDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            texto: string | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            mudadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            mudadaEm: string;
-        };
-        PecaDaOrdemInput: {
-            /** Format: uuid */
-            id: string;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            };
-            quantidade: number;
-            local: components["schemas"]["LocalDaOrdemInput"];
-            /** Format: uuid */
-            movimento: string;
-            lancadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            lancadaEm: string;
-        };
-        OrdemDeServicoInput: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            ativo: components["schemas"]["AtivoDaOrdemInput"];
-            local: components["schemas"]["LocalDaOrdemInput"] | null;
-            solicitacao: {
-                /** Format: uuid */
-                id: string;
-                numero: number;
-                pessoa: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-            } | null;
-            problema: string;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            solucao: string | null;
-            motivoDoEncerramento: string | null;
-            abertaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            abertaEm: string;
-            resolvidaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            resolvidaEm: string | null;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            historico: components["schemas"]["MudancaDaOrdemInput"][];
-            pecas: components["schemas"]["PecaDaOrdemInput"][];
-            permite: {
-                atender: boolean;
-            };
-        };
-        PedidoDeAberturaDaOrdemInput: {
-            ativo?: string | null;
-            problema?: string | null;
-        };
-        PedidoDeCorrecaoDaOrdemInput: {
-            problema?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeSituacaoDaOrdemInput: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
-            observacao?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDePecaDaOrdemInput: {
-            consumivel?: string | null;
-            local?: string | null;
-            quantidade?: number | null;
-        };
-        PedidoDeResolucaoDaOrdemInput: {
-            solucao?: string | null;
-        };
-        PedidoDeReaberturaDaOrdemInput: {
-            motivo?: string | null;
-        };
-        PedidoDeEncerramentoDaOrdemInput: {
-            /** @default false */
-            semResolver: boolean;
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeOrdensInput: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
-        };
-        RetornoDoLoteDeOrdensInput: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        ListaDeOrdensInput: {
-            itens: components["schemas"]["OrdemDeServicoInput"][];
-            total: number;
-            proximo: string | null;
-        };
-        OrdensDoAtivoInput: {
-            emAberto: components["schemas"]["OrdemDeServicoInput"][];
-            resolvidasOuEncerradas: components["schemas"]["OrdemDeServicoInput"][];
-        };
-        LocalDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        ItemDaSolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-            quantidade: number;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            } | null;
-            entrega: {
-                /** @enum {string} */
-                origem: "estoque" | "fornecedor";
-                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-                movimento: string | null;
-                fornecedor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                    abrir: boolean;
-                } | null;
-                entreguePor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-                entregueEm: string;
-            } | null;
-        };
-        ImpressoraDaSolicitacaoInput: {
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            itens: components["schemas"]["ItemDaSolicitacaoInput"][];
-        };
-        SolicitacaoInput: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            tipo: "toner" | "conserto" | "equipamento";
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            pessoa: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            observacao: string | null;
-            locais: components["schemas"]["LocalDaSolicitacaoInput"][];
-            semLocal: boolean;
-            impressoras: components["schemas"]["ImpressoraDaSolicitacaoInput"][];
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"] | null;
-            defeito: string | null;
-            tipoDeAtivo: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            quantidade: number | null;
-            motivo: string | null;
-            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            oQueFoiFeito: string | null;
-            motivoDoCancelamento: string | null;
-            registradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            registradaEm: string;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            permite: {
-                atender: boolean;
-            };
-            ordem: {
-                numero: number;
-                /** @enum {string} */
-                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-                abrir: boolean;
-            } | null;
-        };
-        PedidoDaSolicitacaoInput: {
-            /** @constant */
-            tipo: "toner";
-            pessoa?: string | null;
-            observacao?: string | null;
-            impressoras?: string[];
-            itens?: {
-                impressora?: string | null;
-                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-                quantidade?: number | null;
-                consumivel?: string | null;
-            }[];
-        } | {
-            /** @constant */
-            tipo: "conserto";
-            pessoa?: string | null;
-            observacao?: string | null;
-            ativo?: string | null;
-            defeito?: string | null;
-        } | {
-            /** @constant */
-            tipo: "equipamento";
-            pessoa?: string | null;
-            observacao?: string | null;
-            tipoDeAtivo?: string | null;
-            quantidade?: number | null;
-            motivo?: string | null;
-            local?: string | null;
-        };
-        PedidoDeSituacaoDaSolicitacaoInput: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega";
-        };
-        PedidoAoFornecedorInput: {
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeConclusaoDaSolicitacaoInput: {
-            oQueFoiFeito?: string | null;
-        };
-        PedidoDeCancelamentoDaSolicitacaoInput: {
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeSolicitacoesInput: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            motivo?: string | null;
-        };
-        RetornoDoLoteDeSolicitacoesInput: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        PedidoDeEntregaDaSolicitacaoInput: {
-            entregas: ({
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "estoque";
-                consumivel?: string | null;
-                local?: string | null;
-            } | {
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "fornecedor";
-                fornecedor?: string | null;
-                consumivel?: string | null;
-            })[];
-        };
-        ListaDeSolicitacoesInput: {
-            itens: components["schemas"]["SolicitacaoInput"][];
-            total: number;
-            proximo: string | null;
-        };
-        ImpressorasParaSolicitacaoInput: {
-            itens: {
-                /** Format: uuid */
-                id: string;
-                rotulo: string;
-                patrimonio: string | null;
-                local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            }[];
-        };
-        ImpressoraParaSolicitacaoInput: {
-            ativo: components["schemas"]["AtivoDaSolicitacaoInput"];
-            local: components["schemas"]["LocalDaSolicitacaoInput"] | null;
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            cores: {
-                /** @enum {string} */
-                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-                sugerido: string | null;
-                compativeis: {
-                    /** Format: uuid */
-                    id: string;
-                    codigo: string;
-                    nome: string | null;
-                    saldo: number | null;
-                }[];
-            }[];
-        };
-        SolicitacoesDoAtivoInput: {
-            pendentes: components["schemas"]["SolicitacaoInput"][];
-            encerradas: components["schemas"]["SolicitacaoInput"][];
-            usaConsumiveis: boolean;
-        };
         PainelInput: {
             /** Format: uuid */
             id: string;
@@ -34577,7 +39423,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -34620,7 +39466,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -35294,6 +40140,8 @@ export interface components {
                 densidade?: "compacta" | "normal" | "confortavel";
                 /** @enum {string} */
                 barraDeRolagem?: "ao-rolar" | "sempre";
+                /** @enum {string} */
+                conversas?: "no-meio" | "nos-cantos";
                 raio?: number;
                 personalizado?: {
                     /** @enum {string} */
@@ -35384,6 +40232,7 @@ export interface components {
                 destaque?: ("grafite" | "azul" | "verde" | "laranja" | "personalizado") | null;
                 densidade?: ("compacta" | "normal" | "confortavel") | null;
                 barraDeRolagem?: ("ao-rolar" | "sempre") | null;
+                conversas?: ("no-meio" | "nos-cantos") | null;
                 raio?: number | null;
                 personalizado?: {
                     /** @enum {string} */
@@ -36061,7 +40910,7 @@ export interface components {
         AcessoDaSessao: {
             permissoes: {
                 /** @enum {string} */
-                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar";
+                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
                 organizacao: boolean;
                 locais: string[];
             }[];
@@ -37040,7 +41889,7 @@ export interface components {
         };
         AtribuicaoCriada: {
             atribuicao: components["schemas"]["Atribuicao"];
-            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
         };
         PedidoDeAtribuicao: {
             /** Format: uuid */
@@ -37104,7 +41953,7 @@ export interface components {
         };
         PermissaoEfetiva: {
             /** @enum {string} */
-            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar";
+            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
             organizacao: boolean;
             locais: {
                 /** Format: uuid */
@@ -37266,6 +42115,1110 @@ export interface components {
         };
         AvisoDeTeste: {
             aparelhos: number;
+        };
+        FormularioDeChamado: {
+            titulo: {
+                comecaPeloTipo: boolean;
+                campoId: string | null;
+            };
+            campos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "texto-curto" | "texto-longo" | "escolha-unica" | "varias-opcoes" | "ativo" | "local" | "pessoa" | "data" | "numero" | "anexo" | "sim-ou-nao";
+                rotulo: string;
+                nomeNoResumo: string | null;
+                obrigatorio: boolean;
+                soDaTi: boolean;
+                apagarSeSumir: boolean;
+                opcoes: {
+                    id: string;
+                    texto: string;
+                }[];
+                tiposDeAtivo: string[];
+                condicao: ({
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    opcaoId: string;
+                } | {
+                    campoId: string;
+                    juncao: ("e" | "ou") | null;
+                    valor: boolean;
+                })[];
+            }[];
+        };
+        TipoDeChamado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            /** @enum {string} */
+            situacao: "rascunho" | "em-uso" | "inativo";
+            ordem: number;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+            campos: number;
+            duplicadoDe: string | null;
+            abertos: number;
+            noUltimoAno: number;
+        };
+        TipoDaAbertura: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            formulario: components["schemas"]["FormularioDeChamado"];
+        };
+        LocalDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        MudancaDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            texto: string | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            mudadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            mudadaEm: string;
+        };
+        PecaDaOrdem: {
+            /** Format: uuid */
+            id: string;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            };
+            quantidade: number;
+            local: components["schemas"]["LocalDaOrdem"];
+            /** Format: uuid */
+            movimento: string;
+            lancadaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            lancadaEm: string;
+        };
+        OrdemDeServico: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+            ativo: components["schemas"]["AtivoDaOrdem"];
+            local: components["schemas"]["LocalDaOrdem"] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+            } | null;
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+            problema: string;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            solucao: string | null;
+            motivoDoEncerramento: string | null;
+            abertaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            abertaEm: string;
+            resolvidaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            resolvidaEm: string | null;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            historico: components["schemas"]["MudancaDaOrdem"][];
+            pecas: components["schemas"]["PecaDaOrdem"][];
+            permite: {
+                atender: boolean;
+            };
+        };
+        PedidoDeAberturaDaOrdem: {
+            ativo?: string | null;
+            problema?: string | null;
+        };
+        PedidoDeCorrecaoDaOrdem: {
+            problema?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeSituacaoDaOrdem: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            observacao?: string | null;
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDePecaDaOrdem: {
+            consumivel?: string | null;
+            local?: string | null;
+            quantidade?: number | null;
+        };
+        PedidoDeResolucaoDaOrdem: {
+            solucao?: string | null;
+        };
+        PedidoDeReaberturaDaOrdem: {
+            motivo?: string | null;
+        };
+        PedidoDeEncerramentoDaOrdem: {
+            /** @default false */
+            semResolver: boolean;
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeOrdens: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
+        };
+        RetornoDoLoteDeOrdens: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        ListaDeOrdens: {
+            itens: components["schemas"]["OrdemDeServico"][];
+            total: number;
+            proximo: string | null;
+        };
+        OrdensDoAtivo: {
+            emAberto: components["schemas"]["OrdemDeServico"][];
+            resolvidasOuEncerradas: components["schemas"]["OrdemDeServico"][];
+        };
+        LocalDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            caminho: string;
+        };
+        AtivoDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            patrimonio: string | null;
+            abrir: boolean;
+        };
+        ItemDaSolicitacao: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+            quantidade: number;
+            consumivel: {
+                /** Format: uuid */
+                id: string;
+                codigo: string;
+                nome: string | null;
+                abrir: boolean;
+            } | null;
+            entrega: {
+                /** @enum {string} */
+                origem: "estoque" | "fornecedor";
+                local: components["schemas"]["LocalDaSolicitacao"] | null;
+                movimento: string | null;
+                fornecedor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    abrir: boolean;
+                } | null;
+                entreguePor: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                entregueEm: string;
+            } | null;
+        };
+        ImpressoraDaSolicitacao: {
+            ativo: components["schemas"]["AtivoDaSolicitacao"];
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            itens: components["schemas"]["ItemDaSolicitacao"][];
+        };
+        Solicitacao: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @enum {string} */
+            tipo: "toner" | "conserto" | "equipamento";
+            /** @enum {string} */
+            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            observacao: string | null;
+            locais: components["schemas"]["LocalDaSolicitacao"][];
+            semLocal: boolean;
+            impressoras: components["schemas"]["ImpressoraDaSolicitacao"][];
+            ativo: components["schemas"]["AtivoDaSolicitacao"] | null;
+            defeito: string | null;
+            tipoDeAtivo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            quantidade: number | null;
+            motivo: string | null;
+            local: components["schemas"]["LocalDaSolicitacao"] | null;
+            fornecedor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                abrir: boolean;
+            } | null;
+            osDoFornecedor: string | null;
+            oQueFoiFeito: string | null;
+            motivoDoCancelamento: string | null;
+            registradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            };
+            registradaEm: string;
+            encerradaPor: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            encerradaEm: string | null;
+            permite: {
+                atender: boolean;
+            };
+            ordem: {
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                abrir: boolean;
+            } | null;
+            chamados: {
+                numero: number;
+                abrir: boolean;
+            }[];
+        };
+        PedidoDaSolicitacao: {
+            /** @constant */
+            tipo: "toner";
+            pessoa?: string | null;
+            observacao?: string | null;
+            impressoras?: string[];
+            itens?: {
+                impressora?: string | null;
+                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                quantidade?: number | null;
+                consumivel?: string | null;
+            }[];
+        } | {
+            /** @constant */
+            tipo: "conserto";
+            pessoa?: string | null;
+            observacao?: string | null;
+            ativo?: string | null;
+            defeito?: string | null;
+        } | {
+            /** @constant */
+            tipo: "equipamento";
+            pessoa?: string | null;
+            observacao?: string | null;
+            tipoDeAtivo?: string | null;
+            quantidade?: number | null;
+            motivo?: string | null;
+            local?: string | null;
+        };
+        PedidoDeSituacaoDaSolicitacao: {
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega";
+        };
+        PedidoAoFornecedor: {
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDeConclusaoDaSolicitacao: {
+            oQueFoiFeito?: string | null;
+        };
+        PedidoDeCancelamentoDaSolicitacao: {
+            motivo?: string | null;
+        };
+        PedidoDoLoteDeSolicitacoes: {
+            numeros: number[];
+            /** @enum {string} */
+            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            motivo?: string | null;
+        };
+        RetornoDoLoteDeSolicitacoes: {
+            mudaram: number;
+            recusadas: {
+                numero: number;
+                mensagem: string;
+            }[];
+            texto: string;
+        };
+        PedidoDeEntregaDaSolicitacao: {
+            entregas: ({
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "estoque";
+                consumivel?: string | null;
+                local?: string | null;
+            } | {
+                /** Format: uuid */
+                item: string;
+                /** @constant */
+                origem: "fornecedor";
+                fornecedor?: string | null;
+                consumivel?: string | null;
+            })[];
+        };
+        ListaDeSolicitacoes: {
+            itens: components["schemas"]["Solicitacao"][];
+            total: number;
+            proximo: string | null;
+        };
+        ImpressorasParaSolicitacao: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: components["schemas"]["LocalDaSolicitacao"] | null;
+            }[];
+        };
+        ImpressoraParaSolicitacao: {
+            ativo: components["schemas"]["AtivoDaSolicitacao"];
+            local: components["schemas"]["LocalDaSolicitacao"] | null;
+            contador: {
+                paginas: number;
+                lidoEm: string;
+            } | null;
+            cores: {
+                /** @enum {string} */
+                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                sugerido: string | null;
+                compativeis: {
+                    /** Format: uuid */
+                    id: string;
+                    codigo: string;
+                    nome: string | null;
+                    saldo: number | null;
+                }[];
+            }[];
+        };
+        SolicitacoesDoAtivo: {
+            pendentes: components["schemas"]["Solicitacao"][];
+            encerradas: components["schemas"]["Solicitacao"][];
+            usaConsumiveis: boolean;
+        };
+        HorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDoHorarioDaTi: {
+            dias: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+            inicio: number;
+            fim: number;
+            fuso: string;
+            cargaCheia: number;
+        };
+        PedidoDeAberturaDoChamado: {
+            pessoa?: string | null;
+            tipo?: string | null;
+            titulo?: string | null;
+            respostas?: {
+                [key: string]: unknown;
+            };
+            /** @default true */
+            ficaComigo: boolean;
+        };
+        ChamadoAberto: {
+            numero: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
+        TiposDaAbertura: {
+            tipos: components["schemas"]["TipoDaAbertura"][];
+        };
+        ChamadosNaBusca: {
+            itens: {
+                numero: number;
+                titulo: string;
+                pessoa: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            }[];
+        };
+        SugestoesDoChamado: {
+            local: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                /** Format: uuid */
+                tipoId: string;
+                /** @enum {string} */
+                motivo: "responsavel" | "local";
+            }[];
+        };
+        PessoasNaBuscaDosChamados: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+            }[];
+            total: number;
+        };
+        QuadroDosChamados: {
+            triagem: {
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+            };
+            colunas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                naoAtendeMais: boolean;
+                abertos: number[];
+                maisAntigo: {
+                    numero: number;
+                    /** Format: date-time */
+                    abertoEm: string;
+                } | null;
+                pedacos: {
+                    total: number;
+                    cheios: number;
+                };
+                resolvidosHoje: number[];
+                atende: {
+                    organizacao: boolean;
+                    locais: string[];
+                };
+            }[];
+            resolvidosHoje: number[];
+            versoes: {
+                [key: string]: number;
+            };
+            contandoSoOsLocaisQueVe: boolean;
+        };
+        PrazosDosChamados: {
+            horario: components["schemas"]["HorarioDaTi"];
+            chamados: {
+                numero: number;
+                titulo: string;
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                versao: number;
+                /** Format: date-time */
+                abertoEm: string;
+                tipo: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    icone: string;
+                };
+                pessoa: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    local: string | null;
+                };
+                responsavel: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                    local: string | null;
+                } | null;
+                locais: string[];
+                semLocal: boolean;
+                relogio: {
+                    prazo: {
+                        /** @enum {string} */
+                        modo: "corridas" | "horario";
+                        respostaMin: number;
+                        resolucaoMin: number;
+                        resposta: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                        resolucao: {
+                            valor: number;
+                            /** @enum {string} */
+                            unidade: "min" | "h" | "d";
+                        };
+                    };
+                    contadoS: number;
+                    relogioDesde: string | null;
+                    primeiraRespostaEm: string | null;
+                } | null;
+                grupo: ("estourado" | "ate-2-horas" | "hoje" | "depois-de-hoje" | "parado") | null;
+                ultimaMensagem: {
+                    autor: string;
+                    /** Format: date-time */
+                    em: string;
+                    texto: string;
+                } | null;
+            }[];
+        };
+        CompativelNoResumoDoAtivo: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number;
+            minimo: number;
+            abaixo: boolean;
+        };
+        ResumoDoAtivoNoChamado: {
+            disponibilidade: components["schemas"]["DisponibilidadeDoAtivo"] | null;
+            suprimentos: components["schemas"]["SuprimentosDoAtivo"] | null;
+            paginasPorMes: number | null;
+            tonerCritico: boolean | null;
+            ordens: {
+                abertas: number;
+                concluidas: number;
+            } | null;
+            compativeis: components["schemas"]["CompativelNoResumoDoAtivo"][] | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+        };
+        FichaDoChamado: {
+            numero: number;
+            titulo: string;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            versao: number;
+            /** @enum {string} */
+            origem: "ti";
+            /** Format: date-time */
+            abertoEm: string;
+            tipo: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                icone: string;
+                podeVirarOs: boolean;
+            };
+            pessoa: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                local: string | null;
+                abrir: boolean;
+                contatos: {
+                    email: string | null;
+                    telefone: string | null;
+                } | null;
+            };
+            responsavel: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                /** Format: date-time */
+                desde: string;
+                naoAtendeMais: boolean;
+            } | null;
+            ativo: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                patrimonio: string | null;
+                local: string | null;
+                abrir: boolean;
+                tipo: {
+                    nome: string;
+                    icone: string;
+                };
+                usaConsumiveis: boolean;
+                resumo: components["schemas"]["ResumoDoAtivoNoChamado"] | null;
+            } | null;
+            locais: string[];
+            semLocal: boolean;
+            permite: {
+                atender: boolean;
+            };
+            relogio: {
+                prazo: {
+                    /** @enum {string} */
+                    modo: "corridas" | "horario";
+                    respostaMin: number;
+                    resolucaoMin: number;
+                    resposta: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                    resolucao: {
+                        valor: number;
+                        /** @enum {string} */
+                        unidade: "min" | "h" | "d";
+                    };
+                };
+                contadoS: number;
+                relogioDesde: string | null;
+                primeiraRespostaEm: string | null;
+            } | null;
+            parouEm: string | null;
+            horario: components["schemas"]["HorarioDaTi"];
+            os: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                };
+            } | null;
+            solicitacao: {
+                /** Format: uuid */
+                id: string;
+                numero: number;
+                /** @enum {string} */
+                situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
+            } | null;
+            formulario: components["schemas"]["FormularioDeChamado"];
+            respostas: {
+                [key: string]: unknown;
+            };
+            citados: {
+                ativos: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                }[];
+                locais: {
+                    /** Format: uuid */
+                    id: string;
+                    caminho: string;
+                }[];
+                pessoas: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                }[];
+            };
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            resumo: string;
+            conversa: ({
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "mensagem";
+            } | {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                texto: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                /** @constant */
+                especie: "nota";
+            } | {
+                /** @constant */
+                especie: "evento";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                autor: {
+                    /** @enum {string} */
+                    tipo: "conta" | "pessoa";
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                };
+                /** @enum {string} */
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                de: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                para: {
+                    /** Format: uuid */
+                    conta: string;
+                    nome: string;
+                } | null;
+                desde: string | null;
+                ativo: {
+                    antes: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                    depois: {
+                        /** Format: uuid */
+                        id: string;
+                        rotulo: string;
+                        patrimonio: string | null;
+                    } | null;
+                } | null;
+                os: {
+                    numero: number;
+                } | null;
+                solicitacao: {
+                    numero: number;
+                    /** @enum {string} */
+                    como: "juntou" | "pediu" | "gerou";
+                } | null;
+                motivo: string | null;
+            } | {
+                /** @constant */
+                especie: "alerta";
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                em: string;
+                texto: string;
+                /** @enum {string} */
+                severidade: "critico" | "atencao" | "info";
+            })[];
+            respostasProntas: {
+                /** Format: uuid */
+                id: string;
+                rotulo: string;
+                texto: string;
+                esperaAResposta: boolean;
+            }[];
+        };
+        PedidoDaAcaoDoChamado: {
+            versao?: number;
+        };
+        PedidoDoPassarDoChamado: {
+            /** Format: uuid */
+            para: string;
+            versao?: number;
+        };
+        PedidoDoDesfazerDoChamado: {
+            versao: number;
+        };
+        PedidoDoResolverDoChamado: {
+            /** @default  */
+            feito: string;
+            versao?: number;
+        };
+        PedidoDaConversaDoChamado: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+        };
+        PedidoDaTrocaDoAtivoDoChamado: {
+            ativo: string | null;
+            versao?: number;
+        };
+        PedidoDaTrocaDoTituloDoChamado: {
+            /** @default  */
+            titulo: string;
+        };
+        PedidoDosCamposDaTiDoChamado: {
+            respostas: {
+                [key: string]: unknown;
+            };
+        };
+        PedidoDoVirarOsDoChamado: {
+            problema?: string;
+            /** Format: uuid */
+            ativo?: string;
+            /** @enum {string} */
+            situacao?: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            fornecedor?: string | null;
+            os?: string | null;
+        };
+        PedidoDoPedirToner: {
+            registro?: {
+                /** @constant */
+                tipo: "toner";
+                pessoa?: string | null;
+                observacao?: string | null;
+                impressoras?: string[];
+                itens?: {
+                    impressora?: string | null;
+                    cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+                    quantidade?: number | null;
+                    consumivel?: string | null;
+                }[];
+            };
+        };
+        TonerDoChamado: {
+            /** @constant */
+            resultado: "juntou";
+            solicitacao: {
+                numero: number;
+            };
+        } | {
+            /** @constant */
+            resultado: "registro";
+            registro: {
+                /** @constant */
+                tipo: "toner";
+                /** Format: uuid */
+                pessoa: string;
+                observacao: string | null;
+                impressoras: string[];
+                itens: {
+                    /** Format: uuid */
+                    impressora: string;
+                    /** @enum {string} */
+                    cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
+                    quantidade: number;
+                    consumivel: string | null;
+                }[];
+            };
+        };
+        TonerPedidoPeloChamado: {
+            /** @constant */
+            resultado: "pediu";
+            solicitacao: {
+                numero: number;
+            };
+        };
+        ChamadoDepoisDaAcao: {
+            numero: number;
+            versao: number;
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            responsavel: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            } | null;
+        };
+        AnexoEnviado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        RespostaPronta: {
+            /** Format: uuid */
+            id: string;
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDasRespostasProntas: {
+            respostas: components["schemas"]["RespostaPronta"][];
+        };
+        PedidoDaRespostaPronta: {
+            rotulo: string;
+            texto: string;
+            esperaAResposta: boolean;
+            tipos: string[];
+        };
+        ContasQueAtendemOsChamados: {
+            contas: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        ListaDosTiposDeChamado: {
+            tipos: components["schemas"]["TipoDeChamado"][];
+        };
+        PedidoDoTipoDeChamado: {
+            nome: string;
+            icone: string;
+            frase: string | null;
+            prazo: {
+                /** @enum {string} */
+                modo: "corridas" | "horario";
+                resposta: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+                resolucao: {
+                    valor: number;
+                    /** @enum {string} */
+                    unidade: "min" | "h" | "d";
+                };
+            };
+            atendePorPadrao: string | null;
+            /** @enum {string} */
+            semNinguem: "triagem" | "fica";
+            podeVirarOs: boolean;
+            /** @enum {string} */
+            geraSolicitacao: "nao" | "toner" | "equipamento";
+            tipoDeAtivoDoEquipamento: string | null;
+            pedeOAtivo: boolean;
+            apareceParaOColaborador: boolean;
+            soATiAbre: boolean;
+        };
+        TipoDeChamadoDuplicado: {
+            tipo: components["schemas"]["TipoDeChamado"];
+            solicitacaoDesligada: boolean;
+        };
+        PedidoDoFormularioDeChamado: {
+            titulo?: unknown;
+            campos?: unknown;
+        };
+        FormularioDoTipoDeChamado: {
+            formulario: components["schemas"]["FormularioDeChamado"];
+            pedeOAtivo: boolean;
+            abertos: number;
         };
         PessoaDoSegredo: {
             /** Format: uuid */
@@ -38791,387 +44744,6 @@ export interface components {
             horario: string;
             diaDoTeste: number;
         };
-        LocalDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        MudancaDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            texto: string | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            mudadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            mudadaEm: string;
-        };
-        PecaDaOrdem: {
-            /** Format: uuid */
-            id: string;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            };
-            quantidade: number;
-            local: components["schemas"]["LocalDaOrdem"];
-            /** Format: uuid */
-            movimento: string;
-            lancadaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            lancadaEm: string;
-        };
-        OrdemDeServico: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-            ativo: components["schemas"]["AtivoDaOrdem"];
-            local: components["schemas"]["LocalDaOrdem"] | null;
-            solicitacao: {
-                /** Format: uuid */
-                id: string;
-                numero: number;
-                pessoa: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-            } | null;
-            problema: string;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            solucao: string | null;
-            motivoDoEncerramento: string | null;
-            abertaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            abertaEm: string;
-            resolvidaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            resolvidaEm: string | null;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            historico: components["schemas"]["MudancaDaOrdem"][];
-            pecas: components["schemas"]["PecaDaOrdem"][];
-            permite: {
-                atender: boolean;
-            };
-        };
-        PedidoDeAberturaDaOrdem: {
-            ativo?: string | null;
-            problema?: string | null;
-        };
-        PedidoDeCorrecaoDaOrdem: {
-            problema?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeSituacaoDaOrdem: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
-            observacao?: string | null;
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDePecaDaOrdem: {
-            consumivel?: string | null;
-            local?: string | null;
-            quantidade?: number | null;
-        };
-        PedidoDeResolucaoDaOrdem: {
-            solucao?: string | null;
-        };
-        PedidoDeReaberturaDaOrdem: {
-            motivo?: string | null;
-        };
-        PedidoDeEncerramentoDaOrdem: {
-            /** @default false */
-            semResolver: boolean;
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeOrdens: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-peca" | "encerrada";
-        };
-        RetornoDoLoteDeOrdens: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        ListaDeOrdens: {
-            itens: components["schemas"]["OrdemDeServico"][];
-            total: number;
-            proximo: string | null;
-        };
-        OrdensDoAtivo: {
-            emAberto: components["schemas"]["OrdemDeServico"][];
-            resolvidasOuEncerradas: components["schemas"]["OrdemDeServico"][];
-        };
-        LocalDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            caminho: string;
-        };
-        AtivoDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            rotulo: string;
-            patrimonio: string | null;
-            abrir: boolean;
-        };
-        ItemDaSolicitacao: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-            quantidade: number;
-            consumivel: {
-                /** Format: uuid */
-                id: string;
-                codigo: string;
-                nome: string | null;
-                abrir: boolean;
-            } | null;
-            entrega: {
-                /** @enum {string} */
-                origem: "estoque" | "fornecedor";
-                local: components["schemas"]["LocalDaSolicitacao"] | null;
-                movimento: string | null;
-                fornecedor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                    abrir: boolean;
-                } | null;
-                entreguePor: {
-                    /** Format: uuid */
-                    id: string;
-                    nome: string;
-                };
-                entregueEm: string;
-            } | null;
-        };
-        ImpressoraDaSolicitacao: {
-            ativo: components["schemas"]["AtivoDaSolicitacao"];
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            itens: components["schemas"]["ItemDaSolicitacao"][];
-        };
-        Solicitacao: {
-            /** Format: uuid */
-            id: string;
-            numero: number;
-            /** @enum {string} */
-            tipo: "toner" | "conserto" | "equipamento";
-            /** @enum {string} */
-            situacao: "aberta" | "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            pessoa: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            observacao: string | null;
-            locais: components["schemas"]["LocalDaSolicitacao"][];
-            semLocal: boolean;
-            impressoras: components["schemas"]["ImpressoraDaSolicitacao"][];
-            ativo: components["schemas"]["AtivoDaSolicitacao"] | null;
-            defeito: string | null;
-            tipoDeAtivo: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            quantidade: number | null;
-            motivo: string | null;
-            local: components["schemas"]["LocalDaSolicitacao"] | null;
-            fornecedor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                abrir: boolean;
-            } | null;
-            osDoFornecedor: string | null;
-            oQueFoiFeito: string | null;
-            motivoDoCancelamento: string | null;
-            registradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            };
-            registradaEm: string;
-            encerradaPor: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-            } | null;
-            encerradaEm: string | null;
-            permite: {
-                atender: boolean;
-            };
-            ordem: {
-                numero: number;
-                /** @enum {string} */
-                situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
-                abrir: boolean;
-            } | null;
-        };
-        PedidoDaSolicitacao: {
-            /** @constant */
-            tipo: "toner";
-            pessoa?: string | null;
-            observacao?: string | null;
-            impressoras?: string[];
-            itens?: {
-                impressora?: string | null;
-                cor?: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-                quantidade?: number | null;
-                consumivel?: string | null;
-            }[];
-        } | {
-            /** @constant */
-            tipo: "conserto";
-            pessoa?: string | null;
-            observacao?: string | null;
-            ativo?: string | null;
-            defeito?: string | null;
-        } | {
-            /** @constant */
-            tipo: "equipamento";
-            pessoa?: string | null;
-            observacao?: string | null;
-            tipoDeAtivo?: string | null;
-            quantidade?: number | null;
-            motivo?: string | null;
-            local?: string | null;
-        };
-        PedidoDeSituacaoDaSolicitacao: {
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega";
-        };
-        PedidoAoFornecedor: {
-            fornecedor?: string | null;
-            os?: string | null;
-        };
-        PedidoDeConclusaoDaSolicitacao: {
-            oQueFoiFeito?: string | null;
-        };
-        PedidoDeCancelamentoDaSolicitacao: {
-            motivo?: string | null;
-        };
-        PedidoDoLoteDeSolicitacoes: {
-            numeros: number[];
-            /** @enum {string} */
-            situacao: "em-atendimento" | "aguardando-entrega" | "concluida" | "cancelada";
-            motivo?: string | null;
-        };
-        RetornoDoLoteDeSolicitacoes: {
-            mudaram: number;
-            recusadas: {
-                numero: number;
-                mensagem: string;
-            }[];
-            texto: string;
-        };
-        PedidoDeEntregaDaSolicitacao: {
-            entregas: ({
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "estoque";
-                consumivel?: string | null;
-                local?: string | null;
-            } | {
-                /** Format: uuid */
-                item: string;
-                /** @constant */
-                origem: "fornecedor";
-                fornecedor?: string | null;
-                consumivel?: string | null;
-            })[];
-        };
-        ListaDeSolicitacoes: {
-            itens: components["schemas"]["Solicitacao"][];
-            total: number;
-            proximo: string | null;
-        };
-        ImpressorasParaSolicitacao: {
-            itens: {
-                /** Format: uuid */
-                id: string;
-                rotulo: string;
-                patrimonio: string | null;
-                local: components["schemas"]["LocalDaSolicitacao"] | null;
-            }[];
-        };
-        ImpressoraParaSolicitacao: {
-            ativo: components["schemas"]["AtivoDaSolicitacao"];
-            local: components["schemas"]["LocalDaSolicitacao"] | null;
-            contador: {
-                paginas: number;
-                lidoEm: string;
-            } | null;
-            cores: {
-                /** @enum {string} */
-                cor: "preto" | "ciano" | "magenta" | "amarelo" | "colorido";
-                sugerido: string | null;
-                compativeis: {
-                    /** Format: uuid */
-                    id: string;
-                    codigo: string;
-                    nome: string | null;
-                    saldo: number | null;
-                }[];
-            }[];
-        };
-        SolicitacoesDoAtivo: {
-            pendentes: components["schemas"]["Solicitacao"][];
-            encerradas: components["schemas"]["Solicitacao"][];
-            usaConsumiveis: boolean;
-        };
         Painel: {
             /** Format: uuid */
             id: string;
@@ -39222,7 +44794,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -39265,7 +44837,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;

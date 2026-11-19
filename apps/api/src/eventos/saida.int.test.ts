@@ -123,12 +123,44 @@ describe('registrarEvento', () => {
     ]);
   });
 
-  it('recusa o evento sem público', async () => {
+  it('grava o público de uma das permissões (change chamados-da-ti)', async () => {
+    await naOrganizacao(api.banco, org, (tx) =>
+      registrarEvento(tx, {
+        tipo: 'ajustes-dos-chamados.mudaram',
+        alvo: { tipo: 'tipo-de-chamado', id: ALVO },
+        publico: { permissoes: ['chamados.ver', 'chamados.configurar'] },
+      }),
+    );
+    expect(await gravados()).toMatchObject([
+      {
+        tipo: 'ajustes-dos-chamados.mudaram',
+        alvoTipo: 'tipo-de-chamado',
+        alvoId: ALVO,
+        todas: false,
+        permissao: null,
+        permissoes: ['chamados.ver', 'chamados.configurar'],
+        locais: null,
+        contas: null,
+        sessoes: null,
+      },
+    ]);
+  });
+
+  it('recusa o evento sem público, também com as permissões vazias', async () => {
     await expect(
       naOrganizacao(api.banco, org, (tx) =>
         registrarEvento(tx, { tipo: 'pessoas.mudaram', alvo: null, publico: {} }),
       ),
     ).rejects.toThrow('O evento pessoas.mudaram não tem público.');
+    await expect(
+      naOrganizacao(api.banco, org, (tx) =>
+        registrarEvento(tx, {
+          tipo: 'ajustes-dos-chamados.mudaram',
+          alvo: null,
+          publico: { permissoes: [] },
+        }),
+      ),
+    ).rejects.toThrow('O evento ajustes-dos-chamados.mudaram não tem público.');
     expect(await gravados()).toEqual([]);
   });
 });

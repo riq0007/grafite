@@ -35,7 +35,8 @@ const NA_TELA: Record<SituacaoDaDisponibilidade, Situacao> = {
 export const rotuloDaDisponibilidade = (disponibilidade: Disponibilidade) =>
   ROTULOS_DAS_SITUACOES_DA_DISPONIBILIDADE[disponibilidade.situacao];
 
-function SituacaoNaTela({ disponibilidade }: { disponibilidade: Disponibilidade }) {
+/** A situação da disponibilidade no rótulo do kit, com o ícone de cada uma. */
+export function SituacaoNaTela({ disponibilidade }: { disponibilidade: Disponibilidade }) {
   return (
     <RotuloDeSituacao situacao={NA_TELA[disponibilidade.situacao]}>
       {rotuloDaDisponibilidade(disponibilidade)}

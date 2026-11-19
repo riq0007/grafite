@@ -3,7 +3,7 @@ import { createRoute } from '@tanstack/react-router';
 import { Box, Users } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { raiz } from '../rotas/raiz.tsx';
-import { interruptorDe, registroDaConta } from './registroDaConta.ts';
+import { interruptorDe, itensPermitidos, registroDaConta } from './registroDaConta.ts';
 import { definirModulo, type ModuloRegistrado } from './tipos.ts';
 
 const rotasDoLivre = createRoute({ getParentRoute: () => raiz, path: '/livre' });
@@ -104,6 +104,41 @@ describe('registroDaConta', () => {
     ]);
   });
 
+  it('o primeiro item que a conta vê não leva a linha antes dele, e os outros a mantêm', () => {
+    const menu = [
+      { rotulo: 'Início', destino: '/livre', permissoes: ['chamados.ver'] },
+      {
+        rotulo: 'Configurar',
+        destino: '/livre',
+        separadoAntes: true,
+        permissoes: ['chamados.configurar'],
+      },
+      {
+        rotulo: 'Mais',
+        separadoAntes: true,
+        filhos: [
+          { rotulo: 'Um', destino: '/livre', permissoes: ['chamados.ver'] },
+          {
+            rotulo: 'Dois',
+            destino: '/livre',
+            separadoAntes: true,
+            permissoes: ['chamados.configurar'],
+          },
+        ],
+      },
+    ] as const;
+    expect(itensPermitidos(menu, comAs('chamados.ver', 'chamados.configurar'))).toEqual(menu);
+    const soConfigura = itensPermitidos(menu, comAs('chamados.configurar'));
+    expect(soConfigura).toEqual([
+      { rotulo: 'Configurar', destino: '/livre', permissoes: ['chamados.configurar'] },
+      {
+        rotulo: 'Mais',
+        separadoAntes: true,
+        filhos: [{ rotulo: 'Dois', destino: '/livre', permissoes: ['chamados.configurar'] }],
+      },
+    ]);
+  });
+
   it('os menus da barra perdem os itens sem a permissão, e o menu vazio some', () => {
     const [, visto] = registroDaConta(REGISTRO, comAs('pessoas.ver'));
     expect(rotulosDe(visto?.menusDaBarra)).toEqual(['Visualizar']);
@@ -132,6 +167,22 @@ describe('registroDaConta', () => {
     expect(semAuditoria?.menuDinamico).toBeUndefined();
     const [, comAuditoria] = registroDaConta(REGISTRO, comAs('auditoria.ver'));
     expect(comAuditoria?.menuDinamico).toBe(administracao.menuDinamico);
+  });
+
+  it('a primeira tela fica só para quem tem a permissão dela, também no módulo que só a declara', () => {
+    const entrada = definirModulo({
+      id: 'entrada',
+      nome: 'Entrada',
+      icone: Box,
+      endereco: '/livre',
+      prioridadeNoCelular: 1,
+      rotas: rotasDoLivre,
+      primeiraTela: { permissoes: ['chamados.ver'] },
+    });
+    const [semVer] = registroDaConta([entrada], comAs('chamados.configurar'));
+    expect(semVer?.primeiraTela).toBeUndefined();
+    const [comVer] = registroDaConta([entrada], comAs('chamados.ver'));
+    expect(comVer?.primeiraTela).toBe(entrada.primeiraTela);
   });
 
   it('o cadastro que abre numa aba fica só para quem tem a permissão dele', () => {

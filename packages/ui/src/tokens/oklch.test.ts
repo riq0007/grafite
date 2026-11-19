@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { dentroDoGamute, distancia, distanciaNoCroma, oklchParaHex, paraOklch } from './oklch.ts';
+import {
+  dentroDoGamute,
+  distancia,
+  distanciaNoCroma,
+  oklchParaHex,
+  oklchParaHexCortando,
+  paraOklch,
+} from './oklch.ts';
 
 describe('distancia e distanciaNoCroma', () => {
   it('são 0 entre uma cor e ela mesma', () => {
@@ -48,6 +55,20 @@ describe('oklchParaHex', () => {
   it('a luminosidade fora de 0 a 1 é limitada', () => {
     expect(oklchParaHex({ l: 1.2, c: 0, h: 0 })).toBe('#ffffff');
     expect(oklchParaHex({ l: -0.1, c: 0, h: 0 })).toBe('#000000');
+  });
+});
+
+describe('oklchParaHexCortando', () => {
+  it('fora do gamute, corta cada canal no limite, como o navegador mostra o oklch()', () => {
+    // O fundo da aba no mockup aprovado: o navegador o mostrou em #004f9d.
+    expect(oklchParaHexCortando({ l: 0.42, c: 0.16, h: 245 })).toBe('#004f9d');
+    expect(oklchParaHex({ l: 0.42, c: 0.16, h: 245 })).toBe('#005182');
+  });
+
+  it('dentro do gamute, é a mesma cor da conversão que perde croma', () => {
+    expect(oklchParaHexCortando({ l: 0.8, c: 0.1, h: 245 })).toBe(
+      oklchParaHex({ l: 0.8, c: 0.1, h: 245 }),
+    );
   });
 });
 

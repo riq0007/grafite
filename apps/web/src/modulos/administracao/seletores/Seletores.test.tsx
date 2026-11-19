@@ -225,6 +225,55 @@ describe('SeletorDeConta', () => {
     await waitFor(() => expect(campo('Quem fez').value).toBe('Carla Dias'));
   });
 
+  /** O seletor com a escolha guardada, como as telas o usam, e o que ele manda a cada mudança. */
+  function comEscolha(inicial: ContaDoSeletor | null) {
+    const mudancas: (ContaDoSeletor | null)[] = [];
+    function ComValor() {
+      const [valor, definirValor] = useState(inicial);
+      return (
+        <SeletorDeConta
+          rotulo="Quem fez"
+          valor={valor}
+          aoMudar={(conta) => {
+            mudancas.push(conta);
+            definirValor(conta);
+          }}
+          buscar={async (texto: string) => filtrar(texto)}
+        />
+      );
+    }
+    render(<ComValor />, { wrapper: comApi() });
+    return mudancas;
+  }
+
+  it('o texto que não é de nenhuma conta volta, ao sair do campo, ao da escolhida', async () => {
+    const mudancas = comEscolha({ id: 'c-ana', rotulo: 'Ana Souza' });
+    digitar(campo('Quem fez'), 'bru');
+    await screen.findByRole('option', { name: 'Bruno Costa' });
+    act(() => campo('Quem fez').blur());
+    await waitFor(() => expect(campo('Quem fez').value).toBe('Ana Souza'));
+    expect(mudancas).not.toContain(null);
+  });
+
+  it('sem escolha, o texto digitado fica ao sair do campo, para a busca seguir com ele', async () => {
+    const mudancas = comEscolha(null);
+    digitar(campo('Quem fez'), 'bru');
+    await screen.findByRole('option', { name: 'Bruno Costa' });
+    act(() => campo('Quem fez').blur());
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
+    expect(campo('Quem fez').value).toBe('bru');
+    expect(mudancas).toEqual([]);
+  });
+
+  it('o campo vazio tira a escolha, e ele fica vazio ao sair', async () => {
+    const mudancas = comEscolha({ id: 'c-ana', rotulo: 'Ana Souza' });
+    digitar(campo('Quem fez'), '');
+    await waitFor(() => expect(mudancas).toContain(null));
+    act(() => campo('Quem fez').blur());
+    await waitFor(() => expect(campo('Quem fez').value).toBe(''));
+    expect(mudancas.at(-1)).toBeNull();
+  });
+
   it('a conta escolhida aparece no campo', () => {
     render(
       <SeletorDeConta

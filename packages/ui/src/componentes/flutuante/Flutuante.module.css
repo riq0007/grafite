@@ -53,6 +53,24 @@
   opacity: var(--opacidade-desabilitado);
 }
 
+/* A opção com o detalhe: o nome e, embaixo, o detalhe no texto secundário, que quebra sem cortar. */
+.textosDaOpcao {
+  display: grid;
+  min-width: 0;
+  padding-block: var(--esp-1);
+}
+
+.detalheDaOpcao {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.opcao[data-focused] .detalheDaOpcao {
+  color: inherit;
+}
+
 .marca {
   display: inline-flex;
   width: var(--esp-4);

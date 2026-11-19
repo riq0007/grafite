@@ -267,6 +267,7 @@ export async function simularSolicitacoes(
       encerradaEm: s.encerradaEm,
       permite: { atender: true },
       ordem: ordemDaSolicitacao(s.id),
+      chamados: [],
     };
   }
 

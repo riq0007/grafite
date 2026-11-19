@@ -42,7 +42,9 @@ export function GrupoDeRadios({
       className={[estilosDoCampo.campo, className].filter(Boolean).join(' ')}
     >
       {!ocultarRotulo && <RotuloDoCampo rotulo={rotulo} obrigatorio={obrigatorio} />}
-      <div className={estilos.opcoesDoGrupo}>{children}</div>
+      <div className={estilos.opcoesDoGrupo} data-parte="opcoes">
+        {children}
+      </div>
       {descricao && <DescricaoDoCampo>{descricao}</DescricaoDoCampo>}
       <ErroDoCampo erro={erro} tipo="escolha" />
     </RadioGroup>

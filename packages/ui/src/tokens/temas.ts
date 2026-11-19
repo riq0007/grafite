@@ -2,10 +2,12 @@
 // OKLCH (design da fundamentos-v3). Os componentes só usam os papéis que o gerador produz.
 import { comAlfa } from './contraste.ts';
 import {
+  type CoresDaAbaGerada,
   type CoresDaSituacaoGerada,
   type CoresGeradas,
   type DadosGerados,
   type EntradaDoTema,
+  gerarAba,
   gerarDados,
   gerarSituacoes,
   gerarTema,
@@ -32,6 +34,8 @@ export interface Tema {
   sombraElevada: string;
   situacoes: Record<IdDaSituacao, CoresDaSituacaoGerada>;
   dados: DadosGerados;
+  /** As cores da aba dos chamados, na matiz da informação. */
+  aba: CoresDaAbaGerada;
 }
 
 /** As entradas dos seis temas (spec mestre, Apêndice A.1). */
@@ -62,7 +66,7 @@ export const ENTRADAS_DOS_TEMAS = {
 
 export type IdDoTema = keyof typeof ENTRADAS_DOS_TEMAS;
 
-/** O tema completo de uma entrada: as cores, as sombras, as situações e os dados. */
+/** O tema completo de uma entrada: as cores, as sombras, as situações, os dados e a aba. */
 export function montarTema(nome: string, entrada: EntradaDoTema): Tema {
   const gerado = gerarTema(entrada);
   return {
@@ -74,6 +78,7 @@ export function montarTema(nome: string, entrada: EntradaDoTema): Tema {
     sombraElevada: gerado.sombraElevada,
     situacoes: gerarSituacoes(gerado),
     dados: gerarDados(gerado),
+    aba: gerarAba(gerado),
   };
 }
 

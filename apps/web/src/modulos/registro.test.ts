@@ -167,8 +167,9 @@ describe('registro de módulos', () => {
     expect(REGISTRO.at(-1)?.id).toBe(MODULO_DOS_AJUSTES);
   });
 
-  it('põe os módulos de negócio antes da Administração, e Ajustes no fim', () => {
+  it('põe os Chamados primeiro, os módulos de negócio antes da Administração, e Ajustes no fim', () => {
     expect(REGISTRO.map((modulo) => modulo.id)).toEqual([
+      'chamados',
       'inicio',
       'ativos',
       'gestao',

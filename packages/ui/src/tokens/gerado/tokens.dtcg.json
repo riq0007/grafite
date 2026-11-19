@@ -941,6 +941,125 @@
         "grafite.css": "--cor-tinta-preto"
       }
     },
+    "aba-fundo": {
+      "$type": "color",
+      "$value": "#004f9d",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#004f9d",
+            "meia-noite": "#004f9d",
+            "oled": "#004f9d",
+            "nevoa": "#004f9d",
+            "papel": "#004f9d",
+            "alto-contraste": "#004f9d"
+          }
+        },
+        "grafite.css": "--cor-aba-fundo"
+      }
+    },
+    "aba-fundo-2": {
+      "$type": "color",
+      "$value": "#003975",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#003975",
+            "meia-noite": "#003975",
+            "oled": "#003975",
+            "nevoa": "#003975",
+            "papel": "#003975",
+            "alto-contraste": "#003975"
+          }
+        },
+        "grafite.css": "--cor-aba-fundo-2"
+      }
+    },
+    "aba-bloco": {
+      "$type": "color",
+      "$value": "#0064b6",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#0064b6",
+            "meia-noite": "#0064b6",
+            "oled": "#0064b6",
+            "nevoa": "#0064b6",
+            "papel": "#0064b6",
+            "alto-contraste": "#0064b6"
+          }
+        },
+        "grafite.css": "--cor-aba-bloco"
+      }
+    },
+    "aba-texto": {
+      "$type": "color",
+      "$value": "#f4fbff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#f4fbff",
+            "meia-noite": "#f4fbff",
+            "oled": "#f4fbff",
+            "nevoa": "#f4fbff",
+            "papel": "#f4fbff",
+            "alto-contraste": "#f4fbff"
+          }
+        },
+        "grafite.css": "--cor-aba-texto"
+      }
+    },
+    "aba-contorno": {
+      "$type": "color",
+      "$value": "#86c5fa",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#86c5fa",
+            "meia-noite": "#86c5fa",
+            "oled": "#86c5fa",
+            "nevoa": "#004f9d",
+            "papel": "#004f9d",
+            "alto-contraste": "#004f9d"
+          }
+        },
+        "grafite.css": "--cor-aba-contorno"
+      }
+    },
+    "aba-atencao": {
+      "$type": "color",
+      "$value": "#f4af41",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#f4af41",
+            "meia-noite": "#f4af41",
+            "oled": "#f4af41",
+            "nevoa": "#f4af41",
+            "papel": "#f4af41",
+            "alto-contraste": "#f4af41"
+          }
+        },
+        "grafite.css": "--cor-aba-atencao"
+      }
+    },
+    "aba-sobre-atencao": {
+      "$type": "color",
+      "$value": "#201301",
+      "$extensions": {
+        "grafite.modos": {
+          "tema": {
+            "grafite": "#201301",
+            "meia-noite": "#201301",
+            "oled": "#201301",
+            "nevoa": "#201301",
+            "papel": "#201301",
+            "alto-contraste": "#201301"
+          }
+        },
+        "grafite.css": "--cor-aba-sobre-atencao"
+      }
+    },
     "neutro": {
       "$type": "color",
       "$value": "{cor.texto-2}",
@@ -1569,6 +1688,13 @@
       "$value": "10px",
       "$extensions": {
         "grafite.css": "--raio-aviso"
+      }
+    },
+    "capsula": {
+      "$type": "dimension",
+      "$value": "1000px",
+      "$extensions": {
+        "grafite.css": "--raio-capsula"
       }
     }
   },
