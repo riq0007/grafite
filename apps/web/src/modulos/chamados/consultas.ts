@@ -101,14 +101,21 @@ export function useTiposDeChamado() {
   });
 }
 
+/** O formulário de um tipo, com o "Pede o ativo" e os chamados abertos dele. */
+export type FormularioDoTipoDeChamado = components['schemas']['FormularioDoTipoDeChamado'];
+
+/** A chave do formulário de um tipo, que o construtor regrava com a resposta do salvar. */
+export const chaveDoFormularioDoTipo = (id: string | null) =>
+  [...CHAVE_DOS_TIPOS_DE_CHAMADO, id, 'formulario'] as const;
+
 /**
- * O formulário de um tipo de chamado, a quem configura: a gaveta do Rascunho mostra os campos dele.
- * Sem o id, nada é pedido.
+ * O formulário de um tipo de chamado, a quem configura: a gaveta do Rascunho mostra os campos dele,
+ * e o construtor os edita. Sem o id, nada é pedido.
  */
 export function useFormularioDoTipo(id: string | null) {
   const api = useApi();
   return useQuery({
-    queryKey: [...CHAVE_DOS_TIPOS_DE_CHAMADO, id, 'formulario'],
+    queryKey: chaveDoFormularioDoTipo(id),
     queryFn: () =>
       consultar(
         () =>

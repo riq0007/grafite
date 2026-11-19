@@ -41,13 +41,17 @@ export const ID_DO_FORMULARIO = /^[A-Za-z0-9_-]{1,40}$/;
 
 export const MAXIMO_DE_CAMPOS_DO_FORMULARIO = 20;
 export const MAXIMO_DE_CLAUSULAS_DA_CONDICAO = 5;
-const MINIMO_DE_OPCOES = 2;
-const MAXIMO_DE_OPCOES = 12;
+export const MINIMO_DE_OPCOES_DO_CAMPO = 2;
+export const MAXIMO_DE_OPCOES_DO_CAMPO = 12;
 
 /** Os tipos de campo com opções, os que uma condição pode usar e os que podem dar o título. */
 const COM_OPCOES: readonly TipoDeCampoDoChamado[] = ['escolha-unica', 'varias-opcoes'];
 const NA_CONDICAO: readonly TipoDeCampoDoChamado[] = [...COM_OPCOES, 'sim-ou-nao'];
-const NO_TITULO: readonly TipoDeCampoDoChamado[] = ['escolha-unica', 'texto-curto', 'ativo'];
+export const TIPOS_DE_CAMPO_DO_TITULO: readonly TipoDeCampoDoChamado[] = [
+  'escolha-unica',
+  'texto-curto',
+  'ativo',
+];
 
 export const RECUSA_DO_FORMULARIO =
   'O formulário não pôde ser lido. Recarregue a página e tente de novo.';
@@ -125,10 +129,13 @@ class Erros {
 
 function conferirOpcoes(campoId: string, pedidas: unknown, erros: Erros): OpcaoDoCampo[] {
   const lista = Array.isArray(pedidas) ? pedidas : [];
-  if (lista.length < MINIMO_DE_OPCOES) {
-    erros.anotar(`campos.${campoId}.opcoes`, `Inclua ao menos ${MINIMO_DE_OPCOES} opções.`);
-  } else if (lista.length > MAXIMO_DE_OPCOES) {
-    erros.anotar(`campos.${campoId}.opcoes`, `Use até ${MAXIMO_DE_OPCOES} opções.`);
+  if (lista.length < MINIMO_DE_OPCOES_DO_CAMPO) {
+    erros.anotar(
+      `campos.${campoId}.opcoes`,
+      `Inclua ao menos ${MINIMO_DE_OPCOES_DO_CAMPO} opções.`,
+    );
+  } else if (lista.length > MAXIMO_DE_OPCOES_DO_CAMPO) {
+    erros.anotar(`campos.${campoId}.opcoes`, `Use até ${MAXIMO_DE_OPCOES_DO_CAMPO} opções.`);
   }
   const ids = new Set<string>();
   const textos = new Set<string>();
@@ -290,7 +297,7 @@ function conferirTitulo(
       `campos.${campoId}`,
       'O título usa este campo. Escolha outro no Título do chamado.',
     );
-  } else if (!NO_TITULO.includes(campo.tipo)) {
+  } else if (!TIPOS_DE_CAMPO_DO_TITULO.includes(campo.tipo)) {
     fora();
   } else if (campo.soDaTi) {
     // A pessoa lê o título do próprio chamado, e ele nunca mostra o que só a TI vê.

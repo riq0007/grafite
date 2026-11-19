@@ -113,6 +113,9 @@ export function posicaoDoEncaixe(
 export const textoDoEncaixe = (tipo: TipoDeCampoDoChamado): string =>
   `Solte o campo “${ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[tipo]}” aqui`;
 
+/** O texto da linha de encaixe ao mover um campo da lista pela alça (tarefa 5.22). */
+export const textoDoEncaixeDoCampo = (rotulo: string): string => `Solte o campo “${rotulo}” aqui`;
+
 /** O aviso para o leitor de tela: onde, nos campos de antes, o campo novo entrou. */
 export function avisoDoAcrescentado(
   rotulo: string,

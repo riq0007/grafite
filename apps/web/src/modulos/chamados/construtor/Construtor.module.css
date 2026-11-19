@@ -161,6 +161,11 @@
   color: var(--cor-texto);
 }
 
+/* Vazia, a frase fica na página, para o leitor de tela anunciá-la quando aparece. */
+.avisoDaPaleta:empty {
+  margin: 0;
+}
+
 /* Os campos, no meio, numa lista que rola sozinha. */
 .campos {
   position: relative;
@@ -189,16 +194,273 @@
   padding-bottom: 6px;
 }
 
-.campo {
+/* O cartão do campo, como o m09: a alça, o ícone, o rótulo com o detalhe e o selo à direita. */
+.cartao {
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+}
+
+/* O campo com condição fica recuado, como no m09. */
+.cartao[data-condicional] {
+  margin-left: var(--esp-5);
+}
+
+/* O campo aberto, com a borda dupla do destaque, como no m09. */
+.cartao[data-aberto] {
+  border-color: var(--cor-destaque);
+  outline: 1px solid var(--cor-destaque);
+}
+
+.cartao[data-com-recusa] {
+  border-color: var(--cor-critico);
+}
+
+/* O "Título do chamado", fixo no alto e tracejado. */
+.cartao[data-titulo] {
+  border-style: dashed;
+  background-color: transparent;
+}
+
+/* O cartão de onde saiu o campo no ar, tracejado e apagado, como o botão da paleta. */
+.cartao[data-no-ar] {
+  border-style: dashed;
+  opacity: var(--opacidade-desabilitado);
+}
+
+.linhaDoCampo {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 16px minmax(0, 1fr);
   align-items: center;
   gap: var(--esp-3);
   min-height: 52px;
   padding: 6px var(--esp-3);
+}
+
+.alca {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  color: var(--cor-texto-2);
+  cursor: grab;
+  user-select: none;
+}
+
+.cartao[data-titulo] .alca {
+  cursor: default;
+}
+
+/* O botão que abre o campo no lugar: o ícone, os textos e o selo, sem a cara de botão. */
+.abrir {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+
+.abrir:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* As propriedades do campo aberto, embaixo de uma linha, como no m09. */
+.propriedades {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4) var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+}
+
+.grupoDasOpcoes {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rotuloDaParte {
+  display: block;
+  margin-bottom: var(--esp-1);
+  padding: 0;
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Cada opção, um campo de texto do tamanho do texto, com o × no fim, como as do m09. */
+.opcao {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 32px;
+  padding-left: var(--esp-3);
   border: 1px solid var(--cor-linha-forte);
   border-radius: var(--raio-controle);
-  background-color: var(--cor-superficie);
+  background-color: var(--cor-superficie-2);
+  font-size: var(--texto-dado);
+}
+
+.opcao:focus-within {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.opcao[data-recusado] {
+  border-color: var(--cor-critico);
+}
+
+/* O campo de texto cresce com o texto, pela cópia escondida dele na mesma célula. */
+.medida {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.medida::after {
+  content: attr(data-valor) " ";
+  grid-area: 1 / 1;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: pre;
+}
+
+.medida input {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 3ch;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cor-texto);
+  font: inherit;
+  outline: none;
+}
+
+.tirarOpcao {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  cursor: pointer;
+}
+
+.tirarOpcao:hover {
+  background-color: var(--cor-hover);
+}
+
+.tirarOpcao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.acrescentarOpcao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--esp-3);
+  border: 1px dashed var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-dado);
+  cursor: pointer;
+}
+
+.acrescentarOpcao:hover:not(:disabled) {
+  background-color: var(--cor-hover);
+}
+
+.acrescentarOpcao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.acrescentarOpcao:disabled {
+  cursor: default;
+  opacity: var(--opacidade-desabilitado);
+}
+
+.notaDasOpcoes {
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+/* "Obrigatório" e "Só a TI vê", lado a lado, como no m09. */
+.duas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* A recusa embaixo de uma chave não desce a outra. */
+  align-items: start;
+  gap: var(--esp-4);
+}
+
+.chave {
+  display: grid;
+  min-width: 0;
+}
+
+.linhaDaChave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 36px;
+  font-size: var(--texto-dado);
+}
+
+.removerOCampo {
+  display: grid;
+  justify-items: start;
+}
+
+/* A recusa, com o ícone, na cor crítica, junto do que recusa. */
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+  color: var(--cor-critico);
+}
+
+.recusasDoCampo,
+.recusasGerais {
+  display: grid;
+  outline: none;
+}
+
+.recusasGerais {
+  flex: none;
+  margin-bottom: var(--esp-3);
+}
+
+.informacao {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.5;
 }
 
 .iconeDoCampo {

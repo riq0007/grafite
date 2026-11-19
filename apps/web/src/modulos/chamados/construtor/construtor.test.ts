@@ -19,6 +19,7 @@ import {
   posicaoDoEncaixe,
   rotuloDoCampoNovo,
   textoDoEncaixe,
+  textoDoEncaixeDoCampo,
 } from './construtor.ts';
 
 const campo = (
@@ -194,6 +195,7 @@ describe('a posição da linha de encaixe', () => {
 describe('os textos', () => {
   it('a linha diz o campo que vai entrar', () => {
     expect(textoDoEncaixe('numero')).toBe('Solte o campo “Número” aqui');
+    expect(textoDoEncaixeDoCampo('Qual impressora?')).toBe('Solte o campo “Qual impressora?” aqui');
   });
 
   it('o aviso diz onde o campo entrou', () => {

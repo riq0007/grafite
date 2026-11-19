@@ -10,9 +10,11 @@ import {
   CircleAlert,
   CircleCheck,
   Clock,
+  GitBranch,
   Headset,
   Hourglass,
   Inbox,
+  Info,
   Lock,
   type LucideIcon,
   SquarePen,
@@ -52,6 +54,12 @@ const SELOS = {
   rascunho: { rotulo: 'Rascunho', situacao: 'atencao', icone: SquarePen },
   'ainda-nao-criado': { rotulo: 'Ainda não criado', situacao: 'atencao', icone: SquarePen },
   'toner-critico': { rotulo: 'Toner crítico', situacao: 'critico', icone: CircleAlert },
+  // Os do construtor do formulário, um por campo (design, "O construtor, os campos (tarefa 5.22)").
+  condicional: { rotulo: 'Condicional', situacao: 'atencao', icone: GitBranch },
+  'so-a-ti-ve': { rotulo: 'Só a TI vê', situacao: 'neutra', icone: Lock },
+  obrigatorio: { rotulo: 'Obrigatório', situacao: 'info', icone: Info },
+  opcional: { rotulo: 'Opcional', situacao: 'neutra', icone: Circle },
+  automatico: { rotulo: 'Automático', situacao: 'neutra', icone: Lock },
 } as const satisfies Record<string, DoSelo>;
 
 export type QualSelo = keyof typeof SELOS;

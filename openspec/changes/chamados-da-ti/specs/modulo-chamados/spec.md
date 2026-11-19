@@ -496,7 +496,7 @@ A chave "Prévia do colaborador" SHALL mostrar a prévia em tamanho real, sem ne
   - as respostas;
   - "Campos da TI: a TI preenche depois".
 
-No pé, "Descartar" e "Salvar o formulário", a ação principal, SHALL vir com a frase de quantos chamados abertos mantêm o formulário anterior.
+No cabeçalho, "Descartar" e "Salvar o formulário", a ação principal, SHALL vir com quantas mudanças não estão salvas, como "1 mudança não salva", e com a frase de quantos chamados abertos mantêm o formulário anterior. Tirar um campo ou uma opção de que outro depende SHALL ser recusado na hora, junto do que se tirou, sem mudar nada.
 
 O campo acrescentado pela paleta SHALL nascer opcional, com o nome do tipo de campo como rótulo, único no formulário ("Número", e "Número 2" quando já há um "Número"). Com 20 campos, a paleta SHALL ficar desligada, com "O formulário tem no máximo 20 campos.".
 
@@ -507,6 +507,10 @@ O campo acrescentado pela paleta SHALL nascer opcional, com o nome do tipo de ca
 #### Scenario: Campo condicional na prévia
 - **WHEN** quem configura escolhe "Atolando" em "O que está acontecendo?" na prévia em tamanho real
 - **THEN** "Onde as manchas aparecem?" some da prévia, e "O que chegaria para a TI" passa a "Impressora atolando"
+
+#### Scenario: Campo de que outro depende
+- **WHEN** quem configura escolhe "Remover o campo" em "O que está acontecendo?", no formulário da Impressora
+- **THEN** o campo fica, e "'Onde as manchas aparecem?' depende deste campo. Mude a condição antes." aparece junto do botão
 
 ### Requirement: Respostas prontas e horário da TI na tela
 

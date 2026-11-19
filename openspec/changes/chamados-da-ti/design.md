@@ -705,6 +705,8 @@ A referência das revisões das telas. Cada item é do plano, e não do mockup:
   - o nome no resumo de cada campo, que monta o "O que chegaria para a TI" (m11) e a primeira linha da conversa (m04);
   - as escolhas do item "Título do chamado": "Começar pelo nome do tipo" e a resposta que dá o título;
   - o título montado cortado em 120 caracteres, com as reticências, e a sigla que guarda a maiúscula;
+  - no campo aberto, "Remover o campo", os tipos de ativo do campo Ativo e a recusa na hora, junto do que se mudou;
+  - o menu "Subir" e "Descer" de cada campo, pelo botão direito e pelo teclado;
 - **m05:** o grupo "Vence depois de hoje";
 - **m03:**
   - a ajuda do campo de escrever, "Escreva a resposta para Fernanda.", até a 17 e a 20;
@@ -1071,6 +1073,35 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **O aviso para o leitor de tela,** que só ele lê, diz onde o campo entrou: "Campo “Número” acrescentado no fim." ou "Campo “Número” acrescentado antes de “Contador de páginas”.". Acrescentado, o campo vem à vista na lista que rola, e o foco fica na paleta, para o próximo.
 - **Os campos,** até a 5.22, são cartões com o ícone, o rótulo em peso forte e o tipo de campo embaixo, sem a alça, os selos e o campo aberto. Sem campos, "Nenhum campo ainda. Clique num tipo de campo ou arraste-o para cá.".
 - **A prévia,** à direita, é a aba da 5.6 com o formulário que se preenche, no modo da prévia (`quem: 'pessoa'`, com a conta como quem pede e as sugestões dela), "Prévia do colaborador" no alto e a nota "menor que a real". Ela muda junto com a lista e responde ao clique, como a aba. A marca tracejada do campo condicional, com o resto da nota, entra com a condição (5.23), e o rodapé da aba e o aviso dos campos escondidos, com a prévia em tamanho real (5.24).
+
+**O construtor, os campos (tarefa 5.22),** com o m09:
+- **O cartão do campo** tem a alça, o ícone, o rótulo, a linha de detalhe e um selo. O detalhe: o tipo de campo; nas escolhas, "· 4 opções"; no Ativo com tipos, "· só Impressora ou Monitor"; e, no campo só da TI, "· preenchido pela TI". O selo é um só, nesta ordem: "Condicional" (atenção, com o ramo), "Só a TI vê" (neutro, com o cadeado), "Obrigatório" (informação) e "Opcional" (neutro). O campo com condição fica recuado, como no m09, e o só da TI com condição diz o "preenchido pela TI" no detalhe.
+- **O campo aberto:** o clique no cartão o abre no lugar, um por vez, com a borda do destaque, e o segundo clique o fecha. O campo que a paleta acrescenta já nasce aberto, e o foco segue na paleta. No vigésimo campo, o foco vai ao rótulo dele, e a frase do limite é anunciada (revisão da 5.21). Dentro do campo aberto:
+  - "Rótulo" e "Nome no resumo" (vazio, vale o rótulo sem o "?");
+  - nas escolhas, "Opções", cada uma num campo de texto com o ×, e "Acrescentar", que cria "Opção 3" com o id novo e leva o foco a ela. O limite é de 12, com "O campo tem no máximo 12 opções.";
+  - no Ativo, "Tipos de ativo": os tipos ativos e os que o campo já aceitava, com "Nenhum marcado, o campo aceita ativos de qualquer tipo.";
+  - "Obrigatório" e "Só a TI vê", lado a lado, com "Sim" e "Não", como no m09;
+  - "Remover o campo".
+  A condição e o "Apagar a resposta se o campo sumir" entram com a 5.23.
+- **A recusa na hora:** tirar um campo ou uma opção, mudar uma chave e mudar a ordem conferem antes o formulário com a mudança, pelo `conferirFormulario`. Se a mudança traz uma recusa nova, nada muda, e a recusa fica junto de quem a pediu. São exemplos:
+  - "'Onde as manchas aparecem?' depende deste campo. Mude a condição antes.", no "Remover o campo";
+  - o "Pede o ativo: …", no "Obrigatório" do primeiro campo Ativo;
+  - "O campo tem no mínimo 2 opções.", na opção.
+  O que se escreve (o rótulo, o nome no resumo e as opções) se confere ao salvar.
+- **O salvar** fica no cabeçalho, como no m09, e não no pé, como a spec dizia. Ele tem "1 mudança não salva", "Descartar" e "Salvar o formulário"; os dois botões ficam desligados sem mudança. Embaixo do título, vem a frase dos abertos do editor do tipo. Cada campo acrescentado, tirado ou mudado conta 1, e a ordem e o título contam 1 cada.
+  - Antes da API, o salvar confere o formulário pelo `conferirFormulario`, e só segue sem recusa.
+  - Cada recusa, da conferência ou da API, fica junto do que recusa. A do "Pede o ativo" fica no primeiro campo Ativo e, sem nenhum, no alto da lista. As que não têm lugar, como a da condição, ficam no alto do campo aberto.
+  - O campo fechado com recusa mostra a primeira embaixo dele. O primeiro recusado abre, com o foco no que recusou.
+  - A recusa de um campo vale enquanto o campo não muda, e as outras, enquanto o formulário não muda.
+  - Gravado, aparece "Formulário salvo.". Sair com mudanças pede a confirmação, como no editor do tipo.
+- **O título do chamado** fica fixo no alto da lista: tracejado, com o cadeado no lugar da alça e o selo "Automático". O detalhe é a frase do título:
+  - "Das respostas: “Impressora manchando”", pela primeira opção da Escolha única;
+  - no Texto curto e no Ativo, "Das respostas: “Impressora” e a resposta de “Qual impressora?”";
+  - sem campo, "Das respostas: a primeira resposta de texto ou “Impressora”".
+  Aberto, ele tem "A resposta que dá o título", com "Nenhuma: a primeira resposta de texto" e os campos de Escolha única, de Texto curto e de Ativo que a pessoa vê. Com uma resposta escolhida, ele tem também "Começar pelo nome do tipo".
+- **A ordem** muda de dois jeitos:
+  - a alça arrasta o campo, só com o mouse, pela linha de encaixe da paleta ("Solte o campo “Qual impressora?” aqui"), com o cartão de origem tracejado. A linha não aparece nos dois lugares em que nada mudaria;
+  - o menu do campo, aberto pelo clique direito, pela tecla de menu ou pelo Shift+F10, tem "Subir" e "Descer", como a tabela dos tipos.
 
 **A busca do ativo com mais opções (tarefa 5.30),** um pedido do usuário depois da 5.20, sem mockup:
 - **o lugar:** o campo Ativo do "Trocar o ativo" e do "Ligar um ativo", e o da gaveta do "Virar OS" (5.31). O campo Ativo do formulário fica como está, com as sugestões da pessoa e a busca;

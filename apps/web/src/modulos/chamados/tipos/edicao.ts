@@ -330,15 +330,21 @@ export function notasDaPrevia(
         : soDaTi.length === 1
           ? `${soDaTi[0]} é só da TI e não aparece nesta grade.`
           : `${EM_LISTA.format(soDaTi)} são só da TI e não aparecem nesta grade.`,
-    abertos:
-      abertos === 0
-        ? null
-        : `Vale para os próximos chamados. ${
-            abertos === 1
-              ? 'O 1 aberto mantém o formulário atual.'
-              : `Os ${abertos} abertos mantêm o formulário atual.`
-          }`,
+    abertos: fraseDosAbertosDoTipo(abertos),
   };
+}
+
+/**
+ * Os chamados abertos do tipo, que mantêm o formulário com que foram abertos: a nota da prévia do
+ * editor do tipo e a frase do salvar do construtor. Sem abertos, nenhuma.
+ */
+export function fraseDosAbertosDoTipo(abertos: number): string | null {
+  if (abertos === 0) return null;
+  return `Vale para os próximos chamados. ${
+    abertos === 1
+      ? 'O 1 aberto mantém o formulário atual.'
+      : `Os ${abertos} abertos mantêm o formulário atual.`
+  }`;
 }
 
 /** A contagem do título da tabela, como "9 tipos": os Rascunhos não contam. */
