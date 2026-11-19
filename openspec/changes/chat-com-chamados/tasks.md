@@ -68,7 +68,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o "com você" sozinho na mensagem que reabre.
 
   Começa pelos testes unitários de quem recebe. Verificar: esses testes, os dos títulos, o lint e o typecheck.
-- [ ] 2.9 As permissões e o módulo (decisão 14): o `chat.usar` e o `chat.configurar` na área "Chat" e o `chamados.pedir` na área "Chamados", no catálogo, nos enums do contrato da API e na lista da ficha do perfil, na web; o Chat nos módulos opcionais. Começa pelo teste do catálogo. Verificar: esse teste, o da ficha do perfil, o `contrato:verificar`, o lint e o typecheck.
+- [x] 2.9 As permissões e o módulo (decisão 14): o `chat.usar` e o `chat.configurar` na área "Chat" e o `chamados.pedir` na área "Chamados", no catálogo, nos enums do contrato da API e na lista da ficha do perfil, na web; o Chat nos módulos opcionais. Começa pelo teste do catálogo. Verificar: esse teste, o da ficha do perfil, o `contrato:verificar`, o lint e o typecheck. Feita antes da 2.1, porque o `usaOChat` pede o `chat.usar` e o módulo Chat.
 
 ## 3. API
 

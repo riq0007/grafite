@@ -2,13 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { MODULOS_OPCIONAIS, moduloOpcional } from './modulos.ts';
 
 describe('módulos opcionais', () => {
-  it('Chamados numa organização que já existia: o Chamados primeiro, depois os de antes, com o nome e a descrição', () => {
+  it('Chat numa organização que já existia: o Chamados primeiro, o Chat depois dele e os de antes, com o nome e a descrição', () => {
     expect(MODULOS_OPCIONAIS).toEqual([
       {
         id: 'chamados',
         nome: 'Chamados',
         descricao:
           'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
+      },
+      {
+        id: 'chat',
+        nome: 'Chat',
+        descricao:
+          'As conversas das pessoas da organização: as diretas, as equipes, os canais e os chamados de cada uma.',
       },
       { id: 'ativos', nome: 'Ativos', descricao: 'O catálogo, o cadastro e a lista dos ativos.' },
       {
@@ -43,6 +49,7 @@ describe('módulos opcionais', () => {
 
   it('diz se um módulo é opcional', () => {
     expect(moduloOpcional('chamados')).toBe(true);
+    expect(moduloOpcional('chat')).toBe(true);
     expect(moduloOpcional('ativos')).toBe(true);
     expect(moduloOpcional('cofre')).toBe(true);
     expect(moduloOpcional('alertas')).toBe(true);

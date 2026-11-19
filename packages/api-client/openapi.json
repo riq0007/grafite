@@ -3996,7 +3996,10 @@
                     "paineis.administrar",
                     "chamados.ver",
                     "chamados.atender",
-                    "chamados.configurar"
+                    "chamados.configurar",
+                    "chamados.pedir",
+                    "chat.usar",
+                    "chat.configurar"
                   ]
                 },
                 "organizacao": {
@@ -8902,7 +8905,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           }
@@ -9229,7 +9235,10 @@
               "paineis.administrar",
               "chamados.ver",
               "chamados.atender",
-              "chamados.configurar"
+              "chamados.configurar",
+              "chamados.pedir",
+              "chat.usar",
+              "chat.configurar"
             ]
           },
           "organizacao": {
@@ -23398,7 +23407,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           },
@@ -23649,7 +23661,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           },
@@ -30804,7 +30819,10 @@
                     "paineis.administrar",
                     "chamados.ver",
                     "chamados.atender",
-                    "chamados.configurar"
+                    "chamados.configurar",
+                    "chamados.pedir",
+                    "chat.usar",
+                    "chat.configurar"
                   ]
                 },
                 "organizacao": {
@@ -35876,7 +35894,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           }
@@ -36215,7 +36236,10 @@
               "paineis.administrar",
               "chamados.ver",
               "chamados.atender",
-              "chamados.configurar"
+              "chamados.configurar",
+              "chamados.pedir",
+              "chat.usar",
+              "chat.configurar"
             ]
           },
           "organizacao": {
@@ -50872,7 +50896,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           },
@@ -51128,7 +51155,10 @@
                 "paineis.administrar",
                 "chamados.ver",
                 "chamados.atender",
-                "chamados.configurar"
+                "chamados.configurar",
+                "chamados.pedir",
+                "chat.usar",
+                "chat.configurar"
               ]
             }
           },
