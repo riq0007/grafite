@@ -29,18 +29,22 @@ export interface AcoesDoAtivo {
 
 /**
  * As ações do ativo, só a quem atende os locais do chamado e fora do resolvido. Virar OS e pedir
- * toner pedem o ativo, o chamado sem a OS ou sem a solicitação e o Operação ligado; pedir toner
- * pede também a impressora que usa consumíveis, a ficha dela, porque o registro recusa a impressora
- * que a conta não vê, e as solicitações, que a API confere nos locais da impressora.
+ * toner pedem o ativo, o chamado sem a OS ou sem a solicitação e o Operação ligado; virar OS pede
+ * também o tipo que vira OS, que a API confere; pedir toner, a impressora que usa consumíveis, a
+ * ficha dela, porque o registro recusa a impressora que a conta não vê, e as solicitações, que a
+ * API confere nos locais da impressora.
  */
 export function acoesDoAtivo(
   {
     situacao,
     permite,
+    tipo,
     ativo,
     os,
     solicitacao,
-  }: Pick<FichaDoChamado, 'situacao' | 'permite' | 'ativo' | 'os' | 'solicitacao'>,
+  }: Pick<FichaDoChamado, 'situacao' | 'permite' | 'ativo' | 'os' | 'solicitacao'> & {
+    tipo: Pick<FichaDoChamado['tipo'], 'podeVirarOs'>;
+  },
   { operacaoLigada, pode }: { operacaoLigada: boolean; pode: (chave: Permissao) => boolean },
 ): AcoesDoAtivo {
   if (!permite.atender || situacao === 'resolvido') {
@@ -48,7 +52,7 @@ export function acoesDoAtivo(
   }
   const comOperacao = ativo !== null && operacaoLigada;
   return {
-    virarOs: comOperacao && os === null,
+    virarOs: comOperacao && os === null && tipo.podeVirarOs,
     pedirToner:
       comOperacao &&
       solicitacao === null &&

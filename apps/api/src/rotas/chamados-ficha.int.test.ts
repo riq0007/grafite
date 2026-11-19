@@ -488,7 +488,12 @@ describe('GET /chamados/:numero', () => {
       versao: 1,
       origem: 'ti',
       abertoEm: iso('07:40'),
-      tipo: { id: tipoDe('Impressora'), nome: 'Impressora', icone: 'impressora' },
+      tipo: {
+        id: tipoDe('Impressora'),
+        nome: 'Impressora',
+        icone: 'impressora',
+        podeVirarOs: true,
+      },
       responsavel: {
         conta: conta('ana'),
         nome: 'Ana Souza',

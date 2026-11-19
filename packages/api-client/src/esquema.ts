@@ -37440,6 +37440,7 @@ export interface components {
                 id: string;
                 nome: string;
                 icone: string;
+                podeVirarOs: boolean;
             };
             pessoa: {
                 /** Format: uuid */
@@ -42810,6 +42811,7 @@ export interface components {
                 id: string;
                 nome: string;
                 icone: string;
+                podeVirarOs: boolean;
             };
             pessoa: {
                 /** Format: uuid */

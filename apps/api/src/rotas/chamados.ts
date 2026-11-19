@@ -413,7 +413,13 @@ const FichaDoChamado = z
     versao: z.int(),
     origem: z.enum(ORIGENS_DO_CHAMADO),
     abertoEm: z.iso.datetime(),
-    tipo: z.object({ id: z.uuid(), nome: z.string(), icone: z.string() }),
+    /** O tipo, com o `podeVirarOs`, para a tela mostrar o "Virar OS" só no tipo que vira OS. */
+    tipo: z.object({
+      id: z.uuid(),
+      nome: z.string(),
+      icone: z.string(),
+      podeVirarOs: z.boolean(),
+    }),
     /**
      * Quem pediu, com o caminho do local de trabalho. O atalho da ficha e os contatos vão a quem tem
      * `pessoas.ver` no local dela; a anonimizada vem com o nome anonimizado, sem os dois.

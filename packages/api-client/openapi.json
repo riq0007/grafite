@@ -13652,12 +13652,16 @@
               },
               "icone": {
                 "type": "string"
+              },
+              "podeVirarOs": {
+                "type": "boolean"
               }
             },
             "required": [
               "id",
               "nome",
-              "icone"
+              "icone",
+              "podeVirarOs"
             ]
           },
           "pessoa": {
@@ -40768,12 +40772,16 @@
               },
               "icone": {
                 "type": "string"
+              },
+              "podeVirarOs": {
+                "type": "boolean"
               }
             },
             "required": [
               "id",
               "nome",
-              "icone"
+              "icone",
+              "podeVirarOs"
             ],
             "additionalProperties": false
           },

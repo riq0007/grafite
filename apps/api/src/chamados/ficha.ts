@@ -183,7 +183,8 @@ export interface FichaDoChamado {
   versao: number;
   origem: OrigemDoChamado;
   abertoEm: string;
-  tipo: { id: string; nome: string; icone: string };
+  /** O tipo, com o `podeVirarOs`, que a tela pede para mostrar o "Virar OS" (revisão da 5.31). */
+  tipo: { id: string; nome: string; icone: string; podeVirarOs: boolean };
   pessoa: {
     id: string;
     nome: string;
@@ -368,7 +369,12 @@ export async function fichaDoChamado(
   const [lida] = await tx
     .select({
       chamado: chamados,
-      tipo: { id: tiposDeChamado.id, nome: tiposDeChamado.nome, icone: tiposDeChamado.icone },
+      tipo: {
+        id: tiposDeChamado.id,
+        nome: tiposDeChamado.nome,
+        icone: tiposDeChamado.icone,
+        podeVirarOs: tiposDeChamado.podeVirarOs,
+      },
       pessoa: {
         id: pessoas.id,
         nome: pessoas.nome,

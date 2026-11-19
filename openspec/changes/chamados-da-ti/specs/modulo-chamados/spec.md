@@ -202,7 +202,7 @@ O chamado aberto SHALL responder no endereço `/chamados/<número>`, que as noti
 
 As ações SHALL ficar só com quem atende os locais do chamado:
 - "Transferir" SHALL listar as pessoas do "Passar para…", com os abertos de cada uma;
-- "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL abrir a gaveta da OS (spec ordens-de-servico, "OS pelo chamado"), com:
+- "Virar OS" SHALL ficar só no chamado de um tipo que vira OS, com o ativo ligado e sem OS, e SHALL abrir a gaveta da OS (spec ordens-de-servico, "OS pelo chamado"), com:
   - o ativo do chamado, que se troca só para a OS, e o chamado com a OS noutro ativo SHALL dizer qual, depois da situação da OS;
   - o problema, que começa com o título do chamado e as respostas do formulário, para corrigir antes de abrir;
   - a situação em que a OS nasce, de "Aberta" a "Aguardando fornecedor", com o fornecedor e o número da OS nele;

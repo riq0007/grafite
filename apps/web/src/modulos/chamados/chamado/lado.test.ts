@@ -29,6 +29,7 @@ const IMPRESSORA: Ativo = {
 const FICHA = {
   situacao: 'em-atendimento',
   permite: { atender: true },
+  tipo: { podeVirarOs: true },
   ativo: IMPRESSORA,
   os: null,
   solicitacao: null,
@@ -74,6 +75,15 @@ describe('as ações do ativo (spec modulo-chamados, "Chamado aberto")', () => {
     expect(acoesDoAtivo(FICHA, { ...TUDO, operacaoLigada: false })).toEqual({
       virarOs: false,
       pedirToner: false,
+      trocar: 'trocar',
+    });
+  });
+
+  it('o tipo que não vira OS fica sem o virar OS, e o resto continua', () => {
+    // Como o #2, de Toner: a recusa "O tipo Toner não vira OS." só viria com a gaveta preenchida.
+    expect(acoesDoAtivo({ ...FICHA, tipo: { podeVirarOs: false } }, TUDO)).toEqual({
+      virarOs: false,
+      pedirToner: true,
       trocar: 'trocar',
     });
   });
