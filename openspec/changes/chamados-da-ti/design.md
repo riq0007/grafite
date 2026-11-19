@@ -1210,6 +1210,11 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **a seta,** antes do título e na linha dele, é um botão só de ícone, com o nome "Voltar". Ela volta à tela de antes, quando o chamado abriu de outra tela do app, como o quadro, o Início ou uma notificação, e, com o chamado aberto direto pelo endereço, leva ao Início dos chamados. Ela fica também no carregamento e na falha;
 - **o kit** ganha o `voltar` do cabeçalho da página, fora do título da janela, para o leitor de tela ler o título sem a seta. A trilha continua em cima.
 
+**Os pontas a ponta e o visual (tarefas 6.2 e 6.3):**
+- **a pilha** abre, assume e resolve um chamado, com o anexo de uma mensagem, no fim do caminho;
+- **a primeira tela** se confere na web simulada só no que pede o navegador: a raiz que vai aos chamados, o Início do dock, o recarregar, a aba nova, com o `sessionStorage` dela, o endereço com caminho e a conta sem os chamados. A outra conta na mesma aba e o servidor que volta ficam nos testes do `primeiraTela.test.tsx`, porque a web simulada tem uma sessão por contexto;
+- **o dock com a boia** não muda as referências da regressão visual. Ela fotografa o catálogo do kit, e o dock dele usa os módulos de exemplo (`exemplos.tsx`), que não são os do produto. O Chamados primeiro, com a boia, fica no teste do registro (`modulo.test.ts`) e nas pontas a ponta da ordem do dock (`ajustes.spec.ts`) e das abas do celular (`posturas.spec.ts`). As referências novas são as do campo de hora do kit (5.26).
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

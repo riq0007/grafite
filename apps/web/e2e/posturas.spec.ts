@@ -70,9 +70,19 @@ test.describe('celular em 390×844', () => {
     await alvosDeToque(abas.getByRole('button'));
     await alvosDeToque(page.getByRole('banner').getByRole('button'));
 
-    await abas.getByRole('button', { name: 'Ajustes' }).tap();
+    // Cabem quatro abas e o "Mais": os Chamados, o Início, os Ativos e os Alertas, pela prioridade
+    // do celular, e os Ajustes no "Mais", que fica marcado com eles abertos (change chamados-da-ti).
+    await expect(abas.getByRole('button')).toHaveText([
+      'Chamados',
+      'Início',
+      'Ativos',
+      'Alertas',
+      'Mais',
+    ]);
+    await abas.getByRole('button', { name: 'Mais' }).tap();
+    await page.getByRole('dialog', { name: 'Mais' }).getByRole('button', { name: 'Ajustes' }).tap();
     await expect(titulo(page, 'Ajustes do Sistema')).toBeVisible();
-    await expect(abas.getByRole('button', { name: 'Ajustes' })).toHaveAttribute(
+    await expect(abas.getByRole('button', { name: 'Mais' })).toHaveAttribute(
       'aria-current',
       'page',
     );
