@@ -1,32 +1,22 @@
 // "Trocar o ativo" e "Ligar um ativo" do chamado aberto (spec chamados, "Ativo ligado e campos da
 // TI"; change chamados-da-ti, design, "A coluna da direita, a pessoa e o ativo (tarefa 5.13)"): o
-// diálogo busca como o campo Ativo do formulário, tem "Tirar o ativo" e manda a versão do chamado;
-// as recusas ficam nele, no campo quando são do ativo.
+// diálogo busca como o campo Ativo do formulário, com "Mais opções de busca" (tarefa 5.30), tem
+// "Tirar o ativo" e manda a versão do chamado; as recusas ficam nele, no campo quando são do ativo.
 import { Botao, Dialogo, MensagemDoPasso } from '@grafite/ui';
 import { ArrowLeftRight, Link2 } from 'lucide-react';
 import { useState } from 'react';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
-import {
-  type ContaDoSeletor,
-  SeletorDeConta,
-} from '../../administracao/seletores/SeletorDeConta.tsx';
+import type { ContaDoSeletor } from '../../administracao/seletores/SeletorDeConta.tsx';
 import type { FichaDoChamado } from '../consultas.ts';
 import { rotuloDoAtivoCitado } from '../formulario/estado.ts';
-import { useBuscaDoAtivo } from '../formulario/useBuscaDoAtivo.ts';
 import { useAcoesDoChamadoAberto } from './acoes.ts';
+import { EscolhaDoAtivo } from './EscolhaDoAtivo.tsx';
 import estilos from './Lado.module.css';
-
-const SEM_TIPOS: readonly string[] = [];
 
 export function TrocarOAtivo({ ficha }: { ficha: FichaDoChamado }) {
   const { pode } = useAcesso();
   const acoes = useAcoesDoChamadoAberto();
   const { numero, versao, ativo, pessoa } = ficha;
-  const { buscar } = useBuscaDoAtivo({
-    quem: 'chamado',
-    pessoa: { id: pessoa.id, nome: pessoa.nome },
-    tipos: SEM_TIPOS,
-  });
   const [aberto, definirAberto] = useState(false);
   const [escolhido, definirEscolhido] = useState<ContaDoSeletor | null>(null);
   const [erro, definirErro] = useState<string | null>(null);
@@ -111,14 +101,13 @@ export function TrocarOAtivo({ ficha }: { ficha: FichaDoChamado }) {
     >
       <div className={estilos.formulario}>
         {veOsAtivos ? (
-          <SeletorDeConta
-            rotulo="Ativo"
+          <EscolhaDoAtivo
             valor={escolhido}
             aoMudar={(novo) => {
               definirEscolhido(novo);
               definirErro(null);
             }}
-            buscar={buscar}
+            pessoa={{ id: pessoa.id, nome: pessoa.nome }}
             descricao={`Os locais do chamado passam a ser o local de trabalho de ${pessoa.nome} na abertura e o do ativo.`}
             erro={erro ?? undefined}
           />

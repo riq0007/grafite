@@ -126,6 +126,7 @@ export {
 } from './componentes/busca/BuscaComResultados.tsx';
 export {
   BuscaComSugestoes,
+  type OpcaoDaBuscaComSugestoes,
   type PropsDaBusca,
   type SugeridasDaBusca,
 } from './componentes/busca/BuscaComSugestoes.tsx';
