@@ -3,7 +3,7 @@
 ### Requirement: OS pelo chamado
 
 Num chamado em aberto, com o ativo ligado e de um tipo que pode virar OS (spec chamados e spec tipos-de-chamado), quem atende o chamado e as OS no local do ativo SHALL poder abrir a OS do chamado. A OS SHALL nascer:
-- com o ativo do chamado, ou com outro que quem abre escolhe, sem mudar o ativo do chamado;
+- com o ativo do chamado, ou com outro que quem abre escolhe, num local onde atende as OS, sem mudar o ativo do chamado;
 - com o problema que começa com o título do chamado e as respostas do formulário dele, que quem abre pode corrigir antes;
 - Aberta ou, se quem abre escolhe, já Em atendimento, Aguardando peça ou Aguardando fornecedor, com o fornecedor e o número da OS nele, pelas regras da mudança da situação (requisito "Situação e histórico da OS").
 
@@ -27,7 +27,7 @@ As recusas SHALL ser:
 
 #### Scenario: OS noutro ativo
 - **WHEN** Diego vira o #1042, ligado à PAT-00139, em OS na PAT-00200
-- **THEN** a OS 13 nasce na PAT-00200, e o #1042 continua com a PAT-00139
+- **THEN** a OS 13 nasce na PAT-00200, e o #1042 continua com a PAT-00139 e mostra "OS 13 · Aberta · PAT-00200"
 
 #### Scenario: Segunda OS do chamado
 - **WHEN** alguém tenta abrir outra OS para o #1042, que já tem a OS 13

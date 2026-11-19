@@ -203,14 +203,14 @@ O chamado aberto SHALL responder no endereço `/chamados/<número>`, que as noti
 As ações SHALL ficar só com quem atende os locais do chamado:
 - "Transferir" SHALL listar as pessoas do "Passar para…", com os abertos de cada uma;
 - "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL abrir a gaveta da OS (spec ordens-de-servico, "OS pelo chamado"), com:
-  - o ativo do chamado, que se troca só para a OS;
+  - o ativo do chamado, que se troca só para a OS, e o chamado com a OS noutro ativo SHALL dizer qual, depois da situação da OS;
   - o problema, que começa com o título do chamado e as respostas do formulário, para corrigir antes de abrir;
   - a situação em que a OS nasce, de "Aberta" a "Aguardando fornecedor", com o fornecedor e o número da OS nele;
 - "Pedir toner" SHALL ficar só no chamado com uma impressora ligada, que usa consumíveis, e sem solicitação, e, sem a solicitação pendente, SHALL abrir o registro do Toner que a solicitação pelo chamado dá, para mudar antes de registrar (spec solicitacoes, "Solicitação pelo chamado");
 - "Resolver" SHALL pedir "O que foi feito";
 - o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042.", "OS 13 aberta." e "Solicitação 5 registrada.", com "Abrir", e a recusa SHALL ficar com a frase dela.
 
-A escolha do ativo no "Trocar o ativo", no "Ligar um ativo" e no "Virar OS" SHALL achar o ativo pelo nome, o patrimônio, o número de série e o hostname, SHALL ter "Mais opções de busca", com o tipo, o local e o responsável do ativo, e SHALL mostrar o tipo, o local e o responsável de cada ativo achado, embaixo do nome.
+A escolha do ativo no "Trocar o ativo", no "Ligar um ativo" e no "Virar OS" SHALL achar o ativo pelo nome, o patrimônio, o número de série, o hostname e o modelo, SHALL ter "Mais opções de busca", com o tipo, o local e o responsável do ativo, e SHALL mostrar o tipo, o local e o responsável de cada ativo achado, embaixo do nome.
 
 A conversa SHALL ficar na forma que a conta escolheu (spec preferencias-da-interface, "Forma das conversas nas preferências"):
 - **no meio:** numa coluna central, sem balão;
