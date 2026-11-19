@@ -216,7 +216,13 @@ export interface FichaDoChamado {
   } | null;
   parouEm: string | null;
   horario: Omit<HorarioDaTi, 'dias'> & { dias: DiaDaSemana[] };
-  os: { id: string; numero: number; situacao: SituacaoDaOrdem } | null;
+  /** A OS, com o ativo dela, que pode não ser o do chamado (tarefa 5.31). */
+  os: {
+    id: string;
+    numero: number;
+    situacao: SituacaoDaOrdem;
+    ativo: { id: string; rotulo: string; patrimonio: string | null };
+  } | null;
   solicitacao: { id: string; numero: number; situacao: SituacaoDaSolicitacao } | null;
   formulario: Formulario;
   respostas: Record<string, unknown>;
@@ -595,11 +601,21 @@ export async function fichaDoChamado(
         numero: ordensDeServico.numero,
         situacao: ordensDeServico.situacao,
         localId: ordensDeServico.localId,
+        ativoId: ordensDeServico.ativoId,
       })
       .from(ordensDeServico)
       .where(eq(ordensDeServico.id, chamado.osId));
     if (daOrdem && podeEm(acesso, 'ordens.ver', daOrdem.localId, arvore)) {
-      os = { id: daOrdem.id, numero: daOrdem.numero, situacao: daOrdem.situacao };
+      const ativo =
+        ativoDe.get(daOrdem.ativoId) ??
+        (await ativosPorId(tx, new Set([daOrdem.ativoId]))).get(daOrdem.ativoId);
+      if (!ativo) throw new Error('O ativo da OS não foi lido.');
+      os = {
+        id: daOrdem.id,
+        numero: daOrdem.numero,
+        situacao: daOrdem.situacao,
+        ativo: { id: ativo.id, rotulo: ativo.rotulo, patrimonio: ativo.patrimonio },
+      };
     }
   }
   let solicitacao: FichaDoChamado['solicitacao'] = null;

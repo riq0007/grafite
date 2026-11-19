@@ -1,7 +1,9 @@
 // Virar OS (spec chamados, "OS e solicitação pelo chamado"; ordens-de-servico, "OS pelo chamado";
 // change chamados-da-ti, design, "Virar OS (tarefa 4.16)", "O chamado na leitura da OS" e "A troca
 // do ativo depois da OS"): a rota, com a abertura das OS de hoje na mesma transação, o evento da
-// conversa, que não sobe a versão, a auditoria, o chamado na leitura da OS e na ficha, e as recusas.
+// conversa, que não sobe a versão, a auditoria, o chamado na leitura da OS e na ficha, e as recusas;
+// e os campos da OS no pedido (design, "O Virar OS com os campos da OS (tarefa 5.31)"): o outro
+// ativo, que decide a permissão no local dele, e a situação em que a OS nasce, com o fornecedor.
 // A ordem das recusas do chamado é do domínio (`chamados/os-e-solicitacao.test.ts`); aqui fica um
 // caso de cada ligação.
 import { naOrganizacao, numeracaoDasOrdens, ordensDeServico, tiposDeChamado } from '@grafite/db';
@@ -13,6 +15,7 @@ import {
   montarChamados,
   type UsuarioDosChamados,
 } from '../../test/chamados.ts';
+import { criarFornecedor } from '../../test/estoque.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -56,6 +59,14 @@ const ordem = async (numero: number) => {
     tx.select().from(ordensDeServico).where(eq(ordensDeServico.numero, numero)),
   );
   return linha;
+};
+
+/** O último número de OS da organização, que a abertura desfeita não gasta. */
+const ultimaOs = async () => {
+  const [linha] = await naOrganizacao(api.banco, c.org, (tx) =>
+    tx.select({ ultimo: numeracaoDasOrdens.ultimo }).from(numeracaoDasOrdens),
+  );
+  return linha?.ultimo;
 };
 
 /** A recusa sem mudança: nem a OS, nem a conversa, nem a versão, nem os eventos. */
@@ -367,5 +378,107 @@ describe('o chamado na OS e a OS no chamado', () => {
       .filter((item) => item.especie === 'evento' && item.evento !== 'os')
       .map(({ os }) => os);
     expect(outros).toEqual([null]);
+  });
+});
+
+describe('Virar OS com os campos da OS (tarefa 5.31)', () => {
+  let tonerlab = '';
+
+  beforeAll(async () => {
+    tonerlab = await criarFornecedor(api, c.org, { nome: 'Tonerlab' });
+    // Diego passa a ver os ativos de Campinas, sem atender as OS de lá.
+    const veOsAtivos = await criarPerfil(api, c.org, {
+      nome: 'Vê os ativos de Campinas',
+      permissoes: ['ativos.ver'],
+    });
+    await atribuir(api, c.org, {
+      perfilId: veOsAtivos,
+      contaId: c.conta('diego'),
+      localId: c.locais.campinas,
+    });
+    // #1049 a #1052: a impressora da Recepção, de Marina, com Ana.
+    for (let vez = 0; vez < 4; vez += 1) await c.abrir(daImpressora('marina', ids.pat139));
+  });
+
+  it('OS que nasce no fornecedor: a Aberta e a Aguardando fornecedor no mesmo instante, a escolhida em cima, e a auditoria das duas', async () => {
+    const agora = api.relogio.agora().toISOString();
+    const r = await virarOs(1049, 'diego', {
+      situacao: 'aguardando-fornecedor',
+      fornecedor: tonerlab,
+      os: ' A-778 ',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json()).toMatchObject({
+      situacao: 'aguardando-fornecedor',
+      ativo: { id: ids.pat139 },
+      fornecedor: { id: tonerlab, nome: 'Tonerlab' },
+      osDoFornecedor: 'A-778',
+      chamado: { numero: 1049, abrir: true },
+    });
+    expect(r.json().historico).toMatchObject([
+      { situacao: 'aguardando-fornecedor', fornecedor: { nome: 'Tonerlab' }, mudadaEm: agora },
+      { situacao: 'aberta', fornecedor: null, mudadaEm: agora },
+    ]);
+    const auditados = await auditoriaDaRequisicao(api, c.org, r);
+    expect(auditados.map(({ acao }) => acao).sort()).toEqual([
+      'chamado.virou-os',
+      'ordem.aberta',
+      'ordem.situacao',
+    ]);
+    expect(auditados.find(({ acao }) => acao === 'ordem.situacao')).toMatchObject({
+      antes: { situacao: 'aberta' },
+      depois: {
+        situacao: 'aguardando-fornecedor',
+        fornecedor: 'Tonerlab',
+        osDoFornecedor: 'A-778',
+      },
+    });
+    const ficha = await c.cliente.consultar('/chamados/1049', c.como('diego'));
+    expect(ficha.statusCode, ficha.body).toBe(200);
+    expect(ficha.json().os).toMatchObject({
+      numero: r.json().numero,
+      situacao: 'aguardando-fornecedor',
+      ativo: { id: ids.pat139, patrimonio: 'PAT-00139' },
+    });
+  });
+
+  it('a recusa da mudança da situação volta no campo dela, e nada fica gravado', async () => {
+    const ultima = await ultimaOs();
+    await nadaMudou(1050, async () => {
+      const r = await virarOs(1050, 'ana', { situacao: 'aguardando-fornecedor', os: 'A-779' });
+      expect(r.statusCode, r.body).toBe(400);
+      expect(r.json().campos).toEqual({ fornecedor: 'Escolha o fornecedor.' });
+    });
+    expect(await ultimaOs()).toBe(ultima);
+  });
+
+  it('OS noutro ativo: a OS nasce no ativo escolhido, Aberta, e o chamado fica com o dele e mostra o da OS', async () => {
+    const r = await virarOs(1051, 'ana', { ativo: ids.pat200 });
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json()).toMatchObject({
+      situacao: 'aberta',
+      ativo: { id: ids.pat200, patrimonio: 'PAT-00200' },
+      local: { id: c.locais.administrativo },
+      chamado: { numero: 1051, abrir: true },
+    });
+    expect(r.json().historico).toHaveLength(1);
+    expect(await c.lerChamado(1051)).toMatchObject({ ativoId: ids.pat139, osId: r.json().id });
+    const ficha = await c.cliente.consultar('/chamados/1051', c.como('ana'));
+    expect(ficha.json().os).toMatchObject({
+      numero: r.json().numero,
+      situacao: 'aberta',
+      ativo: { id: ids.pat200, patrimonio: 'PAT-00200' },
+    });
+  });
+
+  it('o outro ativo num local onde quem abre não atende as OS volta recusado no campo, e nada abre', async () => {
+    const ultima = await ultimaOs();
+    // Diego vê a PAT-00200, de Campinas, e atende as OS só de Jundiaí.
+    await nadaMudou(1052, async () => {
+      const r = await virarOs(1052, 'diego', { ativo: ids.pat200 });
+      expect(r.statusCode, r.body).toBe(400);
+      expect(r.json().campos).toEqual({ ativo: 'Você não atende as OS no local deste ativo.' });
+    });
+    expect(await ultimaOs()).toBe(ultima);
   });
 });

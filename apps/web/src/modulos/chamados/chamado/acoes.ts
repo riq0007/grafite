@@ -1,15 +1,16 @@
 // O resolver, o virar OS, a troca do ativo e o pedir toner do chamado aberto (spec
 // modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O chamado aberto, o cabeçalho"
-// e "A coluna da direita, a pessoa e o ativo"): os três primeiros pedem num diálogo, e a recusa
-// volta a ele, no campo quando é do campo; o retorno vai num aviso. Aceita ou recusada, a tela relê
-// os chamados, como nas ações do atendimento.
-import { retornoDoRegistro } from '@grafite/domain';
+// e "A coluna da direita, a pessoa e o ativo"): o resolver e a troca pedem num diálogo, e o virar
+// OS, numa gaveta (tarefa 5.31), e a recusa volta a eles, no campo quando é de um campo; o retorno
+// vai num aviso. Aceita ou recusada, a tela relê os chamados, como nas ações do atendimento.
+import { retornoDoRegistro, type SituacaoDeAtendimento } from '@grafite/domain';
 import { avisar } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { type FalhaDoPedido, pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
+import { type RecusaDoFormulario, recusaDe } from '../../administracao/recusa.ts';
 import type { RegistroDoTonerDoChamado } from '../../operacao/solicitacoes/Formulario.tsx';
 import { CHAVE_DOS_CHAMADOS } from '../consultas.ts';
 
@@ -25,11 +26,27 @@ export function recusaNoDialogo(falha: FalhaDoPedido, campo: string): RecusaNoDi
   return doCampo ? { erro: doCampo, doCampo: true } : { erro: falha.erro, doCampo: false };
 }
 
+/** O pedido do "Virar OS": os campos da OS, com o ativo, que pode não ser o do chamado. */
+export interface PedidoDoVirarOs {
+  ativo: string;
+  problema: string;
+  situacao: 'aberta' | SituacaoDeAtendimento;
+  /** Na Aguardando fornecedor, o fornecedor e o número da OS nele. */
+  fornecedor: string | null;
+  os: string | null;
+}
+
+/** Os campos da gaveta do "Virar OS", em que as recusas da API ficam. */
+export type CampoDoVirarOs = 'ativo' | 'problema' | 'situacao' | 'fornecedor' | 'os';
+
 export interface AcoesDoChamadoAberto {
   /** Nulo quando resolveu; senão, a recusa. */
   resolver: (numero: number, versao: number, feito: string) => Promise<RecusaNoDialogo | null>;
-  /** Nulo quando a OS abriu; senão, a recusa. */
-  virarOs: (numero: number, problema: string) => Promise<RecusaNoDialogo | null>;
+  /** Nulo quando a OS abriu; senão, a recusa, com a de cada campo. */
+  virarOs: (
+    numero: number,
+    pedido: PedidoDoVirarOs,
+  ) => Promise<RecusaDoFormulario<CampoDoVirarOs> | null>;
   /** Liga, troca ou tira (`null`) o ativo; nulo quando mudou, senão, a recusa. */
   trocarAtivo: (
     numero: number,
@@ -68,13 +85,13 @@ export function useAcoesDoChamadoAberto(): AcoesDoChamadoAberto {
         avisar({ situacao: 'sucesso', titulo: `Você resolveu o #${numero}.` });
         return null;
       },
-      async virarOs(numero, problema) {
+      async virarOs(numero, pedido) {
         const resultado = await pedir(
-          () => api.POST('/chamados/{numero}/os', { ...doChamado(numero), body: { problema } }),
+          () => api.POST('/chamados/{numero}/os', { ...doChamado(numero), body: pedido }),
           'abrir a OS do chamado',
         );
         reler();
-        if ('erro' in resultado) return recusaNoDialogo(resultado, 'problema');
+        if ('erro' in resultado) return recusaDe<CampoDoVirarOs>(resultado);
         const os = String(resultado.dados.numero);
         avisar({
           situacao: 'sucesso',

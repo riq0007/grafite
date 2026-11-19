@@ -83,6 +83,7 @@ describe('as ações do ativo (spec modulo-chamados, "Chamado aberto")', () => {
       id: '0190a000-0000-7000-8000-000000000013',
       numero: 13,
       situacao: 'aberta',
+      ativo: { id: '0190a000-0000-7000-8000-000000000139', rotulo: 'Impressora', patrimonio: null },
     } as const;
     const solicitacao = {
       id: '0190a000-0000-7000-8000-000000000004',

@@ -29426,7 +29426,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois */
+        /** Virar OS: abrir a OS no ativo do chamado, ou noutro só para ela, com o problema, ou o título dele, e a situação em que nasce, e ligar os dois */
         post: {
             parameters: {
                 query?: never;
@@ -37508,6 +37508,12 @@ export interface components {
                 numero: number;
                 /** @enum {string} */
                 situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                };
             } | null;
             solicitacao: {
                 /** Format: uuid */
@@ -37696,6 +37702,12 @@ export interface components {
         };
         PedidoDoVirarOsDoChamadoInput: {
             problema?: string;
+            /** Format: uuid */
+            ativo?: string;
+            /** @enum {string} */
+            situacao?: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            fornecedor?: string | null;
+            os?: string | null;
         };
         PedidoDoPedirTonerInput: {
             registro?: {
@@ -42866,6 +42878,12 @@ export interface components {
                 numero: number;
                 /** @enum {string} */
                 situacao: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor" | "resolvida" | "encerrada";
+                ativo: {
+                    /** Format: uuid */
+                    id: string;
+                    rotulo: string;
+                    patrimonio: string | null;
+                };
             } | null;
             solicitacao: {
                 /** Format: uuid */
@@ -43054,6 +43072,12 @@ export interface components {
         };
         PedidoDoVirarOsDoChamado: {
             problema?: string;
+            /** Format: uuid */
+            ativo?: string;
+            /** @enum {string} */
+            situacao?: "aberta" | "em-atendimento" | "aguardando-peca" | "aguardando-fornecedor";
+            fornecedor?: string | null;
+            os?: string | null;
         };
         PedidoDoPedirToner: {
             registro?: {

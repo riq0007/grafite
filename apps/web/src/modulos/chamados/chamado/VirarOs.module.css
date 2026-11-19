@@ -1,0 +1,19 @@
+/* A gaveta do "Virar OS": os campos, um sob o outro, e os botões no pé, como nas gavetas das OS. */
+.gaveta {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.informacao {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}

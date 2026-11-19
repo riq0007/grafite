@@ -245,6 +245,9 @@ function SecaoDoAtivo({ ficha, acoes }: { ficha: FichaDoChamado; acoes: AcoesDoA
                 {`OS ${ficha.os.numero}`}
               </Link>
               {` · ${ROTULOS_DAS_SITUACOES_DA_ORDEM[ficha.os.situacao]}`}
+              {/* A OS noutro ativo diz qual (tarefa 5.31): o chamado fica com o dele. */}
+              {ficha.os.ativo.id !== ficha.ativo?.id &&
+                ` · ${ficha.os.ativo.patrimonio ?? ficha.os.ativo.rotulo}`}
             </li>
           )}
           {ficha.solicitacao && (

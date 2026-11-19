@@ -56,6 +56,7 @@ import { ID_DO_CAMPO_DE_ESCREVER } from './escrever.ts';
 import { LadoDoChamado } from './Lado.tsx';
 import { type AcoesDoAtivo, acoesDoAtivo } from './lado.ts';
 import { quadroDoPrazo } from './prazo.ts';
+import { GavetaDoVirarOs } from './VirarOs.tsx';
 
 const NAO_ENCONTRADO = 'Chamado não encontrado.';
 
@@ -318,7 +319,9 @@ function AcoesDoChamado({ ficha, doAtivo }: { ficha: FichaDoChamado; doAtivo: Ac
   const [esperando, definirEsperando] = useState<string | null>(null);
   // O registro do Toner que o "Pedir toner" deu, aberto na gaveta.
   const [registro, definirRegistro] = useState<RegistroDoTonerDoChamado | null>(null);
-  const { numero, versao, situacao, titulo, ativo } = ficha;
+  // A gaveta do "Virar OS" aberta.
+  const [virando, definirVirando] = useState(false);
+  const { numero, versao, situacao, ativo } = ficha;
 
   const agir = async (botao: string, fazer: () => Promise<unknown>) => {
     if (esperando !== null) return;
@@ -366,20 +369,11 @@ function AcoesDoChamado({ ficha, doAtivo }: { ficha: FichaDoChamado; doAtivo: Ac
         aoEscolher={(para) => void agir('transferir', () => acoes.passar(numero, versao, para))}
       />
       {ativo && doAtivo.virarOs && (
-        <DialogoComTexto
-          gatilho="Virar OS"
-          icone={Wrench}
-          desligado={esperando !== null}
-          titulo={`Virar o #${numero} em OS`}
-          campo={{
-            rotulo: 'Problema',
-            descricao: `A OS abre no ativo ligado, ${ativo.rotulo}.`,
-            inicial: titulo,
-          }}
-          confirmar={{ rotulo: 'Abrir a OS', carregando: 'Abrindo a OS' }}
-          aoConfirmar={(problema) => doChamado.virarOs(numero, problema)}
-        />
+        <Botao icone={Wrench} isDisabled={esperando !== null} onPress={() => definirVirando(true)}>
+          Virar OS
+        </Botao>
       )}
+      {virando && <GavetaDoVirarOs ficha={ficha} aoFechar={() => definirVirando(false)} />}
       {doAtivo.pedirToner && (
         <Botao
           icone={Droplet}

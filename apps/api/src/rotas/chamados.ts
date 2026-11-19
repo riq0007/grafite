@@ -22,6 +22,7 @@ import {
   SEVERIDADES_DO_ALERTA,
   SITUACOES_DA_ORDEM,
   SITUACOES_DA_SOLICITACAO,
+  SITUACOES_DE_ATENDIMENTO,
   SITUACOES_DO_CHAMADO,
 } from '@grafite/domain';
 import type { FastifyRequest } from 'fastify';
@@ -462,9 +463,14 @@ const FichaDoChamado = z
     /** O momento em que o relógio parou, o "Parou às 09:21"; nulo com ele contando. */
     parouEm: z.iso.datetime().nullable(),
     horario: HorarioDaTiLido,
-    /** A OS do chamado, a quem a vê. */
+    /** A OS do chamado, a quem a vê, com o ativo dela, que pode não ser o do chamado. */
     os: z
-      .object({ id: z.uuid(), numero: z.int(), situacao: z.enum(SITUACOES_DA_ORDEM) })
+      .object({
+        id: z.uuid(),
+        numero: z.int(),
+        situacao: z.enum(SITUACOES_DA_ORDEM),
+        ativo: z.object({ id: z.uuid(), rotulo: z.string(), patrimonio: z.string().nullable() }),
+      })
       .nullable(),
     /** A solicitação do chamado, a quem a vê. */
     solicitacao: z
@@ -602,6 +608,15 @@ const PedidoDoVirarOs = z
      * título. O vazio é recusado pela abertura da OS, no campo `problema`.
      */
     problema: z.string().max(5000).optional(),
+    /** O ativo da OS, que quem abre troca só para ela; sem ele, o do chamado. */
+    ativo: z.uuid({ error: 'Ativo não encontrado.' }).optional(),
+    /** A situação em que a OS nasce: a Aberta, a de sempre, ou já uma das do atendimento. */
+    situacao: z
+      .enum(['aberta', ...SITUACOES_DE_ATENDIMENTO], { error: 'Escolha a situação.' })
+      .optional(),
+    /** Na Aguardando fornecedor: o fornecedor e o número da OS nele. */
+    fornecedor: z.uuid({ error: 'Fornecedor não encontrado.' }).nullable().optional(),
+    os: z.string().max(5000).nullable().optional(),
   })
   .meta({ id: 'PedidoDoVirarOsDoChamado' });
 
@@ -1072,7 +1087,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       config: DA_ACAO.config,
       schema: {
         summary:
-          'Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois',
+          'Virar OS: abrir a OS no ativo do chamado, ou noutro só para ela, com o problema, ou o título dele, e a situação em que nasce, e ligar os dois',
         params: DA_ACAO.params,
         body: PedidoDoVirarOs,
         response: { 201: OrdemDeServico, ...PROBLEMAS },

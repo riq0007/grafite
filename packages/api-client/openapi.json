@@ -14002,12 +14002,37 @@
                       "resolvida",
                       "encerrada"
                     ]
+                  },
+                  "ativo": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "rotulo": {
+                        "type": "string"
+                      },
+                      "patrimonio": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "rotulo",
+                      "patrimonio"
+                    ]
                   }
                 },
                 "required": [
                   "id",
                   "numero",
-                  "situacao"
+                  "situacao",
+                  "ativo"
                 ]
               },
               {
@@ -14841,6 +14866,43 @@
           "problema": {
             "type": "string",
             "maxLength": 5000
+          },
+          "ativo": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor"
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -41067,12 +41129,38 @@
                       "resolvida",
                       "encerrada"
                     ]
+                  },
+                  "ativo": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "rotulo": {
+                        "type": "string"
+                      },
+                      "patrimonio": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "rotulo",
+                      "patrimonio"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
                   "id",
                   "numero",
-                  "situacao"
+                  "situacao",
+                  "ativo"
                 ],
                 "additionalProperties": false
               },
@@ -41948,6 +42036,43 @@
           "problema": {
             "type": "string",
             "maxLength": 5000
+          },
+          "ativo": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "aberta",
+              "em-atendimento",
+              "aguardando-peca",
+              "aguardando-fornecedor"
+            ]
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -84546,7 +84671,7 @@
     },
     "/chamados/{numero}/os": {
       "post": {
-        "summary": "Virar OS: abrir a OS no ativo ligado ao chamado, com o problema, ou o título dele, e ligar os dois",
+        "summary": "Virar OS: abrir a OS no ativo do chamado, ou noutro só para ela, com o problema, ou o título dele, e a situação em que nasce, e ligar os dois",
         "requestBody": {
           "required": true,
           "content": {

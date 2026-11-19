@@ -4,7 +4,10 @@
 // - o chamado, travado como nas ações (`travarParaMudar`), se a conta o vê; senão, o que não existe;
 // - as recusas do chamado, do domínio (`recusaDoVirarOs`), no 409, com o tipo como está agora;
 // - a abertura das OS de hoje (`abrir`), com as regras e as recusas dela, o problema pedido ou o
-//   título do chamado, e a auditoria `ordem.aberta`;
+//   título do chamado, e a auditoria `ordem.aberta`, no ativo do chamado ou no escolhido só para a
+//   OS, que num local onde quem abre não atende as OS volta recusado no campo (tarefa 5.31);
+// - fora da Aberta, a mudança da situação de hoje (`mudarSituacao`), no mesmo instante, com o
+//   fornecedor, as recusas dela no campo e a auditoria `ordem.situacao`;
 // - o chamado guarda a OS, a conversa ganha o evento `os`, que não sobe a versão, e a auditoria, o
 //   `chamado.virou-os`, com o `chamados.mudaram` pela saída dela. Nada notifica.
 import {
@@ -14,20 +17,33 @@ import {
   type Transacao,
   tiposDeChamado,
 } from '@grafite/db';
-import { mensagemDaRecusaDoVirarOs, recusaDoVirarOs } from '@grafite/domain';
+import {
+  mensagemDaRecusaDoVirarOs,
+  recusaDoVirarOs,
+  type SituacaoDeAtendimento,
+} from '@grafite/domain';
 import { eq, sql } from 'drizzle-orm';
 import { exigirLigadoNaTransacao } from '../acesso/modulos.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { abrir, type Contexto } from '../ordens/abertura.ts';
 import { lerOrdem, type OrdemLida } from '../ordens/leitura.ts';
+import { mudarSituacao } from '../ordens/situacao.ts';
 import { conflito } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { travarParaMudar } from './acoes.ts';
 import { publicoDoChamado } from './alcance.ts';
 
-/** O pedido do "Virar OS": o problema da OS, ou nada, para o título do chamado. */
+/** O pedido do "Virar OS": os campos da OS, cada um com o padrão de antes quando falta. */
 export interface PedidoDoVirarOs {
+  /** O problema; sem ele, o título do chamado. */
   problema?: string | undefined;
+  /** O ativo da OS; sem ele, o do chamado, que não muda. */
+  ativo?: string | undefined;
+  /** A situação em que a OS nasce; sem ela, a Aberta. */
+  situacao?: 'aberta' | SituacaoDeAtendimento | undefined;
+  /** Na Aguardando fornecedor, o fornecedor e o número da OS nele. */
+  fornecedor?: string | null | undefined;
+  os?: string | null | undefined;
 }
 
 /** Abre a OS do chamado, liga os dois e devolve a OS lida, já com o chamado. */
@@ -64,11 +80,19 @@ export async function virarOs(
   );
   if (recusa) throw conflito(mensagemDaRecusaDoVirarOs(lido.numero, recusa));
 
-  const ordem = await abrir(
-    tx,
-    { ativo: lido.ativo, problema: pedido.problema ?? lido.titulo },
-    contexto,
-  );
+  const ativo = pedido.ativo ?? lido.ativo;
+  const ordem = await abrir(tx, { ativo, problema: pedido.problema ?? lido.titulo }, contexto, {
+    ativoEscolhido: ativo !== lido.ativo,
+  });
+  const situacao = pedido.situacao ?? 'aberta';
+  if (situacao !== 'aberta') {
+    await mudarSituacao(
+      tx,
+      ordem.numero,
+      { situacao, observacao: null, fornecedor: pedido.fornecedor ?? null, os: pedido.os ?? null },
+      contexto,
+    );
+  }
   await tx.update(chamados).set({ osId: ordem.id }).where(eq(chamados.id, lido.id));
   await tx.insert(mensagensDosChamados).values({
     orgId: sql`app.current_org()`,

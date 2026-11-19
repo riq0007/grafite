@@ -41,6 +41,12 @@ export const semPontas = (texto: string | null | undefined) => {
   return limpo === '' ? null : limpo;
 };
 
+/**
+ * A recusa, no campo, do ativo escolhido para a OS num local onde quem abre não atende as OS, como o
+ * outro ativo do "Virar OS" (change chamados-da-ti, design, "O Virar OS com os campos da OS").
+ */
+export const MENSAGEM_DO_ATIVO_FORA_DAS_OS = 'Você não atende as OS no local deste ativo.';
+
 /** O próximo número da organização, na transação da abertura (design, decisão 2). */
 async function proximoNumero(tx: Transacao): Promise<number> {
   const [linha] = await tx
@@ -80,8 +86,18 @@ export async function abrir(
   tx: Transacao,
   pedido: { ativo: string | null; problema: string | null },
   { requisicao, momento }: Contexto,
-  /** A solicitação de conserto de que a OS nasce, conferida por quem chama. */
-  { solicitacaoId = null }: { solicitacaoId?: string | null } = {},
+  {
+    solicitacaoId = null,
+    ativoEscolhido = false,
+  }: {
+    /** A solicitação de conserto de que a OS nasce, conferida por quem chama. */
+    solicitacaoId?: string | null;
+    /**
+     * O ativo foi escolhido só para a OS: o local onde quem abre não atende as OS é recusado no
+     * campo do ativo, para ele escolher outro, e não no 403.
+     */
+    ativoEscolhido?: boolean;
+  } = {},
 ): Promise<OrdemLida> {
   const { acesso, contaId } = sessaoDa(requisicao);
   const problema = semPontas(pedido.problema);
@@ -98,6 +114,9 @@ export async function abrir(
     throw dadosInvalidos({ ativo: 'Ativo não encontrado.' });
   }
   const { ativo } = conferencia;
+  if (ativoEscolhido && !podeEm(acesso, 'ordens.atender', ativo.localId, arvore)) {
+    throw dadosInvalidos({ ativo: MENSAGEM_DO_ATIVO_FORA_DAS_OS });
+  }
   exigirEm(requisicao, 'ordens.atender', ativo.localId, arvore);
 
   const numero = await proximoNumero(tx);
