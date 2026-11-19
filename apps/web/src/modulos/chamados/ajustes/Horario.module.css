@@ -29,9 +29,9 @@
   gap: var(--esp-2) var(--esp-4);
 }
 
-/* O início e o fim, lado a lado, na largura de uma hora. */
+/* O início e o fim, lado a lado: a linha de campos do kit só os põe assim a partir de 480 px. */
 .horas {
-  max-width: 320px;
+  max-width: 480px;
 }
 
 .frase {
