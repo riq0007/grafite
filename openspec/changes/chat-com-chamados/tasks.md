@@ -55,10 +55,10 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
   Começa pelos testes unitários da previsão, do resumo dos tempos e das horas das etapas. Verificar: esses testes, os das palavras, o lint e o typecheck. Os níveis da avaliação entraram aqui, porque a frase do `avaliou` os cita, e a conferência deles fica na 2.7.
 - [x] 2.6 O fechamento (decisão 7): o `momentoDoFechamento`, o `ultimoDiaParaReabrir`, a `situacaoDoChamado` pelo `fechado_em` e o `estaFechado`, com o resolvido vencido que a tarefa ainda não fechou. Começa pelos testes unitários: o #1045 de 11/11, o horário de verão de `America/New_York`, a virada do mês e do ano e a resolução às 23:59. Verificar: esses testes, o lint e o typecheck.
-- [ ] 2.7 As ações de quem participa (decisão 9), na matriz do `acoes.ts`:
+- [x] 2.7 As ações de quem participa (decisão 9), numa matriz ao lado da do `acoes.ts` (`acoes-de-quem-participa.ts`):
   - responder, escolher, reabrir, avaliar e marcar como vista, por situação, com o fechado;
   - as recusas e as frases;
-  - as opções da pergunta (`conferirOpcoes`) e a avaliação: os quatro níveis e o comentário até 500.
+  - as opções da pergunta (`conferirOpcoes`, em `pergunta.ts`) e a avaliação (`conferirAvaliacao`): os quatro níveis e o comentário até 500.
 
   Começa pelos testes unitários, uma célula por teste. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.8 As notificações (decisão 6):
@@ -128,7 +128,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
 - [ ] 3.9 As ações de quem participa:
   - responder, com os anexos, escolher, reabrir, avaliar e marcar como vista, com o chamado travado;
   - a chave da escolha e da avaliação vem da linha lida com o chamado travado, e nunca do pedido: o `dados.mensagem` é o id da mensagem como o banco o devolve (o UUID do pedido em maiúsculas seria outro texto para o índice), e o `dados.resolucao` é o `toISOString()` do `resolvido_em` lido;
-  - a retomada, a reabertura e a versão;
+  - a retomada, a reabertura e a versão, pelo `decidirAcaoDeQuemParticipa`, com o `fechado` do `estaFechado`, quem resolveu como a conta está agora e a pergunta e o `avaliado` lidos com o chamado travado; as recusas por campo (o texto, os anexos, a opção, o nível e o comentário) e as outras como conflito, como o `problemaDaRecusa` da TI; o `desdeDeQuemAtende` passa a aceitar a mudança de quem participa;
   - os eventos da conversa e a auditoria do retomar e do reabrir pela pessoa;
   - a notificação a quem atende;
   - a `vista_ate`, a última linha da conversa lida com o chamado travado, que anda também no "Reabrir" e na avaliação e marca as notificações do chamado, com o teste da mensagem da TI que espera a trava da marcação.
@@ -138,7 +138,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - a mensagem com as opções e o cartão, e o `GET /chamados/:numero/cartao` com o retrato;
   - as respostas prontas com as opções;
   - a notificação da mensagem da TI e do resolvido à pessoa e a quem abriu, fora o autor;
-  - a ficha com a origem, as mensagens de quem participa, a escolha, a avaliação, o resumo dos tempos, o "usa o chat" da pessoa e o Fechado.
+  - a ficha com a origem, as mensagens de quem participa, a escolha, a avaliação, o resumo dos tempos, o "usa o chat" da pessoa e o Fechado; o `EventoGravado` da ficha ganha os eventos de quem participa (`EventoDeQuemParticipa`), para o guarda dos eventos reprovar o que ela não lê.
 
   Começa pelos testes de integração da permissão: o cartão (a prévia e o envio) de um ativo que a conta não vê e o "Abrir a conversa" da origem só a quem participa dela. Verificar: esses testes, os outros de integração, o lint, o typecheck e o contrato.
 - [ ] 3.11 O fechamento (decisão 7): a tarefa `chamados.fechamento`, a cada minuto e em lotes, com o evento `fechou`, sem auditoria e sem notificação, e o módulo desligado pulado; as ações da TI e de quem participa recusadas no fechado pelo `estaFechado`. Começa pelos testes da tarefa: o vencido, o do dia, o reaberto e o resolvido antes desta versão. Verificar: esses testes, o lint e o typecheck.

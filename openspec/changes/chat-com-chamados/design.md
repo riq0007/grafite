@@ -128,7 +128,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **A leitura** tira as notas, os campos só da TI e os anexos dos dois, os alertas, o prazo da resolução e os eventos do desfazer, da OS, da solicitação e das trocas.
 - **O domínio dá as palavras do colaborador:** a situação, as etapas e os eventos, com o "Você" quando quem agiu é a conta que lê. Dá também a ordem da lista CHAMADOS e os grupos da vista Chamados, com os testes antes do código.
 - **As horas das etapas** (m10) saem dos eventos, pela mesma leitura da situação da linha do tempo da TI: o `caminhoDaSituacao`, no domínio, que a `linhaDoTempo` (em `lado.ts`) passa a usar: cada etapa até a de agora tem a hora da última chegada a ela, a pulada fica sem hora, e as depois da de agora, "ainda não". O domínio as calcula com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê.
-- **As ações de quem participa** entram na matriz do `acoes.ts` (`acoesDeQuemParticipa`), com o chamado travado para a gravação:
+- **As ações de quem participa** ficam numa matriz ao lado da do `acoes.ts`, em `acoes-de-quem-participa.ts` (`MATRIZ_DE_QUEM_PARTICIPA` e `decidirAcaoDeQuemParticipa`), com o Fechado como uma situação e o chamado travado para a gravação. A retomada e a reabertura saem da matriz da TI (`MATRIZ_DAS_ACOES`):
   - a mensagem e a escolha que retomam o aguardando;
   - a mensagem e o "Reabrir" que reabrem o resolvido, para quem resolveu ou para a triagem, como o reabrir da TI;
   - as recusas do resolvido e do fechado.
@@ -188,6 +188,12 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **O resumo dos tempos** escreve o tempo como os indicadores (`textoDoTempo`: "18 min", "1,5 h" e "2,7 dias") e o conta pelos minutos das horas que mostra, para a conta fechar com elas. A primeira resposta é a primeira mensagem da TI na conversa (a `mensagem` com a `autor_conta`), como pede a spec, que conta o "O que foi feito" do resolver. Na origem `chat`, ela é a `primeira_resposta_em` do prazo; na origem `ti`, não, porque a abertura pela TI grava a `primeira_resposta_em` na hora da abertura, e o resumo diria a primeira resposta na hora do "Aberto", sem nenhuma mensagem. Cada resolvido tem o seu resumo, com a hora e o "Atendeu" do próprio evento `resolveu`.
 - **A abertura com quem atende** (o "Fica comigo" ou quem atende o tipo por padrão) guarda quem nasce atendendo no `dados.para`, como o reabrir: o chamado chega na abertura ao Aberto e ao Em andamento, nas etapas e na linha do tempo da TI, que diz "Em atendimento · hoje, 07:40 · aberto por Fernanda Rocha · com Bruno Lima", sem o "com" quando quem atende é quem abriu. A abertura de antes desta versão, sem o `para`, lê como antes, na triagem.
 - **O "Você"** vale para a conta que a frase cita: quem agiu e, no passar, quem recebe o chamado ("Você está atendendo o chamado").
+- **As ações de quem participa,** nos casos que a spec não escreve:
+  - "Marcar como vista" vale em toda situação, também no resolvido e no fechado: muda só a leitura da conta, e não o chamado, e o pedido que chega depois da resolução não volta como erro;
+  - a mensagem vem antes do evento que ela causa, o "retomou" ou o "reabriu", como o "O que foi feito" antes do "resolveu", e a escolha antes do "retomou";
+  - o "Reabrir" fora do resolvido recusa com a frase do reabrir da TI ("O chamado #1045 não está resolvido."), e a avaliação, com a da spec dela, sem o número ("O chamado não está resolvido.");
+  - a escolha compara a opção como foi gravada, e as opções de uma pergunta são diferentes sem contar os acentos e as maiúsculas: "Sim" e "sim" seriam a mesma resposta;
+  - a célula recusa antes do conteúdo, como na TI: no fechado, a mensagem vazia recusa pelo fechado; e a avaliação já feita recusa antes do nível.
 
 ## Risks / Trade-offs
 

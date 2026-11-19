@@ -257,6 +257,24 @@ export {
   type TextoDaAcao,
 } from './chamados/acoes.ts';
 export {
+  ACOES_DE_QUEM_PARTICIPA,
+  type AcaoDeQuemParticipa,
+  type CelulaDeQuemParticipa,
+  type ChamadoParaQuemParticipa,
+  type DecisaoDeQuemParticipa,
+  decidirAcaoDeQuemParticipa,
+  type EntradaDeQuemParticipa,
+  type EventoDeQuemParticipa,
+  MATRIZ_DE_QUEM_PARTICIPA,
+  type MudancaDeQuemParticipa,
+  mensagemDaRecusaDeQuemParticipa,
+  type PedidoDeQuemParticipa,
+  type PerguntaParaEscolher,
+  type RecusaDaCelulaDeQuemParticipa,
+  type RecusaDeQuemParticipa,
+  SITUACOES_DE_QUEM_PARTICIPA,
+} from './chamados/acoes-de-quem-participa.ts';
+export {
   type AlcanceDeQuemAtende,
   type AlcanceDeQuemVe,
   type Atendimento,
@@ -271,6 +289,9 @@ export {
   veOChamado,
 } from './chamados/atendimento.ts';
 export {
+  type ConferenciaDaAvaliacao,
+  conferirAvaliacao,
+  LIMITE_DO_COMENTARIO,
   NIVEIS_DA_AVALIACAO,
   type NivelDaAvaliacao,
   nivelDaAvaliacao,
@@ -399,6 +420,11 @@ export {
   situacaoParaQuemParticipa,
   textoDaEtapa,
 } from './chamados/palavras-do-colaborador.ts';
+export {
+  conferirOpcoes,
+  LIMITES_DA_PERGUNTA,
+  MENSAGENS_DA_PERGUNTA,
+} from './chamados/pergunta.ts';
 export {
   type ConferenciaDoHorario,
   conferirHorario,
