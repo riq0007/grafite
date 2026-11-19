@@ -187,7 +187,7 @@ const CAMPOS_DOS_CHAMADOS: Record<string, string> = {
   fim: 'Fim',
   fuso: 'Fuso horário',
   cargaCheia: 'Carga cheia',
-  relogiosFechados: 'Chamados com o relógio contando',
+  relogiosFechados: 'Chamados que contavam no horário da TI',
 };
 
 /** As listas ordenadas, em que a `ordem` é a lista inteira. */

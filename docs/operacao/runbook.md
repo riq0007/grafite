@@ -713,13 +713,13 @@ A API de cada ambiente avalia as regras de alerta de cada organização a cada m
 
 ## Chamados
 
-**Horário da TI.** Os tipos que contam o prazo no horário da TI só contam o tempo dos dias e das horas dele. O horário usa o fuso dele, com o horário de verão, e o fuso do servidor não muda a conta. O de fábrica é de segunda a sexta, das 08:00 às 18:00, no fuso de São Paulo, com a carga cheia de 5 chamados por pessoa. Quem tem `chamados.configurar` o muda em **Chamados › Horário da TI**. A mudança vale daí em diante: o tempo já contado dos chamados abertos fica como estava, e o vencimento passa a contar pelo horário novo. A auditoria guarda o horário de antes e o de depois, com quantos chamados estavam com o relógio contando. Fora do horário, o chamado de um tipo com "Se não houver ninguém: Cai na triagem" nasce na triagem, mesmo com quem atende por padrão.
+**Horário da TI.** Os tipos que contam o prazo no horário da TI só contam o tempo dos dias e das horas dele. O horário usa o fuso dele, com o horário de verão, e o fuso do servidor não muda a conta. O de fábrica é de segunda a sexta, das 08:00 às 18:00, no fuso de São Paulo, com a carga cheia de 5 chamados por pessoa. Quem tem `chamados.configurar` o muda em **Chamados › Horário da TI**. A mudança vale daí em diante: o tempo já contado dos chamados abertos fica como estava, e o vencimento passa a contar pelo horário novo. A auditoria guarda o horário de antes e o de depois, com quantos chamados contavam o prazo no horário da TI. Fora do horário, o chamado de um tipo com "Se não houver ninguém: Cai na triagem" nasce na triagem, mesmo com quem atende por padrão.
 
 **Prazo estourado.** A API de cada ambiente confere os prazos a cada minuto, pela tarefa `chamados.prazo` da fila, que aparece em **Administração › Tarefas** como a rotina "Prazo dos chamados". O chamado que passa do prazo avisa uma vez quem o atende ou, na triagem, quem atende os locais dele, pelas notificações, conforme o que cada pessoa escolhe em **Ajustes › Notificações**. A falha numa organização fica no log do app e não segura as outras; a do minuto seguinte tenta de novo. Com o módulo desligado, nada é avisado; ao religar, quem passou do prazo nesse tempo é avisado.
 
 **O relógio do servidor.** O prazo conta pelo relógio do servidor. Confira que ele acerta a hora pela rede: no Windows, `w32tm /query /status`; no Linux, `timedatectl status`, com "System clock synchronized: yes".
 
-**Anexos.** Os anexos das mensagens e dos campos dos chamados ficam com os outros arquivos (`producao\arquivos`) e entram no backup, no `arquivos.zip`.
+**Anexos.** Os anexos das mensagens e dos campos dos chamados ficam com os outros arquivos (`C:\Grafite\producao\arquivos` no Windows e `/opt/grafite/producao/arquivos` no Linux) e entram no backup, no `arquivos.zip`.
 
 ## E-mail e push
 

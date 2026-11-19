@@ -924,7 +924,7 @@ describe('o registro dos chamados na auditoria', () => {
         valor: `${fuso('America/Sao_Paulo')} → ${fuso('America/Manaus')}`,
       },
       { rotulo: 'Carga cheia', valor: '5 → 6' },
-      { rotulo: 'Chamados com o relógio contando', valor: '3' },
+      { rotulo: 'Chamados que contavam no horário da TI', valor: '3' },
     ]);
   });
 });
