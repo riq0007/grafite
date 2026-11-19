@@ -66,7 +66,7 @@ Quem tem `chat.configurar` SHALL cadastrar as equipes e os canais, até 100 ativ
 - **quem escreve:** "Todos que participam" ou um grupo, cujas contas que participam são as únicas que escrevem, como "Só a TI escreve" num canal de avisos;
 - **"Avisar a cada mensagem":** ligado, cada mensagem notifica quem participa (requisito "Notificações do chat"). Começa desligado.
 
-A equipe e o canal SHALL poder ser arquivados e reativados. O arquivado SHALL sair da lista de quem participa e SHALL NOT receber mensagens, e a conversa SHALL ficar guardada. Reativado, ele SHALL voltar com a conversa.
+A equipe e o canal SHALL poder ser arquivados e reativados. O arquivado SHALL sair da lista de quem participa e SHALL NOT receber mensagens, e a conversa SHALL ficar guardada. Reativado, ele SHALL voltar com a conversa. Reativar SHALL conferir o nome e o teto como o cadastro, e o teto SHALL contar só as equipes e os canais ativos.
 
 As recusas SHALL ser:
 - "Escreva o nome.", "Use até 60 caracteres." e "Já existe uma equipe ou um canal com esse nome.", no nome;
@@ -85,6 +85,10 @@ As recusas SHALL ser:
 #### Scenario: Equipe arquivada
 - **WHEN** quem configura arquiva a Equipe Financeiro
 - **THEN** ela sai da lista de quem participa, a mensagem nela é recusada com "A equipe Equipe Financeiro está arquivada.", e reativá-la a traz de volta com a conversa
+
+#### Scenario: Reativar com o nome em uso
+- **WHEN** quem configura reativa o canal arquivado "Avisos", e outro canal ativo já se chama "Avisos"
+- **THEN** a reativação é recusada com "Já existe uma equipe ou um canal com esse nome.", e o canal segue arquivado
 
 ### Requirement: Mensagem
 
