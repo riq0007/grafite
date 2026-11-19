@@ -127,7 +127,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o resumo do chip.
 - **A leitura** tira as notas, os campos só da TI e os anexos dos dois, os alertas, o prazo da resolução e os eventos do desfazer, da OS, da solicitação e das trocas.
 - **O domínio dá as palavras do colaborador:** a situação, as etapas e os eventos, com o "Você" quando quem agiu é a conta que lê. Dá também a ordem da lista CHAMADOS e os grupos da vista Chamados, com os testes antes do código.
-- **As horas das etapas** (m10) saem dos eventos, pela mesma leitura da situação da linha do tempo da TI (`linhaDoTempo`, em `lado.ts`): cada etapa até a de agora tem a hora da última chegada a ela, a pulada fica sem hora, e as depois da de agora, "ainda não". O domínio as calcula com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê.
+- **As horas das etapas** (m10) saem dos eventos, pela mesma leitura da situação da linha do tempo da TI: o `caminhoDaSituacao`, no domínio, que a `linhaDoTempo` (em `lado.ts`) passa a usar: cada etapa até a de agora tem a hora da última chegada a ela, a pulada fica sem hora, e as depois da de agora, "ainda não". O domínio as calcula com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê.
 - **As ações de quem participa** entram na matriz do `acoes.ts` (`acoesDeQuemParticipa`), com o chamado travado para a gravação:
   - a mensagem e a escolha que retomam o aguardando;
   - a mensagem e o "Reabrir" que reabrem o resolvido, para quem resolveu ou para a triagem, como o reabrir da TI;
@@ -184,6 +184,9 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **As horas das etapas** do m10 ("ontem 17:05", "ainda não") saem dos eventos (decisão 9).
 - **A gaveta das equipes e dos canais,** que os mockups não mostram: "Quem escreve" tem "Todos que participam" e "Um grupo", que abre a escolha do grupo, e o "Um grupo" sem a escolha dá "Escolha o grupo que escreve.", a frase da spec. A escolha lista os grupos ativos. Na alteração, o grupo gravado fica, mesmo inativo, para o nome mudar sem trocar o grupo, e aparece na escolha como o escolhido, com "(inativo)".
 - **As ordens que a spec deixa em aberto:** FECHADOS, na lista do Chat e na vista Chamados, vai pelo resolvido mais novo, porque o que se procura ali é o que acabou de ser resolvido, para reabrir ou avaliar. Os grupos abertos da vista Chamados vão pelo aberto mais novo, como CHAMADOS na lista, para o mesmo chamado ficar na mesma ordem nas duas. EQUIPES E CANAIS compara os nomes sem os acentos e as maiúsculas, com os números em ordem de valor ("Sala 2" antes de "Sala 10"). O empate vai pelo número do chamado, o mais alto primeiro, ou pelo id.
+- **A previsão da resposta** ("responde em ~1 h") só aparece na vez da TI, na triagem e em atendimento: no Aguardando você, a TI espera a pessoa, e o resolvido não espera resposta. O texto é o prazo de resposta que o chamado copiou do tipo, com a unidade dele.
+- **O resumo dos tempos** escreve o tempo como os indicadores (`textoDoTempo`: "18 min", "1,5 h" e "2,7 dias") e o conta pelos minutos das horas que mostra, para a conta fechar com elas. A primeira resposta é a do prazo (`primeira_resposta_em`), que conta o "O que foi feito" do resolver: o resumo e o prazo da TI dizem a mesma hora, e o "sem resposta" fica para o chamado sem ela.
+- **O "Você"** vale para a conta que a frase cita: quem agiu e, no passar, quem recebe o chamado ("Você está atendendo o chamado").
 
 ## Risks / Trade-offs
 

@@ -271,10 +271,23 @@ export {
   veOChamado,
 } from './chamados/atendimento.ts';
 export {
+  NIVEIS_DA_AVALIACAO,
+  type NivelDaAvaliacao,
+  nivelDaAvaliacao,
+  ROTULOS_DOS_NIVEIS_DA_AVALIACAO,
+} from './chamados/avaliacao.ts';
+export {
   MAIOR_NUMERO_DE_CHAMADO,
   type TermoDaBusca,
   termoDaBusca,
 } from './chamados/busca.ts';
+export {
+  caminhoDaSituacao,
+  type EtapaDoChamado,
+  type EventoNoCaminho,
+  etapasDoChamado,
+  type PassoDoCaminho,
+} from './chamados/caminho.ts';
 export {
   AVISO_DO_ALCANCE,
   type CargaDasPessoas,
@@ -367,6 +380,15 @@ export {
   type SolicitacaoNaoGerada,
 } from './chamados/os-e-solicitacao.ts';
 export {
+  type ContaNaFrase,
+  type EventoParaQuemParticipa,
+  fraseDoEventoParaQuemParticipa,
+  previsaoDaResposta,
+  SITUACOES_PARA_QUEM_PARTICIPA,
+  situacaoParaQuemParticipa,
+  textoDaEtapa,
+} from './chamados/palavras-do-colaborador.ts';
+export {
   type ConferenciaDoHorario,
   conferirHorario,
   DIAS_DA_SEMANA_DO_HORARIO,
@@ -426,6 +448,13 @@ export {
   type RespostaProntaConferida,
   textoDaRespostaPronta,
 } from './chamados/respostas-prontas.ts';
+export {
+  type LinhaDoResumoDosTempos,
+  linhasDoResumoDosTempos,
+  type ResumoDosTempos,
+  resumoDosTempos,
+  type TempoDesdeAAbertura,
+} from './chamados/resumo-dos-tempos.ts';
 export {
   compararPrazos,
   GRUPOS_DO_PRAZO,
