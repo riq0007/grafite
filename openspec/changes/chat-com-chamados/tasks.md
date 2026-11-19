@@ -38,7 +38,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `comandoDoAtivo`: o "/ativo" com e sem o patrimônio.
 
   Verificar: os testes unitários, o lint e o typecheck.
-- [ ] 2.3 As equipes e os canais: o `conferirEquipeOuCanal`, com o nome, o tipo, o grupo, quem escreve, o teto de 100 e as frases da spec. Verificar: os testes unitários, o lint e o typecheck.
+- [x] 2.3 As equipes e os canais: o `conferirEquipeOuCanal`, com o nome, o tipo, o grupo, quem escreve, o teto de 100 e as frases da spec. Verificar: os testes unitários, o lint e o typecheck.
 - [ ] 2.4 As listas e as contagens do chat:
   - a ordem de CHAMADOS (os que aguardam a conta primeiro, depois o aberto mais novo) e de FECHADOS;
   - EQUIPES E CANAIS pelo nome e RECENTES pela última mensagem;

@@ -466,6 +466,17 @@ export {
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
 export {
+  type CampoDaEquipeOuCanal,
+  type ConferenciaDaEquipeOuCanal,
+  type ContextoDaEquipeOuCanal,
+  conferirEquipeOuCanal,
+  type EquipeOuCanalConferido,
+  LIMITE_DE_EQUIPES_E_CANAIS,
+  MENSAGENS_DA_EQUIPE_OU_CANAL,
+  type PedidoDaEquipeOuCanal,
+  recusaDoTeto,
+} from './chat/equipes-e-canais.ts';
+export {
   type CitacaoDeChamado,
   citacoesDeChamados,
   comecoDoTexto,

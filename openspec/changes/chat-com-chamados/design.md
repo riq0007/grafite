@@ -182,6 +182,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **"Mensagens anteriores"** carrega 50 por vez.
 - **A espera** fica na linha "Aguardando você", com a hora, sem a razão dos mockups ("confirme o nome da pasta", no m08 e no m10): o evento `aguardando` não tem dados, a razão foi escrita à mão no mockup, e a mensagem da TI logo acima já diz o que falta.
 - **As horas das etapas** do m10 ("ontem 17:05", "ainda não") saem dos eventos (decisão 9).
+- **A gaveta das equipes e dos canais,** que os mockups não mostram: "Quem escreve" tem "Todos que participam" e "Um grupo", que abre a escolha do grupo, e o "Um grupo" sem a escolha dá "Escolha o grupo que escreve.", a frase da spec. A escolha lista os grupos ativos. Na alteração, o grupo gravado fica, mesmo inativo, para o nome mudar sem trocar o grupo.
 
 ## Risks / Trade-offs
 
