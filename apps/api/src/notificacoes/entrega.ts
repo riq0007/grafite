@@ -82,6 +82,7 @@ const MENSAGEM = {
   origem: notificacoes.origem,
   destino: notificacoes.destino,
   criadaEm: notificacoes.criadaEm,
+  mensagem: notificacoes.mensagem,
 };
 
 export function tarefasDaEntrega({

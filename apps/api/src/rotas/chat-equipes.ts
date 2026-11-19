@@ -15,7 +15,6 @@ import {
   membrosDoGrupo,
   mensagensDoChat,
   naOrganizacao,
-  type Transacao,
 } from '@grafite/db';
 import { estaFechado, ordemDasEquipesECanais, situacaoParaQuemParticipa } from '@grafite/domain';
 import { and, count, countDistinct, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
@@ -24,7 +23,7 @@ import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { ContaDoChat, contaDoChat, lerContas } from '../chat/contas.ts';
-import { type ConversaDaConta, lerConversaDaConta } from '../chat/conversa.ts';
+import { idsDeQuemParticipa, lerConversaDaConta } from '../chat/conversa.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { contaDaSessao } from '../chat/sessao.ts';
 import { RespostaDeProblema } from '../problemas.ts';
@@ -97,27 +96,6 @@ const PROBLEMAS = { 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO } as const;
 
 /** As contas que usam o chat agora, na consulta: a conta ativa, com o `chat.usar`. */
 const quemUsa = () => usaOChatNaConsulta(contas.id);
-
-/** Os ids das contas que participam da conversa agora, como a `participacao` do domínio decide. */
-async function idsDeQuemParticipa(tx: Transacao, { conversa }: ConversaDaConta) {
-  if (conversa.tipo === 'direta') return conversa.contas.filter((c) => c.usaOChat).map((c) => c.id);
-  if (conversa.tipo === 'equipe') {
-    if (!conversa.grupo.ativo) return [];
-    const membros = await tx
-      .selectDistinct({ id: membrosDoGrupo.contaId })
-      .from(membrosDoGrupo)
-      .where(
-        and(
-          eq(membrosDoGrupo.grupoId, conversa.grupo.id),
-          isNull(membrosDoGrupo.encerradaEm),
-          usaOChatNaConsulta(membrosDoGrupo.contaId),
-        ),
-      );
-    return membros.map(({ id }) => id);
-  }
-  const todas = await tx.select({ id: contas.id }).from(contas).where(quemUsa());
-  return todas.map(({ id }) => id);
-}
 
 export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
   banco: Banco;
@@ -207,7 +185,7 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
         const conta = await contaDaSessao(tx, requisicao);
         const aberta = await lerConversaDaConta(tx, conta, requisicao.params.id);
-        const lidas = await lerContas(tx, await idsDeQuemParticipa(tx, aberta));
+        const lidas = await lerContas(tx, await idsDeQuemParticipa(tx, aberta.conversa));
         return {
           pessoas: [...lidas.values()]
             .sort(

@@ -82,6 +82,22 @@ describe('a fila de tarefas', () => {
     });
   });
 
+  it('a tarefa pedida para depois só começa passado o tempo dado (change chat-com-chamados)', async () => {
+    const { tarefa } = tarefaDemorada(10);
+    const fila = filaDeTeste([tarefa]);
+    await fila.iniciar();
+    const antes = Date.now();
+    const id = await fila.enviar(tarefa.nome, { id: 'b' }, { depoisDe: 10 });
+    const boss = new PgBoss({ connectionString: inject('urlApp'), schema: 'fila', migrate: false });
+    await boss.start();
+    try {
+      const pedida = await boss.getJobById(tarefa.nome, id ?? '');
+      expect(pedida?.startAfter.getTime()).toBeGreaterThanOrEqual(antes + 9_000);
+    } finally {
+      await boss.stop({ graceful: false });
+    }
+  });
+
   it('recusa pôr na fila dados fora do esquema da tarefa', async () => {
     const { tarefa } = tarefaDemorada(10);
     const fila = filaDeTeste([tarefa]);

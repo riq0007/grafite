@@ -9,6 +9,7 @@ import { tarefasDosAlertas } from '../alertas/tarefas.ts';
 import type { Armazenamento } from '../arquivos/armazenamento.ts';
 import type { CanaisDaApi } from '../canais/canais.ts';
 import { tarefaDoPrazo } from '../chamados/prazo-estourado.ts';
+import { tarefaDoChat } from '../chat/notificar.ts';
 import { tarefasDoControlId } from '../controlid/tarefa.ts';
 import { tarefaDaImportacao } from '../importacao/tarefa.ts';
 import { tarefasDaEntrega } from '../notificacoes/entrega.ts';
@@ -75,6 +76,11 @@ export interface OpcoesDoEnvio {
   unicaPor?: number;
   /** A transação em que ela entra: se a transação é desfeita, a tarefa não entra. */
   tx?: Transacao;
+  /**
+   * Daqui a quantos segundos ela pode começar, como a notificação do chat, 10 s depois da mensagem
+   * (change chat-com-chamados, design, decisão 6).
+   */
+  depoisDe?: number;
 }
 
 /** Põe uma tarefa na fila: o que as tarefas e quem notifica usam da fila. */
@@ -114,6 +120,7 @@ export function tarefasDaApi(contexto: ContextoDasTarefas): DefinicaoDeTarefa[] 
     ...tarefasDosPaineis(contexto),
     ...tarefasDoSoftware(contexto),
     tarefaDoPrazo(contexto),
+    tarefaDoChat(contexto) as DefinicaoDeTarefa,
   ];
   return [tarefaDasFalhas(contexto, outras), ...outras];
 }

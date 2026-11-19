@@ -213,6 +213,56 @@ describe('entrega das notificações', () => {
     expect((await marcas(ids))[0]?.emailEm).toBeNull();
   });
 
+  it('a mensagem vai por push só com o título, fora das severidades escolhidas, e nunca no Foco', async () => {
+    const mensagem = (contaId: string) =>
+      critica(contaId, {
+        severidade: 'info',
+        titulo: 'Mensagem de Paulo Nunes',
+        descricao: 'A impressora do 2º andar manchou de novo.',
+        origem: 'Chat',
+        destino:
+          '/chat/c/0199d3a0-0000-7000-8000-0000000000c1?m=0199d3a0-0000-7000-8000-0000000000c2',
+        mensagem: true,
+        assunto: 'conversa:0199d3a0-0000-7000-8000-0000000000c1',
+      });
+    const celular = await inscrever(ana);
+    const [id] = await gravar(mensagem(ana));
+    await vi.waitFor(() => {
+      expect(celular.recebidos()).toMatchObject([
+        { titulo: 'Mensagem de Paulo Nunes', corpo: 'A impressora do 2º andar manchou de novo.' },
+      ]);
+    }, ESPERA);
+    expect(smtp.mensagens).toEqual([]);
+    const [gravada] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .select({ mensagem: notificacoes.mensagem, assunto: notificacoes.assunto })
+        .from(notificacoes)
+        .where(eq(notificacoes.id, id ?? '')),
+    );
+    expect(gravada).toEqual({
+      mensagem: true,
+      assunto: 'conversa:0199d3a0-0000-7000-8000-0000000000c1',
+    });
+
+    // No Foco, a mensagem não vai por push.
+    const doBruno = await inscrever(bruno);
+    await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .update(contas)
+        .set({ preferencias: { notificacoes: { foco: true } } })
+        .where(eq(contas.id, bruno)),
+    );
+    try {
+      await naOrganizacao(api.banco, org, (tx) => tx.delete(notificacoes));
+      await entregues(await gravar(mensagem(bruno)));
+      expect(doBruno.recebidos()).toEqual([]);
+    } finally {
+      await naOrganizacao(api.banco, org, (tx) =>
+        tx.update(contas).set({ preferencias: {} }).where(eq(contas.id, bruno)),
+      );
+    }
+  });
+
   it('a pessoa sem e-mail não recebe e-mail', async () => {
     await entregues(await gravar(critica(bruno)));
     expect(smtp.mensagens).toEqual([]);

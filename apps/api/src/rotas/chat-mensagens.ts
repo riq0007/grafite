@@ -29,6 +29,8 @@ import {
 } from '../chat/mensagens.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { contaDaSessao } from '../chat/sessao.ts';
+import type { FilaDeTarefas } from '../fila/fila.ts';
+import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { naoEncontrado, ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
@@ -97,7 +99,12 @@ const pessoaNaoEncontrada = () => naoEncontrado('Pessoa não encontrada.');
 export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
   banco: Banco;
   agora: () => Date;
-}> = async (app, { banco, agora }) => {
+  fila?: FilaDeTarefas | undefined;
+}> = async (app, { banco, agora, fila }) => {
+  /** Quem pede a notificação da mensagem; sem a fila rodando, nada é pedido. */
+  const enviar = (): EnviarTarefa | undefined =>
+    fila?.rodando() ? (...dados) => fila.enviar(...dados) : undefined;
+
   app.get(
     '/chat/conversas/:id',
     {
@@ -210,6 +217,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
           respondeA: requisicao.body.respondeA ?? null,
           anexos: requisicao.body.anexos ?? [],
           momento,
+          enviar: enviar(),
         });
         const [lida] = await mensagensParaAConta(tx, conta, conversa.linha.id, [gravada], momento);
         if (!lida) throw new Error('A mensagem gravada não foi lida.');
@@ -261,6 +269,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
           respondeA: null,
           anexos: requisicao.body.anexos ?? [],
           momento,
+          enviar: enviar(),
         });
         const [mensagem] = await mensagensParaAConta(
           tx,

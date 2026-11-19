@@ -2,16 +2,17 @@
 // "Mensagem"; change chat-com-chamados, design, decisões 1 e 3; tarefa 3.2): a linha da conversa,
 // montada para o domínio com as contas da direta e os grupos como estão agora, e a `participacao`
 // da conta. A conversa de que a conta não participa responde como inexistente.
-import { conversas, grupos, type Transacao } from '@grafite/db';
+import { contas, conversas, grupos, membrosDoGrupo, type Transacao } from '@grafite/db';
 import {
   type ConversaParaParticipar,
   type GrupoDaConversa,
   type Participacao,
   participacao,
 } from '@grafite/domain';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { naoEncontrado } from '../problemas.ts';
 import { type ContaLida, lerContas } from './contas.ts';
+import { usaOChatNaConsulta } from './quem-usa.ts';
 
 export const conversaNaoEncontrada = () => naoEncontrado('Conversa não encontrada.');
 
@@ -203,4 +204,36 @@ export function publicoDaConversa(linha: LinhaDaConversa) {
     return { permissao: 'chat.usar' as const, grupos: [linha.grupoId ?? ''] };
   }
   return { permissao: 'chat.usar' as const };
+}
+
+/**
+ * Os ids das contas que participam da conversa agora, como a `participacao` do domínio decide: na
+ * direta, as duas que usam o chat; na equipe, as do grupo ativo, sem a saída, que usam o chat; no
+ * canal, todas que usam o chat. A arquivada conta do mesmo jeito, para quem a lê; quem notifica a
+ * deixa de fora antes.
+ */
+export async function idsDeQuemParticipa(
+  tx: Transacao,
+  conversa: ConversaParaParticipar,
+): Promise<string[]> {
+  if (conversa.tipo === 'direta') return conversa.contas.filter((c) => c.usaOChat).map((c) => c.id);
+  if (conversa.tipo === 'equipe') {
+    if (!conversa.grupo.ativo) return [];
+    const membros = await tx
+      .selectDistinct({ id: membrosDoGrupo.contaId })
+      .from(membrosDoGrupo)
+      .where(
+        and(
+          eq(membrosDoGrupo.grupoId, conversa.grupo.id),
+          isNull(membrosDoGrupo.encerradaEm),
+          usaOChatNaConsulta(membrosDoGrupo.contaId),
+        ),
+      );
+    return membros.map(({ id }) => id);
+  }
+  const todas = await tx
+    .select({ id: contas.id })
+    .from(contas)
+    .where(usaOChatNaConsulta(contas.id));
+  return todas.map(({ id }) => id);
 }

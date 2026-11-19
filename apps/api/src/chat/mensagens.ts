@@ -33,6 +33,7 @@ import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { registrarEvento } from '../eventos/saida.ts';
+import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
 import { tomarAnexosDoChat } from './anexos.ts';
 import { ContaDoChat, type ContaLida, contaDoChat, lerContas } from './contas.ts';
@@ -43,6 +44,7 @@ import {
   type LinhaDaConversa,
   publicoDaConversa,
 } from './conversa.ts';
+import { pedirANotificacao } from './notificar.ts';
 
 /** As mensagens de uma página. */
 export const TAMANHO_DA_PAGINA = 50;
@@ -451,6 +453,8 @@ export async function gravarMensagem(
     respondeA: string | null;
     anexos: readonly string[];
     momento: Date;
+    /** Pede a notificação da mensagem, 10 s depois; sem a fila, nada é pedido. */
+    enviar?: EnviarTarefa | undefined;
   },
 ): Promise<LinhaDaMensagem> {
   if (daConta.participa && !daConta.escreve) {
@@ -495,6 +499,7 @@ export async function gravarMensagem(
     conversaId: linha.id,
     mensagemId: gravada.id,
   });
+  await pedirANotificacao(tx, pedido.enviar, gravada);
   await registrarEvento(tx, {
     tipo: 'chat.mudou',
     alvo: { tipo: 'conversa', id: linha.id },

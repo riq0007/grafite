@@ -102,12 +102,12 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - as abas Arquivos e "Chamados da equipe".
 
   Começa pelos testes de integração da permissão. Verificar: esses testes, o lint, o typecheck e o contrato. O cadastro ficou em `rotas/chat-equipes-e-canais.ts` (`/chat/equipes-e-canais`, com a gaveta, o `arquivamento` e a `reativacao`), e a vista Equipes e as abas em `rotas/chat-equipes.ts` (`GET /chat/equipes` e `GET /chat/conversas/:id/pessoas`, `/arquivos` e `/chamados`); as ações da auditoria são `equipe.*` e `canal.*`, com o alvo `conversa` (decisão 15).
-- [ ] 3.6 A notificação do chat (decisão 6):
+- [x] 3.6 A notificação do chat (decisão 6):
   - a tarefa `chat.notificar`, 10 s depois da mensagem, pelo `startAfter`, que o `enviar` da fila (`fila.ts`) passa a aceitar, a quem não leu, fora o autor e quem silenciou;
   - o assunto, a mensagem do chat e o destino, pelo `notificacoesDaMensagemDoChat`, com o silenciar e a `lida_ate` de cada conta que participa; ele não confere quem participa, e a consulta da tarefa lê as contas quando ela roda, e não na hora da mensagem: a conta ativa, com o `chat.usar` e, na equipe, do grupo agora. O `notificar` grava a `mensagem`, o `assunto` e a `mensagemDoChatId` da `NovaNotificacao`;
   - a mensagem no push, também com a severidade fora das escolhas e nunca no Foco, pela `mensagem` que a entrega já passa ao `canaisNaHora` (2.8), com o teste da entrega, e o título do push sem a severidade.
 
-  Verificar: os testes da tarefa e da entrega, o da conta que sai do grupo nos 10 s, o lint e o typecheck.
+  Verificar: os testes da tarefa e da entrega, o da conta que sai do grupo nos 10 s, o lint e o typecheck. A tarefa ficou em `chat/notificar.ts`, pedida pelo `gravarMensagem` na transação da mensagem, com o `depoisDe` do `enviar`; a equipe ou o canal arquivado nos 10 s não notifica (decisão 15).
 - [ ] 3.7 Abrir pelo chat (decisão 8):
   - o `GET /chat/chamados/tipos` e o `GET /chat/chamados/sugestoes`, só com o id, o nome e o patrimônio;
   - o `POST /chat/mensagens/:id/chamado`, pela abertura com a origem `chat`;

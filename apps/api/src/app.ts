@@ -460,7 +460,7 @@ export async function criarApp({
     await escopo.register(async (doChat) => {
       exigirModuloLigado(doChat, { banco, modulo: 'chat' });
       await doChat.register(rotasDoChat, { banco, armazenamento });
-      await doChat.register(rotasDasMensagensDoChat, { banco, agora });
+      await doChat.register(rotasDasMensagensDoChat, { banco, agora, fila });
       await doChat.register(rotasDaLeituraDoChat, { banco, agora });
       await doChat.register(rotasDosAnexosDoChat, { banco, agora, armazenamento });
       await doChat.register(rotasDasEquipesECanais, { banco, agora });
