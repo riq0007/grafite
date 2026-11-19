@@ -177,6 +177,7 @@ function Campo({
         quem={quem}
         numero={numero}
         erro={erro}
+        visual={visual}
         aoAnexar={(id, anexo) =>
           mudarResposta(campo.id, (anterior) => [...idsDoAnexo(anterior), id], [
             { tipo: 'anexo', id, anexo },

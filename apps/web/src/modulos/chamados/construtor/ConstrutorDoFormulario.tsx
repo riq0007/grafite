@@ -18,16 +18,18 @@ import {
   Botao,
   CabecalhoDaPagina,
   Carimbo,
+  ControleSegmentado,
   Dialogo,
   EstadoVazio,
   Icone,
   type ItemDoMenuDeContexto,
   MenuDeContexto,
   RotuloDeSituacao,
+  Segmento,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useBlocker, useParams } from '@tanstack/react-router';
-import { Check, ChevronRight, Eye, GripVertical, Plus } from 'lucide-react';
+import { Check, ChevronRight, Eye, GripVertical, Pencil, Plus } from 'lucide-react';
 import {
   type DragEvent,
   type KeyboardEvent,
@@ -51,6 +53,7 @@ import {
   useFormularioDoTipo,
   useTiposDeChamado,
 } from '../consultas.ts';
+import type { PessoaDoFormulario } from '../formulario/buscas.ts';
 import { ESTADO_VAZIO, type EstadoDoFormulario } from '../formulario/estado.ts';
 import { FormularioQueSePreenche } from '../formulario/FormularioQueSePreenche.tsx';
 import { ICONES_DOS_TIPOS_DE_CAMPO } from '../icones.ts';
@@ -95,6 +98,8 @@ import {
   textoDoEncaixe,
   textoDoEncaixeDoCampo,
 } from './construtor.ts';
+import { PreviaEmTamanhoReal } from './PreviaEmTamanhoReal.tsx';
+import { previaVazia } from './previa.ts';
 import { TituloDoChamado } from './TituloDoChamado.tsx';
 
 /** O que se arrasta no construtor: um tipo de campo da paleta, ou um campo da lista, pela alça. */
@@ -222,6 +227,9 @@ function Trilha({ tipo }: { tipo: TipoDeChamado | null }) {
   );
 }
 
+/** O que o corpo mostra: o editor, com a paleta, os campos e a prévia pequena, ou a prévia real. */
+type ModoDoConstrutor = 'editar' | 'previa';
+
 /** O campo a pôr à vista, com o foco no rótulo dele (o vigésimo) ou no cartão (o vizinho do tirado). */
 interface AMostrar {
   id: string;
@@ -258,8 +266,15 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
   const [naHora, definirNaHora] = useState<RecusaNaHora | null>(null);
   const [falha, definirFalha] = useState<string | null>(null);
   const [salvando, definirSalvando] = useState(false);
-  // As respostas da prévia, que responde ao clique como a aba.
+  // As respostas das duas prévias, que respondem ao clique como a aba.
   const [estado, definirEstado] = useState<EstadoDoFormulario>(ESTADO_VAZIO);
+  const [modo, definirModo] = useState<ModoDoConstrutor>('editar');
+  // Como quem as prévias mostram o formulário: a própria conta, até o "Ver como" trocar.
+  const [verComo, definirVerComo] = useState<PessoaDoFormulario | null>(() =>
+    sessao.tipo === 'ativa' && sessao.conta.pessoaId
+      ? { id: sessao.conta.pessoaId, nome: sessao.conta.nome }
+      : null,
+  );
   const [aviso, definirAviso] = useState('');
   const [aMostrar, definirAMostrar] = useState<AMostrar | null>(null);
   const [pedidoDeFoco, definirPedidoDeFoco] = useState(0);
@@ -270,6 +285,7 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
   } | null>(null);
   const lista = useRef<HTMLElement>(null);
   const paleta = useRef<HTMLElement>(null);
+  const previa = useRef<HTMLElement>(null);
 
   const listaDosTipos = tiposDeAtivo.data?.tipos;
   const nomesDosTipos = useMemo(
@@ -326,10 +342,12 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
     else paleta.current?.querySelector<HTMLElement>('button:not(:disabled)')?.focus();
   };
 
-  // O campo acrescentado ou o vizinho do tirado vem à vista na lista que rola.
+  // O campo acrescentado ou o vizinho do tirado vem à vista na lista e na prévia, que rolam.
   useEffect(() => {
     if (aMostrar === null) return;
-    const lugar = lista.current?.querySelector(`[data-campo="${CSS.escape(aMostrar.id)}"]`);
+    const campo = `[data-campo="${CSS.escape(aMostrar.id)}"]`;
+    previa.current?.querySelector(campo)?.scrollIntoView({ block: 'nearest' });
+    const lugar = lista.current?.querySelector(campo);
     lugar?.scrollIntoView({ block: 'nearest' });
     if (aMostrar.focar === 'rotulo') lugar?.querySelector<HTMLElement>('input')?.focus();
     if (aMostrar.focar === 'cartao') {
@@ -475,10 +493,9 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
     </li>
   );
   const nomeDaConta = sessao.tipo === 'ativa' ? sessao.conta.nome : '';
-  const pessoa =
-    sessao.tipo === 'ativa' && sessao.conta.pessoaId
-      ? { id: sessao.conta.pessoaId, nome: sessao.conta.nome }
-      : null;
+  // A aba fala com quem a usa: o nome de quem a prévia mostra vem com o "(você)".
+  const quemNaAba = verComo?.nome ?? nomeDaConta;
+  const vazio = previaVazia(campos);
   const abertoAgora =
     aberto === O_TITULO || campos.some((campo) => campo.id === aberto) ? aberto : null;
   const alternar = (qual: string) => {
@@ -493,6 +510,21 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
         detalhe={fraseDosAbertosDoTipo(abertos)}
         acoes={
           <>
+            <ControleSegmentado
+              rotulo="Editar ou ver a prévia do colaborador"
+              ocultarRotulo
+              value={modo}
+              onChange={(valor) => definirModo(valor === 'previa' ? 'previa' : 'editar')}
+            >
+              <Segmento value="editar" className={estilos.segmento}>
+                <Icone icone={Pencil} tamanho={16} />
+                Editar
+              </Segmento>
+              <Segmento value="previa" className={estilos.segmento}>
+                <Icone icone={Eye} tamanho={16} />
+                Prévia do colaborador
+              </Segmento>
+            </ControleSegmentado>
             {mudou && (
               <RotuloDeSituacao situacao="atencao">{textoDasMudancas(mudancas)}</RotuloDeSituacao>
             )}
@@ -512,154 +544,173 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
           </>
         }
       />
-      <div
-        className={estilos.corpo}
-        data-arrastando={arraste ? '' : undefined}
-        data-cursor-nativo={arraste ? '' : undefined}
-      >
-        <section ref={paleta} className={estilos.paleta} aria-labelledby={`${id}-paleta`}>
-          <Carimbo nivel={2} id={`${id}-paleta`}>
-            Campos
-          </Carimbo>
-          <p id={`${id}-dica`} className={estilos.somenteLeitor}>
-            O clique acrescenta o campo no fim do formulário.
-          </p>
-          {TIPOS_DE_CAMPO_DO_CHAMADO.map((tipoDoCampo) => (
-            <button
-              key={tipoDoCampo}
-              type="button"
-              className={estilos.botaoDaPaleta}
-              aria-describedby={`${id}-dica`}
-              // O cursor de segurar do sistema diz que o botão se arrasta, como a alça da tabela.
-              data-cursor-nativo=""
-              disabled={desligada !== null}
-              data-no-ar={(noAr?.de === 'paleta' && noAr.tipo === tipoDoCampo) || undefined}
-              onClick={() => acrescentar(tipoDoCampo, campos.length)}
-              {...(desligada === null && soOMouse({ de: 'paleta', tipo: tipoDoCampo }))}
-            >
-              <Icone icone={ICONES_DOS_TIPOS_DE_CAMPO[tipoDoCampo]} tamanho={16} />
-              {ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[tipoDoCampo]}
-            </button>
-          ))}
-          {/* Sempre na página, para o leitor de tela anunciar a frase quando ela aparece. */}
-          <p role="status" className={estilos.avisoDaPaleta}>
-            {desligada}
-          </p>
-        </section>
-
-        <section ref={lista} className={estilos.campos} aria-label="Campos do formulário">
-          {(falha || geral.length > 0) && (
-            <div className={estilos.recusasGerais} data-recusado="" tabIndex={-1}>
-              {falha && <Erro alerta>{falha}</Erro>}
-              {geral.map((erro) => (
-                <Erro key={erro}>{erro}</Erro>
-              ))}
-            </div>
-          )}
-          <ol className={estilos.listaDosCampos}>
-            <TituloDoChamado
-              formulario={formulario}
-              nomeDoTipo={tipo.nome}
-              aberto={abertoAgora === O_TITULO}
-              aoAbrir={() => alternar(O_TITULO)}
-              aoMudar={(titulo) => mudar({ ...formulario, titulo })}
-            />
-            {campos.map((campo, indice) => (
-              <CampoDaLista
-                key={campo.id}
-                idDoAberto={`${id}-campo-${campo.id}`}
-                campo={campo}
-                detalhe={detalheDoCampo(campo, nomesDosTipos)}
-                antes={posicao === indice ? linha : null}
-                alvo={alvo(campo.id)}
-                alca={soOMouse({ de: 'lista', id: campo.id })}
-                noAr={noAr?.de === 'lista' && noAr.id === campo.id}
-                aberto={abertoAgora === campo.id}
-                erros={porCampo[campo.id]}
-                naHora={naHora}
-                aoAbrir={() => alternar(campo.id)}
-                aoPedirOMenu={(ponto, origem) => abrirOMenu(campo.id, ponto, origem)}
+      {modo === 'previa' ? (
+        <PreviaEmTamanhoReal
+          formulario={formulario}
+          nomeDoTipo={tipo.nome}
+          estado={estado}
+          aoMudar={definirEstado}
+          verComo={verComo}
+          aoVerComo={(escolhida) => {
+            definirVerComo(escolhida);
+            definirEstado(ESTADO_VAZIO);
+          }}
+          vazio={vazio}
+        />
+      ) : (
+        <div
+          className={estilos.corpo}
+          data-arrastando={arraste ? '' : undefined}
+          data-cursor-nativo={arraste ? '' : undefined}
+        >
+          <section ref={paleta} className={estilos.paleta} aria-labelledby={`${id}-paleta`}>
+            <Carimbo nivel={2} id={`${id}-paleta`}>
+              Campos
+            </Carimbo>
+            <p id={`${id}-dica`} className={estilos.somenteLeitor}>
+              O clique acrescenta o campo no fim do formulário.
+            </p>
+            {TIPOS_DE_CAMPO_DO_CHAMADO.map((tipoDoCampo) => (
+              <button
+                key={tipoDoCampo}
+                type="button"
+                className={estilos.botaoDaPaleta}
+                aria-describedby={`${id}-dica`}
+                // O cursor de segurar do sistema diz que o botão se arrasta, como a alça da tabela.
+                data-cursor-nativo=""
+                disabled={desligada !== null}
+                data-no-ar={(noAr?.de === 'paleta' && noAr.tipo === tipoDoCampo) || undefined}
+                onClick={() => acrescentar(tipoDoCampo, campos.length)}
+                {...(desligada === null && soOMouse({ de: 'paleta', tipo: tipoDoCampo }))}
               >
-                <CampoAberto
-                  id={`${id}-campo-${campo.id}`}
+                <Icone icone={ICONES_DOS_TIPOS_DE_CAMPO[tipoDoCampo]} tamanho={16} />
+                {ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[tipoDoCampo]}
+              </button>
+            ))}
+            {/* Sempre na página, para o leitor de tela anunciar a frase quando ela aparece. */}
+            <p role="status" className={estilos.avisoDaPaleta}>
+              {desligada}
+            </p>
+          </section>
+
+          <section ref={lista} className={estilos.campos} aria-label="Campos do formulário">
+            {(falha || geral.length > 0) && (
+              <div className={estilos.recusasGerais} data-recusado="" tabIndex={-1}>
+                {falha && <Erro alerta>{falha}</Erro>}
+                {geral.map((erro) => (
+                  <Erro key={erro}>{erro}</Erro>
+                ))}
+              </div>
+            )}
+            <ol className={estilos.listaDosCampos}>
+              <TituloDoChamado
+                formulario={formulario}
+                nomeDoTipo={tipo.nome}
+                aberto={abertoAgora === O_TITULO}
+                aoAbrir={() => alternar(O_TITULO)}
+                aoMudar={(titulo) => mudar({ ...formulario, titulo })}
+              />
+              {campos.map((campo, indice) => (
+                <CampoDaLista
+                  key={campo.id}
+                  idDoAberto={`${id}-campo-${campo.id}`}
                   campo={campo}
-                  campos={campos}
+                  detalhe={detalheDoCampo(campo, nomesDosTipos)}
+                  antes={posicao === indice ? linha : null}
+                  alvo={alvo(campo.id)}
+                  alca={soOMouse({ de: 'lista', id: campo.id })}
+                  noAr={noAr?.de === 'lista' && noAr.id === campo.id}
+                  aberto={abertoAgora === campo.id}
                   erros={porCampo[campo.id]}
                   naHora={naHora}
-                  tiposDeAtivo={opcoesDosTiposDeAtivo(
-                    listaDosTipos ?? [],
-                    gravado.campos.find((cada) => cada.id === campo.id)?.tiposDeAtivo ?? [],
-                  )}
-                  aoMudar={(novo, lugar) => mudar(trocarCampo(formulario, novo), lugar)}
-                  aoTirarOpcao={(opcaoId) =>
-                    aplicar(
-                      tirarOpcao(formulario, campo.id, opcaoId, pedeOAtivo),
-                      LUGAR.opcao(campo.id, opcaoId),
-                    )
-                  }
-                  aoRemover={() => remover(campo.id)}
+                  aoAbrir={() => alternar(campo.id)}
+                  aoPedirOMenu={(ponto, origem) => abrirOMenu(campo.id, ponto, origem)}
+                >
+                  <CampoAberto
+                    id={`${id}-campo-${campo.id}`}
+                    campo={campo}
+                    campos={campos}
+                    erros={porCampo[campo.id]}
+                    naHora={naHora}
+                    tiposDeAtivo={opcoesDosTiposDeAtivo(
+                      listaDosTipos ?? [],
+                      gravado.campos.find((cada) => cada.id === campo.id)?.tiposDeAtivo ?? [],
+                    )}
+                    aoMudar={(novo, lugar) => mudar(trocarCampo(formulario, novo), lugar)}
+                    aoTirarOpcao={(opcaoId) =>
+                      aplicar(
+                        tirarOpcao(formulario, campo.id, opcaoId, pedeOAtivo),
+                        LUGAR.opcao(campo.id, opcaoId),
+                      )
+                    }
+                    aoRemover={() => remover(campo.id)}
+                  />
+                </CampoDaLista>
+              ))}
+              {posicao === campos.length && linha}
+            </ol>
+            <div className={estilos.fim} {...alvo(ALVO_DO_FIM)}>
+              {campos.length === 0 && !linha && (
+                <p className={estilos.vazio}>
+                  Nenhum campo ainda. Clique num tipo de campo ou arraste-o para cá.
+                </p>
+              )}
+            </div>
+            <p role="status" className={estilos.somenteLeitor}>
+              {aviso}
+            </p>
+          </section>
+
+          <aside ref={previa} className={estilos.previa} aria-labelledby={`${id}-previa`}>
+            <div className={estilos.cabecalhoDaPrevia}>
+              <Icone icone={Eye} tamanho={16} />
+              <h2 id={`${id}-previa`}>Prévia do colaborador</h2>
+              <span className={estilos.notaDaPrevia}>
+                {Object.keys(marcas).length > 0
+                  ? 'menor que a real; a marca tracejada é só do editor'
+                  : 'menor que a real'}
+              </span>
+            </div>
+            <TelaDaAba
+              rotulo="A aba do colaborador"
+              trilha={['Aba', 'Abrir chamado', tipo.nome]}
+              passo="2 de 3"
+              quem={quemNaAba ? { nome: quemNaAba, voce: true } : undefined}
+            >
+              {vazio ? (
+                <p className={estilos.previaVazia}>{vazio}</p>
+              ) : (
+                <FormularioQueSePreenche
+                  formulario={formulario}
+                  estado={estado}
+                  aoMudar={definirEstado}
+                  quem="pessoa"
+                  pessoa={verComo}
+                  visual="aba"
+                  marcas={marcas}
                 />
-              </CampoDaLista>
-            ))}
-            {posicao === campos.length && linha}
-          </ol>
-          <div className={estilos.fim} {...alvo(ALVO_DO_FIM)}>
-            {campos.length === 0 && !linha && (
-              <p className={estilos.vazio}>
-                Nenhum campo ainda. Clique num tipo de campo ou arraste-o para cá.
-              </p>
-            )}
-          </div>
-          <p role="status" className={estilos.somenteLeitor}>
-            {aviso}
-          </p>
-        </section>
+              )}
+            </TelaDaAba>
+          </aside>
 
-        <aside className={estilos.previa} aria-labelledby={`${id}-previa`}>
-          <div className={estilos.cabecalhoDaPrevia}>
-            <Icone icone={Eye} tamanho={16} />
-            <h2 id={`${id}-previa`}>Prévia do colaborador</h2>
-            <span className={estilos.notaDaPrevia}>
-              {Object.keys(marcas).length > 0
-                ? 'menor que a real; a marca tracejada é só do editor'
-                : 'menor que a real'}
-            </span>
-          </div>
-          <TelaDaAba
-            rotulo="A aba do colaborador"
-            trilha={['Aba', 'Abrir chamado', tipo.nome]}
-            passo="2 de 3"
-            quem={nomeDaConta ? { nome: nomeDaConta, voce: true } : undefined}
-          >
-            <FormularioQueSePreenche
-              formulario={formulario}
-              estado={estado}
-              aoMudar={definirEstado}
-              quem="pessoa"
-              pessoa={pessoa}
-              visual="aba"
-              marcas={marcas}
-            />
-          </TelaDaAba>
-        </aside>
-
-        {noAr && arraste && (
-          <div
-            aria-hidden="true"
-            className={estilos.noAr}
-            style={{ left: arraste.x, top: arraste.y }}
-          >
-            {noAr.de === 'paleta' ? (
-              <>
-                <Icone icone={ICONES_DOS_TIPOS_DE_CAMPO[noAr.tipo]} tamanho={16} />
-                {ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[noAr.tipo]}
-              </>
-            ) : (
-              <NoArDoCampo campo={campos.find((campo) => campo.id === noAr.id)} />
-            )}
-          </div>
-        )}
-      </div>
+          {noAr && arraste && (
+            <div
+              aria-hidden="true"
+              className={estilos.noAr}
+              style={{ left: arraste.x, top: arraste.y }}
+            >
+              {noAr.de === 'paleta' ? (
+                <>
+                  <Icone icone={ICONES_DOS_TIPOS_DE_CAMPO[noAr.tipo]} tamanho={16} />
+                  {ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[noAr.tipo]}
+                </>
+              ) : (
+                <NoArDoCampo campo={campos.find((campo) => campo.id === noAr.id)} />
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <MenuDeContexto
         rotulo={doMenu ? `Ações de ${doMenu.rotulo}` : 'Ações do campo'}

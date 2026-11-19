@@ -135,6 +135,63 @@
   margin-inline-start: auto;
 }
 
+/*
+ * O botão da aba, os dois do `ch3-aba.css`, em cápsula, a exceção nomeada do ANTISLOP (seção 15),
+ * como as pílulas da trilha: o de contorno, na linha forte, com o ícone na cor do contorno da aba; e
+ * o cheio, de 40 px, na cor da aba, da ação do rodapé.
+ */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1.5px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  background-color: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+  outline: none;
+}
+
+.botao > svg {
+  flex: none;
+  color: var(--cor-aba-contorno);
+}
+
+.botao:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.botao:active {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
+.botao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.botao[data-cheio] {
+  min-height: var(--esp-10);
+  padding: 0 var(--esp-4) 0 var(--esp-5);
+  border-color: var(--cor-aba-fundo);
+  background-color: var(--cor-aba-fundo);
+  color: var(--cor-aba-texto);
+}
+
+.botao[data-cheio] > svg {
+  color: inherit;
+}
+
+.botao[data-cheio]:hover,
+.botao[data-cheio]:active {
+  background-image: linear-gradient(var(--cor-pressionado), var(--cor-pressionado));
+}
+
 .grade {
   display: grid;
   gap: var(--esp-3);

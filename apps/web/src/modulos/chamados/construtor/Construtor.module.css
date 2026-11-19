@@ -727,6 +727,18 @@
   color: var(--cor-texto-2);
 }
 
+/* A frase no lugar do formulário que a pessoa não vê, em vez da faixa vazia. */
+.previaVazia {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+/* "Editar" e "Prévia do colaborador", no cabeçalho, com o ícone antes do nome. */
+.segmento {
+  gap: var(--esp-2);
+}
+
 .somenteLeitor {
   position: absolute;
   width: 1px;

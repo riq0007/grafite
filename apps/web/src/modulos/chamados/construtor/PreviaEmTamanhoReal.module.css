@@ -1,0 +1,228 @@
+/*
+ * A prévia em tamanho real (m11): duas colunas que rolam sozinhas, a da esquerda afundada, com 420
+ * px, e a mesa, com a aba em 900 px, a largura da tela do colaborador. Na janela mais estreita, a
+ * mesa rola para o lado, e a aba não encolhe.
+ */
+.corpo {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.lado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-5);
+  overflow-y: auto;
+  border-right: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.lado > * {
+  flex: none;
+}
+
+/* "Ver como": a pessoa num cartão, com o local e os ativos dela, e "Trocar". */
+.verComo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+  font-size: var(--texto-dado);
+}
+
+.quem {
+  display: grid;
+  min-width: 0;
+  margin-right: auto;
+  overflow-wrap: anywhere;
+}
+
+.quem b {
+  font-weight: var(--peso-forte);
+}
+
+.quem small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+.busca {
+  display: grid;
+  gap: var(--esp-2);
+  justify-items: start;
+}
+
+.busca > :first-child {
+  justify-self: stretch;
+}
+
+/* O aviso dos campos escondidos, na atenção, como o do m11; vem antes, pela ordem dos seletores. */
+.escondidos {
+  display: flex;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-atencao-borda);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-atencao-fundo);
+  font-size: var(--texto-dado);
+  line-height: 1.4;
+}
+
+.escondidos > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--cor-atencao);
+}
+
+.escondidos b {
+  font-weight: var(--peso-forte);
+}
+
+/* O que ela vê, campo a campo: o olho, o nome, com a condição embaixo, e a nota à direita. */
+.oQueElaVe {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oQueElaVe li {
+  display: grid;
+  grid-template-columns: var(--esp-5) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding-block: var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+  font-size: var(--texto-dado);
+}
+
+.oQueElaVe li > svg {
+  color: var(--cor-texto-2);
+}
+
+.oQueElaVe li[data-ve] > svg {
+  color: var(--cor-ok);
+}
+
+.nomeDoCampo {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.nomeDoCampo small,
+.nota {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+.nota {
+  white-space: nowrap;
+}
+
+.semCampos {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+/* A mesa: a régua, a aba em 900 px, o aviso do envio e o que chegaria para a TI. */
+.mesa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--esp-4) var(--esp-5);
+  overflow: auto;
+}
+
+/* As margens automáticas centram; na mesa mais estreita, elas zeram, e a aba rola desde a ponta. */
+.mesa > * {
+  flex: none;
+  width: 900px;
+  margin-inline: auto;
+}
+
+.regua {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-block: 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+.fimDaRegua {
+  margin-left: auto;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+/*
+ * O aviso do "Enviar para a TI": a frase com o ícone, que já diz o estado, na tinta da situação
+ * sobre o fundo dela, o par que o contraste confere. Vazio, ele não ocupa nada.
+ */
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin-block: 0;
+  border-radius: var(--raio-controle);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.aviso[data-situacao] {
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--borda-do-aviso);
+  background-color: var(--fundo-do-aviso);
+  color: var(--tinta-do-aviso);
+}
+
+.aviso[data-situacao="sucesso"] {
+  --tinta-do-aviso: var(--cor-ok);
+  --fundo-do-aviso: var(--cor-ok-fundo);
+  --borda-do-aviso: var(--cor-ok-borda);
+}
+
+.aviso[data-situacao="atencao"] {
+  --tinta-do-aviso: var(--cor-atencao);
+  --fundo-do-aviso: var(--cor-atencao-fundo);
+  --borda-do-aviso: var(--cor-atencao-borda);
+}
+
+.chegaria {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.chegaria dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--esp-4);
+  margin: 0;
+}
+
+.chegaria dt {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+.chegaria dd {
+  margin: 0;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}

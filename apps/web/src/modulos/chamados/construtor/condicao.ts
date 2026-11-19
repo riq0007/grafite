@@ -279,10 +279,10 @@ export const nomeNaFrase = (campo: CampoDoFormulario): string =>
   campo.rotulo || ROTULOS_DOS_TIPOS_DE_CAMPO_DO_CHAMADO[campo.tipo];
 
 /**
- * A marca tracejada do campo condicional na prévia, que só o editor mostra: "aparece só quando for
- * Manchando". Com mais de um campo na condição, cada parte diz o campo.
+ * A condição numa frase, depois do "quando" ou do "se": "for Manchando". Com mais de um campo na
+ * condição, cada parte diz o campo. Sem condição, nenhuma.
  */
-export function marcaDaCondicao(
+export function fraseDaCondicao(
   campo: CampoDoFormulario,
   campos: readonly CampoDoFormulario[],
 ): string | null {
@@ -297,7 +297,19 @@ export function marcaDaCondicao(
     const juncao = clausula.juncao ? `${clausula.juncao} ` : '';
     return `${juncao}${qual}${base ? palavraDaClausula(base) : 'for'} ${valor ?? '…'}`;
   });
-  return `aparece só quando ${partes.join(' ')}`;
+  return partes.join(' ');
+}
+
+/**
+ * A marca tracejada do campo condicional na prévia, que só o editor mostra: "aparece só quando for
+ * Manchando". Com mais de um campo na condição, cada parte diz o campo.
+ */
+export function marcaDaCondicao(
+  campo: CampoDoFormulario,
+  campos: readonly CampoDoFormulario[],
+): string | null {
+  const frase = fraseDaCondicao(campo, campos);
+  return frase === null ? null : `aparece só quando ${frase}`;
 }
 
 /**

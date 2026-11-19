@@ -8,6 +8,8 @@ import { type CampoDoFormulario, MAXIMO_DE_ANEXOS } from '@grafite/domain';
 import { Botao, FORMATOS_DE_ARQUIVO } from '@grafite/ui';
 import { Paperclip } from 'lucide-react';
 import { useId, useRef } from 'react';
+import { BotaoDaAba } from '../previa/BotaoDaAba.tsx';
+import type { VisualDoFormulario } from './CampoQueSePreenche.tsx';
 import { type AnexoCitado, descricaoDoCampo, type QuemPreenche } from './estado.ts';
 import estilos from './Formulario.module.css';
 import { ListaDeAnexos } from './ListaDeAnexos.tsx';
@@ -24,6 +26,8 @@ export interface PropsDosAnexosDoCampo {
   /** O número do chamado aberto, de onde baixam os arquivos dele. */
   numero?: number;
   erro?: string;
+  /** O visual da tela ou, na prévia do colaborador, o da aba, com o botão de contorno da aba. */
+  visual?: VisualDoFormulario;
   /** O arquivo que entrou: o enviado, ou o da prévia, que só está no navegador. */
   aoAnexar: (id: string, anexo: AnexoCitado) => void;
   aoTirar: (id: string) => void;
@@ -37,6 +41,7 @@ export function AnexosDoCampo({
   quem,
   numero,
   erro,
+  visual = 'tela',
   aoAnexar,
   aoTirar,
 }: PropsDosAnexosDoCampo) {
@@ -102,9 +107,15 @@ export function AnexosDoCampo({
               evento.target.value = '';
             }}
           />
-          <Botao icone={Paperclip} onPress={() => escolha.current?.click()}>
-            Anexar arquivos
-          </Botao>
+          {visual === 'aba' ? (
+            <BotaoDaAba icone={Paperclip} onClick={() => escolha.current?.click()}>
+              Anexar arquivos
+            </BotaoDaAba>
+          ) : (
+            <Botao icone={Paperclip} onPress={() => escolha.current?.click()}>
+              Anexar arquivos
+            </Botao>
+          )}
         </div>
       )}
       {descricao && (
