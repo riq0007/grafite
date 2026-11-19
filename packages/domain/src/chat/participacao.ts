@@ -136,6 +136,18 @@ export function mensagemDaRecusaDaEscrita(recusa: RecusaDaEscrita): string {
   }
 }
 
+/**
+ * A frase no lugar da caixa de escrever (spec modulo-chat, "Caixa de escrever do chat"): na equipe
+ * e no canal arquivados, "Esta equipe foi arquivada." e "Este canal foi arquivado."; nas outras
+ * recusas, a mesma da mensagem recusada.
+ */
+export function fraseNoLugarDaCaixa(recusa: RecusaDaEscrita): string {
+  if (recusa.motivo === 'arquivada') {
+    return recusa.tipo === 'equipe' ? 'Esta equipe foi arquivada.' : 'Este canal foi arquivado.';
+  }
+  return mensagemDaRecusaDaEscrita(recusa);
+}
+
 /** É da TI, no chat, quem tem `chamados.atender` em algum local ou na organização. */
 export function daTi(acesso: Acesso): boolean {
   return pode(acesso, 'chamados.atender');

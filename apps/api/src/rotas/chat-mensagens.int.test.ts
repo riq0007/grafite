@@ -134,6 +134,13 @@ describe('a permissão', () => {
         expect(r.json()).toMatchObject({ detail: 'Conversa não encontrada.' });
       }
     }
+    // O link da mensagem diz que a mensagem não foi encontrada.
+    const doLink = await c.cliente.consultar(
+      `/chat/conversas/${direta}/mensagens?em=${await c.mensagem(direta, 'ana', 'Oi.')}`,
+      c.como('paulo'),
+    );
+    expect(doLink.statusCode).toBe(404);
+    expect(doLink.json()).toMatchObject({ detail: 'A mensagem não foi encontrada.' });
     const naoExiste = await c.cliente.consultar(
       '/chat/conversas/0195f0a0-0000-7000-8000-000000000000',
       c.como('fernanda'),
@@ -188,7 +195,7 @@ describe('a permissão', () => {
     expect(aberta.json()).toMatchObject({
       arquivada: true,
       escreve: false,
-      recusa: 'A equipe Equipe Financeiro está arquivada.',
+      recusa: 'Esta equipe foi arquivada.',
     });
     expect(textos(await pagina('fernanda', equipe))).toEqual(['Antes de arquivar.']);
     const recusada = await escrever('fernanda', equipe, { texto: 'Ainda dá?' });

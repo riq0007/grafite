@@ -593,6 +593,7 @@ export {
   type ContaQueUsaOChat,
   type ConversaParaParticipar,
   daTi,
+  fraseNoLugarDaCaixa,
   type GrupoDaConversa,
   mensagemDaRecusaDaEscrita,
   nomeDaConversa,

@@ -13,7 +13,7 @@ import {
   TIPOS_DE_CONVERSA_NO_BANCO,
   type Transacao,
 } from '@grafite/db';
-import { mensagemDaRecusaDaEscrita, nomeNoChat } from '@grafite/domain';
+import { fraseNoLugarDaCaixa, nomeNoChat } from '@grafite/domain';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -28,11 +28,12 @@ import {
   gravarMensagem,
   lerPagina,
   MensagemDoChat,
+  mensagemNaoEncontrada,
   mensagensParaAConta,
   PaginaDeMensagens,
 } from '../chat/mensagens.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
-import { naoEncontrado, RespostaDeProblema } from '../problemas.ts';
+import { naoEncontrado, ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 const ConversaAberta = z
@@ -165,7 +166,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
           escreve: participacao.participa && participacao.escreve,
           recusa:
             participacao.participa && !participacao.escreve
-              ? mensagemDaRecusaDaEscrita(participacao.recusa)
+              ? fraseNoLugarDaCaixa(participacao.recusa)
               : null,
         };
       }),
@@ -185,7 +186,16 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
     async (requisicao) =>
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
         const conta = await contaDaSessao(tx, requisicao);
-        const { linha } = await lerConversaDaConta(tx, conta, requisicao.params.id);
+        // O link da mensagem (`em`) de uma conversa de que a conta não participa diz que a mensagem
+        // não foi encontrada (spec chat, "Link da mensagem").
+        const { linha } = await lerConversaDaConta(tx, conta, requisicao.params.id).catch(
+          (erro: unknown) => {
+            const naoParticipa = erro instanceof ProblemaDaApi && erro.dados.status === 404;
+            throw naoParticipa && requisicao.query.em !== undefined
+              ? mensagemNaoEncontrada()
+              : erro;
+          },
+        );
         return lerPagina(tx, conta, linha.id, requisicao.query, agora());
       }),
   );

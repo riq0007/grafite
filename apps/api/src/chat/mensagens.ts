@@ -140,7 +140,7 @@ export interface ContaQueLeAsMensagens extends ContaQueLe {
 
 type LinhaDaMensagem = typeof mensagensDoChat.$inferSelect;
 
-const mensagemNaoEncontrada = () => naoEncontrado('A mensagem não foi encontrada.');
+export const mensagemNaoEncontrada = () => naoEncontrado('A mensagem não foi encontrada.');
 
 /** As linhas da conversa, da mais antiga para a mais nova, com as pontas da página. */
 async function linhasDaPagina(

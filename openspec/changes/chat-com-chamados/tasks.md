@@ -113,7 +113,8 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - o `POST /chat/mensagens/:id/chamado`, pela abertura com a origem `chat`;
   - o evento `abertura` com o `dados.para`, a conta de quem nasce atendendo ou nulo na triagem, na abertura pelo chat e na da TI (`apps/api/src/chamados/abertura.ts`), que a ficha já lê no `para` (decisão 15);
   - na mesma transação: a linha `origem`, os anexos da mensagem, o evento `virou-chamado`, a auditoria, os eventos e as notificações da abertura;
-  - a recusa da segunda abertura.
+  - a recusa da segunda abertura;
+  - na página das mensagens (3.2), o evento `virou-chamado` com o número e o "Abrir chamado" resolvidos para quem lê, como a citação, e a marca na mensagem de origem.
 
   Começa pelos testes de integração da permissão: sem `chamados.pedir`, a mensagem de uma conversa de que a conta não participa e o tipo só da TI. Verificar: esses testes, o da corrida das duas aberturas, o lint, o typecheck e o contrato.
 - [ ] 3.8 A leitura de quem participa (decisão 9):

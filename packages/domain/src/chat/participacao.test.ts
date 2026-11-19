@@ -6,6 +6,7 @@ import {
   type ContaNoChat,
   type ConversaParaParticipar,
   daTi,
+  fraseNoLugarDaCaixa,
   mensagemDaRecusaDaEscrita,
   nomeDaConversa,
   nomeNoChat,
@@ -235,6 +236,22 @@ describe('quem participa', () => {
       expect(
         arquivado.participa && !arquivado.escreve && mensagemDaRecusaDaEscrita(arquivado.recusa),
       ).toBe('O canal Avisos está arquivado.');
+    });
+
+    it('a caixa da arquivada diz "Esta equipe foi arquivada." e "Este canal foi arquivado."', () => {
+      expect(fraseNoLugarDaCaixa({ motivo: 'arquivada', tipo: 'equipe', nome: 'Financeiro' })).toBe(
+        'Esta equipe foi arquivada.',
+      );
+      expect(fraseNoLugarDaCaixa({ motivo: 'arquivada', tipo: 'canal', nome: 'Avisos' })).toBe(
+        'Este canal foi arquivado.',
+      );
+      // As outras recusas ficam na caixa com a frase da mensagem recusada.
+      expect(fraseNoLugarDaCaixa({ motivo: 'so-o-grupo', tipo: 'canal', grupo: 'TI' })).toBe(
+        'Só TI escreve neste canal.',
+      );
+      expect(fraseNoLugarDaCaixa({ motivo: 'nao-usa-mais', nome: 'Paulo Nunes' })).toBe(
+        'Paulo Nunes não usa mais o chat.',
+      );
     });
   });
 
