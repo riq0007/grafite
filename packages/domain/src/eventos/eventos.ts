@@ -138,6 +138,8 @@ export const EVENTO_DA_ACAO = {
   'grupo.alterado': 'acessos.mudaram',
   'grupo.inativado': 'acessos.mudaram',
   'grupo.reativado': 'acessos.mudaram',
+  // O alvo da entrada e da saída de um grupo é a conta, e o distribuidor relê só o acesso dela: o
+  // `acessos.mudaram` com o alvo conta muda só a conta do alvo (change chat-com-chamados).
   'membro.incluido': 'acessos.mudaram',
   'membro.retirado': 'acessos.mudaram',
   'atribuicao.criada': 'acessos.mudaram',

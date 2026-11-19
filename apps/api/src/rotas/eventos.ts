@@ -162,6 +162,8 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
       }
       abertas.add(fechar);
       saida.on('close', fechar);
+      // O fim chega uma vez só: o cliente que saiu enquanto a abertura lia o banco não o manda de novo.
+      if (saida.destroyed) fechar();
 
       if (typeof ultimo === 'string') {
         const retomados = await naOrganizacao(banco, orgId, async (tx) => {

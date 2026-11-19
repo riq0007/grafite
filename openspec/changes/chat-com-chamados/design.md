@@ -62,7 +62,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 ### 4. Os eventos
 
-- O `PublicoDoEvento` ganha os `grupos`, que restringem a `permissao` como os `locais`: com eles, só recebe quem tem a permissão e é de um dos grupos. A conexão leva os grupos da conta, lidos com o acesso, e os relê no `acessos.mudaram`, que a entrada e a saída de um grupo já gravam. A tabela `eventos` ganha a coluna `grupos`, com até 8 e só com a `permissao`.
+- O `PublicoDoEvento` ganha os `grupos`, que restringem a `permissao` como os `locais`: com eles, só recebe quem tem a permissão e é de um dos grupos. A conexão leva os grupos da conta, lidos com o acesso, e os relê no `acessos.mudaram`, que a entrada e a saída de um grupo já gravam. O `acessos.mudaram` com o alvo `conta`, o da entrada e o da saída, relê só as conexões dessa conta: com o chat, a empresa inteira fica conectada, e o primeiro login pelo AD grava um por grupo incluído. A tabela `eventos` ganha a coluna `grupos`, com até 8 e só com a `permissao`.
 - O `registrarEvento` divide as `contas` e as `sessoes` em linhas de 20, o teto do CHECK. Sem isso, o `notificar` de um canal com 500 contas recusaria a gravação.
 - O `chat.mudou` tem o alvo `conversa`:
   - na direta, as `contas` das duas;

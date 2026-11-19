@@ -2,10 +2,12 @@
 // só com a sessão que vale, que entrega em até 2 s depois do commit o que a conta pode receber,
 // manda o sinal de vida, não conta como uso da sessão e termina com ela. Os grupos da conta, que a
 // equipe do chat pede (change chat-com-chamados), são lidos na abertura.
+import http from 'node:http';
+import { setTimeout as esperar } from 'node:timers/promises';
 import { contas, naOrganizacao, sessoes } from '@grafite/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { abrirEventos, type FluxoDeEventos } from '../../test/eventos.ts';
+import { abrirEventos, type FluxoDeEventos, portaDa } from '../../test/eventos.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -223,6 +225,44 @@ describe('GET /eventos', () => {
     // Fechada uma, outra pode abrir.
     fluxos[0]?.fechar();
     await vi.waitFor(async () => expect((await eventosDe(entrada)).status).toBe(200));
+  });
+
+  // O fim da resposta chega uma vez só: o cliente que sai enquanto a abertura lê o banco não a
+  // deixa contada nem no distribuidor (pontos da revisão da tarefa 1.3 do chat-com-chamados).
+  it('o cliente que sai durante a abertura não fica contado na sessão', async () => {
+    await criarConta(api, org, { usuario: 'gilda', nome: 'Gilda Prado' });
+    const entrada = await cliente.entrar('gilda');
+    const porta = await portaDa(api);
+    // Com os grupos travados, a abertura espera pelo banco.
+    const trava = await api.dono.connect();
+    try {
+      await trava.query('begin');
+      await trava.query('lock table membros_do_grupo in access exclusive mode');
+      const pedido = http.get({
+        host: '127.0.0.1',
+        port: porta,
+        path: '/eventos',
+        headers: { host, cookie: entrada.cookie },
+      });
+      pedido.on('error', () => {});
+      await vi.waitFor(async () => {
+        const { rows } = await api.dono.query<{ esperando: number }>(
+          `select count(*)::int as esperando from pg_locks l join pg_class c on c.oid = l.relation
+            where c.relname = 'membros_do_grupo' and not l.granted
+              and l.database = (select oid from pg_database where datname = current_database())`,
+        );
+        expect(rows[0]?.esperando).toBeGreaterThan(0);
+      });
+      pedido.destroy();
+      // O servidor vê o fim antes de a leitura seguir.
+      await esperar(200);
+      await trava.query('commit');
+    } finally {
+      trava.release();
+    }
+    await esperar(300);
+    const fluxos = await Promise.all(Array.from({ length: 20 }, () => eventosDe(entrada)));
+    expect(fluxos.map((fluxo) => fluxo.status)).toEqual(Array(20).fill(200));
   });
 });
 

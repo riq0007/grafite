@@ -183,6 +183,31 @@ describe('criarDistribuidor', () => {
     expect(noCelular.recebidos).toEqual([mudaram.id, depois.id]);
   });
 
+  // A entrada de uma conta num grupo, que o login pelo AD grava uma vez por grupo, relê só ela
+  // (pontos da revisão da tarefa 1.3 do chat-com-chamados).
+  it('em acessos.mudaram com o alvo conta, relê só as conexões dessa conta', async () => {
+    const lidas = fontes({ acesso: async () => acessoCom({ 'pessoas.ver': true }) });
+    const distribuidor = criarDistribuidor(lidas);
+    const noComputador = conexao('conta-bruno', acessoCom());
+    const noCelular = conexao('conta-bruno', acessoCom());
+    const carla = conexao('conta-carla', acessoCom());
+    for (const c of [noComputador, noCelular, carla]) distribuidor.entrar(c);
+
+    const entrou: EventoDeSaida = {
+      ...evento('acessos.mudaram', { todas: true }),
+      alvo: { tipo: 'conta', id: 'conta-bruno' },
+    };
+    await distribuidor.distribuir(entrou);
+    const depois = evento('pessoas.mudaram', { permissao: 'pessoas.ver' });
+    await distribuidor.distribuir(depois);
+
+    expect(lidas.lerAcesso).toHaveBeenCalledTimes(1);
+    expect(lidas.lerAcesso).toHaveBeenCalledWith('org-a', 'conta-bruno');
+    expect(noComputador.recebidos).toEqual([entrou.id, depois.id]);
+    expect(noCelular.recebidos).toEqual([entrou.id, depois.id]);
+    expect(carla.recebidos).toEqual([entrou.id]);
+  });
+
   it('em acessos.mudaram, relê também os grupos da conta (change chat-com-chamados)', async () => {
     let doGrupo: string[] = [];
     const lidas = fontes({

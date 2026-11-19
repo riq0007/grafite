@@ -89,7 +89,15 @@ export function criarDistribuidor(fontes: FontesDoDistribuidor): DistribuidorDeE
     const conexoes = porOrganizacao.get(evento.orgId);
     if (!conexoes || conexoes.size === 0) return;
     try {
-      if (evento.tipo === 'acessos.mudaram') await relerAcessos(evento.orgId, conexoes);
+      if (evento.tipo === 'acessos.mudaram') {
+        // Com o alvo conta, a mudança é só dela, como a entrada num grupo, que o login pelo AD grava
+        // uma vez por grupo: relê só as conexões dela, e não as da organização inteira.
+        const daConta = evento.alvo?.tipo === 'conta' ? evento.alvo.id : null;
+        const alcancadas = daConta
+          ? [...conexoes].filter((conexao) => conexao.contaId === daConta)
+          : conexoes;
+        await relerAcessos(evento.orgId, alcancadas);
+      }
       const { permissao, locais } = evento.publico;
       const arvore = permissao && locais !== undefined ? await arvoreDa(evento.orgId) : SEM_ARVORE;
       for (const conexao of [...conexoes]) {
