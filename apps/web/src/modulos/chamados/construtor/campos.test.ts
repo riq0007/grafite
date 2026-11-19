@@ -392,9 +392,10 @@ describe('as recusas junto do que recusam', () => {
       tiposDeAtivo: 'Escolha os tipos da lista.',
       pedeOAtivo: 'Pede o ativo: …',
     });
-    expect(porCampo.onde?.outras).toEqual([
-      "'Onde as manchas aparecem?' depende de 'X', que precisa vir antes.",
-    ]);
+    expect(porCampo.onde).toMatchObject({
+      condicao: "'Onde as manchas aparecem?' depende de 'X', que precisa vir antes.",
+      outras: [],
+    });
     expect(porCampo.contador?.outras).toEqual([
       'O título usa este campo. Escolha outro no Título do chamado.',
     ]);
@@ -419,6 +420,9 @@ describe('as recusas junto do que recusam', () => {
     expect(
       resumoDaRecusa(problema, { rotulo: 'Escreva o rótulo.', porOpcao: {}, outras: [] }),
     ).toBe('Escreva o rótulo.');
+    expect(
+      resumoDaRecusa(problema, { porOpcao: {}, condicao: 'A da condição.', outras: ['Outra.'] }),
+    ).toBe('A da condição.');
     expect(resumoDaRecusa(problema, undefined)).toBeNull();
   });
 });
@@ -436,6 +440,17 @@ describe('as recusas que valem', () => {
     expect(errosQueValemNoFormulario(erros, IMPRESSORA, mudouAFoto)).toEqual({
       'campos.problema.opcoes.atolando': 'Essa opção já existe.',
     });
+  });
+
+  it('a da condição vale enquanto a condição, a ordem e o "Só a TI vê" não mudam', () => {
+    const daCondicao = {
+      'campos.onde.condicao': "'Onde as manchas aparecem?' depende de 'X', que precisa vir antes.",
+    };
+    const valem = (agora: Formulario) => errosQueValemNoFormulario(daCondicao, IMPRESSORA, agora);
+    expect(valem(comCampo(IMPRESSORA, 'foto', { rotulo: 'Foto do defeito' }))).toEqual(daCondicao);
+    expect(valem(comCampo(IMPRESSORA, 'onde', { condicao: [] }))).toEqual({});
+    expect(valem({ ...IMPRESSORA, campos: [...IMPRESSORA.campos].reverse() })).toEqual({});
+    expect(valem(comCampo(IMPRESSORA, 'problema', { soDaTi: true }))).toEqual({});
   });
 
   it('a do rótulo sai quando outro rótulo muda', () => {

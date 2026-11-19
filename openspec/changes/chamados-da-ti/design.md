@@ -1090,9 +1090,9 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
   O que se escreve (o rótulo, o nome no resumo e as opções) se confere ao salvar.
 - **O salvar** fica no cabeçalho, como no m09, e não no pé, como a spec dizia. Ele tem "1 mudança não salva", "Descartar" e "Salvar o formulário"; os dois botões ficam desligados sem mudança. Embaixo do título, vem a frase dos abertos do editor do tipo. Cada campo acrescentado, tirado ou mudado conta 1, e a ordem e o título contam 1 cada.
   - Antes da API, o salvar confere o formulário pelo `conferirFormulario`, e só segue sem recusa.
-  - Cada recusa, da conferência ou da API, fica junto do que recusa. A do "Pede o ativo" fica no primeiro campo Ativo e, sem nenhum, no alto da lista. As que não têm lugar, como a da condição, ficam no alto do campo aberto.
+  - Cada recusa, da conferência ou da API, fica junto do que recusa. A do "Pede o ativo" fica no primeiro campo Ativo e, sem nenhum, no alto da lista. As que não têm lugar ficam no alto do campo aberto; a da condição, até a seção dela (5.23), também.
   - O campo fechado com recusa mostra a primeira embaixo dele. O primeiro recusado abre, com o foco no que recusou.
-  - A recusa de um campo vale enquanto o campo não muda, e as outras, enquanto o formulário não muda.
+  - A recusa de um campo vale enquanto o campo não muda, e as outras, enquanto o formulário não muda. A da condição tem a regra dela (5.23).
   - Gravado, aparece "Formulário salvo.". Sair com mudanças pede a confirmação, como no editor do tipo.
 - **O título do chamado** fica fixo no alto da lista: tracejado, com o cadeado no lugar da alça e o selo "Automático". O detalhe é a frase do título:
   - "Das respostas: “Impressora manchando”", pela primeira opção da Escolha única;
@@ -1102,6 +1102,25 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **A ordem** muda de dois jeitos:
   - a alça arrasta o campo, só com o mouse, pela linha de encaixe da paleta ("Solte o campo “Qual impressora?” aqui"), com o cartão de origem tracejado. A linha não aparece nos dois lugares em que nada mudaria;
   - o menu do campo, aberto pelo clique direito, pela tecla de menu ou pelo Shift+F10, tem "Subir" e "Descer", como a tabela dos tipos.
+
+**A condição (tarefa 5.23),** com o m10:
+- **O lugar** é a seção "Quando mostrar este campo", no campo aberto da 5.22, depois do "Obrigatório" e do "Só a TI vê" e antes do "Remover o campo". O m10 abre o campo só com a condição, sob o título "Condição do campo"; aqui ela fica com as outras propriedades, e o título da página segue "Campos do tipo".
+- **A frase** fica numa caixa afundada, como no m10: "Mostrar “Onde as manchas aparecem?”" e, embaixo, uma linha por parte, com "quando", "e quando" ou "ou quando", o campo, "for" ("tiver", nas Várias opções), a resposta e o ×, que tira a parte ("Tirar a parte 2 da condição"). O campo e a resposta são as seleções na frase do kit (`SelecaoNaFrase`). O "for" é texto, e não a seleção do m10: a condição só compara a resposta com uma opção, e a seleção teria uma opção só.
+- **O campo da parte** se escolhe entre os anteriores de Escolha única, Várias opções ou Sim ou não e, no campo que a pessoa vê, só entre os que ela também vê (`camposDaCondicao`). A resposta se escolhe entre as opções do campo, com "Opção 3" na opção ainda sem texto, ou entre "Sim" e "Não". Trocar o campo põe a primeira resposta dele.
+- **"+ e quando…" e "+ ou quando…"** acrescentam uma parte (`novaClausula`, com os testes antes):
+  - a do "ou" usa o campo da parte anterior;
+  - a do "e" usa o campo mais perto que a condição ainda não usa, ou o da parte anterior;
+  - a resposta é a primeira que nenhuma parte do mesmo campo usa.
+  O foco vai ao campo da parte nova e, ao tirar uma parte, ao "+ e quando…". Com 5 partes, os dois desligam, com "A condição tem no máximo 5 partes.". Cada parte guarda a junção dela, como o domínio a grava, e o "e" vale antes do "ou", como no `camposVisiveis`.
+- **Sem condição,** a frase é "Mostrar “Número” sempre.", com "+ Só quando…", que acrescenta a primeira parte, com o campo que serve mais perto, acima. Sem nenhum campo que sirva, o botão desliga, com "Nenhum campo antes deste serve à condição: ela usa um campo de Escolha única, Várias opções ou Sim ou não que a pessoa também vê." (no campo só da TI, sem o "que a pessoa também vê").
+- **"O que cada resposta faz"** tem uma lista por campo da frase, com o nome dele quando são mais de um. Cada resposta tem o selo do que ela faz:
+  - "O campo aparece", de sucesso, com o olho;
+  - "O campo some", neutro, com o olho riscado;
+  - com mais de um campo, "Depende das outras respostas", neutro, com o ramo.
+  A conta (`efeitoDasRespostas`, com os testes antes) usa o `camposVisiveis` do domínio, a mesma do formulário que se preenche, com as respostas que as condições citam: a da linha, fixa, e todas as dos outros campos. Os campos da frase entram com as condições deles, e o caso em que um campo escondido teria resposta não conta, porque no formulário ele não tem: "Na borda", que só se responde com "Manchando", mostra o campo de "quando “Onde” for Na borda e “O que está acontecendo?” for Manchando". Acima de 4.096 casos, a conta deixa as condições da cadeia de lado. A linha da resposta que mostra o campo fica em peso forte, como no m10.
+- **"Apagar a resposta se o campo sumir"** é a chave com "Sim" e "Não", e só aparece com a condição.
+- **A marca na prévia:** o campo condicional que aparece na prévia tem embaixo dele a marca tracejada, na cor do selo "Condicional" e com o ramo, como "aparece só quando for Manchando". Com mais de um campo na condição, cada parte diz o campo (`marcaDaCondicao`). O m10 a põe entre o rótulo e as opções; aqui ela fica embaixo do campo, porque assim serve a todos os tipos e não separa a continuação da pergunta de que ela depende. Com um campo condicional no formulário, a nota do alto da prévia passa a "menor que a real; a marca tracejada é só do editor", como no m09 e na spec. O bloco do m10 embaixo da prévia ("Se escolher Manchando…") fica de fora, porque "O que cada resposta faz" já o diz.
+- **As mudanças** da condição se conferem na hora, como as chaves, e a recusa fica embaixo da frase. A recusa da condição no salvar (`campos.<id>.condicao`) também fica ali, e não mais no alto do campo aberto. Ela vale enquanto não mudam a condição do campo, a ordem e o "Só a TI vê" dos campos, que é o que ela confere (revisão da 5.22).
 
 **A busca do ativo com mais opções (tarefa 5.30),** um pedido do usuário depois da 5.20, sem mockup:
 - **o lugar:** o campo Ativo do "Trocar o ativo" e do "Ligar um ativo", e o da gaveta do "Virar OS" (5.31). O campo Ativo do formulário fica como está, com as sugestões da pessoa e a busca;

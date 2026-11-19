@@ -83,6 +83,7 @@ import {
   tirarOpcao,
   trocarCampo,
 } from './campos.ts';
+import { marcaDaCondicao } from './condicao.ts';
 import {
   ALVO_DA_LINHA,
   ALVO_DO_FIM,
@@ -248,6 +249,12 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
   } | null>(null);
   const erros = recusa ? errosQueValemNoFormulario(recusa.erros, recusa.naRecusa, formulario) : {};
   const { porCampo, geral } = errosNoFormulario(erros, campos);
+  // A marca tracejada de cada campo condicional na prévia, que só o editor mostra.
+  const marcas: Record<string, string> = {};
+  for (const campo of campos) {
+    const marca = marcaDaCondicao(campo, campos);
+    if (marca) marcas[campo.id] = marca;
+  }
   const [naHora, definirNaHora] = useState<RecusaNaHora | null>(null);
   const [falha, definirFalha] = useState<string | null>(null);
   const [salvando, definirSalvando] = useState(false);
@@ -612,7 +619,11 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
           <div className={estilos.cabecalhoDaPrevia}>
             <Icone icone={Eye} tamanho={16} />
             <h2 id={`${id}-previa`}>Prévia do colaborador</h2>
-            <span className={estilos.notaDaPrevia}>menor que a real</span>
+            <span className={estilos.notaDaPrevia}>
+              {Object.keys(marcas).length > 0
+                ? 'menor que a real; a marca tracejada é só do editor'
+                : 'menor que a real'}
+            </span>
           </div>
           <TelaDaAba
             rotulo="A aba do colaborador"
@@ -627,6 +638,7 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
               quem="pessoa"
               pessoa={pessoa}
               visual="aba"
+              marcas={marcas}
             />
           </TelaDaAba>
         </aside>

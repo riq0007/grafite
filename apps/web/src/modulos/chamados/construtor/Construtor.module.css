@@ -435,6 +435,149 @@
   justify-items: start;
 }
 
+/* A condição como frase, numa caixa afundada, como no m10. */
+.grupoDasOpcoes[data-condicao] {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.frase {
+  display: grid;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  font-size: var(--texto-subtitulo);
+  line-height: 1.2;
+}
+
+.mostrar {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mostrar b {
+  font-weight: var(--peso-forte);
+}
+
+/* Cada parte numa linha: a junção e o campo, o "for" e a resposta, e o × à direita. Na linha que
+   não cabe, a frase quebra antes do "for", e o × fica no alto. */
+.parte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--esp-2);
+}
+
+.fraseDaParte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.pedaco {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* O campo de rótulo comprido encolhe com as reticências, sem passar da caixa. */
+.selecaoDaParte,
+.selecaoDaParte > button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tirarParte {
+  display: grid;
+  place-items: center;
+  width: var(--altura-controle);
+  height: var(--altura-controle);
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: var(--cor-texto-2);
+  cursor: pointer;
+}
+
+.tirarParte:hover {
+  background-color: var(--cor-hover);
+}
+
+.tirarParte:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+.maisPartes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.efeitos {
+  display: grid;
+  gap: var(--esp-2);
+  margin-top: var(--esp-1);
+}
+
+.efeitos > .rotuloDaParte {
+  margin: 0;
+}
+
+.grupoDoEfeito {
+  display: grid;
+  gap: var(--esp-1);
+}
+
+.campoDoEfeito {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+  overflow-wrap: anywhere;
+}
+
+/* Cada resposta numa linha, com o selo do que ela faz; a que mostra o campo, em peso forte. */
+.listaDosEfeitos {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  list-style: none;
+  overflow: hidden;
+}
+
+.listaDosEfeitos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  min-height: 32px;
+  padding: var(--esp-1) var(--esp-3);
+  font-size: var(--texto-dado);
+  overflow-wrap: anywhere;
+}
+
+.listaDosEfeitos li + li {
+  border-top: 1px solid var(--cor-linha);
+}
+
+.listaDosEfeitos li[data-aparece] {
+  background-color: var(--cor-superficie-afundada);
+  font-weight: var(--peso-forte);
+}
+
+.listaDosEfeitos li > :last-child {
+  flex: none;
+}
+
 /* A recusa, com o ícone, na cor crítica, junto do que recusa. */
 .erro {
   display: flex;

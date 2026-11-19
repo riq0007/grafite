@@ -33,6 +33,7 @@ export const LUGAR = {
   opcao: (id: string, opcao: string) => `opcao:${id}:${opcao}`,
   remover: (id: string) => `remover:${id}`,
   mover: (id: string) => `mover:${id}`,
+  condicao: (id: string) => `condicao:${id}`,
 } as const;
 
 /** O selo do cartão do campo: um só, o primeiro que vale nesta ordem. */
@@ -252,7 +253,9 @@ export interface ErrosDoCampo {
   tiposDeAtivo?: string;
   /** A do "Pede o ativo", no primeiro campo Ativo. */
   pedeOAtivo?: string;
-  /** As que não têm lugar no campo aberto, como a da condição e a de quem depende dele. */
+  /** A da condição do campo, na seção dela. */
+  condicao?: string;
+  /** As que não têm lugar no campo aberto, como a de quem depende dele. */
   outras: string[];
 }
 
@@ -292,6 +295,7 @@ export function errosNoFormulario(
     if (ehParteDoCampo(parte)) doId[parte] = erro;
     else if (parte === 'opcoes' && opcao) doId.porOpcao[opcao] = erro;
     else if (parte === 'opcoes') doId.opcoes = erro;
+    else if (parte === 'condicao') doId.condicao = erro;
     else doId.outras.push(erro);
   }
   return { porCampo, geral };
@@ -313,6 +317,7 @@ export function resumoDaRecusa(
     daOpcao ??
     erros.tiposDeAtivo ??
     erros.pedeOAtivo ??
+    erros.condicao ??
     erros.outras[0] ??
     null
   );
@@ -320,8 +325,9 @@ export function resumoDaRecusa(
 
 /**
  * As recusas que ainda valem: a de um campo, enquanto ele não muda (a do rótulo, enquanto nenhum
- * rótulo muda, porque o repetido se resolve no outro); as outras, como a da condição, que depende da
- * ordem, enquanto o formulário não muda.
+ * rótulo muda, porque o repetido se resolve no outro); a da condição, enquanto ela, a ordem e o "Só
+ * a TI vê" dos campos não mudam, que são o que ela confere; as outras, enquanto o formulário não
+ * muda.
  */
 export function errosQueValemNoFormulario(
   erros: Readonly<Record<string, string>>,
@@ -334,7 +340,12 @@ export function errosQueValemNoFormulario(
     const campoEm = (formulario: Formulario) =>
       formulario.campos.find((campo) => campo.id === id) ?? null;
     let recusou: (formulario: Formulario) => unknown = (formulario) => formulario;
-    if (raiz === 'campos' && parte && parte !== 'condicao') {
+    if (raiz === 'campos' && parte === 'condicao') {
+      recusou = (formulario) => [
+        campoEm(formulario)?.condicao,
+        formulario.campos.map(({ id: cada, soDaTi }) => [cada, soDaTi]),
+      ];
+    } else if (raiz === 'campos' && parte) {
       recusou =
         parte === 'rotulo'
           ? (formulario) => [campoEm(formulario), formulario.campos.map(({ rotulo }) => rotulo)]

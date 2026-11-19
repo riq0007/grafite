@@ -5,6 +5,8 @@
 // O `visual` da aba, na prévia (decisão 16), numera as perguntas, cola a continuação à pergunta de
 // que depende e põe as escolhas em cartões e em chips.
 import type { Formulario, RespostaDoCampo } from '@grafite/domain';
+import { Icone } from '@grafite/ui';
+import { GitBranch } from 'lucide-react';
 import { AnexosDoCampo } from './AnexosDoCampo.tsx';
 import type { PessoaDoFormulario } from './buscas.ts';
 import { CampoQueSePreenche, type VisualDoFormulario } from './CampoQueSePreenche.tsx';
@@ -49,6 +51,11 @@ export interface PropsDoFormularioQueSePreenche {
    * dela, e as escolhas em cartões e em chips.
    */
   visual?: VisualDoFormulario;
+  /**
+   * As marcas do editor, por campo, embaixo dele, como "aparece só quando for Manchando": só a
+   * prévia do construtor as mostra (design, "A condição (tarefa 5.23)").
+   */
+  marcas?: Readonly<Record<string, string>>;
 }
 
 const idsDoAnexo = (resposta: RespostaDoCampo | undefined): readonly string[] =>
@@ -64,6 +71,7 @@ export function FormularioQueSePreenche({
   soLeitura = false,
   erros = {},
   visual = 'tela',
+  marcas = {},
 }: PropsDoFormularioQueSePreenche) {
   /** A resposta nova pela anterior, que um envio acabado pode ter mudado. */
   const mudarResposta = (
@@ -92,6 +100,7 @@ export function FormularioQueSePreenche({
       {aparecem.map((aparece, indice) => {
         const pergunta = perguntas[indice] ?? null;
         const continuacao = continuacoes[indice] ?? false;
+        const marca = Object.hasOwn(marcas, aparece.campo.id) ? marcas[aparece.campo.id] : null;
         return (
           <div
             key={aparece.campo.id}
@@ -117,6 +126,12 @@ export function FormularioQueSePreenche({
               visual={visual}
               continuacao={continuacao}
             />
+            {marca && (
+              <p className={estilos.marca} data-parte="marca">
+                <Icone icone={GitBranch} tamanho={12} />
+                {marca}
+              </p>
+            )}
           </div>
         );
       })}

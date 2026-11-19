@@ -16,6 +16,29 @@
   min-width: 0;
 }
 
+/* A marca do campo condicional, que só a prévia do construtor mostra (m10): tracejada, nas cores
+   do selo "Condicional", com o ramo. */
+.marca {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: var(--esp-1);
+  max-width: 100%;
+  margin: 0;
+  padding: 2px var(--esp-2);
+  border: 1px dashed var(--cor-atencao-borda);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-atencao-fundo);
+  color: var(--cor-atencao);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  overflow-wrap: anywhere;
+}
+
+.marca > svg {
+  flex: none;
+}
+
 /* O grupo do Anexo, sem a borda e o recuo do fieldset do navegador. */
 .anexos {
   display: grid;
