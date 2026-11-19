@@ -63,6 +63,7 @@ import { rotasDosAnexosDosChamados } from './rotas/chamados-anexos.ts';
 import { rotasDoHorarioDaTi } from './rotas/chamados-horario.ts';
 import { rotasDasRespostasProntas } from './rotas/chamados-respostas-prontas.ts';
 import { rotasDosTiposDeChamado } from './rotas/chamados-tipos.ts';
+import { rotasDoChat } from './rotas/chat.ts';
 import { rotasDoCofre } from './rotas/cofre.ts';
 import { rotasDoAcessoAoCofre } from './rotas/cofre-acesso.ts';
 import { rotasDoLoginDoControle } from './rotas/cofre-login-do-controle.ts';
@@ -448,6 +449,12 @@ export async function criarApp({
       await dosChamados.register(rotasDoHorarioDaTi, { banco, agora });
       await dosChamados.register(rotasDosAnexosDosChamados, { banco, agora, armazenamento });
       await dosChamados.register(rotasDosChamados, { banco, agora, fila });
+    });
+    // O módulo Chat, opcional: as conversas, as equipes e os canais e os chamados de quem participa
+    // (change chat-com-chamados, design, decisão 14).
+    await escopo.register(async (doChat) => {
+      exigirModuloLigado(doChat, { banco, modulo: 'chat' });
+      await doChat.register(rotasDoChat, { banco, armazenamento });
     });
     // O módulo Painéis, opcional: os painéis das VMs e a verificação (change painel-de-dashboards).
     await escopo.register(async (dosPaineis) => {

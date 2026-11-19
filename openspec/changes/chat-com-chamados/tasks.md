@@ -74,7 +74,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As organizações novas dos testes de integração usam endereços próprios, e o cenário do chat fica no arquivo de apoio `apps/api/test/chat.ts`.
 
-- [ ] 3.1 O módulo e as conversas:
+- [x] 3.1 O módulo e as conversas:
   - o bloco do módulo `chat` em `apps/api/src/app.ts`, com o `exigirModuloLigado`;
   - o `GET /chat/resumo`;
   - o `GET /chat/conversas`, com as seções, os contadores, a última mensagem e o silenciar;
@@ -82,7 +82,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - quem usa o chat, na consulta das outras contas (a escolha da direta, o canal e quem recebe, depois), com o mesmo corte do `carregarAcesso`: a conta ativa, o perfil ativo, a atribuição e a participação no grupo sem encerramento, o grupo ativo e o `chat.usar` na organização, e não num local. As arquivadas ficam fora das listas, embora a `participacao` da 2.1 as abra para ler.
   - as listas do chat no banco (`TIPOS_DE_CONVERSA_NO_BANCO` e `ESPECIES_DO_CHAT_NO_BANCO`, da 1.1) comparadas com as do domínio, como em `chamados/listas.test.ts`.
 
-  Começa pelos testes de integração da permissão: a conta sem `chat.usar`, o módulo desligado, a conversa de outros como inexistente e quem saiu do grupo. Verificar: esses testes, o lint, o typecheck e o contrato.
+  Começa pelos testes de integração da permissão: a conta sem `chat.usar`, o módulo desligado, a conversa de outros como inexistente e quem saiu do grupo. Verificar: esses testes, o lint, o typecheck e o contrato. O corte das outras contas ficou em `chat/quem-usa.ts` (`contaTemAPermissao`), e as rotas, em `rotas/chat.ts`. Entrou também a foto de quem usa o chat (`GET /chat/contas/:id/foto/:arquivo/:tamanho`, com `chat.usar`), que a spec pede e a foto da pessoa só entrega com `pessoas.ver` (decisão 15).
 - [ ] 3.2 As mensagens:
   - o `GET /chat/conversas/:id/mensagens`: de 50 em 50, antes, depois e ao redor de uma mensagem, com as reações, a respondida, os anexos e as citações resolvidas para quem lê (decisão 11);
   - a mensagem, com a direta que nasce na primeira e o par único na corrida, as recusas de quem não escreve, da arquivada e da respondida de outra conversa;

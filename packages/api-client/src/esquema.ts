@@ -29618,6 +29618,337 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/resumo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O total do chat e os chamados com resposta nova, para a trilha e o dock */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResumoDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As conversas da conta: as equipes e os canais e as diretas, com os contadores */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/pessoas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As pessoas que usam o chat, para escolher a conversa direta, até 20 */
+        get: {
+            parameters: {
+                query?: {
+                    busca?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PessoasDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/contas/{id}/foto/{arquivo}/{tamanho}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um tamanho da foto da pessoa de uma conta que usa o chat */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    arquivo: string;
+                    tamanho: "64" | "128" | "256" | "512" | "completa";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A imagem: a completa no tipo do registro, e as miniaturas em WebP */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
+                        "image/svg+xml": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -37849,6 +38180,42 @@ export interface components {
             pedeOAtivo: boolean;
             abertos: number;
         };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
+        ConversaNaListaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+        };
+        ListaDoChatInput: {
+            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
+            recentes: components["schemas"]["ConversaNaListaInput"][];
+        };
+        ResumoDoChatInput: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChatInput: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                conversa: string | null;
+            }[];
+        };
         PessoaDoSegredoInput: {
             /** Format: uuid */
             id: string;
@@ -43219,6 +43586,42 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamado"];
             pedeOAtivo: boolean;
             abertos: number;
+        };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
+        ConversaNaLista: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChat"] | null;
+        };
+        ListaDoChat: {
+            equipesECanais: components["schemas"]["ConversaNaLista"][];
+            recentes: components["schemas"]["ConversaNaLista"][];
+        };
+        ResumoDoChat: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChat: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoa"] | null;
+                conversa: string | null;
+            }[];
         };
         PessoaDoSegredo: {
             /** Format: uuid */

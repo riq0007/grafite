@@ -15566,6 +15566,195 @@
           "abertos"
         ]
       },
+      "ContaDoChatInput": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ]
+      },
+      "ConversaNaListaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "direta",
+              "equipe",
+              "canal"
+            ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "silenciada": {
+            "type": "boolean"
+          },
+          "ultimaMensagemEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDoChatInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "nome",
+          "naoLidas",
+          "silenciada",
+          "ultimaMensagemEm",
+          "outra"
+        ]
+      },
+      "ListaDoChatInput": {
+        "type": "object",
+        "properties": {
+          "equipesECanais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaListaInput"
+            }
+          },
+          "recentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaListaInput"
+            }
+          }
+        },
+        "required": [
+          "equipesECanais",
+          "recentes"
+        ]
+      },
+      "ResumoDoChatInput": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "chamadosComRespostaNova": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "naoLidas",
+          "chamadosComRespostaNova"
+        ]
+      },
+      "PessoasDoChatInput": {
+        "type": "object",
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "daTi": {
+                  "type": "boolean"
+                },
+                "foto": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FotoDaPessoaInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "conversa": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "conta",
+                "nome",
+                "daTi",
+                "foto",
+                "conversa"
+              ]
+            }
+          }
+        },
+        "required": [
+          "pessoas"
+        ]
+      },
       "PessoaDoSegredoInput": {
         "type": "object",
         "properties": {
@@ -42781,6 +42970,201 @@
           "formulario",
           "pedeOAtivo",
           "abertos"
+        ],
+        "additionalProperties": false
+      },
+      "ContaDoChat": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ],
+        "additionalProperties": false
+      },
+      "ConversaNaLista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "direta",
+              "equipe",
+              "canal"
+            ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "silenciada": {
+            "type": "boolean"
+          },
+          "ultimaMensagemEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDoChat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "nome",
+          "naoLidas",
+          "silenciada",
+          "ultimaMensagemEm",
+          "outra"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDoChat": {
+        "type": "object",
+        "properties": {
+          "equipesECanais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaLista"
+            }
+          },
+          "recentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaLista"
+            }
+          }
+        },
+        "required": [
+          "equipesECanais",
+          "recentes"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDoChat": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "chamadosComRespostaNova": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "naoLidas",
+          "chamadosComRespostaNova"
+        ],
+        "additionalProperties": false
+      },
+      "PessoasDoChat": {
+        "type": "object",
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "daTi": {
+                  "type": "boolean"
+                },
+                "foto": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FotoDaPessoa"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "conversa": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "conta",
+                "nome",
+                "daTi",
+                "foto",
+                "conversa"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "pessoas"
         ],
         "additionalProperties": false
       },
@@ -84895,6 +85279,329 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/resumo": {
+      "get": {
+        "summary": "O total do chat e os chamados com resposta nova, para a trilha e o dock",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumoDoChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/conversas": {
+      "get": {
+        "summary": "As conversas da conta: as equipes e os canais e as diretas, com os contadores",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDoChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/pessoas": {
+      "get": {
+        "summary": "As pessoas que usam o chat, para escolher a conversa direta, até 20",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "busca",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PessoasDoChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/contas/{id}/foto/{arquivo}/{tamanho}": {
+      "get": {
+        "summary": "Um tamanho da foto da pessoa de uma conta que usa o chat",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "arquivo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "64",
+                "128",
+                "256",
+                "512",
+                "completa"
+              ]
+            },
+            "in": "path",
+            "name": "tamanho",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A imagem: a completa no tipo do registro, e as miniaturas em WebP",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {
