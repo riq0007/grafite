@@ -37432,7 +37432,7 @@ export interface components {
             situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
             versao: number;
             /** @enum {string} */
-            origem: "ti";
+            origem: "ti" | "chat";
             /** Format: date-time */
             abertoEm: string;
             tipo: {
@@ -42803,7 +42803,7 @@ export interface components {
             situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
             versao: number;
             /** @enum {string} */
-            origem: "ti";
+            origem: "ti" | "chat";
             /** Format: date-time */
             abertoEm: string;
             tipo: {

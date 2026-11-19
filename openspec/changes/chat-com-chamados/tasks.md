@@ -8,7 +8,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 ## 1. Banco
 
 - [x] 1.1 As tabelas do chat (design, decisão 1): `conversas`, com o cadastro da equipe e do canal e os CHECKs de cada tipo, o par da direta único e o nome único entre os ativos; `mensagens_do_chat`, só com INSERT e SELECT para o papel da aplicação, com a resposta da mesma conversa; `reacoes_das_mensagens`, com o DELETE; `anexos_do_chat`; e `leituras_das_conversas`. Todas com `orgScoped()` e o RLS ativo e forçado. Verificar: o teste da migration, o teste-guarda do RLS, o lint e o typecheck.
-- [ ] 1.2 O que muda nos chamados (decisão 2):
+- [x] 1.2 O que muda nos chamados (decisão 2):
   - a origem `chat`, com a conversa e a mensagem, e a mensagem única;
   - o `fechado_em`, só no resolvido;
   - na conversa, a espécie `origem`, as `opcoes`, o `cartao`, o evento sem autor só no `fechou` e os índices únicos parciais do `escolheu` e do `avaliou`;
@@ -44,7 +44,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - EQUIPES E CANAIS pelo nome e RECENTES pela última mensagem;
   - os grupos da vista Chamados, só os que têm chamados;
   - as não lidas, com o "99+", e o total sem as silenciadas;
-  - a resposta nova: só no chamado aberto, sem a mensagem da própria conta (a da TI que é a pessoa do chamado), com o `vista_em` que anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar como vista", e o resolvido com o "O que foi feito" fora da conta.
+  - a resposta nova: só no chamado aberto, sem a mensagem da própria conta (a da TI que é a pessoa do chamado), com a `vista_ate` que anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar como vista", comparada pelo id, e o resolvido com o "O que foi feito" fora da conta.
 
   Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
 - [ ] 2.5 As palavras do colaborador e os tempos:
@@ -125,7 +125,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - a retomada, a reabertura e a versão;
   - os eventos da conversa e a auditoria do retomar e do reabrir pela pessoa;
   - a notificação a quem atende;
-  - o `vista_em`, que anda também no "Reabrir" e na avaliação e marca as notificações do chamado.
+  - a `vista_ate`, a última linha da conversa lida com o chamado travado, que anda também no "Reabrir" e na avaliação e marca as notificações do chamado, com o teste da mensagem da TI que espera a trava da marcação.
 
   Começa pelos testes de integração da permissão: quem não participa e o fechado. Verificar: esses testes, o da escolha ao mesmo tempo em duas conexões, o lint, o typecheck e o contrato.
 - [ ] 3.10 O lado da TI (decisões 10 e 13):

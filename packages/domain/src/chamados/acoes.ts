@@ -28,14 +28,17 @@ export const SITUACOES_DO_CHAMADO = [
 export type SituacaoDoChamado = (typeof SITUACOES_DO_CHAMADO)[number];
 
 /**
- * As origens do chamado, com os textos do banco. Nesta change, todo chamado nasce da TI; o chat e a
- * aba trazem as origens deles.
+ * As origens do chamado, com os textos do banco: a TI e o chat, a partir de uma mensagem (change
+ * chat-com-chamados, design, decisão 2). A aba traz a dela.
  */
-export const ORIGENS_DO_CHAMADO = ['ti'] as const;
+export const ORIGENS_DO_CHAMADO = ['ti', 'chat'] as const;
 export type OrigemDoChamado = (typeof ORIGENS_DO_CHAMADO)[number];
 
-/** As espécies da conversa: a mensagem para a pessoa, a nota interna e o evento. */
-export const ESPECIES_DA_CONVERSA = ['mensagem', 'nota', 'evento'] as const;
+/**
+ * As espécies da conversa: a mensagem para a pessoa, a nota interna, o evento e a origem, a cópia da
+ * mensagem do chat de onde o chamado foi aberto.
+ */
+export const ESPECIES_DA_CONVERSA = ['mensagem', 'nota', 'evento', 'origem'] as const;
 export type EspecieDaConversa = (typeof ESPECIES_DA_CONVERSA)[number];
 
 /** As ações da matriz, na ordem da tabela da spec. */
@@ -255,9 +258,12 @@ export type EventoDaAcao =
    */
   | { evento: 'solicitacao-nao-gerada'; dados: DadosDaSolicitacaoNaoGerada };
 
-/** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
+/**
+ * O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. A origem, só a
+ * abertura pelo chat a grava.
+ */
 export type EntradaDaConversa =
-  | { especie: Exclude<EspecieDaConversa, 'evento'>; texto: string }
+  | { especie: Extract<EspecieDaConversa, 'mensagem' | 'nota'>; texto: string }
   | ({ especie: 'evento' } & EventoDaAcao);
 
 /** O que a rota aplica no chamado. */

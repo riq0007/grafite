@@ -3932,8 +3932,8 @@ export const SITUACOES_DO_CHAMADO_NO_BANCO = [
   'aguardando',
   'resolvido',
 ] as const;
-export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti'] as const;
-export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as const;
+export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti', 'chat'] as const;
+export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento', 'origem'] as const;
 
 /**
  * O documento JSON com o tipo e o tamanho conferidos; o conteúdo, quem confere é o domínio. O teto
@@ -3942,6 +3942,17 @@ export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as c
  */
 const documentoAte = (coluna: unknown, limite: number) =>
   sql`jsonb_typeof(${coluna}) = 'object' and octet_length(${coluna}::text) <= ${sql.raw(String(limite))}`;
+
+/**
+ * As opções de resposta de uma pergunta (change chat-com-chamados, design, decisão 10): de 2 a 3,
+ * sem nulo, cada uma de 1 a 40 caracteres sem os espaços das pontas, numa lista simples que começa
+ * em 1, para as três posições bastarem. Que sejam diferentes, quem confere é o domínio.
+ */
+const opcoesValidas = (coluna: unknown) =>
+  sql`array_ndims(${coluna}) = 1 and array_lower(${coluna}, 1) = 1
+    and cardinality(${coluna}) between 2 and 3 and array_position(${coluna}, null) is null
+    and length(trim(${coluna}[1])) between 1 and 40 and length(trim(${coluna}[2])) between 1 and 40
+    and (cardinality(${coluna}) = 2 or length(trim(${coluna}[3])) between 1 and 40)`;
 
 /**
  * O tipo de chamado (spec tipos-de-chamado; change chamados-da-ti, design, decisões 1, 2 e 6): o
@@ -4049,6 +4060,10 @@ export const tiposDeChamado = orgScoped(
  * nas ações que mudam a situação ou quem atende e na troca do ativo. Quem
  * atende e o relógio seguem a tabela da spec, e as checagens são implicações, para a situação
  * desconhecida ficar com a checagem da situação. O papel da aplicação não apaga (migration 0060).
+ *
+ * Pelo chat (change chat-com-chamados, design, decisões 2 e 7; migration 0066): a conversa e a
+ * mensagem de origem, que vira um chamado só; e o `fechado_em`, que faz do resolvido o Fechado, sem
+ * uma situação nova no banco, para a versão anterior ler o fechado como resolvido.
  */
 export const chamados = orgScoped(
   'chamados',
@@ -4059,6 +4074,9 @@ export const chamados = orgScoped(
     tituloNormalizado: text('titulo_normalizado').notNull(),
     pessoaId: uuid('pessoa_id').notNull(),
     origem: text('origem', { enum: ORIGENS_DO_CHAMADO_NO_BANCO }).notNull(),
+    /** A conversa e a mensagem do chat de onde o chamado foi aberto, só na origem `chat`. */
+    origemConversaId: uuid('origem_conversa_id'),
+    origemMensagemId: uuid('origem_mensagem_id'),
     abertoPor: uuid('aberto_por'),
     abertoEm: momento('aberto_em').notNull().defaultNow(),
     formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
@@ -4078,6 +4096,8 @@ export const chamados = orgScoped(
     estouroAvisadoEm: momento('estouro_avisado_em'),
     resolvidoEm: momento('resolvido_em'),
     resolvidoPor: uuid('resolvido_por'),
+    /** O momento em que o resolvido fechou: a meia-noite do fim do sétimo dia depois da resolução. */
+    fechadoEm: momento('fechado_em'),
     osId: uuid('os_id'),
     solicitacaoId: uuid('solicitacao_id'),
     versao: integer('versao').notNull().default(1),
@@ -4128,7 +4148,32 @@ export const chamados = orgScoped(
       columns: [t.orgId, t.solicitacaoId],
       foreignColumns: [solicitacoes.orgId, solicitacoes.id],
     }),
+    foreignKey({
+      name: 'chamados_origem_conversa_fk',
+      columns: [t.orgId, t.origemConversaId],
+      foreignColumns: [conversas.orgId, conversas.id],
+    }),
+    // A mensagem de origem é da conversa de origem (mensagens_do_chat_id_conversa_unico).
+    foreignKey({
+      name: 'chamados_origem_mensagem_fk',
+      columns: [t.orgId, t.origemMensagemId, t.origemConversaId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id, mensagensDoChat.conversaId],
+    }),
     unique('chamados_numero_unico').on(t.orgId, t.numero),
+    // A mensagem vira um chamado só; a violação vira "Esta mensagem já virou o chamado #1045.".
+    unique('chamados_origem_mensagem_unica').on(t.orgId, t.origemMensagemId),
+    // Os chamados de cada conversa, na aba "Chamados da equipe".
+    index('chamados_origem_conversa_idx')
+      .on(t.orgId, t.origemConversaId)
+      .where(sql`${t.origemConversaId} is not null`),
+    // Os chamados que cada conta abriu pelo chat, na lista CHAMADOS de quem os abriu.
+    index('chamados_aberto_pelo_chat_idx')
+      .on(t.orgId, t.abertoPor)
+      .where(sql`${t.origem} = 'chat'`),
+    // Os resolvidos que ainda não fecharam, para a tarefa do fechamento.
+    index('chamados_a_fechar_idx')
+      .on(t.orgId, t.resolvidoEm)
+      .where(sql`${t.situacao} = 'resolvido' and ${t.fechadoEm} is null`),
     // Uma OS sai de um chamado só; uma solicitação junta os chamados que pedem o mesmo toner.
     unique('chamados_os_unica').on(t.orgId, t.osId),
     // Os abertos de cada situação, para o quadro, a triagem e os prazos.
@@ -4160,6 +4205,22 @@ export const chamados = orgScoped(
       'chamados_abertura_coerente',
       sql`${t.origem} <> 'ti' or (${t.abertoPor} is not null and ${t.primeiraRespostaEm} is not null)`,
     ),
+    // Pelo chat, quem abriu e a mensagem de origem, sem a primeira resposta, que a primeira mensagem
+    // da TI grava; a conversa e a mensagem vêm juntas, e só no chat (spec chamados, "Abrir um
+    // chamado pelo chat").
+    check(
+      'chamados_origem_coerente',
+      sql`(${t.origemConversaId} is null) = (${t.origemMensagemId} is null)
+        and (${t.origem} <> 'chat' or (${t.abertoPor} is not null and ${t.origemMensagemId} is not null))
+        and (${t.origem} = 'chat' or ${t.origemMensagemId} is null)`,
+    ),
+    // O Fechado é o resolvido com o `fechado_em`, depois da resolução: reaberto, ele perderia a
+    // resolução e ficaria recusado, e é assim que a versão anterior não reabre o fechado.
+    check(
+      'chamados_fechamento_coerente',
+      sql`${t.fechadoEm} is null or (${t.situacao} = 'resolvido' and ${t.resolvidoEm} is not null
+        and ${t.fechadoEm} > ${t.resolvidoEm})`,
+    ),
     // Ninguém atende na triagem; alguém atende no atendimento e no aguardando, sempre.
     check(
       'chamados_atendimento_coerente',
@@ -4189,9 +4250,16 @@ export const chamados = orgScoped(
 /**
  * A conversa de cada chamado (spec chamados, "Conversa do chamado"; change chamados-da-ti, design,
  * decisões 1 e 8): a mensagem para a pessoa, de uma conta ou da pessoa, pelo chat; a nota interna,
- * de uma conta; e o evento, com o código e os dados, da conta que agiu. Nenhum evento desta change
- * é do sistema: o chat e a aba trazem os autores deles junto com as origens novas. O papel da
- * aplicação só inclui e lê (migration 0060).
+ * de uma conta; e o evento, com o código e os dados, da conta que agiu. O papel da aplicação só
+ * inclui e lê (migration 0060).
+ *
+ * Pelo chat (change chat-com-chamados, design, decisões 2 e 10; migration 0066): a `origem`, a
+ * cópia da mensagem citada, com a conta de quem a escreveu e, nos dados, a conversa, a mensagem e a
+ * hora dela, uma por chamado; as opções da pergunta, só na mensagem da TI; o cartão do ativo, na
+ * mensagem da TI e na nota; e os eventos novos. O `escolheu` leva nos dados a `mensagem` e a opção,
+ * e a primeira escolha de cada pergunta vence; o `avaliou` leva o nível, o comentário e a
+ * `resolucao`, o `resolvido_em` do chamado em ISO, uma avaliação por resolução; e o `fechou`, um
+ * por chamado, é o único evento sem autor.
  */
 export const mensagensDosChamados = orgScoped(
   'mensagens_dos_chamados',
@@ -4203,6 +4271,10 @@ export const mensagensDosChamados = orgScoped(
     texto: text('texto'),
     evento: text('evento'),
     dados: jsonb('dados').$type<Record<string, unknown>>(),
+    /** As opções da pergunta, de 2 a 3, só na mensagem da TI. */
+    opcoes: text('opcoes').array(),
+    /** O retrato do ativo, copiado na hora de mandar, até 4 KiB. */
+    cartao: jsonb('cartao').$type<Record<string, unknown>>(),
     criadaEm: momento('criada_em').notNull().defaultNow(),
   },
   (t) => [
@@ -4224,21 +4296,51 @@ export const mensagensDosChamados = orgScoped(
     index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
     // Para o anexo da mensagem ser do mesmo chamado (anexos_dos_chamados_mensagem_fk).
     unique('mensagens_dos_chamados_id_chamado_unico').on(t.orgId, t.id, t.chamadoId),
+    uniqueIndex('mensagens_dos_chamados_origem_unica')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.especie} = 'origem'`),
+    // A primeira escolha de cada pergunta vence; a violação vira "Esta pergunta já foi respondida.".
+    uniqueIndex('mensagens_dos_chamados_escolha_unica')
+      .on(t.orgId, sql`(${t.dados} ->> 'mensagem')`)
+      .where(sql`${t.evento} = 'escolheu'`),
+    // Uma avaliação por resolução: reaberto e resolvido de novo, o chamado pede outra.
+    uniqueIndex('mensagens_dos_chamados_avaliacao_unica')
+      .on(t.orgId, t.chamadoId, sql`(${t.dados} ->> 'resolucao')`)
+      .where(sql`${t.evento} = 'avaliou'`),
+    uniqueIndex('mensagens_dos_chamados_fechou_unico')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.evento} = 'fechou'`),
     check(
       'mensagens_dos_chamados_especie_valida',
       sql`${t.especie} in (${lista(ESPECIES_DA_CONVERSA_NO_BANCO)})`,
     ),
+    // Os CHECKs só se alargam: o que a versão anterior grava continua aceito (design, Migration
+    // Plan). O evento sem autor é só o `fechou`, que ninguém faz.
     check(
       'mensagens_dos_chamados_autoria_valida',
       sql`(${t.especie} <> 'mensagem' or num_nonnulls(${t.autorConta}, ${t.autorPessoa}) = 1)
         and (${t.especie} <> 'nota' or (${t.autorConta} is not null and ${t.autorPessoa} is null))
-        and (${t.especie} <> 'evento' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
+        and (${t.especie} <> 'evento' or (${t.autorPessoa} is null
+          and (${t.autorConta} is not null or ${t.evento} = 'fechou')))
+        and (${t.especie} <> 'origem' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
     ),
     check(
       'mensagens_dos_chamados_conteudo_valido',
-      sql`(${t.especie} not in ('mensagem', 'nota') or (${t.texto} is not null
-          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null and ${t.dados} is null))
+      sql`(${t.especie} not in ('mensagem', 'nota', 'origem') or (${t.texto} is not null
+          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null))
+        and (${t.especie} not in ('mensagem', 'nota') or ${t.dados} is null)
+        and (${t.especie} <> 'origem' or ${t.dados} is not null)
         and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null))`,
+    ),
+    check(
+      'mensagens_dos_chamados_opcoes_validas',
+      sql`${t.opcoes} is null or (${t.especie} = 'mensagem' and ${t.autorConta} is not null
+        and ${opcoesValidas(t.opcoes)})`,
+    ),
+    check(
+      'mensagens_dos_chamados_cartao_valido',
+      sql`${t.cartao} is null or (${t.especie} in ('mensagem', 'nota') and ${t.autorConta} is not null
+        and ${documentoAte(t.cartao, 4096)})`,
     ),
     check(
       'mensagens_dos_chamados_evento_valido',
@@ -4271,6 +4373,8 @@ export const numeracaoDosChamados = orgScoped(
  * design, decisão 1): o rótulo, único sem acento e maiúsculas; o texto, em que `{nome}` vira o
  * primeiro nome da pessoa; a espera da resposta, que põe o chamado em Aguardando; os tipos em que
  * ela aparece, ou todos, com a lista vazia; e a ordem. O limite de 100 por organização é do domínio.
+ * As opções da pergunta, vazias ou de 2 a 3, vêm com o chat (change chat-com-chamados, design,
+ * decisão 2; migration 0066).
  */
 export const respostasProntas = orgScoped(
   'respostas_prontas',
@@ -4280,12 +4384,17 @@ export const respostasProntas = orgScoped(
     texto: text('texto').notNull(),
     esperaAResposta: boolean('espera_a_resposta').notNull().default(false),
     tipos: uuid('tipos').array().notNull().default(sql`'{}'::uuid[]`),
+    opcoes: text('opcoes').array().notNull().default(sql`'{}'::text[]`),
     ordem: integer('ordem').notNull(),
   },
   (t) => [
     unique('respostas_prontas_rotulo_unico').on(t.orgId, t.rotuloNormalizado),
     check('respostas_prontas_rotulo_valido', sql`length(trim(${t.rotulo})) between 1 and 60`),
     check('respostas_prontas_texto_valido', sql`length(trim(${t.texto})) between 1 and 2000`),
+    check(
+      'respostas_prontas_opcoes_validas',
+      sql`cardinality(${t.opcoes}) = 0 or (${opcoesValidas(t.opcoes)})`,
+    ),
   ],
 );
 
@@ -4385,6 +4494,45 @@ export const anexosDosChamados = orgScoped(
       'anexos_dos_chamados_campo_valido',
       sql`${t.campoId} is null or ${t.campoId} ~ '^[A-Za-z0-9_-]{1,40}$'`,
     ),
+  ],
+);
+
+/**
+ * A leitura de um chamado por quem participa (spec chamados, "Resposta nova"; change
+ * chat-com-chamados, design, decisões 2 e 5): a `vista_ate`, a última linha da conversa que a conta
+ * viu, do mesmo chamado, que anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar
+ * como vista", lida com o chamado travado. A resposta nova são as mensagens da TI de outra conta
+ * depois dela, pelo id, e não pela hora: o `uuidv7()` sai na inclusão, depois da trava, e segue a
+ * ordem das gravações no chamado. O papel da aplicação não apaga a leitura (migration 0066).
+ */
+export const leiturasDosChamados = orgScoped(
+  'leituras_dos_chamados',
+  {
+    chamadoId: uuid('chamado_id').notNull(),
+    contaId: uuid('conta_id').notNull(),
+    vistaAte: uuid('vista_ate').notNull(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'leituras_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'leituras_dos_chamados_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'leituras_dos_chamados_vista_ate_fk',
+      columns: [t.orgId, t.vistaAte, t.chamadoId],
+      foreignColumns: [
+        mensagensDosChamados.orgId,
+        mensagensDosChamados.id,
+        mensagensDosChamados.chamadoId,
+      ],
+    }),
+    unique('leituras_dos_chamados_unica').on(t.orgId, t.contaId, t.chamadoId),
   ],
 );
 

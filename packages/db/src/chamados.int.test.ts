@@ -523,7 +523,8 @@ describe('chamados', () => {
     expect(await recusada(chamado(orgA, deA, tipoDeA, { titulo: 'a'.repeat(121) }))).toBe(
       'chamados_titulo_valido',
     );
-    expect(await recusada(chamado(orgA, deA, tipoDeA, { origem: 'chat' }))).toBe(
+    // A origem da aba, que o banco ainda não conhece.
+    expect(await recusada(chamado(orgA, deA, tipoDeA, { origem: 'aba' }))).toBe(
       'chamados_origem_valida',
     );
     expect(await recusada(chamado(orgA, deA, tipoDeA, { situacao: 'pausado' }))).toBe(

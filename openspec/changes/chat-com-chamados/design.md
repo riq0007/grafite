@@ -38,14 +38,15 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **`chamados`:**
   - a origem `chat`, com a `origem_conversa_id` e a `origem_mensagem_id`, única: a mensagem vira um chamado só, e a violação vira "Esta mensagem já virou o chamado #1045.";
   - o `fechado_em`: o Fechado é o resolvido com o `fechado_em`, e não uma situação nova no banco. A versão anterior, que a volta do runbook roda no banco novo, lê o fechado como resolvido, em vez de reprovar a situação que não conhece (decisão 7);
-  - os CHECKs: a abertura pelo chat com quem abriu e a origem, sem a primeira resposta; o `fechado_em` só no resolvido.
+  - os CHECKs: a abertura pelo chat com quem abriu e a origem, sem a primeira resposta; o `fechado_em` só no resolvido, depois da resolução;
+  - os índices: os chamados de cada conversa de origem, para a aba "Chamados da equipe"; os que cada conta abriu pelo chat, para a lista CHAMADOS; e os resolvidos que ainda não fecharam, para a tarefa do fechamento.
 - **`mensagens_dos_chamados`:**
   - a mensagem de quem participa é a `mensagem` com a `autor_pessoa`, como a `chamados-da-ti` previu. A pessoa tem uma conta só (`contas_pessoa_unica`), e a pessoa marca o lado: a conta da TI que pede um chamado para si escreve no chat como pessoa e no módulo Chamados como TI;
-  - a espécie `origem`: a cópia da mensagem citada, com o texto, a `autor_conta` de quem a escreveu, e nos dados a conversa, a mensagem e a hora dela;
+  - a espécie `origem`: a cópia da mensagem citada, com o texto, a `autor_conta` de quem a escreveu, e nos dados a conversa, a mensagem e a hora dela, uma por chamado;
   - as colunas `opcoes` (de 2 a 3, só na mensagem da TI) e `cartao` (o retrato do ativo, até 4 KiB, na mensagem da TI e na nota);
-  - os eventos novos: o `escolheu` (a mensagem e a opção, com o índice único parcial pela mensagem: a primeira escolha vence, e a violação vira "Esta pergunta já foi respondida."), o `avaliou` (o nível, o comentário e a resolução, com o índice único parcial pelo chamado e pelo `resolvido_em`), e o `fechou`, o único evento sem autor;
+  - os eventos novos: o `escolheu` (a mensagem e a opção, com o índice único parcial pela mensagem: a primeira escolha vence, e a violação vira "Esta pergunta já foi respondida."), o `avaliou` (o nível, o comentário e a `resolucao`, o `resolvido_em` do chamado em ISO, com o índice único parcial pelo chamado e pela resolução), e o `fechou`, o único evento sem autor, um por chamado;
   - o `retomou` e o `reabriu` de quem participa levam a conta dela, e as telas os dizem pela conta.
-- **`leituras_dos_chamados`:** o chamado, a conta e o `vista_em`, únicos pelo chamado e pela conta (decisão 5).
+- **`leituras_dos_chamados`:** o chamado, a conta e a `vista_ate`, a última linha da conversa que a conta viu, do mesmo chamado pela chave `(org_id, vista_ate, chamado_id)`, únicos pelo chamado e pela conta (decisão 5).
 - **`respostas_prontas`:** as `opcoes`, vazias ou de 2 a 3.
 
 ### 3. Quem usa o chat e quem participa
@@ -75,7 +76,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 - **As não lidas** são as mensagens dos outros depois da `lida_ate`, contadas até 100, para o "99+". Sem a `lida_ate`, a conversa que a conta nunca leu abre na última mensagem, sem o separador.
 - **A leitura** só anda para a frente. A tela a manda com a conversa à vista (a aba visível e a janela com o foco), na abertura e a cada mensagem que chega. Ela marca como lidas as notificações da conta com o assunto da conversa e a `mensagem_do_chat_id` até a mensagem lida (decisão 6): o id é o `uuidv7()`, que ordena.
-- **A resposta nova** são as mensagens da TI (`mensagem` com a `autor_conta`) de outra conta depois do `vista_em` da conta, só no chamado aberto (na triagem, em atendimento e aguardando). O resolver grava o "O que foi feito" como mensagem da TI: sem o corte, todo resolvido teria resposta nova até a pessoa achar o "Marcar como vista". O `vista_em` anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar como vista" dela, e os cinco marcam como lidas as notificações da conta com o assunto do chamado. Pelo "de outra conta", a conta da TI que é a pessoa do próprio chamado não ganha resposta nova da mensagem que ela mesma manda.
+- **A resposta nova** são as mensagens da TI (`mensagem` com a `autor_conta`) de outra conta depois da `vista_ate` da conta, pelo id, só no chamado aberto (na triagem, em atendimento e aguardando). O resolver grava o "O que foi feito" como mensagem da TI: sem o corte, todo resolvido teria resposta nova até a pessoa achar o "Marcar como vista". A `vista_ate` anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar como vista" dela: é a última linha da conversa, lida com o chamado travado. Ela é o id, e não a hora: a hora da mensagem da TI sai antes da trava (o `agora()` da rota), e a mensagem que esperou a trava ficaria com a hora de antes da marcação e nunca seria nova. O `uuidv7()` sai na inclusão, depois da trava, e segue a ordem das gravações no chamado. Os cinco marcam como lidas as notificações da conta com o assunto do chamado. Pelo "de outra conta", a conta da TI que é a pessoa do próprio chamado não ganha resposta nova da mensagem que ela mesma manda.
 - **Na primeira versão,** os chamados abertos com mensagens da TI começam com resposta nova, e é o certo: até aqui ninguém as entregava à pessoa.
 - **O resumo do chat,** num pedido só para o dock, a trilha e a lista: o total sem as silenciadas e os chamados com resposta nova.
 

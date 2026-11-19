@@ -70,6 +70,7 @@ export {
   type LinhaGuardadaDaImportacao,
   leituras,
   leiturasDasConversas,
+  leiturasDosChamados,
   leiturasPorHora,
   ligacoesDeAtivos,
   locais,

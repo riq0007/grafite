@@ -535,6 +535,8 @@ export async function fichaDoChamado(
       });
       continue;
     }
+    // A cópia da mensagem de origem do chat chega à ficha com o lado da TI (chat-com-chamados, 3.10).
+    if (linha.especie === 'origem') continue;
     conversa.push({
       momento: linha.criadaEm,
       item: {
