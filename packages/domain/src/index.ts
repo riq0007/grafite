@@ -422,6 +422,7 @@ export {
   fraseDoEventoParaQuemParticipa,
   previsaoDaResposta,
   SITUACOES_PARA_QUEM_PARTICIPA,
+  situacaoNoChat,
   situacaoParaQuemParticipa,
   textoDaEtapa,
 } from './chamados/palavras-do-colaborador.ts';

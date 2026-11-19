@@ -366,5 +366,14 @@ export async function montarChat(api: ApiDeTeste, host: string) {
           })
           .where(eq(chamados.numero, numero)),
       ),
+
+    /** O chamado aguardando a pessoa, com o relógio parado, direto no banco. */
+    deixarAguardando: (numero: number) =>
+      naOrg((tx) =>
+        tx
+          .update(chamados)
+          .set({ situacao: 'aguardando', relogioDesde: null })
+          .where(eq(chamados.numero, numero)),
+      ),
   };
 }

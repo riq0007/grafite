@@ -9,7 +9,14 @@ import { LIMITE_DE_EQUIPES_E_CANAIS } from '@grafite/domain';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type ChatDeTeste, montarChat, type UsuarioDoChat } from '../../test/chat.ts';
-import { type ApiDeTeste, abrirApi, criarRelogio } from '../../test/integracao.ts';
+import {
+  type ApiDeTeste,
+  abrirApi,
+  atribuir,
+  criarGrupo,
+  criarPerfil,
+  criarRelogio,
+} from '../../test/integracao.ts';
 
 const NOME_REPETIDO = 'Já existe uma equipe ou um canal com esse nome.';
 
@@ -98,18 +105,42 @@ describe('o cadastro', () => {
     for (const usuario of ['ana', 'rita'] as const) {
       const recusadas = [
         await c.cliente.consultar('/chat/equipes-e-canais', c.como(usuario)),
+        await c.cliente.consultar('/chat/grupos', c.como(usuario)),
         await c.cliente.consultar(`/chat/equipes-e-canais/${equipe}`, c.como(usuario)),
         await cadastrar(usuario, pedido({ nome: 'Outra' })),
         await alterar(usuario, equipe, pedido({ nome: 'Outra' })),
         await arquivar(usuario, equipe),
         await reativar(usuario, equipe),
       ];
-      expect(recusadas.map(({ statusCode }) => statusCode)).toEqual(Array(6).fill(403));
+      expect(recusadas.map(({ statusCode }) => statusCode)).toEqual(Array(7).fill(403));
     }
     const [gravada] = await naOrganizacao(api.banco, c.org, (tx) =>
       tx.select().from(conversas).where(eq(conversas.id, equipe)),
     );
     expect(gravada).toMatchObject({ nome: 'Equipe Financeiro', arquivadaEm: null });
+  });
+
+  it('a escolha da gaveta lê os grupos ativos com o chat.configurar, sem o acessos.ver', async () => {
+    const configura = await criarPerfil(api, c.org, {
+      nome: 'Configura o chat',
+      permissoes: ['chat.configurar'],
+    });
+    await atribuir(api, c.org, { perfilId: configura, contaId: c.conta('rita') });
+    const antigo = await criarGrupo(api, c.org, { nome: 'Antigo' });
+    await naOrganizacao(api.banco, c.org, (tx) =>
+      tx.update(grupos).set({ situacao: 'inativo' }).where(eq(grupos.id, antigo)),
+    );
+
+    const r = await c.cliente.consultar('/chat/grupos', c.como('rita'));
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toEqual({
+      itens: [
+        { id: c.grupos.financeiro, nome: 'Financeiro' },
+        { id: c.grupos.ti, nome: 'TI' },
+        { id: c.grupos.todos, nome: 'Todos' },
+      ],
+    });
+    expect((await c.cliente.consultar('/grupos', c.como('rita'))).statusCode).toBe(403);
   });
 
   it('a equipe criada chega a quem é do grupo, e as recusas ficam por campo', async () => {
@@ -381,6 +412,19 @@ describe('a vista Equipes e as abas', () => {
       seguintes: false,
     });
     expect((r.json() as { itens: unknown[] }).itens).toHaveLength(1);
+
+    // A espera é "Aguardando você" só a quem participa do chamado (decisão 15).
+    await c.deixarAguardando(numero);
+    const situacaoPara = async (usuario: UsuarioDoChat) =>
+      (
+        (
+          await c.cliente.consultar(`/chat/conversas/${equipe}/chamados`, c.como(usuario))
+        ).json() as {
+          itens: { situacao: string }[];
+        }
+      ).itens[0]?.situacao;
+    expect(await situacaoPara('fernanda')).toBe('Aguardando você');
+    expect(await situacaoPara('tatiana')).toBe('Aguardando o colaborador');
     expect(
       (await c.cliente.consultar(`/chat/conversas/${equipe}/chamados`, c.como('ana'))).statusCode,
     ).toBe(404);

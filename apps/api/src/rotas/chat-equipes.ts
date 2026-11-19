@@ -16,7 +16,12 @@ import {
   mensagensDoChat,
   naOrganizacao,
 } from '@grafite/db';
-import { estaFechado, ordemDasEquipesECanais, situacaoParaQuemParticipa } from '@grafite/domain';
+import {
+  estaFechado,
+  ordemDasEquipesECanais,
+  participaDoChamado,
+  situacaoNoChat,
+} from '@grafite/domain';
 import { and, count, countDistinct, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -298,6 +303,8 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
             responsavelId: chamados.responsavelId,
             abertoPor: chamados.abertoPor,
             abertoEm: chamados.abertoEm,
+            pessoaId: chamados.pessoaId,
+            origem: chamados.origem,
           })
           .from(chamados)
           .where(
@@ -321,9 +328,13 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
           itens: pagina.map((chamado) => ({
             numero: chamado.numero,
             titulo: chamado.titulo,
-            situacao: situacaoParaQuemParticipa(
+            situacao: situacaoNoChat(
               chamado.situacao,
               estaFechado(chamado, momento, fuso),
+              participaDoChamado(
+                { id: conta.id, pessoaId: conta.pessoaId, usaOChat: true },
+                chamado,
+              ),
             ),
             atende: chamado.responsavelId ? (nomes.get(chamado.responsavelId)?.nome ?? null) : null,
             abriu: chamado.abertoPor ? (nomes.get(chamado.abertoPor)?.nome ?? null) : null,

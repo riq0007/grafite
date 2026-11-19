@@ -4,6 +4,7 @@ import {
   type EventoParaQuemParticipa,
   fraseDoEventoParaQuemParticipa,
   previsaoDaResposta,
+  situacaoNoChat,
   situacaoParaQuemParticipa,
   textoDaEtapa,
 } from './palavras-do-colaborador.ts';
@@ -56,6 +57,13 @@ describe('a situação nas palavras do colaborador', () => {
     expect(situacaoParaQuemParticipa('aguardando', false)).toBe('Aguardando você');
     expect(situacaoParaQuemParticipa('resolvido', false)).toBe('Resolvido');
     expect(situacaoParaQuemParticipa('resolvido', true)).toBe('Fechado');
+  });
+
+  it('no chat, a espera é "Aguardando você" só a quem participa do chamado', () => {
+    expect(situacaoNoChat('aguardando', false, true)).toBe('Aguardando você');
+    expect(situacaoNoChat('aguardando', false, false)).toBe('Aguardando o colaborador');
+    expect(situacaoNoChat('em-atendimento', false, false)).toBe('Em andamento');
+    expect(situacaoNoChat('resolvido', true, false)).toBe('Fechado');
   });
 });
 

@@ -177,6 +177,15 @@ describe('a permissão', () => {
       { ...citacao, inicio: 5, fim: 10 },
     ]);
 
+    // A espera é "Aguardando você" só a quem participa do chamado (decisão 15).
+    await c.deixarAguardando(numero);
+    expect((await pagina('fernanda', equipe)).itens[0]?.citacoes).toEqual([
+      { ...citacao, situacao: 'Aguardando você' },
+    ]);
+    expect((await pagina('paulo', equipe)).itens[0]?.citacoes).toEqual([
+      { ...citacao, situacao: 'Aguardando o colaborador' },
+    ]);
+
     // Com o módulo Chamados desligado, nenhuma citação vira o chip.
     await desligarModulos(api, c.org, ['chamados']);
     expect((await pagina('fernanda', equipe)).itens[0]?.citacoes).toEqual([]);

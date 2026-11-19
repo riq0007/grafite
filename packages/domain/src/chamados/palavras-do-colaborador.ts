@@ -20,6 +20,21 @@ export function situacaoParaQuemParticipa(situacao: SituacaoDoChamado, fechado: 
 }
 
 /**
+ * A situação no chat, no chip da citação e em "Chamados da equipe": nas palavras do colaborador, com
+ * a espera como "Aguardando o colaborador", a palavra da TI, a quem não participa do chamado, como
+ * quem é da equipe ou o vê com `chamados.ver`: a resposta não é dele (change chat-com-chamados,
+ * design, decisão 15).
+ */
+export function situacaoNoChat(
+  situacao: SituacaoDoChamado,
+  fechado: boolean,
+  participaDoChamado: boolean,
+): string {
+  if (situacao === 'aguardando' && !participaDoChamado) return 'Aguardando o colaborador';
+  return situacaoParaQuemParticipa(situacao, fechado);
+}
+
+/**
  * A etapa em texto: o nome e a hora da chegada, como "Aberto · ontem 17:05", que a tela escreve
  * (`hora`); a pulada, só o nome; e a que ainda não veio, "Resolvido · ainda não".
  */

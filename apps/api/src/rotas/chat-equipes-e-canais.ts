@@ -49,6 +49,17 @@ const ListaDasEquipesECanais = z
   })
   .meta({ id: 'ListaDasEquipesECanais' });
 
+/**
+ * Os grupos ativos para a escolha da gaveta, só com o id e o nome: quem configura o chat não precisa
+ * do `acessos.ver` do `GET /grupos` (decisão 15).
+ */
+const GruposParaEscolher = z
+  .object({
+    /** Pelo nome, sem os acentos e as maiúsculas, com os números em ordem de valor. */
+    itens: z.array(z.object({ id: z.uuid(), nome: z.string() })),
+  })
+  .meta({ id: 'GruposParaEscolher' });
+
 /** O que a gaveta grava; as recusas da spec são da conferência do domínio, por campo. */
 const PedidoDaEquipeOuCanal = z
   .object({
@@ -236,6 +247,31 @@ export const rotasDasEquipesECanais: FastifyPluginAsyncZod<{
             asc(conversas.id),
           );
         return { itens: linhas.map((linha) => equipeOuCanal(linha, daOrganizacao)) };
+      }),
+  );
+
+  app.get(
+    '/chat/grupos',
+    {
+      config: { permissao: 'chat.configurar' },
+      schema: {
+        summary: 'Os grupos ativos, para a escolha da gaveta, sem o acessos.ver',
+        response: { 200: GruposParaEscolher, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) =>
+      naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+        const ativos = await tx
+          .select({ id: grupos.id, nome: grupos.nome })
+          .from(grupos)
+          .where(eq(grupos.situacao, 'ativo'));
+        return {
+          itens: ativos.sort(
+            (a, b) =>
+              a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base', numeric: true }) ||
+              a.id.localeCompare(b.id),
+          ),
+        };
       }),
   );
 

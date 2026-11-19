@@ -168,7 +168,7 @@ Cada conta SHALL silenciar e voltar a ouvir cada conversa direta, equipe ou cana
 
 Na mensagem de uma conversa direta, de uma equipe ou de um canal, "#" seguido do número de um chamado, separado das outras palavras, SHALL citar o chamado, como "a impressora já está no #1045".
 
-Quem vê o resumo do chamado SHALL ver a citação como o chip "#1045 · EM ANDAMENTO · Bruno Lima": o número, a situação nas palavras do colaborador (spec chamados, "Leitura do chamado pela pessoa") e quem atende, se há alguém. O chip SHALL seguir o chamado: quando a situação ou quem atende muda, o chip muda.
+Quem vê o resumo do chamado SHALL ver a citação como o chip "#1045 · EM ANDAMENTO · Bruno Lima": o número, a situação nas palavras do colaborador (spec chamados, "Leitura do chamado pela pessoa") e quem atende, se há alguém. A quem não participa do chamado, a espera SHALL ser "Aguardando o colaborador", e não "Aguardando você": a resposta não é dela. O chip SHALL seguir o chamado: quando a situação ou quem atende muda, o chip muda.
 
 Vê o resumo de um chamado:
 - quem participa dele: a pessoa do chamado e quem o abriu pelo chat (spec chamados);
@@ -182,6 +182,10 @@ Para quem não vê o resumo, e para o número que não é de um chamado, a cita�
 #### Scenario: Chip na equipe
 - **WHEN** Paulo Nunes escreve "a impressora já está no #1045" na Equipe Financeiro, de onde o #1045 foi aberto
 - **THEN** quem participa da equipe vê o chip "#1045 · EM ANDAMENTO · Bruno Lima"
+
+#### Scenario: Chip do chamado que espera a pessoa
+- **WHEN** Bruno Lima pede a Fernanda Rocha o nome da pasta, e o #1045, aberto por ela na Equipe Financeiro, fica aguardando
+- **THEN** Fernanda vê o chip "#1045 · AGUARDANDO VOCÊ · Bruno Lima", e Paulo Nunes, "#1045 · AGUARDANDO O COLABORADOR · Bruno Lima"
 
 #### Scenario: Resumo de quem participa
 - **WHEN** Fernanda Rocha, que abriu o #1045, escolhe o chip
@@ -198,7 +202,7 @@ O chamado aberto a partir de uma mensagem (spec chamados, "Abrir um chamado pelo
 - a conversa SHALL ganhar, logo depois da mensagem, o evento "Fernanda Rocha transformou esta mensagem no chamado #1045 · 10:32", com "Abrir chamado" a quem participa do chamado e a quem o vê com `chamados.ver`;
 - quem participa da conversa SHALL ver o resumo do chamado (requisito "Chamado citado numa mensagem").
 
-A equipe e o canal SHALL ter "Chamados da equipe" (no canal, "Chamados do canal"): os chamados abertos das mensagens dela, o mais novo primeiro, com o número, o título, a situação nas palavras do colaborador, quem atende, quem abriu e quando.
+A equipe e o canal SHALL ter "Chamados da equipe" (no canal, "Chamados do canal"): os chamados abertos das mensagens dela, o mais novo primeiro, com o número, o título, a situação nas palavras do colaborador, com a espera como no chip (requisito "Chamado citado numa mensagem"), quem atende, quem abriu e quando.
 
 #### Scenario: Evento na equipe
 - **WHEN** Fernanda Rocha transforma a mensagem das 10:19 de Paulo Nunes no #1045

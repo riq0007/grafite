@@ -24,7 +24,7 @@ import {
   nomeNoChat,
   participacao,
   participaDoChamado,
-  situacaoParaQuemParticipa,
+  situacaoNoChat,
   veOChamado,
 } from '@grafite/domain';
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
@@ -287,7 +287,11 @@ async function resolverCitacoes(
   );
   for (const chamado of vistos) {
     resolvidas.set(chamado.numero, {
-      situacao: situacaoParaQuemParticipa(chamado.situacao, estaFechado(chamado, agora, fuso)),
+      situacao: situacaoNoChat(
+        chamado.situacao,
+        estaFechado(chamado, agora, fuso),
+        participaDoChamado({ id: conta.id, pessoaId: conta.pessoaId, usaOChat: true }, chamado),
+      ),
       atende: chamado.responsavelId
         ? (responsaveis.get(chamado.responsavelId)?.nome ?? null)
         : null,
