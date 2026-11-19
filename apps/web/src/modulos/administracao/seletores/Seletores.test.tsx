@@ -252,7 +252,17 @@ describe('SeletorDeConta', () => {
     await screen.findByRole('option', { name: 'Bruno Costa' });
     act(() => campo('Quem fez').blur());
     await waitFor(() => expect(campo('Quem fez').value).toBe('Ana Souza'));
-    expect(mudancas.at(-1)?.id ?? 'c-ana').toBe('c-ana');
+    expect(mudancas).not.toContain(null);
+  });
+
+  it('sem escolha, o texto digitado fica ao sair do campo, para a busca seguir com ele', async () => {
+    const mudancas = comEscolha(null);
+    digitar(campo('Quem fez'), 'bru');
+    await screen.findByRole('option', { name: 'Bruno Costa' });
+    act(() => campo('Quem fez').blur());
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
+    expect(campo('Quem fez').value).toBe('bru');
+    expect(mudancas).toEqual([]);
   });
 
   it('o campo vazio tira a escolha, e ele fica vazio ao sair', async () => {

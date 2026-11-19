@@ -102,10 +102,11 @@ export function SeletorDeConta({
       selectedKey={valor?.id ?? null}
       onSelectionChange={(chave) => {
         // Com o texto e a escolha controlados, o React Aria repete a escolha de agora ao sair do
-        // campo, quando o texto não é o dela, e deixa o texto com quem controla: ele volta ao
-        // rótulo da escolhida, ou fica vazio sem ela.
+        // campo, quando o texto não é o dela, e deixa o texto com quem controla: com uma escolha,
+        // ele volta ao rótulo dela; sem escolha, fica, para a busca seguir com ele, como ao ir
+        // dele aos filtros de "Mais opções de busca".
         if (chave === (valor?.id ?? null)) {
-          definirTexto(valor?.rotulo ?? '');
+          if (valor) definirTexto(valor.rotulo);
           return;
         }
         aoMudar(chave === null ? null : (contas.find((conta) => conta.id === chave) ?? null));
