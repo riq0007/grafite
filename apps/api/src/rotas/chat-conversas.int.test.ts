@@ -5,7 +5,7 @@
 // permissão vem antes: quem não usa o chat, o módulo desligado, a conversa de outros e quem saiu do
 // grupo. As ordens e os contadores são do domínio (`chat/listas.ts`); aqui fica um caso de cada
 // ligação.
-import { atribuicoes, contas, naOrganizacao, perfis } from '@grafite/db';
+import { atribuicoes, contas, naOrganizacao, perfis, pessoas } from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { desligarModulos } from '../../test/alertas.ts';
@@ -342,6 +342,20 @@ describe('a escolha da pessoa da direta', () => {
     await naOrganizacao(api.banco, c.org, (tx) =>
       tx.update(contas).set({ situacao: 'inativa' }).where(eq(contas.id, doPerfilInativo.id)),
     );
+    expect(await escolha('fernanda', 'pessoa')).toEqual([]);
+
+    // A conta ativa da pessoa inativa também fica fora.
+    await naOrganizacao(api.banco, c.org, async (tx) => {
+      await tx.update(contas).set({ situacao: 'ativa' }).where(eq(contas.id, doPerfilInativo.id));
+      const [conta] = await tx
+        .select({ pessoaId: contas.pessoaId })
+        .from(contas)
+        .where(eq(contas.id, doPerfilInativo.id));
+      await tx
+        .update(pessoas)
+        .set({ situacao: 'inativa' })
+        .where(eq(pessoas.id, conta?.pessoaId ?? ''));
+    });
     expect(await escolha('fernanda', 'pessoa')).toEqual([]);
   });
 });

@@ -8,11 +8,25 @@
 import { definicaoDa, fechamento, PERMISSOES, type Permissao } from '@grafite/domain';
 import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
 
-/** As permissões que dão a chave: ela e as que a incluem. */
-const quemDa = (chave: Permissao) =>
-  PERMISSOES.filter((permissao) => fechamento([permissao.chave]).has(chave)).map(
-    (permissao) => permissao.chave,
-  );
+/**
+ * As permissões que dão a chave, ela e as que a incluem, pelo escopo de cada uma: a da organização
+ * inteira só vale na atribuição sem local, também pelo que ela inclui, como no `resolverAcesso`.
+ */
+const quemDa = (chave: Permissao) => {
+  const daChave = PERMISSOES.filter((permissao) => fechamento([permissao.chave]).has(chave));
+  const doEscopo = (escopo: 'local' | 'organizacao') =>
+    daChave.filter((permissao) => permissao.escopo === escopo).map((permissao) => permissao.chave);
+  return { deLocal: doEscopo('local'), daOrganizacao: doEscopo('organizacao') };
+};
+
+/** O perfil declara uma das chaves. */
+const declara = (chaves: readonly string[]) =>
+  chaves.length > 0
+    ? sql`qu_pf.permissoes && array[${sql.join(
+        chaves.map((c) => sql`${c}`),
+        sql`, `,
+      )}]::text[]`
+    : sql`false`;
 
 /**
  * A conta (a coluna ou o id) tem a permissão agora. Os apelidos próprios (`qu_*`) deixam a consulta
@@ -20,10 +34,7 @@ const quemDa = (chave: Permissao) =>
  */
 export function contaTemAPermissao(conta: SQLWrapper | string, chave: Permissao): SQL {
   const daOrganizacao = definicaoDa(chave).escopo === 'organizacao';
-  const chaves = sql.join(
-    quemDa(chave).map((permissao) => sql`${permissao}`),
-    sql`, `,
-  );
+  const { deLocal, daOrganizacao: queIncluem } = quemDa(chave);
   return sql`exists (
     select 1
     from contas qu_c
@@ -42,7 +53,8 @@ export function contaTemAPermissao(conta: SQLWrapper | string, chave: Permissao)
         where qu_a.encerrada_em is null
           ${daOrganizacao ? sql`and qu_a.local_id is null` : sql``}
           and qu_pf.situacao = 'ativo'
-          and (qu_pf.todas_as_permissoes or qu_pf.permissoes && array[${chaves}]::text[])
+          and (qu_pf.todas_as_permissoes or ${declara(deLocal)}
+            or (qu_a.local_id is null and ${declara(queIncluem)}))
           and (qu_a.conta_id = qu_c.id or qu_g.situacao = 'ativo')))`;
 }
 

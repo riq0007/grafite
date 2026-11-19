@@ -53,6 +53,12 @@ const LIMITE_DAS_NAO_LIDAS = MAXIMO_NO_CONTADOR + 1;
 /** Quantas pessoas a escolha da direta traz. */
 const NA_ESCOLHA = 20;
 
+/**
+ * Quantas candidatas a busca com palavras lê, no máximo, antes do corte pelo nome: a busca da pessoa
+ * também tem o e-mail e a matrícula, e as que casam só por eles saem depois.
+ */
+const CANDIDATAS_DA_BUSCA = 500;
+
 const ConversaNaLista = z
   .object({
     id: z.uuid(),
@@ -361,7 +367,9 @@ export const rotasDoChat: FastifyPluginAsyncZod<{
             ),
           )
           .orderBy(asc(pessoas.nome), asc(contas.id));
-        const candidatas = palavras.length > 0 ? await consulta : await consulta.limit(NA_ESCOLHA);
+        const candidatas = await consulta.limit(
+          palavras.length > 0 ? CANDIDATAS_DA_BUSCA : NA_ESCOLHA,
+        );
         return {
           pessoas: candidatas
             .filter(({ nome }) => {
