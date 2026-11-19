@@ -96,5 +96,5 @@ Da 5.9 até a produção-teste, vale o modo rápido do `docs/agentes.md` (pedido
 ## 6. Fechamento
 
 - [x] 6.1 A documentação: a linha do S7 na spec mestre, o runbook com o horário da TI e o `docs/mapa.md` com as specs novas; o contrato de módulo (`docs/casca/modulos.md`) já tem a primeira tela ao entrar, da 5.2. Verificar: o teste da documentação dos módulos e o lint.
-- [ ] 6.2 O ponta a ponta da pilha: abrir, assumir e resolver um chamado, com o anexo de uma mensagem. Verificar: `pnpm test:e2e:pilha`.
+- [x] 6.2 O ponta a ponta da pilha: abrir, assumir e resolver um chamado, com o anexo de uma mensagem. Verificar: `pnpm test:e2e:pilha`.
 - [ ] 6.3 O ponta a ponta da web e o visual: a web simulada ganha os módulos e a sessão com os chamados; as pontas a ponta da primeira tela, com a aba sem a marca (`primeiraTelaVista: false`), porque a fixture a marca desde a 5.2; o `ajustes.spec.ts` e o `posturas.spec.ts`, que reprovam desde a 5.1 (o Chamados primeiro no dock e os Ajustes no "Mais" do celular); e as referências da regressão visual do dock com a boia. Verificar: `pnpm test:e2e` e `pnpm test:visual`.

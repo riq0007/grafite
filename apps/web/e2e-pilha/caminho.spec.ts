@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createECDH, createHash, createHmac, randomBytes } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -2022,5 +2022,85 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     'Executando: ok, got expected exit status: 0',
     'Executando: ok, action #1 processing success',
     'Fim: ok, job successfully completed',
+  ]);
+
+  // 38. Os chamados (change chamados-da-ti): a administradora abre, pela gaveta do Início dos
+  // chamados, um chamado do tipo Outro em nome de Carla Dias e desliga o "Fica comigo", que vem
+  // ligado. Ele nasce na triagem, porque o tipo não tem quem atende por padrão, e ninguém o
+  // atende. Ela o abre pelo aviso, o assume e
+  // responde com o laudo em PDF anexado: a conversa mostra a mensagem, e o anexo baixa com o nome e
+  // o conteúdo enviados. Depois resolve com o que foi feito, e a auditoria guarda a abertura, o
+  // assumir e a resolução.
+  await page.goto('/chamados');
+  await page.getByRole('button', { name: 'Novo chamado' }).click();
+  const abertura = page.getByRole('dialog', { name: 'Novo chamado' });
+  await escolherSugestao(page, 'Quem pediu', 'Carla', 'Carla Dias · Campinas');
+  await escolher(page, 'Tipo', 'Outro');
+  await abertura
+    .getByRole('textbox', { name: 'Conte o que aconteceu' })
+    .fill('O monitor pisca desde cedo.');
+  await expect(abertura.getByRole('textbox', { name: 'Título' })).toHaveValue(
+    'O monitor pisca desde cedo.',
+  );
+  const ficaComigo = abertura.getByRole('switch', { name: 'Fica comigo' });
+  await expect(ficaComigo).toBeChecked();
+  await abertura
+    .locator('label')
+    .filter({ has: page.getByRole('switch', { name: 'Fica comigo' }) })
+    .click();
+  await expect(ficaComigo).not.toBeChecked();
+  await abertura.getByRole('button', { name: 'Abrir o chamado' }).click();
+  await page
+    .getByRole('region', { name: /Avisos/ })
+    .locator('[data-situacao]')
+    .filter({ hasText: 'Chamado #1 aberto.' })
+    .getByRole('button', { name: 'Abrir', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'O monitor pisca desde cedo. #1' }),
+  ).toBeVisible();
+  // Na triagem, ninguém atende: o cabeçalho não tem o "atende desde", e o "Assumir" aparece.
+  await expect(page.getByText('Na triagem', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/^· atende desde /)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Assumir', exact: true }).click();
+  await expect(page.getByText(/^· atende desde /)).toBeVisible();
+  await expect(page.getByText('Em atendimento', { exact: true }).first()).toBeVisible();
+
+  const escrever = page.getByRole('region', { name: 'Escrever no chamado' });
+  await escrever
+    .getByRole('textbox', { name: 'Mensagem para Carla' })
+    .fill('Troquei o cabo de vídeo. O laudo vai junto.');
+  const escolhaDoLaudo = page.waitForEvent('filechooser');
+  await escrever.getByRole('button', { name: 'Anexar arquivos' }).click();
+  await (await escolhaDoLaudo).setFiles({
+    name: 'laudo-do-monitor.pdf',
+    mimeType: 'application/pdf',
+    buffer: PDF,
+  });
+  // O envio espera o anexo subir: o "Tirar" aparece com o anexo na lista, e o "Enviar" volta.
+  await expect(escrever.getByRole('button', { name: 'Tirar laudo-do-monitor.pdf' })).toBeVisible();
+  const enviar = escrever.getByRole('button', { name: 'Enviar', exact: true });
+  await expect(enviar).toBeEnabled();
+  await enviar.click();
+  const conversa = page.getByRole('region', { name: 'Conversa' });
+  await expect(conversa).toContainText('Troquei o cabo de vídeo. O laudo vai junto.');
+  const laudoBaixado = page.waitForEvent('download');
+  await conversa.getByRole('link', { name: 'Baixar laudo-do-monitor.pdf' }).click();
+  const laudo = await laudoBaixado;
+  expect(laudo.suggestedFilename()).toBe('laudo-do-monitor.pdf');
+  expect(readFileSync(await laudo.path())).toEqual(PDF);
+
+  await page.getByRole('button', { name: 'Resolver', exact: true }).click();
+  const resolver = page.getByRole('dialog', { name: 'Resolver o #1' });
+  await resolver
+    .getByRole('textbox', { name: 'O que foi feito' })
+    .fill('Troquei o cabo de vídeo do monitor.');
+  await resolver.getByRole('button', { name: 'Resolver', exact: true }).click();
+  await expect(page.getByText('Reabra o chamado para escrever.')).toBeVisible();
+  await expect(page.getByText('Resolvido', { exact: true }).first()).toBeVisible();
+  expect((await acoesDaAuditoria()).filter((acao) => acao.startsWith('chamado.'))).toEqual([
+    'chamado.aberto',
+    'chamado.assumido',
+    'chamado.resolvido',
   ]);
 });
