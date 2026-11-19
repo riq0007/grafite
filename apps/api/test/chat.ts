@@ -12,6 +12,7 @@ import {
   mensagensDosChamados,
   naOrganizacao,
   numeracaoDosChamados,
+  reacoesDasMensagens,
   tiposDeChamado,
 } from '@grafite/db';
 import { normalizarTexto } from '@grafite/domain';
@@ -299,5 +300,39 @@ export async function montarChat(api: ApiDeTeste, host: string) {
       });
       return linha?.id ?? '';
     },
+
+    /** A reação da conta à mensagem, no momento do relógio, direto no banco. */
+    reagir: (usuario: UsuarioDoChat, mensagemId: string, texto: string) =>
+      naOrg((tx) =>
+        tx.insert(reacoesDasMensagens).values({
+          orgId: org,
+          mensagemId,
+          contaId: contasDe[usuario],
+          texto,
+          criadaEm: api.relogio.agora(),
+        }),
+      ),
+
+    /**
+     * O chamado passa a ser da mensagem, como a abertura pelo chat grava a origem: a conversa e a
+     * mensagem, e quem abriu.
+     */
+    virarChamadoDa: (
+      numero: number,
+      conversaId: string,
+      mensagemId: string,
+      usuario: UsuarioDoChat,
+    ) =>
+      naOrg((tx) =>
+        tx
+          .update(chamados)
+          .set({
+            origem: 'chat',
+            origemConversaId: conversaId,
+            origemMensagemId: mensagemId,
+            abertoPor: contasDe[usuario],
+          })
+          .where(eq(chamados.numero, numero)),
+      ),
   };
 }

@@ -29949,6 +29949,375 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/conversas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conversa aberta: o nome, quem escreve, o silenciar e a última lida */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaAberta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/mensagens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As mensagens da conversa, de 50 em 50: as mais novas, antes, depois ou ao redor */
+        get: {
+            parameters: {
+                query?: {
+                    antes?: string;
+                    depois?: string;
+                    em?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaginaDeMensagens"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Manda a mensagem na conversa, com a resposta a outra dela */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        texto: string;
+                        respondeA?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MensagemDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/diretas/{conta}/mensagens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda a mensagem à pessoa: a primeira cria a conversa direta */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    conta: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        texto: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MensagemNaDireta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paineis": {
         parameters: {
             query?: never;
@@ -38216,6 +38585,74 @@ export interface components {
                 conversa: string | null;
             }[];
         };
+        AnexoDaMensagemInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagemInput: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamadoInput: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChatInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChatInput"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagemInput"][];
+            anexos: components["schemas"]["AnexoDaMensagemInput"][];
+            citacoes: components["schemas"]["CitacaoDeChamadoInput"][];
+        };
+        PaginaDeMensagensInput: {
+            itens: components["schemas"]["MensagemDoChatInput"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        ConversaAbertaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+            pessoas: number | null;
+            escreveGrupo: string | null;
+            arquivada: boolean;
+            silenciada: boolean;
+            lidaAte: string | null;
+            escreve: boolean;
+            recusa: string | null;
+        };
+        MensagemNaDiretaInput: {
+            /** Format: uuid */
+            conversa: string;
+            mensagem: components["schemas"]["MensagemDoChatInput"];
+        };
         PessoaDoSegredoInput: {
             /** Format: uuid */
             id: string;
@@ -43622,6 +44059,74 @@ export interface components {
                 foto: components["schemas"]["FotoDaPessoa"] | null;
                 conversa: string | null;
             }[];
+        };
+        AnexoDaMensagem: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagem: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamado: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChat: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChat"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagem"][];
+            anexos: components["schemas"]["AnexoDaMensagem"][];
+            citacoes: components["schemas"]["CitacaoDeChamado"][];
+        };
+        PaginaDeMensagens: {
+            itens: components["schemas"]["MensagemDoChat"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        ConversaAberta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            outra: components["schemas"]["ContaDoChat"] | null;
+            pessoas: number | null;
+            escreveGrupo: string | null;
+            arquivada: boolean;
+            silenciada: boolean;
+            lidaAte: string | null;
+            escreve: boolean;
+            recusa: string | null;
+        };
+        MensagemNaDireta: {
+            /** Format: uuid */
+            conversa: string;
+            mensagem: components["schemas"]["MensagemDoChat"];
         };
         PessoaDoSegredo: {
             /** Format: uuid */

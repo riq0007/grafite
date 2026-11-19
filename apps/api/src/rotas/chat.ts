@@ -36,14 +36,14 @@ import { carregarGrupos } from '../acesso/acesso.ts';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { type Armazenamento, VARIANTES } from '../arquivos/armazenamento.ts';
-import { FotoDaPessoa } from '../arquivos/esquemas.ts';
 import {
   entregarImagem,
   IMAGEM_ENTREGUE,
   imagemNaoEncontrada,
 } from '../arquivos/imagem-do-registro.ts';
 import { contendo } from '../busca.ts';
-import { daTiNaConsulta, usaOChatNaConsulta } from '../chat/quem-usa.ts';
+import { ContaDoChat, colunasDaConta, contaDoChat, lerContas } from '../chat/contas.ts';
+import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { RespostaDeProblema } from '../problemas.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
@@ -52,18 +52,6 @@ const LIMITE_DAS_NAO_LIDAS = MAXIMO_NO_CONTADOR + 1;
 
 /** Quantas pessoas a escolha da direta traz. */
 const NA_ESCOLHA = 20;
-
-const ContaDoChat = z
-  .object({
-    conta: z.uuid(),
-    /** O nome da pessoa, sem o "(TI)": a tela o põe pelo `daTi`. */
-    nome: z.string(),
-    /** Tem `chamados.atender` em algum local: leva o "(TI)" depois do nome. */
-    daTi: z.boolean(),
-    /** A foto da pessoa, só de quem usa o chat; sem ela, as iniciais. */
-    foto: FotoDaPessoa.nullable(),
-  })
-  .meta({ id: 'ContaDoChat' });
 
 const ConversaNaLista = z
   .object({
@@ -190,28 +178,6 @@ async function conversasDaConta(tx: Transacao, contaId: string): Promise<LinhaDa
   return linhas.map((linha) => ({ ...linha, silenciada: linha.silenciada ?? false }));
 }
 
-/** As outras contas das diretas e as da escolha: o nome, o "(TI)" e a foto de quem usa o chat. */
-const colunasDaConta = {
-  conta: contas.id,
-  nome: pessoas.nome,
-  fotoId: pessoas.fotoId,
-  daTi: sql<boolean>`${daTiNaConsulta(contas.id)}`,
-  usaOChat: sql<boolean>`${usaOChatNaConsulta(contas.id)}`,
-};
-
-const contaDoChat = (linha: {
-  conta: string;
-  nome: string;
-  fotoId: string | null;
-  daTi: boolean;
-  usaOChat: boolean;
-}) => ({
-  conta: linha.conta,
-  nome: linha.nome,
-  daTi: linha.daTi,
-  foto: linha.usaOChat && linha.fotoId ? { id: linha.fotoId } : null,
-});
-
 /**
  * Os chamados abertos de que a conta participa com resposta nova: os da pessoa dela e os que ela
  * abriu pelo chat (`participaDoChamado`), com as mensagens da TI de outra conta, que o domínio conta
@@ -324,18 +290,7 @@ export const rotasDoChat: FastifyPluginAsyncZod<{
             linhas.flatMap((linha) => (linha.tipo === 'direta' ? [outraDa(linha) ?? ''] : [])),
           ),
         ];
-        const contasDasDiretas =
-          outras.length > 0
-            ? await tx
-                .select(colunasDaConta)
-                .from(contas)
-                .innerJoin(
-                  pessoas,
-                  and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)),
-                )
-                .where(inArray(contas.id, outras))
-            : [];
-        const porConta = new Map(contasDasDiretas.map((linha) => [linha.conta, linha]));
+        const porConta = await lerContas(tx, outras);
 
         const naLista = (linha: LinhaDaConversa) => {
           const outra = linha.tipo === 'direta' ? porConta.get(outraDa(linha) ?? '') : undefined;
