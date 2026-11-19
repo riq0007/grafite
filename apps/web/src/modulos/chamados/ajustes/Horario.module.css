@@ -1,0 +1,86 @@
+/*
+ * O horário da TI (change chamados-da-ti, design, "O horário da TI (tarefa 5.26)"): uma página
+ * comum, com o formulário numa coluna, nas seções com o carimbo, como as do editor dos tipos.
+ */
+.horario {
+  max-width: 640px;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-6);
+}
+
+.carregando {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+/* Os dias numa linha, que quebra na coluna estreita. */
+.dias [data-parte="opcoes"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-4);
+}
+
+/* O início e o fim, lado a lado, na largura de uma hora. */
+.horas {
+  max-width: 320px;
+}
+
+.frase {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+/* A carga como frase, com o número no meio, como o prazo do tipo. */
+.fraseDaCarga {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-dado);
+}
+
+.erro {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}
+
+.ajuda {
+  margin: var(--esp-1) 0 0;
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.pe {
+  display: grid;
+  gap: var(--esp-3);
+  padding-top: var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+}
+
+.botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+.informacao {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.5;
+}

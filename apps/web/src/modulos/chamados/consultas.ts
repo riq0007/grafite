@@ -142,6 +142,18 @@ export function useRespostasProntas() {
   });
 }
 
+/** A chave do horário da TI, debaixo da dos ajustes, que o evento deles relê. */
+export const CHAVE_DO_HORARIO_DA_TI = [...CHAVE_DOS_AJUSTES_DOS_CHAMADOS, 'horario-da-ti'] as const;
+
+/** O horário da TI, ou o padrão na organização que não gravou o dela, a quem configura (5.26). */
+export function useHorarioDaTi() {
+  const api = useApi();
+  return useQuery({
+    queryKey: CHAVE_DO_HORARIO_DA_TI,
+    queryFn: () => consultar(() => api.GET('/chamados/horario-da-ti'), 'carregar o horário da TI'),
+  });
+}
+
 /** As contas que atendem os chamados, que o editor do tipo oferece em quem atende por padrão. */
 export function useContasQueAtendem() {
   const api = useApi();

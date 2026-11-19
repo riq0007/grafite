@@ -138,6 +138,7 @@ export {
 export { AreaDeTexto, type PropsDaAreaDeTexto } from './componentes/campo/AreaDeTexto.tsx';
 export { CampoDeBusca, type PropsDoCampoDeBusca } from './componentes/campo/CampoDeBusca.tsx';
 export { CampoDeData, type PropsDoCampoDeData } from './componentes/campo/CampoDeData.tsx';
+export { CampoDeHora, type PropsDoCampoDeHora } from './componentes/campo/CampoDeHora.tsx';
 export { CampoDeSenha, type PropsDoCampoDeSenha } from './componentes/campo/CampoDeSenha.tsx';
 export { CampoDeTexto, type PropsDoCampoDeTexto } from './componentes/campo/CampoDeTexto.tsx';
 export { Formulario, type PropsDoFormulario } from './componentes/campo/Formulario.tsx';
