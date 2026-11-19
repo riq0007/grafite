@@ -3,7 +3,13 @@
 // volta, com o teto de 10 textos pela trava da mensagem; a leitura, que só anda para a frente e marca
 // as notificações da conversa até a mensagem lida; o silenciar; e os eventos de cada um. As frases e
 // o que a reação aceita são do domínio; aqui fica um caso de cada ligação.
-import { eventos, naOrganizacao, notificacoes, reacoesDasMensagens } from '@grafite/db';
+import {
+  eventos,
+  leiturasDasConversas,
+  naOrganizacao,
+  notificacoes,
+  reacoesDasMensagens,
+} from '@grafite/db';
 import { asc, inArray } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type ChatDeTeste, montarChat, type UsuarioDoChat } from '../../test/chat.ts';
@@ -281,5 +287,16 @@ describe('o silenciar', () => {
         contas: [c.conta('fernanda')],
       })),
     );
+  });
+
+  it('voltar a ouvir a conversa que nunca foi silenciada não grava a leitura nem avisa', async () => {
+    const equipe = await c.criarEquipe('Equipe Financeiro', c.grupos.financeiro);
+    const r = await silenciar('fernanda', equipe, false);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toEqual({ silenciada: false });
+    expect(
+      await naOrganizacao(api.banco, c.org, (tx) => tx.select().from(leiturasDasConversas)),
+    ).toEqual([]);
+    expect(await eventosDoChat()).toEqual([]);
   });
 });

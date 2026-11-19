@@ -226,15 +226,29 @@ export const rotasDaLeituraDoChat: FastifyPluginAsyncZod<{
         const conta = await contaDaSessao(tx, requisicao);
         const { linha } = await lerConversaDaConta(tx, conta, requisicao.params.id);
         const { silenciada } = requisicao.body;
-        const [mudou] = await tx
-          .insert(leiturasDasConversas)
-          .values({ orgId: linha.orgId, conversaId: linha.id, contaId: conta.id, silenciada })
-          .onConflictDoUpdate({
-            target: DA_LEITURA,
-            set: { silenciada },
-            setWhere: sql`${leiturasDasConversas.silenciada} <> ${silenciada}`,
-          })
-          .returning({ id: leiturasDasConversas.id });
+        // Voltar a ouvir só muda a linha que já existe e está silenciada: sem ela, nada muda, e
+        // nem a linha nem o aviso nascem.
+        const [mudou] = silenciada
+          ? await tx
+              .insert(leiturasDasConversas)
+              .values({ orgId: linha.orgId, conversaId: linha.id, contaId: conta.id, silenciada })
+              .onConflictDoUpdate({
+                target: DA_LEITURA,
+                set: { silenciada },
+                setWhere: sql`not ${leiturasDasConversas.silenciada}`,
+              })
+              .returning({ id: leiturasDasConversas.id })
+          : await tx
+              .update(leiturasDasConversas)
+              .set({ silenciada })
+              .where(
+                and(
+                  eq(leiturasDasConversas.conversaId, linha.id),
+                  eq(leiturasDasConversas.contaId, conta.id),
+                  eq(leiturasDasConversas.silenciada, true),
+                ),
+              )
+              .returning({ id: leiturasDasConversas.id });
         if (mudou) {
           await registrarEvento(tx, {
             tipo: 'chat.mudou',
