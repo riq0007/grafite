@@ -24,11 +24,21 @@ No pé da trilha, a foto ou as iniciais da conta SHALL abrir o menu da conta, co
 
 A casca SHALL ter o módulo Chat, com o ícone do balão de conversa, logo depois do Chamados na ordem de fábrica do dock (spec dock), visível para quem usa o chat. No celular, o módulo SHALL ficar na barra de abas, depois do Chamados.
 
-O item do dock SHALL levar o selo com o total do chat mais os chamados com resposta nova, e SHALL abrir a janela do Chat, com a trilha Chat, Equipes e Chamados, a lista e a conversa, como no app. Os avisos ficam no sino da casca. O menu SHALL ter "Chat", "Equipes" e "Chamados" e, para quem configura o chat, "Equipes e canais" (requisito "Equipes e canais na tela"). "Abrir no app do chat" SHALL abrir `/chat` numa janela nova.
+O item do dock SHALL levar o selo com o total do chat mais os chamados com resposta nova, e SHALL abrir a janela do Chat, com a trilha Chat, Equipes e Chamados, a lista e a conversa, como no app. Os avisos ficam no sino da casca. O menu SHALL ter "Chat", "Equipes" e "Chamados" e, para quem configura o chat, "Equipes e canais" (requisito "Equipes e canais na tela"). "Abrir no app do chat" SHALL abrir o mesmo lugar em `/chat` numa janela nova.
+
+A janela do Chat SHALL ter os endereços dela na casca, fora do `/chat`, que é do app: recarregar a casca com a janela do Chat aberta SHALL reabri-la na casca. Na casca, os endereços do app do chat, como os das notificações do chat, SHALL abrir o mesmo lugar na janela do Chat.
 
 #### Scenario: Selo no dock
 - **WHEN** Ana Souza tem 2 mensagens não lidas em conversas diretas e nenhum chamado com resposta nova
 - **THEN** o Chat do dock dela mostra o selo 2
+
+#### Scenario: Recarregar com o Chat aberto
+- **WHEN** Ana Souza recarrega a casca com a janela do Chat aberta na Equipe Financeiro
+- **THEN** a casca volta com a janela do Chat na Equipe Financeiro, e não o app do chat
+
+#### Scenario: Notificação do chat na casca
+- **WHEN** Ana Souza escolhe "Abrir" na notificação "Mensagem de Paulo Nunes", na central da casca
+- **THEN** a janela do Chat abre na conversa direta com Paulo, na mensagem
 
 ### Requirement: Trilha do chat
 
@@ -71,7 +81,7 @@ A conversa SHALL ter:
 - **o dia,** em separadores como "Hoje", "Ontem" e "12/11";
 - **os eventos,** numa linha, como "Fernanda Rocha transformou esta mensagem no chamado #1045 · 10:32", com "Abrir chamado".
 
-A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas", ou na última mensagem, e ficar presa embaixo enquanto chegam as mensagens. As mais antigas SHALL vir ao rolar para cima, com "Mensagens anteriores". Com a conversa rolada para cima, a mensagem que chega SHALL mostrar "Mensagens novas · 2", que leva ao fim.
+A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas", ou, sem não lidas, na última mensagem, e ficar presa embaixo enquanto chegam as mensagens. A conversa que a conta nunca leu, como a equipe de quem acaba de entrar no grupo, SHALL abrir na última mensagem, sem o separador. As mais antigas SHALL vir ao rolar para cima, com "Mensagens anteriores". Com a conversa rolada para cima, a mensagem que chega SHALL mostrar "Mensagens novas · 2", que leva ao fim.
 
 #### Scenario: Mensagem que chega
 - **WHEN** Paulo Nunes manda uma mensagem na Equipe Financeiro, com Fernanda Rocha no fim da conversa
@@ -80,6 +90,10 @@ A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas",
 #### Scenario: Rolada para cima
 - **WHEN** chegam 2 mensagens com Fernanda Rocha lendo as mensagens de ontem
 - **THEN** a conversa não se mexe, e aparece "Mensagens novas · 2"
+
+#### Scenario: Primeira vez na equipe
+- **WHEN** Tatiana Ramos entra no grupo Financeiro e abre a Equipe Financeiro pela primeira vez
+- **THEN** a conversa abre na última mensagem, sem o separador "Mensagens novas", e o contador da equipe some
 
 ### Requirement: Caixa de escrever do chat
 
@@ -136,9 +150,9 @@ Aberto o chamado, o diálogo SHALL fechar, a lista SHALL mostrar o chamado no al
 
 A conversa de um chamado, para quem participa dele (spec chamados, "Leitura do chamado pela pessoa"), SHALL ter:
 - **o cabeçalho:** "CHAMADO #1045" no selo, o título em peso forte e a situação à direita;
-- **as etapas,** Aberto, Em andamento, Aguardando você e Resolvido, com a de agora marcada em texto;
+- **as etapas,** Aberto, Em andamento, Aguardando você e Resolvido, cada uma com a hora ou "ainda não" (spec chamados, "Leitura do chamado pela pessoa"), com a de agora marcada em texto;
 - **"Seus outros chamados",** os outros chamados abertos da conta em pílulas com o título inteiro, que quebram a linha, e levam a eles;
-- **a conversa:** a abertura, com o resumo das respostas ou a mensagem citada, as mensagens da TI e as de quem participa, os eventos nas palavras do colaborador e, no fim de uma espera, a razão dela, como "Aguardando você: confirme o nome da pasta";
+- **a conversa:** a abertura, com o resumo das respostas ou a mensagem citada, as mensagens da TI e as de quem participa e os eventos nas palavras do colaborador, como a espera, na linha "Aguardando você", com a hora;
 - **a resposta nova:** o separador "Resposta nova" antes da primeira mensagem dela e "Marcar como vista";
 - **a pergunta com opções:** as opções em chips de 36 px com a borda à vista, que se escolhem pelo teclado, com as setas, e pelo mouse; respondida, a escolhida cheia, na cor do destaque e com o ✓, e as outras apagadas;
 - **o cartão do ativo:** o ícone, o nome em peso forte, o modelo e o patrimônio em mono, o selo do suprimento e a barra do nível com o número ao lado, e o IP e a situação;
@@ -176,11 +190,21 @@ Cada chamado SHALL ter o contorno, o ícone do tipo, o selo da situação, a hor
 
 A vista Equipes SHALL listar as equipes e os canais de que a conta participa, com quantas pessoas cada um tem. Escolher um SHALL mostrar quem participa, pelo nome, e "Abrir a conversa".
 
-A vista Avisos SHALL mostrar as notificações da conta, como a central da casca (spec notificacoes, "Central de notificações"), com "Abrir", que leva ao chat no endereço da notificação, ou à casca quando o endereço é dela.
+A vista Avisos SHALL mostrar as notificações da conta, como a central da casca (spec notificacoes, "Central de notificações"), com "Abrir", que leva ao chat no endereço da notificação, ou, quando o endereço é da casca, abre o Grafite nele numa janela nova.
+
+A vista Avisos SHALL ter, em cima, "Receber neste aparelho", que inscreve no push o aparelho em que a conta está (spec notificacoes, "Aparelhos do push"), com "Este aparelho recebe os avisos." quando ele já está inscrito e, quando ele não pode receber, o motivo em texto.
 
 #### Scenario: Pessoas da equipe
 - **WHEN** Fernanda Rocha escolhe a Equipe Financeiro na vista Equipes
 - **THEN** a tela mostra as 12 pessoas da equipe e "Abrir a conversa"
+
+#### Scenario: Receber no celular pelo app
+- **WHEN** Fernanda Rocha, com o app do chat instalado no celular, escolhe "Receber neste aparelho" nos Avisos, e o celular permite
+- **THEN** os Avisos dizem "Este aparelho recebe os avisos.", e o celular passa a receber o push das mensagens
+
+#### Scenario: Endereço da casca nos Avisos
+- **WHEN** Ana Souza escolhe "Abrir" na notificação "Chamado #1043 com você", nos Avisos do app do chat
+- **THEN** o Grafite abre o #1043 numa janela nova, e o app do chat continua onde estava
 
 ### Requirement: Chamado citado na tela
 

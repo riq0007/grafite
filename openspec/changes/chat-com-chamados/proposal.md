@@ -38,14 +38,14 @@ A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre,
   - o chamado citado com "#", que vira o chip com a situação e quem atende, e o resumo para quem participa (m12).
 - **As não lidas:**
   - o contador de cada conversa e o da trilha;
-  - a "Resposta nova" azul do chamado, que fica até a pessoa responder ou marcar como vista.
+  - a "Resposta nova" azul do chamado aberto, que fica até a pessoa responder ou marcar como vista.
 - **Transformar em chamado** (m01, m02 e m09):
   - pelo menu da mensagem, ou por Ctrl+Shift+T;
   - o formulário curto: a mensagem citada, o tipo em chips, o título, o ativo sugerido e "No nome de", trocáveis;
   - na conversa de origem, o evento com "Abrir chamado" e o fio azul na mensagem;
   - a aba "Chamados da equipe".
 - **O chamado no chat da pessoa** (m04, m06, m07 e m10):
-  - o cabeçalho, com o número, o título, a situação nas palavras do colaborador e as quatro etapas;
+  - o cabeçalho, com o número, o título, a situação nas palavras do colaborador e as quatro etapas, com as horas;
   - "Seus outros chamados";
   - a conversa, sem as notas internas, com o resumo do formulário na abertura e os eventos nas palavras do colaborador;
   - o painel "Neste chamado", com os anexos, o ativo ligado e quem atende;
@@ -129,8 +129,8 @@ Fica fora:
 - `modulos-da-organizacao`: o Chat entra nos módulos opcionais.
 - `eventos-em-tempo-real`: o tipo de evento do chat na tabela, e o dos chamados passa a ir também à pessoa do chamado.
 - `arquivos-e-imagens`: os anexos do chat, entregues pela conversa dona, e os anexos que a pessoa manda no próprio chamado.
-- `notificacoes`: as notificações de mensagem vão pelo push fora do modo Foco, qualquer que seja a severidade escolhida para o push.
-- `pwa`: o app do chat instalado à parte, com o nome "Grafite · Chat", e o push que abre a conversa nele.
+- `notificacoes`: as notificações de mensagem vão pelo push fora do modo Foco, qualquer que seja a severidade escolhida para o push; o aparelho também se inscreve pelos Avisos do app do chat; e o toque no push escolhe a janela pelo endereço.
+- `pwa`: o app do chat instalado à parte, com o nome "Grafite · Chat", e o push que abre a conversa nele, ou na janela do Chat da casca.
 
 ## Impact
 
@@ -143,7 +143,7 @@ Fica fora:
     - a resposta vista de quem participa (`leituras_dos_chamados`);
     - as opções e o cartão do ativo nas mensagens;
     - as opções nas respostas prontas;
-  - nas notificações, a marca da mensagem e o assunto; nos eventos, o público por grupo.
+  - nas notificações, a marca da mensagem, o assunto e a mensagem do chat; nos eventos, o público por grupo.
 - **Domínio** (`packages/domain`):
   - as palavras do colaborador, as etapas e os grupos dos chamados;
   - as não lidas e a resposta nova;
@@ -159,8 +159,9 @@ Fica fora:
   - a tarefa do fechamento;
   - os eventos, as notificações e a auditoria.
 - **Web:**
-  - o app do chat em `/chat`, com o manifesto próprio;
-  - o módulo Chat na casca;
+  - o app do chat em `/chat`, com a entrada e o manifesto próprios;
+  - o módulo Chat na casca, em `/conversas`, com a tradução dos endereços do chat;
+  - o toque no push (`sw-avisos.js`);
   - o chamado aberto e o campo de escrever do módulo Chamados;
   - a primeira tela.
 - **Documentação:**

@@ -180,7 +180,7 @@ No chat (spec chat), os chamados SHALL notificar como mensagem, na severidade In
 
 O começo SHALL ter até 120 caracteres, cortado no fim de uma palavra, com reticências quando foi cortado. As outras ações SHALL NOT notificar a pessoa: ela as vê na conversa. A nota interna SHALL NOT notificar ninguém.
 
-Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato, e quem participa SHALL NOT ser notificado da própria mensagem. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar a TI: quem atende não muda, e nada cai na triagem. Pelo mesmo motivo, a troca do ativo, do título e dos campos da TI SHALL NOT notificar.
+Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato, e quem escreve SHALL NOT ser notificado da própria mensagem, também a conta da TI que é a pessoa do chamado. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar a TI: quem atende não muda, e nada cai na triagem. Pelo mesmo motivo, a troca do ativo, do título e dos campos da TI SHALL NOT notificar.
 
 #### Scenario: Passado a Renato
 - **WHEN** Ana passa o #1038 a Renato
@@ -316,7 +316,7 @@ Elas SHALL ler:
   | Resolvido | Resolvido |
   | Fechado | Fechado |
 
-- as etapas, nesta ordem: Aberto, Em andamento, Aguardando você e Resolvido, com a de agora marcada;
+- as etapas, nesta ordem: Aberto, Em andamento, Aguardando você e Resolvido, com a de agora marcada. Cada etapa até a de agora SHALL ter a hora da última vez em que o chamado chegou a ela, como "ontem 17:05", e a que o chamado pulou SHALL ficar sem hora; as depois da de agora SHALL dizer "ainda não". As horas saem dos eventos, também dos que a pessoa não lê, como o desfazer;
 - a previsão da resposta, pelo prazo de resposta do tipo, como "responde em ~1 h";
 - as mensagens da TI para a pessoa e as de quem participa, com as opções, as escolhas, os cartões dos ativos e os anexos;
 - o resumo das respostas que a pessoa vê e os anexos dos campos que ela vê;
@@ -342,15 +342,19 @@ Elas SHALL NOT ler as notas internas, os campos só da TI e os anexos dos dois, 
 - **WHEN** Fernanda Rocha abre o #1041 no chat
 - **THEN** ela vê "Aguardando você", as mensagens dela e as de Ana, e não vê as notas das 17:24 e das 09:25
 
+#### Scenario: Etapas com as horas
+- **WHEN** Fernanda Rocha abre hoje o #1041, que ela abriu ontem às 17:05, Ana assumiu às 17:20 e que aguarda ela desde as 09:21
+- **THEN** as etapas dizem "Aberto · ontem 17:05", "Em andamento · ontem 17:20", "Aguardando você · hoje 09:21", marcada, e "Resolvido · ainda não"
+
 #### Scenario: Chamado de outra pessoa
 - **WHEN** Paulo Nunes pede o #1041, de Fernanda Rocha, pela API do chat
 - **THEN** a API responde que o chamado não existe
 
 ### Requirement: Resposta nova
 
-Cada participante SHALL ter, em cada chamado, a resposta nova: as mensagens da TI para a pessoa depois da última mensagem ou escolha dele, ou do último "Marcar como vista" dele. A resposta nova SHALL ficar até ele responder, escolher uma opção ou marcar como vista. Abrir a conversa SHALL NOT tirá-la.
+Cada participante SHALL ter, em cada chamado aberto (Na triagem, Em atendimento e Aguardando o colaborador), a resposta nova: as mensagens da TI para a pessoa escritas por outra conta depois da última mensagem, escolha, reabertura ou avaliação dele, ou do último "Marcar como vista" dele. A resposta nova SHALL ficar até ele responder, escolher uma opção ou marcar como vista. Abrir a conversa SHALL NOT tirá-la. O chamado resolvido e o fechado SHALL NOT ter resposta nova: o "O que foi feito" do resolver entra na conversa como mensagem da TI, e a pessoa o recebe pela notificação do resolvido.
 
-Responder, escolher e marcar como vista SHALL marcar como lidas as notificações desse chamado na conta.
+Responder, escolher, reabrir, avaliar e marcar como vista SHALL marcar como lidas as notificações desse chamado na conta.
 
 #### Scenario: Resposta que fica
 - **WHEN** Ana responde o #1041 às 09:21, e Fernanda Rocha abre a conversa às 10:12 sem responder
@@ -359,6 +363,14 @@ Responder, escolher e marcar como vista SHALL marcar como lidas as notificaçõe
 #### Scenario: Marcar como vista
 - **WHEN** Fernanda Rocha escolhe "Marcar como vista" no #1044
 - **THEN** a resposta nova do #1044 sai, e a mensagem seguinte de Bruno a traz de volta
+
+#### Scenario: Resolvido sem resposta nova
+- **WHEN** Bruno resolve o #1044 com "Troquei o teclado.", e Fernanda Rocha não respondeu desde a última mensagem dele
+- **THEN** o #1044 sai dos chamados com resposta nova de Fernanda, e o "Troquei o teclado." fica na conversa
+
+#### Scenario: A própria mensagem
+- **WHEN** Ana Souza, que atende os chamados, responde pelo módulo Chamados o #1050, aberto para ela mesma
+- **THEN** o #1050 não ganha resposta nova para Ana, e ela não é notificada da própria mensagem
 
 ### Requirement: Resposta da pessoa
 

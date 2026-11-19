@@ -73,14 +73,16 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 ### 5. As não lidas e a resposta nova
 
-- **As não lidas** são as mensagens dos outros depois da `lida_ate`, contadas até 100, para o "99+".
-- **A leitura** só anda para a frente. A tela a manda com a conversa à vista (a aba visível e a janela com o foco), na abertura e a cada mensagem que chega. Ela marca como lidas as notificações da conta com o assunto da conversa, até a mensagem lida.
-- **A resposta nova** são as mensagens da TI (`mensagem` com a `autor_conta`) depois do `vista_em` da conta. O `vista_em` anda na mensagem, na escolha e no "Marcar como vista" dela, e os três marcam como lidas as notificações da conta com o assunto do chamado.
+- **As não lidas** são as mensagens dos outros depois da `lida_ate`, contadas até 100, para o "99+". Sem a `lida_ate`, a conversa que a conta nunca leu abre na última mensagem, sem o separador.
+- **A leitura** só anda para a frente. A tela a manda com a conversa à vista (a aba visível e a janela com o foco), na abertura e a cada mensagem que chega. Ela marca como lidas as notificações da conta com o assunto da conversa e a `mensagem_do_chat_id` até a mensagem lida (decisão 6): o id é o `uuidv7()`, que ordena.
+- **A resposta nova** são as mensagens da TI (`mensagem` com a `autor_conta`) de outra conta depois do `vista_em` da conta, só no chamado aberto (na triagem, em atendimento e aguardando). O resolver grava o "O que foi feito" como mensagem da TI: sem o corte, todo resolvido teria resposta nova até a pessoa achar o "Marcar como vista". O `vista_em` anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar como vista" dela, e os cinco marcam como lidas as notificações da conta com o assunto do chamado. Pelo "de outra conta", a conta da TI que é a pessoa do próprio chamado não ganha resposta nova da mensagem que ela mesma manda.
+- **Na primeira versão,** os chamados abertos com mensagens da TI começam com resposta nova, e é o certo: até aqui ninguém as entregava à pessoa.
 - **O resumo do chat,** num pedido só para o dock, a trilha e a lista: o total sem as silenciadas e os chamados com resposta nova.
 
 ### 6. As notificações
 
-- A `notificacoes` ganha a `mensagem` e o `assunto` (`conversa:<id>` ou `chamado:<id>`, até 80 caracteres), com o índice das não lidas pelo assunto.
+- A `notificacoes` ganha a `mensagem`, o `assunto` (`conversa:<id>` ou `chamado:<id>`, até 80 caracteres) e a `mensagem_do_chat_id`, a mensagem do chat de que ela trata, para a leitura marcar só as notificações até a mensagem lida. O índice das não lidas fica pelo assunto.
+- **Quem escreve** nunca é notificado da própria mensagem: no chat, o autor; no chamado, também a conta da TI que é a pessoa dele.
 - O `canaisNaHora` do domínio recebe a `mensagem`: o push vai qualquer que seja a severidade, nunca no Foco, e leva só o título. O e-mail e o resumo seguem as escolhas da conta, como em qualquer notificação.
 - **A mensagem do chat** é notificada pela fila, 10 s depois (a tarefa `chat.notificar`, com o `startAfter`), a quem ainda não a leu, fora quem escreveu e quem silenciou. É assim que a regra "a conta que já leu a mensagem" se cumpre: quem está com a conversa à vista a lê antes. O destino é `/chat/c/<conversa>?m=<mensagem>`.
 - **Os chamados** notificam na transação, como já fazem:
@@ -124,6 +126,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o resumo do chip.
 - **A leitura** tira as notas, os campos só da TI e os anexos dos dois, os alertas, o prazo da resolução e os eventos do desfazer, da OS, da solicitação e das trocas.
 - **O domínio dá as palavras do colaborador:** a situação, as etapas e os eventos, com o "Você" quando quem agiu é a conta que lê. Dá também a ordem da lista CHAMADOS e os grupos da vista Chamados, com os testes antes do código.
+- **As horas das etapas** (m10) saem dos eventos, pela mesma leitura da situação da linha do tempo da TI (`linhaDoTempo`, em `lado.ts`): cada etapa até a de agora tem a hora da última chegada a ela, a pulada fica sem hora, e as depois da de agora, "ainda não". O domínio as calcula com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê.
 - **As ações de quem participa** entram na matriz do `acoes.ts` (`acoesDeQuemParticipa`), com o chamado travado para a gravação:
   - a mensagem e a escolha que retomam o aguardando;
   - a mensagem e o "Reabrir" que reabrem o resolvido, para quem resolveu ou para a triagem, como o reabrir da TI;
@@ -145,12 +148,14 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 ### 12. O app do chat na web
 
-- **Uma página própria do build:** o `apps/web/chat/index.html`, com o título "Grafite · Chat" e o manifesto `/chat/manifest.webmanifest`, gerado pelo `pnpm marca:gerar` com os ícones de sempre. Ela usa a mesma entrada (`main.tsx`), e o `App` escolhe o app do chat pelo caminho.
-- **O app** tem a árvore de rotas própria (`/chat`, `/chat/c/:conversa`, `/chat/chamados`, `/chat/chamados/:numero`, `/chat/equipes` e `/chat/avisos`) e os mesmos provedores: as preferências, a sessão, a API, o TanStack Query, o canal e as notificações. Não tem a casca nem a chegada.
+- **Uma página própria do build:** o `apps/web/chat/index.html`, com o título "Grafite · Chat" e o manifesto `/chat/manifest.webmanifest`, gerado pelo `pnpm marca:gerar` com os ícones de sempre. A página tem a entrada própria, o `src/chat/main.tsx`, que não importa o roteador da casca nem os módulos: o pacote principal já passa de 2 MiB (`vite.config.ts`), e o colaborador abre o chat no celular. O build passa a ter as duas páginas.
+- **O app** tem a árvore de rotas própria (`/chat`, `/chat/c/:conversa`, `/chat/chamados`, `/chat/chamados/:numero`, `/chat/equipes` e `/chat/avisos`) e os mesmos provedores: as preferências, a sessão, a API, o TanStack Query, o canal e as notificações. Não tem a casca nem a chegada: a entrada valida a sessão como a etapa da sessão da chegada, sem a camada do carregamento, e o `chegadaNoIndex` pula a página do chat, que de outro modo ficaria com o "Carregando o Grafite", que só o `chegar` fecha.
+- **"Receber neste aparelho"** fica em cima dos Avisos do app, pelo mesmo `inscreverEsteAparelho` dos Ajustes e com os motivos em texto deles: quem só usa o chat nunca chega aos Ajustes, e no iPhone o push só vale no app instalado, que tem o alcance `/chat`.
 - **A API** serve o `chat/index.html` aos pedidos de página em `/chat`. No `pnpm dev`, um plugin do Vite faz o mesmo.
 - **O service worker** deixa o `/chat` de fora do `navigateFallback`: o app do chat abre pela rede, porque sem ela não há conversa, e sem isso o cache serviria a página com o manifesto do Grafite.
-- **O toque no push** com o destino em `/chat` (`sw-avisos.js`) foca a janela já aberta do app do chat e a leva ao endereço; sem ela, abre o endereço, que o navegador entrega ao app instalado.
-- **A casca** ganha o módulo `chat`, com as mesmas vistas numa janela, o selo do resumo e "Abrir no app do chat".
+- **O toque no push** (`sw-avisos.js`) guarda o destino com a busca e o fragmento (o `?m=` da mensagem), e não só o caminho, e escolhe a janela pelo caminho, nos dois sentidos: o destino em `/chat` vai à janela do app do chat ou, sem ela, à da casca, que o traduz; os outros vão só à janela da casca, porque o app do chat não tem as rotas dela. Sem a janela certa, ele abre o endereço, que o navegador entrega ao app instalado.
+- **A casca** ganha o módulo `chat`, com as mesmas vistas numa janela, o selo do resumo e "Abrir no app do chat", no endereço `/conversas` (`/conversas/c/:conversa`, `/conversas/chamados/:numero`, `/conversas/equipes` e `/conversas/equipes-e-canais`). O `/chat` é do app: com ele, recarregar a casca com a janela do Chat aberta cairia no app sem a casca.
+- **A tradução dos destinos:** o `navegar` do `App.tsx`, que abre os destinos das notificações, do aviso e do push, leva `/chat/...` a `/conversas/...`, com a busca. No app, o destino fora do `/chat` abre o Grafite numa janela nova. "Abrir no app do chat" faz o inverso, de `/conversas/...` a `/chat/...`. O "Copiar link da mensagem" copia sempre o endereço do app.
 - **A primeira tela:** a conta que, entre os módulos da casca, só vê o Chat vai ao `/chat` com o `location.replace`, na mesma regra da marca da aba da `chamados-da-ti`.
 
 ### 13. O lado da TI
@@ -174,6 +179,8 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **O título** do transformar vai até 120 caracteres, a regra do chamado, e não 80, como no m02.
 - **A origem de uma conversa direta** diz "Aberto a partir da conversa de Fernanda Rocha com Paulo Nunes".
 - **"Mensagens anteriores"** carrega 50 por vez.
+- **A espera** fica na linha "Aguardando você", com a hora, sem a razão dos mockups ("confirme o nome da pasta", no m08 e no m10): o evento `aguardando` não tem dados, a razão foi escrita à mão no mockup, e a mensagem da TI logo acima já diz o que falta.
+- **As horas das etapas** do m10 ("ontem 17:05", "ainda não") saem dos eventos (decisão 9).
 
 ## Risks / Trade-offs
 
@@ -184,12 +191,13 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **O arquivo dividido** entre a conversa e o chamado não pode ganhar o `removido_em` por um dos dois. Hoje nenhum remove o anexo de uma mensagem; a remoção de um anexo de mensagem, se vier, terá de olhar os dois donos.
 - **O resolvido vencido** que a tarefa ainda não fechou já se comporta como fechado, pelo `estaFechado`. A tela pode mostrá-lo como Resolvido por até 1 min.
 - **O fuso do horário da TI trocado** depois da resolução muda o dia do fechamento dos resolvidos, porque ele sai do fuso de agora. A troca é rara, e o erro é de horas.
+- **A conversa que a conta nunca leu** conta a história inteira como não lida, até o "99+", até ser aberta: quem entra num grupo vê a equipe com o contador cheio uma vez. Ela abre na última mensagem, e a leitura zera o contador.
 
 ## Migration Plan
 
 - Uma migration cria as tabelas, as colunas, os CHECKs e os índices, com o RLS e os privilégios do papel da aplicação, e acrescenta a origem `chat` e as espécies e os eventos novos às listas do banco, com o teste que as compara com o domínio. Os CHECKs só se alargam: o que a versão anterior grava continua aceito.
 - O módulo Chat começa ligado nas organizações que já existem, sem equipe e sem canal. Ninguém tem `chat.usar` fora o Administrador até quem administra criar o perfil.
-- **A volta à versão anterior** (o `voltar` do runbook) roda a versão de antes no banco novo, e ela não conhece a origem `chat` nem a linha `origem` da conversa. Como a versão dos campos de arquivo, esta só volta à anterior enquanto nenhum chamado foi aberto pelo chat; depois, o caminho é corrigir numa versão nova ou restaurar o backup de antes da atualização. O runbook ganha essa exceção. O chamado fechado a versão anterior lê como resolvido, e reabri-lo é recusado pelo CHECK do `fechado_em`.
+- **A volta à versão anterior** (o `voltar` do runbook) roda a versão de antes no banco novo, e ela não conhece a origem `chat` nem a linha `origem` da conversa. Como a versão dos campos de arquivo, esta só volta à anterior enquanto nenhum chamado foi aberto pelo chat; depois, o caminho é corrigir numa versão nova ou restaurar o backup de antes da atualização. O runbook ganha essa exceção. O chamado fechado a versão anterior lê como resolvido, e reabri-lo é recusado pelo CHECK do `fechado_em`, com um erro: o runbook também diz isso. A versão anterior pula os eventos que não conhece (`ficha.ts`), então o `fechou`, o `escolheu` e o `avaliou` não quebram a volta.
 
 ## Open Questions
 
