@@ -1,11 +1,12 @@
 /*
  * A prévia em tamanho real (m11): duas colunas que rolam sozinhas, a da esquerda afundada, com 420
- * px, e a mesa, com a aba em 900 px, a largura da tela do colaborador. Na janela mais estreita, a
- * mesa rola para o lado, e a aba não encolhe.
+ * px, e a mesa, com a aba em 900 px, a largura da tela do colaborador. A coluna da esquerda cede
+ * antes da aba, até 300 px, e a aba cabe inteira a partir de uns 1.300 px de janela, como nos
+ * notebooks de 1.366; na janela mais estreita, a mesa rola para o lado, e a aba não encolhe.
  */
 .corpo {
   display: grid;
-  grid-template-columns: 420px minmax(0, 1fr);
+  grid-template-columns: clamp(300px, calc(100% - 900px - 2 * var(--esp-5)), 420px) minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
 }

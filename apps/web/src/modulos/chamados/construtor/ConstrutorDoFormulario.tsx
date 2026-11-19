@@ -363,7 +363,10 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
     recusado?.scrollIntoView({ block: 'nearest' });
   }, [pedidoDeFoco]);
 
+  // A recusa e a falha do salvar só aparecem no editor: o salvar pedido na prévia volta a ele, e o
+  // foco acha a lista montada.
   const recusar = (errosDaRecusa: Record<string, string>, naRecusa: Formulario) => {
+    definirModo('editar');
     definirRecusa({ erros: errosDaRecusa, naRecusa });
     definirFalha(null);
     const recusados = errosNoFormulario(errosDaRecusa, naRecusa.campos).porCampo;
@@ -395,6 +398,7 @@ function Construtor({ tipo, dados }: { tipo: TipoDeChamado; dados: FormularioDoT
         const recusados = resultado.problema?.campos;
         if (recusados && Object.keys(recusados).length > 0) recusar(recusados, pedido);
         else {
+          definirModo('editar');
           definirRecusa(null);
           definirFalha(resultado.erro);
         }
