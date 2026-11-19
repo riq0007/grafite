@@ -7,7 +7,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 1. Banco
 
-- [ ] 1.1 As tabelas do chat (design, decisão 1): `conversas`, com o cadastro da equipe e do canal e os CHECKs de cada tipo, o par da direta único e o nome único entre os ativos; `mensagens_do_chat`, só com INSERT e SELECT para o papel da aplicação, com a resposta da mesma conversa; `reacoes_das_mensagens`, com o DELETE; `anexos_do_chat`; e `leituras_das_conversas`. Todas com `orgScoped()` e o RLS ativo e forçado. Verificar: o teste da migration, o teste-guarda do RLS, o lint e o typecheck.
+- [x] 1.1 As tabelas do chat (design, decisão 1): `conversas`, com o cadastro da equipe e do canal e os CHECKs de cada tipo, o par da direta único e o nome único entre os ativos; `mensagens_do_chat`, só com INSERT e SELECT para o papel da aplicação, com a resposta da mesma conversa; `reacoes_das_mensagens`, com o DELETE; `anexos_do_chat`; e `leituras_das_conversas`. Todas com `orgScoped()` e o RLS ativo e forçado. Verificar: o teste da migration, o teste-guarda do RLS, o lint e o typecheck.
 - [ ] 1.2 O que muda nos chamados (decisão 2):
   - a origem `chat`, com a conversa e a mensagem, e a mensagem única;
   - o `fechado_em`, só no resolvido;
@@ -79,6 +79,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - o `GET /chat/resumo`;
   - o `GET /chat/conversas`, com as seções, os contadores, a última mensagem e o silenciar;
   - o `GET /chat/pessoas?busca=`: até 20, pela ordem do nome, sem a própria conta.
+  - as listas do chat no banco (`TIPOS_DE_CONVERSA_NO_BANCO` e `ESPECIES_DO_CHAT_NO_BANCO`, da 1.1) comparadas com as do domínio, como em `chamados/listas.test.ts`.
 
   Começa pelos testes de integração da permissão: a conta sem `chat.usar`, o módulo desligado, a conversa de outros como inexistente e quem saiu do grupo. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [ ] 3.2 As mensagens:
