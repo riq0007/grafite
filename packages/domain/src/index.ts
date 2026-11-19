@@ -220,6 +220,16 @@ export {
 } from './campos/tipos.ts';
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
+  conferirAberturaPeloChat,
+  jaVirouChamado,
+  type LidoParaAAberturaPeloChat,
+  MENSAGENS_DA_ABERTURA_PELO_CHAT,
+  type PedidoDaAberturaPeloChat,
+  semAtivoSugerido,
+  type TipoParaAbrirPeloChat,
+  tipoAbrePeloChat,
+} from './chamados/abertura-pelo-chat.ts';
+export {
   ACOES_DO_CHAMADO,
   type AcaoComVersao,
   type AcaoDoChamado,

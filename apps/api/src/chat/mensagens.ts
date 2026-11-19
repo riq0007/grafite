@@ -1,7 +1,8 @@
 // As mensagens do chat (spec chat, "Mensagem", "Reações", "Link da mensagem" e "Chamado citado
 // numa mensagem"; change chat-com-chamados, design, decisões 1, 3 e 11; tarefa 3.2): a página de 50,
 // com o autor, a respondida, as reações, os anexos e as citações resolvidas para quem lê, e a
-// gravação da mensagem na conversa travada.
+// gravação da mensagem na conversa travada. A marca do chamado em que a mensagem virou e o evento
+// `virou-chamado` vêm com a abertura pelo chat (tarefa 3.7).
 import {
   anexosDoChat,
   arquivos,
@@ -27,7 +28,7 @@ import {
   situacaoNoChat,
   veOChamado,
 } from '@grafite/domain';
-import { and, asc, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { lerArvore } from '../arvore.ts';
@@ -105,6 +106,11 @@ export const MensagemDoChat = z
     anexos: z.array(AnexoDaMensagem),
     /** Os chamados citados de que a conta que lê vê o resumo; os outros ficam como o texto. */
     citacoes: z.array(CitacaoDeChamado),
+    /**
+     * O chamado em que a mensagem virou, ou o do evento `virou-chamado`, com o "Abrir chamado" a
+     * quem participa dele e a quem o vê com `chamados.ver`; nulo nas outras.
+     */
+    chamado: z.object({ numero: z.int(), abrir: z.boolean() }).nullable(),
   })
   .meta({ id: 'MensagemDoChat' });
 
@@ -300,7 +306,65 @@ async function resolverCitacoes(
   return resolvidas;
 }
 
-/** As mensagens lidas para a conta: o autor, a respondida, as reações, os anexos e as citações. */
+/**
+ * A marca do chamado em que cada mensagem virou e a do evento `virou-chamado` (spec chat, "Chamados
+ * da conversa"): o número e o "Abrir chamado", resolvidos para a conta que lê, como a citação. Com
+ * o módulo Chamados desligado, o número fica, sem o "Abrir chamado".
+ */
+async function marcasDosChamados(
+  tx: Transacao,
+  conta: ContaQueLeAsMensagens,
+  linhas: readonly LinhaDaMensagem[],
+): Promise<Map<string, { numero: number; abrir: boolean }>> {
+  const marcas = new Map<string, { numero: number; abrir: boolean }>();
+  const mensagens = linhas.flatMap(({ id, especie }) => (especie === 'mensagem' ? [id] : []));
+  const doEvento = new Map(
+    linhas.flatMap(({ id, evento, dados }) =>
+      evento === 'virou-chamado' && typeof dados?.chamadoId === 'string'
+        ? [[id, dados.chamadoId] as const]
+        : [],
+    ),
+  );
+  if (mensagens.length === 0 && doEvento.size === 0) return marcas;
+  const lidos = await tx
+    .select({
+      id: chamados.id,
+      numero: chamados.numero,
+      origemMensagemId: chamados.origemMensagemId,
+      pessoaId: chamados.pessoaId,
+      origem: chamados.origem,
+      abertoPor: chamados.abertoPor,
+      locais: chamados.locais,
+      semLocal: chamados.semLocal,
+    })
+    .from(chamados)
+    .where(
+      or(
+        mensagens.length > 0 ? inArray(chamados.origemMensagemId, mensagens) : undefined,
+        doEvento.size > 0 ? inArray(chamados.id, [...new Set(doEvento.values())]) : undefined,
+      ),
+    );
+  if (lidos.length === 0) return marcas;
+  const ligado = await ligadoNaTransacao(tx, 'chamados');
+  const doVer = ligado ? alcance(conta.acesso, 'chamados.ver', await lerArvore(tx)) : null;
+  const daConta = { id: conta.id, pessoaId: conta.pessoaId, usaOChat: true };
+  for (const chamado of lidos) {
+    const marca = {
+      numero: chamado.numero,
+      abrir: ligado && (participaDoChamado(daConta, chamado) || veOChamado(doVer, chamado)),
+    };
+    if (chamado.origemMensagemId) marcas.set(chamado.origemMensagemId, marca);
+    for (const [eventoId, chamadoId] of doEvento) {
+      if (chamadoId === chamado.id) marcas.set(eventoId, marca);
+    }
+  }
+  return marcas;
+}
+
+/**
+ * As mensagens lidas para a conta: o autor, a respondida, as reações, os anexos, as citações e a
+ * marca do chamado.
+ */
 export async function mensagensParaAConta(
   tx: Transacao,
   conta: ContaQueLeAsMensagens,
@@ -376,6 +440,7 @@ export async function mensagensParaAConta(
     agora,
   );
   const respondidaDe = new Map(respondidas.map((linha) => [linha.id, linha]));
+  const marcas = await marcasDosChamados(tx, conta, linhas);
 
   return linhas.map((linha) => {
     const respondida = linha.respondeA ? respondidaDe.get(linha.respondeA) : undefined;
@@ -412,6 +477,7 @@ export async function mensagensParaAConta(
         const resolvida = resolvidas.get(citacao.numero);
         return resolvida ? [{ ...citacao, ...resolvida }] : [];
       }),
+      chamado: marcas.get(linha.id) ?? null,
     };
   });
 }

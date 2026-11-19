@@ -679,7 +679,8 @@ describe('GET /chamados/:numero', () => {
         autor: ana,
         evento: 'abertura',
         de: null,
-        para: null,
+        // Quem nasce atendendo, no `para` da abertura (change chat-com-chamados, decisão 15).
+        para: { conta: conta('ana'), nome: 'Ana Souza' },
         desde: null,
         // Só o evento do ativo tem o ativo (tarefa 4.15), e só os da OS e da solicitação, a OS e a
         // solicitação (4.16 e 4.17), e só o da solicitação não gerada, o motivo (4.18).

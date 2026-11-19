@@ -216,6 +216,15 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o "Chamado #1045 com você" da reabertura, também pela mensagem da pessoa, não é mensagem: vai por push nas severidades escolhidas, como o de qualquer chamado passado;
   - a mensagem vai por push também quando a conta não escolheu nenhuma severidade: a spec diz "qualquer que seja a severidade escolhida", e quem não quer o push de nenhuma mensagem liga o Foco ou não inscreve o aparelho;
   - a tarefa `chat.notificar` lê quem participa quando roda, pela mesma consulta da aba das pessoas (`idsDeQuemParticipa`, em `chat/conversa.ts`). A equipe ou o canal arquivado nos 10 s não notifica ninguém, porque o arquivado sai da lista de quem participa; o módulo Chat desligado também não. Ela roda numa transação só, e a nova tentativa depois de uma falha não acha nada gravado; a que gravou e caiu antes de a fila a dar como concluída roda de novo sem repetir o aviso, porque quem já tem a notificação da mensagem fica de fora.
+- **A abertura pelo chat,** nos casos que a spec não escreve:
+  - a mensagem de uma equipe ou de um canal arquivado, ou em que só um grupo escreve, também vira chamado: a spec pede só que a conta participe da conversa, e o `virou-chamado` é um evento, e não uma mensagem;
+  - o evento entra na conversa na hora da abertura, na ordem dela, e não colado à mensagem de origem, que pode estar longe: a conversa vai pelo id, que sai depois da trava da conversa. A hora da última mensagem não muda;
+  - a recusa da mensagem que já virou chamado vem antes da conferência dos campos, com a mensagem travada (`mensagem:<id>`, a mesma trava das reações);
+  - os ativos sugeridos, o escolhido e a solicitação que o tipo gera são lidos pela organização inteira, porque quem abre não tem o `ativos.ver`: dos sugeridos, ele lê só o id, o nome (o rótulo do ativo: o nome ou o modelo) e o patrimônio;
+  - os tipos trazem o ícone, a frase e se o tipo pede o ativo, para a escolha; os sugeridos de um tipo que não abre pelo chat ou não pede o ativo vêm vazios;
+  - a auditoria `chamado.aberto` leva a origem nas duas aberturas, a `ti` e a `chat`;
+  - a marca na mensagem e o evento trazem o número a quem lê a conversa, e o "Abrir chamado" só a quem participa do chamado ou o vê com `chamados.ver`; com o módulo Chamados desligado, o número fica, sem o "Abrir chamado";
+  - o anexo sem dono dos chamados, enviado por quem tem só o `chat.usar`, pede o módulo Chat ligado, porque não serviria a nenhuma gravação dela. A guarda da rota aceita a lista de permissões, de que a conta precisa de uma.
 
 ## Risks / Trade-offs
 

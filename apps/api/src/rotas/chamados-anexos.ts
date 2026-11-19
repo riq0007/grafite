@@ -1,6 +1,7 @@
 // Os anexos dos chamados pela API (spec arquivos-e-imagens, "Anexos dos chamados"; change
 // chamados-da-ti, design, decisão 10, tarefa 4.6):
-// - o envio, um arquivo por vez, com `chamados.atender` em algum local e as regras de "Arquivos
+// - o envio, um arquivo por vez, com `chamados.atender` em algum local ou o `chat.usar`, para a
+//   resposta de quem participa (change chat-com-chamados, tarefa 3.7), e as regras de "Arquivos
 //   aceitos": o conteúdo vai para o armazenamento fora da transação e, nela, entram o registro do
 //   arquivo, com quem o enviou, e o anexo sem dono, que a gravação da mensagem, da nota, da abertura
 //   ou do campo toma depois (`tomarAnexos`);
@@ -11,10 +12,12 @@
 // O envio e a entrega são os de `arquivos/anexos-sem-dono.ts`, também do chat. Num plugin só deles,
 // porque o corpo do envio é o arquivo, até 25 MiB, e não JSON.
 import { anexosDosChamados, arquivos, naOrganizacao, type Transacao } from '@grafite/db';
+import { pode } from '@grafite/domain';
 import { and, eq, isNull, type SQL, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { sessaoDa } from '../acesso/escopo.ts';
+import { moduloDesligado, modulosDesligados } from '../acesso/modulos.ts';
 import {
   AnexoEnviado,
   arquivoNaoEncontrado,
@@ -51,10 +54,21 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
   aceitarArquivos(app);
   const orgDa = (requisicao: FastifyRequest) => requisicao.organizacao?.id ?? '';
 
+  /**
+   * Quem envia pelo `chat.usar`, sem atender chamados, usa o chat: com o módulo Chat desligado, o
+   * anexo não serviria a nenhuma mensagem dela.
+   */
+  async function exigirOChatDeQuemNaoAtende(requisicao: FastifyRequest) {
+    if (pode(sessaoDa(requisicao).acesso, 'chamados.atender')) return;
+    if ((await modulosDesligados(banco, orgDa(requisicao))).includes('chat')) {
+      throw moduloDesligado('chat');
+    }
+  }
+
   app.post(
     '/chamados/anexos',
     {
-      config: { permissao: 'chamados.atender' },
+      config: { permissao: ['chamados.atender', 'chat.usar'] },
       schema: {
         summary: 'Enviar um anexo, sem dono até a gravação que o usa',
         querystring: NomeDoArquivoEnviado,
@@ -64,6 +78,7 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
       },
     },
     async (requisicao, resposta) => {
+      await exigirOChatDeQuemNaoAtende(requisicao);
       const enviado = await receberAnexo(
         dependencias,
         requisicao,
@@ -78,7 +93,7 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
   app.get(
     '/chamados/anexos/:arquivo',
     {
-      config: { permissao: 'chamados.atender' },
+      config: { permissao: ['chamados.atender', 'chat.usar'] },
       schema: {
         summary: 'O anexo ainda sem dono, para baixar, só a quem o enviou',
         params: ParametrosDoAnexoSemDono,
@@ -86,6 +101,7 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
       },
     },
     async (requisicao, resposta) => {
+      await exigirOChatDeQuemNaoAtende(requisicao);
       const { arquivo } = requisicao.params;
       const lido = await naOrganizacao(banco, orgDa(requisicao), (tx) =>
         arquivoDoAnexo(

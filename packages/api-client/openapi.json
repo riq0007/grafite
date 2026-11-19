@@ -15755,6 +15755,418 @@
           "pessoas"
         ]
       },
+      "AnexoDaMensagemInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ]
+      },
+      "ReacaoDaMensagemInput": {
+        "type": "object",
+        "properties": {
+          "texto": {
+            "type": "string"
+          },
+          "contas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conta",
+                "nome"
+              ]
+            }
+          },
+          "minha": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "texto",
+          "contas",
+          "minha"
+        ]
+      },
+      "CitacaoDeChamadoInput": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "inicio": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "fim": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "situacao": {
+            "type": "string"
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "inicio",
+          "fim",
+          "situacao",
+          "atende"
+        ]
+      },
+      "MensagemDoChatInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "especie": {
+            "type": "string",
+            "enum": [
+              "mensagem",
+              "evento"
+            ]
+          },
+          "autor": {
+            "$ref": "#/components/schemas/ContaDoChatInput"
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "respondida": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "autor": {
+                    "type": "string"
+                  },
+                  "comeco": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "autor",
+                  "comeco"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReacaoDaMensagemInput"
+            }
+          },
+          "anexos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnexoDaMensagemInput"
+            }
+          },
+          "citacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitacaoDeChamadoInput"
+            }
+          },
+          "chamado": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "abrir"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "especie",
+          "autor",
+          "texto",
+          "evento",
+          "criadaEm",
+          "respondida",
+          "reacoes",
+          "anexos",
+          "citacoes",
+          "chamado"
+        ]
+      },
+      "PaginaDeMensagensInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MensagemDoChatInput"
+            }
+          },
+          "lidaAte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anteriores": {
+            "type": "boolean"
+          },
+          "seguintes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "itens",
+          "lidaAte",
+          "anteriores",
+          "seguintes"
+        ]
+      },
+      "TipoParaAbrirPeloChatInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string",
+            "enum": [
+              "gota",
+              "notebook",
+              "impressora",
+              "cadeado",
+              "janela",
+              "globo",
+              "telefone",
+              "reticencias",
+              "setas",
+              "computador",
+              "torre",
+              "fone",
+              "chave",
+              "caixa",
+              "camera",
+              "wi-fi"
+            ]
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "icone",
+          "frase",
+          "pedeOAtivo"
+        ]
+      },
+      "TiposParaAbrirPeloChatInput": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TipoParaAbrirPeloChatInput"
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ]
+      },
+      "AtivosSugeridosPeloChatInput": {
+        "type": "object",
+        "properties": {
+          "ativos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "patrimonio"
+              ]
+            }
+          }
+        },
+        "required": [
+          "ativos"
+        ]
+      },
+      "PedidoDaAberturaPeloChatInput": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "titulo": {
+            "type": "string",
+            "maxLength": 1200
+          },
+          "pessoa": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "titulo"
+        ]
+      },
+      "ChamadoAbertoPeloChatInput": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "numero"
+        ]
+      },
       "EquipeDaContaInput": {
         "type": "object",
         "properties": {
@@ -16104,233 +16516,6 @@
           "quemEscreve",
           "escreveGrupoId",
           "avisar"
-        ]
-      },
-      "AnexoDaMensagemInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "tipo": {
-            "type": "string"
-          },
-          "bytes": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "tipo",
-          "bytes"
-        ]
-      },
-      "ReacaoDaMensagemInput": {
-        "type": "object",
-        "properties": {
-          "texto": {
-            "type": "string"
-          },
-          "contas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "conta": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "nome": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "conta",
-                "nome"
-              ]
-            }
-          },
-          "minha": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "texto",
-          "contas",
-          "minha"
-        ]
-      },
-      "CitacaoDeChamadoInput": {
-        "type": "object",
-        "properties": {
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "inicio": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "fim": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "situacao": {
-            "type": "string"
-          },
-          "atende": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "numero",
-          "inicio",
-          "fim",
-          "situacao",
-          "atende"
-        ]
-      },
-      "MensagemDoChatInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "especie": {
-            "type": "string",
-            "enum": [
-              "mensagem",
-              "evento"
-            ]
-          },
-          "autor": {
-            "$ref": "#/components/schemas/ContaDoChatInput"
-          },
-          "texto": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "evento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "criadaEm": {
-            "type": "string"
-          },
-          "respondida": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "autor": {
-                    "type": "string"
-                  },
-                  "comeco": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "autor",
-                  "comeco"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "reacoes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReacaoDaMensagemInput"
-            }
-          },
-          "anexos": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnexoDaMensagemInput"
-            }
-          },
-          "citacoes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CitacaoDeChamadoInput"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "especie",
-          "autor",
-          "texto",
-          "evento",
-          "criadaEm",
-          "respondida",
-          "reacoes",
-          "anexos",
-          "citacoes"
-        ]
-      },
-      "PaginaDeMensagensInput": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MensagemDoChatInput"
-            }
-          },
-          "lidaAte": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "anteriores": {
-            "type": "boolean"
-          },
-          "seguintes": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "itens",
-          "lidaAte",
-          "anteriores",
-          "seguintes"
         ]
       },
       "LeituraDaConversaInput": {
@@ -43876,6 +44061,432 @@
         ],
         "additionalProperties": false
       },
+      "AnexoDaMensagem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ],
+        "additionalProperties": false
+      },
+      "ReacaoDaMensagem": {
+        "type": "object",
+        "properties": {
+          "texto": {
+            "type": "string"
+          },
+          "contas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "conta",
+                "nome"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "minha": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "texto",
+          "contas",
+          "minha"
+        ],
+        "additionalProperties": false
+      },
+      "CitacaoDeChamado": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "inicio": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "fim": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "situacao": {
+            "type": "string"
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "inicio",
+          "fim",
+          "situacao",
+          "atende"
+        ],
+        "additionalProperties": false
+      },
+      "MensagemDoChat": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "especie": {
+            "type": "string",
+            "enum": [
+              "mensagem",
+              "evento"
+            ]
+          },
+          "autor": {
+            "$ref": "#/components/schemas/ContaDoChat"
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evento": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "criadaEm": {
+            "type": "string"
+          },
+          "respondida": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "autor": {
+                    "type": "string"
+                  },
+                  "comeco": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "autor",
+                  "comeco"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReacaoDaMensagem"
+            }
+          },
+          "anexos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnexoDaMensagem"
+            }
+          },
+          "citacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitacaoDeChamado"
+            }
+          },
+          "chamado": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "numero": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "abrir": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "numero",
+                  "abrir"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "especie",
+          "autor",
+          "texto",
+          "evento",
+          "criadaEm",
+          "respondida",
+          "reacoes",
+          "anexos",
+          "citacoes",
+          "chamado"
+        ],
+        "additionalProperties": false
+      },
+      "PaginaDeMensagens": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MensagemDoChat"
+            }
+          },
+          "lidaAte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anteriores": {
+            "type": "boolean"
+          },
+          "seguintes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "itens",
+          "lidaAte",
+          "anteriores",
+          "seguintes"
+        ],
+        "additionalProperties": false
+      },
+      "TipoParaAbrirPeloChat": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string",
+            "enum": [
+              "gota",
+              "notebook",
+              "impressora",
+              "cadeado",
+              "janela",
+              "globo",
+              "telefone",
+              "reticencias",
+              "setas",
+              "computador",
+              "torre",
+              "fone",
+              "chave",
+              "caixa",
+              "camera",
+              "wi-fi"
+            ]
+          },
+          "frase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pedeOAtivo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "icone",
+          "frase",
+          "pedeOAtivo"
+        ],
+        "additionalProperties": false
+      },
+      "TiposParaAbrirPeloChat": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TipoParaAbrirPeloChat"
+            }
+          }
+        },
+        "required": [
+          "itens"
+        ],
+        "additionalProperties": false
+      },
+      "AtivosSugeridosPeloChat": {
+        "type": "object",
+        "properties": {
+          "ativos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "patrimonio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "patrimonio"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "ativos"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaAberturaPeloChat": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "titulo": {
+            "type": "string",
+            "maxLength": 1200
+          },
+          "pessoa": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "titulo"
+        ],
+        "additionalProperties": false
+      },
+      "ChamadoAbertoPeloChat": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "numero"
+        ],
+        "additionalProperties": false
+      },
       "EquipeDaConta": {
         "type": "object",
         "properties": {
@@ -44237,240 +44848,6 @@
           "quemEscreve",
           "escreveGrupoId",
           "avisar"
-        ],
-        "additionalProperties": false
-      },
-      "AnexoDaMensagem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "tipo": {
-            "type": "string"
-          },
-          "bytes": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "tipo",
-          "bytes"
-        ],
-        "additionalProperties": false
-      },
-      "ReacaoDaMensagem": {
-        "type": "object",
-        "properties": {
-          "texto": {
-            "type": "string"
-          },
-          "contas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "conta": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "nome": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "conta",
-                "nome"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "minha": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "texto",
-          "contas",
-          "minha"
-        ],
-        "additionalProperties": false
-      },
-      "CitacaoDeChamado": {
-        "type": "object",
-        "properties": {
-          "numero": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "inicio": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "fim": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "situacao": {
-            "type": "string"
-          },
-          "atende": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "numero",
-          "inicio",
-          "fim",
-          "situacao",
-          "atende"
-        ],
-        "additionalProperties": false
-      },
-      "MensagemDoChat": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "especie": {
-            "type": "string",
-            "enum": [
-              "mensagem",
-              "evento"
-            ]
-          },
-          "autor": {
-            "$ref": "#/components/schemas/ContaDoChat"
-          },
-          "texto": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "evento": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "criadaEm": {
-            "type": "string"
-          },
-          "respondida": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "autor": {
-                    "type": "string"
-                  },
-                  "comeco": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "autor",
-                  "comeco"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "reacoes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReacaoDaMensagem"
-            }
-          },
-          "anexos": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnexoDaMensagem"
-            }
-          },
-          "citacoes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CitacaoDeChamado"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "especie",
-          "autor",
-          "texto",
-          "evento",
-          "criadaEm",
-          "respondida",
-          "reacoes",
-          "anexos",
-          "citacoes"
-        ],
-        "additionalProperties": false
-      },
-      "PaginaDeMensagens": {
-        "type": "object",
-        "properties": {
-          "itens": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MensagemDoChat"
-            }
-          },
-          "lidaAte": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "anteriores": {
-            "type": "boolean"
-          },
-          "seguintes": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "itens",
-          "lidaAte",
-          "anteriores",
-          "seguintes"
         ],
         "additionalProperties": false
       },
@@ -87449,6 +87826,281 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MensagemNaDireta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/tipos": {
+      "get": {
+        "summary": "Os tipos que a abertura pelo chat oferece, na ordem dos tipos",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TiposParaAbrirPeloChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/sugestoes": {
+      "get": {
+        "summary": "Os ativos sugeridos para a pessoa no tipo, só com o id, o nome e o patrimônio",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "tipo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "pessoa",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtivosSugeridosPeloChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/mensagens/{id}/chamado": {
+      "post": {
+        "summary": "Abre um chamado a partir da mensagem, que vira um chamado só",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDaAberturaPeloChatInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChamadoAbertoPeloChat"
                 }
               }
             }

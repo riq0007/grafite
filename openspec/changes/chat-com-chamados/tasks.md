@@ -108,7 +108,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - a mensagem no push, também com a severidade fora das escolhas e nunca no Foco, pela `mensagem` que a entrega já passa ao `canaisNaHora` (2.8), com o teste da entrega, e o título do push sem a severidade.
 
   Verificar: os testes da tarefa e da entrega, o da conta que sai do grupo nos 10 s, o lint e o typecheck. A tarefa ficou em `chat/notificar.ts`, pedida pelo `gravarMensagem` na transação da mensagem, com o `depoisDe` do `enviar`; a equipe ou o canal arquivado nos 10 s não notifica (decisão 15).
-- [ ] 3.7 Abrir pelo chat (decisão 8):
+- [x] 3.7 Abrir pelo chat (decisão 8):
   - o `GET /chat/chamados/tipos` e o `GET /chat/chamados/sugestoes`, só com o id, o nome e o patrimônio;
   - o `POST /chat/mensagens/:id/chamado`, pela abertura com a origem `chat`;
   - o evento `abertura` com o `dados.para`, a conta de quem nasce atendendo ou nulo na triagem, na abertura pelo chat e na da TI (`apps/api/src/chamados/abertura.ts`), que a ficha já lê no `para` (decisão 15);

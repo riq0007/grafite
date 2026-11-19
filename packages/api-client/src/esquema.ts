@@ -30320,6 +30320,285 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/chamados/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos que a abertura pelo chat oferece, na ordem dos tipos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TiposParaAbrirPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/sugestoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os ativos sugeridos para a pessoa no tipo, só com o id, o nome e o patrimônio */
+        get: {
+            parameters: {
+                query: {
+                    tipo: string;
+                    pessoa: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AtivosSugeridosPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/mensagens/{id}/chamado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abre um chamado a partir da mensagem, que vira um chamado só */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAberturaPeloChatInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAbertoPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/mensagens/{id}/reacoes": {
         parameters: {
             query?: never;
@@ -40100,6 +40379,87 @@ export interface components {
                 conversa: string | null;
             }[];
         };
+        AnexoDaMensagemInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagemInput: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamadoInput: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChatInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChatInput"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagemInput"][];
+            anexos: components["schemas"]["AnexoDaMensagemInput"][];
+            citacoes: components["schemas"]["CitacaoDeChamadoInput"][];
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+        };
+        PaginaDeMensagensInput: {
+            itens: components["schemas"]["MensagemDoChatInput"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        TipoParaAbrirPeloChatInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            pedeOAtivo: boolean;
+        };
+        TiposParaAbrirPeloChatInput: {
+            itens: components["schemas"]["TipoParaAbrirPeloChatInput"][];
+        };
+        AtivosSugeridosPeloChatInput: {
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                patrimonio: string | null;
+            }[];
+        };
+        PedidoDaAberturaPeloChatInput: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+        };
+        ChamadoAbertoPeloChatInput: {
+            numero: number;
+        };
         EquipeDaContaInput: {
             /** Format: uuid */
             id: string;
@@ -40177,54 +40537,6 @@ export interface components {
             quemEscreve: "todos" | "grupo";
             escreveGrupoId: string | null;
             avisar: boolean;
-        };
-        AnexoDaMensagemInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
-        ReacaoDaMensagemInput: {
-            texto: string;
-            contas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-            }[];
-            minha: boolean;
-        };
-        CitacaoDeChamadoInput: {
-            numero: number;
-            inicio: number;
-            fim: number;
-            situacao: string;
-            atende: string | null;
-        };
-        MensagemDoChatInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            especie: "mensagem" | "evento";
-            autor: components["schemas"]["ContaDoChatInput"];
-            texto: string | null;
-            evento: string | null;
-            criadaEm: string;
-            respondida: {
-                /** Format: uuid */
-                id: string;
-                autor: string;
-                comeco: string;
-            } | null;
-            reacoes: components["schemas"]["ReacaoDaMensagemInput"][];
-            anexos: components["schemas"]["AnexoDaMensagemInput"][];
-            citacoes: components["schemas"]["CitacaoDeChamadoInput"][];
-        };
-        PaginaDeMensagensInput: {
-            itens: components["schemas"]["MensagemDoChatInput"][];
-            lidaAte: string | null;
-            anteriores: boolean;
-            seguintes: boolean;
         };
         LeituraDaConversaInput: {
             /** Format: uuid */
@@ -45660,6 +45972,87 @@ export interface components {
                 conversa: string | null;
             }[];
         };
+        AnexoDaMensagem: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagem: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamado: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChat: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChat"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagem"][];
+            anexos: components["schemas"]["AnexoDaMensagem"][];
+            citacoes: components["schemas"]["CitacaoDeChamado"][];
+            chamado: {
+                numero: number;
+                abrir: boolean;
+            } | null;
+        };
+        PaginaDeMensagens: {
+            itens: components["schemas"]["MensagemDoChat"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        TipoParaAbrirPeloChat: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            pedeOAtivo: boolean;
+        };
+        TiposParaAbrirPeloChat: {
+            itens: components["schemas"]["TipoParaAbrirPeloChat"][];
+        };
+        AtivosSugeridosPeloChat: {
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                patrimonio: string | null;
+            }[];
+        };
+        PedidoDaAberturaPeloChat: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+        };
+        ChamadoAbertoPeloChat: {
+            numero: number;
+        };
         EquipeDaConta: {
             /** Format: uuid */
             id: string;
@@ -45737,54 +46130,6 @@ export interface components {
             quemEscreve: "todos" | "grupo";
             escreveGrupoId: string | null;
             avisar: boolean;
-        };
-        AnexoDaMensagem: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
-        ReacaoDaMensagem: {
-            texto: string;
-            contas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-            }[];
-            minha: boolean;
-        };
-        CitacaoDeChamado: {
-            numero: number;
-            inicio: number;
-            fim: number;
-            situacao: string;
-            atende: string | null;
-        };
-        MensagemDoChat: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            especie: "mensagem" | "evento";
-            autor: components["schemas"]["ContaDoChat"];
-            texto: string | null;
-            evento: string | null;
-            criadaEm: string;
-            respondida: {
-                /** Format: uuid */
-                id: string;
-                autor: string;
-                comeco: string;
-            } | null;
-            reacoes: components["schemas"]["ReacaoDaMensagem"][];
-            anexos: components["schemas"]["AnexoDaMensagem"][];
-            citacoes: components["schemas"]["CitacaoDeChamado"][];
-        };
-        PaginaDeMensagens: {
-            itens: components["schemas"]["MensagemDoChat"][];
-            lidaAte: string | null;
-            anteriores: boolean;
-            seguintes: boolean;
         };
         LeituraDaConversa: {
             /** Format: uuid */
