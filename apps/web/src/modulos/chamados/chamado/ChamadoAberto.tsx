@@ -1,12 +1,13 @@
 // O chamado aberto (spec modulo-chamados, "Chamado aberto"; change chamados-da-ti, design, "O
 // chamado aberto, o cabeçalho (tarefa 5.10)"; mockup m03): o endereço `/chamados/<número>`, que as
-// notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, o número e o
-// título, o selo, o tipo, quem pediu e quem atende, o quadro do prazo e as ações de cada situação,
-// e, embaixo, a conversa (tarefa 5.11) e o campo de escrever (tarefa 5.12), com a coluna da direita
-// ao lado (tarefa 5.13, m04).
+// notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, a seta de
+// voltar (tarefa 5.32), o título e o número, o selo, o tipo, quem pediu e quem atende, o quadro do
+// prazo e as ações de cada situação, e, embaixo, a conversa (tarefa 5.11) e o campo de escrever
+// (tarefa 5.12), com a coluna da direita ao lado (tarefa 5.13, m04).
 import {
   AreaDeTexto,
   Botao,
+  BotaoDeIcone,
   CabecalhoDaPagina,
   CampoDeTexto,
   type DataHora,
@@ -18,8 +19,9 @@ import {
   Menu,
   useDataHora,
 } from '@grafite/ui';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useCanGoBack, useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import {
+  ArrowLeft,
   ArrowLeftRight,
   ChevronRight,
   CircleCheck,
@@ -115,6 +117,7 @@ function ConteudoDoChamado() {
     <div className={estilos.tela} data-janela-inteira="">
       <CabecalhoDaPagina
         trilha={<Trilha numero={numero === null || sumiu ? null : numero} />}
+        voltar={<Voltar />}
         titulo={
           numero === null || sumiu ? (
             'Chamado'
@@ -142,9 +145,10 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
     <div className={estilos.tela} data-janela-inteira="rola-por-dentro">
       <CabecalhoDaPagina
         trilha={<Trilha tipo={ficha.tipo.nome} numero={ficha.numero} />}
+        voltar={<Voltar />}
         titulo={
           <>
-            <span className={estilos.numeroDoTitulo}>{`#${ficha.numero}`}</span> {ficha.titulo}
+            {ficha.titulo} <span className={estilos.numeroDoTitulo}>{`#${ficha.numero}`}</span>
           </>
         }
         detalhe={<DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
@@ -164,6 +168,27 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         <LadoDoChamado ficha={ficha} acoes={doAtivo} />
       </div>
     </div>
+  );
+}
+
+/**
+ * A seta de voltar (design, "A seta de voltar no chamado aberto (tarefa 5.32)"): volta à tela de
+ * antes, quando o chamado abriu de outra tela do app, como o quadro, o Início ou uma notificação, e,
+ * com o chamado aberto direto pelo endereço, leva ao Início dos chamados.
+ */
+function Voltar() {
+  const roteador = useRouter();
+  const podeVoltar = useCanGoBack();
+  const navegar = useNavigate();
+  return (
+    <BotaoDeIcone
+      icone={ArrowLeft}
+      rotulo="Voltar"
+      onPress={() => {
+        if (podeVoltar) roteador.history.back();
+        else void navegar({ to: '/chamados' });
+      }}
+    />
   );
 }
 

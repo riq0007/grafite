@@ -43,8 +43,17 @@
 }
 
 /* O título da janela traz a margem de quando vem sozinho; aqui, o espaço é o do cabeçalho. */
-.textos > [data-titulo-da-janela] {
+.textos > [data-titulo-da-janela],
+.linhaComVoltar > [data-titulo-da-janela] {
   margin: 0;
+}
+
+/* A seta de voltar e o título, na mesma linha, com o detalhe embaixo, a partir da seta. */
+.linhaComVoltar {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
 }
 
 .linhaDoTitulo {

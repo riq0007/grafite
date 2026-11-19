@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Printer } from 'lucide-react';
+import { ArrowLeft, Printer } from 'lucide-react';
 import { expect, within } from 'storybook/test';
-import { Icone } from '../../icones/Icone.tsx';
+import { BotaoDeIcone, Icone } from '../../icones/Icone.tsx';
 import { Botao } from '../botao/Botao.tsx';
 import { RotuloDeSituacao } from '../situacao/RotuloDeSituacao.tsx';
 import { CabecalhoDaPagina } from './CabecalhoDaPagina.tsx';
@@ -166,5 +166,41 @@ export const ComTrilhaEQuadro: Historia = {
     await expect(semAcoes.titulo.top - semAcoes.cabecalho.top).toBe(
       larga.titulo.top - larga.cabecalho.top,
     );
+  },
+};
+
+/**
+ * A seta de voltar do chamado aberto (change chamados-da-ti, design, "A seta de voltar no chamado
+ * aberto (tarefa 5.32)"): antes do título, na linha dele, e fora do título da janela.
+ */
+export const ComVoltar: Historia = {
+  render: () => (
+    <div style={{ width: 960, padding: 'var(--esp-4)', background: 'var(--cor-superficie)' }}>
+      <CabecalhoDaPagina
+        trilha={<nav aria-label="Trilha">Chamados › Toner › {numero(2)}</nav>}
+        voltar={<BotaoDeIcone icone={ArrowLeft} rotulo="Voltar" />}
+        titulo={`Toner preto ${numero(2)}`}
+        detalhe="Em atendimento · Toner · Ana Souza"
+        acoes={<Botao nivel="primario">Responder</Botao>}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const titulo = tela.getByRole('heading', { level: 1 });
+    const voltar = tela.getByRole('button', { name: 'Voltar' });
+    // O leitor de tela lê o título sem a seta.
+    await expect(titulo.textContent).toBe(`Toner preto ${numero(2)}`);
+    await expect(titulo.contains(voltar)).toBe(false);
+    // A seta vem antes do título, na linha dele, e o detalhe começa embaixo dela.
+    const seta = voltar.getBoundingClientRect();
+    const doTitulo = titulo.getBoundingClientRect();
+    const detalhe = tela.getByText('Em atendimento · Toner · Ana Souza').getBoundingClientRect();
+    await expect(seta.right).toBeLessThanOrEqual(doTitulo.left);
+    await expect(
+      Math.abs(seta.top + seta.height / 2 - (doTitulo.top + doTitulo.height / 2)),
+    ).toBeLessThanOrEqual(2);
+    await expect(detalhe.top).toBeGreaterThanOrEqual(doTitulo.bottom);
+    await expect(Math.abs(detalhe.left - seta.left)).toBeLessThanOrEqual(1);
   },
 };
