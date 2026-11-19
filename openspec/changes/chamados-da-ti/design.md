@@ -1138,7 +1138,7 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **O "Como vai o chamado"** do m11, ao lado do formulário, fica para a S8, como na 5.6.
 
 **As respostas prontas (tarefa 5.25),** sem mockup próprio, no molde da tabela dos tipos (m07) e da gaveta do kit:
-- **A tela** pede a janela inteira e rola por dentro, como a dos tipos, com a lista numa coluna só. No alto: o título "Respostas prontas", a contagem ("6 respostas"), a frase "Quem atende as usa no campo de escrever do chamado, nesta ordem. Arraste as linhas para mudar a ordem." e "Nova resposta", primário, com o mais. Com 100 respostas, o botão desliga, e "A organização já tem 100 respostas prontas." aparece embaixo dele (`limiteDasRespostas`), em vez de a recusa vir só depois de a resposta estar escrita.
+- **A tela** pede a janela inteira e rola por dentro, como a dos tipos, com a lista numa coluna só. No alto: o título "Respostas prontas", a contagem ("6 respostas"), a frase "Quem atende as usa no campo de escrever do chamado, nesta ordem. Arraste pela alça para mudar a ordem." e "Nova resposta", primário, com o mais. Com 100 respostas, o botão desliga, e "A organização já tem 100 respostas prontas." aparece embaixo dele (`limiteDasRespostas`), em vez de a recusa vir só depois de a resposta estar escrita.
 - **A tabela** é a `TabelaQueSeOrdena` da 5.19:
   - a alça;
   - a resposta: o rótulo em peso forte, com o selo "Espera a resposta" ao lado, e, embaixo, o começo do texto numa linha, com as quebras juntadas (`textoNumaLinha`) e as reticências do CSS. O selo tem o relógio de areia na tinta da informação, como "Aguardando o colaborador", que é a situação que a resposta dá ao chamado. O `{nome}` aparece como foi escrito, porque a lista é de quem configura;

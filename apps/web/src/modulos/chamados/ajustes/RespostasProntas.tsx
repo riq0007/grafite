@@ -333,7 +333,7 @@ function TelaDasRespostas() {
           )}
         </div>
         <p>
-          Quem atende as usa no campo de escrever do chamado, nesta ordem. Arraste as linhas para
+          Quem atende as usa no campo de escrever do chamado, nesta ordem. Arraste pela alça para
           mudar a ordem.
         </p>
         {respostas && respostas.length > 0 && (
