@@ -93,7 +93,8 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
 - [ ] 3.3 As reações, a leitura e o silenciar: a reação que vai e volta, com o teto de 10 pela trava da mensagem; a leitura, que só anda para a frente e marca as notificações do assunto até a mensagem lida, pela `mensagem_do_chat_id`; o silenciar; e os eventos de cada um. Verificar: os testes de integração, com as duas reações ao mesmo tempo em duas conexões, o lint, o typecheck e o contrato.
 - [ ] 3.4 Os anexos do chat: o envio sem dono, com `chat.usar`; a mensagem que os toma; a entrega pela conversa dona, a quem participa agora; e a remoção dos sem dono em 24 h. Começa pelos testes de integração da entrega: quem saiu da equipe e o anexo de outra conta. Verificar: esses testes, o lint, o typecheck e o contrato.
 - [ ] 3.5 As equipes e os canais:
-  - o cadastro, com `chat.configurar` e as recusas;
+  - o cadastro, com `chat.configurar` e as recusas, e o `antes` do `conferirEquipeOuCanal` lido da linha travada na transação da gravação, para duas alterações ao mesmo tempo não aceitarem o grupo inativo que a outra já trocou;
+  - a leitura da equipe e do canal com o nome e a situação dos dois grupos gravados, para a gaveta da alteração (4.11);
   - arquivar e reativar, com o reativar recusado pelo nome em uso (a violação do `conversas_nome_unico` vira "Já existe uma equipe ou um canal com esse nome.") e pelo teto, que conta só as ativas, com os dois casos no teste de integração;
   - a auditoria, com o "antes → depois" e o alvo pelo nome de agora;
   - o `chat.mudou` aos grupos de antes e de depois;
@@ -192,7 +193,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - a web simulada com o `GET /chat/resumo` e as pontas a ponta que o dock novo muda.
 
   Começa pelos testes da primeira tela. Verificar: esses testes, os do registro e da tradução, o `pnpm test:e2e`, o lint, o typecheck e o dock no `pnpm dev`, com a casca recarregada na janela do Chat.
-- [ ] 4.11 As equipes e os canais na tela: a lista, com a situação em texto, e a gaveta, com os avisos e as recusas no campo. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
+- [ ] 4.11 As equipes e os canais na tela: a lista, com a situação em texto, e a gaveta, com os avisos e as recusas no campo. Na alteração, o grupo gravado inativo aparece como o escolhido, com a situação em texto, como "Financeiro (inativo)": sem ele, o campo abre vazio e o salvar volta "Escolha o grupo da equipe.". Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.12 As telas atualizadas e os avisos:
   - o `chat.mudou` e o `chamados.mudaram`, sem perder o que se escreve;
   - o aviso escondido com a conversa à vista;
