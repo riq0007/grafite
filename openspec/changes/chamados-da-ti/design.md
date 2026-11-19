@@ -1060,6 +1060,26 @@ Depois de cada ação, aceita ou recusada, a tela relê os chamados (a `CHAVE_DO
 - **A tabela** marca a origem de um Rascunho duplicado com "copiado daqui", embaixo do nome, com o ícone da cópia, e a contagem do título deixa os Rascunhos de fora ("9 tipos").
 - **A situação** é a última seção do editor de um tipo Em uso ou Inativo: em texto, o que a situação quer dizer, e o botão que a troca. "Inativar o tipo" pede a confirmação ("Inativar o tipo Impressora?", com o que acontece aos abertos), e o aviso diz "Tipo inativado."; "Reativar o tipo" grava sem confirmação, com o aviso "Tipo reativado.", e as recusas da reativação, que confere o tipo gravado, ficam no campo, com o foco no primeiro. Com mudanças no editor, os dois ficam desligados, com "Salve ou descarte as mudanças para mudar a situação.": a reativação confere o gravado, e a recusa num campo já mudado não teria onde aparecer.
 
+**A busca do ativo com mais opções (tarefa 5.30),** um pedido do usuário depois da 5.20, sem mockup:
+- **o lugar:** o campo Ativo do "Trocar o ativo" e do "Ligar um ativo", e o da gaveta do "Virar OS" (5.31). O campo Ativo do formulário fica como está, com as sugestões da pessoa e a busca;
+- **o texto** acha pelo nome, o patrimônio, o número de série, o hostname e o modelo, como a busca da lista dos ativos, e o texto de exemplo do campo diz isso: "Nome, patrimônio, série ou hostname";
+- **"Mais opções de busca",** um botão embaixo do campo, mostra e esconde os filtros, com o `aria-expanded`: "Tipo", com os tipos de ativo; "Local", na árvore dos locais, com os de dentro do escolhido; e "Responsável", pela busca da pessoa da gaveta da abertura. Com um filtro escolhido, a lista troca as sugestões da pessoa pelos ativos que passam nos filtros e no texto, pelo `GET /ativos` com o `tipo`, o `local` e o filtro `qualquer` do `ativo.responsavel`, sem mudar a API. Esconder as opções limpa os filtros, para nada filtrar fora da vista;
+- **cada ativo achado** ganha uma segunda linha, com o tipo, o local e o responsável, cada um quando há, como "Impressora · Matriz › Financeiro · Marina Rocha", para distinguir os parecidos. As sugestões da pessoa, sem texto e sem filtro, ficam numa linha só, sob a origem, que já diz por que elas estão ali. O kit ganha o `detalhe` da opção da busca com sugestões, na linha de baixo e no texto secundário, que o leitor de tela lê como a descrição dela.
+
+**O "Virar OS" com os campos da OS (tarefa 5.31),** um pedido do usuário depois da 5.20, sem mockup:
+- **a gaveta** "Virar o #1042 em OS" toma o lugar do diálogo, como a do "Pedir toner", com os campos:
+  - "Ativo", com o do chamado já escolhido e a busca da 5.30. Trocar o ativo aqui muda só a OS, e a descrição do campo diz isso: o ativo do chamado fica, como na troca do ativo depois da OS (decisão 11);
+  - "Problema", em várias linhas, que começa com o título e, embaixo, uma linha por resposta do formulário, como no resumo da abertura ("Cor do toner: Preto"). A resposta que não cabe nos 1.000 caracteres do problema fica de fora, inteira;
+  - "Situação", com "Aberta", a de sempre, "Em atendimento", "Aguardando peça" e "Aguardando fornecedor";
+  - na Aguardando fornecedor, o "Fornecedor", com "Cadastrar novo fornecedor" numa aba, e o "Número da OS no fornecedor", como na mudança da situação da OS;
+- **a API:** o `POST /chamados/:numero/os` aceita também o `ativo`, a `situacao`, o `fornecedor` e o `os`; sem o ativo, o do chamado, e sem a situação, a Aberta. As recusas do chamado vêm antes, como hoje. A OS abre pela abertura de hoje e, fora da Aberta, muda de situação pela mudança de hoje (`mudarSituacao`), na mesma transação: o histórico da OS tem as duas linhas no mesmo instante, e a auditoria, o `ordem.aberta` e o `ordem.situacao`. As recusas da mudança, como "Escolha o fornecedor.", voltam no campo delas, e nada fica gravado;
+- **o problema em várias linhas** tira a pendência da 5.10 do Enter no "Problema": nele, o Enter quebra a linha, e a OS abre pelo botão.
+
+**A seta de voltar no chamado aberto (tarefa 5.32),** um pedido do usuário depois da 5.20, sem mockup:
+- **o título** fica "Toner preto #2": o título e, depois dele, o número, em mono, como era antes do título;
+- **a seta,** antes do título e na linha dele, é um botão só de ícone, com o nome "Voltar". Ela volta à tela de antes, quando o chamado abriu de outra tela do app, como o quadro, o Início ou uma notificação, e, com o chamado aberto direto pelo endereço, leva ao Início dos chamados. Ela fica também no carregamento e na falha;
+- **o kit** ganha o `voltar` do cabeçalho da página, fora do título da janela, para o leitor de tela ler o título sem a seta. A trilha continua em cima.
+
 ## Risks / Trade-offs
 
 - **A change é grande** (banco, domínio, API e dez telas) → As tarefas seguem a ordem banco, domínio, API e web. Cada tarefa tem o teste dela e o próprio commit, e cada tela é conferida no `pnpm dev` contra o PNG do mockup antes do commit.

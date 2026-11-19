@@ -181,7 +181,8 @@ Esc SHALL cancelar o arraste. Soltar fora de uma coluna, ou na de origem, SHALL 
 
 O chamado aberto SHALL ter, no cabeçalho:
 - a trilha;
-- o número, em mono, e o título;
+- a seta de voltar, antes do título, que volta à tela de antes ou, com o chamado aberto direto pelo endereço, ao Início dos chamados;
+- o título e, depois dele, o número, em mono;
 - a situação, num selo em texto;
 - o tipo, quem pediu, e quem atende desde quando, com "não atende mais os chamados" quando for o caso;
 - as ações:
@@ -201,10 +202,15 @@ O chamado aberto SHALL responder no endereço `/chamados/<número>`, que as noti
 
 As ações SHALL ficar só com quem atende os locais do chamado:
 - "Transferir" SHALL listar as pessoas do "Passar para…", com os abertos de cada uma;
-- "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL mostrar o problema da OS, que começa com o título do chamado, para corrigir antes de abrir;
+- "Virar OS" SHALL ficar só no chamado com o ativo ligado e sem OS, e SHALL abrir a gaveta da OS (spec ordens-de-servico, "OS pelo chamado"), com:
+  - o ativo do chamado, que se troca só para a OS;
+  - o problema, que começa com o título do chamado e as respostas do formulário, para corrigir antes de abrir;
+  - a situação em que a OS nasce, de "Aberta" a "Aguardando fornecedor", com o fornecedor e o número da OS nele;
 - "Pedir toner" SHALL ficar só no chamado com uma impressora ligada, que usa consumíveis, e sem solicitação, e, sem a solicitação pendente, SHALL abrir o registro do Toner que a solicitação pelo chamado dá, para mudar antes de registrar (spec solicitacoes, "Solicitação pelo chamado");
 - "Resolver" SHALL pedir "O que foi feito";
 - o retorno SHALL vir num aviso, como "Você resolveu o #1042.", "Você reabriu o #1042.", "OS 13 aberta." e "Solicitação 5 registrada.", com "Abrir", e a recusa SHALL ficar com a frase dela.
+
+A escolha do ativo no "Trocar o ativo", no "Ligar um ativo" e no "Virar OS" SHALL achar o ativo pelo nome, o patrimônio, o número de série e o hostname, SHALL ter "Mais opções de busca", com o tipo, o local e o responsável do ativo, e SHALL mostrar o tipo, o local e o responsável de cada ativo achado, embaixo do nome.
 
 A conversa SHALL ficar na forma que a conta escolheu (spec preferencias-da-interface, "Forma das conversas nas preferências"):
 - **no meio:** numa coluna central, sem balão;
@@ -253,6 +259,18 @@ Assumir SHALL mostrar o aviso "Você assumiu o #1042." com "Desfazer".
 #### Scenario: Pedir toner sem a pendente
 - **WHEN** Ana usa "Pedir toner" no #1042, e a PAT-00139 não está numa solicitação pendente
 - **THEN** a gaveta "Pedir toner para o #1042" abre com Marina Rocha, a PAT-00139 e 1 preto, e "Registrar" grava a solicitação ligada ao #1042, com o aviso "Solicitação 5 registrada."
+
+#### Scenario: Achar o ativo pelo responsável
+- **WHEN** Ana abre "Mais opções de busca" no "Trocar o ativo" do #1042 e escolhe o responsável Marina Rocha
+- **THEN** a lista mostra só os ativos sob a responsabilidade de Marina, cada um com o tipo e o local embaixo do nome
+
+#### Scenario: Virar OS que nasce no fornecedor
+- **WHEN** Diego vira o #1042 em OS em "Aguardando fornecedor", com o fornecedor Tonerlab e o número A-778
+- **THEN** a OS 13 nasce na PAT-00139, Aguardando fornecedor, com o Tonerlab e a A-778, e o aviso diz "OS 13 aberta."
+
+#### Scenario: Voltar do chamado
+- **WHEN** Ana abre o #1042 pelo quadro de "Quem está com o quê" e usa a seta de voltar
+- **THEN** o quadro volta; com o #1042 aberto por um link direto, a seta leva ao Início dos chamados
 
 #### Scenario: Ver sem atender
 - **WHEN** Carla, que só vê os chamados, abre o #1042
