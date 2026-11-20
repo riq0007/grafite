@@ -147,8 +147,10 @@ const ItemDaConversaDeQuemParticipa = z
       anexos: z.array(AnexoNaLeitura),
       /** As opções da pergunta da TI, de 2 a 3; nulas na mensagem sem pergunta. */
       opcoes: z.array(z.string()).nullable(),
-      /** A opção escolhida, que vale para sempre; nula na pergunta sem resposta. */
-      escolhida: z.string().nullable(),
+      /** A opção escolhida, que vale para sempre, com quem a escolheu e quando; nula sem resposta. */
+      escolhida: z
+        .object({ opcao: z.string(), por: z.string(), minha: z.boolean(), em: z.string() })
+        .nullable(),
       /** O retrato do ativo, como foi mandado. */
       cartao: z.record(z.string(), z.unknown()).nullable(),
     }),
@@ -555,12 +557,21 @@ export async function conversaDeQuemParticipa(
   }
 
   // A escolha fica na própria pergunta: a primeira de cada uma vence (o índice único dela).
-  const escolhidaDe = new Map<string, string>();
+  type Escolhida = NonNullable<
+    Extract<ItemDaConversaDeQuemParticipa, { especie: 'mensagem' }>['escolhida']
+  >;
+  const escolhidaDe = new Map<string, Escolhida>();
   for (const linha of linhas) {
     if (linha.evento !== 'escolheu') continue;
-    const mensagem = dadoDeTexto(linha.dados, 'mensagem');
+    const mensagem = dadoDeTexto(linha.dados, 'mensagem')?.toLowerCase() ?? null;
     const opcao = dadoDeTexto(linha.dados, 'opcao');
-    if (mensagem !== null && opcao !== null) escolhidaDe.set(mensagem.toLowerCase(), opcao);
+    if (mensagem === null || opcao === null || escolhidaDe.has(mensagem)) continue;
+    escolhidaDe.set(mensagem, {
+      opcao,
+      por: nome.conta(linha.autorConta ?? ''),
+      minha: linha.autorConta === conta.id,
+      em: linha.criadaEm.toISOString(),
+    });
   }
   // A primeira resposta da TI: a primeira mensagem com a conta, também o "O que foi feito".
   const primeiraResposta = linhas.find(
@@ -603,6 +614,15 @@ export async function conversaDeQuemParticipa(
       continue;
     }
     const evento = linha.evento ?? '';
+    if (evento === 'desfez') {
+      // O desfazer vem logo depois do assumir que ele desfaz (`decidirDesfazer`, no domínio): a
+      // pessoa não lê nenhum dos dois, como as etapas, que voltam à chegada de antes.
+      const ultimo = conversa.findLastIndex((item) => item.especie === 'evento');
+      const anterior = conversa[ultimo];
+      if (anterior?.especie === 'evento' && anterior.evento === 'assumiu')
+        conversa.splice(ultimo, 1);
+      continue;
+    }
     const autor = contaNaFrase(linha.autorConta);
     const frase = fraseDoEventoParaQuemParticipa(
       {

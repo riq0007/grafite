@@ -40855,7 +40855,12 @@ export interface components {
             texto: string;
             anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
             opcoes: string[] | null;
-            escolhida: string | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
             cartao: {
                 [key: string]: unknown;
             } | null;
@@ -46597,7 +46602,12 @@ export interface components {
             texto: string;
             anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
             opcoes: string[] | null;
-            escolhida: string | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
             cartao: {
                 [key: string]: unknown;
             } | null;

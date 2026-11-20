@@ -16469,9 +16469,33 @@
                 ]
               },
               "escolhida": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "opcao": {
+                        "type": "string"
+                      },
+                      "por": {
+                        "type": "string"
+                      },
+                      "minha": {
+                        "type": "boolean"
+                      },
+                      "em": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "opcao",
+                      "por",
+                      "minha",
+                      "em"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "cartao": {
@@ -45578,9 +45602,34 @@
                 ]
               },
               "escolhida": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "opcao": {
+                        "type": "string"
+                      },
+                      "por": {
+                        "type": "string"
+                      },
+                      "minha": {
+                        "type": "boolean"
+                      },
+                      "em": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "opcao",
+                      "por",
+                      "minha",
+                      "em"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "cartao": {

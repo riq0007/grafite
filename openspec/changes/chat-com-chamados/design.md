@@ -232,7 +232,8 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o "Reabrir até" vem em todo resolvido, também no fechado, onde é o dia do "O chamado fechou em 18/11";
   - a resposta nova traz quantas e a primeira delas, onde entra o separador "Resposta nova";
   - a última mensagem da lista e da vista Chamados é a última `mensagem` da conversa, sem as notas e os eventos, com quem a escreveu;
-  - a escolha vai na própria pergunta (`escolhida`), a primeira de cada uma, e o cartão, como foi gravado;
+  - a escolha vai na própria pergunta (`escolhida`), a primeira de cada uma, com quem escolheu e quando, e o cartão, como foi gravado;
+  - o assumir que o desfazer desfez sai da conversa com ele, como sai das etapas: a pessoa não lê "está atendendo" de quem não atende;
   - a mensagem de origem vem à parte (`origem`), com os anexos dela, para a abertura a mostrar;
   - as duas últimas mensagens do resumo do chip incluem as notas só a quem vê o chamado com `chamados.ver`.
 

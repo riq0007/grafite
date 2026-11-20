@@ -4,7 +4,7 @@
 // 9 e 15; tarefa 3.8): o chamado de outra pessoa como inexistente, a nota e o anexo dela de fora, a
 // conversa nas palavras do colaborador, com as etapas, a resposta nova e o "Reabrir até", a lista na
 // ordem do domínio, com o fechado vencido, e o resumo do chip.
-import { chamados, naOrganizacao } from '@grafite/db';
+import { chamados, mensagensDosChamados, naOrganizacao } from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type ChatDeTeste, montarChat, type UsuarioDoChat } from '../../test/chat.ts';
@@ -27,6 +27,8 @@ interface ItemLido {
   autor?: { nome: string };
   anexos?: { id: string }[];
   resumo?: unknown;
+  opcoes?: string[] | null;
+  escolhida?: unknown;
 }
 
 interface ChamadoLido {
@@ -193,6 +195,60 @@ describe('a leitura de quem participa', () => {
       especie: 'mensagem',
       texto: 'Troquei a cadeira.',
     });
+  });
+});
+
+describe('a pergunta e o assumir desfeito', () => {
+  it('a escolha vai na pergunta, com quem escolheu e quando, e o assumir desfeito sai', async () => {
+    const numero = await c.abrirChamado('fernanda');
+    const linha = (valores: Partial<typeof mensagensDosChamados.$inferInsert>) =>
+      naOrganizacao(api.banco, c.org, async (tx) => {
+        const [chamado] = await tx
+          .select({ id: chamados.id })
+          .from(chamados)
+          .where(eq(chamados.numero, numero));
+        const [gravada] = await tx
+          .insert(mensagensDosChamados)
+          .values({
+            orgId: c.org,
+            chamadoId: chamado?.id ?? '',
+            especie: 'evento',
+            criadaEm: api.relogio.agora(),
+            ...valores,
+          })
+          .returning({ id: mensagensDosChamados.id });
+        return gravada?.id ?? '';
+      });
+    avancar(1);
+    const pergunta = await linha({
+      especie: 'mensagem',
+      autorConta: c.conta('ana'),
+      texto: 'Posso passar amanhã?',
+      opcoes: ['Pode ser', 'Prefiro hoje'],
+    });
+    avancar(1);
+    const escolhidaEm = api.relogio.agora().toISOString();
+    await linha({
+      autorConta: c.conta('fernanda'),
+      evento: 'escolheu',
+      dados: { mensagem: pergunta, opcao: 'Pode ser' },
+    });
+    // A Ana assume de novo e desfaz: a pessoa não lê nenhum dos dois.
+    avancar(1);
+    await linha({ autorConta: c.conta('ana'), evento: 'assumiu', dados: {} });
+    await linha({ autorConta: c.conta('ana'), evento: 'desfez', dados: {} });
+
+    const lido = await ler('fernanda', numero);
+    expect(lido.conversa.map(({ evento, especie }) => evento ?? especie)).toEqual([
+      'abertura',
+      'mensagem',
+    ]);
+    expect(lido.conversa[1]).toMatchObject({
+      opcoes: ['Pode ser', 'Prefiro hoje'],
+      escolhida: { opcao: 'Pode ser', por: 'Fernanda Rocha', minha: true, em: escolhidaEm },
+    });
+    const daTatiana = await c.cliente.consultar(`/chat/chamados/${numero}`, c.como('tatiana'));
+    expect(daTatiana.statusCode).toBe(404);
   });
 });
 
