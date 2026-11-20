@@ -51,7 +51,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   enderecos += 1;
-  c = await montarChat(api, `grafite.chat-leitura-${enderecos}.local`);
+  c = await montarChat(api, `grafite.chat-chamados-leitura-${enderecos}.local`);
   await c.entrar();
 });
 
