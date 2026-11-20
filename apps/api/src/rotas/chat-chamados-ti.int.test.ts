@@ -5,7 +5,7 @@
 // ativo que a conta não vê, na prévia e no envio; o "Abrir a conversa" da origem só a quem participa
 // dela; as opções; as notificações a quem participa; as respostas prontas com as opções; e a ficha
 // com o que vem do chat.
-import { chamados, mensagensDosChamados, naOrganizacao, notificacoes } from '@grafite/db';
+import { campos, chamados, mensagensDosChamados, naOrganizacao, notificacoes } from '@grafite/db';
 import { and, asc, eq, like } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -394,6 +394,61 @@ describe('as opções e o cartão', () => {
       disponibilidade: { situacao: 'online', texto: 'Online' },
       em: '2026-11-17T13:19:00.000Z',
     });
+  });
+
+  it('o IP de um campo restrito não entra no cartão, nem pela mão de quem vê os restritos', async () => {
+    // Pontos da revisão da tarefa 3.10: o cartão vai a quem participa e a quem vê o chamado sem a
+    // permissão dos restritos.
+    const restrito = await naOrg(async (tx) => {
+      const [campo] = await tx
+        .insert(campos)
+        .values({
+          orgId: c.org,
+          rotulo: 'IP da gerência',
+          rotuloNormalizado: 'ip da gerencia',
+          tipo: 'ip',
+          restrito: true,
+        })
+        .returning({ id: campos.id });
+      return campo?.id ?? '';
+    });
+    const daGerencia = await criarTipo(api, c.org, {
+      nome: 'Impressora da gerência',
+      capacidades: ['rede.disponibilidade'],
+      configuracao: { 'rede.disponibilidade': { campoDoIp: restrito } },
+    });
+    const pat150 = await criarAtivoDoTipo(api, c.org, {
+      tipoId: daGerencia,
+      patrimonio: 'PAT-00150',
+      valores: { [restrito]: '10.0.0.50' },
+    });
+    const numero = await c.abrirChamado('fernanda');
+
+    // Lívia, administradora, vê os restritos: a prévia mostra o que vai, sem o IP.
+    const daLivia = await previa('livia', numero, 'PAT-00150');
+    expect(daLivia.statusCode, daLivia.body).toBe(200);
+    expect(daLivia.json()).toMatchObject({ patrimonio: 'PAT-00150', ip: null });
+
+    // A nota leva o cartão, como a mensagem, e fica fora da leitura de quem participa.
+    for (const acao of ['mensagem', 'nota']) {
+      const r = await daTi('livia', acao, numero, { texto: `O ${acao}.`, cartao: pat150 });
+      expect(r.statusCode, r.body).toBe(200);
+    }
+    const gravadas = (await conversaGravada(numero)).filter(({ especie }) => especie !== 'evento');
+    expect(gravadas.map(({ especie, cartao }) => [especie, cartao?.ip])).toEqual([
+      ['mensagem', null],
+      ['nota', null],
+    ]);
+    expect((await ficha('ana', numero)).conversa.at(-1)).toMatchObject({
+      especie: 'nota',
+      cartao: { patrimonio: 'PAT-00150', ip: null, abrir: false },
+    });
+    const lido = await c.cliente.consultar(`/chat/chamados/${numero}`, c.como('fernanda'));
+    expect(lido.statusCode, lido.body).toBe(200);
+    const doChat = (lido.json() as { conversa: ItemDaFicha[] }).conversa.filter(
+      ({ especie }) => especie !== 'evento',
+    );
+    expect(doChat.map(({ texto }) => texto)).toEqual(['O mensagem.']);
   });
 });
 

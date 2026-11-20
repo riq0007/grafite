@@ -42,7 +42,7 @@ export const CartaoDoAtivo = z
     /** O fabricante e o modelo, como "HP LaserJet M428". */
     modelo: z.string().nullable(),
     patrimonio: z.string().nullable(),
-    /** O IP do campo que o tipo usa na coleta; nulo no restrito, a quem não vê os restritos. */
+    /** O IP do campo que o tipo usa na coleta; nulo no campo restrito, que o cartão não leva. */
     ip: z.string().nullable(),
     /** A situação da última leitura da disponibilidade, em texto; nula sem leitura. */
     disponibilidade: z
@@ -109,16 +109,15 @@ export async function retratoDoAtivo(
     );
   if (!lido || !podeEm(acesso, 'ativos.ver', lido.ativo.localId, arvore)) return null;
   const { ativo, tipo, modelo } = lido;
+  // O cartão é lido por quem participa e por quem vê o chamado sem a permissão dos restritos: o IP de
+  // um campo restrito não entra nele, qualquer que seja quem escreve (revisão da tarefa 3.10).
   const restritos = await camposRestritos(tx);
-  const veRestritos = () => podeEm(acesso, 'ativos.restritos', ativo.localId, arvore);
-  const leitura = { restritos, veRestritos };
+  const leitura = { restritos, veRestritos: () => false };
 
   const campo = campoDoIp(tipo);
   const guardado = campo === null ? null : (ativo.valores as Record<string, unknown>)[campo];
   const ip =
-    typeof guardado === 'string' &&
-    guardado !== '' &&
-    (!restritos.has(campo ?? '') || veRestritos())
+    typeof guardado === 'string' && guardado !== '' && !restritos.has(campo ?? '')
       ? guardado
       : null;
   const disponibilidade = (await disponibilidadeDosAtivos(tx, [ativo], leitura)).get(ativo.id);
