@@ -9,9 +9,11 @@ import {
   type RouterHistory,
 } from '@tanstack/react-router';
 import { MessageCircle } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import estilos from './MolduraDoChat.module.css';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
+import { TelaDaConversa } from './TelaDaConversa.tsx';
 
 /** A vista Chat sem nada escolhido na lista. */
 function NadaEscolhido() {
@@ -41,12 +43,31 @@ const raiz = createRootRoute({ component: MolduraDoChat, notFoundComponent: Chat
 
 const chat = createRoute({ getParentRoute: () => raiz, path: '/chat' });
 
-// As telas ao lado da lista ainda vazias chegam nas tarefas delas: a conversa e a direta na 4.3, o
-// chamado na 4.6 e as vistas Chamados, Equipes e Avisos na 4.7.
+// As telas ao lado da lista ainda vazias chegam nas tarefas delas: a direta na 4.4, o chamado na
+// 4.6 e as vistas Chamados, Equipes e Avisos na 4.7.
 const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: NadaEscolhido });
 
-/** Uma conversa, na vista Chat. */
-export const rotaDaConversa = createRoute({ getParentRoute: () => chat, path: 'c/$conversa' });
+/**
+ * Uma conversa, na vista Chat; com `?m=`, aberta na mensagem do link (spec chat, "Link da
+ * mensagem"). Os ids vão em minúsculas, como a API os devolve.
+ */
+export const rotaDaConversa = createRoute({
+  getParentRoute: () => chat,
+  path: 'c/$conversa',
+  validateSearch: (busca: Record<string, unknown>): { m?: string } =>
+    typeof busca.m === 'string' && busca.m !== '' ? { m: busca.m } : {},
+  component: ConversaDoEndereco,
+});
+
+/**
+ * A tela de cada conversa começa do zero: as abas, a rolagem e a abertura são dela. Os tipos do
+ * roteador são os da casca, que registra o dela: a rota lê os parâmetros e a busca pela forma deles.
+ */
+function ConversaDoEndereco(): ReactNode {
+  const conversa = (rotaDaConversa.useParams() as { conversa: string }).conversa.toLowerCase();
+  const alvo = (rotaDaConversa.useSearch() as { m?: string }).m?.toLowerCase() ?? null;
+  return <TelaDaConversa key={conversa} conversa={conversa} alvo={alvo} />;
+}
 
 /**
  * A conversa direta com a pessoa escolhida em "Nova conversa", que ainda não nasceu: ela nasce com a

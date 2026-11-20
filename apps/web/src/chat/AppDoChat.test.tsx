@@ -2,12 +2,12 @@
 // que volta ao endereço pedido, a conta sem o chat, o módulo desligado, o servidor que não responde,
 // a trilha, com os contadores, a lista do Chat e o menu da conta.
 import { filaDeAvisos } from '@grafite/ui';
-import { createMemoryHistory } from '@tanstack/react-router';
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { type CanalDeEventos, criarCanalDeEventos } from '../eventos/canal.ts';
-import { criarLojaDaSessao, type LojaDaSessao, type ServidorDaSessao } from '../sessao/loja.ts';
+import { criarCanalDeEventos } from '../eventos/canal.ts';
+import { criarLojaDaSessao } from '../sessao/loja.ts';
 import { pagina } from '../sessao/pagina.ts';
+import { abrirOChat as abrir, CHAT_VAZIO, comOChat, fecharOChat } from '../teste/chat.tsx';
 import {
   estadoDaSessaoAtiva,
   naOrganizacao,
@@ -15,48 +15,15 @@ import {
   sessaoAtiva,
   sessaoDesconhecida,
 } from '../teste/sessao.ts';
-import { AppDoChat } from './AppDoChat.tsx';
 import type { ChamadoDeQuemParticipa, ConversaNaLista, PessoaDoChat } from './consultas.ts';
 import { vistaDaTela } from './MolduraDoChat.tsx';
-import { criarRoteadorDoChat } from './rotas.tsx';
 
 const CONVERSA = '0199a6e0-0000-7000-8000-00000000c0a1';
 
-let lojas: LojaDaSessao[] = [];
-
 afterEach(() => {
-  cleanup();
+  fecharOChat();
   vi.restoreAllMocks();
-  for (const loja of lojas) loja.parar();
-  lojas = [];
-  for (const { chave } of filaDeAvisos.naTela) filaDeAvisos.fechar(chave);
-  localStorage.clear();
-  document.documentElement.removeAttribute('data-theme');
 });
-
-/** Abre o app no endereço, como a entrada dele: a sessão ainda por validar é validada ali. */
-function abrir(
-  endereco: string,
-  loja: LojaDaSessao,
-  { chamadoNovo, canal }: { chamadoNovo?: number; canal?: CanalDeEventos } = {},
-) {
-  lojas.push(loja);
-  const roteador = criarRoteadorDoChat(createMemoryHistory({ initialEntries: [endereco] }));
-  render(<AppDoChat roteador={roteador} sessao={loja} chamadoNovo={chamadoNovo} canal={canal} />);
-  if (loja.ler().tipo === 'validando') void loja.validar();
-  return roteador;
-}
-
-/** O chat de quem ainda não tem nada: sem não lidas, sem conversas e sem chamados. */
-const CHAT_VAZIO: ServidorDeTeste = {
-  'GET /api/chat/resumo': () => Response.json({ naoLidas: 0, chamadosComRespostaNova: 0 }),
-  'GET /api/chat/conversas': () => Response.json({ equipesECanais: [], recentes: [] }),
-  'GET /api/chat/chamados': () => Response.json({ abertos: [], resolvidos: [], seguintes: false }),
-};
-
-/** A sessão de quem usa o chat, com o servidor do chat vazio por baixo do que o teste preparar. */
-const comOChat = (servidor: ServidorDeTeste = {}, doServidor: Partial<ServidorDaSessao> = {}) =>
-  sessaoAtiva(naOrganizacao('chat.usar'), { ...CHAT_VAZIO, ...servidor }, {}, {}, doServidor);
 
 /** Um servidor que responde os pedidos preparados e as notificações, que o app lê com a sessão. */
 const buscarEm = (servidor: ServidorDeTeste) => async (pedido: Request) => {

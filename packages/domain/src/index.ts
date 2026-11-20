@@ -429,9 +429,11 @@ export {
 } from './chamados/os-e-solicitacao.ts';
 export {
   type ContaNaFrase,
+  ESPERA_DE_OUTRO,
   type EventoParaQuemParticipa,
   fraseDoEventoParaQuemParticipa,
   previsaoDaResposta,
+  SITUACAO_FECHADA,
   SITUACOES_PARA_QUEM_PARTICIPA,
   situacaoNoChat,
   situacaoParaQuemParticipa,

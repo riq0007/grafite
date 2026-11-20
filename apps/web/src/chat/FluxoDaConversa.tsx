@@ -1,0 +1,606 @@
+// As mensagens da conversa aberta (spec modulo-chat, "Conversa na tela"; spec chat, "Não lidas",
+// "Link da mensagem" e "Chamados da conversa"; change chat-com-chamados, design, decisões 5 e 15):
+// numa coluna, sem balão, com a foto, o nome e a hora em cima, as seguidas da mesma pessoa juntas,
+// os dias e os eventos. A conversa abre na mensagem do link, marcada, na primeira não lida, com
+// "Mensagens novas", ou no fim, e fica presa embaixo enquanto as mensagens chegam; rolada para cima,
+// a que chega mostra "Mensagens novas · 2", que leva ao fim. As mais antigas vêm ao rolar para cima,
+// com "Mensagens anteriores", e, no trecho que não chega ao fim, as seguintes vêm ao rolar para
+// baixo. A última mostrada fica lida com a conversa à vista.
+import { nomeNoChat } from '@grafite/domain';
+import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
+import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { FalhaDaConsulta } from '../api/consultas.ts';
+import { miniaturasNoChat } from '../api/fotos.ts';
+import { useSessao } from '../sessao/useSessao.tsx';
+import { type CargaDoTrecho, type MensagensDaConversa, useLeituraDaConversa } from './consultas.ts';
+import { type ItemNaTela, itensDaConversa, type MensagemDoChat, novasDesde } from './conversa.ts';
+import { FalhaDoChat } from './FalhaDoChat.tsx';
+import estilos from './FluxoDaConversa.module.css';
+import { useAgoraNoChat, useJanelaAVista } from './janela.ts';
+import { LinkDoChat } from './LinkDoChat.tsx';
+
+/** A folga, em px, em que quem lê ainda está no fim da conversa. */
+const PERTO_DO_FIM = 32;
+
+/** O espaço, em px, acima do separador "Mensagens novas" quando a conversa abre nele. */
+const ACIMA_DAS_NOVAS = 16;
+
+/** O quanto antes de a ponta aparecer as anteriores e as seguintes já começam a vir. */
+const ANTES_DA_PONTA = '160px 0px';
+
+const estaNoFim = (elemento: HTMLElement) =>
+  elemento.scrollHeight - elemento.scrollTop - elemento.clientHeight <= PERTO_DO_FIM;
+
+/** A distância do elemento ao topo do conteúdo que rola. */
+const topoNaRolagem = (rolagem: HTMLElement, elemento: HTMLElement) =>
+  elemento.getBoundingClientRect().top - rolagem.getBoundingClientRect().top + rolagem.scrollTop;
+
+/** A API respondeu que não há o que se pediu, como a mensagem do link de outra conversa. */
+export const naoEncontrada = (erro: unknown) =>
+  erro instanceof FalhaDaConsulta && erro.falha.problema?.status === 404;
+
+const daMensagem = (rolagem: HTMLElement, id: string) =>
+  rolagem.querySelector<HTMLElement>(`[data-mensagem="${id}"]`);
+
+/**
+ * A abertura: a mensagem do link no meio da área, o separador "Mensagens novas" no alto ou, sem
+ * nenhum dos dois, o fim da conversa.
+ */
+function pontoDaAbertura(rolagem: HTMLElement, alvo: string | null): number {
+  const doAlvo = alvo === null ? null : daMensagem(rolagem, alvo);
+  if (doAlvo) {
+    return topoNaRolagem(rolagem, doAlvo) - (rolagem.clientHeight - doAlvo.offsetHeight) / 2;
+  }
+  const novas = rolagem.querySelector<HTMLElement>('[data-novas]');
+  return novas ? topoNaRolagem(rolagem, novas) - ACIMA_DAS_NOVAS : rolagem.scrollHeight;
+}
+
+/**
+ * A rolagem que a própria conversa faz, guardada em `propria`. O evento dela chega no quadro
+ * seguinte, quando a tela já pode ter mudado, como a faixa das abas, que aparece depois da
+ * abertura: ele não diz onde quem lê quis ficar.
+ */
+function rolarPara(rolagem: HTMLElement, topo: number, propria: { current: number | null }) {
+  const antes = rolagem.scrollTop;
+  rolagem.scrollTop = topo;
+  if (rolagem.scrollTop !== antes) propria.current = rolagem.scrollTop;
+}
+
+/** O nome de quem escreveu, no chat: "Você" para a conta, e o "(TI)" para quem atende. */
+const nomeDoAutor = (autor: MensagemDoChat['autor'], conta: string) =>
+  autor.conta === conta ? 'Você' : nomeNoChat(autor.nome, autor.daTi);
+
+const LISTA = new Intl.ListFormat('pt-BR', { type: 'conjunction' });
+
+export function FluxoDaConversa({
+  conversa,
+  alvo,
+  visivel,
+  mensagens: { trecho, mais },
+}: {
+  conversa: string;
+  /** A mensagem do link (`?m=`), que a conversa abre marcada. */
+  alvo: string | null;
+  /** A conversa está na tela: a aba Conversa escolhida, ou a direta, que não tem abas. */
+  visivel: boolean;
+  mensagens: MensagensDaConversa;
+}) {
+  const sessao = useSessao();
+  const conta = (sessao.tipo === 'ativa' && sessao.conta.id) || '';
+  const dataHora = useDataHora();
+  const agora = useAgoraNoChat();
+  const janelaAVista = useJanelaAVista();
+  const dados = trecho.data;
+  const itens = useMemo(
+    () =>
+      dados
+        ? itensDaConversa(dados.itens, {
+            conta,
+            lidaAoAbrir: dados.lidaAoAbrir,
+            agora,
+            dataHora,
+          })
+        : [],
+    [dados, conta, agora, dataHora],
+  );
+  const primeira = dados?.itens[0]?.id ?? null;
+  const ultima = dados?.itens.at(-1)?.id ?? null;
+  useLeituraDaConversa(conversa, {
+    ultima,
+    lidaAte: dados?.lidaAte ?? null,
+    aVista: janelaAVista && visivel,
+  });
+
+  const rolagem = useRef<HTMLElement>(null);
+  const conteudo = useRef<HTMLOListElement>(null);
+  /** Quem lê está no fim: a conversa desce com o que chega. */
+  const noFim = useRef(true);
+  const [noFimNaTela, definirNoFimNaTela] = useState(true);
+  /** A última mensagem que quem lê viu no fim: as dos outros depois dela são as novas. */
+  const [vistaAte, definirVistaAte] = useState<string | null>(null);
+  const ultimaAgora = useRef(ultima);
+  /** A abertura já foi posicionada, e as pontas já podem carregar ao aparecer. */
+  const [pronta, definirPronta] = useState(false);
+  /** A primeira mensagem antes das anteriores chegarem, onde ela estava na tela. */
+  const ancora = useRef<{ id: string; topo: number } | null>(null);
+  /** O ponto da rolagem quando a aba Conversa sai da tela, para voltar a ele. */
+  const rolagemSalva = useRef(0);
+  /** Onde a própria conversa pôs a rolagem, até o evento dela chegar. */
+  const rolagemPropria = useRef<number | null>(null);
+  const visivelAntes = useRef(visivel);
+
+  useLayoutEffect(() => {
+    ultimaAgora.current = ultima;
+  }, [ultima]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roda a cada mudança dos itens, como a mensagem que chega.
+  useLayoutEffect(() => {
+    const elemento = rolagem.current;
+    const voltou = visivel && !visivelAntes.current;
+    visivelAntes.current = visivel;
+    if (!elemento || !dados || !visivel) return;
+    if (!pronta) {
+      rolarPara(elemento, pontoDaAbertura(elemento, alvo), rolagemPropria);
+      noFim.current = estaNoFim(elemento);
+      definirNoFimNaTela(noFim.current);
+      definirVistaAte(ultima);
+      definirPronta(true);
+      return;
+    }
+    if (voltou && !noFim.current) {
+      rolarPara(elemento, rolagemSalva.current, rolagemPropria);
+      return;
+    }
+    const marca = ancora.current;
+    ancora.current = null;
+    const daMarca = marca && daMensagem(elemento, marca.id);
+    if (marca && daMarca) {
+      const deslocou = daMarca.getBoundingClientRect().top - marca.topo;
+      rolarPara(elemento, elemento.scrollTop + deslocou, rolagemPropria);
+      return;
+    }
+    if (noFim.current) {
+      rolarPara(elemento, elemento.scrollHeight, rolagemPropria);
+      definirNoFimNaTela(true);
+      definirVistaAte(ultima);
+    }
+  }, [itens, visivel]);
+
+  useEffect(() => {
+    const elemento = rolagem.current;
+    if (!elemento) return;
+    const medir = () => {
+      // A aba escondida não tem altura: o que ela diria do fim não vale.
+      if (elemento.clientHeight === 0) return;
+      rolagemSalva.current = elemento.scrollTop;
+      const propria = rolagemPropria.current;
+      rolagemPropria.current = null;
+      if (propria !== null && elemento.scrollTop === propria) return;
+      const fim = estaNoFim(elemento);
+      noFim.current = fim;
+      definirNoFimNaTela(fim);
+      if (fim) definirVistaAte(ultimaAgora.current);
+    };
+    const descer = () => {
+      if (noFim.current && elemento.clientHeight > 0) {
+        rolarPara(elemento, elemento.scrollHeight, rolagemPropria);
+      }
+    };
+    elemento.addEventListener('scroll', medir, { passive: true });
+    const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(descer) : null;
+    observador?.observe(elemento);
+    if (conteudo.current) observador?.observe(conteudo.current);
+    return () => {
+      elemento.removeEventListener('scroll', medir);
+      observador?.disconnect();
+    };
+  }, []);
+
+  const carregar = (carga: CargaDoTrecho) => {
+    const elemento = rolagem.current;
+    if (mais.isPending || !elemento) return;
+    if (carga === 'anteriores' && primeira !== null) {
+      const daPrimeira = daMensagem(elemento, primeira);
+      ancora.current = daPrimeira
+        ? { id: primeira, topo: daPrimeira.getBoundingClientRect().top }
+        : null;
+    }
+    if (carga === 'mais-novas') noFim.current = true;
+    mais.mutate(carga, {
+      onError: () => {
+        ancora.current = null;
+      },
+    });
+  };
+  const carregarAgora = useRef(carregar);
+  useLayoutEffect(() => {
+    carregarAgora.current = carregar;
+  });
+
+  // As pontas carregam ao aparecer, depois da abertura. O observador novo, a cada mudança do
+  // trecho, diz se a ponta ainda está à vista, para carregar a página seguinte; a falha espera o
+  // "Tentar de novo".
+  // biome-ignore lint/correctness/useExhaustiveDependencies: o observador novo, a cada mudança das pontas do trecho, diz de novo se elas estão à vista.
+  useEffect(() => {
+    const elemento = rolagem.current;
+    if (!pronta || !visivel || !elemento || mais.isPending || mais.isError) return;
+    if (typeof IntersectionObserver !== 'function') return;
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const entrada of entradas) {
+          const lado = (entrada.target as HTMLElement).dataset.lado;
+          if (entrada.isIntersecting && (lado === 'anteriores' || lado === 'seguintes')) {
+            carregarAgora.current(lado);
+          }
+        }
+      },
+      { root: elemento, rootMargin: ANTES_DA_PONTA },
+    );
+    for (const ponta of elemento.querySelectorAll('[data-lado]')) observador.observe(ponta);
+    return () => observador.disconnect();
+  }, [pronta, visivel, primeira, ultima, mais.isPending, mais.isError]);
+
+  const irAoFim = () => {
+    const elemento = rolagem.current;
+    if (!elemento) return;
+    noFim.current = true;
+    rolarPara(elemento, elemento.scrollHeight, rolagemPropria);
+    definirNoFimNaTela(true);
+    definirVistaAte(ultima);
+    elemento.focus();
+  };
+
+  const novas = dados && !dados.seguintes ? novasDesde(dados.itens, conta, vistaAte) : 0;
+  const carregando = mais.isPending ? mais.variables : null;
+  const falhou = mais.isError ? mais.variables : null;
+
+  return (
+    <div className={estilos.fluxo}>
+      <section
+        ref={rolagem}
+        className={estilos.rolagem}
+        aria-label="Mensagens"
+        aria-busy={trecho.isPending || undefined}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a área que rola recebe o foco para rolar pelo teclado.
+        tabIndex={0}
+      >
+        {trecho.isPending && (
+          <p role="status" className={estilos.carregando}>
+            Carregando as mensagens…
+          </p>
+        )}
+        {trecho.isError &&
+          !dados &&
+          (alvo !== null && naoEncontrada(trecho.error) ? (
+            <div role="alert" className={estilos.semAMensagem}>
+              <p>{trecho.error.message}</p>
+              <LinkDoChat para={`/chat/c/${conversa}`}>Abrir a conversa</LinkDoChat>
+            </div>
+          ) : (
+            <FalhaDoChat
+              mensagem={trecho.error.message}
+              relendo={trecho.isFetching}
+              tentarDeNovo={() => void trecho.refetch()}
+            />
+          ))}
+        {dados?.anteriores && (
+          <Ponta
+            lado="anteriores"
+            rotulo="Mensagens anteriores"
+            carregando={carregando === 'anteriores'}
+            falha={falhou === 'anteriores' ? (mais.error?.message ?? null) : null}
+            carregar={() => carregar('anteriores')}
+          />
+        )}
+        {dados && dados.itens.length === 0 && (
+          <p className={estilos.carregando}>Nenhuma mensagem ainda.</p>
+        )}
+        <ol ref={conteudo} className={estilos.itens}>
+          {itens.map((item) => (
+            <ItemDaConversa
+              key={item.chave}
+              item={item}
+              conversa={conversa}
+              conta={conta}
+              alvo={alvo}
+              dataHora={dataHora}
+            />
+          ))}
+        </ol>
+        {dados?.seguintes && (
+          <Ponta
+            lado="seguintes"
+            rotulo="Mensagens seguintes"
+            carregando={carregando === 'seguintes' || carregando === 'mais-novas'}
+            falha={
+              falhou === 'seguintes' || falhou === 'mais-novas'
+                ? (mais.error?.message ?? null)
+                : null
+            }
+            carregar={() => carregar('seguintes')}
+          />
+        )}
+      </section>
+      {!noFimNaTela &&
+        (dados?.seguintes ? (
+          <div className={estilos.aviso}>
+            <Botao nivel="primario" icone={ArrowDown} onPress={() => carregar('mais-novas')}>
+              Ir para as mais novas
+            </Botao>
+          </div>
+        ) : (
+          novas > 0 && (
+            <div className={estilos.aviso}>
+              <Botao nivel="primario" icone={ArrowDown} onPress={irAoFim}>
+                {`Mensagens novas · ${novas}`}
+              </Botao>
+            </div>
+          )
+        ))}
+    </div>
+  );
+}
+
+/**
+ * "Mensagens anteriores" no alto e "Mensagens seguintes" no pé do trecho: carregam ao aparecer e
+ * pelo botão, e dizem o motivo da falha, com "Tentar de novo".
+ */
+function Ponta({
+  lado,
+  rotulo,
+  carregando,
+  falha,
+  carregar,
+}: {
+  lado: 'anteriores' | 'seguintes';
+  rotulo: string;
+  carregando: boolean;
+  falha: string | null;
+  carregar: () => void;
+}) {
+  return (
+    <div className={estilos.ponta} data-lado={lado}>
+      {falha === null ? (
+        <Botao
+          nivel="terciario"
+          carregando={carregando}
+          rotuloCarregando="Carregando"
+          onPress={carregar}
+        >
+          {rotulo}
+        </Botao>
+      ) : (
+        <FalhaDoChat mensagem={falha} relendo={carregando} tentarDeNovo={carregar} />
+      )}
+    </div>
+  );
+}
+
+function ItemDaConversa({
+  item,
+  conversa,
+  conta,
+  alvo,
+  dataHora,
+}: {
+  item: ItemNaTela;
+  conversa: string;
+  conta: string;
+  alvo: string | null;
+  dataHora: DataHora;
+}) {
+  switch (item.tipo) {
+    case 'dia':
+      return (
+        <li className={estilos.dia}>
+          <h3>{item.rotulo}</h3>
+        </li>
+      );
+    case 'novas':
+      return (
+        <li className={estilos.novas} data-novas="">
+          Mensagens novas
+        </li>
+      );
+    case 'evento':
+      return (
+        <EventoNaConversa
+          mensagem={item.mensagem}
+          conversa={conversa}
+          conta={conta}
+          dataHora={dataHora}
+        />
+      );
+    case 'mensagem':
+      return (
+        <MensagemNaConversa
+          mensagem={item.mensagem}
+          seguida={item.seguida}
+          doLink={item.mensagem.id === alvo}
+          conversa={conversa}
+          conta={conta}
+          dataHora={dataHora}
+        />
+      );
+  }
+}
+
+/** O endereço da mensagem na conversa, que abre a conversa nela. */
+const daConversaEm = (conversa: string, mensagem: string) => `/chat/c/${conversa}?m=${mensagem}`;
+
+/**
+ * Uma mensagem: a foto, o nome e a hora, a respondida, o texto, os anexos, o chamado em que ela
+ * virou e as reações. A seguida da mesma pessoa vai sem a foto e o nome, com a hora ao lado, que
+ * aparece no mouse e no foco. A do link vai marcada, com o nome.
+ */
+function MensagemNaConversa({
+  mensagem,
+  seguida,
+  doLink,
+  conversa,
+  conta,
+  dataHora,
+}: {
+  mensagem: MensagemDoChat;
+  seguida: boolean;
+  doLink: boolean;
+  conversa: string;
+  conta: string;
+  dataHora: DataHora;
+}) {
+  const hora = dataHora.formatarHora(new Date(mensagem.criadaEm));
+  const nome = nomeDoAutor(mensagem.autor, conta);
+  const junta = seguida && !doLink;
+  return (
+    <li
+      className={estilos.mensagem}
+      data-mensagem={mensagem.id}
+      data-seguida={junta || undefined}
+      data-do-link={doLink || undefined}
+      data-virada={mensagem.chamado ? '' : undefined}
+      aria-current={doLink || undefined}
+    >
+      {junta ? (
+        <time className={estilos.horaAoLado} dateTime={mensagem.criadaEm}>
+          {hora}
+        </time>
+      ) : (
+        <Avatar
+          nome={mensagem.autor.nome}
+          imagens={miniaturasNoChat(mensagem.autor.conta, mensagem.autor.foto)}
+          className={estilos.foto}
+          decorativo
+        />
+      )}
+      <div className={estilos.corpo}>
+        {junta ? (
+          <span className={estilos.paraOLeitor}>{nome}</span>
+        ) : (
+          <p className={estilos.quem}>
+            <span className={estilos.nome}>{nome}</span>
+            <time dateTime={mensagem.criadaEm}>{hora}</time>
+            {doLink && <span className={estilos.doLink}>Mensagem do link</span>}
+          </p>
+        )}
+        {mensagem.respondida && (
+          <LinkDoChat
+            className={estilos.respondida}
+            para={daConversaEm(conversa, mensagem.respondida.id)}
+          >
+            <Icone icone={CornerUpLeft} tamanho={14} />
+            <span className={estilos.paraOLeitor}>Respondendo a</span>
+            <span className={estilos.autorDaRespondida}>{mensagem.respondida.autor}</span>
+            <span className={estilos.comecoDaRespondida}>{mensagem.respondida.comeco}</span>
+          </LinkDoChat>
+        )}
+        {mensagem.texto && <p className={estilos.texto}>{mensagem.texto}</p>}
+        {mensagem.anexos.length > 0 && (
+          <ul className={estilos.anexos} aria-label="Anexos">
+            {mensagem.anexos.map((anexo) => (
+              <li key={anexo.id}>
+                <a
+                  className={estilos.anexo}
+                  href={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
+                  download={anexo.nome}
+                >
+                  <span className={estilos.miniDoAnexo}>
+                    <Icone
+                      icone={anexo.tipo.startsWith('image/') ? Image : FileText}
+                      tamanho={20}
+                    />
+                  </span>
+                  <span>
+                    <span className={estilos.nomeDoAnexo}>{anexo.nome}</span>
+                    <small>{formatarTamanho(anexo.bytes)}</small>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {mensagem.chamado && (
+          <p className={estilos.virou}>
+            <span className={estilos.iconeDoChamado}>
+              <Icone icone={LifeBuoy} tamanho={14} />
+            </span>
+            <span>
+              Virou o chamado <span className={estilos.numero}>#{mensagem.chamado.numero}</span>
+            </span>
+            {mensagem.chamado.abrir && (
+              <LinkDoChat para={`/chat/chamados/${mensagem.chamado.numero}`}>
+                Abrir chamado
+              </LinkDoChat>
+            )}
+          </p>
+        )}
+        {mensagem.reacoes.length > 0 && (
+          <ul className={estilos.reacoes} aria-label="Reações">
+            {mensagem.reacoes.map((reacao) => {
+              const quem = reacao.contas.map((de) => (de.conta === conta ? 'você' : de.nome));
+              return (
+                <li
+                  key={reacao.texto}
+                  className={estilos.reacao}
+                  data-minha={reacao.minha || undefined}
+                  title={LISTA.format(quem)}
+                >
+                  <span aria-hidden="true">{`${reacao.texto} · ${reacao.contas.length}`}</span>
+                  <span className={estilos.paraOLeitor}>
+                    {`${reacao.texto}: ${LISTA.format(quem)}`}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * O evento numa linha, no quadro azul do chamado (m03): "Fernanda Rocha transformou esta mensagem no
+ * chamado #1045 · 10:32", que leva à mensagem de origem, com "Abrir chamado" a quem pode abri-lo.
+ */
+function EventoNaConversa({
+  mensagem,
+  conversa,
+  conta,
+  dataHora,
+}: {
+  mensagem: MensagemDoChat;
+  conversa: string;
+  conta: string;
+  dataHora: DataHora;
+}) {
+  if (mensagem.evento !== 'virou-chamado' || !mensagem.chamado) return null;
+  const { numero, abrir, mensagem: origem } = mensagem.chamado;
+  return (
+    <li className={estilos.evento} data-mensagem={mensagem.id}>
+      <span className={estilos.iconeDoEvento}>
+        <Icone icone={LifeBuoy} tamanho={22} />
+      </span>
+      <p>
+        <strong>{nomeDoAutor(mensagem.autor, conta)}</strong> transformou{' '}
+        {origem ? (
+          <LinkDoChat para={daConversaEm(conversa, origem)}>esta mensagem</LinkDoChat>
+        ) : (
+          'esta mensagem'
+        )}{' '}
+        no chamado <span className={estilos.numero}>#{numero}</span>
+        <span className={estilos.horaDoEvento}>
+          {' · '}
+          <time dateTime={mensagem.criadaEm}>
+            {dataHora.formatarHora(new Date(mensagem.criadaEm))}
+          </time>
+        </span>
+      </p>
+      {abrir && (
+        <LinkDoChat className={estilos.abrirChamado} para={`/chat/chamados/${numero}`}>
+          Abrir chamado
+        </LinkDoChat>
+      )}
+    </li>
+  );
+}

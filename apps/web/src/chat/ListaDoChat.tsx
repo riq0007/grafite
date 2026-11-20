@@ -4,9 +4,9 @@
 // no alto; os resolvidos que ainda se reabrem em FECHADOS, recolhido; as equipes e os canais; e as
 // conversas diretas, em RECENTES. A conversa e o chamado do endereço ficam marcados.
 import { secoesDoChat } from '@grafite/domain';
-import { Avatar, Botao, Icone } from '@grafite/ui';
+import { Avatar, Icone } from '@grafite/ui';
 import { useRouterState } from '@tanstack/react-router';
-import { BellOff, ChevronRight, CircleAlert, Hash, LifeBuoy } from 'lucide-react';
+import { BellOff, ChevronRight, Hash, LifeBuoy } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import { useServidor } from '../sessao/useSessao.tsx';
@@ -18,6 +18,7 @@ import {
   useChamadosDoChat,
   useConversasDoChat,
 } from './consultas.ts';
+import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import estilos from './ListaDoChat.module.css';
 import moldura from './MolduraDoChat.module.css';
@@ -95,14 +96,14 @@ export function ListaDoChat() {
       </div>
       <div className={estilos.secoes}>
         {comChamados && chamados.isError && !chamados.data && (
-          <FalhaDaLista
+          <FalhaDoChat
             mensagem={chamados.error.message}
             relendo={chamados.isFetching}
             tentarDeNovo={() => void chamados.refetch()}
           />
         )}
         {conversas.isError && !conversas.data && (
-          <FalhaDaLista
+          <FalhaDoChat
             mensagem={conversas.error.message}
             relendo={conversas.isFetching}
             tentarDeNovo={() => void conversas.refetch()}
@@ -126,31 +127,6 @@ export function ListaDoChat() {
         )}
       </div>
     </section>
-  );
-}
-
-/** A lista que não carregou, com a mensagem e "Tentar de novo". */
-function FalhaDaLista({
-  mensagem,
-  relendo,
-  tentarDeNovo,
-}: {
-  mensagem: string;
-  relendo: boolean;
-  tentarDeNovo: () => void;
-}) {
-  return (
-    <div role="alert" className={estilos.falha}>
-      <p>
-        <span className={estilos.marcaDaFalha}>
-          <Icone icone={CircleAlert} tamanho={14} />
-        </span>
-        {mensagem}
-      </p>
-      <Botao carregando={relendo} rotuloCarregando="Tentando de novo" onPress={tentarDeNovo}>
-        Tentar de novo
-      </Botao>
-    </div>
   );
 }
 
@@ -268,11 +244,7 @@ function CartaoDoChamado({
       >
         <span className={estilos.tituloDoChamado}>{chamado.titulo}</span>
         <span className={estilos.linhaDoChamado}>
-          <SeloDoChamado
-            situacao={chamado.situacao}
-            fechado={chamado.fechado}
-            texto={chamado.situacaoEmTexto}
-          />
+          <SeloDoChamado texto={chamado.situacaoEmTexto} />
           <Contador quantos={chamado.respostaNova} tom="chamado" />
           <span className={estilos.numero}>{`#${chamado.numero}`}</span>
         </span>

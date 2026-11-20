@@ -14,9 +14,17 @@ export const SITUACOES_PARA_QUEM_PARTICIPA: Record<SituacaoDoChamado, string> = 
   resolvido: 'Resolvido',
 };
 
+/** O resolvido que não se reabre mais, nas palavras de quem participa. */
+export const SITUACAO_FECHADA = 'Fechado';
+
+/** A espera a quem não participa do chamado, na palavra da TI: a resposta não é dele. */
+export const ESPERA_DE_OUTRO = 'Aguardando o colaborador';
+
 /** A situação para quem participa: o resolvido que não se reabre mais é o Fechado. */
 export function situacaoParaQuemParticipa(situacao: SituacaoDoChamado, fechado: boolean): string {
-  return situacao === 'resolvido' && fechado ? 'Fechado' : SITUACOES_PARA_QUEM_PARTICIPA[situacao];
+  return situacao === 'resolvido' && fechado
+    ? SITUACAO_FECHADA
+    : SITUACOES_PARA_QUEM_PARTICIPA[situacao];
 }
 
 /**
@@ -30,7 +38,7 @@ export function situacaoNoChat(
   fechado: boolean,
   participaDoChamado: boolean,
 ): string {
-  if (situacao === 'aguardando' && !participaDoChamado) return 'Aguardando o colaborador';
+  if (situacao === 'aguardando' && !participaDoChamado) return ESPERA_DE_OUTRO;
   return situacaoParaQuemParticipa(situacao, fechado);
 }
 

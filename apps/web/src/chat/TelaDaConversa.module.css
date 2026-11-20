@@ -1,0 +1,176 @@
+/* A conversa aberta, ao lado da lista (m01): o cabeçalho no alto, as abas e, embaixo, a parte
+   escolhida, que rola por dentro. */
+.conversa {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.abrindo {
+  margin: 0;
+  padding: var(--esp-4) var(--esp-5);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A conversa que não existe para a conta: o motivo e o caminho de volta, no meio da tela. */
+.naoEncontrada {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: auto;
+  padding: var(--esp-6);
+}
+
+.naoEncontrada p {
+  margin: 0;
+}
+
+.naoEncontrada a {
+  color: var(--cor-destaque-texto);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-5);
+}
+
+/* A direta não tem abas: a linha de baixo do cabeçalho fica no lugar da faixa delas. */
+.cabecalho[data-sem-abas] {
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+.cabecalho .foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+.marcaDoCanal {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--esp-8);
+  block-size: var(--esp-8);
+  border: 1px solid var(--cor-linha);
+  border-radius: 50%;
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto-2);
+}
+
+.nome {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.sobre {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As abas ocupam o resto da altura, com a faixa no recuo do cabeçalho. */
+.abas {
+  --recuo-das-abas: var(--esp-5);
+
+  flex: 1;
+  min-block-size: 0;
+}
+
+/* Os arquivos e os chamados da conversa, numa coluna que rola. */
+.lista {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--esp-3);
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--esp-4) var(--esp-5);
+}
+
+.nenhum {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.itens {
+  display: grid;
+  gap: var(--esp-2);
+  inline-size: 100%;
+  max-inline-size: var(--largura-previa);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivo,
+.chamado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+  font-size: var(--texto-dado);
+}
+
+.chamado {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--esp-1);
+}
+
+.iconeDoArquivo {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.sobreOArquivo {
+  min-inline-size: 0;
+}
+
+.nomeDoArquivo {
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.nomeDoArquivo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.arquivo small,
+.chamado small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.linhaDoChamado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-weight: var(--peso-forte);
+}
+
+.tituloDoChamado {
+  min-inline-size: 0;
+  font-weight: var(--peso-forte);
+  overflow-wrap: anywhere;
+}
