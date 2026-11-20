@@ -111,7 +111,9 @@ export async function abrirTrecho(
 /**
  * As páginas que relêem o trecho, juntas numa só: o trecho que chega ao fim da conversa se relê das
  * mais novas para trás, até o começo dele, e traz o que chegou depois; o outro, do começo dele para a
- * frente, até o fim dele. A página junta vale como a das mais novas, que cobre da primeira à última.
+ * frente, até o fim dele. A releitura não estende o trecho: o que as páginas trazem antes do começo
+ * dele e, longe do fim, depois do fim dele fica de fora, para as pontas carregarem quando quem lê
+ * chegar a elas. A página junta vale como a das mais novas, que cobre da primeira à última.
  */
 export async function relerTrecho(
   buscar: BuscarPagina,
@@ -120,7 +122,8 @@ export async function relerTrecho(
   const primeira = trecho.itens[0]?.id;
   const ultima = trecho.itens.at(-1)?.id;
   const paginas: PaginaDeMensagens[] = [];
-  if (!trecho.seguintes || primeira === undefined || ultima === undefined) {
+  const noFim = !trecho.seguintes || primeira === undefined || ultima === undefined;
+  if (noFim) {
     let pagina = await buscar({});
     paginas.push(pagina);
     let comeco = pagina.itens[0]?.id;
@@ -144,7 +147,26 @@ export async function relerTrecho(
       fim = pagina.itens.at(-1)?.id;
     }
   }
-  return { pedido: {}, pagina: juntas(paginas) };
+  return { pedido: {}, pagina: noTrecho(juntas(paginas), primeira, noFim ? undefined : ultima) };
+}
+
+/**
+ * A página só com as mensagens de `de` a `ate`. O que sai deixa a ponta aberta: há mensagens antes,
+ * ou depois, do que ficou.
+ */
+function noTrecho(
+  pagina: PaginaDeMensagens,
+  de: string | undefined,
+  ate: string | undefined,
+): PaginaDeMensagens {
+  const antes = ({ id }: MensagemDoChat) => de !== undefined && id < de;
+  const depois = ({ id }: MensagemDoChat) => ate !== undefined && id > ate;
+  return {
+    ...pagina,
+    itens: pagina.itens.filter((mensagem) => !antes(mensagem) && !depois(mensagem)),
+    anteriores: pagina.anteriores || pagina.itens.some(antes),
+    seguintes: pagina.seguintes || pagina.itens.some(depois),
+  };
 }
 
 /** As páginas seguidas, da mais antiga para a mais nova, como uma página só. */

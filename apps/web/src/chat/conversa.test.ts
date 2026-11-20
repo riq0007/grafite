@@ -248,24 +248,46 @@ describe('abrirTrecho', () => {
 });
 
 describe('relerTrecho', () => {
-  it('no fim da conversa, relê das mais novas para trás até o começo do trecho', async () => {
+  it('no fim da conversa, relê das mais novas para trás até o começo do trecho, sem estendê-lo', async () => {
     const { buscar, pedidos } = servidor(230);
     const lido = trecho(varias(101, 200), { anteriores: true });
     const { pedido, pagina: relida } = await relerTrecho(buscar, lido);
     expect(pedidos).toEqual([{}, { antes: id(181) }, { antes: id(131) }]);
     expect(pedido).toEqual({});
-    expect(ids(relida.itens)).toEqual(ids(varias(81, 230)));
-    expect(ids(juntarPagina(lido, pedido, relida).itens)).toEqual(ids(varias(81, 230)));
+    expect(ids(relida.itens)).toEqual(ids(varias(101, 230)));
+    const junto = juntarPagina(lido, pedido, relida);
+    expect(ids(junto.itens)).toEqual(ids(varias(101, 230)));
+    expect(junto).toMatchObject({ anteriores: true, seguintes: false });
   });
 
-  it('longe do fim, relê do começo do trecho para a frente, até o fim dele', async () => {
+  it('longe do fim, relê do começo do trecho para a frente, até o fim dele, sem estendê-lo', async () => {
     const { buscar, pedidos } = servidor(300);
     const lido = trecho(varias(101, 180), { anteriores: true, seguintes: true });
     const { pedido, pagina: relida } = await relerTrecho(buscar, lido);
     expect(pedidos).toEqual([{ em: id(101) }, { depois: id(125) }, { depois: id(175) }]);
     const junto = juntarPagina(lido, pedido, relida);
-    expect(ids(junto.itens)).toEqual(ids(varias(76, 225)));
+    expect(ids(junto.itens)).toEqual(ids(varias(101, 180)));
     expect(junto).toMatchObject({ anteriores: true, seguintes: true });
+  });
+
+  it('a mensagem que chega entra no fim, sem trazer anteriores', async () => {
+    let lido = trecho(varias(151, 200), { anteriores: true });
+    for (const total of [201, 202]) {
+      const { buscar } = servidor(total);
+      const { pedido, pagina: relida } = await relerTrecho(buscar, lido);
+      lido = juntarPagina(lido, pedido, relida);
+      expect(ids(lido.itens)).toEqual(ids(varias(151, total)));
+      expect(lido).toMatchObject({ anteriores: true, seguintes: false });
+    }
+  });
+
+  it('no começo da conversa, a releitura fica sem anteriores', async () => {
+    const { buscar } = servidor(300);
+    const lido = trecho(varias(1, 40), { seguintes: true });
+    const { pedido, pagina: relida } = await relerTrecho(buscar, lido);
+    const junto = juntarPagina(lido, pedido, relida);
+    expect(ids(junto.itens)).toEqual(ids(varias(1, 40)));
+    expect(junto).toMatchObject({ anteriores: false, seguintes: true });
   });
 
   it('a conversa sem mensagens relê as mais novas', async () => {

@@ -8,7 +8,10 @@
   min-block-size: 0;
 }
 
+/* A área que rola é a base dos textos só para o leitor de tela: eles rolam com ela e ficam dentro
+   dela, sem deixar o documento mais alto que a janela. */
 .rolagem {
+  position: relative;
   flex: 1;
   min-block-size: 0;
   overflow-y: auto;
