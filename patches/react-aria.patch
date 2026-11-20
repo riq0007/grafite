@@ -37,3 +37,60 @@ index 0fc3e3d54032b47dd95fd290b07825f62b3f7174..573966d62fd8d343a31cee7ba3d18d03
  const $eac5d44fa99b2e3b$var$ANGLE_PADDING = Math.PI / 12; // 15°
  function $eac5d44fa99b2e3b$export$85ec83e04c95f50a(options) {
      let { menuRef: menuRef, submenuRef: submenuRef, isOpen: isOpen, isDisabled: isDisabled } = options;
+diff --git a/dist/private/utils/animation.cjs b/dist/private/utils/animation.cjs
+index 77a2e8b18df9230f83754d8f7c1162639454ef3f..037b67ecf2702909e811c651c78d0ea326b6e979 100644
+--- a/dist/private/utils/animation.cjs
++++ b/dist/private/utils/animation.cjs
+@@ -57,6 +57,14 @@ function $f77f64616fa97613$export$45fda7c47f93fd48(ref, isOpen) {
+             break;
+     }
+     let isExiting = exitState === 'exiting';
++    // Grafite: sem o elemento, como a dica que outra trocou no aquecimento, fechada sem a animação de
++    // saída, a saída acaba na hora; presa, ela voltava sem a posição quando a dica fechava outra vez.
++    (0, $429333cab433657c$exports.useLayoutEffect)(()=>{
++        if (isExiting && !ref.current) setExitState((state)=>state === 'exiting' ? 'closed' : state);
++    }, [
++        ref,
++        isExiting
++    ]);
+     $f77f64616fa97613$var$useAnimation(ref, isExiting, (0, $9Rk9E$react.useCallback)(()=>{
+         // Set the state to closed, which will cause the element to be unmounted.
+         setExitState((state)=>state === 'exiting' ? 'closed' : state);
+diff --git a/dist/private/utils/animation.js b/dist/private/utils/animation.js
+index 533adadfffadf4d2cc6831347752427eb63dfff1..5513a984300b8b8581204095b924c4faace9c92f 100644
+--- a/dist/private/utils/animation.js
++++ b/dist/private/utils/animation.js
+@@ -50,6 +50,14 @@ function $3c19e3d939575a21$export$45fda7c47f93fd48(ref, isOpen) {
+             break;
+     }
+     let isExiting = exitState === 'exiting';
++    // Grafite: sem o elemento, como a dica que outra trocou no aquecimento, fechada sem a animação de
++    // saída, a saída acaba na hora; presa, ela voltava sem a posição quando a dica fechava outra vez.
++    (0, $53fed047b798be36$export$e5c5a5f917a5871c)(()=>{
++        if (isExiting && !ref.current) setExitState((state)=>state === 'exiting' ? 'closed' : state);
++    }, [
++        ref,
++        isExiting
++    ]);
+     $3c19e3d939575a21$var$useAnimation(ref, isExiting, (0, $7ueWv$useCallback)(()=>{
+         // Set the state to closed, which will cause the element to be unmounted.
+         setExitState((state)=>state === 'exiting' ? 'closed' : state);
+diff --git a/dist/private/utils/animation.mjs b/dist/private/utils/animation.mjs
+index f615c0b51de2123f40bc50e808e4aa3a856f84b1..45ada204411e06372eae8af15aa79292cda81be9 100644
+--- a/dist/private/utils/animation.mjs
++++ b/dist/private/utils/animation.mjs
+@@ -50,6 +50,14 @@ function $fcc7165e876206c6$export$45fda7c47f93fd48(ref, isOpen) {
+             break;
+     }
+     let isExiting = exitState === 'exiting';
++    // Grafite: sem o elemento, como a dica que outra trocou no aquecimento, fechada sem a animação de
++    // saída, a saída acaba na hora; presa, ela voltava sem a posição quando a dica fechava outra vez.
++    (0, $c4867b2f328c2698$export$e5c5a5f917a5871c)(()=>{
++        if (isExiting && !ref.current) setExitState((state)=>state === 'exiting' ? 'closed' : state);
++    }, [
++        ref,
++        isExiting
++    ]);
+     $fcc7165e876206c6$var$useAnimation(ref, isExiting, (0, $5MIG0$useCallback)(()=>{
+         // Set the state to closed, which will cause the element to be unmounted.
+         setExitState((state)=>state === 'exiting' ? 'closed' : state);
