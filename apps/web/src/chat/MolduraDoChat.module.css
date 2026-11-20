@@ -1,0 +1,126 @@
+/* O app do chat (spec modulo-chat, "App do chat"): a trilha à esquerda e a vista ao lado, na janela
+   inteira, sem a casca. */
+.app {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  block-size: 100dvh;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* A trilha (spec modulo-chat, "Trilha do chat"): as vistas no alto e o menu da conta no pé. */
+.trilha {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-2);
+  inline-size: calc(var(--esp-12) + var(--esp-4));
+  padding: var(--esp-2) var(--esp-1);
+  border-inline-end: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.vistas {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada vista: o ícone e o nome embaixo, em texto. */
+.vista {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-1);
+  inline-size: calc(var(--esp-12) + var(--esp-2));
+  padding: var(--esp-2) 0;
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  text-decoration: none;
+  outline: none;
+}
+
+.vista:hover {
+  background-color: var(--cor-hover);
+  color: var(--cor-texto);
+}
+
+.vista:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A vista à vista: a barra do destaque na borda da trilha, como o indicador das abas, o fundo e o
+   nome em peso forte, para não depender só da cor. */
+.vista[aria-current="page"] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+  color: var(--cor-texto);
+  font-weight: var(--peso-forte);
+}
+
+.vista[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--esp-1);
+  inset-inline-start: calc(var(--esp-1) * -1);
+  inline-size: 2px;
+  border-radius: 1px;
+  background-color: var(--cor-destaque);
+}
+
+/* O menu da conta: a foto ou as iniciais, sem o preenchimento do botão de texto. */
+.trilha .conta {
+  padding: var(--esp-1);
+}
+
+.conteudo {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* Sem o chat: o motivo no meio da janela. */
+.motivo {
+  margin: auto;
+}
+
+/* A coluna da lista da vista, com o título no alto. */
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  inline-size: calc(var(--esp-12) * 6);
+  padding: var(--esp-4);
+  border-inline-end: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie);
+}
+
+.tituloDaLista {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+/* O endereço que não leva a nenhuma vista. */
+.naoEncontrada {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: auto;
+}
+
+.naoEncontrada p {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+.naoEncontrada a {
+  color: var(--cor-destaque-texto);
+}

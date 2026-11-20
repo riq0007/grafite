@@ -261,6 +261,15 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **Os eventos a quem participa,** nos casos que a spec não escreve (tarefa 3.12):
   - as contas da pessoa e de quem abriu pelo chat vão no `chamados.mudaram` do que muda o que elas leem: a abertura, as ações da TI, a troca do ativo, do título e dos campos, o fechamento e as ações delas. A nota, o Virar OS e o "Pedir toner" vão só a quem vê o chamado, porque nada do que quem participa lê muda com eles. As contas são as de quem participa agora (`contasQueParticipam`): sem o módulo Chat e a conta que não usa o chat ficam de fora;
   - o `chat.mudou` da conversa de origem sai quando a situação ou quem atende muda, pela TI ou por quem participa, e no fechamento, porque o chip passa a "Fechado". A mensagem, a nota e a edição não o gravam: o chip mostra só o número, a situação e quem atende. O fechamento grava um por conversa no lote.
+- **O app do chat,** nos casos que a spec não escreve (tarefa 4.1):
+  - os motivos de o chat não abrir vão nesta ordem: sem resposta do servidor, "Sem conexão com o servidor." e "O chat abre quando a conexão voltar.", e o app abre sozinho quando ela volta; com o módulo desligado, "O chat está desligado nesta organização.", para todos, também sem o `chat.usar`, porque pedir acesso não adiantaria; e só então "Você não tem acesso ao chat.". Com um motivo, as telas do chat nem montam, sem pedir dados;
+  - o desligado diz a quem tem o `organizacao.editar` "Você pode ligá-lo na seção Módulos da Administração do Grafite." e aos outros "Peça a quem define os padrões da organização para ligá-lo.";
+  - com um motivo, a trilha fica sem as vistas. O menu da conta fica no pé dela também sem o `chat.usar` e com o módulo desligado, para quem entrou poder sair; sem conexão, não, porque a conta não se sabe;
+  - o tema do menu da conta lista os temas em "Escuros" e "Claros", pelo tom de cada um, e o personalizado em "Montado por você"; o destaque e o fuso são escolhidos nos Ajustes da casca, e o app só os segue;
+  - o item escolhido da trilha tem a barra e o fundo no destaque da conta, e o nome em peso forte. O endereço que não leva a nenhuma tela do chat diz "Página não encontrada", com "Ir para o Chat", e a trilha fica sem item escolhido;
+  - os links do app trocam a tela sem recarregar a página, e o clique com o Ctrl ou o Shift, ou com o botão do meio, abre o endereço como um link comum;
+  - o service worker deixa o `chat/index.html` fora do precache, porque o Workbox serviria a página guardada no `/chat/`, e guarda o manifesto do chat, como o do Grafite. O `/chat` de fora do `navigateFallback` casa também com a busca e o fragmento (`/chat?m=12`), porque o Workbox confere o caminho com a busca;
+  - a API e o plugin do `pnpm dev` servem a página do chat ao `/chat` e ao que vem depois de `/chat/`, e não ao `/chatbot`, que é da casca.
 
 ## Risks / Trade-offs
 

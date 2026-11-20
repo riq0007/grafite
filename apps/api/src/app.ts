@@ -232,9 +232,11 @@ export async function criarApp({
     requestIdHeader: false,
     // /api/... chega às mesmas rotas, como no proxy do desenvolvimento (a web chama /api). Com a
     // web compilada, o pedido de uma página fora do /api é dela, mesmo no endereço de uma rota da
-    // API, como /ativos: recebe o index.html.
+    // API, como /ativos: recebe o index.html, ou, em /chat, a página do app do chat.
     rewriteUrl: (requisicao) =>
-      pastaDaWeb && pedePagina(requisicao) ? '/index.html' : semPrefixoDaApi(requisicao.url ?? '/'),
+      pastaDaWeb && pedePagina(requisicao)
+        ? paginaDoEndereco(requisicao.url)
+        : semPrefixoDaApi(requisicao.url ?? '/'),
     // Só o proxy na frente diz o endereço do cliente (design do F2d, decisão 10).
     trustProxy: proxiesConfiaveis,
   }).withTypeProvider<ZodTypeProvider>();
@@ -519,6 +521,14 @@ export function semPrefixoDaApi(url: string): string {
 
 /** Arquivo com extensão (script, estilo, imagem): se não existe, é 404, nunca o index.html. */
 const EXTENSAO = /\.[a-z0-9]+$/i;
+
+/** Os endereços do app do chat, que tem a página própria (change chat-com-chamados, decisão 12). */
+const DO_CHAT = /^\/chat(\/|$)/;
+
+/** A página da web de um pedido de página: a do app do chat em /chat e abaixo; a da casca no resto. */
+export function paginaDoEndereco(url = '/'): string {
+  return DO_CHAT.test(url.split('?')[0] ?? '') ? '/chat/index.html' : '/index.html';
+}
 
 /** Onde o Vite põe os arquivos com a versão no nome: o único lugar com cache longo. */
 const PASTA_COM_VERSAO = 'assets';

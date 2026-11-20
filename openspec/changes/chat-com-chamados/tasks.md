@@ -150,7 +150,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
 
 Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O que mudar o kit em todas as telas vai antes ao usuário por cartão.
 
-- [ ] 4.1 O app do chat (decisão 12):
+- [x] 4.1 O app do chat (decisão 12):
   - a página `chat/index.html` no build, com a entrada própria `src/chat/main.tsx`, sem o roteador da casca nem os módulos, e o `chegadaNoIndex` que pula a página;
   - o manifesto pelo `pnpm marca:gerar`;
   - a árvore de rotas do chat, com os provedores e a sessão validada sem a camada do carregamento;
