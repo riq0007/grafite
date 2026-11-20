@@ -19,6 +19,7 @@ import { ProvedorDaSessao } from '../sessao/useSessao.tsx';
 import { ProvedorDoChamadoNovo } from './chamadoNovo.tsx';
 import { EVENTOS_DO_CHAT } from './consultas.ts';
 import { ehDoChat } from './enderecos.ts';
+import { ProvedorDosRascunhos } from './rascunhos.tsx';
 import type { RoteadorDoChat } from './rotas.tsx';
 
 /** O chat no registro dos eventos, com as consultas que cada evento relê. */
@@ -64,7 +65,9 @@ export function AppDoChat({
               <ProvedorDeNotificacoes navegar={navegar}>
                 <Porta>
                   <ProvedorDoChamadoNovo inicial={chamadoNovo}>
-                    <RouterProvider router={roteador} />
+                    <ProvedorDosRascunhos>
+                      <RouterProvider router={roteador} />
+                    </ProvedorDosRascunhos>
                   </ProvedorDoChamadoNovo>
                 </Porta>
               </ProvedorDeNotificacoes>

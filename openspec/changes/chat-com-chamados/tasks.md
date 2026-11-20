@@ -167,7 +167,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - a leitura com a conversa à vista.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.4 A caixa de escrever e o menu da mensagem (m01):
+- [x] 4.4 A caixa de escrever e o menu da mensagem (m01):
   - a caixa: o Enter e o Shift+Enter, a respondida, os anexos, o "#" com a lista dos chamados, o texto que fica e as recusas;
   - o menu: a barra, as reações, o link, o silenciar e o Ctrl+Shift+T.
 

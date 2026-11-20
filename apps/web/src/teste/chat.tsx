@@ -1,5 +1,6 @@
 // O app do chat nos testes: a abertura num endereço, como a entrada dele, o servidor do chat vazio e
 // a sessão de quem usa o chat, com o que o teste preparar por cima.
+import type { Permissao } from '@grafite/domain';
 import { filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
 import { cleanup, render } from '@testing-library/react';
@@ -44,14 +45,16 @@ export const CHAT_VAZIO: ServidorDeTeste = {
 
 /**
  * A sessão de quem usa o chat, com o servidor do chat vazio por baixo do que o teste preparar, no fuso
- * dos mockups: as horas na tela não dependem do fuso da máquina que roda o teste.
+ * dos mockups: as horas na tela não dependem do fuso da máquina que roda o teste. As permissões vão
+ * além do `chat.usar`, como o `chamados.pedir`.
  */
 export const comOChat = (
   servidor: ServidorDeTeste = {},
   doServidor: Partial<ServidorDaSessao> = {},
+  permissoes: Permissao[] = [],
 ) =>
   sessaoAtiva(
-    naOrganizacao('chat.usar'),
+    naOrganizacao('chat.usar', ...permissoes),
     { ...CHAT_VAZIO, ...servidor },
     { regiao: { fuso: FUSO_DOS_MOCKUPS } },
     {},

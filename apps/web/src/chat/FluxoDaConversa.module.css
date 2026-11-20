@@ -94,8 +94,10 @@
   background-color: var(--cor-destaque);
 }
 
-/* A mensagem: a foto de 32 px e, ao lado, o nome com a hora, o texto e o resto. */
+/* A mensagem: a foto de 32 px e, ao lado, o nome com a hora, o texto e o resto. Ela é a base da
+   barra, no canto de cima. */
 .mensagem {
+  position: relative;
   display: grid;
   grid-template-columns: var(--esp-8) minmax(0, 1fr);
   column-gap: var(--esp-3);
@@ -104,8 +106,62 @@
   border-radius: var(--raio-menu);
 }
 
-.mensagem:is(:hover, :focus-within) {
+/* No mouse, no foco e com um menu da barra aberto (m01): o fundo diz de qual mensagem é o menu. */
+.mensagem:is(:hover, :focus-within, :has(> .barra[data-presa])) {
   background-color: var(--cor-hover);
+}
+
+.mensagem:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A barra da mensagem (m01): "Reagir", "Responder" e "Mais", no canto de cima, por cima da
+   anterior, com o mouse ou o foco na mensagem, e presa enquanto um menu dela está aberto. Escondida,
+   ela fica montada na mensagem da vez do teclado, e o foco volta aos botões dela. */
+.barra {
+  position: absolute;
+  inset-block-start: calc(var(--esp-3) * -1 - 2px);
+  inset-inline-end: var(--esp-3);
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-elevada);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mensagem:is(:hover, :focus-within) > .barra,
+.barra[data-presa] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.barra .botaoDaBarra {
+  width: calc(var(--esp-6) + var(--esp-1));
+  height: calc(var(--esp-6) + var(--esp-1));
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .barra .botaoDaBarra {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+}
+
+/* A reação escrita, no popover: o campo e, embaixo, "Cancelar" e "Reagir". */
+.reacaoEscrita {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+}
+
+.acoesDaReacao {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
 }
 
 /* A seguida da mesma pessoa encosta na anterior. */
@@ -144,7 +200,7 @@
   transition: opacity var(--dur-rapida) var(--curva-padrao);
 }
 
-.mensagem:is(:hover, :focus-within) .horaAoLado {
+.mensagem:is(:hover, :focus-within, :has(> .barra[data-presa])) .horaAoLado {
   opacity: 1;
 }
 
@@ -306,7 +362,8 @@
   font-weight: var(--peso-forte);
 }
 
-/* As reações, em cápsulas; a da conta em peso forte, com a borda do destaque. */
+/* As reações, em cápsulas, que dão e tiram a reação da conta; a dela em peso forte, com a borda do
+   destaque. */
 .reacoes {
   display: flex;
   flex-wrap: wrap;
@@ -317,15 +374,29 @@
 }
 
 .reacao {
+  display: inline-block;
+  margin: 0;
   padding: 0 var(--esp-2);
   border: 1px solid var(--cor-linha-forte);
   border-radius: var(--raio-capsula);
   background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-family: inherit;
   font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
   line-height: var(--entrelinha-normal);
 }
 
-.reacao[data-minha] {
+button.reacao:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+button.reacao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.reacao:is([data-minha], [aria-pressed="true"]) {
   border-color: var(--cor-destaque);
   font-weight: var(--peso-forte);
 }

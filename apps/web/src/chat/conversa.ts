@@ -90,6 +90,25 @@ export function juntarPagina(
 }
 
 /**
+ * O trecho com a mensagem que a conta mandou ou que mudou pela mão dela, como a reação, sem esperar a
+ * releitura: a mandada entra na ordem dos ids no trecho que chega ao fim da conversa, e a que já está
+ * nele fica uma vez, com o que veio agora. Com "trocar", só troca a que está no trecho. Nulo quando a
+ * mensagem fica de fora: longe do fim, a mandada é das mais novas, que vêm à parte.
+ */
+export function comAMensagem(
+  trecho: TrechoDaConversa,
+  mensagem: MensagemDoChat,
+  como: 'acrescentar' | 'trocar' = 'acrescentar',
+): TrechoDaConversa | null {
+  const esta = trecho.itens.some(({ id }) => id === mensagem.id);
+  if (!esta && (como === 'trocar' || trecho.seguintes)) return null;
+  const itens = esta
+    ? trecho.itens.map((outra) => (outra.id === mensagem.id ? mensagem : outra))
+    : [...trecho.itens, mensagem].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return { ...trecho, itens };
+}
+
+/**
  * A conversa aberta: na mensagem do link, ao redor dela; sem o link, nas mais novas, ou, com a
  * última lida antes delas, ao redor dela, onde está a primeira não lida. A conversa que a conta nunca
  * leu abre nas mais novas.

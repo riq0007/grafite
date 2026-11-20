@@ -26,9 +26,19 @@
   color: var(--cor-critico);
 }
 
+/* A ação que leva ao chamado: o nome forte no azul do chamado, sobre o fundo e a borda dele. O foco
+   pinta o item no destaque, como os outros. */
+.item[data-informativo] {
+  background-color: var(--cor-info-fundo);
+  box-shadow: inset 0 0 0 1px var(--cor-info-borda);
+  color: var(--cor-info);
+  font-weight: var(--peso-forte);
+}
+
 /* Item em foco, e o item cujo submenu está aberto: o destaque, como no macOS. */
 .item:is([data-focused], [data-open]) {
   background-color: var(--cor-destaque);
+  box-shadow: none;
   color: var(--cor-sobre-destaque);
 }
 
@@ -63,8 +73,28 @@
   color: var(--cor-texto-2);
 }
 
-.item:is([data-focused], [data-open]) :is(.descricao, .icone) {
+/* O texto curto no fim do item, como "+1 · ok · visto", e o atalho de teclado da ação, em texto,
+   como nos menus do macOS; no item informativo, o atalho segue o azul do nome. */
+.dica,
+.atalho {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+}
+
+.item[data-informativo] .atalho,
+.item:is([data-focused], [data-open]) :is(.descricao, .icone, .dica, .atalho) {
   color: inherit;
+}
+
+.paraOLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .tituloDaSecao {

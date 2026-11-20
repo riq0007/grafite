@@ -7,6 +7,7 @@ import {
   createRoute,
   createRouter,
   type RouterHistory,
+  useRouterState,
 } from '@tanstack/react-router';
 import { MessageCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -14,6 +15,7 @@ import { LinkDoChat } from './LinkDoChat.tsx';
 import estilos from './MolduraDoChat.module.css';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
 import { TelaDaConversa } from './TelaDaConversa.tsx';
+import { type PessoaDaDireta, TelaDaDireta } from './TelaDaDireta.tsx';
 
 /** A vista Chat sem nada escolhido na lista. */
 function NadaEscolhido() {
@@ -43,8 +45,8 @@ const raiz = createRootRoute({ component: MolduraDoChat, notFoundComponent: Chat
 
 const chat = createRoute({ getParentRoute: () => raiz, path: '/chat' });
 
-// As telas ao lado da lista ainda vazias chegam nas tarefas delas: a direta na 4.4, o chamado na
-// 4.6 e as vistas Chamados, Equipes e Avisos na 4.7.
+// As telas ao lado da lista ainda vazias chegam nas tarefas delas: o chamado na 4.6 e as vistas
+// Chamados, Equipes e Avisos na 4.7.
 const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: NadaEscolhido });
 
 /**
@@ -73,7 +75,21 @@ function ConversaDoEndereco(): ReactNode {
  * A conversa direta com a pessoa escolhida em "Nova conversa", que ainda não nasceu: ela nasce com a
  * primeira mensagem (spec chat, "Conversa direta").
  */
-export const rotaDaDireta = createRoute({ getParentRoute: () => chat, path: 'direta/$conta' });
+export const rotaDaDireta = createRoute({
+  getParentRoute: () => chat,
+  path: 'direta/$conta',
+  component: DiretaDoEndereco,
+});
+
+/** A pessoa vem no estado da navegação, que o histórico guarda também na volta e ao recarregar. */
+function DiretaDoEndereco(): ReactNode {
+  const conta = (rotaDaDireta.useParams() as { conta: string }).conta.toLowerCase();
+  const pessoa = useRouterState({
+    select: (estado) => (estado.location.state as { pessoa?: PessoaDaDireta }).pessoa ?? null,
+  });
+  const daConta = pessoa?.conta.toLowerCase() === conta ? pessoa : null;
+  return <TelaDaDireta key={conta} conta={conta} pessoa={daConta} />;
+}
 
 const vistaChamados = createRoute({ getParentRoute: () => chat, path: 'chamados' });
 

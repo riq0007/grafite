@@ -17,7 +17,9 @@ import type { EventosDoModulo } from '../modulos/tipos.ts';
 import {
   abrirTrecho,
   type BuscarPagina,
+  comAMensagem,
   juntarPagina,
+  type MensagemDoChat,
   type PedidoDaPagina,
   relerTrecho,
   type TrechoDaConversa,
@@ -172,7 +174,17 @@ export function useMensagensDaConversa(conversa: string, alvo: string | null) {
       );
     },
   });
-  return { trecho, mais };
+  /**
+   * A mensagem que a conta mandou, ou que mudou pela mão dela, como a reação, entra no trecho sem
+   * esperar a releitura do evento; `false` quando ela fica de fora (`comAMensagem`).
+   */
+  const mostrar = (mensagem: MensagemDoChat, como?: 'acrescentar' | 'trocar'): boolean => {
+    const atual = consultas.getQueryData<TrechoDaConversa>(chave);
+    const junto = atual ? comAMensagem(atual, mensagem, como) : null;
+    if (junto) consultas.setQueryData<TrechoDaConversa>(chave, junto);
+    return junto !== null;
+  };
+  return { trecho, mais, mostrar };
 }
 
 export type MensagensDaConversa = ReturnType<typeof useMensagensDaConversa>;

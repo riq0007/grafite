@@ -1,0 +1,44 @@
+/* A mensagem citada, como ela é (m02): quem escreveu e a hora em cima, e o texto, com o fio do azul
+   do chamado. */
+.citada {
+  position: relative;
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-inline-start: 3px solid var(--cor-info);
+  border-radius: 0 var(--raio-controle) var(--raio-controle) 0;
+  background-color: var(--cor-superficie-2);
+  font-size: var(--texto-dado);
+}
+
+.quem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+}
+
+.autor {
+  font-weight: var(--peso-forte);
+}
+
+.hora {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.texto {
+  margin: 2px 0 0;
+  line-height: var(--entrelinha-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

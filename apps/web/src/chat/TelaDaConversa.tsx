@@ -2,16 +2,27 @@
 // chat-com-chamados, design, decisão 15, "A conversa aberta" e "A conversa, nos casos que a spec não
 // escreve"): o cabeçalho, com a foto ou as iniciais, o nome e, na equipe, quantas pessoas participam
 // ou, no canal, quem escreve; na equipe e no canal, as abas Conversa, Arquivos e "Chamados da equipe"
-// (ou "do canal"); e as mensagens. A aba Conversa continua montada nas outras, com o ponto da
-// rolagem; sem o módulo Chamados, a aba dos chamados sai.
-import { nomeNoChat } from '@grafite/domain';
-import { Abas, Avatar, Botao, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
+// (ou "do canal"); e as mensagens, com a caixa de escrever embaixo e, na barra de cada uma, o
+// responder, as reações, o silenciar e o transformar em chamado (spec modulo-chat, "Menu da
+// mensagem"). A aba Conversa continua montada nas outras, com o ponto da rolagem; sem o módulo
+// Chamados, a aba dos chamados sai.
+import { comecoDoTexto, nomeNoChat } from '@grafite/domain';
+import { Abas, Avatar, avisar, Botao, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
+import { useQueryClient } from '@tanstack/react-query';
 import { FileText, Hash, Image } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
+import { pedir } from '../api/pedir.ts';
+import { useApi } from '../api/useApi.tsx';
+import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../sessao/useSessao.tsx';
+import type { AcoesDaMensagem } from './BarraDaMensagem.tsx';
+import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
+  CHAVE_DAS_CONVERSAS,
+  CHAVE_DO_RESUMO_DO_CHAT,
   type ConversaAberta,
+  chaveDaConversa,
   useArquivosDaConversa,
   useChamadosDaConversa,
   useConversaAberta,
@@ -19,16 +30,25 @@ import {
 } from './consultas.ts';
 import { quandoNoChat } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
-import { FluxoDaConversa, naoEncontrada } from './FluxoDaConversa.tsx';
+import { type ControleDoFluxo, FluxoDaConversa, naoEncontrada } from './FluxoDaConversa.tsx';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { rascunhoDaConversa, useRascunho } from './rascunhos.tsx';
 import { SeloDoChamado } from './SeloDoChamado.tsx';
 import estilos from './TelaDaConversa.module.css';
+import { type MensagemATransformar, TransformarEmChamado } from './TransformarEmChamado.tsx';
 
 const NENHUM_DESLIGADO: readonly string[] = [];
 
 /** A frase da spec chat ("Link da mensagem") para o link da mensagem de quem não participa. */
 const SEM_A_MENSAGEM = 'A mensagem não foi encontrada.';
+
+/**
+ * O texto de ajuda da caixa: "Escrever uma mensagem em Equipe Financeiro…" na equipe e no canal, e
+ * "Escrever uma mensagem para Paulo Nunes…" na direta.
+ */
+export const ajudaDaCaixa = ({ tipo, nome }: Pick<ConversaAberta, 'tipo' | 'nome'>) =>
+  tipo === 'direta' ? `Escrever uma mensagem para ${nome}…` : `Escrever uma mensagem em ${nome}…`;
 
 /** O que o cabeçalho diz embaixo do nome: as pessoas da equipe e quem escreve. */
 export function sobreAConversa(aberta: ConversaAberta): string | null {
@@ -48,6 +68,13 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
   const [aba, definirAba] = useState('conversa');
   const idDoNome = useId();
+  const api = useApi();
+  const consultas = useQueryClient();
+  const { pode } = useAcesso();
+  const controle = useRef<ControleDoFluxo>(null);
+  const caixa = useRef<HTMLTextAreaElement>(null);
+  const [, mudarRascunho] = useRascunho(rascunhoDaConversa(conversa));
+  const [transformando, definirTransformando] = useState<MensagemATransformar | null>(null);
   const aberta = cabecalho.data;
 
   if (!aberta) {
@@ -77,14 +104,106 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     );
   }
 
+  /** A conversa silenciada, ou ouvida de novo: o cabeçalho, a lista e o total do chat mudam. */
+  const silenciar = async (silenciada: boolean) => {
+    const resposta = await pedir(
+      () =>
+        api.PUT('/chat/conversas/{id}/silenciada', {
+          params: { path: { id: conversa } },
+          body: { silenciada },
+        }),
+      silenciada ? 'silenciar a conversa' : 'voltar a ouvir a conversa',
+    );
+    if (!('dados' in resposta)) {
+      avisar({ situacao: 'atencao', titulo: resposta.erro });
+      return;
+    }
+    const agora = resposta.dados.silenciada;
+    consultas.setQueryData<ConversaAberta>(
+      [...chaveDaConversa(conversa), 'cabecalho'],
+      (antes) => antes && { ...antes, silenciada: agora },
+    );
+    void consultas.invalidateQueries({ queryKey: CHAVE_DAS_CONVERSAS });
+    void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+    avisar({
+      situacao: 'sucesso',
+      titulo: agora ? 'Conversa silenciada.' : 'A conversa volta a notificar.',
+    });
+  };
+  const acoes: AcoesDaMensagem = {
+    // A respondida vai à caixa como a mensagem enviada a mostra: o nome no chat e o começo do texto.
+    responder: aberta.escreve
+      ? (mensagem) => {
+          mudarRascunho((antes) => ({
+            ...antes,
+            respondida: {
+              id: mensagem.id,
+              autor: nomeNoChat(mensagem.autor.nome, mensagem.autor.daTi),
+              comeco: comecoDoTexto(mensagem.texto ?? ''),
+            },
+          }));
+          caixa.current?.focus();
+        }
+      : null,
+    reagir: aberta.arquivada
+      ? null
+      : async (mensagem, texto) => {
+          const resposta = await pedir(
+            () =>
+              api.POST('/chat/mensagens/{id}/reacoes', {
+                params: { path: { id: mensagem.id } },
+                body: { texto },
+              }),
+            'reagir à mensagem',
+          );
+          if (!('dados' in resposta)) return resposta.problema?.campos?.texto ?? resposta.erro;
+          mensagens.mostrar(resposta.dados, 'trocar');
+          return null;
+        },
+    transformar:
+      pode('chamados.pedir') && !desligados.includes('chamados')
+        ? (mensagem, autor) => definirTransformando({ mensagem, autor })
+        : null,
+    silenciada: aberta.silenciada,
+    silenciar: (silenciada) => void silenciar(silenciada),
+  };
+
   const fluxo = (visivel: boolean) => (
-    <FluxoDaConversa
-      key={alvo ?? ''}
-      conversa={conversa}
-      alvo={alvo}
-      visivel={visivel}
-      mensagens={mensagens}
-    />
+    <>
+      <FluxoDaConversa
+        key={alvo ?? ''}
+        ref={controle}
+        conversa={conversa}
+        alvo={alvo}
+        visivel={visivel}
+        mensagens={mensagens}
+        acoes={acoes}
+      />
+      {aberta.escreve ? (
+        <CaixaDoChat
+          caixa={caixa}
+          rascunho={rascunhoDaConversa(conversa)}
+          ajuda={ajudaDaCaixa(aberta)}
+          citar={!desligados.includes('chamados')}
+          mandar={(corpo) =>
+            pedir(
+              () =>
+                api.POST('/chat/conversas/{id}/mensagens', {
+                  params: { path: { id: conversa } },
+                  body: corpo,
+                }),
+              'mandar a mensagem',
+            )
+          }
+          aoEnviar={(mensagem) => {
+            const entrou = mensagens.mostrar(mensagem);
+            controle.current?.irAoFimAoEnviar(!entrou);
+          }}
+        />
+      ) : (
+        aberta.recusa !== null && <p className={estilos.semCaixa}>{aberta.recusa}</p>
+      )}
+    </>
   );
   const sobre = sobreAConversa(aberta);
   const abas =
@@ -144,6 +263,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
           className={estilos.abas}
         />
       )}
+      <TransformarEmChamado alvo={transformando} aoFechar={() => definirTransformando(null)} />
     </section>
   );
 }

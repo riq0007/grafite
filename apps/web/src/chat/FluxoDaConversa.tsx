@@ -1,18 +1,37 @@
-// As mensagens da conversa aberta (spec modulo-chat, "Conversa na tela"; spec chat, "Não lidas",
-// "Link da mensagem" e "Chamados da conversa"; change chat-com-chamados, design, decisões 5 e 15):
+// As mensagens da conversa aberta (spec modulo-chat, "Conversa na tela" e "Menu da mensagem"; spec
+// chat, "Não lidas", "Reações", "Link da mensagem" e "Chamados da conversa"; change
+// chat-com-chamados, design, decisões 5 e 15):
 // numa coluna, sem balão, com a foto, o nome e a hora em cima, as seguidas da mesma pessoa juntas,
 // os dias e os eventos. A conversa abre na mensagem do link, marcada, na primeira não lida, com
 // "Mensagens novas", ou no fim, e fica presa embaixo enquanto as mensagens chegam; rolada para cima,
 // a que chega mostra "Mensagens novas · 2", que leva ao fim. As mais antigas vêm ao rolar para cima,
 // com "Mensagens anteriores", e, no trecho que não chega ao fim, as seguintes vêm ao rolar para
-// baixo. A última mostrada fica lida com a conversa à vista.
+// baixo. A última mostrada fica lida com a conversa à vista. O mouse e o foco numa mensagem mostram a
+// barra dela; as setas andam pelas mensagens, e Ctrl+Shift+T abre o transformar em chamado.
 import { nomeNoChat } from '@grafite/domain';
 import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
 import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type Ref,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { FalhaDaConsulta } from '../api/consultas.ts';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import { useSessao } from '../sessao/useSessao.tsx';
+import {
+  type AcoesDaMensagem,
+  BarraDaMensagem,
+  type Reagir,
+  reagirAvisando,
+} from './BarraDaMensagem.tsx';
 import { type CargaDoTrecho, type MensagensDaConversa, useLeituraDaConversa } from './consultas.ts';
 import { type ItemNaTela, itensDaConversa, type MensagemDoChat, novasDesde } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
@@ -42,6 +61,39 @@ export const naoEncontrada = (erro: unknown) =>
 
 const daMensagem = (rolagem: HTMLElement, id: string) =>
   rolagem.querySelector<HTMLElement>(`[data-mensagem="${id}"]`);
+
+/** O id da mensagem escrita em volta do elemento, a que tem a barra; os eventos não têm. */
+const escritaEmVolta = (alvo: EventTarget | null) =>
+  alvo instanceof Element
+    ? (alvo.closest<HTMLElement>('[data-escrita]')?.dataset.mensagem ?? null)
+    : null;
+
+/** As teclas que andam pelas mensagens com o foco numa delas. */
+const PASSOS: Record<string, (posicao: number, total: number) => number> = {
+  ArrowUp: (posicao) => posicao - 1,
+  ArrowDown: (posicao) => posicao + 1,
+  Home: () => 0,
+  End: (_, total) => total - 1,
+};
+
+/**
+ * O foco anda pelas mensagens escritas com as setas, o Home e o End, como numa lista: só a da vez
+ * fica na ordem do Tab, e as teclas dos botões e links dentro dela continuam com eles.
+ */
+function andarPelasMensagens(evento: KeyboardEvent<HTMLOListElement>) {
+  const atual = evento.target;
+  const passo = PASSOS[evento.key];
+  if (!passo || !(atual instanceof HTMLElement) || !atual.matches('[data-escrita]')) return;
+  if (evento.altKey || evento.ctrlKey || evento.metaKey || evento.shiftKey) return;
+  const todas = [...evento.currentTarget.querySelectorAll<HTMLElement>('[data-escrita]')];
+  const destino = todas[passo(todas.indexOf(atual), todas.length)];
+  if (!destino) return;
+  evento.preventDefault();
+  destino.focus();
+}
+
+/** Uma janela por cima da conversa, como um diálogo ou um menu, fica com o atalho. */
+const COM_O_ATALHO = '[role="dialog"], [role="alertdialog"], [role="menu"]';
 
 /**
  * A abertura: a mensagem do link no meio da área, o separador "Mensagens novas" no alto ou, sem
@@ -73,11 +125,22 @@ const nomeDoAutor = (autor: MensagemDoChat['autor'], conta: string) =>
 
 const LISTA = new Intl.ListFormat('pt-BR', { type: 'conjunction' });
 
+/** O que a tela da conversa pede às mensagens. */
+export interface ControleDoFluxo {
+  /**
+   * A conta mandou uma mensagem: a conversa vai ao fim e fica presa nele, e, com o trecho longe do
+   * fim, traz as mais novas, com a mandada.
+   */
+  irAoFimAoEnviar: (comAsMaisNovas: boolean) => void;
+}
+
 export function FluxoDaConversa({
   conversa,
   alvo,
   visivel,
   mensagens: { trecho, mais },
+  acoes = null,
+  ref,
 }: {
   conversa: string;
   /** A mensagem do link (`?m=`), que a conversa abre marcada. */
@@ -85,6 +148,9 @@ export function FluxoDaConversa({
   /** A conversa está na tela: a aba Conversa escolhida, ou a direta, que não tem abas. */
   visivel: boolean;
   mensagens: MensagensDaConversa;
+  /** O que a barra de cada mensagem faz; sem elas, as mensagens ficam sem a barra. */
+  acoes?: AcoesDaMensagem | null;
+  ref?: Ref<ControleDoFluxo | null>;
 }) {
   const sessao = useSessao();
   const conta = (sessao.tipo === 'ativa' && sessao.conta.id) || '';
@@ -106,6 +172,17 @@ export function FluxoDaConversa({
   );
   const primeira = dados?.itens[0]?.id ?? null;
   const ultima = dados?.itens.at(-1)?.id ?? null;
+  const escritas = useMemo(
+    () => dados?.itens.filter(({ especie }) => especie === 'mensagem') ?? [],
+    [dados],
+  );
+  /** A mensagem em que o foco esteve por último, a única na ordem do Tab; sem ela, a última. */
+  const [comOFoco, definirComOFoco] = useState<string | null>(null);
+  /** A mensagem com o mouse em cima. */
+  const [comOPonteiro, definirComOPonteiro] = useState<string | null>(null);
+  const daVez = escritas.some(({ id }) => id === comOFoco)
+    ? comOFoco
+    : (escritas.at(-1)?.id ?? null);
   useLeituraDaConversa(conversa, {
     ultima,
     lidaAte: dados?.lidaAte ?? null,
@@ -251,9 +328,75 @@ export function FluxoDaConversa({
     elemento.focus();
   };
 
+  /**
+   * A respondida que está no trecho: a conversa vai a ela, no meio da área, com o foco nela, sem
+   * abrir a conversa de novo pelo link. Quem lê sai do fim, e o que chega não o leva de volta.
+   */
+  const irParaAMensagem = (id: string) => {
+    const elemento = rolagem.current;
+    const destino = elemento && daMensagem(elemento, id);
+    if (!elemento || !destino?.matches('[data-escrita]')) return false;
+    elemento.scrollTop =
+      topoNaRolagem(elemento, destino) - (elemento.clientHeight - destino.offsetHeight) / 2;
+    noFim.current = estaNoFim(elemento);
+    definirNoFimNaTela(noFim.current);
+    destino.focus({ preventScroll: true });
+    return true;
+  };
+
+  // Ctrl+Shift+T abre o transformar na mensagem com o foco ou, sem o foco numa mensagem, na do
+  // mouse. O diálogo e o menu abertos ficam com o atalho.
+  const transformarPeloAtalho = useRef<(evento: globalThis.KeyboardEvent) => void>(() => {});
+  useLayoutEffect(() => {
+    transformarPeloAtalho.current = (evento) => {
+      const transformar = acoes?.transformar;
+      const { ctrlKey, shiftKey, altKey, metaKey, key } = evento;
+      if (!transformar || !ctrlKey || !shiftKey || altKey || metaKey) return;
+      if (key.toLowerCase() !== 't' || evento.defaultPrevented) return;
+      const focado = document.activeElement;
+      if (focado?.closest(COM_O_ATALHO)) return;
+      const id =
+        (rolagem.current?.contains(focado) ? escritaEmVolta(focado) : null) ?? comOPonteiro;
+      const mensagem = escritas.find((escrita) => escrita.id === id);
+      if (!mensagem || mensagem.chamado) return;
+      evento.preventDefault();
+      transformar(mensagem, nomeDoAutor(mensagem.autor, conta));
+    };
+  });
+  useEffect(() => {
+    if (!visivel) return;
+    const ouvir = (evento: globalThis.KeyboardEvent) => transformarPeloAtalho.current(evento);
+    window.addEventListener('keydown', ouvir);
+    return () => window.removeEventListener('keydown', ouvir);
+  }, [visivel]);
+
+  // A presa no fim vale antes de a mandada entrar: a mudança dos itens desce a conversa até ela.
+  useImperativeHandle(ref, () => ({
+    irAoFimAoEnviar: (comAsMaisNovas) => {
+      noFim.current = true;
+      if (comAsMaisNovas) {
+        mais.mutate('mais-novas');
+        return;
+      }
+      const elemento = rolagem.current;
+      if (!elemento) return;
+      rolarPara(elemento, elemento.scrollHeight, rolagemPropria);
+      definirNoFimNaTela(true);
+    },
+  }));
+
   const novas = dados && !dados.seguintes ? novasDesde(dados.itens, conta, vistaAte) : 0;
   const carregando = mais.isPending ? mais.variables : null;
   const falhou = mais.isError ? mais.variables : null;
+  const naMensagem: NaMensagem = {
+    daVez,
+    barra: (mensagem, autor) =>
+      acoes && (mensagem.id === daVez || mensagem.id === comOPonteiro) ? (
+        <BarraDaMensagem mensagem={mensagem} autor={autor} conversa={conversa} acoes={acoes} />
+      ) : null,
+    irPara: irParaAMensagem,
+    reagir: acoes?.reagir ?? null,
+  };
 
   return (
     <div className={estilos.fluxo}>
@@ -296,7 +439,17 @@ export function FluxoDaConversa({
         {dados && dados.itens.length === 0 && (
           <p className={estilos.carregando}>Nenhuma mensagem ainda.</p>
         )}
-        <ol ref={conteudo} className={estilos.itens}>
+        <ol
+          ref={conteudo}
+          className={estilos.itens}
+          onPointerOver={(evento) => definirComOPonteiro(escritaEmVolta(evento.target))}
+          onPointerLeave={() => definirComOPonteiro(null)}
+          onFocus={(evento) => {
+            const id = escritaEmVolta(evento.target);
+            if (id) definirComOFoco(id);
+          }}
+          onKeyDown={andarPelasMensagens}
+        >
           {itens.map((item) => (
             <ItemDaConversa
               key={item.chave}
@@ -305,6 +458,7 @@ export function FluxoDaConversa({
               conta={conta}
               alvo={alvo}
               dataHora={dataHora}
+              naMensagem={naMensagem}
             />
           ))}
         </ol>
@@ -377,18 +531,32 @@ function Ponta({
   );
 }
 
+/** O que cada mensagem escrita recebe do fluxo. */
+interface NaMensagem {
+  /** A mensagem da vez do teclado, a única na ordem do Tab. */
+  daVez: string | null;
+  /** A barra da mensagem, quando ela tem uma: com o mouse, ou na da vez do teclado. */
+  barra: (mensagem: MensagemDoChat, autor: string) => ReactNode;
+  /** Leva à mensagem do trecho; sem ela no trecho, devolve falso, e o link abre a conversa nela. */
+  irPara: (id: string) => boolean;
+  /** A reação pela cápsula dela; nulo na conversa arquivada. */
+  reagir: Reagir | null;
+}
+
 function ItemDaConversa({
   item,
   conversa,
   conta,
   alvo,
   dataHora,
+  naMensagem,
 }: {
   item: ItemNaTela;
   conversa: string;
   conta: string;
   alvo: string | null;
   dataHora: DataHora;
+  naMensagem: NaMensagem;
 }) {
   switch (item.tipo) {
     case 'dia':
@@ -421,6 +589,7 @@ function ItemDaConversa({
           conversa={conversa}
           conta={conta}
           dataHora={dataHora}
+          naMensagem={naMensagem}
         />
       );
   }
@@ -429,10 +598,15 @@ function ItemDaConversa({
 /** O endereço da mensagem na conversa, que abre a conversa nela. */
 const daConversaEm = (conversa: string, mensagem: string) => `/chat/c/${conversa}?m=${mensagem}`;
 
+/** O clique simples, sem Ctrl, Shift, Alt nem outro botão, que o navegador deixaria abrir o link. */
+const cliqueSimples = (evento: MouseEvent) =>
+  evento.button === 0 && !evento.ctrlKey && !evento.metaKey && !evento.shiftKey && !evento.altKey;
+
 /**
  * Uma mensagem: a foto, o nome e a hora, a respondida, o texto, os anexos, o chamado em que ela
- * virou e as reações. A seguida da mesma pessoa vai sem a foto e o nome, com a hora ao lado, que
- * aparece no mouse e no foco. A do link vai marcada, com o nome.
+ * virou e as reações, que se dão e se tiram pela cápsula. A seguida da mesma pessoa vai sem a foto e
+ * o nome, com a hora ao lado, que aparece no mouse e no foco. A do link vai marcada, com o nome. O
+ * mouse e o foco mostram a barra dela.
  */
 function MensagemNaConversa({
   mensagem,
@@ -441,6 +615,7 @@ function MensagemNaConversa({
   conversa,
   conta,
   dataHora,
+  naMensagem,
 }: {
   mensagem: MensagemDoChat;
   seguida: boolean;
@@ -448,14 +623,20 @@ function MensagemNaConversa({
   conversa: string;
   conta: string;
   dataHora: DataHora;
+  naMensagem: NaMensagem;
 }) {
   const hora = dataHora.formatarHora(new Date(mensagem.criadaEm));
   const nome = nomeDoAutor(mensagem.autor, conta);
   const junta = seguida && !doLink;
+  const { respondida } = mensagem;
+  const { reagir } = naMensagem;
   return (
     <li
       className={estilos.mensagem}
       data-mensagem={mensagem.id}
+      data-escrita=""
+      // A mensagem recebe o foco, que mostra a barra dela, e as setas andam pelas mensagens.
+      tabIndex={mensagem.id === naMensagem.daVez ? 0 : -1}
       data-seguida={junta || undefined}
       data-do-link={doLink || undefined}
       data-virada={mensagem.chamado ? '' : undefined}
@@ -483,15 +664,20 @@ function MensagemNaConversa({
             {doLink && <span className={estilos.doLink}>Mensagem do link</span>}
           </p>
         )}
-        {mensagem.respondida && (
+        {respondida && (
           <LinkDoChat
             className={estilos.respondida}
-            para={daConversaEm(conversa, mensagem.respondida.id)}
+            para={daConversaEm(conversa, respondida.id)}
+            onClick={(evento) => {
+              if (cliqueSimples(evento) && naMensagem.irPara(respondida.id)) {
+                evento.preventDefault();
+              }
+            }}
           >
             <Icone icone={CornerUpLeft} tamanho={14} />
             <span className={estilos.paraOLeitor}>Respondendo a</span>
-            <span className={estilos.autorDaRespondida}>{mensagem.respondida.autor}</span>
-            <span className={estilos.comecoDaRespondida}>{mensagem.respondida.comeco}</span>
+            <span className={estilos.autorDaRespondida}>{respondida.autor}</span>
+            <span className={estilos.comecoDaRespondida}>{respondida.comeco}</span>
           </LinkDoChat>
         )}
         {mensagem.texto && <p className={estilos.texto}>{mensagem.texto}</p>}
@@ -537,24 +723,43 @@ function MensagemNaConversa({
         {mensagem.reacoes.length > 0 && (
           <ul className={estilos.reacoes} aria-label="Reações">
             {mensagem.reacoes.map((reacao) => {
-              const quem = reacao.contas.map((de) => (de.conta === conta ? 'você' : de.nome));
-              return (
-                <li
-                  key={reacao.texto}
-                  className={estilos.reacao}
-                  data-minha={reacao.minha || undefined}
-                  title={LISTA.format(quem)}
-                >
+              const quem = LISTA.format(
+                reacao.contas.map((de) => (de.conta === conta ? 'você' : de.nome)),
+              );
+              const texto = (
+                <>
                   <span aria-hidden="true">{`${reacao.texto} · ${reacao.contas.length}`}</span>
-                  <span className={estilos.paraOLeitor}>
-                    {`${reacao.texto}: ${LISTA.format(quem)}`}
-                  </span>
+                  <span className={estilos.paraOLeitor}>{`${reacao.texto}: ${quem}`}</span>
+                </>
+              );
+              return (
+                <li key={reacao.texto}>
+                  {reagir ? (
+                    <button
+                      type="button"
+                      className={estilos.reacao}
+                      aria-pressed={reacao.minha}
+                      title={quem}
+                      onClick={() => reagirAvisando(reagir, mensagem, reacao.texto)}
+                    >
+                      {texto}
+                    </button>
+                  ) : (
+                    <span
+                      className={estilos.reacao}
+                      data-minha={reacao.minha || undefined}
+                      title={quem}
+                    >
+                      {texto}
+                    </span>
+                  )}
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+      {naMensagem.barra(mensagem, nome)}
     </li>
   );
 }

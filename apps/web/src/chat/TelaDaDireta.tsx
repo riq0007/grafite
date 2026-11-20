@@ -1,0 +1,100 @@
+// A conversa direta que ainda não nasceu (spec chat, "Conversa direta"; change chat-com-chamados,
+// design, decisão 15, "A caixa e o menu da mensagem"): a pessoa escolhida em "Nova conversa", com a
+// foto e o nome no cabeçalho e a caixa, sem nenhuma mensagem. A primeira mensagem faz a conversa
+// nascer, e a tela passa a ser a dela. A pessoa vem com a navegação; aberta sem ela, a tela pede a
+// escolha de novo. Com a conversa já nascida, a tela vai a ela.
+import { nomeNoChat } from '@grafite/domain';
+import { Avatar } from '@grafite/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
+import { useEffect, useId } from 'react';
+import { miniaturasNoChat } from '../api/fotos.ts';
+import { pedir } from '../api/pedir.ts';
+import { useApi } from '../api/useApi.tsx';
+import { useServidor } from '../sessao/useSessao.tsx';
+import { CaixaDoChat } from './CaixaDoChat.tsx';
+import {
+  CHAVE_DAS_CONVERSAS,
+  CHAVE_DO_RESUMO_DO_CHAT,
+  type ConversaAberta,
+  useConversasDoChat,
+} from './consultas.ts';
+import { LinkDoChat } from './LinkDoChat.tsx';
+import { rascunhoDaDireta } from './rascunhos.tsx';
+import estilos from './TelaDaConversa.module.css';
+import { ajudaDaCaixa } from './TelaDaConversa.tsx';
+
+/** A pessoa da direta, como a escolha em "Nova conversa" a passa na navegação. */
+export type PessoaDaDireta = NonNullable<ConversaAberta['outra']>;
+
+const NENHUM_DESLIGADO: readonly string[] = [];
+
+export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaDaDireta | null }) {
+  const roteador = useRouter();
+  const api = useApi();
+  const consultas = useQueryClient();
+  const conversas = useConversasDoChat();
+  const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
+  const idDoNome = useId();
+  const nascida = conversas.data?.recentes.find(
+    ({ outra }) => outra?.conta.toLowerCase() === conta,
+  )?.id;
+
+  useEffect(() => {
+    if (nascida) void roteador.navigate({ href: `/chat/c/${nascida}`, replace: true });
+  }, [nascida, roteador]);
+
+  if (nascida || (!pessoa && conversas.isPending)) {
+    return (
+      <p role="status" className={estilos.abrindo}>
+        Abrindo a conversa…
+      </p>
+    );
+  }
+  if (!pessoa) {
+    return (
+      <div role="alert" className={estilos.naoEncontrada}>
+        <p>Escolha a pessoa de novo em Nova conversa.</p>
+        <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
+      </div>
+    );
+  }
+
+  const nome = nomeNoChat(pessoa.nome, pessoa.daTi);
+  return (
+    <section className={estilos.conversa} aria-labelledby={idDoNome}>
+      <header className={estilos.cabecalho} data-sem-abas>
+        <Avatar
+          nome={pessoa.nome}
+          imagens={miniaturasNoChat(pessoa.conta, pessoa.foto)}
+          className={estilos.foto}
+          decorativo
+        />
+        <h2 id={idDoNome} className={estilos.nome}>
+          {nome}
+        </h2>
+      </header>
+      <p className={estilos.semMensagens}>Nenhuma mensagem ainda.</p>
+      <CaixaDoChat
+        rascunho={rascunhoDaDireta(conta)}
+        ajuda={ajudaDaCaixa({ tipo: 'direta', nome })}
+        citar={!desligados.includes('chamados')}
+        mandar={({ texto, anexos }) =>
+          pedir(
+            () =>
+              api.POST('/chat/diretas/{conta}/mensagens', {
+                params: { path: { conta } },
+                body: { texto, anexos },
+              }),
+            'mandar a mensagem',
+          )
+        }
+        aoEnviar={({ conversa }) => {
+          void consultas.invalidateQueries({ queryKey: CHAVE_DAS_CONVERSAS });
+          void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+          void roteador.navigate({ href: `/chat/c/${conversa.toLowerCase()}`, replace: true });
+        }}
+      />
+    </section>
+  );
+}

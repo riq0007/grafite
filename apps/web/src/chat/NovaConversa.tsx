@@ -28,7 +28,12 @@ export function NovaConversa() {
           <EscolhaDaPessoa
             aoEscolher={(pessoa) => {
               fechar();
-              void roteador.navigate({ href: enderecoDaPessoa(pessoa) });
+              // A direta por nascer mostra a pessoa, que vem no estado da navegação.
+              const { conta, nome, daTi, foto } = pessoa;
+              void roteador.navigate({
+                href: enderecoDaPessoa(pessoa),
+                state: (antes) => ({ ...antes, pessoa: { conta, nome, daTi, foto } }),
+              });
             }}
           />
         )}

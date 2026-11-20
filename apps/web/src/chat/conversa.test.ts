@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   abrirTrecho,
   type BuscarPagina,
+  comAMensagem,
   type ItemNaTela,
   itensDaConversa,
   juntarPagina,
@@ -295,6 +296,37 @@ describe('relerTrecho', () => {
     const { pagina: relida } = await relerTrecho(buscar, trecho([]));
     expect(pedidos).toEqual([{}]);
     expect(relida.itens).toEqual([]);
+  });
+});
+
+describe('comAMensagem', () => {
+  it('a mandada entra no fim do trecho que chega ao fim da conversa', () => {
+    const junto = comAMensagem(trecho(varias(1, 3), { anteriores: true }), mensagem(4));
+    expect(junto && ids(junto.itens)).toEqual([id(1), id(2), id(3), id(4)]);
+    expect(junto).toMatchObject({ anteriores: true, seguintes: false });
+  });
+
+  it('entra na ordem dos ids, depois das que a releitura já trouxe', () => {
+    const junto = comAMensagem(trecho([mensagem(1), mensagem(3)]), mensagem(2));
+    expect(junto && ids(junto.itens)).toEqual([id(1), id(2), id(3)]);
+  });
+
+  it('a que já está no trecho fica uma vez, com o que veio agora', () => {
+    const reagida = mensagem(2, { reacoes: [{ texto: '+1', contas: [], minha: true }] });
+    const junto = comAMensagem(trecho(varias(1, 3)), reagida);
+    expect(junto && ids(junto.itens)).toEqual([id(1), id(2), id(3)]);
+    expect(junto?.itens[1]).toBe(reagida);
+  });
+
+  it('longe do fim da conversa, a mandada não entra: o trecho fica como está', () => {
+    expect(comAMensagem(trecho(varias(1, 3), { seguintes: true }), mensagem(9))).toBeNull();
+  });
+
+  it('a que muda, como a reação, só troca a que está no trecho, mesmo longe do fim', () => {
+    const reagida = mensagem(2, { reacoes: [{ texto: 'ok', contas: [], minha: true }] });
+    const longe = trecho(varias(1, 3), { seguintes: true });
+    expect(comAMensagem(longe, reagida, 'trocar')?.itens[1]).toBe(reagida);
+    expect(comAMensagem(longe, mensagem(9), 'trocar')).toBeNull();
   });
 });
 
