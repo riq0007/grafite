@@ -40756,6 +40756,7 @@ export interface components {
             chamado: {
                 numero: number;
                 abrir: boolean;
+                mensagem: string | null;
             } | null;
         };
         PaginaDeMensagensInput: {
@@ -46497,6 +46498,7 @@ export interface components {
             chamado: {
                 numero: number;
                 abrir: boolean;
+                mensagem: string | null;
             } | null;
         };
         PaginaDeMensagens: {

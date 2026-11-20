@@ -10,16 +10,29 @@ import {
   ativos,
   auditoria,
   chamados,
+  impressorasDasSolicitacoes,
   mensagensDosChamados,
   naOrganizacao,
+  pessoas,
+  solicitacoes,
   tiposDeChamado,
 } from '@grafite/db';
 import { and, asc, eq } from 'drizzle-orm';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { criarAtivoDoTipo, criarTipo } from '../../test/alertas.ts';
+import { criarAtivoDoTipo, criarModelo, criarTipo } from '../../test/alertas.ts';
 import { type ChatDeTeste, montarChat, type UsuarioDoChat } from '../../test/chat.ts';
-import { type ApiDeTeste, abrirApi, criarRelogio, esperarNaTrava } from '../../test/integracao.ts';
+import {
+  type ApiDeTeste,
+  abrirApi,
+  criarLocal,
+  criarRelogio,
+  esperarNaTrava,
+} from '../../test/integracao.ts';
+import { criarCompativel } from '../../test/solicitacoes.ts';
 import { travar } from '../travas.ts';
+
+/** O id que nada tem, para a leitura sem a solicitação. */
+const NENHUM = '00000000-0000-0000-0000-000000000000';
 
 const PDF = (texto: string) => Buffer.from(`%PDF-1.7\n% ${texto}\n%%EOF\n`);
 
@@ -211,16 +224,16 @@ describe('a abertura pelo chat', () => {
     expect(registro?.depois).toMatchObject({ numero, origem: 'chat' });
 
     // O Paulo, que não participa do chamado nem o vê com chamados.ver, vê a marca e o evento sem o
-    // "Abrir chamado"; a Fernanda, que o abriu, com ele.
+    // "Abrir chamado"; a Fernanda, que o abriu, com ele. O evento cita a mensagem de origem.
     const doPaulo = await pagina('paulo', equipe);
     expect(doPaulo.map(({ especie, evento, chamado }) => ({ especie, evento, chamado }))).toEqual([
-      { especie: 'mensagem', evento: null, chamado: { numero, abrir: false } },
-      { especie: 'evento', evento: 'virou-chamado', chamado: { numero, abrir: false } },
+      { especie: 'mensagem', evento: null, chamado: { numero, abrir: false, mensagem } },
+      { especie: 'evento', evento: 'virou-chamado', chamado: { numero, abrir: false, mensagem } },
     ]);
     expect(doPaulo[1]?.autor.nome).toBe('Fernanda Rocha');
     expect((await pagina('fernanda', equipe)).map(({ chamado }) => chamado)).toEqual([
-      { numero, abrir: true },
-      { numero, abrir: true },
+      { numero, abrir: true, mensagem },
+      { numero, abrir: true, mensagem },
     ]);
   });
 
@@ -311,6 +324,128 @@ describe('a abertura pelo chat', () => {
       ativoId: null,
       respostas: {},
     });
+  });
+
+  it('a solicitação que o tipo gera, também a quem não vê os ativos nem o estoque', async () => {
+    // A impressora a laser da Fernanda, que usa os consumíveis; a Fernanda não tem o ativos.ver.
+    const comToner = await criarTipo(api, c.org, {
+      nome: 'Impressora a laser',
+      capacidades: ['consumiveis.compatibilidade'],
+    });
+    const modelo = await criarModelo(api, c.org, { tipoId: comToner, nome: 'LaserJet M404' });
+    await criarCompativel(api, c.org, { codigo: 'CF258A', cor: 'preto', modeloId: modelo });
+    const laser = await criarAtivoDoTipo(api, c.org, {
+      tipoId: comToner,
+      modeloId: modelo,
+      patrimonio: 'PAT-00150',
+    });
+    const financeiro = await criarLocal(api, c.org, { nome: 'Financeiro' });
+    await naOrganizacao(api.banco, c.org, async (tx) => {
+      await tx
+        .update(ativos)
+        .set({ responsavelId: c.pessoa('fernanda') })
+        .where(eq(ativos.id, laser));
+      await tx
+        .update(pessoas)
+        .set({ localId: financeiro })
+        .where(eq(pessoas.id, c.pessoa('fernanda')));
+      // O Outro passa a gerar o equipamento, um computador a laser para o local da pessoa.
+      await tx
+        .update(tiposDeChamado)
+        .set({ geraSolicitacao: 'equipamento', tipoDeAtivoDoEquipamento: comToner })
+        .where(eq(tiposDeChamado.id, c.tipos.Outro ?? ''));
+    });
+
+    const daSolicitacao = async (numero: number) =>
+      naOrganizacao(api.banco, c.org, async (tx) => {
+        const [chamado] = await tx.select().from(chamados).where(eq(chamados.numero, numero));
+        const eventos = await tx
+          .select({ evento: mensagensDosChamados.evento, dados: mensagensDosChamados.dados })
+          .from(mensagensDosChamados)
+          .where(eq(mensagensDosChamados.chamadoId, chamado?.id ?? ''));
+        const [solicitacao] = await tx
+          .select()
+          .from(solicitacoes)
+          .where(eq(solicitacoes.id, chamado?.solicitacaoId ?? NENHUM));
+        const impressoras = await tx
+          .select({ ativoId: impressorasDasSolicitacoes.ativoId })
+          .from(impressorasDasSolicitacoes)
+          .where(eq(impressorasDasSolicitacoes.solicitacaoId, solicitacao?.id ?? NENHUM));
+        return {
+          eventos: eventos.flatMap(({ evento, dados }) =>
+            evento?.startsWith('solicitacao') ? [{ evento, dados }] : [],
+          ),
+          solicitacao,
+          impressoras: impressoras.map(({ ativoId }) => ativoId),
+        };
+      });
+
+    const { mensagem } = await mensagemDoPaulo();
+    const toner = await abrir('fernanda', mensagem, {
+      tipo: c.tipos.Toner,
+      titulo: 'Acabou o toner',
+      pessoa: c.pessoa('fernanda'),
+      ativo: laser,
+    });
+    expect(toner.statusCode, toner.body).toBe(201);
+    const doToner = await daSolicitacao((toner.json() as { numero: number }).numero);
+    expect(doToner.eventos).toEqual([
+      { evento: 'solicitacao', dados: { numero: doToner.solicitacao?.numero, como: 'gerou' } },
+    ]);
+    expect(doToner.solicitacao).toMatchObject({ tipo: 'toner', pessoaId: c.pessoa('fernanda') });
+    expect(doToner.impressoras).toEqual([laser]);
+
+    const outra = await c.mensagem(await c.criarDireta('fernanda', 'paulo'), 'fernanda');
+    const equipamento = await abrir('fernanda', outra, {
+      tipo: c.tipos.Outro,
+      titulo: 'Preciso de uma impressora',
+      pessoa: c.pessoa('fernanda'),
+      ativo: null,
+    });
+    expect(equipamento.statusCode, equipamento.body).toBe(201);
+    const doEquipamento = await daSolicitacao((equipamento.json() as { numero: number }).numero);
+    expect(doEquipamento.eventos.map(({ evento }) => evento)).toEqual(['solicitacao']);
+    expect(doEquipamento.solicitacao).toMatchObject({
+      tipo: 'equipamento',
+      tipoDeAtivoId: comToner,
+      localId: financeiro,
+    });
+  });
+
+  it('os sugeridos vêm todos, sem o teto da TI, e o último também se escolhe', async () => {
+    // Onze impressoras na sala da Fernanda, sem responsável, além da PAT-00137, que é dela.
+    const sala = await criarLocal(api, c.org, { nome: 'Sala 3' });
+    const impressora = await criarTipo(api, c.org, { nome: 'Impressora da sala' });
+    const daSala: string[] = [];
+    for (let indice = 1; indice <= 11; indice += 1) {
+      daSala.push(
+        await criarAtivoDoTipo(api, c.org, {
+          tipoId: impressora,
+          patrimonio: `SALA-${String(indice).padStart(2, '0')}`,
+          localId: sala,
+        }),
+      );
+    }
+    await naOrganizacao(api.banco, c.org, (tx) =>
+      tx
+        .update(pessoas)
+        .set({ localId: sala })
+        .where(eq(pessoas.id, c.pessoa('fernanda'))),
+    );
+    const sugestoes = await c.cliente.consultar(
+      `/chat/chamados/sugestoes?tipo=${c.tipos.Impressora}&pessoa=${c.pessoa('fernanda')}`,
+      c.como('fernanda'),
+    );
+    expect(sugestoes.statusCode, sugestoes.body).toBe(200);
+    const ids = (sugestoes.json() as { ativos: { id: string }[] }).ativos.map(({ id }) => id);
+    expect(ids).toEqual([pat137, ...daSala]);
+
+    const { mensagem } = await mensagemDoPaulo();
+    const r = await abrir('fernanda', mensagem, {
+      ...impressoraPara('fernanda'),
+      ativo: daSala.at(-1),
+    });
+    expect(r.statusCode, r.body).toBe(201);
   });
 
   it('a abertura pela TI guarda quem nasce atendendo no para', async () => {

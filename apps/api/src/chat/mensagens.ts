@@ -108,9 +108,12 @@ export const MensagemDoChat = z
     citacoes: z.array(CitacaoDeChamado),
     /**
      * O chamado em que a mensagem virou, ou o do evento `virou-chamado`, com o "Abrir chamado" a
-     * quem participa dele e a quem o vê com `chamados.ver`; nulo nas outras.
+     * quem participa dele e a quem o vê com `chamados.ver` e a mensagem de origem, que o "esta
+     * mensagem" do evento cita; nulo nas outras.
      */
-    chamado: z.object({ numero: z.int(), abrir: z.boolean() }).nullable(),
+    chamado: z
+      .object({ numero: z.int(), abrir: z.boolean(), mensagem: z.uuid().nullable() })
+      .nullable(),
   })
   .meta({ id: 'MensagemDoChat' });
 
@@ -311,12 +314,14 @@ async function resolverCitacoes(
  * da conversa"): o número e o "Abrir chamado", resolvidos para a conta que lê, como a citação. Com
  * o módulo Chamados desligado, o número fica, sem o "Abrir chamado".
  */
+type MarcaDoChamado = NonNullable<MensagemDoChat['chamado']>;
+
 async function marcasDosChamados(
   tx: Transacao,
   conta: ContaQueLeAsMensagens,
   linhas: readonly LinhaDaMensagem[],
-): Promise<Map<string, { numero: number; abrir: boolean }>> {
-  const marcas = new Map<string, { numero: number; abrir: boolean }>();
+): Promise<Map<string, MarcaDoChamado>> {
+  const marcas = new Map<string, MarcaDoChamado>();
   const mensagens = linhas.flatMap(({ id, especie }) => (especie === 'mensagem' ? [id] : []));
   const doEvento = new Map(
     linhas.flatMap(({ id, evento, dados }) =>
@@ -352,6 +357,7 @@ async function marcasDosChamados(
     const marca = {
       numero: chamado.numero,
       abrir: ligado && (participaDoChamado(daConta, chamado) || veOChamado(doVer, chamado)),
+      mensagem: chamado.origemMensagemId,
     };
     if (chamado.origemMensagemId) marcas.set(chamado.origemMensagemId, marca);
     for (const [eventoId, chamadoId] of doEvento) {

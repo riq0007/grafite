@@ -49,15 +49,22 @@ import { travar } from '../travas.ts';
 import { type ContaQueLe, lerConversaDaConta, publicoDaConversa } from './conversa.ts';
 import { mensagemNaoEncontrada } from './mensagens.ts';
 
-/** Quem lê os ativos da abertura pelo chat: a organização inteira, só para a escolha. */
-const ACESSO_DOS_SUGERIDOS: Acesso = {
+/**
+ * Quem lê na abertura pelo chat: a organização inteira, nos ativos, para a escolha e a solicitação
+ * que o tipo gera, e no estoque, para o consumível sugerido pelo saldo, como na abertura pela TI.
+ * Da escolha, quem abre recebe só o id, o nome e o patrimônio.
+ */
+const ACESSO_DA_ABERTURA_PELO_CHAT: Acesso = {
   ...SEM_ACESSO,
-  permissoes: new Map([['ativos.ver', { organizacao: true, locais: new Set<string>() }]]),
+  permissoes: new Map([
+    ['ativos.ver', { organizacao: true, locais: new Set<string>() }],
+    ['estoque.ver', { organizacao: true, locais: new Set<string>() }],
+  ]),
 };
 
 /** O leitor dos ativos sugeridos, do escolhido e da solicitação que o tipo gera. */
 export async function leitorDaAberturaPeloChat(tx: Transacao): Promise<Leitor> {
-  return { acesso: ACESSO_DOS_SUGERIDOS, arvore: await lerArvore(tx) };
+  return { acesso: ACESSO_DA_ABERTURA_PELO_CHAT, arvore: await lerArvore(tx) };
 }
 
 /** O primeiro campo Ativo do tipo que pede o ativo, cujo ativo é o ligado; nos outros, nenhum. */
@@ -107,9 +114,11 @@ async function sugeridosPara(
 ) {
   const campo = tipo && tipoAbrePeloChat(tipo) ? campoDoAtivo(tipo) : null;
   if (!campo) return null;
+  // Todos, sem o teto da TI: no chat, o ativo só se escolhe da lista, sem a busca.
   const { ativos } = await sugestoesDaPessoa(tx, pessoaId, {
     tipos: campo.tiposDeAtivo,
     ...leitor,
+    limite: null,
   });
   return { campo, ativos };
 }
