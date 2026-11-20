@@ -66,7 +66,7 @@ import { ATIVO_DO_CARTAO_NAO_ENCONTRADO, type CartaoDoAtivo, retratoDoAtivo } fr
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
-import { contasQueParticipam, publicoComQuemParticipa } from './quem-participa.ts';
+import { comQuemParticipa, contasQueParticipam } from './quem-participa.ts';
 
 /**
  * O pedido de cada rota, depois do schema: a versão que a tela mostra, nas ações dos botões, com a
@@ -490,11 +490,14 @@ export async function agirNoChamado(
       ? null
       : { id: decisao.responsavel, nome: await nomeDaConta(tx, decisao.responsavel) };
   const locais = { locais: lido.locais, semLocal: lido.semLocal };
-  // Quem participa recebe o que muda o que ele lê; a nota fica só com quem vê o chamado (tarefa 3.12).
+  // Quem participa, lido uma vez para o público e para as notificações, recebe o que muda o que ele
+  // lê; a nota fica só com quem vê o chamado (tarefa 3.12).
+  const participante = { pessoaId: lido.pessoaId, origem: lido.origem, abertoPor: lido.abertoPor };
+  const participam = await contasQueParticipam(tx, participante);
   const publico =
     pedido.acao === 'nota'
       ? publicoDoChamado(locais)
-      : await publicoComQuemParticipa(tx, lido, locais);
+      : comQuemParticipa(publicoDoChamado(locais), participam);
   const acaoNaAuditoria = decisao.sobeAVersao ? NA_AUDITORIA[pedido.acao] : null;
   if (acaoNaAuditoria === null) {
     await registrarEvento(tx, {
@@ -531,14 +534,13 @@ export async function agirNoChamado(
     enviar ? { enviar } : {},
   );
   // A mensagem para a pessoa e o resolvido vão também a quem participa pelo chat (decisão 13).
-  const participante = { pessoaId: lido.pessoaId, origem: lido.origem, abertoPor: lido.abertoPor };
   await notificar(
     tx,
     notificacoesParaQuemParticipa(
       { id: lido.id, numero: lido.numero, titulo: lido.titulo, ...participante },
       decisao,
       { contaId, nome: await nomeDaConta(tx, contaId) },
-      await contasQueParticipam(tx, participante),
+      participam,
     ),
     momento,
     enviar ? { enviar } : {},
