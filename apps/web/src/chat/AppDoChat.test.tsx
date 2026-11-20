@@ -119,6 +119,17 @@ describe('o app do chat', () => {
     );
   });
 
+  it.each([
+    ['/chat/Equipes', 'Equipes'],
+    ['/chat/Chamados/1041', 'Chamados'],
+  ])(
+    'o endereço com maiúsculas, como %s, marca a vista dele, como o roteador o casa',
+    async (endereco, vista) => {
+      abrir(endereco, sessaoAtiva(naOrganizacao('chat.usar')));
+      expect(within(await trilha()).getByRole('link', { current: 'page' }).textContent).toBe(vista);
+    },
+  );
+
   it('sem o módulo Chamados, a trilha fica sem Chamados', async () => {
     abrir(
       '/chat',

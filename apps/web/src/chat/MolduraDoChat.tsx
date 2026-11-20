@@ -50,7 +50,8 @@ const VISTA_DA_ROTA: Readonly<Record<string, IdDaVista>> = {
   '/chat/avisos': 'avisos',
 };
 
-const semBarraNoFim = (caminho: string) => caminho.replace(/\/+$/, '');
+/** O caminho como o roteador o casa: sem as barras do fim e sem diferenciar as maiúsculas. */
+const comoORoteadorCasa = (caminho: string) => caminho.replace(/\/+$/, '').toLowerCase();
 
 /**
  * A vista da tela aberta, pela última rota casada. A página não encontrada não é de nenhuma: o
@@ -65,7 +66,9 @@ export function vistaDaTela({
   matches: readonly { routeId: string; pathname: string }[];
 }): IdDaVista | null {
   const ultima = matches.at(-1);
-  if (!ultima || semBarraNoFim(ultima.pathname) !== semBarraNoFim(location.pathname)) return null;
+  if (!ultima || comoORoteadorCasa(ultima.pathname) !== comoORoteadorCasa(location.pathname)) {
+    return null;
+  }
   return VISTA_DA_ROTA[ultima.routeId] ?? null;
 }
 
