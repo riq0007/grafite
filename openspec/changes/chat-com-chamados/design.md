@@ -235,7 +235,13 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - a escolha vai na própria pergunta (`escolhida`), a primeira de cada uma, com quem escolheu e quando, e o cartão, como foi gravado;
   - o assumir que o desfazer desfez sai da conversa com ele, como sai das etapas: a pessoa não lê "está atendendo" de quem não atende;
   - a mensagem de origem vem à parte (`origem`), com os anexos dela, para a abertura a mostrar;
-  - as duas últimas mensagens do resumo do chip incluem as notas só a quem vê o chamado com `chamados.ver`.
+  - as duas últimas mensagens do resumo do chip incluem as notas só a quem vê o chamado com `chamados.ver`;
+  - a avaliação da resolução de agora vem à parte (`avaliacao`), com o nível e se foi a conta que lê, para a tela saber se oferece a avaliação.
+- **As ações de quem participa,** nos casos que a spec não escreve:
+  - as rotas são `POST /chat/chamados/:numero/mensagens`, `/escolha`, `/reabertura`, `/avaliacao` e `/vista`, e cada uma devolve a conversa depois da ação, lida na mesma transação, para a tela não pedir de novo;
+  - quem não participa recebe "Chamado não encontrado.", como na leitura, também quem vê o chamado com `chamados.ver`, que age no módulo Chamados;
+  - a escolha numa mensagem que não é do chamado, também a nota, que a pessoa não lê, é a pergunta sem opções: "Escolha uma opção da pergunta.", no campo `opcao`, sem dizer se a mensagem existe;
+  - a marcação como vista avisa só as telas da conta (`chamados.mudaram` com a conta), porque muda só a leitura dela; as outras ações avisam quem vê o chamado, e a 3.12 soma as contas de quem participa.
 
 ## Risks / Trade-offs
 

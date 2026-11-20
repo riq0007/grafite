@@ -66,6 +66,7 @@ import { rotasDosTiposDeChamado } from './rotas/chamados-tipos.ts';
 import { rotasDoChat } from './rotas/chat.ts';
 import { rotasDosAnexosDoChat } from './rotas/chat-anexos.ts';
 import { rotasDosChamadosDoChat } from './rotas/chat-chamados.ts';
+import { rotasDasAcoesDosChamadosDoChat } from './rotas/chat-chamados-acoes.ts';
 import { rotasDaLeituraDosChamadosDoChat } from './rotas/chat-chamados-leitura.ts';
 import { rotasDasEquipesDoChat } from './rotas/chat-equipes.ts';
 import { rotasDasEquipesECanais } from './rotas/chat-equipes-e-canais.ts';
@@ -465,6 +466,7 @@ export async function criarApp({
       await doChat.register(rotasDasMensagensDoChat, { banco, agora, fila });
       await doChat.register(rotasDosChamadosDoChat, { banco, agora, fila });
       await doChat.register(rotasDaLeituraDosChamadosDoChat, { banco, agora, armazenamento });
+      await doChat.register(rotasDasAcoesDosChamadosDoChat, { banco, agora, fila });
       await doChat.register(rotasDaLeituraDoChat, { banco, agora });
       await doChat.register(rotasDosAnexosDoChat, { banco, agora, armazenamento });
       await doChat.register(rotasDasEquipesECanais, { banco, agora });

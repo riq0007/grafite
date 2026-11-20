@@ -26,6 +26,8 @@ import {
   fraseDoEventoParaQuemParticipa,
   ICONES_DO_TIPO_DE_CHAMADO,
   lerPrazoDoChamado,
+  NIVEIS_DA_AVALIACAO,
+  nivelDaAvaliacao,
   participacao,
   participaDoChamado,
   previsaoDaResposta,
@@ -212,6 +214,11 @@ export const ConversaDoChamadoDeQuemParticipa = z
     conversa: z.array(ItemDaConversaDeQuemParticipa),
     /** A resposta nova: quantas e a primeira delas, onde entra o separador "Resposta nova". */
     respostaNova: z.object({ quantas: z.int(), desde: z.uuid().nullable() }),
+    /**
+     * A avaliação da resolução de agora, com o nível e se foi a conta que lê; nula sem ela e fora do
+     * resolvido. Sem ela, o resolvido que ainda reabre oferece a avaliação.
+     */
+    avaliacao: z.object({ nivel: z.enum(NIVEIS_DA_AVALIACAO), minha: z.boolean() }).nullable(),
   })
   .meta({ id: 'ConversaDoChamadoDeQuemParticipa' });
 type ConversaDoChamadoDeQuemParticipa = z.infer<typeof ConversaDoChamadoDeQuemParticipa>;
@@ -247,7 +254,8 @@ type ResumoDoChamadoNoChat = z.infer<typeof ResumoDoChamadoNoChat>;
 
 type LinhaDoChamado = typeof chamados.$inferSelect;
 
-const daConta = (conta: ContaQueLeAsMensagens) => ({
+/** A conta como a participação no chamado a lê: quem lê pelo chat usa o chat. */
+export const daConta = (conta: ContaQueLeAsMensagens) => ({
   id: conta.id,
   pessoaId: conta.pessoaId,
   usaOChat: true,
@@ -685,6 +693,15 @@ export async function conversaDeQuemParticipa(
       ? (linhas.find((linha) => respostaNova({ ...pedidoDaNova, linhas: [linha] }) > 0)?.id ?? null)
       : null;
 
+  // A avaliação da resolução de agora, pela chave do índice: o `resolvido_em` em ISO.
+  const resolucao =
+    chamado.situacao === 'resolvido' ? (chamado.resolvidoEm?.toISOString() ?? null) : null;
+  const avaliou = linhas.find(
+    ({ evento, dados }) =>
+      resolucao !== null && evento === 'avaliou' && dadoDeTexto(dados, 'resolucao') === resolucao,
+  );
+  const nivel = nivelDaAvaliacao(avaliou?.dados?.nivel);
+
   const { fuso } = await lerHorarioDaTi(tx);
   const fechado = estaFechado(chamado, agora, fuso);
   const prazo = lerPrazoDoChamado(chamado.prazo);
@@ -723,6 +740,7 @@ export async function conversaDeQuemParticipa(
     origem,
     conversa,
     respostaNova: { quantas, desde },
+    avaliacao: avaliou && nivel ? { nivel, minha: avaliou.autorConta === conta.id } : null,
   };
 }
 

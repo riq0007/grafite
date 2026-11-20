@@ -280,8 +280,15 @@ export async function montarChat(api: ApiDeTeste, host: string) {
       return (r.json() as { numero: number }).numero;
     },
 
-    /** A mensagem da TI, como a Ana, na conversa do chamado, direto no banco. Devolve o id. */
-    async mensagemDaTi(numero: number, texto = 'Já vi aqui.') {
+    /**
+     * A mensagem da TI, como a Ana, na conversa do chamado, direto no banco, com as opções da
+     * pergunta, se há. Devolve o id.
+     */
+    async mensagemDaTi(
+      numero: number,
+      texto = 'Já vi aqui.',
+      { opcoes = null }: { opcoes?: string[] | null } = {},
+    ) {
       const [linha] = await naOrg(async (tx) => {
         const [chamado] = await tx
           .select({ id: chamados.id })
@@ -295,6 +302,7 @@ export async function montarChat(api: ApiDeTeste, host: string) {
             especie: 'mensagem',
             autorConta: contasDe.ana,
             texto,
+            opcoes,
             criadaEm: api.relogio.agora(),
           })
           .returning({ id: mensagensDosChamados.id });

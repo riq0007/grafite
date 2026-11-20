@@ -127,7 +127,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - o resumo do chip.
 
   Começa pelos testes de integração da permissão (o chamado de outra pessoa como inexistente, a nota e o anexo dela, que não vão) e da ordem. Verificar: esses testes, o lint, o typecheck e o contrato.
-- [ ] 3.9 As ações de quem participa:
+- [x] 3.9 As ações de quem participa:
   - responder, com os anexos, escolher, reabrir, avaliar e marcar como vista, com o chamado travado;
   - a chave da escolha e da avaliação vem da linha lida com o chamado travado, e nunca do pedido: o `dados.mensagem` é o id da mensagem como o banco o devolve (o UUID do pedido em maiúsculas seria outro texto para o índice), e o `dados.resolucao` é o `toISOString()` do `resolvido_em` lido;
   - a retomada, a reabertura e a versão, pelo `decidirAcaoDeQuemParticipa`, com o `fechado` do `estaFechado`, quem resolveu (o `resolvido_por`, como no reabrir da TI) como a conta está agora e a pergunta e o `avaliado` lidos com o chamado travado; as recusas por campo (o texto, os anexos, a opção, o nível e o comentário) e as outras como conflito, como o `problemaDaRecusa` da TI; o `desdeDeQuemAtende` passa a aceitar a mudança de quem participa;
@@ -135,7 +135,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - a notificação a quem atende, pelo `notificacoesDeQuemParticipa` com a mudança decidida, e as contas da triagem lidas só na reabertura que vai à triagem (o `reabriu` sem o `para`);
   - a `vista_ate`, a última linha da conversa lida com o chamado travado, que anda também no "Reabrir" e na avaliação e marca as notificações do chamado, com o teste da mensagem da TI que espera a trava da marcação.
 
-  Começa pelos testes de integração da permissão: quem não participa e o fechado. Verificar: esses testes, o da escolha ao mesmo tempo em duas conexões, o lint, o typecheck e o contrato.
+  Começa pelos testes de integração da permissão: quem não participa e o fechado. Verificar: esses testes, o da escolha ao mesmo tempo em duas conexões, o lint, o typecheck e o contrato. As ações ficaram em `chat/acoes-de-quem-participa.ts` (`agirComoQuemParticipa`), e as rotas, em `rotas/chat-chamados-acoes.ts` (`POST /chat/chamados/:numero/mensagens`, `/escolha`, `/reabertura`, `/avaliacao` e `/vista`), que devolvem a conversa depois da ação; a leitura ganhou a avaliação da resolução de agora (`avaliacao`), da revisão da 3.8 (decisão 15).
 - [ ] 3.10 O lado da TI (decisões 10 e 13):
   - a mensagem com as opções e o cartão, e o `GET /chamados/:numero/cartao` com o retrato; a mensagem sem pergunta grava `null` nas opções da `mensagens_dos_chamados`, e não o `[]` do `conferirOpcoes`, que o CHECK `mensagens_dos_chamados_opcoes_validas` reprova (na `respostas_prontas`, o vazio é o certo);
   - as respostas prontas com as opções;
