@@ -17,6 +17,8 @@ import { MolduraDoChat } from './MolduraDoChat.tsx';
 import { TelaDaConversa } from './TelaDaConversa.tsx';
 import { type PessoaDaDireta, TelaDaDireta } from './TelaDaDireta.tsx';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** A vista Chat sem nada escolhido na lista. */
 function NadaEscolhido() {
   return (
@@ -56,8 +58,11 @@ const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component
 export const rotaDaConversa = createRoute({
   getParentRoute: () => chat,
   path: 'c/$conversa',
-  validateSearch: (busca: Record<string, unknown>): { m?: string } =>
-    typeof busca.m === 'string' && busca.m !== '' ? { m: busca.m } : {},
+  // O `?m=` mexido, que não é o id de uma mensagem, sai: a conversa abre como sem o link. O `m`
+  // indefinido apaga o da busca da raiz, que o roteador junta por baixo da validada.
+  validateSearch: (busca: Record<string, unknown>): { m?: string } => ({
+    m: typeof busca.m === 'string' && UUID.test(busca.m) ? busca.m : undefined,
+  }),
   component: ConversaDoEndereco,
 });
 

@@ -8,7 +8,7 @@
 // Chamados, a aba dos chamados sai.
 import { comecoDoTexto, nomeNoChat } from '@grafite/domain';
 import { Abas, Avatar, avisar, Botao, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import { type UseInfiniteQueryResult, useQueryClient } from '@tanstack/react-query';
 import { FileText, Hash, Image } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
@@ -206,27 +206,31 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     </>
   );
   const sobre = sobreAConversa(aberta);
+  const outrasAbas = [
+    {
+      id: 'arquivos',
+      rotulo: 'Arquivos',
+      conteudo: <ArquivosDaConversa conversa={conversa} />,
+    },
+    ...(desligados.includes('chamados')
+      ? []
+      : [
+          {
+            id: 'chamados',
+            rotulo: aberta.tipo === 'canal' ? 'Chamados do canal' : 'Chamados da equipe',
+            conteudo: <ChamadosDaConversa conversa={conversa} tipo={aberta.tipo} />,
+          },
+        ]),
+  ];
+  // A aba escolhida que sai, como a dos chamados com o módulo desligado, deixa a Conversa na tela.
+  const escolhida = outrasAbas.some(({ id }) => id === aba) ? aba : 'conversa';
   const abas =
     aberta.tipo === 'direta'
       ? null
       : [
-          { id: 'conversa', rotulo: 'Conversa', conteudo: fluxo(aba === 'conversa') },
-          {
-            id: 'arquivos',
-            rotulo: 'Arquivos',
-            conteudo: <ArquivosDaConversa conversa={conversa} />,
-          },
-          ...(desligados.includes('chamados')
-            ? []
-            : [
-                {
-                  id: 'chamados',
-                  rotulo: aberta.tipo === 'canal' ? 'Chamados do canal' : 'Chamados da equipe',
-                  conteudo: <ChamadosDaConversa conversa={conversa} tipo={aberta.tipo} />,
-                },
-              ]),
+          { id: 'conversa', rotulo: 'Conversa', conteudo: fluxo(escolhida === 'conversa') },
+          ...outrasAbas,
         ];
-  const escolhida = abas?.some(({ id }) => id === aba) ? aba : 'conversa';
 
   return (
     <section className={estilos.conversa} aria-labelledby={idDoNome}>
@@ -322,16 +326,41 @@ function ArquivosDaConversa({ conversa }: { conversa: string }) {
           ))}
         </ul>
       )}
-      {arquivos.hasNextPage && (
-        <Botao
-          carregando={arquivos.isFetchingNextPage}
-          rotuloCarregando="Carregando"
-          onPress={() => void arquivos.fetchNextPage()}
-        >
-          Carregar mais
-        </Botao>
-      )}
+      <CarregarMais lista={arquivos} />
     </div>
+  );
+}
+
+/**
+ * "Carregar mais" na lista que tem a página seguinte; a página que falha diz o motivo, em texto, com
+ * "Tentar de novo".
+ */
+function CarregarMais({
+  lista,
+}: {
+  lista: Pick<
+    UseInfiniteQueryResult<unknown>,
+    'hasNextPage' | 'isFetchingNextPage' | 'isFetchNextPageError' | 'error' | 'fetchNextPage'
+  >;
+}) {
+  if (!lista.hasNextPage) return null;
+  if (lista.isFetchNextPageError && lista.error) {
+    return (
+      <FalhaDoChat
+        mensagem={lista.error.message}
+        relendo={lista.isFetchingNextPage}
+        tentarDeNovo={() => void lista.fetchNextPage()}
+      />
+    );
+  }
+  return (
+    <Botao
+      carregando={lista.isFetchingNextPage}
+      rotuloCarregando="Carregando"
+      onPress={() => void lista.fetchNextPage()}
+    >
+      Carregar mais
+    </Botao>
   );
 }
 
@@ -396,15 +425,7 @@ function ChamadosDaConversa({
           ))}
         </ul>
       )}
-      {chamados.hasNextPage && (
-        <Botao
-          carregando={chamados.isFetchingNextPage}
-          rotuloCarregando="Carregando"
-          onPress={() => void chamados.fetchNextPage()}
-        >
-          Carregar mais
-        </Botao>
-      )}
+      <CarregarMais lista={chamados} />
     </div>
   );
 }

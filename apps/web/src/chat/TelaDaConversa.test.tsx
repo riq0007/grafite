@@ -14,6 +14,7 @@ import {
   CAMINHO,
   CONVERSA,
   conversaMudou,
+  erroInterno,
   id,
   mensagem,
   mensagemNaTela,
@@ -24,6 +25,7 @@ import {
   TATIANA,
   varias,
 } from '../teste/conversaDoChat.ts';
+import { estadoDaSessaoAtiva, naOrganizacao, type ServidorDeTeste } from '../teste/sessao.ts';
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'], now: AGORA });
@@ -133,6 +135,92 @@ describe('o cabeçalho e as abas', () => {
     expect(
       within(chamado).getByText('Bruno Lima atende · Aberto por Fernanda Rocha · hoje, 10:32'),
     ).toBeTruthy();
+  });
+
+  it.each([
+    {
+      aba: 'Arquivos',
+      caminho: `GET ${CAMINHO}/arquivos`,
+      item: (n: number) => ({
+        id: `0199a6e0-0000-7000-8000-00000000f00${n}`,
+        nome: `planilha-${n}.xlsx`,
+        tipo: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        bytes: 1024,
+        mensagem: id(n),
+        autor: PAULO,
+        enviadoEm: as('10:19'),
+      }),
+      texto: (n: number) => `planilha-${n}.xlsx`,
+      motivo: 'Não foi possível carregar os arquivos. Informe à TI o código R7K2-9QXM.',
+    },
+    {
+      aba: 'Chamados da equipe',
+      caminho: `GET ${CAMINHO}/chamados`,
+      item: (n: number) => ({
+        numero: 1040 + n,
+        titulo: `Chamado ${n}`,
+        situacao: 'Em andamento',
+        atende: null,
+        abriu: null,
+        abertoEm: as('10:32'),
+      }),
+      texto: (n: number) => `Chamado ${n}`,
+      motivo: 'Não foi possível carregar os chamados da conversa. Informe à TI o código R7K2-9QXM.',
+    },
+  ])('em $aba, o "Carregar mais" que falha diz o motivo e tenta de novo', async (lista) => {
+    let falhar = true;
+    const { servidor } = servidorDaConversa({
+      outros: {
+        [lista.caminho]: (pedido) => {
+          if (new URL(pedido.url).search === '') {
+            return Response.json({ itens: [lista.item(1)], seguintes: true });
+          }
+          if (falhar) return erroInterno();
+          return Response.json({ itens: [lista.item(2)], seguintes: false });
+        },
+      },
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    fireEvent.click(await screen.findByRole('tab', { name: lista.aba }));
+    await screen.findByText(lista.texto(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Carregar mais' }));
+    const falha = await screen.findByRole('alert');
+    expect(falha.textContent).toContain(lista.motivo);
+    expect(screen.queryByRole('button', { name: 'Carregar mais' })).toBeNull();
+
+    falhar = false;
+    fireEvent.click(within(falha).getByRole('button', { name: 'Tentar de novo' }));
+    expect(await screen.findByText(lista.texto(2))).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('com "Chamados da equipe" escolhida, o módulo desligado leva de volta à Conversa, que lê', async () => {
+    const foco = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    let desligados: string[] = [];
+    const { servidor, estado } = servidorDaConversa({
+      mensagens: varias(1, 3),
+      outros: {
+        [`GET ${CAMINHO}/chamados`]: () => Response.json({ itens: [], seguintes: false }),
+        'GET /api/sessao': () =>
+          estadoDaSessaoAtiva(naOrganizacao('chat.usar'), { modulosDesligados: desligados }),
+      },
+    });
+    const loja = comOChat(servidor);
+    abrir(`/chat/c/${CONVERSA}`, loja);
+    await within(await areaDasMensagens()).findByText('Mensagem 3');
+    fireEvent.click(screen.getByRole('tab', { name: 'Chamados da equipe' }));
+    await screen.findByText('Nenhum chamado aberto das mensagens desta equipe.');
+    foco.mockReturnValue(true);
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(estado.leituras).toEqual([]);
+
+    desligados = ['chamados'];
+    await act(() => loja.validar());
+    expect(screen.queryByRole('tab', { name: 'Chamados da equipe' })).toBeNull();
+    expect(screen.getByRole('tab', { selected: true }).textContent).toBe('Conversa');
+    await waitFor(() => expect(estado.leituras).toEqual([id(3)]));
   });
 });
 
@@ -271,6 +359,15 @@ describe('a abertura e a leitura', () => {
     expect(screen.getByRole('button', { name: 'Mensagens seguintes' })).toBeTruthy();
   });
 
+  it('o link mexido, com o que não é o id de uma mensagem, abre a conversa como sem o link', async () => {
+    const { servidor, estado } = servidorDaConversa({ mensagens: varias(1, 3) });
+    abrir(`/chat/c/${CONVERSA}?m=abc`, comOChat(servidor));
+    const area = await areaDasMensagens();
+    await within(area).findByText('Mensagem 3');
+    expect(estado.paginas[0]).toBe('');
+    expect(within(area).queryByText('Mensagem do link')).toBeNull();
+  });
+
   it('o link de uma mensagem que não é da conversa diz que ela não foi encontrada', async () => {
     const { servidor } = servidorDaConversa({ mensagens: varias(1, 3) });
     abrir(`/chat/c/${CONVERSA}?m=${id(99)}`, comOChat(servidor));
@@ -326,5 +423,38 @@ describe('a conversa que recebe mensagens', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /^Mensagens novas/ })).toBeNull(),
     );
+  });
+
+  it('a ida às mais novas que falha deixa a conversa onde quem lê está', async () => {
+    const canal = criarCanalDeEventos();
+    const { servidor, estado } = servidorDaConversa({ mensagens: varias(1, 100) });
+    const doTrecho = servidor[`GET ${CAMINHO}/mensagens`];
+    if (!doTrecho) throw new Error('O servidor da conversa não dá as mensagens.');
+    let falhar = false;
+    const comAFalha: ServidorDeTeste = {
+      ...servidor,
+      // Só as mais novas falham: a releitura do trecho longe do fim pede ao redor e depois.
+      [`GET ${CAMINHO}/mensagens`]: (pedido) =>
+        falhar && new URL(pedido.url).search === '' ? erroInterno() : doTrecho(pedido),
+    };
+    abrir(`/chat/c/${CONVERSA}?m=${id(30)}`, comOChat(comAFalha), { canal });
+    const area = await areaDasMensagens();
+    await within(area).findByText('Mensagem 30');
+    rolar(area, { conteudo: () => 2000, janela: 500, topo: 600 });
+    falhar = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Ir para as mais novas' }));
+    expect((await within(area).findByRole('alert')).textContent).toContain(
+      'Não foi possível carregar as mensagens. Informe à TI o código R7K2-9QXM.',
+    );
+
+    // A reação muda o trecho, e a conversa não desce até o fim dele.
+    estado.mensagens[29] = mensagem(30, {
+      reacoes: [
+        { texto: '+1', contas: [{ conta: TATIANA.conta, nome: 'Tatiana Ramos' }], minha: false },
+      ],
+    });
+    act(() => canal.publicar(conversaMudou(1)));
+    await within(area).findByText('+1: Tatiana Ramos');
+    expect(area.scrollTop).toBe(600);
   });
 });

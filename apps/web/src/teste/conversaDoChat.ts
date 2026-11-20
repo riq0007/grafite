@@ -80,6 +80,19 @@ export const naoEncontrado = (detalhe: string) =>
     { status: 404 },
   );
 
+/** O erro do servidor, com o código de rastreio que a tela pede para informar à TI. */
+export const erroInterno = () =>
+  Response.json(
+    {
+      type: 'urn:grafite:problema:interno',
+      title: 'Erro interno',
+      status: 500,
+      detail: 'Erro interno.',
+      codigoDeRastreio: 'R7K2-9QXM',
+    },
+    { status: 500 },
+  );
+
 /** A recusa da API, com a frase do campo. */
 export const recusada = (
   campos: Record<string, string>,

@@ -274,6 +274,17 @@ export function FluxoDaConversa({
     };
   }, []);
 
+  /**
+   * A ida às mais novas que falhou deixa quem lê onde está: medido de novo, ele só fica no fim se
+   * estiver lá, e a conversa não desce até o fim do trecho com a próxima mudança.
+   */
+  const medirOFim = () => {
+    const elemento = rolagem.current;
+    if (!elemento || elemento.clientHeight === 0) return;
+    noFim.current = estaNoFim(elemento);
+    definirNoFimNaTela(noFim.current);
+  };
+
   const carregar = (carga: CargaDoTrecho) => {
     const elemento = rolagem.current;
     if (mais.isPending || !elemento) return;
@@ -287,6 +298,7 @@ export function FluxoDaConversa({
     mais.mutate(carga, {
       onError: () => {
         ancora.current = null;
+        if (carga === 'mais-novas') medirOFim();
       },
     });
   };
@@ -375,7 +387,7 @@ export function FluxoDaConversa({
     irAoFimAoEnviar: (comAsMaisNovas) => {
       noFim.current = true;
       if (comAsMaisNovas) {
-        mais.mutate('mais-novas');
+        mais.mutate('mais-novas', { onError: medirOFim });
         return;
       }
       const elemento = rolagem.current;
