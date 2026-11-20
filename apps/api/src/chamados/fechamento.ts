@@ -2,8 +2,10 @@
 // decisão 7, e tarefa 3.11): a cada minuto, em cada organização com o módulo Chamados ligado, o
 // resolvido vencido, o de antes do começo do dia de 7 dias atrás no fuso do horário da TI, ganha o
 // `fechado_em` e o evento `fechou` na conversa, os dois na meia-noite do `momentoDoFechamento`, e o
-// `chamados.mudaram` a quem vê o chamado, sem auditoria e sem notificação. A versão não sobe: o
-// fechamento não é uma ação, e o fechado já era recusado antes dele pelo `estaFechado`.
+// `chamados.mudaram` a quem vê o chamado e a quem participa dele pelo chat, com o `chat.mudou` da
+// conversa de origem, onde o chip passa a "Fechado" (tarefa 3.12), sem auditoria e sem notificação.
+// A versão não sobe: o fechamento não é uma ação, e o fechado já era recusado antes dele pelo
+// `estaFechado`.
 import {
   type Banco,
   chamados,
@@ -15,11 +17,13 @@ import { type EventoDoFechamento, limiteDoFechamento, momentoDoFechamento } from
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
+import { avisarAsConversasDeOrigem } from '../chat/conversa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import { FILA_DAS_FALHAS } from '../fila/falhas.ts';
 import type { ContextoDasTarefas, DefinicaoDeTarefa } from '../fila/tarefas.ts';
 import { publicoDoChamado } from './alcance.ts';
 import { lerHorarioDaTi } from './horario.ts';
+import { comQuemParticipa, contasQueParticipamDos } from './quem-participa.ts';
 
 export const TAREFA_DO_FECHAMENTO = 'chamados.fechamento';
 
@@ -41,6 +45,10 @@ async function fecharUmLote(tx: Transacao, agora: Date, lote: number): Promise<n
       resolvidoEm: chamados.resolvidoEm,
       locais: chamados.locais,
       semLocal: chamados.semLocal,
+      pessoaId: chamados.pessoaId,
+      origem: chamados.origem,
+      abertoPor: chamados.abertoPor,
+      origemConversaId: chamados.origemConversaId,
     })
     .from(chamados)
     .where(
@@ -73,13 +81,18 @@ async function fecharUmLote(tx: Transacao, agora: Date, lote: number): Promise<n
       criadaEm: momento,
     })),
   );
-  for (const { id, locais, semLocal } of fechamentos) {
+  const participam = await contasQueParticipamDos(tx, fechamentos);
+  for (const fechado of fechamentos) {
     await registrarEvento(tx, {
       tipo: 'chamados.mudaram',
-      alvo: { tipo: 'chamado', id },
-      publico: publicoDoChamado({ locais, semLocal }),
+      alvo: { tipo: 'chamado', id: fechado.id },
+      publico: comQuemParticipa(publicoDoChamado(fechado), participam.get(fechado) ?? []),
     });
   }
+  await avisarAsConversasDeOrigem(
+    tx,
+    fechamentos.map(({ origemConversaId }) => origemConversaId),
+  );
   return fechamentos.length;
 }
 

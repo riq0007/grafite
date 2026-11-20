@@ -9,7 +9,8 @@
 // - o atendimento, o número da organização e o prazo do tipo em minutos;
 // - o chamado, com a primeira resposta dada, o evento de abertura, sem o resumo pronto, os anexos
 //   tomados pelos campos, a solicitação gerada pelo tipo (`solicitacao-gerada.ts`, tarefa 4.18), a
-//   auditoria e o `chamados.mudaram`;
+//   auditoria e o `chamados.mudaram`, também às contas de quem participa pelo chat (change
+//   chat-com-chamados, tarefa 3.12);
 // - as notificações de quem recebe o chamado pelo tipo ou da triagem (tarefa 4.8).
 // A gravação, depois das conferências, é a mesma da abertura pelo chat (`gravarAbertura`; change
 // chat-com-chamados, design, decisão 8, tarefa 3.7), que confere do jeito dela
@@ -60,11 +61,11 @@ import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { notificar } from '../notificacoes/notificar.ts';
 import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
-import { publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
+import { publicoComQuemParticipa } from './quem-participa.ts';
 import { gerarSolicitacao } from './solicitacao-gerada.ts';
 
 export const RECUSAS_DA_ABERTURA = {
@@ -537,7 +538,13 @@ export async function gravarAbertura(
     depois: Object.fromEntries(Object.entries(visao).filter(([, valor]) => valor !== null)),
     origem: origemDa(requisicao),
     momento,
-    saida: { publico: publicoDoChamado(doChamado) },
+    saida: {
+      publico: await publicoComQuemParticipa(
+        tx,
+        { pessoaId: pessoa.id, origem: origem.tipo, abertoPor: contaId },
+        doChamado,
+      ),
+    },
   });
 
   // As notificações: a de quem recebe o chamado pelo tipo, ou as da triagem, fora quem abriu. As

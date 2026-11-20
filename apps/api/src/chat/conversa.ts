@@ -10,6 +10,7 @@ import {
   participacao,
 } from '@grafite/domain';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { registrarEvento } from '../eventos/saida.ts';
 import { naoEncontrado } from '../problemas.ts';
 import { type ContaLida, lerContas } from './contas.ts';
 import { usaOChatNaConsulta } from './quem-usa.ts';
@@ -204,6 +205,27 @@ export function publicoDaConversa(linha: LinhaDaConversa) {
     return { permissao: 'chat.usar' as const, grupos: [linha.grupoId ?? ''] };
   }
   return { permissao: 'chat.usar' as const };
+}
+
+/**
+ * O `chat.mudou` das conversas de origem dos chamados cuja situação ou quem atende mudou, uma vez por
+ * conversa (design, decisão 4; tarefa 3.12): o chip da citação e "Chamados da equipe" seguem o
+ * chamado. O chamado de fora do chat, sem a conversa de origem, não grava nada.
+ */
+export async function avisarAsConversasDeOrigem(
+  tx: Transacao,
+  origens: readonly (string | null)[],
+): Promise<void> {
+  const ids = [...new Set(origens.filter((id): id is string => id !== null))];
+  if (ids.length === 0) return;
+  const linhas = await tx.select().from(conversas).where(inArray(conversas.id, ids));
+  for (const linha of linhas) {
+    await registrarEvento(tx, {
+      tipo: 'chat.mudou',
+      alvo: { tipo: 'conversa', id: linha.id },
+      publico: publicoDaConversa(linha),
+    });
+  }
 }
 
 /**

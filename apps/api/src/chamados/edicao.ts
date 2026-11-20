@@ -7,9 +7,10 @@
 //   antes das do campo, fora a do ativo, que é lido antes, como na abertura;
 // - a mudança, que o mesmo ativo, o mesmo título e as mesmas respostas não fazem: a rota responde o
 //   chamado como está, sem a auditoria;
-// - a auditoria, com o antes e o depois, e o `chamados.mudaram` pela saída dela. Só a troca do ativo
-//   sobe a versão e grava o evento na conversa, e nenhuma das três notifica: quem atende não muda, e
-//   nada cai na triagem.
+// - a auditoria, com o antes e o depois, e o `chamados.mudaram` pela saída dela, também às contas de
+//   quem participa pelo chat, que leem o título, o ativo e as respostas (change chat-com-chamados,
+//   tarefa 3.12). Só a troca do ativo sobe a versão e grava o evento na conversa, e nenhuma das
+//   três notifica: quem atende não muda, e nada cai na triagem.
 import {
   anexosDosChamados,
   arquivos,
@@ -44,10 +45,10 @@ import {
   formularioDoChamado,
   travarParaMudar,
 } from './acoes.ts';
-import { publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
 import { ativosPorId, nomesDasPessoas } from './ficha.ts';
 import { lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
+import { publicoComQuemParticipa } from './quem-participa.ts';
 
 /** O que as três recebem da rota: a requisição, com a sessão, e o momento. */
 interface Contexto {
@@ -168,7 +169,7 @@ export async function trocarOAtivo(
     depois: { ativo: ativoNaAuditoria(novo) },
     origem: origemDa(requisicao),
     momento,
-    saida: { publico: publicoDoChamado(lido, depois) },
+    saida: { publico: await publicoComQuemParticipa(tx, lido, lido, depois) },
   });
   return comoFicou(tx, lido, versao);
 }
@@ -201,7 +202,7 @@ export async function trocarOTitulo(
     depois: { titulo: conferido.titulo },
     origem: origemDa(requisicao),
     momento,
-    saida: { publico: publicoDoChamado(lido) },
+    saida: { publico: await publicoComQuemParticipa(tx, lido, lido) },
   });
   return comoFicou(tx, lido);
 }
@@ -302,7 +303,7 @@ export async function mudarOsCamposDaTi(
     depois: { campos: depois },
     origem: origemDa(requisicao),
     momento,
-    saida: { publico: publicoDoChamado(lido) },
+    saida: { publico: await publicoComQuemParticipa(tx, lido, lido) },
   });
   return comoFicou(tx, lido);
 }

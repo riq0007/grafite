@@ -258,6 +258,9 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - cada lote roda na transação dele, com os vencidos travados sem esperar (`skip locked`): o que uma ação trava fica para o minuto seguinte, e duas execuções ao mesmo tempo fecham cada chamado uma vez;
   - na TI, o fechado entra no lugar da célula da matriz, depois da versão e de quem age: as ações do atendimento, a mensagem e a nota recusam com "O chamado #1030 está fechado.", também no vencido que a tarefa ainda não fechou. A troca do ativo, do título e dos campos, o Virar OS e o "Pedir toner" seguem recusados pelo resolvido ("O chamado #1030 está resolvido."), como antes;
   - o `fechou` vem na ficha sem autor (`autor: null`), e a web da TI o mostra na 4.13; o `chamados.mudaram` do fechamento vai a quem vê o chamado, e a 3.12 soma as contas de quem participa.
+- **Os eventos a quem participa,** nos casos que a spec não escreve (tarefa 3.12):
+  - as contas da pessoa e de quem abriu pelo chat vão no `chamados.mudaram` do que muda o que elas leem: a abertura, as ações da TI, a troca do ativo, do título e dos campos, o fechamento e as ações delas. A nota, o Virar OS e o "Pedir toner" vão só a quem vê o chamado, porque nada do que quem participa lê muda com eles. As contas são as de quem participa agora (`contasQueParticipam`): sem o módulo Chat e a conta que não usa o chat ficam de fora;
+  - o `chat.mudou` da conversa de origem sai quando a situação ou quem atende muda, pela TI ou por quem participa, e no fechamento, porque o chip passa a "Fechado". A mensagem, a nota e a edição não o gravam: o chip mostra só o número, a situação e quem atende. O fechamento grava um por conversa no lote.
 
 ## Risks / Trade-offs
 

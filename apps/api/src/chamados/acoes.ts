@@ -17,7 +17,9 @@
 // - o chamado, com o relógio, a primeira resposta, a resolução e a versão, que sobe só quando a
 //   situação ou quem atende muda; a conversa, uma linha por vez, na ordem da mudança, com os anexos
 //   tomados para a mensagem ou a nota; a auditoria, com o `chamados.mudaram`, das ações que mudam a
-//   situação ou quem atende, e só o `chamados.mudaram` das outras; e as notificações, também as de
+//   situação ou quem atende, e só o `chamados.mudaram` das outras, também às contas de quem participa
+//   pelo chat, fora o da nota, com o `chat.mudou` da conversa de origem quando a situação ou quem
+//   atende muda (change chat-com-chamados, decisão 4; tarefa 3.12); e as notificações, também as de
 //   quem participa pelo chat, com o módulo Chat ligado.
 import { chamados, mensagensDosChamados, pessoas, type Transacao } from '@grafite/db';
 import {
@@ -52,6 +54,7 @@ import type { FastifyRequest } from 'fastify';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
+import { avisarAsConversasDeOrigem } from '../chat/conversa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { notificar } from '../notificacoes/notificar.ts';
@@ -63,7 +66,7 @@ import { ATIVO_DO_CARTAO_NAO_ENCONTRADO, type CartaoDoAtivo, retratoDoAtivo } fr
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
-import { contasQueParticipam } from './quem-participa.ts';
+import { contasQueParticipam, publicoComQuemParticipa } from './quem-participa.ts';
 
 /**
  * O pedido de cada rota, depois do schema: a versão que a tela mostra, nas ações dos botões, com a
@@ -153,6 +156,7 @@ export async function travarOChamado(
       pessoaId: chamados.pessoaId,
       origem: chamados.origem,
       abertoPor: chamados.abertoPor,
+      origemConversaId: chamados.origemConversaId,
     })
     .from(chamados)
     .innerJoin(pessoas, eq(pessoas.id, chamados.pessoaId))
@@ -486,7 +490,11 @@ export async function agirNoChamado(
       ? null
       : { id: decisao.responsavel, nome: await nomeDaConta(tx, decisao.responsavel) };
   const locais = { locais: lido.locais, semLocal: lido.semLocal };
-  const publico = publicoDoChamado(locais);
+  // Quem participa recebe o que muda o que ele lê; a nota fica só com quem vê o chamado (tarefa 3.12).
+  const publico =
+    pedido.acao === 'nota'
+      ? publicoDoChamado(locais)
+      : await publicoComQuemParticipa(tx, lido, locais);
   const acaoNaAuditoria = decisao.sobeAVersao ? NA_AUDITORIA[pedido.acao] : null;
   if (acaoNaAuditoria === null) {
     await registrarEvento(tx, {
@@ -506,6 +514,10 @@ export async function agirNoChamado(
       momento,
       saida: { publico },
     });
+  }
+  // O chip da conversa de origem segue a situação e quem atende (decisão 4).
+  if (decisao.situacao !== lido.situacao || decisao.responsavel !== lido.responsavel) {
+    await avisarAsConversasDeOrigem(tx, [lido.origemConversaId]);
   }
 
   await notificar(

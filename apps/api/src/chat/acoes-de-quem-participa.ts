@@ -11,8 +11,9 @@
 // - a decisão do domínio (`decidirAcaoDeQuemParticipa`), com as recusas do conteúdo no campo e as
 //   outras como o conflito, como as da TI;
 // - na retomada e na reabertura, o chamado, com o relógio, quem atende desde quando e a versão, e a
-//   auditoria pela conta de quem participa; nas outras, só o `chamados.mudaram`, e na marcação como
-//   vista nem ele, que muda só a leitura da conta;
+//   auditoria pela conta de quem participa, com o `chat.mudou` da conversa de origem; nas outras, só
+//   o `chamados.mudaram`, também às contas de quem participa (tarefa 3.12), e na marcação como vista
+//   só às da conta, que muda só a leitura dela;
 // - a conversa, uma linha por vez, na ordem da mudança: a mensagem pela pessoa, com os anexos, e os
 //   eventos pela conta;
 // - a `vista_ate`, a última linha da conversa depois da ação, lida com o chamado travado, e as
@@ -42,10 +43,11 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
-import { chamadoNaoEncontrado, publicoDoChamado } from '../chamados/alcance.ts';
+import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
 import { tomarAnexos } from '../chamados/anexos.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from '../chamados/quem-atende.ts';
+import { publicoComQuemParticipa } from '../chamados/quem-participa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { marcarLidasDoAssunto } from '../notificacoes/leitura.ts';
@@ -53,6 +55,7 @@ import { notificar } from '../notificacoes/notificar.ts';
 import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { daConta } from './chamados-de-quem-participa.ts';
+import { avisarAsConversasDeOrigem } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
 
 /**
@@ -362,7 +365,7 @@ export async function agirComoQuemParticipa(
   await marcarComoVista(tx, lido.id, { conta, momento });
 
   const locais = { locais: lido.locais, semLocal: lido.semLocal };
-  const publico = publicoDoChamado(locais);
+  const publico = await publicoComQuemParticipa(tx, lido, locais);
   const reabriu = decisao.conversa.find(
     (entrada) => entrada.especie === 'evento' && entrada.evento === 'reabriu',
   );
@@ -379,6 +382,8 @@ export async function agirComoQuemParticipa(
       momento,
       saida: { publico },
     });
+    // O chip da conversa de origem segue a situação e quem atende (decisão 4).
+    await avisarAsConversasDeOrigem(tx, [lido.origemConversaId]);
   } else {
     // A marcação como vista muda só a leitura da conta: só as telas dela são avisadas.
     await registrarEvento(tx, {

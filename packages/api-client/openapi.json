@@ -10145,6 +10145,38 @@
           "campos"
         ]
       },
+      "ContaDoChatInput": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ]
+      },
       "CartaoDoAtivoInput": {
         "type": "object",
         "properties": {
@@ -10251,38 +10283,6 @@
           "disponibilidade",
           "suprimento",
           "em"
-        ]
-      },
-      "ContaDoChatInput": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "daTi": {
-            "type": "boolean"
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "conta",
-          "nome",
-          "daTi",
-          "foto"
         ]
       },
       "TipoDeChamadoInput": {
@@ -39694,6 +39694,39 @@
         ],
         "additionalProperties": false
       },
+      "ContaDoChat": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ],
+        "additionalProperties": false
+      },
       "CartaoDoAtivo": {
         "type": "object",
         "properties": {
@@ -39802,39 +39835,6 @@
           "disponibilidade",
           "suprimento",
           "em"
-        ],
-        "additionalProperties": false
-      },
-      "ContaDoChat": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "daTi": {
-            "type": "boolean"
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "conta",
-          "nome",
-          "daTi",
-          "foto"
         ],
         "additionalProperties": false
       },

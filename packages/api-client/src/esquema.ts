@@ -40159,6 +40159,13 @@ export interface components {
                 })[];
             }[];
         };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
         CartaoDoAtivoInput: {
             /** Format: uuid */
             ativo: string;
@@ -40180,13 +40187,6 @@ export interface components {
             } | null;
             /** Format: date-time */
             em: string;
-        };
-        ContaDoChatInput: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
         };
         TipoDeChamadoInput: {
             /** Format: uuid */
@@ -46031,6 +46031,13 @@ export interface components {
                 })[];
             }[];
         };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
         CartaoDoAtivo: {
             /** Format: uuid */
             ativo: string;
@@ -46052,13 +46059,6 @@ export interface components {
             } | null;
             /** Format: date-time */
             em: string;
-        };
-        ContaDoChat: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
         };
         TipoDeChamado: {
             /** Format: uuid */
