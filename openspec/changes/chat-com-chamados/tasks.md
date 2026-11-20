@@ -159,7 +159,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - a página servida em `/chat` pela API e pelo plugin do `pnpm dev`, e o service worker sem o `/chat` no `navigateFallback`.
 
   Verificar: os testes da entrada, do plugin da chegada e da rota da página, o build com as duas páginas, o `marca:verificar`, o lint, o typecheck e o `/chat` no `pnpm dev`.
-- [ ] 4.2 A trilha e a lista do Chat (m01 e m03): as seções, os contadores, o chamado novo no alto com o contorno forte (o `novo` do `secoesDoChat` sai só quando a tela é montada de novo, e não na consulta que o evento da abertura refaz), FECHADOS recolhido e "Nova conversa", com a escolha da pessoa. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
+- [x] 4.2 A trilha e a lista do Chat (m01 e m03): as seções, os contadores, o chamado novo no alto com o contorno forte (o `novo` do `secoesDoChat` sai só quando a tela é montada de novo, e não na consulta que o evento da abertura refaz), FECHADOS recolhido e "Nova conversa", com a escolha da pessoa. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.3 A conversa (m01):
   - o cabeçalho e as abas;
   - as mensagens seguidas juntas, os dias e os eventos;

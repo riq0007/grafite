@@ -1,10 +1,11 @@
 /* O app do chat (spec modulo-chat, "App do chat"): a trilha à esquerda e a vista ao lado, na janela
-   inteira, sem a casca. */
+   inteira, sem a casca. A tela escolhida fica na superfície, a lista da vista na afundada e a
+   trilha no fundo, como no m01. */
 .app {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   block-size: 100dvh;
-  background-color: var(--cor-fundo);
+  background-color: var(--cor-superficie);
   color: var(--cor-texto);
 }
 
@@ -18,7 +19,7 @@
   inline-size: calc(var(--esp-12) + var(--esp-4));
   padding: var(--esp-2) var(--esp-1);
   border-inline-end: 1px solid var(--cor-linha);
-  background-color: var(--cor-superficie-afundada);
+  background-color: var(--cor-fundo);
 }
 
 .vistas {
@@ -74,6 +75,16 @@
   background-color: var(--cor-destaque);
 }
 
+/* O contador da vista, no canto de cima do item, como no m01, menor que o da lista. */
+.vista .contadorDaVista {
+  position: absolute;
+  inset-block-start: calc(var(--esp-1) / -2);
+  inset-inline-end: calc(var(--esp-1) * -1);
+  min-inline-size: var(--esp-4);
+  padding: 0 var(--esp-1);
+  line-height: var(--esp-4);
+}
+
 /* O menu da conta: a foto ou as iniciais, sem o preenchimento do botão de texto. */
 .trilha .conta {
   padding: var(--esp-1);
@@ -90,15 +101,31 @@
   margin: auto;
 }
 
-/* A coluna da lista da vista, com o título no alto. */
+/* A coluna da lista da vista, com o título no alto, de 280 px, como no m01. */
 .lista {
   display: flex;
+  flex: none;
   flex-direction: column;
   gap: var(--esp-3);
-  inline-size: calc(var(--esp-12) * 6);
+  inline-size: calc(var(--esp-10) * 7);
+  min-block-size: 0;
   padding: var(--esp-4);
   border-inline-end: 1px solid var(--cor-linha);
-  background-color: var(--cor-superficie);
+  background-color: var(--cor-superficie-afundada);
+}
+
+/* A tela escolhida, ao lado da lista. */
+.tela {
+  display: flex;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* Sem nada escolhido na lista: o convite no meio da tela. */
+.nadaEscolhido {
+  margin: auto;
+  padding: var(--esp-6);
 }
 
 .tituloDaLista {

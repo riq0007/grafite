@@ -1,0 +1,250 @@
+/* A lista da vista Chat (m01 e m03): na coluna das vistas, sem o preenchimento dela, com o título
+   no alto e as seções embaixo, que rolam. */
+.lista {
+  gap: 0;
+  padding: 0;
+}
+
+/* O alto: o título e "Nova conversa", à direita. */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-2) var(--esp-1) var(--esp-4);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+.secoes {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 0 var(--esp-2) var(--esp-4);
+}
+
+.secao {
+  display: grid;
+}
+
+/* O título da seção: a legenda em maiúsculas, espaçada, no texto secundário; o de CHAMADOS, no
+   azul do chamado, com a boia. */
+.tituloDaSecao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: var(--esp-3) var(--esp-2) var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  line-height: var(--entrelinha-justa);
+  text-transform: uppercase;
+}
+
+.tituloDaSecao[data-tom="chamado"] {
+  color: var(--cor-info);
+}
+
+/* FECHADOS: o título é o botão que abre e fecha a seção, com a seta que gira. */
+.recolher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-block-size: var(--esp-8);
+  padding: 0 var(--esp-1);
+  margin-inline-start: calc(var(--esp-1) * -1);
+  border: 0;
+  border-radius: var(--raio-controle);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  outline: none;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.recolher:hover {
+  background-color: var(--cor-hover);
+}
+
+.recolher:focus-visible {
+  outline: 2px solid var(--cor-foco);
+}
+
+.recolher svg {
+  transition: rotate var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.recolher[aria-expanded="true"] svg {
+  rotate: 90deg;
+}
+
+.itens {
+  display: grid;
+  gap: calc(var(--esp-1) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A seção que acaba de abrir, como as que abrem e fecham: 200 ms, parada com "reduzir movimento". */
+.abrindo {
+  animation: aparecer var(--dur-deslocamento) var(--curva-padrao);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--esp-1) * -1));
+  }
+}
+
+.nenhum {
+  margin: 0 var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* O chamado: o cartão com o contorno azul, no fundo do chamado do mockup, o azul a 9% sobre a
+   superfície. Sobre ele, o selo, com o fundo dele, passa do AA em todos os temas, e sobre o
+   --cor-info-fundo da afundada não passaria (change chat-com-chamados, design, decisão 15). Pelo
+   mesmo motivo, o mouse acende o contorno e não muda o fundo. */
+.chamado {
+  display: grid;
+  gap: var(--esp-1);
+  padding: calc(var(--esp-1) * 1.5) var(--esp-3);
+  border: 1.5px solid var(--cor-info-borda);
+  border-radius: var(--raio-controle);
+  background-color: color-mix(in srgb, var(--cor-info) 9%, var(--cor-superficie));
+  color: var(--cor-texto);
+  text-decoration: none;
+  outline: none;
+  transition:
+    border-color var(--dur-rapida) var(--curva-padrao),
+    box-shadow var(--dur-rapida) var(--curva-padrao);
+}
+
+.chamado:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O do mouse e o escolhido: o contorno no azul cheio. */
+.chamado:hover,
+.chamado[aria-current="page"] {
+  border-color: var(--cor-info);
+}
+
+/* O que a conta acaba de abrir: o contorno forte, que entra em 200 ms. */
+.chamado[data-novo] {
+  border-color: var(--cor-info-forte);
+  box-shadow: 0 0 0 1px var(--cor-info-forte);
+  animation: aparecer var(--dur-deslocamento) var(--curva-padrao);
+}
+
+/* O título inteiro, em peso forte: quebra a linha e não corta. */
+.tituloDoChamado {
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.linhaDoChamado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.numero {
+  margin-inline-start: auto;
+  color: var(--cor-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A conversa: a linha de 34 px, com a marca da conversa, o nome e o contador. */
+.conversa {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-block-size: calc(var(--esp-8) + var(--esp-1) / 2);
+  padding: var(--esp-1) var(--esp-2);
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  text-decoration: none;
+  outline: none;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.conversa:hover {
+  background-color: var(--cor-hover);
+}
+
+.conversa:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A escolhida: a marca do item da trilha, a barra e o fundo no destaque e o nome em peso forte. */
+.conversa[aria-current="page"] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+  box-shadow: inset 2px 0 0 var(--cor-destaque);
+  font-weight: var(--peso-forte);
+}
+
+.marcaDoCanal {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--esp-5);
+  block-size: var(--esp-5);
+  color: var(--cor-texto-2);
+}
+
+.nomeDaConversa {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.silenciada {
+  display: inline-flex;
+  color: var(--cor-texto-2);
+}
+
+/* A lista que não carregou. */
+.falha {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: var(--esp-3) var(--esp-2);
+}
+
+.falha p {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.marcaDaFalha {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-critico);
+}

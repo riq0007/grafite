@@ -270,6 +270,19 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - os links do app trocam a tela sem recarregar a página, e o clique com o Ctrl ou o Shift, ou com o botão do meio, abre o endereço como um link comum;
   - o service worker deixa o `chat/index.html` fora do precache, porque o Workbox serviria a página guardada no `/chat/`, e guarda o manifesto do chat, como o do Grafite. O `/chat` de fora do `navigateFallback` casa também com a busca e o fragmento (`/chat?m=12`), porque o Workbox confere o caminho com a busca;
   - a API e o plugin do `pnpm dev` servem a página do chat ao `/chat` e ao que vem depois de `/chat/`, e não ao `/chatbot`, que é da casca.
+- **A trilha e a lista do Chat,** nos casos que a spec não escreve (tarefa 4.2):
+  - o chamado aberto pela lista do Chat fica em `/chat/chamados/:numero`, na vista Chat, com a lista dela ao lado; o aberto pela vista Chamados leva `?vista=chamados`, para ficar com a lista dela (tarefa 4.7). A direta que ainda não nasceu fica em `/chat/direta/:conta`, também na vista Chat;
+  - no meio de uma navegação, a vista é a das rotas casadas, que cobrem o endereço novo ou o resolvido: a lista não desmonta entre duas telas da mesma vista;
+  - o chamado novo sai do alto quando a vista Chat sai da tela ou a página recarrega; a consulta que o evento da abertura refaz não o tira;
+  - os contadores mostram até 99, e "99+" acima. O leitor de tela ouve o nome do item com a contagem, como "Chat, 4 não lidas", "Chamados, 1 com resposta nova", "Avisos, 2 não lidos" e "Trocar o mouse, Aberto, chamado 1045, 1 resposta nova", e, acima de 99, "mais de 99 não lidas". O de Chamados e o da resposta nova ficam no azul forte do chamado, com o texto sobre ele, e os outros, no destaque da conta, como a spec, que dá o azul só ao chamado (o m01 e o m03 pintam de azul também o do Chat). Equipes não tem contador;
+  - a conversa escolhida tem a marca do item escolhido da trilha, e o chamado escolhido, o contorno no `--cor-info`, que o mouse também acende. A silenciada mostra o sino cortado e continua com o contador, e o leitor de tela ouve "silenciada";
+  - o cartão do chamado tem o fundo do mockup, o `--cor-info` a 9% sobre a superfície, e não o `--cor-info-fundo`: sobre o `--cor-info-fundo` da lista, o selo, com o fundo dele, ficaria abaixo do AA (3,71 na Meia-noite), e sobre o do mockup passa em todos os temas (4,73 no pior). Pelo mesmo motivo, o mouse acende o contorno e não muda o fundo, que deixaria o selo em 4,10;
+  - sem nada escolhido, a tela diz "Escolha uma conversa ou um chamado na lista." e "Para falar com alguém, use Nova conversa.";
+  - "Nova conversa" abre o diálogo com a busca da pessoa pelo nome, que pergunta à API a cada texto. A pessoa com quem a conta já fala abre a mesma conversa, e a outra, a direta por nascer, sem criá-la. A busca sem ninguém diz "Ninguém com esse nome usa o chat.";
+  - cada seção carrega por si: a que falha diz o motivo, com "Tentar de novo", e a vazia sai da lista, fora CHAMADOS, que diz "Nenhum chamado aberto.". Sem o módulo Chamados, a lista fica sem CHAMADOS e FECHADOS e não os pede;
+  - FECHADOS mostra os resolvidos que reabrem da primeira página da lista, que vêm antes dos fechados. A seção abre sozinha quando o chamado do endereço é um deles, e quem a fecha a fecha, até escolher outro deles;
+  - a trilha fica no fundo, a lista na superfície afundada e a tela na superfície, como no mockup. A página não encontrada fica sozinha, sem a lista de nenhuma vista;
+  - a direta mostra a foto ou as iniciais da outra pessoa, a equipe, as iniciais dela, e o canal, o "#".
 
 ## Risks / Trade-offs
 

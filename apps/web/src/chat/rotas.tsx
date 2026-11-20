@@ -1,29 +1,30 @@
 // A árvore de rotas do app do chat (change chat-com-chamados, design, decisão 12), à parte da
-// casca: o app não importa o roteador dela nem os módulos. A moldura, com a trilha, fica na raiz,
-// e cada vista pendura as telas dela no /chat.
+// casca: o app não importa o roteador dela nem os módulos. A moldura, com a trilha e a lista da
+// vista, fica na raiz, e cada rota do /chat dá a tela ao lado da lista.
+import { EstadoVazio } from '@grafite/ui';
 import {
   createRootRoute,
   createRoute,
   createRouter,
   type RouterHistory,
 } from '@tanstack/react-router';
+import { MessageCircle } from 'lucide-react';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import estilos from './MolduraDoChat.module.css';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
 
-/** A coluna da lista de uma vista, com o título dela. */
-function ColunaDaVista({ titulo }: { titulo: string }) {
+/** A vista Chat sem nada escolhido na lista. */
+function NadaEscolhido() {
   return (
-    <section aria-label={titulo} className={estilos.lista}>
-      <h1 className={estilos.tituloDaLista}>{titulo}</h1>
-    </section>
+    <div className={estilos.nadaEscolhido}>
+      <EstadoVazio
+        icone={MessageCircle}
+        titulo="Escolha uma conversa ou um chamado na lista."
+        descricao="Para falar com alguém, use Nova conversa."
+      />
+    </div>
   );
 }
-
-const VistaChat = () => <ColunaDaVista titulo="Chat" />;
-const VistaChamados = () => <ColunaDaVista titulo="Chamados" />;
-const VistaEquipes = () => <ColunaDaVista titulo="Equipes" />;
-const VistaAvisos = () => <ColunaDaVista titulo="Avisos" />;
 
 /** O endereço que não leva a nenhuma tela do chat, com o caminho de volta. */
 function ChatNaoEncontrado() {
@@ -40,44 +41,41 @@ const raiz = createRootRoute({ component: MolduraDoChat, notFoundComponent: Chat
 
 const chat = createRoute({ getParentRoute: () => raiz, path: '/chat' });
 
-const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: VistaChat });
+// As telas ao lado da lista ainda vazias chegam nas tarefas delas: a conversa e a direta na 4.3, o
+// chamado na 4.6 e as vistas Chamados, Equipes e Avisos na 4.7.
+const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: NadaEscolhido });
 
 /** Uma conversa, na vista Chat. */
-export const rotaDaConversa = createRoute({
-  getParentRoute: () => chat,
-  path: 'c/$conversa',
-  component: VistaChat,
-});
+export const rotaDaConversa = createRoute({ getParentRoute: () => chat, path: 'c/$conversa' });
 
-const vistaChamados = createRoute({
-  getParentRoute: () => chat,
-  path: 'chamados',
-  component: VistaChamados,
-});
+/**
+ * A conversa direta com a pessoa escolhida em "Nova conversa", que ainda não nasceu: ela nasce com a
+ * primeira mensagem (spec chat, "Conversa direta").
+ */
+export const rotaDaDireta = createRoute({ getParentRoute: () => chat, path: 'direta/$conta' });
 
-/** Um chamado de quem participa, na vista Chamados. */
+const vistaChamados = createRoute({ getParentRoute: () => chat, path: 'chamados' });
+
+/**
+ * Um chamado de quem participa, na vista Chat, com os abertos e os fechados na lista; aberto pela
+ * vista Chamados, com `?vista=chamados`, fica nela.
+ */
 export const rotaDoChamado = createRoute({
   getParentRoute: () => chat,
   path: 'chamados/$numero',
-  component: VistaChamados,
+  validateSearch: (busca: Record<string, unknown>): { vista?: 'chamados' } =>
+    busca.vista === 'chamados' ? { vista: 'chamados' } : {},
 });
 
-const vistaEquipes = createRoute({
-  getParentRoute: () => chat,
-  path: 'equipes',
-  component: VistaEquipes,
-});
+const vistaEquipes = createRoute({ getParentRoute: () => chat, path: 'equipes' });
 
-const vistaAvisos = createRoute({
-  getParentRoute: () => chat,
-  path: 'avisos',
-  component: VistaAvisos,
-});
+const vistaAvisos = createRoute({ getParentRoute: () => chat, path: 'avisos' });
 
 export const arvoreDoChat = raiz.addChildren([
   chat.addChildren([
     vistaChat,
     rotaDaConversa,
+    rotaDaDireta,
     vistaChamados,
     rotaDoChamado,
     vistaEquipes,

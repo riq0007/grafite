@@ -1,6 +1,7 @@
-// O app do chat por inteiro (spec modulo-chat, "App do chat" e "Trilha do chat"): a trilha à
-// esquerda, com as vistas e o menu da conta no pé, e a vista do endereço ao lado. Sem o chat, a
-// vista dá lugar ao motivo, e as telas dela nem montam, sem pedir dados.
+// O app do chat por inteiro (spec modulo-chat, "App do chat", "Trilha do chat" e "Lista do Chat"):
+// a trilha à esquerda, com as vistas, os contadores e o menu da conta no pé, a lista da vista do
+// endereço e, ao lado dela, a tela escolhida. Sem o chat, a vista dá lugar ao motivo, e as telas
+// dela nem montam, sem pedir dados.
 import { EstadoVazio, Icone, RegiaoDeAvisos } from '@grafite/ui';
 import { Outlet, useRouterState } from '@tanstack/react-router';
 import {
@@ -12,11 +13,17 @@ import {
   Users,
   WifiOff,
 } from 'lucide-react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { SemPermissao } from '../modulos/administracao/SemPermissao.tsx';
+import { useNotificacoes } from '../notificacoes/useNotificacoes.tsx';
 import type { EstadoDaSessao } from '../sessao/loja.ts';
 import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../sessao/useSessao.tsx';
+import { Contador, contagemEmTexto, nomeParaOLeitor, type TomDoContador } from './Contador.tsx';
+import { useChamadoNovo } from './chamadoNovo.tsx';
+import { useResumoDoChat } from './consultas.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { ListaDaVista } from './ListaDaVista.tsx';
 import { MenuDaConta } from './MenuDaConta.tsx';
 import estilos from './MolduraDoChat.module.css';
 
@@ -38,36 +45,51 @@ const VISTAS: readonly VistaDaTrilha[] = [
 ];
 
 /**
- * A vista de cada tela do chat, pelo id da rota dela (`rotas.tsx`): a conversa é da vista Chat, e o
- * chamado, da vista Chamados.
+ * A vista de cada tela do chat, pelo id da rota dela (`rotas.tsx`): a conversa, a direta que ainda
+ * não nasceu e o chamado são da vista Chat, que lista os chamados abertos e os fechados. O chamado
+ * aberto pela vista Chamados leva a vista na busca (`vistaNaBusca`), para a lista dela ficar ao lado.
  */
 const VISTA_DA_ROTA: Readonly<Record<string, IdDaVista>> = {
   '/chat/': 'chat',
   '/chat/c/$conversa': 'chat',
+  '/chat/direta/$conta': 'chat',
   '/chat/equipes': 'equipes',
   '/chat/chamados': 'chamados',
-  '/chat/chamados/$numero': 'chamados',
+  '/chat/chamados/$numero': 'chat',
   '/chat/avisos': 'avisos',
 };
 
 /** O caminho como o roteador o casa: sem as barras do fim e sem diferenciar as maiúsculas. */
 const comoORoteadorCasa = (caminho: string) => caminho.replace(/\/+$/, '').toLowerCase();
 
+const daVistaChamados = (busca: unknown) =>
+  typeof busca === 'object' && busca !== null && 'vista' in busca && busca.vista === 'chamados';
+
 /**
  * A vista da tela aberta, pela última rota casada. A página não encontrada não é de nenhuma: o
  * roteador casa o começo do endereço, como o /chat/equipes do /chat/equipes/outra, e a última rota
- * não cobre o endereço inteiro.
+ * não cobre o endereço inteiro. No meio de uma navegação, o roteador troca o endereço antes das rotas
+ * casadas e o endereço resolvido depois delas: as rotas cobrem um dos dois, e a vista não some entre
+ * duas telas dela, o que desmontaria a lista.
  */
 export function vistaDaTela({
   location,
+  resolvedLocation,
   matches,
 }: {
   location: { pathname: string };
-  matches: readonly { routeId: string; pathname: string }[];
+  resolvedLocation?: { pathname: string } | undefined;
+  matches: readonly { routeId: string; pathname: string; search?: unknown }[];
 }): IdDaVista | null {
   const ultima = matches.at(-1);
-  if (!ultima || comoORoteadorCasa(ultima.pathname) !== comoORoteadorCasa(location.pathname)) {
-    return null;
+  if (!ultima) return null;
+  const caminho = comoORoteadorCasa(ultima.pathname);
+  const cobre = [location, resolvedLocation].some(
+    (endereco) => endereco !== undefined && comoORoteadorCasa(endereco.pathname) === caminho,
+  );
+  if (!cobre) return null;
+  if (ultima.routeId === '/chat/chamados/$numero' && daVistaChamados(ultima.search)) {
+    return 'chamados';
   }
   return VISTA_DA_ROTA[ultima.routeId] ?? null;
 }
@@ -107,42 +129,120 @@ export function MolduraDoChat() {
     usaOChat: pode('chat.usar'),
   });
   const atual = useRouterState({ select: vistaDaTela });
+  // O chamado que a conta acaba de abrir sai do alto quando a lista do Chat sai da tela: ela volta
+  // na ordem de sempre (spec modulo-chat, "Lista do Chat").
+  const { marcar } = useChamadoNovo();
+  const vistaDeAntes = useRef(atual);
+  useEffect(() => {
+    if (vistaDeAntes.current === 'chat' && atual !== 'chat') marcar(null);
+    vistaDeAntes.current = atual;
+  }, [atual, marcar]);
   // A vista Chamados só existe com o módulo Chamados ligado.
   const vistas = VISTAS.filter(
     (vista) => vista.id !== 'chamados' || !desligados.includes('chamados'),
   );
+  let conteudo: ReactNode;
+  if (motivo !== null) {
+    conteudo = (
+      <div className={estilos.motivo}>
+        <SemOChat motivo={motivo} />
+      </div>
+    );
+  } else if (atual === null) {
+    // A página não encontrada fica sozinha, sem a lista de nenhuma vista.
+    conteudo = <Outlet />;
+  } else {
+    conteudo = (
+      <>
+        <ListaDaVista vista={atual} />
+        <div className={estilos.tela}>
+          <Outlet />
+        </div>
+      </>
+    );
+  }
   return (
     <div className={estilos.app}>
       <nav aria-label="Vistas do chat" className={estilos.trilha}>
-        {motivo === null && (
-          <ul className={estilos.vistas}>
-            {vistas.map((vista) => (
-              <li key={vista.id}>
-                <LinkDoChat
-                  para={vista.endereco}
-                  aria-current={vista.id === atual ? 'page' : undefined}
-                  className={estilos.vista}
-                >
-                  <Icone icone={vista.icone} tamanho={20} />
-                  {vista.nome}
-                </LinkDoChat>
-              </li>
-            ))}
-          </ul>
-        )}
+        {motivo === null && <VistasDaTrilha vistas={vistas} atual={atual} />}
         {sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} />}
       </nav>
-      <main className={estilos.conteudo}>
-        {motivo === null ? (
-          <Outlet />
-        ) : (
-          <div className={estilos.motivo}>
-            <SemOChat motivo={motivo} />
-          </div>
-        )}
-      </main>
+      <main className={estilos.conteudo}>{conteudo}</main>
       <RegiaoDeAvisos />
     </div>
+  );
+}
+
+/** O contador de uma vista da trilha e o que o leitor de tela ouve dele. */
+interface ContagemDaVista {
+  quantos: number;
+  tom: TomDoContador;
+  um: string;
+  varios: string;
+}
+
+/**
+ * As vistas da trilha, com os contadores: o total do chat no Chat, os chamados com resposta nova,
+ * no azul do chamado, em Chamados, e as notificações não lidas em Avisos.
+ */
+function VistasDaTrilha({
+  vistas,
+  atual,
+}: {
+  vistas: readonly VistaDaTrilha[];
+  atual: IdDaVista | null;
+}) {
+  const resumo = useResumoDoChat();
+  const { naoLidas: avisos } = useNotificacoes();
+  const contagens: Record<IdDaVista, ContagemDaVista | null> = {
+    chat: {
+      quantos: resumo.data?.naoLidas ?? 0,
+      tom: 'neutro',
+      um: 'não lida',
+      varios: 'não lidas',
+    },
+    equipes: null,
+    chamados: {
+      quantos: resumo.data?.chamadosComRespostaNova ?? 0,
+      tom: 'chamado',
+      um: 'com resposta nova',
+      varios: 'com resposta nova',
+    },
+    avisos: { quantos: avisos, tom: 'neutro', um: 'não lido', varios: 'não lidos' },
+  };
+  return (
+    <ul className={estilos.vistas}>
+      {vistas.map((vista) => {
+        const contagem = contagens[vista.id];
+        return (
+          <li key={vista.id}>
+            <LinkDoChat
+              para={vista.endereco}
+              aria-current={vista.id === atual ? 'page' : undefined}
+              aria-label={
+                contagem
+                  ? nomeParaOLeitor(
+                      vista.nome,
+                      contagemEmTexto(contagem.quantos, contagem.um, contagem.varios),
+                    )
+                  : undefined
+              }
+              className={estilos.vista}
+            >
+              <Icone icone={vista.icone} tamanho={20} />
+              {vista.nome}
+              {contagem && (
+                <Contador
+                  quantos={contagem.quantos}
+                  tom={contagem.tom}
+                  className={estilos.contadorDaVista}
+                />
+              )}
+            </LinkDoChat>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
