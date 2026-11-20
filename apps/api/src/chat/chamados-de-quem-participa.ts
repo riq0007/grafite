@@ -33,7 +33,6 @@ import {
   previsaoDaResposta,
   respostaNova,
   resumoDasRespostas,
-  resumoDosTempos,
   SITUACOES_DO_CHAMADO,
   secoesDoChat,
   situacaoNoChat,
@@ -46,12 +45,17 @@ import { z } from 'zod';
 import { arquivoNaoEncontrado } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
+import { CartaoDoAtivo, cartaoLido } from '../chamados/cartao.ts';
 import {
   type AnexoNaFicha,
   anexoNaFicha,
   ativosPorId,
   citadosPelasRespostas,
+  dadoDeTexto,
+  escolhasDasPerguntas,
   nomesDasPessoas,
+  resumoDaResolucao,
+  textoDoDia,
 } from '../chamados/ficha.ts';
 import { formularioDa } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
@@ -122,7 +126,7 @@ export const BuscaDosChamadosDeQuemParticipa = z.object({
 
 const TempoDesdeAAbertura = z.object({ em: z.string(), tempo: z.string() });
 
-const ResumoDosTemposLido = z
+export const ResumoDosTemposLido = z
   .object({
     abertoEm: z.string(),
     /** A primeira mensagem da TI para a pessoa; nula sem nenhuma, o "sem resposta". */
@@ -153,8 +157,8 @@ const ItemDaConversaDeQuemParticipa = z
       escolhida: z
         .object({ opcao: z.string(), por: z.string(), minha: z.boolean(), em: z.string() })
         .nullable(),
-      /** O retrato do ativo, como foi mandado. */
-      cartao: z.record(z.string(), z.unknown()).nullable(),
+      /** O retrato do ativo, como foi mandado; o que esta versão não lê vem nulo. */
+      cartao: CartaoDoAtivo.nullable(),
     }),
     z.object({
       especie: z.literal('evento'),
@@ -267,9 +271,6 @@ const deQuemParticipa = (conta: ContaQueLeAsMensagens): SQL | undefined =>
     eq(chamados.pessoaId, conta.pessoaId),
     and(eq(chamados.origem, 'chat'), eq(chamados.abertoPor, conta.id)),
   );
-
-const textoDoDia = ({ ano, mes, dia }: { ano: number; mes: number; dia: number }) =>
-  `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 
 /** O nome de cada conta e de cada pessoa, numa leitura de cada. */
 async function nomesDe(tx: Transacao, idsDasContas: Set<string>, idsDasPessoas: Set<string>) {
@@ -482,11 +483,6 @@ function anexosDosCamposQueAPessoaVe(
   return doCampo;
 }
 
-const dadoDeTexto = (dados: Record<string, unknown> | null, chave: string) => {
-  const valor = dados?.[chave];
-  return typeof valor === 'string' ? valor : null;
-};
-
 /**
  * A conversa do chamado para quem participa: sem as notas, sem os campos só da TI e os anexos dos
  * dois, sem os alertas do ativo, o prazo da resolução e os eventos que a pessoa não lê. As etapas
@@ -565,26 +561,18 @@ export async function conversaDeQuemParticipa(
   }
 
   // A escolha fica na própria pergunta: a primeira de cada uma vence (o índice único dela).
-  type Escolhida = NonNullable<
-    Extract<ItemDaConversaDeQuemParticipa, { especie: 'mensagem' }>['escolhida']
-  >;
-  const escolhidaDe = new Map<string, Escolhida>();
-  for (const linha of linhas) {
-    if (linha.evento !== 'escolheu') continue;
-    const mensagem = dadoDeTexto(linha.dados, 'mensagem')?.toLowerCase() ?? null;
-    const opcao = dadoDeTexto(linha.dados, 'opcao');
-    if (mensagem === null || opcao === null || escolhidaDe.has(mensagem)) continue;
-    escolhidaDe.set(mensagem, {
-      opcao,
-      por: nome.conta(linha.autorConta ?? ''),
-      minha: linha.autorConta === conta.id,
-      em: linha.criadaEm.toISOString(),
-    });
-  }
-  // A primeira resposta da TI: a primeira mensagem com a conta, também o "O que foi feito".
-  const primeiraResposta = linhas.find(
-    ({ especie, autorConta }) => especie === 'mensagem' && autorConta !== null,
-  );
+  const escolhas = escolhasDasPerguntas(linhas);
+  const escolhida = (mensagemId: string) => {
+    const escolha = escolhas.get(mensagemId.toLowerCase());
+    return escolha
+      ? {
+          opcao: escolha.opcao,
+          por: nome.conta(escolha.linha.autorConta ?? ''),
+          minha: escolha.linha.autorConta === conta.id,
+          em: escolha.linha.criadaEm.toISOString(),
+        }
+      : null;
+  };
 
   let origem: ConversaDoChamadoDeQuemParticipa['origem'] = null;
   const conversa: ItemDaConversaDeQuemParticipa[] = [];
@@ -616,8 +604,8 @@ export async function conversaDeQuemParticipa(
         texto: linha.texto ?? '',
         anexos: anexosDaLinha.get(linha.id) ?? [],
         opcoes: linha.opcoes,
-        escolhida: escolhidaDe.get(linha.id.toLowerCase()) ?? null,
-        cartao: linha.cartao,
+        escolhida: escolhida(linha.id),
+        cartao: cartaoLido(linha.cartao),
       });
       continue;
     }
@@ -642,24 +630,13 @@ export async function conversaDeQuemParticipa(
       conta.id,
     );
     if (frase === null) continue;
-    let resumo: z.infer<typeof ResumoDosTemposLido> | null = null;
-    if (evento === 'resolveu') {
-      const tempos = resumoDosTempos({
-        abertoEm: chamado.abertoEm,
-        primeiraRespostaEm: primeiraResposta?.criadaEm ?? null,
-        resolvidoEm: linha.criadaEm,
-        atendeu: autor?.nome ?? '',
-      });
-      resumo = {
-        abertoEm: tempos.abertoEm.toISOString(),
-        primeiraResposta: tempos.primeiraResposta && {
-          em: tempos.primeiraResposta.em.toISOString(),
-          tempo: tempos.primeiraResposta.tempo,
-        },
-        resolvido: { em: tempos.resolvido.em.toISOString(), tempo: tempos.resolvido.tempo },
-        atendeu: tempos.atendeu,
-      };
-    }
+    const resumo =
+      evento === 'resolveu'
+        ? resumoDaResolucao(chamado.abertoEm, linhas, {
+            criadaEm: linha.criadaEm,
+            atendeu: autor?.nome ?? '',
+          })
+        : null;
     conversa.push({ especie: 'evento', id: linha.id, em, evento, frase, resumo });
   }
 

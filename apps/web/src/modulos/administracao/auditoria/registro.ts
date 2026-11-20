@@ -181,6 +181,7 @@ const CAMPOS_DOS_CHAMADOS: Record<string, string> = {
   rotulo: 'Rótulo',
   texto: 'Texto',
   esperaAResposta: 'Espera a resposta',
+  opcoes: 'Opções da pergunta',
   tipos: 'Tipos',
   dias: 'Dias',
   inicio: 'Início',
@@ -227,7 +228,7 @@ const ORDEM_NOS_CHAMADOS: Readonly<Record<string, readonly string[]>> = {
     'soATiAbre',
     'duplicadoDe',
   ],
-  'resposta-pronta': ['rotulo', 'texto', 'esperaAResposta', 'tipos'],
+  'resposta-pronta': ['rotulo', 'texto', 'esperaAResposta', 'opcoes', 'tipos'],
   'horario-da-ti': ['dias', 'inicio', 'fim', 'fuso', 'cargaCheia'],
 };
 
@@ -323,6 +324,8 @@ function textoNosChamados(alvo: string, campo: string, valor: unknown): string |
       return typeof valor === 'string' ? (PEDIDOS_DO_TONER[valor] ?? null) : null;
     case 'tipos':
       return Array.isArray(valor) && valor.length === 0 ? 'Todos os tipos' : null;
+    case 'opcoes':
+      return Array.isArray(valor) && valor.length === 0 ? 'Sem pergunta' : null;
     case 'dias':
       return ehDias(valor) ? (diasNaFrase(valor) ?? '—') : null;
     case 'inicio':

@@ -28169,6 +28169,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/cartao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava */
+        get: {
+            parameters: {
+                query: {
+                    patrimonio: string;
+                };
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartaoDoAtivo"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/{numero}/assumir": {
         parameters: {
             query?: never;
@@ -28562,7 +28647,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Enviar uma mensagem à pessoa do chamado, com os anexos */
+        /** Enviar uma mensagem à pessoa do chamado, com os anexos, as opções e o cartão */
         post: {
             parameters: {
                 query?: never;
@@ -28754,7 +28839,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Gravar uma nota interna no chamado, com os anexos */
+        /** Gravar uma nota interna no chamado, com os anexos e o cartão */
         post: {
             parameters: {
                 query?: never;
@@ -28766,7 +28851,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["PedidoDaConversaDoChamadoInput"];
+                    "application/json": components["schemas"]["PedidoDaNotaDoChamadoInput"];
                 };
             };
             responses: {
@@ -40074,6 +40159,35 @@ export interface components {
                 })[];
             }[];
         };
+        CartaoDoAtivoInput: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+        };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
         TipoDeChamadoInput: {
             /** Format: uuid */
             id: string;
@@ -40129,6 +40243,169 @@ export interface components {
             icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamadoInput"];
+        };
+        AnexoEnviadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        AnexoDoChamadoNoChatInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ChamadoDeQuemParticipaInput: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            resolvidoEm: string | null;
+            atende: string | null;
+            respostaNova: number;
+            ultimaMensagem: {
+                autor: string;
+                minha: boolean;
+                comeco: string;
+                em: string;
+            } | null;
+        };
+        ChamadosDeQuemParticipaInput: {
+            abertos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
+            resolvidos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
+            seguintes: boolean;
+        };
+        ResumoDosTemposNoChatInput: {
+            abertoEm: string;
+            primeiraResposta: {
+                em: string;
+                tempo: string;
+            } | null;
+            resolvido: {
+                em: string;
+                tempo: string;
+            };
+            atendeu: string;
+        };
+        ItemDaConversaDeQuemParticipaInput: {
+            /** @constant */
+            especie: "mensagem";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            autor: {
+                nome: string;
+                daTi: boolean;
+                minha: boolean;
+            };
+            texto: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+            opcoes: string[] | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
+            cartao: components["schemas"]["CartaoDoAtivoInput"] | null;
+        } | {
+            /** @constant */
+            especie: "evento";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            evento: string;
+            frase: string;
+            resumo: components["schemas"]["ResumoDosTemposNoChatInput"] | null;
+        };
+        ConversaDoChamadoDeQuemParticipaInput: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            atende: {
+                nome: string;
+                desde: string;
+            } | null;
+            etapas: {
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                agora: boolean;
+                /** @enum {string} */
+                estado: "chegou" | "pulada" | "ainda-nao";
+                em: string | null;
+            }[];
+            previsao: string | null;
+            reabrirAte: string | null;
+            ativo: {
+                nome: string;
+                patrimonio: string | null;
+            } | null;
+            resumo: string;
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            origem: {
+                autor: string;
+                texto: string;
+                em: string;
+                anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+            } | null;
+            conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
+            respostaNova: {
+                quantas: number;
+                desde: string | null;
+            };
+            avaliacao: {
+                /** @enum {string} */
+                nivel: "ruim" | "regular" | "bom" | "otimo";
+                minha: boolean;
+            } | null;
+        };
+        ResumoDoChamadoNoChatInput: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abrir: ("chat" | "chamados") | null;
+            detalhes: {
+                ultimas: {
+                    /** @enum {string} */
+                    especie: "mensagem" | "nota";
+                    texto: string;
+                    autor: string;
+                    em: string;
+                }[];
+                ativo: {
+                    nome: string;
+                    patrimonio: string | null;
+                } | null;
+                abertoEm: string;
+            } | null;
         };
         LocalDaOrdemInput: {
             /** Format: uuid */
@@ -40693,6 +40970,29 @@ export interface components {
                 } | null;
             }[];
         };
+        CartaoDoAtivoNaFichaInput: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+            abrir: boolean;
+        };
         CompativelNoResumoDoAtivoInput: {
             /** Format: uuid */
             id: string;
@@ -40732,8 +41032,34 @@ export interface components {
             versao: number;
             /** @enum {string} */
             origem: "ti" | "chat";
+            origemNoChat: {
+                conversa: {
+                    /** @enum {string} */
+                    tipo: "direta" | "equipe" | "canal";
+                    nome: string;
+                };
+                autor: string;
+                texto: string;
+                /** Format: date-time */
+                em: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                abrir: {
+                    /** Format: uuid */
+                    conversa: string;
+                    /** Format: uuid */
+                    mensagem: string;
+                } | null;
+            } | null;
             /** Format: date-time */
             abertoEm: string;
+            fechado: boolean;
+            reabrirAte: string | null;
             tipo: {
                 /** Format: uuid */
                 id: string;
@@ -40751,6 +41077,7 @@ export interface components {
                     email: string | null;
                     telefone: string | null;
                 } | null;
+                usaOChat: boolean;
             };
             responsavel: {
                 /** Format: uuid */
@@ -40873,6 +41200,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFichaInput"] | null;
                 /** @constant */
                 especie: "mensagem";
             } | {
@@ -40895,6 +41230,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFichaInput"] | null;
                 /** @constant */
                 especie: "nota";
             } | {
@@ -40912,7 +41255,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -40947,6 +41290,12 @@ export interface components {
                     como: "juntou" | "pediu" | "gerou";
                 } | null;
                 motivo: string | null;
+                avaliacao: {
+                    /** @enum {string} */
+                    nivel: "ruim" | "regular" | "bom" | "otimo";
+                    comentario: string | null;
+                } | null;
+                resumo: components["schemas"]["ResumoDosTemposNoChatInput"] | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -40964,6 +41313,7 @@ export interface components {
                 rotulo: string;
                 texto: string;
                 esperaAResposta: boolean;
+                opcoes: string[];
             }[];
         };
         PedidoDaAcaoDoChamadoInput: {
@@ -40982,10 +41332,18 @@ export interface components {
             feito: string;
             versao?: number;
         };
+        PedidoDaNotaDoChamadoInput: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+            cartao?: string | null;
+        };
         PedidoDaConversaDoChamadoInput: {
             /** @default  */
             texto: string;
             anexos?: string[];
+            cartao?: string | null;
+            opcoes?: string[];
         };
         PedidoDaTrocaDoAtivoDoChamadoInput: {
             ativo: string | null;
@@ -41068,19 +41426,13 @@ export interface components {
                 nome: string;
             } | null;
         };
-        AnexoEnviadoInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         RespostaProntaInput: {
             /** Format: uuid */
             id: string;
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            opcoes: string[];
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -41094,6 +41446,8 @@ export interface components {
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            /** @default [] */
+            opcoes: string[];
             tipos: string[];
         };
         ContasQueAtendemOsChamadosInput: {
@@ -41147,13 +41501,6 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamadoInput"];
             pedeOAtivo: boolean;
             abertos: number;
-        };
-        ContaDoChatInput: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
         };
         ConversaNaListaInput: {
             /** Format: uuid */
@@ -41265,164 +41612,6 @@ export interface components {
         };
         ChamadoAbertoPeloChatInput: {
             numero: number;
-        };
-        AnexoDoChamadoNoChatInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
-        ChamadoDeQuemParticipaInput: {
-            numero: number;
-            titulo: string;
-            tipo: {
-                nome: string;
-                /** @enum {string} */
-                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            };
-            /** @enum {string} */
-            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-            fechado: boolean;
-            situacaoEmTexto: string;
-            abertoEm: string;
-            resolvidoEm: string | null;
-            atende: string | null;
-            respostaNova: number;
-            ultimaMensagem: {
-                autor: string;
-                minha: boolean;
-                comeco: string;
-                em: string;
-            } | null;
-        };
-        ChamadosDeQuemParticipaInput: {
-            abertos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
-            resolvidos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
-            seguintes: boolean;
-        };
-        ResumoDosTemposNoChatInput: {
-            abertoEm: string;
-            primeiraResposta: {
-                em: string;
-                tempo: string;
-            } | null;
-            resolvido: {
-                em: string;
-                tempo: string;
-            };
-            atendeu: string;
-        };
-        ItemDaConversaDeQuemParticipaInput: {
-            /** @constant */
-            especie: "mensagem";
-            /** Format: uuid */
-            id: string;
-            em: string;
-            autor: {
-                nome: string;
-                daTi: boolean;
-                minha: boolean;
-            };
-            texto: string;
-            anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
-            opcoes: string[] | null;
-            escolhida: {
-                opcao: string;
-                por: string;
-                minha: boolean;
-                em: string;
-            } | null;
-            cartao: {
-                [key: string]: unknown;
-            } | null;
-        } | {
-            /** @constant */
-            especie: "evento";
-            /** Format: uuid */
-            id: string;
-            em: string;
-            evento: string;
-            frase: string;
-            resumo: components["schemas"]["ResumoDosTemposNoChatInput"] | null;
-        };
-        ConversaDoChamadoDeQuemParticipaInput: {
-            numero: number;
-            titulo: string;
-            tipo: {
-                nome: string;
-                /** @enum {string} */
-                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            };
-            /** @enum {string} */
-            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-            fechado: boolean;
-            situacaoEmTexto: string;
-            abertoEm: string;
-            atende: {
-                nome: string;
-                desde: string;
-            } | null;
-            etapas: {
-                /** @enum {string} */
-                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-                agora: boolean;
-                /** @enum {string} */
-                estado: "chegou" | "pulada" | "ainda-nao";
-                em: string | null;
-            }[];
-            previsao: string | null;
-            reabrirAte: string | null;
-            ativo: {
-                nome: string;
-                patrimonio: string | null;
-            } | null;
-            resumo: string;
-            anexosDosCampos: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                tipo: string;
-                bytes: number;
-                campo: string;
-            }[];
-            origem: {
-                autor: string;
-                texto: string;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
-            } | null;
-            conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
-            respostaNova: {
-                quantas: number;
-                desde: string | null;
-            };
-            avaliacao: {
-                /** @enum {string} */
-                nivel: "ruim" | "regular" | "bom" | "otimo";
-                minha: boolean;
-            } | null;
-        };
-        ResumoDoChamadoNoChatInput: {
-            numero: number;
-            titulo: string;
-            situacao: string;
-            atende: string | null;
-            abrir: ("chat" | "chamados") | null;
-            detalhes: {
-                ultimas: {
-                    /** @enum {string} */
-                    especie: "mensagem" | "nota";
-                    texto: string;
-                    autor: string;
-                    em: string;
-                }[];
-                ativo: {
-                    nome: string;
-                    patrimonio: string | null;
-                } | null;
-                abertoEm: string;
-            } | null;
         };
         PedidoDaMensagemDeQuemParticipaInput: {
             /** @default  */
@@ -45842,6 +46031,35 @@ export interface components {
                 })[];
             }[];
         };
+        CartaoDoAtivo: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+        };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
         TipoDeChamado: {
             /** Format: uuid */
             id: string;
@@ -45897,6 +46115,169 @@ export interface components {
             icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamado"];
+        };
+        AnexoEnviado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        AnexoDoChamadoNoChat: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ChamadoDeQuemParticipa: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            resolvidoEm: string | null;
+            atende: string | null;
+            respostaNova: number;
+            ultimaMensagem: {
+                autor: string;
+                minha: boolean;
+                comeco: string;
+                em: string;
+            } | null;
+        };
+        ChamadosDeQuemParticipa: {
+            abertos: components["schemas"]["ChamadoDeQuemParticipa"][];
+            resolvidos: components["schemas"]["ChamadoDeQuemParticipa"][];
+            seguintes: boolean;
+        };
+        ResumoDosTemposNoChat: {
+            abertoEm: string;
+            primeiraResposta: {
+                em: string;
+                tempo: string;
+            } | null;
+            resolvido: {
+                em: string;
+                tempo: string;
+            };
+            atendeu: string;
+        };
+        ItemDaConversaDeQuemParticipa: {
+            /** @constant */
+            especie: "mensagem";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            autor: {
+                nome: string;
+                daTi: boolean;
+                minha: boolean;
+            };
+            texto: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+            opcoes: string[] | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
+            cartao: components["schemas"]["CartaoDoAtivo"] | null;
+        } | {
+            /** @constant */
+            especie: "evento";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            evento: string;
+            frase: string;
+            resumo: components["schemas"]["ResumoDosTemposNoChat"] | null;
+        };
+        ConversaDoChamadoDeQuemParticipa: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            atende: {
+                nome: string;
+                desde: string;
+            } | null;
+            etapas: {
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                agora: boolean;
+                /** @enum {string} */
+                estado: "chegou" | "pulada" | "ainda-nao";
+                em: string | null;
+            }[];
+            previsao: string | null;
+            reabrirAte: string | null;
+            ativo: {
+                nome: string;
+                patrimonio: string | null;
+            } | null;
+            resumo: string;
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            origem: {
+                autor: string;
+                texto: string;
+                em: string;
+                anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+            } | null;
+            conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
+            respostaNova: {
+                quantas: number;
+                desde: string | null;
+            };
+            avaliacao: {
+                /** @enum {string} */
+                nivel: "ruim" | "regular" | "bom" | "otimo";
+                minha: boolean;
+            } | null;
+        };
+        ResumoDoChamadoNoChat: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abrir: ("chat" | "chamados") | null;
+            detalhes: {
+                ultimas: {
+                    /** @enum {string} */
+                    especie: "mensagem" | "nota";
+                    texto: string;
+                    autor: string;
+                    em: string;
+                }[];
+                ativo: {
+                    nome: string;
+                    patrimonio: string | null;
+                } | null;
+                abertoEm: string;
+            } | null;
         };
         LocalDaOrdem: {
             /** Format: uuid */
@@ -46461,6 +46842,29 @@ export interface components {
                 } | null;
             }[];
         };
+        CartaoDoAtivoNaFicha: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+            abrir: boolean;
+        };
         CompativelNoResumoDoAtivo: {
             /** Format: uuid */
             id: string;
@@ -46500,8 +46904,34 @@ export interface components {
             versao: number;
             /** @enum {string} */
             origem: "ti" | "chat";
+            origemNoChat: {
+                conversa: {
+                    /** @enum {string} */
+                    tipo: "direta" | "equipe" | "canal";
+                    nome: string;
+                };
+                autor: string;
+                texto: string;
+                /** Format: date-time */
+                em: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                abrir: {
+                    /** Format: uuid */
+                    conversa: string;
+                    /** Format: uuid */
+                    mensagem: string;
+                } | null;
+            } | null;
             /** Format: date-time */
             abertoEm: string;
+            fechado: boolean;
+            reabrirAte: string | null;
             tipo: {
                 /** Format: uuid */
                 id: string;
@@ -46519,6 +46949,7 @@ export interface components {
                     email: string | null;
                     telefone: string | null;
                 } | null;
+                usaOChat: boolean;
             };
             responsavel: {
                 /** Format: uuid */
@@ -46641,6 +47072,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFicha"] | null;
                 /** @constant */
                 especie: "mensagem";
             } | {
@@ -46663,6 +47102,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFicha"] | null;
                 /** @constant */
                 especie: "nota";
             } | {
@@ -46680,7 +47127,7 @@ export interface components {
                     nome: string;
                 };
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -46715,6 +47162,12 @@ export interface components {
                     como: "juntou" | "pediu" | "gerou";
                 } | null;
                 motivo: string | null;
+                avaliacao: {
+                    /** @enum {string} */
+                    nivel: "ruim" | "regular" | "bom" | "otimo";
+                    comentario: string | null;
+                } | null;
+                resumo: components["schemas"]["ResumoDosTemposNoChat"] | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -46732,6 +47185,7 @@ export interface components {
                 rotulo: string;
                 texto: string;
                 esperaAResposta: boolean;
+                opcoes: string[];
             }[];
         };
         PedidoDaAcaoDoChamado: {
@@ -46750,10 +47204,18 @@ export interface components {
             feito: string;
             versao?: number;
         };
+        PedidoDaNotaDoChamado: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+            cartao?: string | null;
+        };
         PedidoDaConversaDoChamado: {
             /** @default  */
             texto: string;
             anexos?: string[];
+            cartao?: string | null;
+            opcoes?: string[];
         };
         PedidoDaTrocaDoAtivoDoChamado: {
             ativo: string | null;
@@ -46836,19 +47298,13 @@ export interface components {
                 nome: string;
             } | null;
         };
-        AnexoEnviado: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         RespostaPronta: {
             /** Format: uuid */
             id: string;
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            opcoes: string[];
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -46862,6 +47318,8 @@ export interface components {
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            /** @default [] */
+            opcoes: string[];
             tipos: string[];
         };
         ContasQueAtendemOsChamados: {
@@ -46915,13 +47373,6 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamado"];
             pedeOAtivo: boolean;
             abertos: number;
-        };
-        ContaDoChat: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
         };
         ConversaNaLista: {
             /** Format: uuid */
@@ -47033,164 +47484,6 @@ export interface components {
         };
         ChamadoAbertoPeloChat: {
             numero: number;
-        };
-        AnexoDoChamadoNoChat: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
-        ChamadoDeQuemParticipa: {
-            numero: number;
-            titulo: string;
-            tipo: {
-                nome: string;
-                /** @enum {string} */
-                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            };
-            /** @enum {string} */
-            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-            fechado: boolean;
-            situacaoEmTexto: string;
-            abertoEm: string;
-            resolvidoEm: string | null;
-            atende: string | null;
-            respostaNova: number;
-            ultimaMensagem: {
-                autor: string;
-                minha: boolean;
-                comeco: string;
-                em: string;
-            } | null;
-        };
-        ChamadosDeQuemParticipa: {
-            abertos: components["schemas"]["ChamadoDeQuemParticipa"][];
-            resolvidos: components["schemas"]["ChamadoDeQuemParticipa"][];
-            seguintes: boolean;
-        };
-        ResumoDosTemposNoChat: {
-            abertoEm: string;
-            primeiraResposta: {
-                em: string;
-                tempo: string;
-            } | null;
-            resolvido: {
-                em: string;
-                tempo: string;
-            };
-            atendeu: string;
-        };
-        ItemDaConversaDeQuemParticipa: {
-            /** @constant */
-            especie: "mensagem";
-            /** Format: uuid */
-            id: string;
-            em: string;
-            autor: {
-                nome: string;
-                daTi: boolean;
-                minha: boolean;
-            };
-            texto: string;
-            anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
-            opcoes: string[] | null;
-            escolhida: {
-                opcao: string;
-                por: string;
-                minha: boolean;
-                em: string;
-            } | null;
-            cartao: {
-                [key: string]: unknown;
-            } | null;
-        } | {
-            /** @constant */
-            especie: "evento";
-            /** Format: uuid */
-            id: string;
-            em: string;
-            evento: string;
-            frase: string;
-            resumo: components["schemas"]["ResumoDosTemposNoChat"] | null;
-        };
-        ConversaDoChamadoDeQuemParticipa: {
-            numero: number;
-            titulo: string;
-            tipo: {
-                nome: string;
-                /** @enum {string} */
-                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
-            };
-            /** @enum {string} */
-            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-            fechado: boolean;
-            situacaoEmTexto: string;
-            abertoEm: string;
-            atende: {
-                nome: string;
-                desde: string;
-            } | null;
-            etapas: {
-                /** @enum {string} */
-                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
-                agora: boolean;
-                /** @enum {string} */
-                estado: "chegou" | "pulada" | "ainda-nao";
-                em: string | null;
-            }[];
-            previsao: string | null;
-            reabrirAte: string | null;
-            ativo: {
-                nome: string;
-                patrimonio: string | null;
-            } | null;
-            resumo: string;
-            anexosDosCampos: {
-                /** Format: uuid */
-                id: string;
-                nome: string;
-                tipo: string;
-                bytes: number;
-                campo: string;
-            }[];
-            origem: {
-                autor: string;
-                texto: string;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
-            } | null;
-            conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
-            respostaNova: {
-                quantas: number;
-                desde: string | null;
-            };
-            avaliacao: {
-                /** @enum {string} */
-                nivel: "ruim" | "regular" | "bom" | "otimo";
-                minha: boolean;
-            } | null;
-        };
-        ResumoDoChamadoNoChat: {
-            numero: number;
-            titulo: string;
-            situacao: string;
-            atende: string | null;
-            abrir: ("chat" | "chamados") | null;
-            detalhes: {
-                ultimas: {
-                    /** @enum {string} */
-                    especie: "mensagem" | "nota";
-                    texto: string;
-                    autor: string;
-                    em: string;
-                }[];
-                ativo: {
-                    nome: string;
-                    patrimonio: string | null;
-                } | null;
-                abertoEm: string;
-            } | null;
         };
         PedidoDaMensagemDeQuemParticipa: {
             /** @default  */

@@ -11,11 +11,12 @@ export type RespostaPronta = components['schemas']['RespostaPronta'];
 /** A resposta como a gaveta a escreve e a gravação a pede, com os tipos pelo id. */
 export type EdicaoDaResposta = components['schemas']['PedidoDaRespostaPronta'];
 
-/** A resposta nova: vazia, sem esperar a resposta e em todos os tipos. */
+/** A resposta nova: vazia, sem esperar a resposta, sem pergunta e em todos os tipos. */
 export const RESPOSTA_NOVA: EdicaoDaResposta = {
   rotulo: '',
   texto: '',
   esperaAResposta: false,
+  opcoes: [],
   tipos: [],
 };
 
@@ -47,11 +48,12 @@ export const limiteDasRespostas = (quantas: number): string | null =>
 
 /** O que a gaveta mostra: a resposta gravada, com os tipos pelo id, ou a nova, vazia. */
 export function edicaoDaResposta(resposta: RespostaPronta | null): EdicaoDaResposta {
-  if (!resposta) return { ...RESPOSTA_NOVA, tipos: [] };
+  if (!resposta) return { ...RESPOSTA_NOVA, opcoes: [], tipos: [] };
   return {
     rotulo: resposta.rotulo,
     texto: resposta.texto,
     esperaAResposta: resposta.esperaAResposta,
+    opcoes: resposta.opcoes,
     tipos: resposta.tipos.map(({ id }) => id),
   };
 }
@@ -69,6 +71,8 @@ export function mudouAResposta(edicao: EdicaoDaResposta, resposta: RespostaPront
     edicao.rotulo !== gravada.rotulo ||
     edicao.texto !== gravada.texto ||
     edicao.esperaAResposta !== gravada.esperaAResposta ||
+    edicao.opcoes.length !== gravada.opcoes.length ||
+    edicao.opcoes.some((opcao, i) => opcao !== gravada.opcoes[i]) ||
     !mesmosTipos(edicao.tipos, gravada.tipos)
   );
 }

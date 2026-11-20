@@ -242,6 +242,16 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - quem não participa recebe "Chamado não encontrado.", como na leitura, também quem vê o chamado com `chamados.ver`, que age no módulo Chamados;
   - a escolha numa mensagem que não é do chamado, também a nota, que a pessoa não lê, é a pergunta sem opções: "Escolha uma opção da pergunta.", no campo `opcao`, sem dizer se a mensagem existe;
   - a marcação como vista avisa só as telas da conta (`chamados.mudaram` com a conta), porque muda só a leitura dela; as outras ações avisam quem vê o chamado, e a 3.12 soma as contas de quem participa.
+- **O lado da TI,** nos casos que a spec não escreve:
+  - a prévia do cartão (`GET /chamados/:numero/cartao?patrimonio=`) acha o ativo só pelo patrimônio, como o "/ativo" o escreve; o ativo que não existe, o de um local que quem escreve não vê com `ativos.ver` e o módulo Ativos desligado respondem "O ativo não foi encontrado.", na prévia e no envio, no campo `cartao`;
+  - o retrato (`chamados/cartao.ts`) leva o ícone e o tipo, o nome, o modelo, o patrimônio, o IP (o campo da disponibilidade ou, sem ele, o do SNMP, escondido se é restrito e quem escreve não vê os restritos), a disponibilidade só com uma leitura, o suprimento medido mais baixo, com o "crítico" do alerta só a quem vê os alertas, e a hora do retrato, que é a hora do envio. O que esta versão não lê no gravado sai nulo, e não como erro;
+  - a nota da TI não leva as opções nem o cartão; as opções e o cartão são conferidos depois da decisão do domínio, com as recusas juntas no 400, e as opções vazias gravam nulo;
+  - a origem no chat tem o nome de agora da conversa; na direta, "Paulo Nunes com Ana Souza", quem escreveu a mensagem primeiro. O "Abrir a conversa" vai só a quem usa o chat e participa da conversa agora, com o módulo Chat ligado, porque a TI que não participa não abriria a conversa;
+  - a ficha diz se a conta da pessoa usa o chat (`pessoa.usaOChat`), pela mesma regra de quem participa: a conta da pessoa que usa o chat, com o módulo ligado;
+  - o `escolheu` não é um item da conversa da TI: vai na própria pergunta (`escolhida`), como no chat. O `avaliou` é um item, com o nível e o comentário, e o `resolveu` leva o resumo dos tempos daquela resolução;
+  - o cartão na ficha é o gravado, com o "Abrir a ficha" (`abrir`) a quem vê o ativo agora, no local de agora;
+  - as opções das respostas prontas entram na auditoria, como "Opções da pergunta", e o vazio é "Sem pergunta";
+  - as notificações das ações da TI a quem participa (a mensagem, a pergunta, a espera e o resolvido) só saem com o módulo Chat ligado, porque sem ele quem participa não lê o chamado no chat.
 
 ## Risks / Trade-offs
 

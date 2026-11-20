@@ -135,6 +135,9 @@ export function linhaDoEvento(
       return evento.motivo
         ? linha(fraseDaSolicitacaoNaoGerada(evento.motivo).replace(/\.$/u, ''), hora)
         : null;
+    case 'avaliou':
+      // A avaliação de quem participa entra na conversa da TI na tarefa 4.13.
+      return null;
   }
 }
 

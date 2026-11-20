@@ -315,6 +315,8 @@ function evento(
     os: null,
     solicitacao: null,
     motivo: null,
+    avaliacao: null,
+    resumo: null,
     ...dados,
   };
 }
@@ -326,6 +328,9 @@ const mensagem = (em: string, autor: Evento['autor']): Item => ({
   autor,
   texto: 'Pode testar agora?',
   anexos: [],
+  opcoes: null,
+  escolhida: null,
+  cartao: null,
 });
 
 // Hoje é 18/11, ao meio-dia de São Paulo.

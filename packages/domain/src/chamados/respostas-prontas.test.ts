@@ -44,8 +44,21 @@ describe('conferirRespostaPronta', () => {
         rotuloNormalizado: 'pedir o print do erro',
         texto: 'Oi, {nome}!\n\nPode mandar?',
         esperaAResposta: true,
+        opcoes: [],
         tipos: [],
       },
+    });
+  });
+
+  it('guarda as opções sem os espaços das pontas, e as recusa pela pergunta, no campo delas', () => {
+    expect(conferir({ opcoes: [' Pode ser ', 'Daqui a meia hora'] })).toMatchObject({
+      ok: true,
+      resposta: { opcoes: ['Pode ser', 'Daqui a meia hora'] },
+    });
+    expect(errosDe({ opcoes: ['Sim'] })).toEqual({ opcoes: 'Use de 2 a 3 opções.' });
+    expect(errosDe({ opcoes: ['Sim', 'SIM'], rotulo: '' })).toEqual({
+      rotulo: 'Escreva o rótulo.',
+      opcoes: 'As opções precisam ser diferentes.',
     });
   });
 

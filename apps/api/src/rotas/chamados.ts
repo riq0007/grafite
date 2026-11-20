@@ -16,6 +16,7 @@ import {
   GRUPOS_DO_PRAZO,
   MENSAGENS_DO_TIPO_DE_CHAMADO,
   MODOS_DO_PRAZO,
+  NIVEIS_DA_AVALIACAO,
   nomeDoFuso,
   ORIGENS_DO_CHAMADO,
   RECUSA_DO_FORMULARIO,
@@ -36,6 +37,11 @@ import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../c
 import { NumeroDoChamado } from '../chamados/alcance.ts';
 import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
 import { buscarChamados } from '../chamados/busca.ts';
+import {
+  ATIVO_DO_CARTAO_NAO_ENCONTRADO,
+  CartaoDoAtivo,
+  previaDoCartao,
+} from '../chamados/cartao.ts';
 import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edicao.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
@@ -46,6 +52,7 @@ import { quadroDosChamados } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import { lerTiposDaAbertura, TipoDaAbertura, ValorDoPrazo } from '../chamados/tipos.ts';
 import { pedirToner } from '../chamados/toner.ts';
+import { ResumoDosTemposLido } from '../chat/chamados-de-quem-participa.ts';
 import { ConsumivelCompativel } from '../consumiveis/compativeis.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { OrdemDeServico } from '../ordens/esquemas.ts';
@@ -316,6 +323,14 @@ const EscritoNaConversa = z.object({
   autor: AutorNaConversa,
   texto: z.string(),
   anexos: z.array(AnexoDaFicha),
+  /** As opções da pergunta da TI, de 2 a 3; nulas na mensagem sem pergunta e na nota. */
+  opcoes: z.array(z.string()).nullable(),
+  /** A opção escolhida por quem participa, com quem a escolheu e quando; nula sem resposta. */
+  escolhida: z.object({ opcao: z.string(), por: z.string(), em: z.iso.datetime() }).nullable(),
+  /** O cartão do ativo, como foi mandado, com o "Abrir a ficha" a quem vê o ativo agora. */
+  cartao: CartaoDoAtivo.extend({ abrir: z.boolean() })
+    .meta({ id: 'CartaoDoAtivoNaFicha' })
+    .nullable(),
 });
 
 /**
@@ -356,6 +371,12 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
      * nome de agora da pessoa), que vem depois de "A solicitação não foi gerada: "; nulo nos outros.
      */
     motivo: z.string().nullable(),
+    /** No `avaliou` de quem participa, o nível e o comentário; nulo nos outros. */
+    avaliacao: z
+      .object({ nivel: z.enum(NIVEIS_DA_AVALIACAO), comentario: z.string().nullable() })
+      .nullable(),
+    /** No `resolveu`, o resumo dos tempos dessa resolução; nulo nos outros. */
+    resumo: ResumoDosTemposLido.nullable(),
   }),
   z.object({
     especie: z.literal('alerta'),
@@ -412,7 +433,26 @@ const FichaDoChamado = z
     /** A versão, que sobe nas ações que mudam a situação ou quem atende. */
     versao: z.int(),
     origem: z.enum(ORIGENS_DO_CHAMADO),
+    /**
+     * Na origem `chat`, a conversa de onde o chamado foi aberto, pelo nome de agora (na direta, "Paulo
+     * Nunes com Ana Souza", quem escreveu primeiro), e a mensagem citada, como ficou na abertura,
+     * com os anexos; o "Abrir a conversa", só a quem usa o chat e participa dela agora.
+     */
+    origemNoChat: z
+      .object({
+        conversa: z.object({ tipo: z.enum(['direta', 'equipe', 'canal']), nome: z.string() }),
+        autor: z.string(),
+        texto: z.string(),
+        em: z.iso.datetime(),
+        anexos: z.array(AnexoDaFicha),
+        abrir: z.object({ conversa: z.uuid(), mensagem: z.uuid() }).nullable(),
+      })
+      .nullable(),
     abertoEm: z.iso.datetime(),
+    /** O resolvido que não se reabre mais: o que a tarefa fechou e o vencido que ela não fechou. */
+    fechado: z.boolean(),
+    /** No resolvido, o último dia em que ele se reabre, como "2026-11-18", no fuso da TI. */
+    reabrirAte: z.string().nullable(),
     /** O tipo, com o `podeVirarOs`, para a tela mostrar o "Virar OS" só no tipo que vira OS. */
     tipo: z.object({
       id: z.uuid(),
@@ -432,6 +472,8 @@ const FichaDoChamado = z
       contatos: z
         .object({ email: z.string().nullable(), telefone: z.string().nullable() })
         .nullable(),
+      /** A conta da pessoa usa o chat, com o módulo ligado: a mensagem chega a ela. */
+      usaOChat: z.boolean(),
     }),
     /**
      * Quem atende, desde quando, e se não atende mais os chamados: a conta inativa ou fora de um dos
@@ -505,6 +547,8 @@ const FichaDoChamado = z
         rotulo: z.string(),
         texto: z.string(),
         esperaAResposta: z.boolean(),
+        /** As opções da pergunta, que o campo de escrever traz com o texto; nenhuma, sem pergunta. */
+        opcoes: z.array(z.string()),
       }),
     ),
   })
@@ -575,8 +619,30 @@ const PedidoDaConversa = z
         error: ANEXO_NAO_ENCONTRADO,
       })
       .optional(),
+    /**
+     * O cartão do ativo, pelo id, de um ativo que quem escreve vê; nulo ou ausente, sem cartão. O
+     * retrato é montado na hora de mandar.
+     */
+    cartao: z.uuid({ error: ATIVO_DO_CARTAO_NAO_ENCONTRADO }).nullish(),
   })
-  .meta({ id: 'PedidoDaConversaDoChamado' });
+  .meta({ id: 'PedidoDaNotaDoChamado' });
+
+const PedidoDaMensagemDoChamado = PedidoDaConversa.extend({
+  /**
+   * As opções da pergunta, de 2 a 3, cada uma de 1 a 40 caracteres e diferentes entre si; nenhuma, a
+   * mensagem sem pergunta. As recusas vêm no campo `opcoes`.
+   */
+  opcoes: z.array(z.string()).optional(),
+}).meta({ id: 'PedidoDaConversaDoChamado' });
+
+const BuscaDoCartao = z.object({
+  /** O patrimônio do ativo, sem contar os acentos, as maiúsculas e os espaços das pontas. */
+  patrimonio: z
+    .string({ error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
+    .trim()
+    .min(1, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
+    .max(200, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO }),
+});
 
 const PedidoDaTrocaDoAtivo = z
   .object({
@@ -868,6 +934,29 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
         fichaDoChamado(tx, requisicao.params.numero, {
           acesso: sessaoDa(requisicao).acesso,
+          contaId: sessaoDa(requisicao).contaId,
+          arvore: await lerArvore(tx),
+          agora: agora(),
+        }),
+      ),
+  );
+
+  app.get(
+    '/chamados/:numero/cartao',
+    {
+      config: { permissao: 'chamados.atender' },
+      schema: {
+        summary:
+          'A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava',
+        params: z.object({ numero: NumeroDoChamado }),
+        querystring: BuscaDoCartao,
+        response: { 200: CartaoDoAtivo, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
+        previaDoCartao(tx, requisicao.params.numero, requisicao.query.patrimonio, {
+          acesso: sessaoDa(requisicao).acesso,
           arvore: await lerArvore(tx),
           agora: agora(),
         }),
@@ -953,14 +1042,23 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
   // A conversa (tarefa 4.13): a mensagem para a pessoa, o "Enviar e esperar a resposta" e a nota
   // interna, com o texto e os anexos.
   const ROTAS_DA_CONVERSA = [
-    { acao: 'mensagem', summary: 'Enviar uma mensagem à pessoa do chamado, com os anexos' },
+    {
+      acao: 'mensagem',
+      summary: 'Enviar uma mensagem à pessoa do chamado, com os anexos, as opções e o cartão',
+      body: PedidoDaMensagemDoChamado,
+    },
     {
       acao: 'esperar',
       summary: 'Enviar a mensagem e esperar a resposta: o chamado fica aguardando a pessoa',
+      body: PedidoDaMensagemDoChamado,
     },
-    { acao: 'nota', summary: 'Gravar uma nota interna no chamado, com os anexos' },
+    {
+      acao: 'nota',
+      summary: 'Gravar uma nota interna no chamado, com os anexos e o cartão',
+      body: PedidoDaConversa,
+    },
   ] as const;
-  for (const { acao, summary } of ROTAS_DA_CONVERSA) {
+  for (const { acao, summary, body } of ROTAS_DA_CONVERSA) {
     app.post(
       `/chamados/:numero/${acao}`,
       {
@@ -968,7 +1066,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
         schema: {
           summary,
           params: DA_ACAO.params,
-          body: PedidoDaConversa,
+          body,
           response: DA_ACAO.response,
         },
       },
