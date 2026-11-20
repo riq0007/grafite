@@ -4,7 +4,7 @@
 // os anexos embaixo. Enter manda e Shift+Enter quebra a linha; o envio fica sem ação com a caixa
 // vazia. O "#" abre a lista dos chamados da conta, para citar. O que se escreve fica no rascunho da
 // conversa, e a recusa fica embaixo da caixa, com a frase dela.
-import { MAXIMO_DE_ANEXOS } from '@grafite/domain';
+import { conferirMensagem, MAXIMO_DE_ANEXOS } from '@grafite/domain';
 import {
   BarraDeProgresso,
   Botao,
@@ -110,12 +110,21 @@ export function CaixaDoChat<T>({
   }
 
   async function enviar() {
-    if (enviando || fila.length > 0 || vazia) return;
+    if (enviando || fila.length > 0 || (vazia && anexos.length === 0)) return;
+    // A regra da API, sem o pedido: só com os anexos, a mensagem pede o texto.
+    const conferida = conferirMensagem({ texto, anexos: anexos.length });
+    if (!conferida.ok) {
+      definirRecusa(conferida.erro);
+      caixa.current?.focus();
+      return;
+    }
     definirEnviando(true);
+    const foram = anexos.map(({ id }) => id);
+    const respondeA = respondida?.id ?? null;
     const resultado = await mandar({
       texto,
-      anexos: anexos.length > 0 ? anexos.map(({ id }) => id) : undefined,
-      respondeA: respondida?.id ?? null,
+      anexos: foram.length > 0 ? foram : undefined,
+      respondeA,
     });
     definirEnviando(false);
     if ('erro' in resultado) {
@@ -124,7 +133,12 @@ export function CaixaDoChat<T>({
       caixa.current?.focus();
       return;
     }
-    mudarRascunho(() => RASCUNHO_VAZIO);
+    // Sai o que foi na mensagem: o anexo que terminou de subir enquanto ela ia fica para a próxima.
+    mudarRascunho((antes) => ({
+      ...RASCUNHO_VAZIO,
+      respondida: antes.respondida?.id === respondeA ? null : antes.respondida,
+      anexos: antes.anexos.filter(({ id }) => !foram.includes(id)),
+    }));
     definirRecusa(null);
     limparRecusas();
     caixa.current?.focus();
@@ -242,7 +256,7 @@ export function CaixaDoChat<T>({
             icone={ArrowUp}
             rotulo="Enviar"
             className={estilos.enviar}
-            isDisabled={vazia || fila.length > 0}
+            isDisabled={(vazia && anexos.length === 0) || fila.length > 0}
             isPending={enviando}
             onPress={() => void enviar()}
           />
@@ -321,6 +335,9 @@ function useListaDoChamado({
   const chamados = useChamadosDoChat(citar);
   const [ativa, definirAtiva] = useState(0);
   const [dispensada, definirDispensada] = useState<number | null>(null);
+  // O "#" dispensado que sai do texto, como no envio ou ao apagar, solta a lista: o "#" que vier
+  // depois no mesmo lugar a abre de novo.
+  if (dispensada !== null && texto[dispensada] !== '#') definirDispensada(null);
   const citacao = citar && cursor !== null ? citacaoNoCursor(texto, cursor) : null;
   const daConta = chamados.data ? [...chamados.data.abertos, ...chamados.data.resolvidos] : [];
   const achados = citacao ? chamadosParaCitar(daConta, citacao.busca) : [];

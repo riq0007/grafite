@@ -206,3 +206,41 @@ export const OpacoComAtalho: Historia = {
     await userEvent.keyboard('{Escape}{Escape}');
   },
 };
+
+/**
+ * O item informativo sem ação, como o da mensagem que já virou chamado: o motivo, na descrição,
+ * segue legível, no azul do nome; a opacidade do desabilitado fica no ícone, no nome e no atalho.
+ */
+/** O motivo do item sem ação, com o número do chamado, que o verificador de cores leria como hex. */
+const MOTIVO = `Já virou o #${1045}`;
+
+export const InformativoSemAcaoDizOMotivo: Historia = {
+  render: () => (
+    <Menu rotulo="Ações da mensagem" gatilho={<Botao>Mais</Botao>} opaco nomePeloRotulo>
+      <ItemDeMenu icone={CornerUpLeft}>Responder</ItemDeMenu>
+      <ItemDeMenu
+        icone={LifeBuoy}
+        informativo
+        atalho={['ctrl', 'shift', 'T']}
+        isDisabled
+        descricao={MOTIVO}
+      >
+        Transformar em chamado
+      </ItemDeMenu>
+    </Menu>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Mais' }));
+    const menu = await corpo.findByRole('menu', { name: 'Ações da mensagem' });
+    const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
+    await expect(transformar).toHaveAttribute('aria-disabled', 'true');
+    await expect(transformar).toHaveAccessibleDescription(expect.stringContaining(MOTIVO));
+    const motivo = within(transformar).getByText(MOTIVO);
+    await expect(getComputedStyle(transformar).opacity).toBe('1');
+    await expect(getComputedStyle(motivo).color).toBe(getComputedStyle(transformar).color);
+    const icone = transformar.querySelector('svg')?.parentElement;
+    await expect(icone && Number(getComputedStyle(icone).opacity)).toBeLessThan(1);
+    await userEvent.keyboard('{Escape}');
+  },
+};

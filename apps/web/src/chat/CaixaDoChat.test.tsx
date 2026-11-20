@@ -200,6 +200,74 @@ describe('a caixa de escrever', () => {
     );
   });
 
+  it('só com o anexo, o envio diz que falta o texto, sem mandar, e com ele a mensagem vai', async () => {
+    const { servidor, pedidos } = servidorQueRecebe({
+      outros: {
+        'POST /api/chat/anexos': () =>
+          Response.json(
+            { id: 'a-1', nome: 'impressora.png', tipo: 'image/png', bytes: 2048 },
+            { status: 201 },
+          ),
+      },
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    const entrada = document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!entrada) throw new Error('A caixa não anexa.');
+    fireEvent.change(entrada, { target: { files: [new File(['x'], 'impressora.png')] } });
+    await screen.findByRole('button', { name: 'Tirar impressora.png' });
+    const enviar = screen.getByRole('button', { name: 'Enviar' });
+    expect(enviar.hasAttribute('disabled')).toBe(false);
+    fireEvent.keyDown(caixa, { key: 'Enter' });
+    expect((await screen.findByRole('alert')).textContent).toBe('Escreva a mensagem.');
+    expect(caixa.getAttribute('aria-invalid')).toBe('true');
+    expect(pedidos).toEqual([]);
+
+    escrever(caixa, 'Olha a folha');
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(enviar);
+    await waitFor(() =>
+      expect(pedidos).toEqual([{ texto: 'Olha a folha', anexos: ['a-1'], respondeA: null }]),
+    );
+  });
+
+  it('o anexo que termina de subir enquanto a mensagem vai fica na caixa para a próxima', async () => {
+    let responder: (resposta: Response) => void = () => {};
+    const { servidor } = servidorDaConversa({
+      mensagens: varias(1, 3),
+      outros: {
+        'POST /api/chat/anexos': (pedido) => {
+          const nome = new URL(pedido.url).searchParams.get('nome') ?? '';
+          return Response.json(
+            { id: `a-${nome}`, nome, tipo: 'image/png', bytes: 2048 },
+            { status: 201 },
+          );
+        },
+        [`POST ${CAMINHO}/mensagens`]: () =>
+          new Promise<Response>((resolver) => {
+            responder = resolver;
+          }),
+      },
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    const entrada = document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!entrada) throw new Error('A caixa não anexa.');
+    fireEvent.change(entrada, { target: { files: [new File(['x'], 'primeira.png')] } });
+    await screen.findByRole('button', { name: 'Tirar primeira.png' });
+    escrever(caixa, 'Olha a folha');
+    fireEvent.keyDown(caixa, { key: 'Enter' });
+    fireEvent.change(entrada, { target: { files: [new File(['x'], 'segunda.png')] } });
+    await screen.findByRole('button', { name: 'Tirar segunda.png' });
+    act(() =>
+      responder(Response.json(mensagem(4, { autor: ANA, texto: 'Olha a folha' }), { status: 201 })),
+    );
+    await waitFor(() => expect((caixa as HTMLTextAreaElement).value).toBe(''));
+    const anexos = screen.getByRole('list', { name: 'Anexos da mensagem' });
+    expect(within(anexos).queryByText('primeira.png')).toBeNull();
+    expect(within(anexos).getByText('segunda.png')).toBeTruthy();
+  });
+
   it('"Tirar" tira o anexo antes de mandar', async () => {
     const { servidor } = servidorQueRecebe({
       outros: {
@@ -264,6 +332,25 @@ describe('o "#" da caixa', () => {
     const lista = await screen.findByRole('listbox', { name: 'Chamados para citar' });
     fireEvent.click(within(lista).getByRole('option', { name: /Impressora manchando/ }));
     expect((caixa as HTMLTextAreaElement).value).toBe('veja #1045 ');
+  });
+
+  it('o Esc vale só para aquele "#": depois do envio, o "#" no mesmo lugar abre a lista', async () => {
+    const { servidor, pedidos } = servidorQueRecebe({ outros: CHAMADOS });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    escrever(caixa, '#tecl');
+    await screen.findByRole('listbox', { name: 'Chamados para citar' });
+    fireEvent.keyDown(caixa, { key: 'Escape' });
+    fireEvent.keyDown(caixa, { key: 'Enter' });
+    await waitFor(() => expect(pedidos).toEqual([{ texto: '#tecl', respondeA: null }]));
+    await waitFor(() => expect((caixa as HTMLTextAreaElement).value).toBe(''));
+    escrever(caixa, '#');
+    expect(await screen.findByRole('listbox', { name: 'Chamados para citar' })).toBeTruthy();
+
+    fireEvent.keyDown(caixa, { key: 'Escape' });
+    escrever(caixa, '');
+    escrever(caixa, '#');
+    expect(await screen.findByRole('listbox', { name: 'Chamados para citar' })).toBeTruthy();
   });
 
   it('sem o módulo Chamados, o "#" não abre lista nenhuma', async () => {

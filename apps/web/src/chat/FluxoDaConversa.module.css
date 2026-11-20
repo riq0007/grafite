@@ -106,8 +106,9 @@
   border-radius: var(--raio-menu);
 }
 
-/* No mouse, no foco e com um menu da barra aberto (m01): o fundo diz de qual mensagem é o menu. */
-.mensagem:is(:hover, :focus-within, :has(> .barra[data-presa])) {
+/* No mouse, no foco do teclado e com um menu da barra aberto (m01): o fundo diz de qual mensagem é
+   o menu. O clique que dá o foco à mensagem, como ao selecionar o texto, não a prende. */
+.mensagem:is(:hover, :focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) {
   background-color: var(--cor-hover);
 }
 
@@ -135,7 +136,7 @@
   pointer-events: none;
 }
 
-.mensagem:is(:hover, :focus-within) > .barra,
+.mensagem:is(:hover, :focus-visible, :has(:focus-visible)) > .barra,
 .barra[data-presa] {
   opacity: 1;
   pointer-events: auto;
@@ -200,7 +201,7 @@
   transition: opacity var(--dur-rapida) var(--curva-padrao);
 }
 
-.mensagem:is(:hover, :focus-within, :has(> .barra[data-presa])) .horaAoLado {
+.mensagem:is(:hover, :focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) .horaAoLado {
   opacity: 1;
 }
 

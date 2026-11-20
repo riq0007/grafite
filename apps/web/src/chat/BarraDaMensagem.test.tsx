@@ -327,6 +327,27 @@ describe('o resto do menu', () => {
     );
   });
 
+  it('"Responder" pelo "Mais" põe o foco na caixa depois de o menu fechar', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await comOMouse('Mensagem 2');
+    const caixa = screen.getByRole('textbox', {
+      name: 'Escrever uma mensagem em Equipe Financeiro',
+    });
+    // Com o menu aberto, o resto da página fica inerte, e o foco na caixa não pegaria.
+    const comOMenu: boolean[] = [];
+    const focar = caixa.focus.bind(caixa);
+    vi.spyOn(caixa, 'focus').mockImplementation((opcoes) => {
+      comOMenu.push(screen.queryByRole('menu') !== null);
+      focar(opcoes);
+    });
+    const menu = await abrirOMais(item);
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Responder' }));
+    await waitFor(() => expect(document.activeElement).toBe(caixa));
+    expect(comOMenu).toEqual([false]);
+    expect(screen.getByRole('button', { name: 'Tirar a mensagem respondida' })).toBeTruthy();
+  });
+
   it('no canal em que a conta só lê, a barra reage, sem o responder', async () => {
     const { servidor } = servidorDoMenu({
       cabecalho: {

@@ -87,13 +87,14 @@ export function BarraDaMensagem({
   const barra = useRef<HTMLDivElement>(null);
   const [abertos, definirAbertos] = useState(0);
   const [escrevendo, definirEscrevendo] = useState(false);
-  // A reação escrita abre depois de o menu fechar e devolver o foco ao botão dele: o popover aberto
-  // antes perderia o foco para essa volta.
-  const escreverNaVolta = useRef(false);
+  // A reação escrita e o responder do menu agem depois de o menu fechar e devolver o foco ao botão
+  // dele: o popover aberto antes perderia o foco para essa volta, e, com o menu aberto, o resto da
+  // página fica inerte, e o foco na caixa não pegaria.
+  const naVolta = useRef<(() => void) | null>(null);
   const voltou = () => {
-    if (!escreverNaVolta.current) return;
-    escreverNaVolta.current = false;
-    definirEscrevendo(true);
+    const agir = naVolta.current;
+    naVolta.current = null;
+    agir?.();
   };
   const prender = (aberto: boolean) => definirAbertos((antes) => antes + (aberto ? 1 : -1));
   const minhas = mensagem.reacoes.filter(({ minha }) => minha).map(({ texto }) => texto);
@@ -123,7 +124,7 @@ export function BarraDaMensagem({
       id="escrever"
       icone={PenLine}
       onAction={() => {
-        escreverNaVolta.current = true;
+        naVolta.current = () => definirEscrevendo(true);
       }}
     >
       Escrever a reação…
@@ -176,7 +177,13 @@ export function BarraDaMensagem({
         }
       >
         {responder && (
-          <ItemDeMenu id="responder" icone={CornerUpLeft} onAction={() => responder(mensagem)}>
+          <ItemDeMenu
+            id="responder"
+            icone={CornerUpLeft}
+            onAction={() => {
+              naVolta.current = () => responder(mensagem);
+            }}
+          >
             Responder
           </ItemDeMenu>
         )}

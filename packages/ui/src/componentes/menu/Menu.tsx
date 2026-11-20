@@ -149,7 +149,13 @@ export function ItemDeMenu({
           )}
           {/* Com a descrição ou o atalho, o nome do item é só o rótulo, e o resto o descreve. */}
           <span className={estilos.texto}>
-            {descricao || atalho ? <Text slot="label">{children}</Text> : children}
+            {descricao || atalho ? (
+              <Text slot="label" className={estilos.nome}>
+                {children}
+              </Text>
+            ) : (
+              children
+            )}
             {descricao && (
               <Text slot="description" className={estilos.descricao}>
                 {descricao}
