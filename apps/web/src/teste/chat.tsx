@@ -7,6 +7,7 @@ import { AppDoChat } from '../chat/AppDoChat.tsx';
 import { criarRoteadorDoChat } from '../chat/rotas.tsx';
 import type { CanalDeEventos } from '../eventos/canal.ts';
 import type { LojaDaSessao, ServidorDaSessao } from '../sessao/loja.ts';
+import { FUSO_DOS_MOCKUPS } from './chamados.ts';
 import { naOrganizacao, type ServidorDeTeste, sessaoAtiva } from './sessao.ts';
 
 let lojas: LojaDaSessao[] = [];
@@ -41,8 +42,18 @@ export const CHAT_VAZIO: ServidorDeTeste = {
   'GET /api/chat/chamados': () => Response.json({ abertos: [], resolvidos: [], seguintes: false }),
 };
 
-/** A sessão de quem usa o chat, com o servidor do chat vazio por baixo do que o teste preparar. */
+/**
+ * A sessão de quem usa o chat, com o servidor do chat vazio por baixo do que o teste preparar, no fuso
+ * dos mockups: as horas na tela não dependem do fuso da máquina que roda o teste.
+ */
 export const comOChat = (
   servidor: ServidorDeTeste = {},
   doServidor: Partial<ServidorDaSessao> = {},
-) => sessaoAtiva(naOrganizacao('chat.usar'), { ...CHAT_VAZIO, ...servidor }, {}, {}, doServidor);
+) =>
+  sessaoAtiva(
+    naOrganizacao('chat.usar'),
+    { ...CHAT_VAZIO, ...servidor },
+    { regiao: { fuso: FUSO_DOS_MOCKUPS } },
+    {},
+    doServidor,
+  );
