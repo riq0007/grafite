@@ -118,7 +118,7 @@ Cada tarefa da API regera o contrato e confere o `pnpm contrato:verificar`. As o
   - na página das mensagens (3.2), o evento `virou-chamado` com o número e o "Abrir chamado" resolvidos para quem lê, como a citação, e a marca na mensagem de origem.
 
   Começa pelos testes de integração da permissão: sem `chamados.pedir`, a mensagem de uma conversa de que a conta não participa e o tipo só da TI. Verificar: esses testes, o da corrida das duas aberturas, o lint, o typecheck e o contrato.
-- [ ] 3.8 A leitura de quem participa (decisão 9):
+- [x] 3.8 A leitura de quem participa (decisão 9):
   - o `GET /chat/chamados`: os abertos, os que ainda reabrem e os fechados paginados, na ordem do domínio, com o `fechado` do `ChamadoNaLista` pelo `estaFechado(chamado, agora, fuso)`, e não só pelo `fechado_em`: o resolvido vencido que a tarefa ainda não fechou já não reabre;
   - o `GET /chat/chamados/:numero`: a conversa sem o que é só da TI, os eventos para o colaborador, a resposta nova e o "Reabrir até";
   - as etapas, pelo `etapasDoChamado` com todos os eventos, também o desfazer, antes de a leitura tirar os que a pessoa não lê, a previsão e o resumo dos tempos de cada resolvido;

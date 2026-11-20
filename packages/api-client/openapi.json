@@ -16167,6 +16167,773 @@
           "numero"
         ]
       },
+      "AnexoDoChamadoNoChatInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ]
+      },
+      "ChamadoDeQuemParticipaInput": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "icone": {
+                "type": "string",
+                "enum": [
+                  "gota",
+                  "notebook",
+                  "impressora",
+                  "cadeado",
+                  "janela",
+                  "globo",
+                  "telefone",
+                  "reticencias",
+                  "setas",
+                  "computador",
+                  "torre",
+                  "fone",
+                  "chave",
+                  "caixa",
+                  "camera",
+                  "wi-fi"
+                ]
+              }
+            },
+            "required": [
+              "nome",
+              "icone"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "em-atendimento",
+              "aguardando",
+              "resolvido"
+            ]
+          },
+          "fechado": {
+            "type": "boolean"
+          },
+          "situacaoEmTexto": {
+            "type": "string"
+          },
+          "abertoEm": {
+            "type": "string"
+          },
+          "resolvidoEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "respostaNova": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ultimaMensagem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "autor": {
+                    "type": "string"
+                  },
+                  "minha": {
+                    "type": "boolean"
+                  },
+                  "comeco": {
+                    "type": "string"
+                  },
+                  "em": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "autor",
+                  "minha",
+                  "comeco",
+                  "em"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "tipo",
+          "situacao",
+          "fechado",
+          "situacaoEmTexto",
+          "abertoEm",
+          "resolvidoEm",
+          "atende",
+          "respostaNova",
+          "ultimaMensagem"
+        ]
+      },
+      "ChamadosDeQuemParticipaInput": {
+        "type": "object",
+        "properties": {
+          "abertos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChamadoDeQuemParticipaInput"
+            }
+          },
+          "resolvidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChamadoDeQuemParticipaInput"
+            }
+          },
+          "seguintes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "abertos",
+          "resolvidos",
+          "seguintes"
+        ]
+      },
+      "ResumoDosTemposNoChatInput": {
+        "type": "object",
+        "properties": {
+          "abertoEm": {
+            "type": "string"
+          },
+          "primeiraResposta": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "em": {
+                    "type": "string"
+                  },
+                  "tempo": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "em",
+                  "tempo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvido": {
+            "type": "object",
+            "properties": {
+              "em": {
+                "type": "string"
+              },
+              "tempo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "em",
+              "tempo"
+            ]
+          },
+          "atendeu": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "abertoEm",
+          "primeiraResposta",
+          "resolvido",
+          "atendeu"
+        ]
+      },
+      "ItemDaConversaDeQuemParticipaInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "especie": {
+                "type": "string",
+                "const": "mensagem"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "em": {
+                "type": "string"
+              },
+              "autor": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "daTi": {
+                    "type": "boolean"
+                  },
+                  "minha": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "daTi",
+                  "minha"
+                ]
+              },
+              "texto": {
+                "type": "string"
+              },
+              "anexos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnexoDoChamadoNoChatInput"
+                }
+              },
+              "opcoes": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "escolhida": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cartao": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "especie",
+              "id",
+              "em",
+              "autor",
+              "texto",
+              "anexos",
+              "opcoes",
+              "escolhida",
+              "cartao"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "especie": {
+                "type": "string",
+                "const": "evento"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "em": {
+                "type": "string"
+              },
+              "evento": {
+                "type": "string"
+              },
+              "frase": {
+                "type": "string"
+              },
+              "resumo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ResumoDosTemposNoChatInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "especie",
+              "id",
+              "em",
+              "evento",
+              "frase",
+              "resumo"
+            ]
+          }
+        ]
+      },
+      "ConversaDoChamadoDeQuemParticipaInput": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "icone": {
+                "type": "string",
+                "enum": [
+                  "gota",
+                  "notebook",
+                  "impressora",
+                  "cadeado",
+                  "janela",
+                  "globo",
+                  "telefone",
+                  "reticencias",
+                  "setas",
+                  "computador",
+                  "torre",
+                  "fone",
+                  "chave",
+                  "caixa",
+                  "camera",
+                  "wi-fi"
+                ]
+              }
+            },
+            "required": [
+              "nome",
+              "icone"
+            ]
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "em-atendimento",
+              "aguardando",
+              "resolvido"
+            ]
+          },
+          "fechado": {
+            "type": "boolean"
+          },
+          "situacaoEmTexto": {
+            "type": "string"
+          },
+          "abertoEm": {
+            "type": "string"
+          },
+          "atende": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "desde": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "desde"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "etapas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "situacao": {
+                  "type": "string",
+                  "enum": [
+                    "triagem",
+                    "em-atendimento",
+                    "aguardando",
+                    "resolvido"
+                  ]
+                },
+                "agora": {
+                  "type": "boolean"
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "chegou",
+                    "pulada",
+                    "ainda-nao"
+                  ]
+                },
+                "em": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "situacao",
+                "agora",
+                "estado",
+                "em"
+              ]
+            }
+          },
+          "previsao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reabrirAte": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "patrimonio": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "patrimonio"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resumo": {
+            "type": "string"
+          },
+          "anexosDosCampos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "campo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "tipo",
+                "bytes",
+                "campo"
+              ]
+            }
+          },
+          "origem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "autor": {
+                    "type": "string"
+                  },
+                  "texto": {
+                    "type": "string"
+                  },
+                  "em": {
+                    "type": "string"
+                  },
+                  "anexos": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AnexoDoChamadoNoChatInput"
+                    }
+                  }
+                },
+                "required": [
+                  "autor",
+                  "texto",
+                  "em",
+                  "anexos"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversa": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaConversaDeQuemParticipaInput"
+            }
+          },
+          "respostaNova": {
+            "type": "object",
+            "properties": {
+              "quantas": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "desde": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "quantas",
+              "desde"
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "tipo",
+          "situacao",
+          "fechado",
+          "situacaoEmTexto",
+          "abertoEm",
+          "atende",
+          "etapas",
+          "previsao",
+          "reabrirAte",
+          "ativo",
+          "resumo",
+          "anexosDosCampos",
+          "origem",
+          "conversa",
+          "respostaNova"
+        ]
+      },
+      "ResumoDoChamadoNoChatInput": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string"
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "chat",
+                  "chamados"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detalhes": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimas": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "especie": {
+                          "type": "string",
+                          "enum": [
+                            "mensagem",
+                            "nota"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "autor": {
+                          "type": "string"
+                        },
+                        "em": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "especie",
+                        "texto",
+                        "autor",
+                        "em"
+                      ]
+                    }
+                  },
+                  "ativo": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "nome": {
+                            "type": "string"
+                          },
+                          "patrimonio": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "nome",
+                          "patrimonio"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "abertoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ultimas",
+                  "ativo",
+                  "abertoEm"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "situacao",
+          "atende",
+          "abrir",
+          "detalhes"
+        ]
+      },
       "EquipeDaContaInput": {
         "type": "object",
         "properties": {
@@ -44484,6 +45251,796 @@
         },
         "required": [
           "numero"
+        ],
+        "additionalProperties": false
+      },
+      "AnexoDoChamadoNoChat": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ],
+        "additionalProperties": false
+      },
+      "ChamadoDeQuemParticipa": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "icone": {
+                "type": "string",
+                "enum": [
+                  "gota",
+                  "notebook",
+                  "impressora",
+                  "cadeado",
+                  "janela",
+                  "globo",
+                  "telefone",
+                  "reticencias",
+                  "setas",
+                  "computador",
+                  "torre",
+                  "fone",
+                  "chave",
+                  "caixa",
+                  "camera",
+                  "wi-fi"
+                ]
+              }
+            },
+            "required": [
+              "nome",
+              "icone"
+            ],
+            "additionalProperties": false
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "em-atendimento",
+              "aguardando",
+              "resolvido"
+            ]
+          },
+          "fechado": {
+            "type": "boolean"
+          },
+          "situacaoEmTexto": {
+            "type": "string"
+          },
+          "abertoEm": {
+            "type": "string"
+          },
+          "resolvidoEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "respostaNova": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ultimaMensagem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "autor": {
+                    "type": "string"
+                  },
+                  "minha": {
+                    "type": "boolean"
+                  },
+                  "comeco": {
+                    "type": "string"
+                  },
+                  "em": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "autor",
+                  "minha",
+                  "comeco",
+                  "em"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "tipo",
+          "situacao",
+          "fechado",
+          "situacaoEmTexto",
+          "abertoEm",
+          "resolvidoEm",
+          "atende",
+          "respostaNova",
+          "ultimaMensagem"
+        ],
+        "additionalProperties": false
+      },
+      "ChamadosDeQuemParticipa": {
+        "type": "object",
+        "properties": {
+          "abertos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChamadoDeQuemParticipa"
+            }
+          },
+          "resolvidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChamadoDeQuemParticipa"
+            }
+          },
+          "seguintes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "abertos",
+          "resolvidos",
+          "seguintes"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDosTemposNoChat": {
+        "type": "object",
+        "properties": {
+          "abertoEm": {
+            "type": "string"
+          },
+          "primeiraResposta": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "em": {
+                    "type": "string"
+                  },
+                  "tempo": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "em",
+                  "tempo"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvido": {
+            "type": "object",
+            "properties": {
+              "em": {
+                "type": "string"
+              },
+              "tempo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "em",
+              "tempo"
+            ],
+            "additionalProperties": false
+          },
+          "atendeu": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "abertoEm",
+          "primeiraResposta",
+          "resolvido",
+          "atendeu"
+        ],
+        "additionalProperties": false
+      },
+      "ItemDaConversaDeQuemParticipa": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "especie": {
+                "type": "string",
+                "const": "mensagem"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "em": {
+                "type": "string"
+              },
+              "autor": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "daTi": {
+                    "type": "boolean"
+                  },
+                  "minha": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "daTi",
+                  "minha"
+                ],
+                "additionalProperties": false
+              },
+              "texto": {
+                "type": "string"
+              },
+              "anexos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnexoDoChamadoNoChat"
+                }
+              },
+              "opcoes": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "escolhida": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cartao": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "especie",
+              "id",
+              "em",
+              "autor",
+              "texto",
+              "anexos",
+              "opcoes",
+              "escolhida",
+              "cartao"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "especie": {
+                "type": "string",
+                "const": "evento"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "em": {
+                "type": "string"
+              },
+              "evento": {
+                "type": "string"
+              },
+              "frase": {
+                "type": "string"
+              },
+              "resumo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ResumoDosTemposNoChat"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "especie",
+              "id",
+              "em",
+              "evento",
+              "frase",
+              "resumo"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ConversaDoChamadoDeQuemParticipa": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "icone": {
+                "type": "string",
+                "enum": [
+                  "gota",
+                  "notebook",
+                  "impressora",
+                  "cadeado",
+                  "janela",
+                  "globo",
+                  "telefone",
+                  "reticencias",
+                  "setas",
+                  "computador",
+                  "torre",
+                  "fone",
+                  "chave",
+                  "caixa",
+                  "camera",
+                  "wi-fi"
+                ]
+              }
+            },
+            "required": [
+              "nome",
+              "icone"
+            ],
+            "additionalProperties": false
+          },
+          "situacao": {
+            "type": "string",
+            "enum": [
+              "triagem",
+              "em-atendimento",
+              "aguardando",
+              "resolvido"
+            ]
+          },
+          "fechado": {
+            "type": "boolean"
+          },
+          "situacaoEmTexto": {
+            "type": "string"
+          },
+          "abertoEm": {
+            "type": "string"
+          },
+          "atende": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "desde": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "desde"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "etapas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "situacao": {
+                  "type": "string",
+                  "enum": [
+                    "triagem",
+                    "em-atendimento",
+                    "aguardando",
+                    "resolvido"
+                  ]
+                },
+                "agora": {
+                  "type": "boolean"
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "chegou",
+                    "pulada",
+                    "ainda-nao"
+                  ]
+                },
+                "em": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "situacao",
+                "agora",
+                "estado",
+                "em"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "previsao": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reabrirAte": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ativo": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "patrimonio": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "nome",
+                  "patrimonio"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resumo": {
+            "type": "string"
+          },
+          "anexosDosCampos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "tipo": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "campo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "tipo",
+                "bytes",
+                "campo"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "origem": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "autor": {
+                    "type": "string"
+                  },
+                  "texto": {
+                    "type": "string"
+                  },
+                  "em": {
+                    "type": "string"
+                  },
+                  "anexos": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AnexoDoChamadoNoChat"
+                    }
+                  }
+                },
+                "required": [
+                  "autor",
+                  "texto",
+                  "em",
+                  "anexos"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversa": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaConversaDeQuemParticipa"
+            }
+          },
+          "respostaNova": {
+            "type": "object",
+            "properties": {
+              "quantas": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "desde": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "quantas",
+              "desde"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "tipo",
+          "situacao",
+          "fechado",
+          "situacaoEmTexto",
+          "abertoEm",
+          "atende",
+          "etapas",
+          "previsao",
+          "reabrirAte",
+          "ativo",
+          "resumo",
+          "anexosDosCampos",
+          "origem",
+          "conversa",
+          "respostaNova"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDoChamadoNoChat": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "situacao": {
+            "type": "string"
+          },
+          "atende": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "abrir": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "chat",
+                  "chamados"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detalhes": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ultimas": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "especie": {
+                          "type": "string",
+                          "enum": [
+                            "mensagem",
+                            "nota"
+                          ]
+                        },
+                        "texto": {
+                          "type": "string"
+                        },
+                        "autor": {
+                          "type": "string"
+                        },
+                        "em": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "especie",
+                        "texto",
+                        "autor",
+                        "em"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "ativo": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "nome": {
+                            "type": "string"
+                          },
+                          "patrimonio": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "nome",
+                          "patrimonio"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "abertoEm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ultimas",
+                  "ativo",
+                  "abertoEm"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "situacao",
+          "atende",
+          "abrir",
+          "detalhes"
         ],
         "additionalProperties": false
       },
@@ -88146,6 +89703,333 @@
             }
           },
           "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados": {
+      "get": {
+        "summary": "Os chamados de que a conta participa: os abertos e uma página dos resolvidos",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "query",
+            "name": "resolvidosAntes",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChamadosDeQuemParticipa"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/{numero}": {
+      "get": {
+        "summary": "A conversa do chamado nas palavras do colaborador, a quem participa dele",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversaDoChamadoDeQuemParticipa"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/{numero}/resumo": {
+      "get": {
+        "summary": "O resumo do chip do chamado citado, a quem vê o resumo",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumoDoChamadoNoChat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/{numero}/anexos/{arquivo}": {
+      "get": {
+        "summary": "Um anexo do chamado, para baixar, a quem participa dele",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "arquivo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O anexo, para baixar, no tipo conferido e com o nome original",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Default Response",
             "content": {
               "application/json": {

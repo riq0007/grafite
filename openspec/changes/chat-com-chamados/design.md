@@ -225,6 +225,15 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - a auditoria `chamado.aberto` leva a origem nas duas aberturas, a `ti` e a `chat`;
   - a marca na mensagem e o evento trazem o número a quem lê a conversa, e o "Abrir chamado" só a quem participa do chamado ou o vê com `chamados.ver`; com o módulo Chamados desligado, o número fica, sem o "Abrir chamado";
   - o anexo sem dono dos chamados, enviado por quem tem só o `chat.usar`, pede o módulo Chat ligado, porque não serviria a nenhuma gravação dela. A guarda da rota aceita a lista de permissões, de que a conta precisa de uma.
+- **A leitura de quem participa,** nos casos que a spec não escreve:
+  - a conversa e o anexo pelo chat vão só a quem participa do chamado. Quem o vê com `chamados.ver` e não participa recebe "Chamado não encontrado." no chat e o lê no módulo Chamados, onde está também o que é só da TI; o "Abrir chamado" do resumo do chip diz aonde levar cada um (`abrir`: a conversa do chat ou o módulo);
+  - a lista traz todos os abertos na primeira página, na ordem da lista do Chat, e os resolvidos de 50 em 50, os que ainda reabrem e os fechados juntos, o resolvido mais novo primeiro, com o número do último da página como o cursor (`resolvidosAntes`). Os que reabrem vêm antes dos fechados, porque o chamado fecha pela data da resolução;
+  - o "Reabrir até" vem em todo resolvido, também no fechado, onde é o dia do "O chamado fechou em 18/11";
+  - a resposta nova traz quantas e a primeira delas, onde entra o separador "Resposta nova";
+  - a última mensagem da lista e da vista Chamados é a última `mensagem` da conversa, sem as notas e os eventos, com quem a escreveu;
+  - a escolha vai na própria pergunta (`escolhida`), a primeira de cada uma, e o cartão, como foi gravado;
+  - a mensagem de origem vem à parte (`origem`), com os anexos dela, para a abertura a mostrar;
+  - as duas últimas mensagens do resumo do chip incluem as notas só a quem vê o chamado com `chamados.ver`.
 
 ## Risks / Trade-offs
 

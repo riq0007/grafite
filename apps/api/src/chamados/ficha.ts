@@ -241,8 +241,11 @@ export interface FichaDoChamado {
 const caminhoDo = (arvore: ArvoreDeLocais, localId: string | null) =>
   localId === null ? null : arvore.caminho(localId);
 
-/** Os ids que as respostas citam, de todos os campos, na ordem do formulário: a TI vê os só dela. */
-function citadosPelasRespostas(
+/**
+ * Os ids que as respostas citam, dos campos dados, na ordem do formulário: a TI vê os só dela, e a
+ * leitura de quem participa passa o formulário sem eles (`chat/chamados-de-quem-participa.ts`).
+ */
+export function citadosPelasRespostas(
   formulario: Formulario,
   respostas: Readonly<Record<string, unknown>>,
 ) {
@@ -348,7 +351,7 @@ async function tipoDoLigado(tx: Transacao, ativoId: string) {
 }
 
 /** O anexo como a ficha o mostra; o do chamado sempre tem o nome, que o envio dá. */
-const anexoNaFicha = (arquivo: {
+export const anexoNaFicha = (arquivo: {
   id: string;
   nome: string | null;
   tipo: string;
