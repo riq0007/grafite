@@ -199,7 +199,7 @@ Para quem não vê o resumo, e para o número que não é de um chamado, a cita�
 
 O chamado aberto a partir de uma mensagem (spec chamados, "Abrir um chamado pelo chat") SHALL ser da conversa dessa mensagem:
 - a mensagem SHALL ganhar a marca de que virou o chamado, e SHALL NOT virar outro;
-- a conversa SHALL ganhar, logo depois da mensagem, o evento "Fernanda Rocha transformou esta mensagem no chamado #1045 · 10:32", com "Abrir chamado" a quem participa do chamado e a quem o vê com `chamados.ver`;
+- a conversa SHALL ganhar, na hora da abertura, na ordem das mensagens, o evento "Fernanda Rocha transformou esta mensagem no chamado #1045 · 10:32", que leva à mensagem de origem, com "Abrir chamado" a quem participa do chamado e a quem o vê com `chamados.ver`;
 - quem participa da conversa SHALL ver o resumo do chamado (requisito "Chamado citado numa mensagem").
 
 A equipe e o canal SHALL ter "Chamados da equipe" (no canal, "Chamados do canal"): os chamados abertos das mensagens dela, o mais novo primeiro, com o número, o título, a situação nas palavras do colaborador, com a espera como no chip (requisito "Chamado citado numa mensagem"), quem atende, quem abriu e quando.

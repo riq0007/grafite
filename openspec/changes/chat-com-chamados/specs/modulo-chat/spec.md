@@ -140,7 +140,7 @@ Ctrl+Shift+T SHALL abrir o transformar na mensagem com o foco ou com o mouse. As
 - "No nome de Fernanda Rocha", com "Trocar", que busca a pessoa pelo nome;
 - "Cancelar" e "Abrir chamado", a ação principal.
 
-Aberto o chamado, o diálogo SHALL fechar, a lista SHALL mostrar o chamado no alto de CHAMADOS e a conversa SHALL mostrar o evento logo depois da mensagem, com a marca nela. A recusa SHALL ficar no campo dela.
+Aberto o chamado, o diálogo SHALL fechar, a lista SHALL mostrar o chamado no alto de CHAMADOS e a conversa SHALL mostrar o evento no fim, na hora da abertura, com o "esta mensagem" levando à mensagem de origem, e a marca nela. A recusa SHALL ficar no campo dela.
 
 #### Scenario: Abrir pelo diálogo
 - **WHEN** Fernanda Rocha escolhe Impressora, escreve "Impressora manchando" e escolhe "Abrir chamado"
