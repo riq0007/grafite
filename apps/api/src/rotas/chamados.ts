@@ -344,7 +344,8 @@ const ItemDaConversa = z.discriminatedUnion('especie', [
     especie: z.literal('evento'),
     id: z.uuid(),
     em: z.iso.datetime(),
-    autor: AutorNaConversa,
+    /** Quem agiu; nulo no `fechou`, que ninguém faz. */
+    autor: AutorNaConversa.nullable(),
     evento: z.enum(EVENTOS_DA_FICHA),
     /** De quem o chamado saiu, no `assumiu`, no `passou` e no `devolveu`. */
     de: ContaDoEvento,

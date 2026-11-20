@@ -8,6 +8,7 @@ import { tarefasDosIndicadores } from '../alertas/indicadores-diarios.ts';
 import { tarefasDosAlertas } from '../alertas/tarefas.ts';
 import type { Armazenamento } from '../arquivos/armazenamento.ts';
 import type { CanaisDaApi } from '../canais/canais.ts';
+import { tarefaDoFechamento } from '../chamados/fechamento.ts';
 import { tarefaDoPrazo } from '../chamados/prazo-estourado.ts';
 import { tarefaDoChat } from '../chat/notificar.ts';
 import { tarefasDoControlId } from '../controlid/tarefa.ts';
@@ -120,6 +121,7 @@ export function tarefasDaApi(contexto: ContextoDasTarefas): DefinicaoDeTarefa[] 
     ...tarefasDosPaineis(contexto),
     ...tarefasDoSoftware(contexto),
     tarefaDoPrazo(contexto),
+    tarefaDoFechamento(contexto),
     tarefaDoChat(contexto) as DefinicaoDeTarefa,
   ];
   return [tarefaDasFalhas(contexto, outras), ...outras];

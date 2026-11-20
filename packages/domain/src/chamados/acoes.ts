@@ -163,6 +163,11 @@ export interface ChamadoParaAcao {
   versao: number;
   /** Quando a TI escreveu à pessoa pela primeira vez, ou nulo, com a primeira resposta pendente. */
   primeiraRespostaEm: Date | null;
+  /**
+   * O resolvido fechado, pelo `estaFechado`: o que a tarefa fechou e o vencido que ela ainda não
+   * fechou. Nada muda mais nele (change chat-com-chamados, decisão 7).
+   */
+  fechado: boolean;
 }
 
 /** Quem age, com o alcance de `chamados.atender` da conta. */
@@ -283,6 +288,7 @@ export interface MudancaDoChamado {
 /** Por que a ação não acontece; `mensagemDaRecusaDaAcao` escreve a frase. */
 export type RecusaDaAcao =
   | { motivo: 'resolvido' }
+  | { motivo: 'fechado' }
   | { motivo: 'ja-na-triagem' }
   | { motivo: 'aguardando'; pessoa: string }
   | { motivo: 'nao-aguardando' }
@@ -426,6 +432,8 @@ export function decidirAcao(
   if (daVersao) return recusada(daVersao);
   const daConta = recusaDeQuemAge(quemAge, chamado);
   if (daConta) return recusada(daConta);
+  // O fechado no lugar da célula: nada muda mais nele, nem o reabrir.
+  if (chamado.fechado) return recusada({ motivo: 'fechado' });
   const celula = MATRIZ_DAS_ACOES[pedido.acao][chamado.situacao];
   if ('recusa' in celula) return recusada(recusaDaCelula(celula.recusa, chamado));
   const de = chamado.responsavel;
@@ -614,6 +622,8 @@ export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): st
   switch (recusa.motivo) {
     case 'resolvido':
       return `O chamado #${numero} está resolvido.`;
+    case 'fechado':
+      return `O chamado #${numero} está fechado.`;
     case 'ja-na-triagem':
       return `O chamado #${numero} já está na triagem.`;
     case 'aguardando':

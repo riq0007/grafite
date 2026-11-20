@@ -39,6 +39,7 @@ import {
   type DiaDoCalendario,
   type EventoDaAcao,
   type EventoDeQuemParticipa,
+  type EventoDoFechamento,
   estaFechado,
   type Formulario,
   type HorarioDaTi,
@@ -77,10 +78,14 @@ import { contasQueParticipam } from './quem-participa.ts';
 import { type ResumoDoAtivo, resumoDoAtivo } from './resumo-do-ativo.ts';
 
 /**
- * Os códigos que esta versão grava na conversa: a abertura, os eventos das ações do domínio e os de
- * quem participa pelo chat (chat-com-chamados, tarefa 3.10).
+ * Os códigos que esta versão grava na conversa: a abertura, os eventos das ações do domínio, os de
+ * quem participa pelo chat (chat-com-chamados, tarefa 3.10) e o do fechamento (3.11).
  */
-type EventoGravado = 'abertura' | EventoDaAcao['evento'] | EventoDeQuemParticipa['evento'];
+type EventoGravado =
+  | 'abertura'
+  | EventoDaAcao['evento']
+  | EventoDeQuemParticipa['evento']
+  | EventoDoFechamento['evento'];
 
 /** A escolha, que a ficha lê na própria pergunta, e não como um evento da conversa. */
 const EVENTOS_NA_PERGUNTA = ['escolheu'] as const;
@@ -88,7 +93,7 @@ const EVENTOS_NA_PERGUNTA = ['escolheu'] as const;
 /**
  * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento, a troca do ativo, o
  * Virar OS (4.16) e a solicitação, pelo "Pedir toner" (4.17) e pelo tipo na abertura, gerada ou não
- * (4.18); e a avaliação de quem participa (chat-com-chamados, 3.10).
+ * (4.18); a avaliação de quem participa (chat-com-chamados, 3.10); e o fechamento, sem autor (3.11).
  */
 export const EVENTOS_DA_FICHA = [
   'abertura',
@@ -105,6 +110,7 @@ export const EVENTOS_DA_FICHA = [
   'solicitacao',
   'solicitacao-nao-gerada',
   'avaliou',
+  'fechou',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -257,7 +263,8 @@ export type ItemDaConversa =
       especie: 'evento';
       id: string;
       em: string;
-      autor: AutorNaFicha;
+      /** Quem agiu; nulo no `fechou`, que ninguém faz. */
+      autor: AutorNaFicha | null;
       evento: EventoDaFicha;
       de: ContaNaFicha | null;
       para: ContaNaFicha | null;
@@ -733,7 +740,7 @@ export async function fichaDoChamado(
           especie: 'evento',
           id: linha.id,
           em,
-          autor: autor(linha),
+          autor: linha.autorConta === null && linha.autorPessoa === null ? null : autor(linha),
           evento: linha.evento,
           de: contaNoEvento(doEvento(linha.dados, 'de')),
           para: contaNoEvento(doEvento(linha.dados, 'para')),

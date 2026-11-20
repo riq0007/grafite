@@ -41253,9 +41253,9 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     nome: string;
-                };
+                } | null;
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou" | "fechou";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -47125,9 +47125,9 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     nome: string;
-                };
+                } | null;
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou" | "fechou";
                 de: {
                     /** Format: uuid */
                     conta: string;

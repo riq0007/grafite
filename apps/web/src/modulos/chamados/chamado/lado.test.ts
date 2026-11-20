@@ -321,7 +321,7 @@ function evento(
   };
 }
 
-const mensagem = (em: string, autor: Evento['autor']): Item => ({
+const mensagem = (em: string, autor: NonNullable<Evento['autor']>): Item => ({
   especie: 'mensagem',
   id: proximoId(),
   em,

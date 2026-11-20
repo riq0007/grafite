@@ -363,6 +363,7 @@ export {
   type ChamadoParaOFechamento,
   DIAS_PARA_REABRIR,
   type DiaDoCalendario,
+  type EventoDoFechamento,
   estaFechado,
   limiteDoFechamento,
   momentoDoFechamento,

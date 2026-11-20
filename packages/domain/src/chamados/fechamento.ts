@@ -43,6 +43,15 @@ export function limiteDoFechamento(agora: Date, fuso: string): Date {
   return comecoDoDiaDoCalendario(ano, mes, dia - DIAS_PARA_REABRIR, fuso);
 }
 
+/**
+ * O evento do fechamento na conversa, que a tarefa grava sem autor, porque ninguém o faz, na hora do
+ * `momentoDoFechamento`.
+ */
+export interface EventoDoFechamento {
+  evento: 'fechou';
+  dados: Record<string, never>;
+}
+
 /** O chamado, no que o fechamento lê. */
 export interface ChamadoParaOFechamento {
   situacao: SituacaoDoChamado;

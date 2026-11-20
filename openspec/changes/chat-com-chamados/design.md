@@ -252,6 +252,12 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - o cartão na ficha é o gravado, com o "Abrir a ficha" (`abrir`) a quem vê o ativo agora, no local de agora;
   - as opções das respostas prontas entram na auditoria, como "Opções da pergunta", e o vazio é "Sem pergunta";
   - as notificações das ações da TI a quem participa (a mensagem, a pergunta, a espera e o resolvido) só saem com o módulo Chat ligado, porque sem ele quem participa não lê o chamado no chat.
+- **O fechamento,** nos casos que a spec não escreve:
+  - o `fechado_em` e o evento `fechou` levam a meia-noite do `momentoDoFechamento`, e não a hora em que a tarefa rodou: o vencido da tarefa atrasada, o do módulo desligado e o resolvido antes desta versão fecham com a data deles, e a conversa fica na ordem, porque nada entra nela depois da meia-noite. A data das frases ("O chamado fechou em 18/11." e "Fechado · 18/11") é o último dia para reabrir (`reabrirAte`), e não o dia do `fechado_em`, que é o seguinte;
+  - o fechamento não sobe a versão: não é uma ação, e o fechado já é recusado antes dele pelo `estaFechado`;
+  - cada lote roda na transação dele, com os vencidos travados sem esperar (`skip locked`): o que uma ação trava fica para o minuto seguinte, e duas execuções ao mesmo tempo fecham cada chamado uma vez;
+  - na TI, o fechado entra no lugar da célula da matriz, depois da versão e de quem age: as ações do atendimento, a mensagem e a nota recusam com "O chamado #1030 está fechado.", também no vencido que a tarefa ainda não fechou. A troca do ativo, do título e dos campos, o Virar OS e o "Pedir toner" seguem recusados pelo resolvido ("O chamado #1030 está resolvido."), como antes;
+  - o `fechou` vem na ficha sem autor (`autor: null`), e a web da TI o mostra na 4.13; o `chamados.mudaram` do fechamento vai a quem vê o chamado, e a 3.12 soma as contas de quem participa.
 
 ## Risks / Trade-offs
 

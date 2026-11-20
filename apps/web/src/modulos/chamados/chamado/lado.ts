@@ -171,13 +171,14 @@ function partesDoPasso(
   estava: SituacaoDoChamado,
   pessoa: string,
 ): (string | null)[] {
-  const quem = item.autor.nome;
+  // Só o `fechou` vem sem autor, e ele não é um passo (chat-com-chamados, tarefa 3.11).
+  const quem = item.autor?.nome ?? '';
   switch (item.evento) {
     case 'abertura':
       // Quem nasce atendendo, fora quem abriu com o "Fica comigo" (chat-com-chamados, decisão 15).
       return [
-        item.autor.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
-        item.para && item.para.conta !== item.autor.id ? `com ${item.para.nome}` : null,
+        item.autor?.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
+        item.para && item.para.conta !== item.autor?.id ? `com ${item.para.nome}` : null,
       ];
     case 'assumiu':
       return [`assumido por ${quem}`];
@@ -193,7 +194,7 @@ function partesDoPasso(
       // No aguardando, o relógio já estava parado.
       return [`resolvido por ${quem}`, estava === 'aguardando' ? null : 'o relógio parou'];
     case 'reabriu': {
-      const para = item.para && item.para.conta !== item.autor.id ? ` para ${item.para.nome}` : '';
+      const para = item.para && item.para.conta !== item.autor?.id ? ` para ${item.para.nome}` : '';
       return [`reaberto por ${quem}${para}`, 'o relógio voltou a contar'];
     }
     default:

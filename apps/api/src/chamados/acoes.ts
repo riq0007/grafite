@@ -36,6 +36,7 @@ import {
   desdeNaTriagem,
   type EntradaDaConversa,
   type EventoNaConversa,
+  estaFechado,
   mensagemDaRecusaDaAcao,
   modoDoPrazoGuardado,
   notificacoesDaAcao,
@@ -144,6 +145,8 @@ export async function travarOChamado(
       relogioDesde: chamados.relogioDesde,
       primeiraRespostaEm: chamados.primeiraRespostaEm,
       resolvidoPor: chamados.resolvidoPor,
+      resolvidoEm: chamados.resolvidoEm,
+      fechadoEm: chamados.fechadoEm,
       ativo: chamados.ativoId,
       localDaPessoa: chamados.localDaPessoa,
       pessoa: pessoas.nome,
@@ -424,6 +427,10 @@ export async function agirNoChamado(
     semLocal: lido.semLocal,
     versao: lido.versao,
     primeiraRespostaEm: lido.primeiraRespostaEm,
+    // O fechado pelo `estaFechado`, também o vencido que a tarefa ainda não fechou, no fuso do
+    // horário de agora, lido só no resolvido (chat-com-chamados, tarefa 3.11).
+    fechado:
+      lido.situacao === 'resolvido' && estaFechado(lido, momento, (await lerHorarioDaTi(tx)).fuso),
   };
   const decisao = await decidir(tx, chamado, quemAge, pedido, { eventos, arvore, lido });
   if (!decisao.aceita) throw problemaDaRecusa(lido.numero, decisao.recusa);
