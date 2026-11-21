@@ -1,6 +1,7 @@
 // O módulo Chat na casca (spec modulo-chat, "Chat na casca"; change chat-com-chamados, design,
 // decisão 12): depois do Chamados no dock e no celular, para quem usa o chat, com o menu, o selo do
-// total do chat mais os chamados com resposta nova e o app próprio em /chat.
+// total do chat mais os chamados com resposta nova e o app próprio em /chat; e para quem só configura
+// o chat, com as Equipes e canais no menu.
 import { fechamento, type Permissao } from '@grafite/domain';
 import { ordenarParaOCelular } from '@grafite/ui';
 import { describe, expect, it } from 'vitest';
@@ -44,6 +45,28 @@ describe('o módulo Chat', () => {
       itensPermitidos(chat.menu ?? [], com('chat.usar'), desligados).map((item) => item.rotulo);
     expect(rotulos([])).toEqual(['Chat', 'Equipes', 'Chamados']);
     expect(rotulos(['chamados'])).toEqual(['Chat', 'Equipes']);
+  });
+
+  it('aparece para quem só configura o chat, com só "Equipes e canais" no menu, sem a linha antes', () => {
+    expect(registroDaConta(REGISTRO, com('chat.configurar')).map(({ id }) => id)).toContain('chat');
+    expect(itensPermitidos(chat.menu ?? [], com('chat.configurar'))).toEqual([
+      {
+        rotulo: 'Equipes e canais',
+        destino: '/conversas/equipes-e-canais',
+        permissoes: ['chat.configurar'],
+      },
+    ]);
+  });
+
+  it('quem usa e configura o chat tem "Equipes e canais" no fim do menu, separado das vistas', () => {
+    const itens = itensPermitidos(chat.menu ?? [], com('chat.usar', 'chat.configurar'));
+    expect(itens.map((item) => item.rotulo)).toEqual([
+      'Chat',
+      'Equipes',
+      'Chamados',
+      'Equipes e canais',
+    ]);
+    expect(itens.at(-1)?.separadoAntes).toBe(true);
   });
 
   it('o app próprio é o /chat, para quem usa o chat', () => {

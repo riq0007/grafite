@@ -58,6 +58,15 @@ export const CHAVE_DAS_EQUIPES_DO_CHAT = [...CHAVE_DO_CHAT, 'equipes'] as const;
 export const CHAVE_DAS_PESSOAS_DO_CHAT = [...CHAVE_DO_CHAT, 'pessoas'] as const;
 
 /**
+ * O cadastro das equipes e dos canais, de quem configura o chat: a lista, com as arquivadas, e os
+ * grupos ativos da escolha da gaveta.
+ */
+export const CHAVE_DO_CADASTRO_DO_CHAT = [...CHAVE_DO_CHAT, 'cadastro'] as const;
+
+/** A lista do cadastro, que a tela muda na hora com o que a API devolve. */
+export const CHAVE_DAS_EQUIPES_E_CANAIS = [...CHAVE_DO_CADASTRO_DO_CHAT, 'lista'] as const;
+
+/**
  * O que o transformar em chamado lê: os tipos que o chat oferece, os ativos sugeridos para a pessoa e
  * as pessoas de "No nome de".
  */
@@ -150,6 +159,30 @@ export function useEquipesDoChat() {
     queryKey: CHAVE_DAS_EQUIPES_DO_CHAT,
     queryFn: ({ signal }) =>
       consultar(() => api.GET('/chat/equipes', { signal }), 'carregar as equipes e os canais'),
+  });
+}
+
+/** As equipes e os canais do cadastro, as ativas primeiro e depois pelo nome, como a API os dá. */
+export function useEquipesECanais() {
+  const api = useApi();
+  return useQuery({
+    queryKey: CHAVE_DAS_EQUIPES_E_CANAIS,
+    queryFn: ({ signal }) =>
+      consultar(
+        () => api.GET('/chat/equipes-e-canais', { signal }),
+        'carregar as equipes e os canais',
+      ),
+  });
+}
+
+/** Os grupos ativos da escolha da gaveta, só com ela aberta. */
+export function useGruposDoChat(ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DO_CADASTRO_DO_CHAT, 'grupos'],
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(() => api.GET('/chat/grupos', { signal }), 'carregar os grupos'),
   });
 }
 
@@ -522,6 +555,7 @@ export const EVENTOS_DO_CHAT: EventosDoModulo = {
     CHAVE_DO_RESUMO_DO_CHAT,
     CHAVE_DAS_PESSOAS_DO_CHAT,
     CHAVE_DAS_EQUIPES_DO_CHAT,
+    CHAVE_DO_CADASTRO_DO_CHAT,
     ...daConversa(evento),
   ],
   'chamados.mudaram': () => [CHAVE_DOS_CHAMADOS_DO_CHAT, CHAVE_DO_RESUMO_DO_CHAT],

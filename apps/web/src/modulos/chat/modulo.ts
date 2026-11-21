@@ -31,13 +31,15 @@ export function seloDoChat(resumo: ResumoDoChat | undefined): SeloDoModulo | nul
 }
 
 const USA_O_CHAT = ['chat.usar'] as const;
+const CONFIGURA_O_CHAT = ['chat.configurar'] as const;
 
 /**
  * O módulo Chat no registro (spec modulo-chat, "Chat na casca"; change chat-com-chamados, design,
  * decisão 12): logo depois do Chamados no dock e no celular, com o balão de conversa, para quem usa
  * o chat. A janela tem as vistas do app do chat em /conversas, e o menu leva a elas; a vista
  * Chamados só com o módulo Chamados ligado. O selo é o do resumo do chat, e quem só vê o Chat entre
- * os módulos da casca vai ao app dele, em /chat. Os eventos do chat relêem as telas dele.
+ * os módulos da casca vai ao app dele, em /chat. Quem configura o chat tem as Equipes e canais no
+ * fim do menu, e quem só o configura vê o módulo só com elas. Os eventos do chat relêem as telas dele.
  */
 export const chat = definirModulo({
   id: 'chat',
@@ -46,7 +48,7 @@ export const chat = definirModulo({
   endereco: '/conversas',
   prioridadeNoCelular: 0,
   rotas: rotasDoChat,
-  permissoes: USA_O_CHAT,
+  permissoes: [...USA_O_CHAT, ...CONFIGURA_O_CHAT],
   appProprio: { endereco: '/chat', permissoes: USA_O_CHAT },
   menu: [
     { rotulo: 'Chat', destino: '/conversas', permissoes: USA_O_CHAT },
@@ -56,6 +58,12 @@ export const chat = definirModulo({
       destino: '/conversas/chamados',
       permissoes: USA_O_CHAT,
       comOModulo: 'chamados',
+    },
+    {
+      rotulo: 'Equipes e canais',
+      destino: '/conversas/equipes-e-canais',
+      permissoes: CONFIGURA_O_CHAT,
+      separadoAntes: true,
     },
   ],
   selo: {
