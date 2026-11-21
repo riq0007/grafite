@@ -199,7 +199,11 @@ export function useAcoesDoChamado(numero: number) {
     resultado: { dados: ConversaDoChamadoNoChat } | FalhaDoPedido,
   ): { dados: ConversaDoChamadoNoChat } | FalhaDoPedido => {
     if ('dados' in resultado) {
-      consultas.setQueryData(chaveDoChamadoDoChat(numero), resultado.dados);
+      // Só na conversa que está na tela: com a tela fora, a leitura já saiu (o `gcTime: 0`), e
+      // criá-la aqui a guardaria por 5 minutos, que a volta ao chamado mostraria antes de ler.
+      consultas.setQueryData<ConversaDoChamadoNoChat>(chaveDoChamadoDoChat(numero), (antes) =>
+        antes === undefined ? undefined : resultado.dados,
+      );
       void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT, exact: true });
       void consultas.invalidateQueries({ queryKey: CHAVE_DAS_PAGINAS_DOS_CHAMADOS });
       void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
