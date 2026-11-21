@@ -26,14 +26,28 @@ export function esquecerAChegada() {
 }
 
 /**
+ * O foco está fora da janela do Chat e fora de um diálogo ou de um menu aberto: ele voltou, por
+ * exemplo, ao sino da casca quando a central de notificações saiu, e a conta ainda não chegou.
+ */
+function foraDaJanela(ativo: Element | null, titulo: HTMLElement) {
+  const janela = titulo.closest('[data-na-casca]');
+  return (
+    ativo !== null &&
+    janela !== null &&
+    !janela.contains(ativo) &&
+    ativo.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]') === null
+  );
+}
+
+/**
  * O `ref` do título do item: quando ele aparece depois da chegada, recebe o foco, se ele não saiu
- * de onde a casca o deixou. No celular, a lista atrás do item é inerte e não o recebe: o foco ficou
- * onde estava ou caiu no corpo da página.
+ * de onde a casca o deixou ou se está fora da janela (`foraDaJanela`). No celular, a lista atrás do
+ * item é inerte e não o recebe: o foco ficou onde estava ou caiu no corpo da página.
  */
 export function focarAoChegar(titulo: HTMLElement | null) {
   if (!titulo || !chegadaPendente) return;
   const { foco } = chegadaPendente;
   chegadaPendente = null;
   const ativo = document.activeElement;
-  if (ativo === foco || ativo === document.body) titulo.focus();
+  if (ativo === foco || ativo === document.body || foraDaJanela(ativo, titulo)) titulo.focus();
 }
