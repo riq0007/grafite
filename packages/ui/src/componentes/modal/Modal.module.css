@@ -34,6 +34,11 @@
   animation: crescer var(--dur-deslocamento) var(--curva-padrao);
 }
 
+/* O diálogo largo, de um formulário curto, como o transformar em chamado do chat. */
+.janelaLarga {
+  width: min(100%, calc(var(--esp-12) * 12));
+}
+
 .dialogo {
   display: grid;
   gap: var(--esp-4);

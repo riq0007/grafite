@@ -27,6 +27,11 @@ export interface PropsDoDialogo {
   children: Conteudo;
   /** Botões do rodapé, alinhados à direita; a ação principal vem por último. */
   acoes?: Conteudo;
+  /**
+   * O diálogo de um formulário curto, de 576 px, no lugar dos 480 da decisão, como o transformar em
+   * chamado do chat (m02), em que os tipos em chips quebram em menos linhas.
+   */
+  largo?: boolean;
 }
 
 /**
@@ -41,12 +46,13 @@ export function Dialogo({
   aoMudarAberto,
   children,
   acoes,
+  largo = false,
 }: PropsDoDialogo) {
   return (
     <DialogTrigger isOpen={aberto} onOpenChange={aoMudarAberto}>
       {gatilho}
       <ModalOverlay className={estilos.veu}>
-        <Modal className={estilos.janela}>
+        <Modal className={[estilos.janela, largo && estilos.janelaLarga].filter(Boolean).join(' ')}>
           <Dialog role={alerta ? 'alertdialog' : 'dialog'} className={estilos.dialogo}>
             {({ close }) => (
               <>

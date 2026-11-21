@@ -233,6 +233,84 @@
   white-space: nowrap;
 }
 
+/*
+ * O campo de texto com o contador no fim da caixa, como "20/120" no título do transformar em
+ * chamado (mockup m02 do chat): a caixa é a do campo, com a entrada sem borda própria e o contador
+ * dentro dela, como a busca. O anel do foco e a borda da recusa ficam na caixa inteira.
+ */
+.caixaComContador {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  min-height: var(--altura-controle);
+  padding: 0 var(--esp-2);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.caixaComContador:has(> [data-hovered]) {
+  border-color: var(--cor-texto-2);
+}
+
+.caixaComContador:has(> [data-focused]) {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.caixaComContador:has(> [data-invalid]) {
+  border-color: var(--cor-critico);
+}
+
+.caixaComContador:has(> [data-disabled]) {
+  opacity: var(--opacidade-desabilitado);
+}
+
+.entradaComContador {
+  flex: 1;
+  min-width: 0;
+  min-height: calc(var(--altura-controle) - 2px);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cor-texto);
+  font-family: var(--fonte-interface);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-justa);
+  outline: none;
+}
+
+.entradaComContador::placeholder {
+  color: var(--cor-texto-2);
+  opacity: 1;
+}
+
+/* A contagem é quantidade: na fonte da interface, com algarismos tabulares (ANTISLOP v3). */
+.contadorDoCampo {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.contadorDoCampo[data-passou] {
+  color: var(--cor-critico);
+}
+
+.paraOLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* O número na frase: a caixa estreita, em mono, com o texto no meio. */
 .numeroNaFrase {
   display: inline-flex;

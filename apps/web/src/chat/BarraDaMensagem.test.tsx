@@ -193,6 +193,21 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
     expect(within(dialogo).getByText('Mensagem 1')).toBeTruthy();
   });
 
+  it('pelo "Mais", o diálogo abre depois de o menu fechar, e "Cancelar" devolve o foco ao "Mais"', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
+    const item = await comOMouse('Mensagem 2');
+    const mais = within(item).getByRole('button', { name: 'Mais' });
+    const menu = await abrirOMais(item);
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Transformar em chamado' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Transformar em chamado' });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Transformar em chamado' })).toBeNull(),
+    );
+    expect(document.activeElement).toBe(mais);
+  });
+
   it('a mensagem que já virou chamado dá "Já virou o #1045", sem ação, e o atalho a ignora', async () => {
     const virada = mensagem(2, { chamado: { numero: 1045, abrir: true, mensagem: null } });
     const { servidor } = servidorDoMenu({ mensagens: [mensagem(1), virada, mensagem(3)] });

@@ -544,10 +544,12 @@ export {
   camposNaAuditoria,
   comMinuscula,
   conferirTituloDoChamado,
+  LIMITE_DO_TITULO_DO_CHAMADO,
   nomeNoResumo,
   type ParteDoResumo,
   partesDoResumo,
   resumoDasRespostas,
+  tamanhoDoTitulo,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
 export {

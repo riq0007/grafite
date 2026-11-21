@@ -98,8 +98,11 @@ export interface PropsDoItemDeMenu extends Omit<MenuItemProps, 'children' | 'cla
   children: string;
   /** Ação que apaga ou encerra algo: texto na cor crítica. */
   destrutivo?: boolean;
-  /** Texto de apoio abaixo do nome, como "Padrão da organização". */
-  descricao?: string;
+  /**
+   * Texto de apoio abaixo do nome, como "Padrão da organização", ou o que se lê com ele, como o
+   * patrimônio de um ativo na mono.
+   */
+  descricao?: ReactNode;
   /** O ícone antes do nome, como o de cada tipo em "Por tipo"; decorativo, o nome diz tudo. */
   icone?: LucideIcon;
   /**

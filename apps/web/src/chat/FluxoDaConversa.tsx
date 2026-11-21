@@ -584,14 +584,7 @@ function ItemDaConversa({
         </li>
       );
     case 'evento':
-      return (
-        <EventoNaConversa
-          mensagem={item.mensagem}
-          conversa={conversa}
-          conta={conta}
-          dataHora={dataHora}
-        />
-      );
+      return <EventoNaConversa mensagem={item.mensagem} conversa={conversa} dataHora={dataHora} />;
     case 'mensagem':
       return (
         <MensagemNaConversa
@@ -779,16 +772,15 @@ function MensagemNaConversa({
 /**
  * O evento numa linha, no quadro azul do chamado (m03): "Fernanda Rocha transformou esta mensagem no
  * chamado #1045 · 10:32", que leva à mensagem de origem, com "Abrir chamado" a quem pode abri-lo.
+ * Quem transformou é dito pelo nome, também à conta que agiu, como na spec e no m03.
  */
 function EventoNaConversa({
   mensagem,
   conversa,
-  conta,
   dataHora,
 }: {
   mensagem: MensagemDoChat;
   conversa: string;
-  conta: string;
   dataHora: DataHora;
 }) {
   if (mensagem.evento !== 'virou-chamado' || !mensagem.chamado) return null;
@@ -799,7 +791,7 @@ function EventoNaConversa({
         <Icone icone={LifeBuoy} tamanho={22} />
       </span>
       <p>
-        <strong>{nomeDoAutor(mensagem.autor, conta)}</strong> transformou{' '}
+        <strong>{nomeNoChat(mensagem.autor.nome, mensagem.autor.daTi)}</strong> transformou{' '}
         {origem ? (
           <LinkDoChat para={daConversaEm(conversa, origem)}>esta mensagem</LinkDoChat>
         ) : (

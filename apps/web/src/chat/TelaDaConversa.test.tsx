@@ -285,7 +285,7 @@ describe('as mensagens', () => {
       .find((item) => item.textContent?.includes('transformou'));
     if (!evento) throw new Error('O evento não está na conversa.');
     expect(evento.textContent).toBe(
-      'Você transformou esta mensagem no chamado #1045 · 10:32Abrir chamado',
+      'Ana Souza (TI) transformou esta mensagem no chamado #1045 · 10:32Abrir chamado',
     );
     expect(within(evento).getByRole('link', { name: 'esta mensagem' }).getAttribute('href')).toBe(
       `/chat/c/${CONVERSA}?m=${id(2)}`,

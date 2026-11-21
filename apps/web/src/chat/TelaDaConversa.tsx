@@ -267,7 +267,11 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
           className={estilos.abas}
         />
       )}
-      <TransformarEmChamado alvo={transformando} aoFechar={() => definirTransformando(null)} />
+      <TransformarEmChamado
+        alvo={transformando}
+        conversa={conversa}
+        aoFechar={() => definirTransformando(null)}
+      />
     </section>
   );
 }

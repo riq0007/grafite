@@ -41,6 +41,12 @@ export const CHAVE_DOS_CHAMADOS_DO_CHAT = [...CHAVE_DO_CHAT, 'chamados'] as cons
 export const CHAVE_DAS_PESSOAS_DO_CHAT = [...CHAVE_DO_CHAT, 'pessoas'] as const;
 
 /**
+ * O que o transformar em chamado lê: os tipos que o chat oferece, os ativos sugeridos para a pessoa e
+ * as pessoas de "No nome de".
+ */
+export const CHAVE_DA_ABERTURA_PELO_CHAT = [...CHAVE_DO_CHAT, 'abertura'] as const;
+
+/**
  * O que é de uma conversa aberta: o cabeçalho, as mensagens, os arquivos e os chamados dela, à parte
  * da lista, para o evento da conversa reler só ela. O id vai em minúsculas, como a API o devolve.
  */
@@ -54,6 +60,9 @@ export type PessoaDoChat = components['schemas']['PessoasDoChat']['pessoas'][num
 export type ConversaAberta = components['schemas']['ConversaAberta'];
 export type ArquivoDaConversa = components['schemas']['ArquivoDaConversa'];
 export type ChamadoDaConversa = components['schemas']['ChamadoDaConversa'];
+export type TipoParaAbrirPeloChat = components['schemas']['TipoParaAbrirPeloChat'];
+export type AtivoSugeridoPeloChat =
+  components['schemas']['AtivosSugeridosPeloChat']['ativos'][number];
 
 export function useResumoDoChat() {
   const api = useApi();
@@ -102,6 +111,54 @@ export function usePessoasDoChat(busca: string, ligado: boolean) {
             params: { query: busca === '' ? {} : { busca } },
             signal,
           }),
+        'buscar as pessoas',
+      ),
+  });
+}
+
+/** Os tipos que a abertura pelo chat oferece, na ordem dos tipos, enquanto o diálogo está aberto. */
+export function useTiposDaAberturaPeloChat(ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DA_ABERTURA_PELO_CHAT, 'tipos'],
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(() => api.GET('/chat/chamados/tipos', { signal }), 'carregar os tipos'),
+  });
+}
+
+/** Os ativos sugeridos para a pessoa no tipo que pede o ativo; o primeiro vem escolhido. */
+export function useAtivosSugeridosPeloChat(tipo: string | null, pessoa: string | null) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DA_ABERTURA_PELO_CHAT, 'sugestoes', tipo, pessoa],
+    enabled: tipo !== null && pessoa !== null,
+    queryFn: ({ signal }) =>
+      consultar(
+        () =>
+          api.GET('/chat/chamados/sugestoes', {
+            params: { query: { tipo: tipo ?? '', pessoa: pessoa ?? '' } },
+            signal,
+          }),
+        'carregar os ativos sugeridos',
+      ),
+  });
+}
+
+/**
+ * As pessoas ativas pelo nome, até 20, para "No nome de" (spec administracao-de-pessoas, "Nomes das
+ * pessoas para a escolha"). Enquanto a busca nova não chega, a lista fica com as da busca de antes.
+ */
+export function usePessoasParaOChamado(busca: string, ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DA_ABERTURA_PELO_CHAT, 'pessoas', busca],
+    enabled: ligado,
+    placeholderData: keepPreviousData,
+    queryFn: ({ signal }) =>
+      consultar(
+        () =>
+          api.GET('/pessoas/nomes', { params: { query: busca === '' ? {} : { busca } }, signal }),
         'buscar as pessoas',
       ),
   });
@@ -282,8 +339,8 @@ export const EVENTOS_DO_CHAT: EventosDoModulo = {
     ...daConversa(evento),
   ],
   'chamados.mudaram': () => [CHAVE_DOS_CHAMADOS_DO_CHAT, CHAVE_DO_RESUMO_DO_CHAT],
-  // O nome e o ícone do tipo dos chamados.
-  'ajustes-dos-chamados.mudaram': () => [CHAVE_DOS_CHAMADOS_DO_CHAT],
+  // O nome e o ícone do tipo dos chamados, e os tipos que a abertura pelo chat oferece.
+  'ajustes-dos-chamados.mudaram': () => [CHAVE_DOS_CHAMADOS_DO_CHAT, CHAVE_DA_ABERTURA_PELO_CHAT],
   'pessoas.mudaram': () => [CHAVE_DO_CHAT],
   'acessos.mudaram': () => [CHAVE_DO_CHAT],
   'modulos.mudaram': () => [CHAVE_DO_CHAT],
