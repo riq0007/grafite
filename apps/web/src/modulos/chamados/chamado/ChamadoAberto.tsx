@@ -36,7 +36,7 @@ import { Fragment, type ReactNode, useState } from 'react';
 import { FalhaDaConsulta } from '../../../api/consultas.ts';
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { useJanelaAVista } from '../../../chat/janela.ts';
-import { useDestinoAVista } from '../../../notificacoes/destinosAVista.tsx';
+import { useChamadoAVista } from '../../../notificacoes/destinosAVista.tsx';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../../../sessao/useSessao.tsx';
 import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
@@ -139,8 +139,9 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
   const { pode } = useAcesso();
   const operacaoLigada = !(useServidor()?.modulosDesligados ?? []).includes('operacao');
   const doAtivo = acoesDoAtivo(ficha, { operacaoLigada, pode });
-  // A notificação deste chamado, como a resposta da pessoa, não vira aviso enquanto ele está à vista.
-  useDestinoAVista(`/chamados/${ficha.numero}`, useJanelaAVista());
+  // As notificações deste chamado, nos dois endereços dele, como a resposta da pessoa, não viram
+  // aviso enquanto ele está à vista.
+  useChamadoAVista(ficha.numero, useJanelaAVista());
   // Cada envio do campo de escrever leva a conversa à última mensagem.
   const [envios, definirEnvios] = useState(0);
   return (

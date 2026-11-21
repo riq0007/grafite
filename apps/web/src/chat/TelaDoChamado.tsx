@@ -30,7 +30,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
-import { useDestinoAVista } from '../notificacoes/destinosAVista.tsx';
+import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
@@ -138,8 +138,9 @@ function ChamadoNaTela({
   const [reabrindo, definirReabrindo] = useState(false);
   const [painelNaFolha, definirPainelNaFolha] = useState(false);
   const celular = usePostura() === 'celular';
-  // A notificação deste chamado, como a resposta da TI, não vira aviso enquanto ele está à vista.
-  useDestinoAVista(`/chat/chamados/${numero}`, useJanelaAVista());
+  // As notificações deste chamado, nos dois endereços dele, como a resposta da TI, não viram aviso
+  // enquanto ele está à vista.
+  useChamadoAVista(numero, useJanelaAVista());
   const daConta = useChamadosDoChat(true);
   // Na ordem da seção CHAMADOS da lista do Chat: os que aguardam a pessoa e depois o aberto mais
   // novo. A API não ordena os abertos.

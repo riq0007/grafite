@@ -52,3 +52,13 @@ export function useDestinoAVista(destino: string, aVista: boolean) {
     return destinos.marcar(destino);
   }, [destinos, destino, aVista]);
 }
+
+/**
+ * Marca os dois endereços do chamado enquanto a tela dele está à vista: o da TI (`/chamados/<n>`) e
+ * o de quem participa pelo chat (`/chat/chamados/<n>`). A conta que atende e também participa recebe
+ * as notificações do mesmo chamado nos dois, e o assunto é o mesmo em qualquer das telas.
+ */
+export function useChamadoAVista(numero: number, aVista: boolean) {
+  useDestinoAVista(`/chamados/${numero}`, aVista);
+  useDestinoAVista(`/chat/chamados/${numero}`, aVista);
+}

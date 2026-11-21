@@ -266,4 +266,53 @@ describe('o chamado que muda à vista', () => {
     expect(caixa().value).toBe('A bandeja 2 também mancha.');
     expect(document.activeElement).toBe(caixa());
   });
+
+  it('a notificação do chamado à vista no endereço da TI também não vira aviso', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    const canal = criarCanalDeEventos();
+    const notificacoes = { itens: [] as Notificacao[], leituras: 0 };
+    abrirOChat(
+      '/chat/chamados/1045',
+      comOChat({
+        'GET /api/chat/chamados': () =>
+          Response.json({
+            abertos: [naLista(1045, IMPRESSORA_MANCHANDO), naLista(1041, PASTA)],
+            resolvidos: [],
+            seguintes: false,
+          }),
+        'GET /api/chat/chamados/1045': () =>
+          Response.json(
+            conversa(1045, IMPRESSORA_MANCHANDO, {
+              conversa: [mensagem(1, 'Vou olhar a impressora.')],
+            }),
+          ),
+        'GET /api/notificacoes': () => {
+          notificacoes.leituras++;
+          return Response.json({
+            itens: notificacoes.itens,
+            naoLidas: notificacoes.itens.length,
+            proximo: null,
+          });
+        },
+      }),
+      { canal },
+    );
+    expect(await screen.findByText('Vou olhar a impressora.')).toBeTruthy();
+    await waitFor(() => expect(notificacoes.leituras).toBe(1));
+
+    // A conta atende o #1045 e participa dele: a resposta da pessoa chega no endereço da TI.
+    notificacoes.itens = [paraQuemAtende(1045), paraQuemAtende(1041)];
+    act(() => canal.publicar(mudou('notificacoes.mudaram')));
+    const titulos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
+    await waitFor(() => expect(titulos()).toContain('Fernanda Rocha respondeu o #1041'));
+    expect(titulos()).toEqual(['Fernanda Rocha respondeu o #1041']);
+  });
+});
+
+/** A resposta da pessoa no chamado, como a API a notifica a quem o atende, no endereço da TI. */
+const paraQuemAtende = (numero: number): Notificacao => ({
+  ...respondeu(numero),
+  id: `ti${numero}`,
+  titulo: `Fernanda Rocha respondeu o #${numero}`,
+  destino: `/chamados/${numero}`,
 });
