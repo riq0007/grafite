@@ -104,13 +104,16 @@ export function useChamadosDoChat(ligado: boolean) {
 
 /**
  * A conversa de um chamado de que a conta participa, nas palavras do colaborador, só com o módulo
- * Chamados ligado.
+ * Chamados ligado. Ela não fica guardada fora da tela, como o trecho da conversa: a volta ao chamado
+ * lê de novo e abre na "Resposta nova" que chegou fora dela, sem mostrar antes a conversa velha, com
+ * as opções de uma pergunta já respondida em outro aparelho.
  */
 export function useChamadoDoChat(numero: number, ligado: boolean) {
   const api = useApi();
   return useQuery({
     queryKey: chaveDoChamadoDoChat(numero),
     enabled: ligado,
+    gcTime: 0,
     queryFn: ({ signal }) =>
       consultar(
         () => api.GET('/chat/chamados/{numero}', { params: { path: { numero } }, signal }),

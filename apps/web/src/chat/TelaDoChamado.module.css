@@ -202,8 +202,16 @@
 
 /* "Seus outros chamados": o rótulo e as pílulas correm em linha, como texto, com o fio embaixo. As
    pílulas seguem o rótulo e, quando não cabem, descem para o começo da linha de baixo, como no m10.
-   A margem de cima e de baixo das pílulas faz o vão entre as linhas e entra na medida das bordas. */
+   A margem de cima e de baixo das pílulas faz o vão entre as linhas e entra na medida das bordas.
+   Com muitos chamados, a faixa para em duas linhas e meia e rola por dentro, para não tirar a altura
+   da conversa: quem atende participa dos chamados que abre pelo chat e pode ter dezenas abertos. A
+   meia linha diz que há mais, e duas linhas cabem inteiras, sem rolar, com folga para a fonte. */
 .outros {
+  --linha-dos-outros: calc(var(--esp-6) + 3 * var(--esp-1));
+  flex: none;
+  max-block-size: calc(2.5 * var(--linha-dos-outros) + 2 * (var(--esp-3) - var(--esp-1)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: calc(var(--esp-3) - var(--esp-1)) var(--esp-5);
   border-block-end: 1px solid var(--cor-linha);
 }
