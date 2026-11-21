@@ -441,6 +441,28 @@ describe('o teclado e a respondida', () => {
     expect(estado.paginas).toHaveLength(1);
   });
 
+  it('o destino do salto fica marcado até o próximo clique ou a próxima tecla', async () => {
+    const resposta = mensagem(4, {
+      autor: TATIANA,
+      texto: 'Aqui também manchou',
+      respondida: { id: id(2), autor: 'Paulo Nunes', comeco: 'Mensagem 2' },
+    });
+    const { servidor } = servidorDoMenu({ mensagens: [...varias(1, 3), resposta] });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const respondida = await screen.findByRole('link', { name: /Paulo Nunes/ });
+    const destino = document.querySelector(`[data-mensagem="${id(2)}"]`) as HTMLElement;
+    // O foco que o clique põe na mensagem não é o do teclado, que o :focus-visible pinta.
+    fireEvent.click(respondida);
+    expect(destino.hasAttribute('data-saltada')).toBe(true);
+    fireEvent.pointerDown(document.body);
+    expect(destino.hasAttribute('data-saltada')).toBe(false);
+
+    fireEvent.click(respondida);
+    expect(destino.hasAttribute('data-saltada')).toBe(true);
+    fireEvent.keyDown(destino, { key: 'ArrowDown' });
+    expect(destino.hasAttribute('data-saltada')).toBe(false);
+  });
+
   it('a respondida fora do trecho abre a conversa nela', async () => {
     const resposta = mensagem(60, {
       autor: TATIANA,

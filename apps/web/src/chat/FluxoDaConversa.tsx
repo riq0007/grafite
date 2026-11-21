@@ -92,6 +92,22 @@ function andarPelasMensagens(evento: KeyboardEvent<HTMLOListElement>) {
   destino.focus();
 }
 
+/**
+ * O destino do salto pela respondida fica com o fundo do mouse até o próximo clique ou a próxima
+ * tecla: o foco que o clique põe nele não é o do teclado, que o `:focus-visible` pinta, e sem a
+ * marca nada diria aonde a conversa foi. O clique que fez o salto já passou quando ela entra.
+ */
+function marcarODestino(destino: HTMLElement) {
+  destino.setAttribute('data-saltada', '');
+  const tirar = () => {
+    destino.removeAttribute('data-saltada');
+    window.removeEventListener('pointerdown', tirar, true);
+    window.removeEventListener('keydown', tirar, true);
+  };
+  window.addEventListener('pointerdown', tirar, true);
+  window.addEventListener('keydown', tirar, true);
+}
+
 /** Uma janela por cima da conversa, como um diálogo ou um menu, fica com o atalho. */
 const COM_O_ATALHO = '[role="dialog"], [role="alertdialog"], [role="menu"]';
 
@@ -353,6 +369,7 @@ export function FluxoDaConversa({
     noFim.current = estaNoFim(elemento);
     definirNoFimNaTela(noFim.current);
     destino.focus({ preventScroll: true });
+    marcarODestino(destino);
     return true;
   };
 

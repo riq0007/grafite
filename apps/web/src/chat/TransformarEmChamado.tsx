@@ -143,6 +143,13 @@ function FormularioDoChamado({
   );
   const ativos = sugeridos.data?.ativos ?? [];
   const ativo = ativos.find(({ id }) => id === ativoEscolhido) ?? ativos[0] ?? null;
+  // Os campos com o controle na tela, onde a recusa deles aparece: os tipos, quando a lista está na
+  // tela, e o ativo, quando os sugeridos chegaram. "Abrir chamado" fica sem ação enquanto os tipos ou
+  // os sugeridos não chegam e sem nenhum tipo, porque o pedido iria sem o que a tela ainda vai mostrar.
+  const comOsTipos = tipos.isSuccess && tipos.data.itens.length > 0;
+  const comOAtivo = Boolean(tipo?.pedeOAtivo) && pessoa !== null;
+  const comOsSugeridos = comOAtivo && sugeridos.isSuccess;
+  const semAcao = !comOsTipos || (comOAtivo && !sugeridos.isSuccess);
 
   // O foco vai ao primeiro campo recusado, depois de a tela mostrar as recusas. Sem nenhum sugerido,
   // o ativo não tem o que escolher, e a recusa manda trocar o tipo: o foco vai ao tipo escolhido.
@@ -175,7 +182,7 @@ function FormularioDoChamado({
 
   async function abrir(evento: FormEvent) {
     evento.preventDefault();
-    if (enviando) return;
+    if (enviando || semAcao) return;
     definirEnviando(true);
     definirFalha(null);
     try {
@@ -193,14 +200,20 @@ function FormularioDoChamado({
         'abrir o chamado',
       );
       if (!('dados' in resultado)) {
-        const campos = Object.fromEntries(
-          Object.entries(resultado.problema?.campos ?? {}).filter(
-            (campo): campo is [string, string] => typeof campo[1] === 'string',
-          ),
-        ) as Recusas;
-        if (Object.keys(campos).length > 0) {
-          definirRecusas(campos);
-          definirPedidoDeFoco((antes) => antes + 1);
+        const campos = Object.entries(resultado.problema?.campos ?? {}).filter(
+          (campo): campo is [string, string] => typeof campo[1] === 'string',
+        );
+        if (campos.length > 0) {
+          // A recusa do campo que não está na tela, como a do ativo no tipo que não o pede, fica
+          // acima das ações, para não sumir.
+          const naTela = new Set<string>(['titulo', 'pessoa']);
+          if (comOsTipos) naTela.add('tipo');
+          if (comOsSugeridos) naTela.add('ativo');
+          const nosCampos = campos.filter(([campo]) => naTela.has(campo));
+          const foraDeles = campos.filter(([campo]) => !naTela.has(campo));
+          definirRecusas(Object.fromEntries(nosCampos) as Recusas);
+          definirFalha(foraDeles.length > 0 ? foraDeles.map(([, texto]) => texto).join(' ') : null);
+          if (nosCampos.length > 0) definirPedidoDeFoco((antes) => antes + 1);
           return;
         }
         // A mensagem que já virou chamado mostra a marca na conversa, que se relê.
@@ -268,6 +281,7 @@ function FormularioDoChamado({
           type="submit"
           nivel="primario"
           icone={LifeBuoy}
+          isDisabled={semAcao}
           carregando={enviando}
           rotuloCarregando="Abrindo o chamado"
         >

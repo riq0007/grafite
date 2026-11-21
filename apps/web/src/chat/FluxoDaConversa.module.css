@@ -107,8 +107,15 @@
 }
 
 /* No mouse, no foco do teclado e com um menu da barra aberto (m01): o fundo diz de qual mensagem é
-   o menu. O clique que dá o foco à mensagem, como ao selecionar o texto, não a prende. */
-.mensagem:is(:hover, :focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) {
+   o menu. O clique que dá o foco à mensagem, como ao selecionar o texto, não a prende. O destino do
+   salto pela respondida fica com o fundo até o próximo clique ou a próxima tecla. */
+.mensagem:is(
+  :hover,
+  :focus-visible,
+  :has(:focus-visible),
+  :has(> .barra[data-presa]),
+  [data-saltada]
+) {
   background-color: var(--cor-hover);
 }
 
