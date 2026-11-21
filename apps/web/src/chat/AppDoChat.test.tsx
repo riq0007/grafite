@@ -693,6 +693,19 @@ describe('o menu da conta', () => {
     ).toEqual(['Tema', 'Sair']);
   });
 
+  it('para quem configura o chat, "Equipes e canais" abre a tela no Grafite, numa janela nova', async () => {
+    const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
+    abrir('/chat', comOChat({}, {}, ['chat.configurar']));
+    const menu = await abrirOMenu();
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Tema', 'Equipes e canaisNo Grafite, numa janela nova', 'Sair']);
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Equipes e canais' }));
+    expect(abrirJanela).toHaveBeenCalledWith('/conversas/equipes-e-canais', '_blank', 'noopener');
+  });
+
   it('com foto, mostra a foto da pessoa da conta', async () => {
     abrir(
       '/chat',

@@ -1,7 +1,9 @@
 // O menu da conta no pé da trilha (spec modulo-chat, "App do chat"): a foto ou as iniciais abrem o
 // tema, que vale na hora e é gravado na conta, como nos Ajustes, e "Sair". Quem só usa o chat
 // nunca chega aos Ajustes, e o tema é o que muda de um aparelho para outro. Na barra de baixo do
-// celular, a foto vai com "Conta" embaixo, como as vistas, e o menu abre acima dela.
+// celular, a foto vai com "Conta" embaixo, como as vistas, e o menu abre acima dela. Para quem
+// configura o chat, "Equipes e canais" abre a tela no Grafite, numa janela nova, porque a conta que
+// entra no app pode não ter outro caminho até ela (change chat-com-chamados, design, decisão 15).
 import { TEMAS_DA_ESCOLHA } from '@grafite/domain';
 import {
   Avatar,
@@ -19,7 +21,9 @@ import { miniaturasDaConta } from '../api/fotos.ts';
 import { usePreferencias } from '../preferencias/usePreferencias.tsx';
 import type { ContaDaSessao } from '../sessao/loja.ts';
 import { pagina } from '../sessao/pagina.ts';
+import { useAcesso } from '../sessao/useAcesso.ts';
 import { useLojaDaSessao } from '../sessao/useSessao.tsx';
+import { useIrNoChat } from './base.tsx';
 import estilos from './MolduraDoChat.module.css';
 
 const IDS_DOS_TEMAS = Object.keys(temas) as IdDoTema[];
@@ -38,6 +42,8 @@ export function MenuDaConta({
   naBarraDeBaixo?: boolean;
 }) {
   const loja = useLojaDaSessao();
+  const { pode } = useAcesso();
+  const irNoChat = useIrNoChat();
   const { preferencias, mudar } = usePreferencias();
   const tema = preferencias.aparencia.tema;
   /** Sair encerra a sessão e recarrega a página, que recomeça sem nada da conta na memória. */
@@ -93,6 +99,14 @@ export function MenuDaConta({
         {GRUPOS_DE_TEMAS.map((grupo) => secao(grupo.nome, grupo.temas))}
         {secao('Montado por você', ['personalizado'])}
       </Submenu>
+      {pode('chat.configurar') ? (
+        <ItemDeMenu
+          descricao="No Grafite, numa janela nova"
+          onAction={() => irNoChat('/conversas/equipes-e-canais')}
+        >
+          Equipes e canais
+        </ItemDeMenu>
+      ) : null}
       <Separador />
       <ItemDeMenu onAction={() => void sair()}>Sair</ItemDeMenu>
     </Menu>
