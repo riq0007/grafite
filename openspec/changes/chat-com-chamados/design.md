@@ -387,6 +387,11 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - na conversa, a origem vem antes de tudo, com "Mensagem de Paulo Nunes, hoje, 10:19", o texto citado e os anexos que o chamado copiou; o "Abrir a conversa" abre o Chat na casca. Quem abriu pelo chat no nome de outra pessoa tem "· abriu o chamado" no nome. A pergunta fica nos chips, sem ação, com "Sem resposta." ou quem escolheu. O resumo dos tempos é o do chat (`chat/ResumoDosTempos.tsx`), embaixo da linha da resolução. A avaliação é a linha "Fernanda Rocha avaliou: Ótimo · Resolveu muito bem · 10:52", com o comentário entre aspas embaixo, e o fechamento, "O chamado fechou · 00:00";
   - o Fechado tem o selo no cabeçalho, sem as ações, e o caminho da busca da casca diz "Fechado", pelo `fechado` que a API soma aos itens do `buscarChamados`. A Linha do tempo termina no passo "Fechado · 18/11", que passa a ser o de agora. O resolvido tem o "fecha em 18/11" ao lado do selo, com o último dia para reabrir;
   - a gaveta da resposta pronta tem as opções entre o texto e a espera, com a explicação "De 2 a 3, que a pessoa escolhe por um botão no chat. Sem opções, a resposta não pede escolha." e a recusa delas embaixo; a lista conta as opções depois do selo da espera.
+- **A Auditoria,** nos casos que a spec não escreve (tarefa 4.14):
+  - o alvo `conversa` sai pelo tipo da ação, "Equipe: Financeiro" ou "Canal: Avisos da TI", na lista e na prévia;
+  - os campos da equipe e do canal são os da lista do cadastro, na ordem dela: Nome, Tipo, Grupo, Quem escreve, "Avisar a cada mensagem", com "Ligado" ou "Desligado", e Situação. No canal, o grupo é "Todos que usam o chat", como a lista;
+  - a abertura tem a "Origem", "Chat" ou "TI", depois da pessoa. Quem abriu pelo chat no nome de outra pessoa fica em "Quem fez";
+  - o retomar e o reabrir pela pessoa têm o registro da TI, com ela em "Quem fez": a situação e quem atende pelo texto, só o que mudou.
 
 ## Risks / Trade-offs
 

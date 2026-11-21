@@ -32,6 +32,14 @@ const visao = (campos: Record<string, string>, travados: string[] = []) => ({
 /** O detalhe sem as quatro linhas fixas: quem fez, o alvo, o IP e o código de rastreio. */
 const doRegistro = (registro: Registro) => camposDoDetalhe(registro, formatar).slice(4);
 
+/** A ordem em que o jsonb devolve as chaves: pelo tamanho e, no mesmo tamanho, pelo alfabeto. */
+const doBanco = (visao: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(visao).sort(
+      ([uma], [outra]) => uma.length - outra.length || (uma < outra ? -1 : 1),
+    ),
+  );
+
 describe('o registro de um ativo na auditoria', () => {
   it('o alvo pelo nome do ativo', () => {
     expect(textoDoAlvo({ tipo: 'ativo', id: 'a1', nome: 'HP LaserJet M404', usuario: null })).toBe(
@@ -604,13 +612,6 @@ describe('o registro dos chamados na auditoria', () => {
   });
 
   it('as chaves na ordem das telas, e não na do banco, que guarda o JSON com as curtas primeiro', () => {
-    // A ordem em que o jsonb devolve as chaves: pelo tamanho e, no mesmo tamanho, pelo alfabeto.
-    const doBanco = (visao: Record<string, unknown>) =>
-      Object.fromEntries(
-        Object.entries(visao).sort(
-          ([uma], [outra]) => uma.length - outra.length || (uma < outra ? -1 : 1),
-        ),
-      );
     const rotulos = (registro: Registro) => doRegistro(registro).map(({ rotulo }) => rotulo);
     expect(
       rotulos(
@@ -692,6 +693,94 @@ describe('o registro dos chamados na auditoria', () => {
         }),
       ),
     ).toEqual([{ rotulo: 'Título', valor: 'Toner → Toner preto' }]);
+  });
+
+  it('a abertura pelo chat e pela TI: a origem em texto, depois da pessoa', () => {
+    const aberto = (origem: string) =>
+      doChamado({
+        ator: { tipo: 'conta', id: 'c-carla', nome: 'Carla Dias', usuario: 'carla.dias' },
+        alvo: { tipo: 'chamado', id: 'ch2', nome: '#1045 · Impressora manchando', usuario: null },
+        depois: doBanco({
+          numero: 1045,
+          tipo: 'Impressora',
+          titulo: 'Impressora manchando',
+          pessoa: 'Fernanda Lima',
+          situacao: 'triagem',
+          origem,
+        }),
+      });
+    expect(doRegistro(aberto('chat'))).toEqual([
+      { rotulo: 'Número', valor: '#1045' },
+      { rotulo: 'Tipo', valor: 'Impressora' },
+      { rotulo: 'Título', valor: 'Impressora manchando' },
+      { rotulo: 'Pessoa', valor: 'Fernanda Lima' },
+      { rotulo: 'Origem', valor: 'Chat' },
+      { rotulo: 'Situação', valor: 'Na triagem' },
+    ]);
+    // Quem abriu pelo chat no nome de outra pessoa fica em "Quem fez", e a pessoa, no chamado.
+    expect(camposDoDetalhe(aberto('chat'), formatar)[0]).toEqual({
+      rotulo: 'Quem fez',
+      valor: 'Carla Dias (carla.dias)',
+    });
+    expect(doRegistro(aberto('ti')).at(4)).toEqual({ rotulo: 'Origem', valor: 'TI' });
+  });
+
+  it('o retomar e o reabrir pela pessoa: ela em "Quem fez", com a situação e quem atende em texto', () => {
+    const fernanda = {
+      tipo: 'conta' as const,
+      id: 'c-fernanda',
+      nome: 'Fernanda Lima',
+      usuario: 'fernanda.lima',
+    };
+    const alvo = {
+      tipo: 'chamado',
+      id: 'ch2',
+      nome: '#1045 · Impressora manchando',
+      usuario: null,
+    };
+    const retomado = doChamado({
+      acao: 'chamado.retomado',
+      rotulo: 'Chamado retomado',
+      ator: fernanda,
+      alvo,
+      antes: { situacao: 'aguardando', responsavel: 'Ana Souza' },
+      depois: { situacao: 'em-atendimento', responsavel: 'Ana Souza' },
+    });
+    expect(camposDoDetalhe(retomado, formatar).slice(0, 2)).toEqual([
+      { rotulo: 'Quem fez', valor: 'Fernanda Lima (fernanda.lima)' },
+      { rotulo: 'Alvo', valor: 'Chamado: #1045 · Impressora manchando' },
+    ]);
+    expect(doRegistro(retomado)).toEqual([
+      { rotulo: 'Situação', valor: 'Aguardando o colaborador → Em atendimento' },
+    ]);
+    // Reaberto com quem atendia, ou na triagem, quando ele já não atende.
+    expect(
+      doRegistro(
+        doChamado({
+          acao: 'chamado.reaberto',
+          rotulo: 'Chamado reaberto',
+          ator: fernanda,
+          alvo,
+          antes: { situacao: 'resolvido', responsavel: 'Ana Souza' },
+          depois: { situacao: 'em-atendimento', responsavel: 'Ana Souza' },
+        }),
+      ),
+    ).toEqual([{ rotulo: 'Situação', valor: 'Resolvido → Em atendimento' }]);
+    expect(
+      doRegistro(
+        doChamado({
+          acao: 'chamado.reaberto',
+          rotulo: 'Chamado reaberto',
+          ator: fernanda,
+          alvo,
+          antes: { situacao: 'resolvido', responsavel: 'Ana Souza' },
+          depois: { situacao: 'triagem' },
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Situação', valor: 'Resolvido → Na triagem' },
+      { rotulo: 'Quem atende', valor: 'Ana Souza → —' },
+    ]);
   });
 
   it('Tipo de fábrica criado: cada parte do tipo pelo nome da tela, com os valores em texto', () => {
@@ -936,5 +1025,102 @@ describe('o registro dos chamados na auditoria', () => {
       { rotulo: 'Carga cheia', valor: '5 → 6' },
       { rotulo: 'Chamados que contavam no horário da TI', valor: '3' },
     ]);
+  });
+});
+
+describe('o registro das equipes e dos canais na auditoria', () => {
+  const daConversa = (extras: Partial<Registro>): Registro => ({
+    id: 'r10',
+    momento: '2026-11-21T12:00:00.000Z',
+    acao: 'canal.criado',
+    rotulo: 'Canal criado',
+    ator: { tipo: 'conta', id: 'c-ana', nome: 'Ana Souza', usuario: 'ana.souza' },
+    alvo: { tipo: 'conversa', id: 'cv1', nome: 'Avisos da TI', usuario: null },
+    antes: null,
+    depois: null,
+    dados: null,
+    ip: null,
+    codigoDeRastreio: null,
+    ...extras,
+  });
+  /** O canal como a visão que a API grava, nos termos da lista das equipes e dos canais. */
+  const avisos = {
+    nome: 'Avisos da TI',
+    tipo: 'Canal',
+    grupo: null,
+    escreve: 'Todos que participam',
+    avisar: true,
+    situacao: 'Ativo',
+  };
+  const financeiro = {
+    nome: 'Financeiro',
+    tipo: 'Equipe',
+    grupo: 'Financeiro',
+    escreve: 'Todos que participam',
+    avisar: false,
+    situacao: 'Ativo',
+  };
+  const daEquipe = (extras: Partial<Registro>) =>
+    daConversa({
+      acao: 'equipe.criada',
+      rotulo: 'Equipe criada',
+      alvo: { tipo: 'conversa', id: 'cv2', nome: 'Financeiro', usuario: null },
+      ...extras,
+    });
+
+  it('o alvo pelo tipo da ação e pelo nome de agora', () => {
+    const alvo = (nome: string) => ({ tipo: 'conversa', id: 'cv1', nome, usuario: null });
+    expect(textoDoAlvo(alvo('Avisos da TI'), 'canal.alterado')).toBe('Canal: Avisos da TI');
+    expect(textoDoAlvo(alvo('Financeiro'), 'equipe.arquivada')).toBe('Equipe: Financeiro');
+    expect(textoDoAlvo(alvo('Avisos da TI'))).toBe('Conversa: Avisos da TI');
+    expect(camposDoDetalhe(daEquipe({ depois: financeiro }), formatar)[1]).toEqual({
+      rotulo: 'Alvo',
+      valor: 'Equipe: Financeiro',
+    });
+  });
+
+  it('Canal criado: cada campo pelo nome da lista, na ordem dela, com os valores em texto', () => {
+    expect(doRegistro(daConversa({ depois: doBanco(avisos) }))).toEqual([
+      { rotulo: 'Nome', valor: 'Avisos da TI' },
+      { rotulo: 'Tipo', valor: 'Canal' },
+      { rotulo: 'Grupo', valor: 'Todos que usam o chat' },
+      { rotulo: 'Quem escreve', valor: 'Todos que participam' },
+      { rotulo: 'Avisar a cada mensagem', valor: 'Ligado' },
+      { rotulo: 'Situação', valor: 'Ativo' },
+    ]);
+  });
+
+  it('Canal alterado: só o que mudou, como quem escreve, com o antes → depois', () => {
+    expect(
+      doRegistro(
+        daConversa({
+          acao: 'canal.alterado',
+          rotulo: 'Canal alterado',
+          antes: doBanco(avisos),
+          depois: doBanco({ ...avisos, escreve: 'TI', avisar: false }),
+        }),
+      ),
+    ).toEqual([
+      { rotulo: 'Quem escreve', valor: 'Todos que participam → TI' },
+      { rotulo: 'Avisar a cada mensagem', valor: 'Ligado → Desligado' },
+    ]);
+  });
+
+  it('a equipe criada, com o grupo pelo nome, e a arquivada e a reativada pela situação', () => {
+    expect(doRegistro(daEquipe({ depois: doBanco(financeiro) }))).toEqual([
+      { rotulo: 'Nome', valor: 'Financeiro' },
+      { rotulo: 'Tipo', valor: 'Equipe' },
+      { rotulo: 'Grupo', valor: 'Financeiro' },
+      { rotulo: 'Quem escreve', valor: 'Todos que participam' },
+      { rotulo: 'Avisar a cada mensagem', valor: 'Desligado' },
+      { rotulo: 'Situação', valor: 'Ativo' },
+    ]);
+    const arquivada = { ...financeiro, situacao: 'Arquivado' };
+    expect(
+      doRegistro(daEquipe({ acao: 'equipe.arquivada', antes: financeiro, depois: arquivada })),
+    ).toEqual([{ rotulo: 'Situação', valor: 'Ativo → Arquivado' }]);
+    expect(
+      doRegistro(daEquipe({ acao: 'equipe.reativada', antes: arquivada, depois: financeiro })),
+    ).toEqual([{ rotulo: 'Situação', valor: 'Arquivado → Ativo' }]);
   });
 });

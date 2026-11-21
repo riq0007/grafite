@@ -214,7 +214,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - as pontas a ponta e as referências visuais do chamado aberto que o campo de escrever novo muda.
 
   Verificar: o `pnpm test:e2e` dos chamados, o lint, o typecheck e as telas no `pnpm dev`.
-- [ ] 4.14 Os registros na Auditoria (`registro.ts`): os alvos e os campos das equipes e dos canais, a abertura pelo chat e o retomar e o reabrir pela pessoa, nos termos da operação. Verificar: os testes do `registro.test.ts`, o lint, o typecheck e a Auditoria no `pnpm dev`.
+- [x] 4.14 Os registros na Auditoria (`registro.ts`): os alvos e os campos das equipes e dos canais, a abertura pelo chat e o retomar e o reabrir pela pessoa, nos termos da operação. Verificar: os testes do `registro.test.ts`, o lint, o typecheck e a Auditoria no `pnpm dev`. O alvo `conversa` sai pelo tipo da ação (`textoDoAlvo` com a ação), os campos pelos da lista do cadastro e a ordem das telas vale para todo alvo que a tem (`ORDEM_NAS_TELAS`); o retomar e o reabrir pela pessoa já saíam nos termos da TI, e os testes os fixam (decisão 15, "A Auditoria").
 
 ## 5. Fechamento
 

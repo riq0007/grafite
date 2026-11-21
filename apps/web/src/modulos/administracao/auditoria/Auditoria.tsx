@@ -252,7 +252,7 @@ export function Auditoria() {
                   <Celula>{dataHora.formatarDataEHora(new Date(registro.momento))}</Celula>
                   <Celula>{textoDoAtor(registro.ator)}</Celula>
                   <Celula>{registro.rotulo}</Celula>
-                  <Celula>{textoDoAlvo(registro.alvo)}</Celula>
+                  <Celula>{textoDoAlvo(registro.alvo, registro.acao)}</Celula>
                   <Celula>{registro.ip ?? '—'}</Celula>
                   <Celula>{registro.codigoDeRastreio ?? '—'}</Celula>
                 </Linha>
