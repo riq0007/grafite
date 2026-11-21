@@ -97,7 +97,10 @@ export function useEsteAparelho() {
       recebeuAqui.current = false;
       throw erro;
     }
-    definirSuporte(resultado === 'sem-push' ? 'sem-push' : suporteAoPush(ambiente));
+    const suporteAgora = resultado === 'sem-push' ? 'sem-push' : suporteAoPush(ambiente);
+    definirSuporte(suporteAgora);
+    // Com o pedido dos avisos dispensado, a permissão fica como estava, e o botão, com o foco.
+    if (resultado !== 'inscrito' && suporteAgora === 'ok') recebeuAqui.current = false;
     if (resultado === 'inscrito') await reler();
   };
 
