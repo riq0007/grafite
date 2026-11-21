@@ -1,0 +1,28 @@
+/* O resumo dos tempos: o rótulo em cima e o tempo embaixo, em colunas que quebram a linha. */
+.tempos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-2) var(--esp-8);
+  margin: 0;
+}
+
+.tempos dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.tempos dd {
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-medio);
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}

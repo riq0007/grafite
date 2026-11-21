@@ -206,8 +206,8 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - o toque no push (`sw-avisos.js`): o destino guardado com a busca e a janela pelo caminho, nos dois sentidos (o destino do chat no app do chat ou, sem ele, na casca; os outros só na casca; sem janela, o `openWindow`).
 
   Verificar: os testes do `sw-avisos.js`, com o destino do chat e o da casca diante de cada janela aberta, o lint, o typecheck e as duas sessões no `pnpm dev`.
-- [ ] 4.13 O lado da TI (m05 e m11):
-  - o campo de escrever: "Enviar à Fernanda", o "/ativo", "Cartão do ativo", "Pedir uma escolha" e a ajuda do chat;
+- [x] 4.13 O lado da TI (m05 e m11):
+  - o campo de escrever: "Enviar para Fernanda", o "/ativo", "Cartão do ativo", "Pedir uma escolha" e a ajuda do chat;
   - a conversa: as mensagens de quem participa, a origem, a escolha, a avaliação e o resumo dos tempos;
   - o Fechado na tela, também na lista: a API soma o `fechado` aos itens do `buscarChamados`, pelo `estaFechado(chamado, agora, fuso)`, como a lista do chat (nota da revisão da 3.11);
   - as respostas prontas com as opções;

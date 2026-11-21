@@ -56,6 +56,7 @@ import { estaNoFim, topoNaRolagem } from './FluxoDaConversa.tsx';
 import estilos from './FluxoDoChamado.module.css';
 import { useAgoraNoChat } from './janela.ts';
 import { type EscolherAOpcao, PerguntaDoChamado } from './PerguntaDoChamado.tsx';
+import { ResumoDosTempos } from './ResumoDosTempos.tsx';
 
 /** O espaço, em px, acima de "Resposta nova" quando a conversa abre nela. */
 const ACIMA_DA_NOVA = 16;
@@ -286,46 +287,6 @@ function PilulaDoEvento({ evento, dataHora }: { evento: EventoDoChamado; dataHor
         </span>
       </span>
     </p>
-  );
-}
-
-type ResumoDosTemposNoChat = NonNullable<EventoDoChamado['resumo']>;
-
-/** O resumo dos tempos do resolvido, em quatro colunas, embaixo da pílula dele. */
-function ResumoDosTempos({
-  resumo,
-  agora,
-  dataHora,
-}: {
-  resumo: ResumoDosTemposNoChat;
-  agora: Date;
-  dataHora: DataHora;
-}) {
-  const hora = (em: string) => horaNaConversa(new Date(em), agora, dataHora);
-  const { primeiraResposta, resolvido } = resumo;
-  return (
-    <dl className={estilos.tempos}>
-      <div>
-        <dt>Aberto</dt>
-        <dd className={estilos.mono}>{hora(resumo.abertoEm)}</dd>
-      </div>
-      <div>
-        <dt>Primeira resposta da TI</dt>
-        <dd className={primeiraResposta ? estilos.mono : undefined}>
-          {primeiraResposta
-            ? `${hora(primeiraResposta.em)} · ${primeiraResposta.tempo}`
-            : 'sem resposta'}
-        </dd>
-      </div>
-      <div>
-        <dt>Resolvido</dt>
-        <dd className={estilos.mono}>{`${hora(resolvido.em)} · ${resolvido.tempo}`}</dd>
-      </div>
-      <div>
-        <dt>Atendeu</dt>
-        <dd className={estilos.forte}>{resumo.atendeu}</dd>
-      </div>
-    </dl>
   );
 }
 

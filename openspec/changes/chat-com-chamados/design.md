@@ -139,7 +139,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 - **As opções:** a mensagem da TI leva de 2 a 3, conferidas no domínio, e a resposta pronta as põe no campo.
 - **O cartão:** a API monta o retrato na hora de mandar, de um ativo que quem escreve vê. Ela usa as leituras do resumo do ativo (o nome, o modelo, o patrimônio, o IP, a disponibilidade em texto, o suprimento mais baixo e a hora da leitura) e grava no `cartao`.
-- **O campo de escrever** pede a prévia pelo `GET /chamados/:numero/cartao?patrimonio=`, que dá o mesmo retrato. O "/ativo" é lido na web, pelo `comandoDoAtivo` do domínio.
+- **O campo de escrever** pede a prévia pelo `GET /chamados/:numero/cartao?patrimonio=`, ou pelo `?ativo=`, que dão o mesmo retrato. O "/ativo" é lido na web, pelo `comandoDoAtivo` do domínio.
 
 ### 11. O chamado citado
 
@@ -161,7 +161,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 
 ### 13. O lado da TI
 
-- O campo de escrever do chamado aberto ganha "Enviar à Fernanda", o cartão, as opções e a ajuda de quem usa o chat. A ficha passa a dizer se a conta da pessoa usa o chat.
+- O campo de escrever do chamado aberto ganha "Enviar para Fernanda", o cartão, as opções e a ajuda de quem usa o chat. A ficha passa a dizer se a conta da pessoa usa o chat.
 - A conversa ganha as mensagens de quem participa, a origem com "Abrir a conversa" a quem participa dela, a escolha, a avaliação e o resumo dos tempos, este montado na leitura pelo domínio (`resumoDosTempos`, em horas corridas).
 - O Fechado ganha o selo, a frase do campo e a linha "Fechado · 18/11"; o resolvido diz "fecha em 18/11".
 - A lista das respostas prontas mostra as opções contadas, e a gaveta as edita.
@@ -178,6 +178,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
 - **As durações** vêm dos tokens de movimento. A que faltar entra neles, com o teste.
 - **A forma da conversa:** o chat é sempre o do Discord (o nome e a hora em cima, sem balão), e não segue a preferência "conversas", que é do chamado aberto da TI.
 - **O título** do transformar vai até 120 caracteres, a regra do chamado, e não 80, como no m02.
+- **O envio da TI** diz "Enviar para Fernanda", e não "Enviar à Fernanda", como no m05 e no m11: a crase erra nos nomes masculinos ("Enviar à Paulo"), e o "para" é o da chave "Mensagem para Fernanda". **Confirmado pelo usuário em 21/11, pela pergunta,** com a spec modulo-chamados mudada.
 - **A origem de uma conversa direta** diz "Aberto a partir da conversa de Fernanda Rocha com Paulo Nunes".
 - **"Mensagens anteriores"** carrega 50 por vez.
 - **A espera** fica na linha "Aguardando você", com a hora, sem a razão dos mockups ("confirme o nome da pasta", no m08 e no m10): o evento `aguardando` não tem dados, a razão foi escrita à mão no mockup, e a mensagem da TI logo acima já diz o que falta.
@@ -243,7 +244,7 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - a escolha numa mensagem que não é do chamado, também a nota, que a pessoa não lê, é a pergunta sem opções: "Escolha uma opção da pergunta.", no campo `opcao`, sem dizer se a mensagem existe;
   - a marcação como vista avisa só as telas da conta (`chamados.mudaram` com a conta), porque muda só a leitura dela; as outras ações avisam quem vê o chamado, e a 3.12 soma as contas de quem participa.
 - **O lado da TI,** nos casos que a spec não escreve:
-  - a prévia do cartão (`GET /chamados/:numero/cartao?patrimonio=`) acha o ativo só pelo patrimônio, como o "/ativo" o escreve; o ativo que não existe, o de um local que quem escreve não vê com `ativos.ver` e o módulo Ativos desligado respondem "O ativo não foi encontrado.", na prévia e no envio, no campo `cartao`;
+  - a prévia do cartão (`GET /chamados/:numero/cartao`) acha o ativo pelo patrimônio (`?patrimonio=`), como o "/ativo" o escreve, ou pelo id (`?ativo=`), como o "Cartão do ativo" o escolhe; com os dois, vale o id, e sem nenhum, a recusa fica no `patrimonio` (tarefa 4.13); o ativo que não existe, o de um local que quem escreve não vê com `ativos.ver` e o módulo Ativos desligado respondem "O ativo não foi encontrado.", na prévia e no envio, no campo `cartao`;
   - o retrato (`chamados/cartao.ts`) leva o ícone e o tipo, o nome, o modelo, o patrimônio, o IP (o campo da disponibilidade ou, sem ele, o do SNMP; o de um campo restrito nunca entra, também pela mão de quem vê os restritos, porque o cartão vai a quem participa e a quem vê o chamado sem essa permissão, e a prévia já mostra o que vai; da revisão da 3.10), a disponibilidade só com uma leitura, o suprimento medido mais baixo, com o "crítico" do alerta só a quem vê os alertas, e a hora do retrato, que é a hora do envio. O que esta versão não lê no gravado sai nulo, e não como erro;
   - a nota da TI não leva as opções, mas leva o cartão, como a spec pede, e fica fora da leitura de quem participa; as opções e o cartão são conferidos depois da decisão do domínio, com as recusas juntas no 400, e as opções vazias gravam nulo;
   - a origem no chat tem o nome de agora da conversa; na direta, "Paulo Nunes com Ana Souza", quem escreveu a mensagem primeiro. O "Abrir a conversa" vai só a quem usa o chat e participa da conversa agora, com o módulo Chat ligado, porque a TI que não participa não abriria a conversa;
@@ -378,6 +379,14 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - à vista é a aba visível, a janela com o foco e a tela na frente: na casca, um cadastro numa aba da janela deixa a tela montada atrás, e ela não está à vista. A conversa não é lida, e a notificação dela vira aviso (da revisão da 4.10);
   - o toque no push com o app do chat aberto: o app ouve o pedido do service worker e abre o destino do chat sem recarregar; o de fora abre o Grafite numa janela nova, como o "Abrir" do aviso;
   - o `chat.mudou` e o `chamados.mudaram` relêem a conversa e o chamado sem montar a caixa de novo: o que se escreve e o foco ficam.
+- **O lado da TI na tela,** nos casos que a spec, o m05 e o m11 não escrevem (tarefa 4.13):
+  - o "/ativo" é lido na caixa: com o patrimônio, depois de 600 ms sem escrever; sozinho, com o ativo do chamado, quando a linha dele acaba. Achado, o cartão entra e a linha sai do texto. Recusado ("O ativo PAT-00999 não foi encontrado." ou, sem o ativo ligado, "O chamado não tem um ativo ligado."), a frase fica embaixo da caixa enquanto o comando é o mesmo, e o envio manda o texto como está. O comando ainda não lido é lido no envio: quando só ele estava escrito, o cartão entra e nada vai;
+  - o cartão no campo tem só o "Tirar", sem o "Abrir a ficha", e a nota também o leva. O "Cartão do ativo" aparece a quem vê os ativos, com o módulo Ativos ligado; o diálogo começa no ativo do chamado, e o botão diz "Inserir o cartão";
+  - "Pedir uma escolha" põe duas opções vazias, e tirar todas tira a pergunta. Na nota, as opções ficam guardadas, escondidas, e não vão;
+  - a ajuda do chat fica ao lado da chave, só na mensagem, e a caixa a lê pelo `aria-describedby`. O "/ativo insere o cartão" do m11 fica de fora: o "Cartão do ativo" já está à vista. O envio fica parado com a caixa vazia ou só com espaços, como no m11;
+  - na conversa, a origem vem antes de tudo, com "Mensagem de Paulo Nunes, hoje, 10:19", o texto citado e os anexos que o chamado copiou; o "Abrir a conversa" abre o Chat na casca. Quem abriu pelo chat no nome de outra pessoa tem "· abriu o chamado" no nome. A pergunta fica nos chips, sem ação, com "Sem resposta." ou quem escolheu. O resumo dos tempos é o do chat (`chat/ResumoDosTempos.tsx`), embaixo da linha da resolução. A avaliação é a linha "Fernanda Rocha avaliou: Ótimo · Resolveu muito bem · 10:52", com o comentário entre aspas embaixo, e o fechamento, "O chamado fechou · 00:00";
+  - o Fechado tem o selo no cabeçalho, sem as ações, e o caminho da busca da casca diz "Fechado", pelo `fechado` que a API soma aos itens do `buscarChamados`. A Linha do tempo termina no passo "Fechado · 18/11", que passa a ser o de agora. O resolvido tem o "fecha em 18/11" ao lado do selo, com o último dia para reabrir;
+  - a gaveta da resposta pronta tem as opções entre o texto e a espera, com a explicação "De 2 a 3, que a pessoa escolhe por um botão no chat. Sem opções, a resposta não pede escolha." e a recusa delas embaixo; a lista conta as opções depois do selo da espera.
 
 ## Risks / Trade-offs
 

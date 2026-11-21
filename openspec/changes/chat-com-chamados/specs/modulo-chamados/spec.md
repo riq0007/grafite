@@ -43,11 +43,11 @@ Com a sessão desconhecida na primeira carga, porque o servidor não respondeu, 
 ### Requirement: Campo de escrever
 
 O campo de escrever SHALL ficar no pé do chamado aberto, só para quem atende os locais do chamado, com:
-- a chave "Mensagem para Fernanda | Nota interna" e, na mensagem, "Esperar a resposta", que troca "Enviar à Fernanda" por "Enviar e esperar a resposta";
+- a chave "Mensagem para Fernanda | Nota interna" e, na mensagem, "Esperar a resposta", que troca "Enviar para Fernanda" por "Enviar e esperar a resposta";
 - a caixa do texto, que cresce com ele, e embaixo dela os anexos, cada um com o nome, o tamanho e "Tirar", até 5;
 - o cartão do ativo e as opções de resposta, quando há, entre a caixa e os anexos;
 - "Respostas prontas", o menu com todas as do tipo do chamado, e as duas primeiras ao lado, em botões, como "Pedir o print do erro";
-- o clipe, para os anexos, "Cartão do ativo", "Pedir uma escolha" e "Enviar à Fernanda", com o primeiro nome da pessoa. Ctrl+Enter manda.
+- o clipe, para os anexos, "Cartão do ativo", "Pedir uma escolha" e "Enviar para Fernanda", com o primeiro nome da pessoa. Ctrl+Enter manda.
 
 A nota interna SHALL mudar o campo para o quadro tracejado da nota, sem as respostas prontas, sem "Pedir uma escolha" e sem "Esperar a resposta", e o botão SHALL dizer "Salvar a nota".
 
@@ -64,7 +64,7 @@ No campo, o cartão SHALL mostrar os dados de agora, que vão na mensagem como e
 
 A ajuda do campo SHALL dizer "Fernanda vê esta mensagem no chat." quando a conta da pessoa usa o chat, e "Fernanda ainda não usa o chat: a mensagem fica no chamado." quando não usa.
 
-"Enviar à Fernanda" e "Salvar a nota" SHALL ficar sem ação enquanto a caixa está vazia.
+"Enviar para Fernanda" e "Salvar a nota" SHALL ficar sem ação enquanto a caixa está vazia.
 
 O que se escreve SHALL continuar no campo quando a conversa se atualiza. Mandado, o campo SHALL esvaziar, e a conversa SHALL ir à última mensagem. A recusa SHALL ficar embaixo do campo, com a frase dela.
 
@@ -88,7 +88,7 @@ No chamado resolvido, o campo SHALL dar lugar a "Reabra o chamado para escrever.
 
 #### Scenario: Cartão pelo /ativo
 - **WHEN** Bruno escreve "/ativo PAT-00137" no #1045
-- **THEN** o cartão da Impressora Financeiro aparece no campo, com o toner de agora e "Tirar", e o botão diz "Enviar à Fernanda"
+- **THEN** o cartão da Impressora Financeiro aparece no campo, com o toner de agora e "Tirar", e o botão diz "Enviar para Fernanda"
 
 #### Scenario: Pedir uma escolha
 - **WHEN** Bruno escolhe "Pedir uma escolha", escreve "Pode ser" e "Daqui a meia hora, por favor" e manda "Passo aí em 10 minutos. Pode ser?"

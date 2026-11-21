@@ -13728,13 +13728,17 @@
                     "aguardando",
                     "resolvido"
                   ]
+                },
+                "fechado": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "numero",
                 "titulo",
                 "pessoa",
-                "situacao"
+                "situacao",
+                "fechado"
               ]
             }
           }
@@ -43399,13 +43403,17 @@
                     "aguardando",
                     "resolvido"
                   ]
+                },
+                "fechado": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "numero",
                 "titulo",
                 "pessoa",
-                "situacao"
+                "situacao",
+                "fechado"
               ],
               "additionalProperties": false
             }
@@ -88580,8 +88588,18 @@
     },
     "/chamados/{numero}/cartao": {
       "get": {
-        "summary": "A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava",
+        "summary": "A prévia do cartão do ativo pelo id ou pelo patrimônio, o mesmo retrato que a mensagem grava",
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "ativo",
+            "required": false
+          },
           {
             "schema": {
               "type": "string",
@@ -88590,7 +88608,7 @@
             },
             "in": "query",
             "name": "patrimonio",
-            "required": true
+            "required": false
           },
           {
             "schema": {

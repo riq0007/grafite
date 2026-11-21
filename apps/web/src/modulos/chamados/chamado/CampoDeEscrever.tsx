@@ -1,17 +1,22 @@
-// O campo de escrever do chamado aberto (spec modulo-chamados, "Campo de escrever"; change
-// chamados-da-ti, design, "O campo de escrever (tarefa 5.12)"; mockup m03): no pé da tela, só para
-// quem atende os locais do chamado, a chave da mensagem e da nota, o "Esperar a resposta", a caixa
-// que cresce com o texto, os anexos, as respostas prontas do tipo, o clipe e "Enviar", que o
-// Ctrl+Enter também chama. O rascunho fica no componente de fora, que a tela monta pelo número do
-// chamado: a releitura da conversa não o apaga, e o chamado resolvido no meio da escrita o guarda até
-// o "Reabrir".
-import { MAXIMO_DE_ANEXOS, nomeCurto } from '@grafite/domain';
+// O campo de escrever do chamado aberto (spec modulo-chamados, "Campo de escrever" e "Chamado
+// fechado na tela"; change chamados-da-ti, design, "O campo de escrever (tarefa 5.12)"; change
+// chat-com-chamados, design, decisão 15, tarefa 4.13; mockups m03, m05 e m11): no pé da tela, só
+// para quem atende os locais do chamado, a chave da mensagem e da nota, o "Esperar a resposta", a
+// ajuda do chat, a caixa que cresce com o texto, o cartão do ativo e as opções de resposta, os
+// anexos, as respostas prontas do tipo, o clipe, "Cartão do ativo", "Pedir uma escolha" e
+// "Enviar para Fernanda", que o Ctrl+Enter também chama. O rascunho fica no componente de fora,
+// que a tela monta pelo número do chamado: a releitura da conversa não o apaga, e o chamado
+// resolvido no meio da escrita o guarda até o "Reabrir". O fechado não se reabre, e o campo dá
+// lugar à frase.
+import type { components } from '@grafite/api-client';
+import { type ComandoDoAtivo, comandoDoAtivo, MAXIMO_DE_ANEXOS, nomeCurto } from '@grafite/domain';
 import {
   AreaDeTexto,
   Botao,
   BotaoDeIcone,
   Checkbox,
   ControleSegmentado,
+  Dialogo,
   FORMATOS_DE_ARQUIVO,
   Icone,
   ItemDeMenu,
@@ -19,36 +24,60 @@ import {
   Menu,
   Segmento,
   TeclaDeAtalho,
+  useDataHora,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { Lock, MessageSquareText, Paperclip, RotateCcw, Send, Zap } from 'lucide-react';
+import {
+  IdCard,
+  ListChecks,
+  Lock,
+  MessageSquareText,
+  Paperclip,
+  RotateCcw,
+  Send,
+  Zap,
+} from 'lucide-react';
 import {
   type Dispatch,
   type SetStateAction,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
+import { useAgora } from '../../../casca/status/useAgora.ts';
+import { CartaoDoAtivoNaMensagem } from '../../../chat/CartaoDoAtivoNaMensagem.tsx';
+import { diaDoReabrir } from '../../../chat/chamado.ts';
 import { usePreferencias } from '../../../preferencias/usePreferencias.tsx';
+import { useAcesso } from '../../../sessao/useAcesso.ts';
+import { useServidor } from '../../../sessao/useSessao.tsx';
+import type { ContaDoSeletor } from '../../administracao/seletores/SeletorDeConta.tsx';
 import { useAcoesDoAtendimento } from '../acoes.ts';
 import { CHAVE_DOS_CHAMADOS, type FichaDoChamado } from '../consultas.ts';
-import type { AnexoCitado } from '../formulario/estado.ts';
+import { EditorDasOpcoes } from '../EditorDasOpcoes.tsx';
+import { type AnexoCitado, rotuloDoAtivoCitado } from '../formulario/estado.ts';
 import { ListaDeAnexos } from '../formulario/ListaDeAnexos.tsx';
 import { Recusa } from '../formulario/Recusa.tsx';
 import { useFilaDeAnexos } from '../formulario/useFilaDeAnexos.ts';
 import estilos from './CampoDeEscrever.module.css';
+import { EscolhaDoAtivo } from './EscolhaDoAtivo.tsx';
 import {
+  ajudaDoCampo,
+  ativoNaoEncontrado,
+  comandoParaLer,
   envioDoCampo,
   formaDoCampo,
   ID_DO_CAMPO_DE_ESCREVER,
   inserirNoTexto,
   type ModoDoCampo,
+  SEM_O_ATIVO_LIGADO,
 } from './escrever.ts';
 
 type RespostaPronta = FichaDoChamado['respostasProntas'][number];
+type CartaoDoAtivo = components['schemas']['CartaoDoAtivo'];
 
 /** O que se escreve, até ser mandado. */
 interface Rascunho {
@@ -58,6 +87,10 @@ interface Rascunho {
   /** Os anexos, na ordem, já enviados e ainda sem dono. */
   ids: readonly string[];
   anexos: ReadonlyMap<string, AnexoCitado>;
+  /** O cartão do ativo, com os dados de quando entrou; o envio grava os da hora de mandar. */
+  cartao: CartaoDoAtivo | null;
+  /** As opções da pergunta, do "Pedir uma escolha" ou da resposta pronta; nulo, sem pergunta. */
+  opcoes: readonly string[] | null;
 }
 
 const RASCUNHO_VAZIO: Rascunho = {
@@ -66,10 +99,20 @@ const RASCUNHO_VAZIO: Rascunho = {
   esperar: false,
   ids: [],
   anexos: new Map(),
+  cartao: null,
+  opcoes: null,
 };
 
 /** As respostas prontas que vão também em botões, ao lado do menu. */
 const RESPOSTAS_A_VISTA = 2;
+
+/** A pausa na escrita, em ms, depois da qual o campo lê o "/ativo". */
+const PAUSA_DO_COMANDO = 600;
+
+/** O "/ativo" como o campo o reconhece: pelo patrimônio escrito ou, sozinho, pelo ativo ligado. */
+const chaveDoComando = (comando: ComandoDoAtivo) => comando.patrimonio ?? '';
+
+const NENHUM_DESLIGADO: readonly string[] = [];
 
 export interface PropsDoCampoDeEscrever {
   ficha: FichaDoChamado;
@@ -77,7 +120,10 @@ export interface PropsDoCampoDeEscrever {
   aoEnviar: () => void;
 }
 
-/** O campo de escrever, o "Reabra o chamado para escrever." no resolvido ou nada, sem atender. */
+/**
+ * O campo de escrever, o "Reabra o chamado para escrever." no resolvido, o "O chamado fechou em
+ * 18/11." no fechado ou nada, sem atender.
+ */
 export function CampoDeEscrever({ ficha, aoEnviar }: PropsDoCampoDeEscrever) {
   const [rascunho, definirRascunho] = useState<Rascunho>(RASCUNHO_VAZIO);
   const forma = usePreferencias().preferencias.aparencia.conversas;
@@ -86,9 +132,9 @@ export function CampoDeEscrever({ ficha, aoEnviar }: PropsDoCampoDeEscrever) {
   return (
     <section className={estilos.campo} aria-label="Escrever no chamado" data-forma={forma}>
       <div className={estilos.coluna}>
-        {campo === 'reabrir' ? (
-          <ReabrirParaEscrever ficha={ficha} />
-        ) : (
+        {campo === 'reabrir' && <ReabrirParaEscrever ficha={ficha} />}
+        {campo === 'fechado' && <ChamadoFechado ficha={ficha} />}
+        {campo === 'escrever' && (
           <Escrever
             ficha={ficha}
             rascunho={rascunho}
@@ -129,6 +175,18 @@ function ReabrirParaEscrever({ ficha: { numero, versao } }: { ficha: FichaDoCham
   );
 }
 
+/** No fechado, a frase com o último dia em que ele se reabria, sem ação. */
+function ChamadoFechado({ ficha }: { ficha: FichaDoChamado }) {
+  const agora = useAgora();
+  const dataHora = useDataHora();
+  const dia = ficha.reabrirAte === null ? null : diaDoReabrir(ficha.reabrirAte, agora, dataHora);
+  return (
+    <div className={estilos.reabrir}>
+      <p>{dia === null ? 'O chamado fechou.' : `O chamado fechou em ${dia}.`}</p>
+    </div>
+  );
+}
+
 function Escrever({
   ficha,
   rascunho,
@@ -142,11 +200,26 @@ function Escrever({
 }) {
   const api = useApi();
   const consultas = useQueryClient();
+  const agora = useAgora();
+  const dataHora = useDataHora();
+  const { pode } = useAcesso();
+  const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
   const caixa = useRef<HTMLTextAreaElement>(null);
   const escolha = useRef<HTMLInputElement>(null);
+  const idDaAjuda = useId();
   const [enviando, definirEnviando] = useState(false);
   const [erroDoTexto, definirErroDoTexto] = useState<string | null>(null);
   const [erroDosAnexos, definirErroDosAnexos] = useState<string | null>(null);
+  const [erroDasOpcoes, definirErroDasOpcoes] = useState<string | null>(null);
+  // A pergunta do "Pedir uma escolha", que sai da tela ao ser apertado: a primeira opção recebe o
+  // foco. A da resposta pronta deixa o foco na caixa, onde o texto entrou.
+  const [focarNaPergunta, definirFocarNaPergunta] = useState(false);
+  const [erroDoCartao, definirErroDoCartao] = useState<string | null>(null);
+  // A recusa do "/ativo", pelo comando que a teve: ela fica à vista enquanto o comando é o mesmo.
+  const [recusaDoComando, definirRecusaDoComando] = useState<{
+    chave: string;
+    texto: string;
+  } | null>(null);
   const [falha, definirFalha] = useState<string | null>(null);
   const [tentativa, definirTentativa] = useState(0);
   const { fila, progresso, recusas, receber, limparRecusas } = useFilaDeAnexos({
@@ -162,12 +235,21 @@ function Escrever({
     },
   });
 
-  const { texto, modo, esperar, ids, anexos } = rascunho;
+  const { texto, modo, esperar, ids, anexos, cartao, opcoes } = rascunho;
   const pessoa = nomeCurto(ficha.pessoa.nome);
-  const envio = envioDoCampo(modo, esperar);
+  const envio = envioDoCampo(modo, esperar, pessoa);
   const nota = modo === 'nota';
   const respostas = nota ? [] : ficha.respostasProntas;
   const cabeMais = ids.length + fila.length < MAXIMO_DE_ANEXOS;
+  const usaOCartao = pode('ativos.ver') && !desligados.includes('ativos');
+  const comando = comandoDoAtivo(texto);
+  const recusaDeAgora =
+    comando !== null && recusaDoComando?.chave === chaveDoComando(comando)
+      ? recusaDoComando.texto
+      : null;
+  // O texto de agora, para a prévia que chega depois de quem continuou escrevendo.
+  const textoDeAgora = useRef(texto);
+  textoDeAgora.current = texto;
 
   // A caixa cresce com o texto, até a metade da janela; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto e a cada modo.
@@ -212,6 +294,61 @@ function Escrever({
 
   const mudar = (parte: Partial<Rascunho>) => definirRascunho((antes) => ({ ...antes, ...parte }));
 
+  /**
+   * Lê o "/ativo" pela prévia do cartão: achado, o cartão entra no campo e a linha do comando sai do
+   * texto de agora; recusado, a frase fica embaixo da caixa e o texto, como foi escrito. Devolve o
+   * texto e o cartão com que o envio segue, ou nulo.
+   */
+  async function lerOComando(
+    lido: ComandoDoAtivo,
+  ): Promise<{ texto: string; cartao: CartaoDoAtivo } | null> {
+    const chave = chaveDoComando(lido);
+    const recusar = (frase: string) => {
+      definirRecusaDoComando({ chave, texto: frase });
+      return null;
+    };
+    const ligado = ficha.ativo;
+    if (lido.patrimonio === null && ligado === null) return recusar(SEM_O_ATIVO_LIGADO);
+    const query =
+      lido.patrimonio === null ? { ativo: ligado?.id ?? '' } : { patrimonio: lido.patrimonio };
+    const resultado = await pedir(
+      () =>
+        api.GET('/chamados/{numero}/cartao', {
+          params: { path: { numero: ficha.numero }, query },
+        }),
+      'buscar o ativo',
+    );
+    if ('erro' in resultado) {
+      return recusar(
+        resultado.problema?.status === 404
+          ? ativoNaoEncontrado(lido.patrimonio ?? ligado?.patrimonio ?? null)
+          : resultado.erro,
+      );
+    }
+    // Quem continuou escrevendo pode ter trocado o comando: a prévia vale só para o mesmo.
+    const deAgora = comandoDoAtivo(textoDeAgora.current);
+    if (deAgora === null || chaveDoComando(deAgora) !== chave) return null;
+    definirRecusaDoComando(null);
+    definirErroDoCartao(null);
+    mudar({ cartao: resultado.dados, texto: deAgora.semOComando });
+    return { texto: deAgora.semOComando, cartao: resultado.dados };
+  }
+
+  // O "/ativo" lido depois da pausa na escrita, uma vez por comando recusado.
+  const chaveParaLer = (() => {
+    const paraLer = comandoParaLer(texto);
+    return paraLer === null ? null : chaveDoComando(paraLer);
+  })();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a leitura segue o texto e a recusa do comando.
+  useEffect(() => {
+    if (chaveParaLer === null || recusaDoComando?.chave === chaveParaLer || enviando) return;
+    const espera = window.setTimeout(() => {
+      const paraLer = comandoParaLer(textoDeAgora.current);
+      if (paraLer) void lerOComando(paraLer);
+    }, PAUSA_DO_COMANDO);
+    return () => window.clearTimeout(espera);
+  }, [texto, chaveParaLer, recusaDoComando, enviando]);
+
   function usarResposta(resposta: RespostaPronta, doMenu: boolean) {
     const elemento = caixa.current;
     const inicio = elemento?.selectionStart ?? texto.length;
@@ -222,27 +359,53 @@ function Escrever({
       ...antes,
       texto: inserido.texto,
       esperar: antes.esperar || resposta.esperaAResposta,
+      // A que tem opções as põe no campo, no lugar das que havia.
+      opcoes: resposta.opcoes.length > 0 ? [...resposta.opcoes] : antes.opcoes,
     }));
     definirErroDoTexto(null);
+    if (resposta.opcoes.length > 0) {
+      definirErroDasOpcoes(null);
+      definirFocarNaPergunta(false);
+    }
     if (doMenu) voltaDoMenu.current = true;
     else elemento?.focus();
   }
 
   async function enviar() {
-    if (enviando || fila.length > 0) return;
+    if (enviando || fila.length > 0 || texto.trim() === '') return;
     definirEnviando(true);
-    const pedido = {
-      params: { path: { numero: ficha.numero } },
-      body: { texto, anexos: ids.length > 0 ? [...ids] : undefined },
+    let textoDoEnvio = texto;
+    let cartaoDoEnvio = cartao;
+    // O "/ativo" que a pausa ainda não leu, o envio o lê antes; o recusado vai como foi escrito.
+    if (comando !== null && recusaDoComando?.chave !== chaveDoComando(comando)) {
+      const lido = await lerOComando(comando);
+      if (lido === null || lido.texto.trim() === '') {
+        // Só com o comando, o cartão entra no campo, e quem escreve escreve a mensagem.
+        definirEnviando(false);
+        caixa.current?.focus();
+        return;
+      }
+      textoDoEnvio = lido.texto;
+      cartaoDoEnvio = lido.cartao;
+    }
+    const comum = {
+      texto: textoDoEnvio,
+      anexos: ids.length > 0 ? [...ids] : undefined,
+      cartao: cartaoDoEnvio?.ativo,
     };
+    const comAsOpcoes = {
+      ...comum,
+      opcoes: opcoes !== null && opcoes.length > 0 ? [...opcoes] : undefined,
+    };
+    const caminho = { path: { numero: ficha.numero } };
     const fazer = () => {
       switch (envio.rota) {
         case '/chamados/{numero}/mensagem':
-          return api.POST('/chamados/{numero}/mensagem', pedido);
+          return api.POST('/chamados/{numero}/mensagem', { params: caminho, body: comAsOpcoes });
         case '/chamados/{numero}/esperar':
-          return api.POST('/chamados/{numero}/esperar', pedido);
+          return api.POST('/chamados/{numero}/esperar', { params: caminho, body: comAsOpcoes });
         case '/chamados/{numero}/nota':
-          return api.POST('/chamados/{numero}/nota', pedido);
+          return api.POST('/chamados/{numero}/nota', { params: caminho, body: comum });
       }
     };
     const resultado = await pedir(fazer, envio.noErro);
@@ -256,6 +419,10 @@ function Escrever({
         caixa.current?.focus();
       } else if (campos?.anexos) {
         definirErroDosAnexos(campos.anexos);
+      } else if (campos?.opcoes && !nota) {
+        definirErroDasOpcoes(campos.opcoes);
+      } else if (campos?.cartao) {
+        definirErroDoCartao(campos.cartao);
       } else {
         definirFalha(resultado.erro);
         definirTentativa((anterior) => anterior + 1);
@@ -265,10 +432,19 @@ function Escrever({
     definirRascunho((antes) => ({ ...RASCUNHO_VAZIO, modo: antes.modo }));
     definirErroDoTexto(null);
     definirErroDosAnexos(null);
+    definirErroDasOpcoes(null);
+    definirErroDoCartao(null);
+    definirRecusaDoComando(null);
     definirFalha(null);
     limparRecusas();
     aoEnviar();
   }
+
+  const pedirUmaEscolha = () => {
+    mudar({ opcoes: ['', ''] });
+    definirErroDasOpcoes(null);
+    definirFocarNaPergunta(true);
+  };
 
   return (
     <div className={estilos.escrever} data-modo={modo}>
@@ -281,6 +457,7 @@ function Escrever({
             mudar({ modo: valor === 'nota' ? 'nota' : 'mensagem' });
             // As recusas de antes eram do outro modo, como o "Escreva a mensagem.".
             definirErroDoTexto(null);
+            definirErroDasOpcoes(null);
             definirFalha(null);
           }}
         >
@@ -298,12 +475,18 @@ function Escrever({
             Esperar a resposta
           </Checkbox>
         )}
+        {!nota && (
+          <p id={idDaAjuda} className={estilos.ajuda}>
+            {ajudaDoCampo(pessoa, ficha.pessoa.usaOChat)}
+          </p>
+        )}
       </div>
       <AreaDeTexto
         id={ID_DO_CAMPO_DE_ESCREVER}
         ref={caixa}
         rotulo={nota ? 'Nota interna' : `Mensagem para ${pessoa}`}
         ocultarRotulo
+        aria-describedby={nota ? undefined : idDaAjuda}
         placeholder={
           nota ? `Escreva a nota. ${pessoa} não a vê.` : `Escreva a resposta para ${pessoa}.`
         }
@@ -325,6 +508,47 @@ function Escrever({
           evento.continuePropagation();
         }}
       />
+      {recusaDeAgora && <Recusa texto={recusaDeAgora} />}
+      {cartao && (
+        <div className={estilos.cartao}>
+          <CartaoDoAtivoNaMensagem
+            cartao={cartao}
+            agora={agora}
+            dataHora={dataHora}
+            abrir={false}
+            acao={
+              !enviando && (
+                <Botao
+                  nivel="terciario"
+                  aria-label={`Tirar o cartão de ${cartao.nome}`}
+                  onPress={() => {
+                    mudar({ cartao: null });
+                    definirErroDoCartao(null);
+                    caixa.current?.focus();
+                  }}
+                >
+                  Tirar
+                </Botao>
+              )
+            }
+          />
+          {erroDoCartao && <Recusa texto={erroDoCartao} />}
+        </div>
+      )}
+      {!nota && opcoes !== null && (
+        <EditorDasOpcoes
+          opcoes={opcoes}
+          editavel={!enviando}
+          erro={erroDasOpcoes}
+          focarAoAparecer={focarNaPergunta}
+          aoMudar={(novas) => {
+            definirErroDasOpcoes(null);
+            // Sem nenhuma opção, a pergunta sai, e "Pedir uma escolha" volta.
+            mudar({ opcoes: novas.length === 0 ? null : novas });
+            if (novas.length === 0) caixa.current?.focus();
+          }}
+        />
+      )}
       <ListaDeAnexos
         ids={ids}
         anexos={anexos}
@@ -406,13 +630,28 @@ function Escrever({
               />
             </>
           )}
+          {usaOCartao && (
+            <EscolherOCartao
+              ficha={ficha}
+              desligado={enviando}
+              aoEscolher={(escolhido) => {
+                mudar({ cartao: escolhido });
+                definirErroDoCartao(null);
+              }}
+            />
+          )}
+          {!nota && opcoes === null && (
+            <Botao icone={ListChecks} isDisabled={enviando} onPress={pedirUmaEscolha}>
+              Pedir uma escolha
+            </Botao>
+          )}
           <TeclaDeAtalho teclas={['mod', 'Enter']} />
           <Botao
             nivel="primario"
             icone={Send}
             carregando={enviando}
             rotuloCarregando={envio.carregando}
-            isDisabled={fila.length > 0}
+            isDisabled={fila.length > 0 || texto.trim() === ''}
             onPress={() => void enviar()}
           >
             {envio.rotulo}
@@ -421,5 +660,107 @@ function Escrever({
       </div>
       <MensagemDoPasso texto={falha} chave={tentativa} />
     </div>
+  );
+}
+
+/**
+ * "Cartão do ativo": o diálogo escolhe o ativo como o "Trocar o ativo", a começar pelo ligado ao
+ * chamado, e a prévia do cartão, pelo id, põe no campo os dados de agora. A recusa fica no diálogo.
+ */
+function EscolherOCartao({
+  ficha,
+  desligado,
+  aoEscolher,
+}: {
+  ficha: FichaDoChamado;
+  desligado: boolean;
+  aoEscolher: (cartao: CartaoDoAtivo) => void;
+}) {
+  const api = useApi();
+  const { numero, ativo, pessoa } = ficha;
+  const [aberto, definirAberto] = useState(false);
+  const [escolhido, definirEscolhido] = useState<ContaDoSeletor | null>(null);
+  const [erro, definirErro] = useState<string | null>(null);
+  const [falha, definirFalha] = useState<string | null>(null);
+  const [tentativa, definirTentativa] = useState(0);
+  const [buscando, definirBuscando] = useState(false);
+
+  const mudarAberto = (abrir: boolean) => {
+    if (buscando) return;
+    if (abrir) {
+      definirEscolhido(ativo ? { id: ativo.id, rotulo: rotuloDoAtivoCitado(ativo) } : null);
+      definirErro(null);
+      definirFalha(null);
+    }
+    definirAberto(abrir);
+  };
+
+  const inserir = async (id: string) => {
+    if (buscando) return;
+    definirBuscando(true);
+    const resultado = await pedir(
+      () =>
+        api.GET('/chamados/{numero}/cartao', {
+          params: { path: { numero }, query: { ativo: id } },
+        }),
+      'buscar o ativo',
+    );
+    definirBuscando(false);
+    if ('erro' in resultado) {
+      if (resultado.problema?.status === 404) {
+        definirErro(ativoNaoEncontrado(null));
+        return;
+      }
+      definirFalha(resultado.erro);
+      definirTentativa((anterior) => anterior + 1);
+      return;
+    }
+    aoEscolher(resultado.dados);
+    definirAberto(false);
+  };
+
+  return (
+    <Dialogo
+      gatilho={
+        <Botao icone={IdCard} isDisabled={desligado}>
+          Cartão do ativo
+        </Botao>
+      }
+      titulo="Cartão do ativo"
+      aberto={aberto}
+      aoMudarAberto={mudarAberto}
+      acoes={(fechar) => (
+        <>
+          <Botao isDisabled={buscando} onPress={fechar}>
+            Cancelar
+          </Botao>
+          <Botao
+            nivel="primario"
+            carregando={buscando}
+            rotuloCarregando="Inserindo o cartão"
+            isDisabled={escolhido === null}
+            onPress={() => {
+              if (escolhido) void inserir(escolhido.id);
+            }}
+          >
+            Inserir o cartão
+          </Botao>
+        </>
+      )}
+    >
+      <div className={estilos.formulario}>
+        <EscolhaDoAtivo
+          valor={escolhido}
+          aoMudar={(novo) => {
+            definirEscolhido(novo);
+            definirErro(null);
+          }}
+          pessoa={{ id: pessoa.id, nome: pessoa.nome }}
+          descricao="O cartão vai na mensagem com os dados da hora de mandar."
+          erro={erro ?? undefined}
+        />
+        <MensagemDoPasso texto={falha} chave={tentativa} />
+      </div>
+    </Dialogo>
   );
 }

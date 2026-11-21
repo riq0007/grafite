@@ -93,8 +93,14 @@
   font-weight: var(--peso-forte);
 }
 
-.rotuloNaLinha > :last-child {
+.rotuloNaLinha > :not(:first-child) {
   flex: none;
+}
+
+/* As opções contadas, "3 opções", depois do selo da espera. */
+.opcoesNaLinha {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
 }
 
 .comecoDoTexto {

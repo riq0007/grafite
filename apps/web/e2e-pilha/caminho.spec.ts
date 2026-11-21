@@ -2077,9 +2077,10 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     mimeType: 'application/pdf',
     buffer: PDF,
   });
-  // O envio espera o anexo subir: o "Tirar" aparece com o anexo na lista, e o "Enviar" volta.
+  // O envio espera o anexo subir: o "Tirar" aparece com o anexo na lista, e o "Enviar para Carla"
+  // volta.
   await expect(escrever.getByRole('button', { name: 'Tirar laudo-do-monitor.pdf' })).toBeVisible();
-  const enviar = escrever.getByRole('button', { name: 'Enviar', exact: true });
+  const enviar = escrever.getByRole('button', { name: 'Enviar para Carla', exact: true });
   await expect(enviar).toBeEnabled();
   await enviar.click();
   const conversa = page.getByRole('region', { name: 'Conversa' });

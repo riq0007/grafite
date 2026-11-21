@@ -28176,11 +28176,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava */
+        /** A prévia do cartão do ativo pelo id ou pelo patrimônio, o mesmo retrato que a mensagem grava */
         get: {
             parameters: {
-                query: {
-                    patrimonio: string;
+                query?: {
+                    ativo?: string;
+                    patrimonio?: string;
                 };
                 header?: never;
                 path: {
@@ -40841,6 +40842,7 @@ export interface components {
                 pessoa: string;
                 /** @enum {string} */
                 situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                fechado: boolean;
             }[];
         };
         SugestoesDoChamadoInput: {
@@ -46714,6 +46716,7 @@ export interface components {
                 pessoa: string;
                 /** @enum {string} */
                 situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                fechado: boolean;
             }[];
         };
         SugestoesDoChamado: {

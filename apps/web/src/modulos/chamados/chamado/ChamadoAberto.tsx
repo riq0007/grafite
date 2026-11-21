@@ -3,7 +3,9 @@
 // notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, a seta de
 // voltar (tarefa 5.32), o título e o número, o selo, o tipo, quem pediu e quem atende, o quadro do
 // prazo e as ações de cada situação, e, embaixo, a conversa (tarefa 5.11) e o campo de escrever
-// (tarefa 5.12), com a coluna da direita ao lado (tarefa 5.13, m04).
+// (tarefa 5.12), com a coluna da direita ao lado (tarefa 5.13, m04). O resolvido diz até quando se
+// reabre, "fecha em 18/11", e o fechado tem o selo Fechado, sem as ações (change chat-com-chamados,
+// tarefa 4.13).
 import {
   AreaDeTexto,
   Botao,
@@ -35,6 +37,7 @@ import {
 import { Fragment, type ReactNode, useState } from 'react';
 import { FalhaDaConsulta } from '../../../api/consultas.ts';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { diaDoReabrir } from '../../../chat/chamado.ts';
 import { useJanelaAVista } from '../../../chat/janela.ts';
 import { useChamadoAVista } from '../../../notificacoes/destinosAVista.tsx';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
@@ -158,7 +161,10 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         }
         detalhe={<DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
         quadro={<QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
-        acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} doAtivo={doAtivo} />}
+        acoes={
+          ficha.permite.atender &&
+          !ficha.fechado && <AcoesDoChamado ficha={ficha} doAtivo={doAtivo} />
+        }
       />
       <div className={estilos.corpo}>
         <div className={estilos.principal}>
@@ -234,9 +240,12 @@ function desdeDeQuemAtende(desde: Date, agora: Date, dataHora: DataHora): string
     : `atende desde ${momento}`;
 }
 
-/** O selo, o tipo, quem pediu e quem atende; na triagem, ninguém atende, e o selo o diz. */
+/**
+ * O selo, o tipo, quem pediu e quem atende; na triagem, ninguém atende, e o selo o diz. O resolvido
+ * diz, junto do selo, o último dia em que se reabre, e o fechado tem o selo Fechado.
+ */
 function DadosDoChamado({
-  ficha: { situacao, tipo, pessoa, responsavel },
+  ficha: { situacao, tipo, pessoa, responsavel, fechado, reabrirAte },
   agora,
   dataHora,
 }: {
@@ -246,7 +255,14 @@ function DadosDoChamado({
 }) {
   return (
     <div className={estilos.dados}>
-      <Selo selo={situacao} />
+      <span className={estilos.situacao}>
+        <Selo selo={fechado ? 'fechado' : situacao} />
+        {situacao === 'resolvido' && !fechado && reabrirAte !== null && (
+          <span
+            className={estilos.fecha}
+          >{`fecha em ${diaDoReabrir(reabrirAte, agora, dataHora)}`}</span>
+        )}
+      </span>
       <span className={estilos.tipo}>
         <IconeDoTipo icone={tipo.icone} nome={tipo.nome} decorativo />
         {tipo.nome}

@@ -6,6 +6,7 @@ import {
   caminhoDaSituacao,
   type Permissao,
   ROTULOS_DAS_SITUACOES_DA_SOLICITACAO,
+  SITUACAO_FECHADA,
   type SituacaoDoChamado,
 } from '@grafite/domain';
 import type { DataHora } from '@grafite/ui';
@@ -211,19 +212,40 @@ function partesDoPasso(
  */
 export function linhaDoTempo(
   conversa: readonly ItemDaConversa[],
-  { pessoa, agora, dataHora }: { pessoa: string; agora: Date; dataHora: DataHora },
+  {
+    pessoa,
+    agora,
+    dataHora,
+    fechado = null,
+  }: {
+    pessoa: string;
+    agora: Date;
+    dataHora: DataHora;
+    /**
+     * O dia do "Fechado · 18/11", o último em que o chamado se reabria, no que fechou: o passo dele
+     * vem depois do resolvido, com o evento da tarefa do fechamento ou sem ele, no vencido que ela
+     * ainda não fechou (chat-com-chamados, tarefa 4.13). Nulo, no que não fechou.
+     */
+    fechado?: string | null;
+  },
 ): PassoDaLinha[] {
   const eventos = conversa.filter((item): item is EventoDaConversa => item.especie === 'evento');
   const passos = caminhoDaSituacao(eventos);
-  return passos.map(({ evento, estava, situacao }, indice) => ({
+  const linha = passos.map(({ evento, estava, situacao }, indice) => ({
     id: evento.id,
     titulo: ROTULO_DA_SITUACAO[situacao],
     texto: juntarPartes(
       momentoNaConversa(new Date(evento.em), agora, dataHora),
       ...partesDoPasso(evento, estava, pessoa),
     ),
-    agora: indice === passos.length - 1,
+    agora: fechado === null && indice === passos.length - 1,
   }));
+  if (fechado === null) return linha;
+  const fechou = eventos.findLast((evento) => evento.evento === 'fechou');
+  return [
+    ...linha,
+    { id: fechou?.id ?? 'fechado', titulo: SITUACAO_FECHADA, texto: fechado, agora: true },
+  ];
 }
 
 /** As seções da coluna da direita, abertas ou fechadas. */

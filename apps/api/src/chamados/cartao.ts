@@ -151,13 +151,14 @@ export async function retratoDoAtivo(
 }
 
 /**
- * A prévia do campo de escrever (`GET /chamados/:numero/cartao`): o retrato pelo patrimônio, no
- * chamado que a conta vê; o ativo que ela não vê responde como o que não existe.
+ * A prévia do campo de escrever (`GET /chamados/:numero/cartao`): o retrato pelo id, do "Cartão do
+ * ativo" e do "/ativo" sozinho, ou pelo patrimônio, do "/ativo PAT-00137", no chamado que a conta
+ * vê; o ativo que ela não vê responde como o que não existe.
  */
 export async function previaDoCartao(
   tx: Transacao,
   numero: number,
-  patrimonio: string,
+  onde: { ativo: string } | { patrimonio: string },
   leitura: { acesso: Acesso; arvore: ArvoreDeLocais; agora: Date },
 ): Promise<CartaoDoAtivo> {
   const [chamado] = await tx
@@ -167,7 +168,7 @@ export async function previaDoCartao(
   if (!chamado || !veOChamado(alcance(leitura.acesso, 'chamados.ver', leitura.arvore), chamado)) {
     throw chamadoNaoEncontrado();
   }
-  const retrato = await retratoDoAtivo(tx, { patrimonio }, leitura);
+  const retrato = await retratoDoAtivo(tx, onde, leitura);
   if (retrato === null) throw naoEncontrado(ATIVO_DO_CARTAO_NAO_ENCONTRADO);
   return retrato;
 }

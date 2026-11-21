@@ -5,10 +5,14 @@
 // depois da abertura, o resumo das respostas do formulário. Os anexos de cada mensagem e de cada
 // nota vão numa lista, como a do formulário, com o nome, o tamanho e "Baixar". Com as conversas
 // "Nos cantos" nas preferências (tarefa 5.29), a de quem pede fica à esquerda e as da TI à direita,
-// em balões.
-import { partesDoResumo } from '@grafite/domain';
+// em balões. Do chat (change chat-com-chamados, tarefa 4.13; mockups m05 e m11): a origem, no
+// começo, com a mensagem citada e "Abrir a conversa" a quem participa dela; as mensagens de quem
+// participa, com "· abriu o chamado" em quem abriu no nome de outra pessoa; a pergunta, sem ação para
+// a TI; o cartão do ativo; o resumo dos tempos da resolução; a avaliação, com o comentário; e o
+// fechamento.
+import { destinoDaMensagem, partesDoResumo } from '@grafite/domain';
 import { type DataHora, formatarTamanho, Icone, RotuloDeSituacao, useDataHora } from '@grafite/ui';
-import { BellRing, FileText, Hourglass, Lock } from 'lucide-react';
+import { ArrowUpRight, BellRing, FileText, Hourglass, Lock, MessagesSquare } from 'lucide-react';
 import {
   Fragment,
   type ReactNode,
@@ -18,6 +22,11 @@ import {
   useRef,
 } from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { ProvedorDaJanelaDoChat } from '../../../chat/base.tsx';
+import { CartaoDoAtivoNaMensagem } from '../../../chat/CartaoDoAtivoNaMensagem.tsx';
+import { LinkDoChat } from '../../../chat/LinkDoChat.tsx';
+import { PerguntaDoChamado } from '../../../chat/PerguntaDoChamado.tsx';
+import { ResumoDosTempos } from '../../../chat/ResumoDosTempos.tsx';
 import { usePreferencias } from '../../../preferencias/usePreferencias.tsx';
 import type { FichaDoChamado } from '../consultas.ts';
 import { enderecoDoAnexo } from '../formulario/anexos.ts';
@@ -25,13 +34,17 @@ import { SiglaDaPessoa } from '../Pecas.tsx';
 import estilos from './Conversa.module.css';
 import {
   contextoDaFicha,
+  type EscritoDaConversa,
   type ItemDaConversa,
   linhaDoAlerta,
   linhaDoEvento,
   momentoNaConversa,
+  nomeNaConversa,
+  tituloDaOrigem,
 } from './conversa.ts';
 
-type Escrito = Extract<ItemDaConversa, { especie: 'mensagem' | 'nota' }>;
+type Escrito = EscritoDaConversa;
+type OrigemDoChamado = NonNullable<FichaDoChamado['origemNoChat']>;
 
 /** A folga, em px, em que quem lê ainda está no fim da conversa. */
 const PERTO_DO_FIM = 32;
@@ -124,10 +137,21 @@ export function Conversa({ ficha, envios = 0 }: { ficha: FichaDoChamado; envios?
       tabIndex={0}
       data-forma={forma}
     >
-      <ol className={estilos.itens}>
-        {abertura === -1 && resumo}
-        {itens}
-      </ol>
+      {/* Os links do chat, como o "Abrir a conversa" e o "Abrir a ficha" do cartão, abrem nesta janela. */}
+      <ProvedorDaJanelaDoChat>
+        <ol className={estilos.itens}>
+          {ficha.origemNoChat && (
+            <OrigemNoChat
+              origem={ficha.origemNoChat}
+              numero={ficha.numero}
+              agora={agora}
+              dataHora={dataHora}
+            />
+          )}
+          {abertura === -1 && resumo}
+          {itens}
+        </ol>
+      </ProvedorDaJanelaDoChat>
     </section>
   );
 }
@@ -146,14 +170,38 @@ function ItemNaConversa({
   switch (item.especie) {
     case 'mensagem':
     case 'nota':
-      return <Escrito item={item} numero={ficha.numero} agora={agora} dataHora={dataHora} />;
+      return (
+        <Escrito
+          item={item}
+          numero={ficha.numero}
+          pessoaDoChamado={ficha.pessoa.id}
+          agora={agora}
+          dataHora={dataHora}
+        />
+      );
     case 'evento': {
       const linha = linhaDoEvento(item, { pessoa: ficha.pessoa.nome, agora, dataHora });
       if (!linha) return null;
-      return (
+      const frase = (
         <LinhaEntreFios forte={linha.aguardando} icone={linha.aguardando ? Hourglass : undefined}>
           {linha.texto}
         </LinhaEntreFios>
+      );
+      // A resolução com o resumo dos tempos embaixo, e a avaliação com o comentário.
+      const comentario = item.evento === 'avaliou' ? (item.avaliacao?.comentario ?? null) : null;
+      if (!item.resumo && comentario === null) return frase;
+      return (
+        <li className={estilos.comDetalhe}>
+          <ul className={estilos.semMarcas}>{frase}</ul>
+          {item.resumo && (
+            <ResumoDosTempos resumo={item.resumo} agora={agora} dataHora={dataHora} />
+          )}
+          {comentario !== null && (
+            <blockquote className={estilos.comentario}>
+              <p>{comentario}</p>
+            </blockquote>
+          )}
+        </li>
       );
     }
     case 'alerta':
@@ -194,11 +242,13 @@ function LinhaEntreFios({
 function Escrito({
   item,
   numero,
+  pessoaDoChamado,
   agora,
   dataHora,
 }: {
   item: Escrito;
   numero: number;
+  pessoaDoChamado: string;
   agora: Date;
   dataHora: DataHora;
 }) {
@@ -232,12 +282,81 @@ function Escrito({
           </p>
         ) : (
           <p className={estilos.quem}>
-            <b>{autor.nome}</b>
+            <b>{nomeNaConversa(autor, pessoaDoChamado)}</b>
             {hora}
           </p>
         )}
         {item.texto && <p className={estilos.texto}>{item.texto}</p>}
         {item.anexos.length > 0 && <Anexos anexos={item.anexos} numero={numero} />}
+        {/* O cartão e a pergunta como a pessoa os vê no chat, sem a escolha, que é dela. */}
+        {item.cartao && (
+          <CartaoDoAtivoNaMensagem
+            cartao={item.cartao}
+            agora={agora}
+            dataHora={dataHora}
+            abrir={item.cartao.abrir}
+          />
+        )}
+        {item.opcoes && (
+          <PerguntaDoChamado
+            opcoes={item.opcoes}
+            escolhida={item.escolhida && { ...item.escolhida, minha: false }}
+            escolher={null}
+            agora={agora}
+            dataHora={dataHora}
+          />
+        )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * A origem pelo chat, no começo da conversa (m05): de que conversa o chamado veio e a mensagem
+ * citada, como ficou na abertura, com quem a escreveu, a hora, o texto e os anexos, que o chamado
+ * guardou. "Abrir a conversa" leva ao chat nessa mensagem, só a quem participa dela.
+ */
+function OrigemNoChat({
+  origem,
+  numero,
+  agora,
+  dataHora,
+}: {
+  origem: OrigemDoChamado;
+  numero: number;
+  agora: Date;
+  dataHora: DataHora;
+}) {
+  return (
+    <li className={estilos.origem}>
+      <Icone icone={MessagesSquare} />
+      <div className={estilos.deOnde}>
+        <p className={estilos.tituloDaOrigem}>{tituloDaOrigem(origem.conversa)}</p>
+        <figure className={estilos.citada}>
+          <figcaption className={estilos.quemEscreveu}>
+            {'Mensagem de '}
+            <b>{origem.autor}</b>
+            {', '}
+            <time dateTime={origem.em}>
+              {momentoNaConversa(new Date(origem.em), agora, dataHora)}
+            </time>
+          </figcaption>
+          {origem.texto !== '' && (
+            <blockquote className={estilos.textoCitado}>
+              <p>{origem.texto}</p>
+            </blockquote>
+          )}
+        </figure>
+        {origem.anexos.length > 0 && <Anexos anexos={origem.anexos} numero={numero} />}
+        {origem.abrir && (
+          <LinkDoChat
+            className={estilos.abrirAConversa}
+            para={destinoDaMensagem(origem.abrir.conversa, origem.abrir.mensagem)}
+          >
+            Abrir a conversa
+            <Icone icone={ArrowUpRight} tamanho={14} />
+          </LinkDoChat>
+        )}
       </div>
     </li>
   );

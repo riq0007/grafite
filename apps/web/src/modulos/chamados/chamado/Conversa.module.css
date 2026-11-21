@@ -119,6 +119,120 @@
 }
 
 /*
+ * A resolução com o resumo dos tempos embaixo, e a avaliação com o comentário de quem avaliou, entre
+ * aspas, no meio, como a frase do evento.
+ */
+.comDetalhe {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.semMarcas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comentario {
+  justify-self: center;
+  max-width: 85%;
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.comentario p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.comentario p::before {
+  content: "“";
+}
+
+.comentario p::after {
+  content: "”";
+}
+
+/*
+ * A origem pelo chat, no começo (m05): a caixa afundada com o ícone do chat, no azul do chamado, o
+ * título em peso forte, a mensagem citada, os anexos e "Abrir a conversa". Nos cantos, ela fica na
+ * largura da conversa, como os eventos.
+ */
+.origem {
+  display: flex;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background: var(--cor-superficie-afundada);
+  font-size: var(--texto-dado);
+}
+
+.origem > svg {
+  flex: none;
+  color: var(--cor-info);
+}
+
+.deOnde {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.tituloDaOrigem {
+  margin: 0;
+  font-weight: var(--peso-forte);
+}
+
+.citada {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+}
+
+.quemEscreveu b {
+  font-weight: var(--peso-forte);
+}
+
+.textoCitado {
+  margin: 0;
+  padding-left: var(--esp-3);
+  border-left: 2px solid var(--cor-linha-forte);
+  font-size: var(--texto-corpo);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.textoCitado p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.abrirAConversa {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--esp-1);
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-destaque-texto);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+  outline: none;
+}
+
+.abrirAConversa:hover {
+  text-decoration: underline;
+}
+
+.abrirAConversa:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/*
  * O resumo das respostas, logo depois da abertura: cada nome em versalete, pequeno, com a resposta
  * ao lado; o patrimônio do ativo, na mono.
  */

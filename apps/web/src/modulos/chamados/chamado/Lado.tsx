@@ -22,6 +22,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowUpRight, Package } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { diaDoReabrir } from '../../../chat/chamado.ts';
 import { Desatualizado, IdadeDaLeitura, SituacaoNaTela } from '../../ativos/disponibilidade.tsx';
 import type { PainelDeSuprimentos } from '../../ativos/suprimentos.tsx';
 import type { FichaDoChamado } from '../consultas.ts';
@@ -78,12 +79,21 @@ export function LadoDoChamado({ ficha, acoes }: { ficha: FichaDoChamado; acoes: 
 
 /**
  * A linha do tempo, como no m03 e no m04: o caminho do chamado pelas situações, com o ponto de cada
- * passo e o fio entre eles; o passo de agora, o último, com o ponto na cor da informação.
+ * passo e o fio entre eles; o passo de agora, o último, com o ponto na cor da informação. O fechado
+ * acaba em "Fechado · 18/11", com o último dia em que ele se reabria.
  */
 function LinhaDoTempo({ ficha }: { ficha: FichaDoChamado }) {
   const agora = useAgora();
   const dataHora = useDataHora();
-  const passos = linhaDoTempo(ficha.conversa, { pessoa: ficha.pessoa.nome, agora, dataHora });
+  const passos = linhaDoTempo(ficha.conversa, {
+    pessoa: ficha.pessoa.nome,
+    agora,
+    dataHora,
+    fechado:
+      ficha.fechado && ficha.reabrirAte !== null
+        ? diaDoReabrir(ficha.reabrirAte, agora, dataHora)
+        : null,
+  });
   return (
     <ol className={estilos.linhaDoTempo} aria-label="Passos do chamado">
       {passos.map((passo) => (

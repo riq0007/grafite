@@ -7,6 +7,7 @@ import {
   comMinuscula,
   fraseDaSolicitacaoNaoGerada,
   nomeCurto,
+  ROTULOS_DOS_NIVEIS_DA_AVALIACAO,
 } from '@grafite/domain';
 import type { DataHora } from '@grafite/ui';
 import type { FichaDoChamado } from '../consultas.ts';
@@ -16,6 +17,7 @@ import { idadeDoMaisAntigo } from '../quadro/quadro.ts';
 export type ItemDaConversa = FichaDoChamado['conversa'][number];
 export type EventoDaConversa = Extract<ItemDaConversa, { especie: 'evento' }>;
 export type AlertaDaConversa = Extract<ItemDaConversa, { especie: 'alerta' }>;
+export type EscritoDaConversa = Extract<ItemDaConversa, { especie: 'mensagem' | 'nota' }>;
 
 /** O ativo como as frases o citam: o patrimônio ou, sem ele, o nome que as telas mostram. */
 interface AtivoNaFrase {
@@ -136,11 +138,39 @@ export function linhaDoEvento(
       return evento.motivo
         ? linha(fraseDaSolicitacaoNaoGerada(evento.motivo).replace(/\.$/u, ''), hora)
         : null;
-    case 'avaliou':
+    case 'avaliou': {
+      // A avaliação de quem participa, como "Fernanda Rocha avaliou: Ótimo · Resolveu muito bem"; o
+      // comentário vai embaixo da linha (chat-com-chamados, tarefa 4.13).
+      if (!evento.avaliacao) return null;
+      const { nome, descricao } = ROTULOS_DOS_NIVEIS_DA_AVALIACAO[evento.avaliacao.nivel];
+      return linha(`${quem} avaliou: ${nome} · ${descricao}`, hora);
+    }
     case 'fechou':
-      // A avaliação de quem participa e o fechamento entram na conversa da TI na tarefa 4.13.
-      return null;
+      // O fechamento, que a tarefa grava sem autor na meia-noite do oitavo dia.
+      return linha('O chamado fechou', hora);
   }
+}
+
+/**
+ * O nome de quem escreveu, como a conversa o mostra: quem abriu pelo chat no nome de outra pessoa,
+ * que também participa do chamado, ganha "· abriu o chamado" (spec modulo-chamados, "Conversa com a
+ * pessoa no chamado aberto"). Quem participa é a pessoa do chamado e quem o abriu.
+ */
+export function nomeNaConversa(autor: EscritoDaConversa['autor'], pessoaDoChamado: string): string {
+  return autor.tipo === 'pessoa' && autor.id !== pessoaDoChamado
+    ? `${autor.nome} · abriu o chamado`
+    : autor.nome;
+}
+
+/**
+ * O título da origem pelo chat, no começo da conversa: "Aberto a partir da conversa Equipe
+ * Financeiro" e, na direta, que a API nomeia por quem escreveu e com quem, "Aberto a partir da
+ * conversa de Paulo Nunes com Ana Souza" (change chat-com-chamados, design, decisão 15).
+ */
+export function tituloDaOrigem(conversa: NonNullable<FichaDoChamado['origemNoChat']>['conversa']) {
+  return conversa.tipo === 'direta'
+    ? `Aberto a partir da conversa de ${conversa.nome}`
+    : `Aberto a partir da conversa ${conversa.nome}`;
 }
 
 /**

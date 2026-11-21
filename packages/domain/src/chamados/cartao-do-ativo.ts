@@ -8,6 +8,11 @@ export interface ComandoDoAtivo {
   patrimonio: string | null;
   /** O texto sem a linha do comando, para quando o cartão entra no campo. */
   semOComando: string;
+  /**
+   * O comando está na última linha, onde ainda se escreve: o "/ativo" sozinho nela ainda pode ganhar
+   * o patrimônio, e o campo o lê quando a linha acaba.
+   */
+  naUltimaLinha: boolean;
 }
 
 // A linha só com o comando: o "/ativo", em maiúsculas ou minúsculas, e o patrimônio, que vai até o
@@ -25,5 +30,5 @@ export function comandoDoAtivo(texto: string): ComandoDoAtivo | null {
   if (indice === -1) return null;
   const patrimonio = COMANDO.exec(linhas[indice] ?? '')?.[1] ?? null;
   const semOComando = linhas.filter((_, outra) => outra !== indice).join('\n');
-  return { patrimonio, semOComando };
+  return { patrimonio, semOComando, naUltimaLinha: indice === linhas.length - 1 };
 }

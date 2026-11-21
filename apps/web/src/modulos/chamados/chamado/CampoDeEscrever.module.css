@@ -75,3 +75,23 @@
   margin: 0;
   color: var(--cor-texto-2);
 }
+
+/* A ajuda do chat, ao lado da chave: onde a pessoa lê a mensagem. */
+.ajuda {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+/* O cartão do ativo no campo, entre a caixa e os anexos, com o "Tirar" no canto. */
+.cartao {
+  display: grid;
+  gap: var(--esp-1);
+  justify-items: start;
+}
+
+/* O diálogo do "Cartão do ativo". */
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}

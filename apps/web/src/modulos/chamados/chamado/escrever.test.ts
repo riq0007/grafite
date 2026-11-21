@@ -1,39 +1,97 @@
-// A regra do campo de escrever (spec modulo-chamados, "Campo de escrever" e "Chamado aberto"; change
-// chamados-da-ti, design, "O campo de escrever (tarefa 5.12)"): quem o vê, a rota e o rótulo de cada
-// envio, e a resposta pronta que entra onde está o cursor.
+// A regra do campo de escrever (spec modulo-chamados, "Campo de escrever", "Chamado aberto" e
+// "Chamado fechado na tela"; change chamados-da-ti, design, "O campo de escrever (tarefa 5.12)";
+// change chat-com-chamados, tarefa 4.13): quem o vê, a rota e o rótulo de cada envio, a ajuda do
+// chat, o "/ativo" que o campo lê e a resposta pronta que entra onde está o cursor.
 import { describe, expect, it } from 'vitest';
-import { envioDoCampo, formaDoCampo, inserirNoTexto } from './escrever.ts';
+import {
+  ajudaDoCampo,
+  ativoNaoEncontrado,
+  comandoParaLer,
+  envioDoCampo,
+  formaDoCampo,
+  inserirNoTexto,
+} from './escrever.ts';
 
 describe('formaDoCampo: quem vê o campo de escrever', () => {
   it('quem atende os locais escreve no chamado aberto, em qualquer situação fora a resolvida', () => {
     for (const situacao of ['triagem', 'em-atendimento', 'aguardando'] as const) {
-      expect(formaDoCampo({ situacao, permite: { atender: true } }), situacao).toBe('escrever');
+      expect(formaDoCampo({ situacao, fechado: false, permite: { atender: true } }), situacao).toBe(
+        'escrever',
+      );
     }
   });
 
   it('no resolvido, quem atende vê o "Reabra o chamado para escrever."', () => {
-    expect(formaDoCampo({ situacao: 'resolvido', permite: { atender: true } })).toBe('reabrir');
+    expect(
+      formaDoCampo({ situacao: 'resolvido', fechado: false, permite: { atender: true } }),
+    ).toBe('reabrir');
   });
 
   it('quem só vê os chamados fica sem o campo, também no resolvido', () => {
     for (const situacao of ['triagem', 'em-atendimento', 'aguardando', 'resolvido'] as const) {
-      expect(formaDoCampo({ situacao, permite: { atender: false } }), situacao).toBeNull();
+      expect(
+        formaDoCampo({ situacao, fechado: false, permite: { atender: false } }),
+        situacao,
+      ).toBeNull();
     }
+  });
+
+  it('no fechado, quem atende vê "O chamado fechou em 18/11.", sem o "Reabrir", e quem só vê, nada', () => {
+    expect(formaDoCampo({ situacao: 'resolvido', fechado: true, permite: { atender: true } })).toBe(
+      'fechado',
+    );
+    expect(
+      formaDoCampo({ situacao: 'resolvido', fechado: true, permite: { atender: false } }),
+    ).toBeNull();
+  });
+});
+
+describe('ajudaDoCampo: onde a pessoa lê a mensagem', () => {
+  it('com a conta no chat, ela vê no chat; sem ela, a mensagem fica no chamado', () => {
+    expect(ajudaDoCampo('Fernanda', true)).toBe('Fernanda vê esta mensagem no chat.');
+    expect(ajudaDoCampo('Marina', false)).toBe(
+      'Marina ainda não usa o chat: a mensagem fica no chamado.',
+    );
+  });
+});
+
+describe('comandoParaLer: o "/ativo" que o campo lê depois da pausa', () => {
+  it('o com o patrimônio, em qualquer linha', () => {
+    expect(comandoParaLer('Veja:\n/ativo PAT-00137')).toMatchObject({
+      patrimonio: 'PAT-00137',
+      semOComando: 'Veja:',
+    });
+  });
+
+  it('o sozinho, só com a linha dele acabada, porque ainda pode ganhar o patrimônio', () => {
+    expect(comandoParaLer('Veja:\n/ativo')).toBeNull();
+    expect(comandoParaLer('Veja:\n/ativo\n')).toMatchObject({ patrimonio: null });
+  });
+
+  it('sem o comando, nada', () => {
+    expect(comandoParaLer('Veja o /ativo PAT-00137')).toBeNull();
+  });
+});
+
+describe('ativoNaoEncontrado: a frase do ativo que a conta não acha', () => {
+  it('com o patrimônio escrito e sem ele', () => {
+    expect(ativoNaoEncontrado('PAT-00999')).toBe('O ativo PAT-00999 não foi encontrado.');
+    expect(ativoNaoEncontrado(null)).toBe('O ativo não foi encontrado.');
   });
 });
 
 describe('envioDoCampo: a rota e o rótulo pela chave e pelo "Esperar a resposta"', () => {
-  it('a mensagem vai pelo /mensagem, com "Enviar"', () => {
-    expect(envioDoCampo('mensagem', false)).toEqual({
+  it('a mensagem vai pelo /mensagem, com "Enviar para Fernanda", o primeiro nome da pessoa', () => {
+    expect(envioDoCampo('mensagem', false, 'Fernanda')).toEqual({
       rota: '/chamados/{numero}/mensagem',
-      rotulo: 'Enviar',
+      rotulo: 'Enviar para Fernanda',
       carregando: 'Enviando',
       noErro: 'enviar a mensagem',
     });
   });
 
   it('com "Esperar a resposta", vai pelo /esperar, com "Enviar e esperar a resposta"', () => {
-    expect(envioDoCampo('mensagem', true)).toEqual({
+    expect(envioDoCampo('mensagem', true, 'Fernanda')).toEqual({
       rota: '/chamados/{numero}/esperar',
       rotulo: 'Enviar e esperar a resposta',
       carregando: 'Enviando',
@@ -48,8 +106,8 @@ describe('envioDoCampo: a rota e o rótulo pela chave e pelo "Esperar a resposta
       carregando: 'Salvando a nota',
       noErro: 'salvar a nota',
     };
-    expect(envioDoCampo('nota', false)).toEqual(nota);
-    expect(envioDoCampo('nota', true)).toEqual(nota);
+    expect(envioDoCampo('nota', false, 'Fernanda')).toEqual(nota);
+    expect(envioDoCampo('nota', true, 'Fernanda')).toEqual(nota);
   });
 });
 

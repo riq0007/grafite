@@ -123,6 +123,13 @@ const previa = (usuario: UsuarioDoChat, numero: number, patrimonio: string) =>
     c.como(usuario),
   );
 
+/** A prévia pelo id do ativo, como o "Cartão do ativo" e o "/ativo" sozinho a pedem. */
+const previaPeloId = (usuario: UsuarioDoChat, numero: number, ativo: string) =>
+  c.cliente.consultar(
+    `/chamados/${numero}/cartao?ativo=${encodeURIComponent(ativo)}`,
+    c.como(usuario),
+  );
+
 const conversaGravada = async (numero: number) =>
   naOrg((tx) =>
     tx
@@ -223,6 +230,29 @@ describe('a permissão', () => {
     const torto = await daTi('livia', 'nota', numero, { texto: 'Esta.', cartao: 'PAT-00137' });
     expect(torto.statusCode).toBe(400);
     expect(torto.json().campos).toEqual({ cartao: 'O ativo não foi encontrado.' });
+  });
+
+  it('a prévia pelo id do ativo tem a mesma recusa e o mesmo retrato', async () => {
+    const numero = await c.abrirChamado('fernanda');
+
+    // Ana não tem `ativos.ver`: o ativo que ela não vê responde como o que não existe.
+    const daAna = await previaPeloId('ana', numero, pat137);
+    expect(daAna.statusCode).toBe(404);
+    expect(daAna.json()).toMatchObject({ detail: 'O ativo não foi encontrado.' });
+
+    const daLivia = await previaPeloId('livia', numero, pat137);
+    expect(daLivia.statusCode, daLivia.body).toBe(200);
+    expect(daLivia.json()).toEqual((await previa('livia', numero, 'PAT-00137')).json());
+
+    // O id que não é de ativo nenhum, o que nem é um id, e a prévia sem o ativo e sem o patrimônio.
+    const outro = await previaPeloId('livia', numero, '0199a6e0-0000-7000-8000-000000000999');
+    expect(outro.statusCode).toBe(404);
+    const torto = await previaPeloId('livia', numero, 'PAT-00137');
+    expect(torto.statusCode).toBe(400);
+    expect(torto.json().campos).toEqual({ ativo: 'O ativo não foi encontrado.' });
+    const vazia = await c.cliente.consultar(`/chamados/${numero}/cartao`, c.como('livia'));
+    expect(vazia.statusCode).toBe(400);
+    expect(vazia.json().campos).toEqual({ patrimonio: 'O ativo não foi encontrado.' });
   });
 
   it('o "Abrir a conversa" da origem vai só a quem participa da conversa', async () => {

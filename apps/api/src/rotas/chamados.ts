@@ -108,6 +108,11 @@ const ChamadosNaBusca = z
         /** O nome de agora de quem pediu. */
         pessoa: z.string(),
         situacao: z.enum(SITUACOES_DO_CHAMADO),
+        /**
+         * O resolvido que fechou, pela tarefa do fechamento ou pelo sétimo dia depois da resolução
+         * já passado, no fuso do horário da TI; a tela o mostra como "Fechado".
+         */
+        fechado: z.boolean(),
       }),
     ),
   })
@@ -636,14 +641,35 @@ const PedidoDaMensagemDoChamado = PedidoDaConversa.extend({
   opcoes: z.array(z.string()).optional(),
 }).meta({ id: 'PedidoDaConversaDoChamado' });
 
-const BuscaDoCartao = z.object({
-  /** O patrimônio do ativo, sem contar os acentos, as maiúsculas e os espaços das pontas. */
-  patrimonio: z
-    .string({ error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
-    .trim()
-    .min(1, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
-    .max(200, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO }),
-});
+const BuscaDoCartao = z
+  .object({
+    /**
+     * O id do ativo, como o "Cartão do ativo" o escolhe e como o "/ativo" sozinho o tem, pelo ativo
+     * do chamado; com ele, o patrimônio não conta.
+     */
+    ativo: z.uuid({ error: ATIVO_DO_CARTAO_NAO_ENCONTRADO }).optional(),
+    /**
+     * O patrimônio do ativo, como o "/ativo" o escreve, sem contar os acentos, as maiúsculas e os
+     * espaços das pontas. Sem o id, ele é pedido.
+     */
+    patrimonio: z
+      .string({ error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
+      .trim()
+      .min(1, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
+      .max(200, { error: ATIVO_DO_CARTAO_NAO_ENCONTRADO })
+      .optional(),
+  })
+  .refine(({ ativo, patrimonio }) => ativo !== undefined || patrimonio !== undefined, {
+    error: ATIVO_DO_CARTAO_NAO_ENCONTRADO,
+    path: ['patrimonio'],
+  });
+
+/** O ativo da prévia: pelo id, quando vem, ou pelo patrimônio. */
+const ondeDoCartao = ({
+  ativo,
+  patrimonio = '',
+}: z.infer<typeof BuscaDoCartao>): { ativo: string } | { patrimonio: string } =>
+  ativo === undefined ? { patrimonio } : { ativo };
 
 const PedidoDaTrocaDoAtivo = z
   .object({
@@ -875,6 +901,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
         buscarChamados(tx, requisicao.query.termo, {
           acesso: sessaoDa(requisicao).acesso,
           arvore: await lerArvore(tx),
+          agora: agora(),
         }),
       ),
   );
@@ -948,7 +975,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
       config: { permissao: 'chamados.atender' },
       schema: {
         summary:
-          'A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava',
+          'A prévia do cartão do ativo pelo id ou pelo patrimônio, o mesmo retrato que a mensagem grava',
         params: z.object({ numero: NumeroDoChamado }),
         querystring: BuscaDoCartao,
         response: { 200: CartaoDoAtivo, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
@@ -956,7 +983,7 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
     },
     (requisicao) =>
       naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) =>
-        previaDoCartao(tx, requisicao.params.numero, requisicao.query.patrimonio, {
+        previaDoCartao(tx, requisicao.params.numero, ondeDoCartao(requisicao.query), {
           acesso: sessaoDa(requisicao).acesso,
           arvore: await lerArvore(tx),
           agora: agora(),

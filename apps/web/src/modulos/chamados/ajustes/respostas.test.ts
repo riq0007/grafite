@@ -8,6 +8,7 @@ import {
   errosDaResposta,
   limiteDasRespostas,
   mudouAResposta,
+  opcoesNaLista,
   RESPOSTA_NOVA,
   type RespostaPronta,
   recusasQueValem,
@@ -147,11 +148,13 @@ describe('errosDaResposta', () => {
       errosDaResposta({
         rotulo: 'Já existe uma resposta pronta com esse rótulo.',
         tipos: 'Escolha os tipos da lista.',
+        opcoes: 'As opções precisam ser diferentes.',
         ids: 'A ordem precisa ter todas as respostas prontas, uma vez cada.',
       }),
     ).toEqual({
       rotulo: 'Já existe uma resposta pronta com esse rótulo.',
       tipos: 'Escolha os tipos da lista.',
+      opcoes: 'As opções precisam ser diferentes.',
     });
   });
 });
@@ -181,5 +184,27 @@ describe('recusasQueValem', () => {
       recusasQueValem(dosTipos, comTipos, { ...comTipos, tipos: [IMPRESSORA.id, ACESSO.id] }),
     ).toEqual(dosTipos);
     expect(recusasQueValem(dosTipos, comTipos, { ...comTipos, tipos: [ACESSO.id] })).toEqual({});
+  });
+});
+
+describe('recusasQueValem: as opções', () => {
+  it('a recusa das opções vale enquanto elas não mudam', () => {
+    const comOpcoes = { ...RESPOSTA_NOVA, opcoes: ['Sim', 'Sim'] };
+    const dasOpcoes = { opcoes: 'As opções precisam ser diferentes.' };
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes })).toEqual(dasOpcoes);
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes, opcoes: ['Sim', 'Não'] })).toEqual(
+      {},
+    );
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes, opcoes: ['Sim'] })).toEqual({});
+  });
+});
+
+describe('opcoesNaLista', () => {
+  it('as opções contadas na linha da resposta, e nada na resposta sem pergunta', () => {
+    expect(opcoesNaLista([])).toBeNull();
+    expect(opcoesNaLista(['Sim', 'Não'])).toBe('2 opções');
+    expect(opcoesNaLista(['Pode ser', 'Daqui a meia hora, por favor', 'Estou em reunião'])).toBe(
+      '3 opções',
+    );
   });
 });

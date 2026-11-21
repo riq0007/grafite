@@ -2,7 +2,8 @@
 // chamados-da-ti, design, "As respostas prontas (tarefa 5.25)"), para quem configura os chamados: a
 // lista na ordem, com a alça, o rótulo, o selo "Espera a resposta", o começo do texto e os tipos; e
 // a gaveta da resposta, com "Salvar" e "Remover". A ordem muda pela alça, com o `useArrastar`, e, no
-// teclado, pelo "Subir" e pelo "Descer" do menu da linha.
+// teclado, pelo "Subir" e pelo "Descer" do menu da linha. As opções da pergunta, na gaveta e
+// contadas na linha (change chat-com-chamados, tarefa 4.13).
 import {
   AreaDeTexto,
   avisar,
@@ -30,6 +31,7 @@ import {
   useRespostasProntas,
   useTiposDeChamado,
 } from '../consultas.ts';
+import { EditorDasOpcoes } from '../EditorDasOpcoes.tsx';
 import { Recusa } from '../formulario/Recusa.tsx';
 import { Selo } from '../Pecas.tsx';
 import { PERMISSOES_DE_CONFIGURAR } from '../permissoes.ts';
@@ -45,6 +47,7 @@ import {
   errosDaResposta,
   limiteDasRespostas,
   mudouAResposta,
+  opcoesNaLista,
   RESPOSTA_NOVA,
   type RespostaPronta,
   recusasQueValem,
@@ -377,6 +380,12 @@ function TelaDasRespostas() {
             descricao="{nome} vira o primeiro nome da pessoa do chamado."
             erro={erros.texto}
           />
+          <EditorDasOpcoes
+            opcoes={edicao.opcoes}
+            aoMudar={(opcoes) => mudar({ opcoes })}
+            erro={erros.opcoes}
+            descricao="De 2 a 3, que a pessoa escolhe por um botão no chat. Sem opções, a resposta não pede escolha."
+          />
           <ChaveDaEspera
             ligada={edicao.esperaAResposta}
             aoMudar={(esperaAResposta) => mudar({ esperaAResposta })}
@@ -525,6 +534,9 @@ const COLUNAS: ColunaQueSeOrdena<RespostaPronta>[] = [
         <span className={estilos.rotuloNaLinha}>
           <span>{resposta.rotulo}</span>
           {resposta.esperaAResposta && <Selo selo="espera-a-resposta" />}
+          {resposta.opcoes.length > 0 && (
+            <span className={estilos.opcoesNaLinha}>{opcoesNaLista(resposta.opcoes)}</span>
+          )}
         </span>
         <span className={estilos.comecoDoTexto}>{textoNumaLinha(resposta.texto)}</span>
       </span>

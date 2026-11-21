@@ -3,10 +3,13 @@
 // do ativo como foi mandado, com a miniatura do tipo, o nome em peso forte, o modelo e o patrimônio
 // em mono, o selo do toner crítico, a barra do nível com o número ao lado, o IP, a situação e a hora
 // dos dados. "Abrir a ficha" abre o Grafite na ficha, só a quem vê os ativos: no app do chat, numa
-// janela nova, e, na janela do Chat da casca, nela mesma.
+// janela nova, e, na janela do Chat da casca, nela mesma. No chamado aberto da TI, a API diz a quem
+// vai o "Abrir a ficha", pelo local do ativo, e o campo de escrever põe o "Tirar" no cartão
+// (chat-com-chamados, tarefa 4.13).
 import { tintaDoSuprimento } from '@grafite/domain';
 import { type DataHora, Icone, Medidor, MiniaturaDeAtivo, RotuloDeSituacao } from '@grafite/ui';
 import { ArrowUpRight, CircleAlert } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor } from '../sessao/useSessao.tsx';
 import estilos from './CartaoDoAtivoNaMensagem.module.css';
@@ -19,14 +22,23 @@ export function CartaoDoAtivoNaMensagem({
   cartao,
   agora,
   dataHora,
+  abrir,
+  acao,
 }: {
   cartao: CartaoDoAtivo;
   agora: Date;
   dataHora: DataHora;
+  /**
+   * O "Abrir a ficha" que a API decidiu, pelo local do ativo; sem ele, a quem vê os ativos com o
+   * Ativos ligado.
+   */
+  abrir?: boolean;
+  /** A ação do cartão no canto, como o "Tirar" do campo de escrever. */
+  acao?: ReactNode;
 }) {
   const { pode } = useAcesso();
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
-  const abrirAFicha = pode('ativos.ver') && !desligados.includes('ativos');
+  const abrirAFicha = abrir ?? (pode('ativos.ver') && !desligados.includes('ativos'));
   const { suprimento } = cartao;
   const sobre = [cartao.modelo, cartao.patrimonio].filter(Boolean).join(' · ');
   return (
@@ -42,6 +54,7 @@ export function CartaoDoAtivoNaMensagem({
             Toner crítico
           </RotuloDeSituacao>
         )}
+        {acao}
       </div>
       {suprimento && (
         <div className={estilos.suprimento}>

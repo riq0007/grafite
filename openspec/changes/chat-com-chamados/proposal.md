@@ -65,7 +65,7 @@ A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre,
 - **A resposta da pessoa:** a mensagem e a escolha dela, no chamado que aguarda, voltam o chamado ao atendimento, e o relógio volta a contar.
 - **O lado da TI** (m05 e m11):
   - a conversa do chamado aberto mostra as mensagens da pessoa, as escolhas, a avaliação e a origem, "Aberto a partir da conversa Equipe Financeiro";
-  - o campo de escrever manda "Enviar à Fernanda", com o "/ativo" e as opções de resposta.
+  - o campo de escrever manda "Enviar para Fernanda", com o "/ativo" e as opções de resposta.
 - **No celular** (m08 e m09):
   - a lista e a conversa em telas;
   - alvos de 44 px;
@@ -123,7 +123,7 @@ Fica fora:
 - `modulo-chamados`:
   - a primeira tela de quem só usa o chat;
   - a conversa com a pessoa no chamado aberto;
-  - o campo de escrever, com "Enviar à Fernanda", o "/ativo" e as opções;
+  - o campo de escrever, com "Enviar para Fernanda", o "/ativo" e as opções;
   - as opções nas respostas prontas;
   - o chamado fechado na tela.
 - `modulos-da-organizacao`: o Chat entra nos módulos opcionais.

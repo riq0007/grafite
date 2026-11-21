@@ -165,6 +165,19 @@ p.estado {
   font-weight: var(--peso-forte);
 }
 
+/* O selo e, no resolvido, o último dia em que se reabre, "fecha em 18/11", juntos. */
+.situacao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  white-space: nowrap;
+}
+
+.fecha {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
 /* O quadro do prazo, no quadro do cabeçalho, à direita do título e das ações. */
 .prazo {
   display: grid;
