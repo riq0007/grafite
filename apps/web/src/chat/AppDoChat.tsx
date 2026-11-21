@@ -2,8 +2,9 @@
 // a sessão, a API, as consultas, o canal dos eventos e as notificações, e, atrás da porta da
 // entrada, o roteador do chat. A entrada não muda o endereço: depois dela, o app abre no endereço
 // do chat que foi pedido. Os eventos relêem as consultas do chat (spec modulo-chat, "Telas do chat
-// atualizadas e avisos"). A postura do aparelho vai no <html>, como na casca, para as regras do toque
-// e do celular valerem também nas camadas em portal, como os menus e as folhas.
+// atualizadas e avisos"), e o toque no push abre aqui o endereço do chat. A postura do aparelho vai no
+// <html>, como na casca, para as regras do toque e do celular valerem também nas camadas em portal,
+// como os menus e as folhas.
 import { usePostura } from '@grafite/ui';
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
@@ -13,6 +14,7 @@ import { ProvedorDaApi } from '../api/useApi.tsx';
 import { type CanalDeEventos, criarCanalDeEventos } from '../eventos/canal.ts';
 import { ligarEventosDosModulos } from '../eventos/modulos.ts';
 import { ProvedorDoCanal } from '../eventos/useCanal.tsx';
+import { ouvirAberturaPeloPush } from '../notificacoes/aberturaPeloPush.ts';
 import { ProvedorDeNotificacoes } from '../notificacoes/useNotificacoes.tsx';
 import { ProvedorDePreferencias } from '../preferencias/usePreferencias.tsx';
 import type { LojaDaSessao } from '../sessao/loja.ts';
@@ -64,6 +66,16 @@ export function AppDoChat({
       else abrirForaDoChat(destino);
     },
     [roteador],
+  );
+  // O toque no push com o app aberto: o service worker pede a esta janela o destino do chat
+  // (`sw-avisos.js`), e o app o abre, sem recarregar.
+  useEffect(
+    () =>
+      ouvirAberturaPeloPush(
+        typeof navigator === 'undefined' ? undefined : navigator.serviceWorker,
+        navegar,
+      ),
+    [navegar],
   );
   return (
     <ProvedorDePreferencias loja={sessao} canal={canal}>

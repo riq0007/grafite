@@ -4,7 +4,9 @@
 // dela, filtradas e em páginas, só aberta. Os eventos das notificações e dos alertas releem as
 // duas, e as ações vão às rotas das notificações e às do alerta de que a notificação trata. A
 // notificação que chega com a aplicação aberta vira aviso conforme as preferências e o Foco, só na
-// aba da vez (decisão 9), e o aviso sai quando ela é lida ou o alerta dela deixa de pedir ação.
+// aba da vez (decisão 9), e o aviso sai quando ela é lida ou o alerta dela deixa de pedir ação. A
+// notificação com o destino de uma tela à vista, como a conversa aberta no chat, não vira aviso
+// (change chat-com-chamados, design, decisão 6).
 import type { components } from '@grafite/api-client';
 import { avisar, type FilaDeAvisos, type FiltrosDaCentral, filaDeAvisos } from '@grafite/ui';
 import { queryOptions, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,6 +27,7 @@ import { useCanal } from '../eventos/useCanal.tsx';
 import { usePreferencias } from '../preferencias/usePreferencias.tsx';
 import { useSessao } from '../sessao/useSessao.tsx';
 import { type AbaDaVez, vigiarAbaDaVez } from './abaDaVez.ts';
+import { ContextoDosDestinosAVista, criarDestinosAVista } from './destinosAVista.tsx';
 
 export const CHAVE_DAS_NOTIFICACOES = ['notificacoes'] as const;
 
@@ -228,6 +231,7 @@ export function ProvedorDeNotificacoes({
     };
   }, []);
 
+  const [destinos] = useState(criarDestinosAVista);
   const abertaEm = useRef(Date.now());
   const vistas = useRef<Set<string> | null>(null);
   const avisosNaTela = useRef(new Map<string, string>());
@@ -252,6 +256,8 @@ export function ProvedorDeNotificacoes({
       if (notificacao.lida) continue;
       if (notificacao.momento.getTime() < abertaEm.current - FOLGA_DO_RELOGIO) continue;
       if (!(abaDaVez.current?.ehDaVez() ?? true)) continue;
+      // A tela do destino está à vista: quem lê já vê o que chegou.
+      if (notificacao.destino !== undefined && destinos.estaAVista(notificacao.destino)) continue;
       const critico = notificacao.severidade === 'critico';
       const naTela =
         critico || (!foco && (notificacao.severidade === 'atencao' ? atencao : informacao));
@@ -284,9 +290,15 @@ export function ProvedorDeNotificacoes({
         avisosNaTela.current.delete(id);
       }
     }
-  }, [recentes.data, fila]);
+  }, [recentes.data, fila, destinos]);
 
-  return <Contexto.Provider value={controle}>{children}</Contexto.Provider>;
+  return (
+    <Contexto.Provider value={controle}>
+      <ContextoDosDestinosAVista.Provider value={destinos}>
+        {children}
+      </ContextoDosDestinosAVista.Provider>
+    </Contexto.Provider>
+  );
 }
 
 export function useNotificacoes(): ControleDasNotificacoes {

@@ -27,6 +27,7 @@ import {
 } from 'react';
 import { FalhaDaConsulta } from '../api/consultas.ts';
 import { miniaturasNoChat } from '../api/fotos.ts';
+import { useDestinoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useSessao } from '../sessao/useSessao.tsx';
 import {
   type AcoesDaMensagem,
@@ -218,11 +219,10 @@ export function FluxoDaConversa({
   const daVez = escritas.some(({ id }) => id === comOFoco)
     ? comOFoco
     : (escritas.at(-1)?.id ?? null);
-  useLeituraDaConversa(conversa, {
-    ultima,
-    lidaAte: dados?.lidaAte ?? null,
-    aVista: janelaAVista && visivel,
-  });
+  const aVista = janelaAVista && visivel;
+  useLeituraDaConversa(conversa, { ultima, lidaAte: dados?.lidaAte ?? null, aVista });
+  // A notificação desta conversa não vira aviso enquanto ela está à vista.
+  useDestinoAVista(`/chat/c/${conversa}`, aVista);
 
   const rolagem = useRef<HTMLElement>(null);
   const conteudo = useRef<HTMLOListElement>(null);

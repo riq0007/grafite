@@ -5,6 +5,7 @@ import { Box } from 'lucide-react';
 import { type ComponentType, type ReactNode, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App.tsx';
+import { useJanelaAVista } from '../chat/janela.ts';
 import { REGISTRO } from '../modulos/registro.ts';
 import { definirModulo } from '../modulos/tipos.ts';
 import type { criarRoteador } from '../rotas/arvore.ts';
@@ -106,10 +107,16 @@ function CampoQuePede({
   );
 }
 
+/** Se a tela está à vista, como a conversa do chat lê para a leitura e para os avisos. */
+function VistaDaTela() {
+  return <p data-vista-da-tela>{useJanelaAVista() ? 'Tela à vista' : 'Tela fora de vista'}</p>;
+}
+
 function NovoAtivo() {
   return (
     <>
       <TituloDaJanela>Novo ativo</TituloDaJanela>
+      <VistaDaTela />
       <label>
         Nome do ativo <input />
       </label>
@@ -193,6 +200,18 @@ describe('a janela com as abas de cadastro', () => {
     fireEvent.click(aba('Novo ativo'));
     const nome = await screen.findByRole('textbox', { name: 'Nome do ativo' });
     expect((nome as HTMLInputElement).value).toBe('IMP-01');
+  });
+
+  it('com o cadastro na frente, a tela atrás não está à vista, e volta a estar com ela na frente', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    abrir();
+    await titulo('Novo ativo');
+    const vista = () => document.querySelector('[data-vista-da-tela]')?.textContent;
+    expect(vista()).toBe('Tela à vista');
+    await abrirONovoLocal();
+    expect(vista()).toBe('Tela fora de vista');
+    fireEvent.click(aba('Novo ativo'));
+    await waitFor(() => expect(vista()).toBe('Tela à vista'));
   });
 
   it('salvar fecha a aba e volta à tela com o registro no campo e o foco nele', async () => {

@@ -1,6 +1,6 @@
 // O app do chat (spec modulo-chat, "App do chat", "Trilha do chat" e "Lista do Chat"): a entrada,
 // que volta ao endereço pedido, a conta sem o chat, o módulo desligado, o servidor que não responde,
-// a trilha, com os contadores, a lista do Chat e o menu da conta.
+// a trilha, com os contadores, a lista do Chat, o menu da conta e o toque no push com o app aberto.
 import { filaDeAvisos } from '@grafite/ui';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -786,5 +786,31 @@ describe('o menu da conta', () => {
       ),
     );
     expect(recarregar).not.toHaveBeenCalled();
+  });
+});
+
+describe('o toque no push com o app do chat aberto', () => {
+  afterEach(() => {
+    delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+  });
+
+  it('o destino do chat abre aqui, sem recarregar, e o de fora, o Grafite numa janela nova', async () => {
+    const container = new EventTarget();
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: container });
+    const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
+    const roteador = abrir('/chat', comOChat());
+    await trilha();
+    const pedir = (destino: string) =>
+      act(() => {
+        container.dispatchEvent(
+          new MessageEvent('message', { data: { tipo: 'grafite:abrir', destino } }),
+        );
+      });
+    pedir('/chat/chamados');
+    await waitFor(() => expect(roteador.state.location.href).toBe('/chat/chamados'));
+    expect(abrirJanela).not.toHaveBeenCalled();
+    pedir('/ativos/1');
+    expect(abrirJanela).toHaveBeenCalledWith('/ativos/1', '_blank', 'noopener');
+    expect(roteador.state.location.href).toBe('/chat/chamados');
   });
 });

@@ -2,6 +2,7 @@
 // mensagem" e "Chamados da conversa"): o cabeçalho e as abas, as mensagens seguidas juntas, os dias
 // e o evento, a abertura na primeira não lida, na última ou na mensagem do link, a leitura com a
 // conversa à vista, "Mensagens anteriores", a conversa presa embaixo e "Mensagens novas · 2".
+import type { components } from '@grafite/api-client';
 import { filaDeAvisos } from '@grafite/ui';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -678,5 +679,110 @@ describe('a conversa que recebe mensagens', () => {
     act(() => canal.publicar(conversaMudou(1)));
     await within(area).findByText('+1: Tatiana Ramos');
     expect(area.scrollTop).toBe(600);
+  });
+
+  it('a mensagem que chega não tira o que se escreve na caixa nem o foco dela', async () => {
+    const canal = criarCanalDeEventos();
+    const { servidor, estado } = servidorDaConversa({ mensagens: varias(1, 5) });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor), { canal });
+    const caixa = () =>
+      screen.getByRole<HTMLTextAreaElement>('textbox', {
+        name: 'Escrever uma mensagem em Equipe Financeiro',
+      });
+    const area = await areaDasMensagens();
+    await within(area).findByText('Mensagem 5');
+    caixa().focus();
+    fireEvent.change(caixa(), { target: { value: 'Já reiniciei a impressora' } });
+    estado.mensagens.push(mensagem(6, { autor: TATIANA }));
+    act(() => canal.publicar(conversaMudou(1)));
+    await within(area).findByText('Mensagem 6');
+    expect(caixa().value).toBe('Já reiniciei a impressora');
+    expect(document.activeElement).toBe(caixa());
+  });
+});
+
+type Notificacao = components['schemas']['NotificacaoNaLista'];
+
+const OUTRA = '0199a6e0-0000-7000-8000-00000000c0e2';
+
+/** A notificação da mensagem do chat, como a API a grava, com o destino da mensagem. */
+const daMensagem = (n: number, conversa = CONVERSA, autor = 'Tatiana Ramos'): Notificacao => ({
+  id: `n${n}`,
+  severidade: 'info',
+  titulo: `Mensagem de ${autor}`,
+  descricao: `Mensagem ${n}`,
+  origem: 'Chat',
+  destino: `/chat/c/${conversa}?m=${id(n)}`,
+  criadaEm: AGORA.toISOString(),
+  lida: false,
+  alerta: null,
+});
+
+/**
+ * A conversa com as notificações do servidor, que o teste troca, e o evento que as relê. A outra
+ * conversa não existe para a conta.
+ */
+function comAsNotificacoes() {
+  const canal = criarCanalDeEventos();
+  const { servidor, estado } = servidorDaConversa({ mensagens: varias(1, 5) });
+  const notificacoes = { itens: [] as Notificacao[], leituras: 0 };
+  const comElas: ServidorDeTeste = {
+    ...servidor,
+    'GET /api/notificacoes': () => {
+      notificacoes.leituras++;
+      return Response.json({
+        itens: notificacoes.itens,
+        naoLidas: notificacoes.itens.length,
+        proximo: null,
+      });
+    },
+    'POST /api/notificacoes/n7/leitura': () => new Response(null, { status: 204 }),
+    [`GET /api/chat/conversas/${OUTRA}`]: () => naoEncontrado('Conversa não encontrada.'),
+    [`GET /api/chat/conversas/${OUTRA}/mensagens`]: () =>
+      naoEncontrado('A mensagem não foi encontrada.'),
+  };
+  const chegar = (...itens: Notificacao[]) => {
+    notificacoes.itens = itens;
+    act(() =>
+      canal.publicar({
+        id: `0199a6e0-0000-7000-8000-0000000008${String(itens.length).padStart(2, '0')}`,
+        tipo: 'notificacoes.mudaram',
+        momento: AGORA.toISOString(),
+        alvo: null,
+      }),
+    );
+  };
+  return { canal, estado, servidor: comElas, notificacoes, chegar };
+}
+
+const titulosDosAvisos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
+
+describe('os avisos com a conversa à vista', () => {
+  it('a notificação da conversa à vista não vira aviso; a de outra conversa vira, e "Abrir" leva a ela no app', async () => {
+    const { canal, estado, servidor, notificacoes, chegar } = comAsNotificacoes();
+    const roteador = abrir(`/chat/c/${CONVERSA}`, comOChat(servidor), { canal });
+    const area = await areaDasMensagens();
+    await within(area).findByText('Mensagem 5');
+    await waitFor(() => expect(notificacoes.leituras).toBe(1));
+    // Tatiana escreve na conversa à vista, e Paulo Nunes, numa outra.
+    estado.mensagens.push(mensagem(6, { autor: TATIANA }));
+    act(() => canal.publicar(conversaMudou(1)));
+    await within(area).findByText('Mensagem 6');
+    chegar(daMensagem(6), daMensagem(7, OUTRA, 'Paulo Nunes'));
+    // Os dois avisos entrariam juntos, na mesma leitura: com o de Paulo na tela, o de Tatiana não veio.
+    await waitFor(() => expect(titulosDosAvisos()).toContain('Mensagem de Paulo Nunes'));
+    expect(titulosDosAvisos()).toEqual(['Mensagem de Paulo Nunes']);
+    act(() => filaDeAvisos.naTela[0]?.aviso.aoAbrir?.());
+    await waitFor(() => expect(roteador.state.location.href).toBe(`/chat/c/${OUTRA}?m=${id(7)}`));
+  });
+
+  it('com a janela sem o foco, a notificação da conversa aberta vira aviso', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    const { canal, servidor, notificacoes, chegar } = comAsNotificacoes();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor), { canal });
+    await within(await areaDasMensagens()).findByText('Mensagem 5');
+    await waitFor(() => expect(notificacoes.leituras).toBe(1));
+    chegar(daMensagem(6));
+    await waitFor(() => expect(titulosDosAvisos()).toContain('Mensagem de Tatiana Ramos'));
   });
 });

@@ -1,5 +1,6 @@
 import { type AbaNaJanela, AbasDaJanela, Botao, Dialogo } from '@grafite/ui';
 import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { ContextoDaTelaNaFrente } from '../notificacoes/destinosAVista.tsx';
 import { ABA_DA_TELA, type AbaDeCadastro } from './abasDaJanela.ts';
 import { type AbasDoApp, ContextoDaAba } from './abasDoApp.tsx';
 import estilos from './JanelaComAbas.module.css';
@@ -38,7 +39,15 @@ export function JanelaComAbas({ abas, tela, chaveDaTela, nomeReserva }: PropsDaJ
             id: aba.id,
             titulo: nomeDaTela,
             chave: chaveDaTela,
-            conteudo: <ContextoDaAba.Provider value={aba.id}>{tela}</ContextoDaAba.Provider>,
+            // Com um cadastro na frente, a tela fica montada atrás e não está à vista: a conversa
+            // dela não é lida, e a notificação dela vira aviso (change chat-com-chamados).
+            conteudo: (
+              <ContextoDaAba.Provider value={aba.id}>
+                <ContextoDaTelaNaFrente.Provider value={estado.frente === aba.id}>
+                  {tela}
+                </ContextoDaTelaNaFrente.Provider>
+              </ContextoDaAba.Provider>
+            ),
           }
         : {
             id: aba.id,

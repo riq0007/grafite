@@ -3,11 +3,11 @@
 // casca recarregada com a janela do Chat aberta, que volta nela, com as vistas sem os Avisos, que
 // ficam no sino; "Abrir no app do chat", com o mesmo lugar em /chat numa janela nova; e os endereços
 // do app do chat, como o da notificação e o do toque no push, que abrem o mesmo lugar na janela do
-// Chat, com a busca.
+// Chat, com a busca; com a conversa à vista na janela, a notificação dela não vira aviso.
 import type { components } from '@grafite/api-client';
 import { filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../App.tsx';
 import { criarClienteDeConsultas } from '../../api/consultas.ts';
@@ -241,5 +241,51 @@ describe('o Chat na casca', () => {
       new MessageEvent('message', { data: { tipo: 'grafite:abrir', destino } }),
     );
     await naTerceiraMensagem(roteador, estado);
+  });
+
+  it('com a conversa à vista na janela do Chat, a notificação dela não vira aviso, e a de outra conversa vira', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    const { servidor } = conversaComPaulo();
+    const notificacoes = { itens: [] as Notificacao[], leituras: 0 };
+    const doChat = (n: number, conversa: string, autor: string): Notificacao => ({
+      id: `n${n}`,
+      severidade: 'info',
+      titulo: `Mensagem de ${autor}`,
+      descricao: `Mensagem ${n}`,
+      origem: 'Chat',
+      destino: `/chat/c/${conversa}?m=${id(n)}`,
+      criadaEm: new Date(Date.now() + 1_000).toISOString(),
+      lida: false,
+      alerta: null,
+    });
+    const { canal } = abrirACasca(`/conversas/c/${CONVERSA}`, {
+      ...servidor,
+      'GET /api/notificacoes': () => {
+        notificacoes.leituras++;
+        return Response.json({
+          itens: notificacoes.itens,
+          naoLidas: notificacoes.itens.length,
+          proximo: null,
+        });
+      },
+    });
+    expect(await screen.findByRole('region', { name: 'Paulo Nunes' })).toBeTruthy();
+    await waitFor(() => expect(notificacoes.leituras).toBe(1));
+    notificacoes.itens = [
+      doChat(6, CONVERSA, 'Paulo Nunes'),
+      doChat(7, FINANCEIRO, 'Fernanda Rocha'),
+    ];
+    act(() =>
+      canal.publicar({
+        id: 'evento-notificacoes',
+        tipo: 'notificacoes.mudaram',
+        momento: new Date().toISOString(),
+        alvo: null,
+      }),
+    );
+    const titulos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
+    // Os dois avisos entrariam juntos, na mesma leitura.
+    await waitFor(() => expect(titulos()).toContain('Mensagem de Fernanda Rocha'));
+    expect(titulos()).toEqual(['Mensagem de Fernanda Rocha']);
   });
 });

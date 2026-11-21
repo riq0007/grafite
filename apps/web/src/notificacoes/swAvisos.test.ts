@@ -74,6 +74,12 @@ describe('push', () => {
     ]);
   });
 
+  it('guarda o destino com a busca e o fragmento, como o da mensagem do chat', async () => {
+    const sw = escopoFalso();
+    await sw.disparar('push', push({ ...CONTEUDO, destino: '/chat/c/abc?m=def#fim' }));
+    expect(sw.mostradas[0]?.opcoes.data).toEqual({ destino: '/chat/c/abc?m=def#fim' });
+  });
+
   it('o que não é crítico some sozinho', async () => {
     const sw = escopoFalso();
     await sw.disparar('push', push({ ...CONTEUDO, severidade: 'atencao' }));
@@ -117,6 +123,62 @@ describe('toque no push', () => {
     expect(janela.focus).toHaveBeenCalled();
     expect(mensagens).toEqual([{ tipo: 'grafite:abrir', destino: CONTEUDO.destino }]);
     expect(sw.abertas).toEqual([]);
+  });
+
+  /** Uma janela aberta do Grafite no endereço, com o que ela recebe. */
+  const janelaEm = (caminho: string) => {
+    const recebidas: unknown[] = [];
+    const janela: JanelaFalsa = {
+      url: `${ORIGEM}${caminho}`,
+      focus: vi.fn(async () => janela),
+      postMessage: (mensagem) => recebidas.push(mensagem),
+    };
+    return { janela, recebidas };
+  };
+  const DO_CHAT = '/chat/c/abc?m=def';
+  const DA_CASCA = '/chamados/1045';
+
+  it('o destino do chat vai à janela do app do chat, mesmo com a da casca aberta antes', async () => {
+    const casca = janelaEm('/ativos');
+    const app = janelaEm('/chat/equipes');
+    const sw = escopoFalso({ janelas: [casca.janela, app.janela] });
+    await sw.disparar('notificationclick', toque(DO_CHAT).evento);
+    expect(app.recebidas).toEqual([{ tipo: 'grafite:abrir', destino: DO_CHAT }]);
+    expect(app.janela.focus).toHaveBeenCalled();
+    expect(casca.recebidas).toEqual([]);
+    expect(sw.abertas).toEqual([]);
+  });
+
+  it('sem a janela do app do chat, o destino do chat vai à da casca, que o traduz', async () => {
+    const casca = janelaEm('/conversas/equipes');
+    const sw = escopoFalso({ janelas: [casca.janela] });
+    await sw.disparar('notificationclick', toque(DO_CHAT).evento);
+    expect(casca.recebidas).toEqual([{ tipo: 'grafite:abrir', destino: DO_CHAT }]);
+    expect(sw.abertas).toEqual([]);
+  });
+
+  it('o destino da casca vai só à janela da casca, e nunca à do app do chat', async () => {
+    const app = janelaEm('/chat');
+    const casca = janelaEm('/inicio');
+    const sw = escopoFalso({ janelas: [app.janela, casca.janela] });
+    await sw.disparar('notificationclick', toque(DA_CASCA).evento);
+    expect(casca.recebidas).toEqual([{ tipo: 'grafite:abrir', destino: DA_CASCA }]);
+    expect(app.recebidas).toEqual([]);
+  });
+
+  it('só com a janela do app do chat, o destino da casca abre uma janela nova', async () => {
+    const app = janelaEm('/chat/c/abc');
+    const sw = escopoFalso({ janelas: [app.janela] });
+    await sw.disparar('notificationclick', toque(DA_CASCA).evento);
+    expect(app.recebidas).toEqual([]);
+    expect(app.janela.focus).not.toHaveBeenCalled();
+    expect(sw.abertas).toEqual([`${ORIGEM}${DA_CASCA}`]);
+  });
+
+  it('sem janela aberta, o destino do chat abre uma nova com a busca, que o navegador entrega ao app instalado', async () => {
+    const sw = escopoFalso();
+    await sw.disparar('notificationclick', toque(DO_CHAT).evento);
+    expect(sw.abertas).toEqual([`${ORIGEM}${DO_CHAT}`]);
   });
 
   it('sem janela aberta, abre uma nova no endereço', async () => {

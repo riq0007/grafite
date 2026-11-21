@@ -199,7 +199,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
   Começa pelos testes da primeira tela. Verificar: esses testes, os do registro e da tradução, o `pnpm test:e2e`, o lint, o typecheck e o dock no `pnpm dev`, com a casca recarregada na janela do Chat.
 - [x] 4.11 As equipes e os canais na tela: a lista, com a situação em texto, e a gaveta, com os avisos e as recusas no campo. Na alteração, o grupo gravado inativo aparece como o escolhido, com a situação em texto, como "Financeiro (inativo)": sem ele, o campo abre vazio e o salvar volta "Escolha o grupo da equipe.". Verificar: o lint, o typecheck e a tela no `pnpm dev`. A tela ficou em `modulos/chat/EquipesECanais.tsx`, com o que ela decide sem a API em `equipesECanais.ts`, no `/conversas/equipes-e-canais`, fora da moldura do chat, e o módulo Chat aparece também para quem só configura o chat (decisão 15). A gaveta abre com a linha da lista, que tem o mesmo retrato, e a leitura de uma ficou sem uso na tela.
-- [ ] 4.12 As telas atualizadas e os avisos:
+- [x] 4.12 As telas atualizadas e os avisos:
   - o `chat.mudou` e o `chamados.mudaram`, sem perder o que se escreve;
   - o aviso escondido com a conversa à vista;
   - o "Abrir" no app ou na janela da casca;
