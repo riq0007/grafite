@@ -6,6 +6,7 @@ import { Avatar, Icone } from '@grafite/ui';
 import { useRouterState } from '@tanstack/react-router';
 import { Hash } from 'lucide-react';
 import { useId } from 'react';
+import { rotaComoNoApp } from './base.tsx';
 import { nomeParaOLeitor } from './Contador.tsx';
 import { type EquipeDoChat, useEquipesDoChat } from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
@@ -25,7 +26,7 @@ const equipeDoEndereco = ({
   matches: readonly { routeId: string; params: unknown }[];
 }) => {
   const ultima = matches.at(-1);
-  if (ultima?.routeId !== '/chat/equipes/$conversa') return null;
+  if (!ultima || rotaComoNoApp(ultima.routeId) !== '/chat/equipes/$conversa') return null;
   const { conversa } = ultima.params as { conversa?: unknown };
   return typeof conversa === 'string' ? conversa.toLowerCase() : null;
 };

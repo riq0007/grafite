@@ -2,7 +2,12 @@
 // uma entrada no registro. Os destinos dos menus são endereços das rotas do próprio módulo, então
 // um menu que aponta para uma rota inexistente não compila.
 import type { Permissao, PreferenciasDaInterface, TipoDeEvento } from '@grafite/domain';
-import type { OcorrenciaAberta, OpcaoDoBloco, ValoresDasOpcoesDoBloco } from '@grafite/ui';
+import type {
+  OcorrenciaAberta,
+  OpcaoDoBloco,
+  SeloDoModulo,
+  ValoresDasOpcoesDoBloco,
+} from '@grafite/ui';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import type { AnyRoute } from '@tanstack/react-router';
 import type { LucideIcon } from 'lucide-react';
@@ -33,9 +38,14 @@ export interface ExigePermissoes {
   permissoes?: readonly Permissao[];
 }
 
-/** Item de um menu do módulo: leva a um endereço do próprio módulo ou abre um submenu. */
-export type ItemDoMenuDoModulo<TEndereco extends string> = ExigePermissoes &
-  (
+/**
+ * Item de um menu do módulo: leva a um endereço do próprio módulo ou abre um submenu. Com
+ * `comOModulo`, o item some com aquele módulo desligado na organização, como "Chamados" no menu do
+ * Chat.
+ */
+export type ItemDoMenuDoModulo<TEndereco extends string> = ExigePermissoes & {
+  comOModulo?: string;
+} & (
     | { rotulo: string; destino: TEndereco; separadoAntes?: boolean; icone?: LucideIcon }
     | { rotulo: string; filhos: readonly ItemDoMenuDoModulo<TEndereco>[]; separadoAntes?: boolean }
   );
@@ -242,6 +252,28 @@ export type EventosDoModulo = {
   [T in TipoDeEvento]?: (evento: EventoRecebido) => readonly QueryKey[];
 };
 
+/** O app de fora da casca de um módulo, no endereço dele, para quem tem uma das permissões. */
+export interface AppProprioDoModulo extends ExigePermissoes {
+  endereco: string;
+}
+
+/**
+ * O selo do item do módulo no dock e na barra de abas do celular, que vem dos dados, como o total do
+ * chat (change chat-com-chamados, design, decisão 12). A casca carrega as consultas pelo TanStack
+ * Query, só para a conta que tem a permissão e com o módulo ligado, e os eventos do módulo as
+ * relêem, como as do menu dinâmico.
+ */
+export interface SeloDoModuloRegistrado extends ExigePermissoes {
+  consultas: (api: ClienteDaApi) => readonly ConsultaDoMenu[];
+  /** O selo com os dados das consultas, ou nenhum, como no zero e enquanto elas carregam. */
+  montar: (contexto: {
+    /** O dado de uma das consultas do selo: nenhum enquanto ela carrega ou se ela falhou. */
+    ler: <TDado>(consulta: ConsultaDoMenu<TDado>) => TDado | undefined;
+    /** O cliente da sessão, para montar as consultas que `ler` lê. */
+    api: ClienteDaApi;
+  }) => SeloDoModulo | null;
+}
+
 export interface ModuloRegistrado<TRota extends AnyRoute = AnyRoute> extends ExigePermissoes {
   /** Identificador estável, em minúsculas, como "ativos" ou "ajustes". */
   id: string;
@@ -268,6 +300,15 @@ export interface ModuloRegistrado<TRota extends AnyRoute = AnyRoute> extends Exi
    * módulo, e não ao Início. Vale o primeiro módulo do registro da conta que a declara.
    */
   primeiraTela?: ExigePermissoes;
+  /**
+   * O app próprio do módulo, fora da casca, como o app do chat em `/chat` (change
+   * chat-com-chamados, design, decisão 12): a conta que, entre os módulos da casca que exigem
+   * permissão, só vê este vai a ele na primeira carga da aba, na mesma regra da primeira tela, se
+   * tem uma das permissões do app, como quem usa o chat, e não só quem o configura.
+   */
+  appProprio?: AppProprioDoModulo;
+  /** O selo do item do dock e da aba do celular, que vem dos dados, como o total do chat. */
+  selo?: SeloDoModuloRegistrado;
   /** Menus do módulo na barra superior. */
   menusDaBarra?: readonly MenuDaBarraDoModulo<EnderecosDe<TRota>>[];
   /**

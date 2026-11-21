@@ -10,6 +10,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import type { ClienteDaApi } from '../api/cliente.ts';
 import { consultar } from '../api/consultas.ts';
 import { type FalhaDoPedido, pedir } from '../api/pedir.ts';
 import { useApi } from '../api/useApi.tsx';
@@ -83,13 +84,18 @@ export type ConversaDoChamadoNoChat = components['schemas']['ConversaDoChamadoDe
 export type EquipeDoChat = components['schemas']['EquipeDaConta'];
 export type ContaDoChat = components['schemas']['ContaDoChat'];
 
+/**
+ * O total do chat e os chamados com resposta nova: a consulta da trilha, que o selo do Chat no dock
+ * da casca também lê.
+ */
+export const consultaDoResumoDoChat = (api: ClienteDaApi) => ({
+  queryKey: CHAVE_DO_RESUMO_DO_CHAT,
+  queryFn: ({ signal }: { signal?: AbortSignal } = {}): Promise<ResumoDoChat> =>
+    consultar(() => api.GET('/chat/resumo', { signal }), 'carregar os contadores do chat'),
+});
+
 export function useResumoDoChat() {
-  const api = useApi();
-  return useQuery({
-    queryKey: CHAVE_DO_RESUMO_DO_CHAT,
-    queryFn: ({ signal }) =>
-      consultar(() => api.GET('/chat/resumo', { signal }), 'carregar os contadores do chat'),
-  });
+  return useQuery(consultaDoResumoDoChat(useApi()));
 }
 
 /** As equipes e os canais, pelo nome, e as conversas diretas, a da mensagem mais nova primeiro. */

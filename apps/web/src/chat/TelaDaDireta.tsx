@@ -6,12 +6,12 @@
 import { nomeNoChat } from '@grafite/domain';
 import { Avatar } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
 import { useEffect, useId } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import { pedir } from '../api/pedir.ts';
 import { useApi } from '../api/useApi.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
+import { useIrNoChat } from './base.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
   CHAVE_DAS_CONVERSAS,
@@ -31,7 +31,7 @@ export type PessoaDaDireta = NonNullable<ConversaAberta['outra']>;
 const NENHUM_DESLIGADO: readonly string[] = [];
 
 export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaDaDireta | null }) {
-  const roteador = useRouter();
+  const irNoChat = useIrNoChat();
   const api = useApi();
   const consultas = useQueryClient();
   const conversas = useConversasDoChat();
@@ -42,8 +42,8 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
   )?.id;
 
   useEffect(() => {
-    if (nascida) void roteador.navigate({ href: `/chat/c/${nascida}`, replace: true });
-  }, [nascida, roteador]);
+    if (nascida) irNoChat(`/chat/c/${nascida}`, { replace: true });
+  }, [nascida, irNoChat]);
 
   if (nascida || (!pessoa && conversas.isPending)) {
     return (
@@ -100,7 +100,7 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
         aoEnviar={({ conversa }) => {
           void consultas.invalidateQueries({ queryKey: CHAVE_DAS_CONVERSAS });
           void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
-          void roteador.navigate({ href: `/chat/c/${conversa.toLowerCase()}`, replace: true });
+          irNoChat(`/chat/c/${conversa.toLowerCase()}`, { replace: true });
         }}
       />
     </section>

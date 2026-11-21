@@ -64,6 +64,7 @@ export type {
   MenuDaBarra,
   ModuloDaCasca,
   PosicaoDoDock,
+  SeloDoModulo,
 } from './casca/tipos.ts';
 export {
   atualizarCarregamento,

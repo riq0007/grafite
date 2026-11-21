@@ -14,14 +14,14 @@ import {
   Icone,
   useDataHora,
 } from '@grafite/ui';
-import { useRouter } from '@tanstack/react-router';
 import { LifeBuoy, Link, SquareArrowOutUpRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useIrNoChat, useOndeEstaOChat } from './base.tsx';
 import estilos from './ChamadoCitado.module.css';
 import { type ResumoDoChamadoNoChat, useResumoDoChamadoNoChat } from './consultas.ts';
 import { quandoNoChat, rotuloDoDia } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
-import { abrirForaDoChat, useAgoraNoChat } from './janela.ts';
+import { useAgoraNoChat } from './janela.ts';
 import { SeloDoChamado } from './SeloDoChamado.tsx';
 
 /** O que o chip e "Chamados da equipe" já sabem do chamado, antes do resumo. */
@@ -102,7 +102,9 @@ export function ChipDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
 /** O resumo no cartão, lido quando ele abre. */
 function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
   const resumo = useResumoDoChamadoNoChat(chamado.numero);
-  const roteador = useRouter();
+  const irNoChat = useIrNoChat();
+  // No app, o chamado do módulo abre o Grafite numa janela nova; na casca, a janela é a mesma.
+  const noApp = useOndeEstaOChat() === 'app';
   const dataHora = useDataHora();
   const agora = useAgoraNoChat();
   const dados = resumo.data;
@@ -119,11 +121,8 @@ function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
       ? dataHora.formatarHora(data)
       : quandoNoChat(data, agora, dataHora);
   };
-  const abrir = (onde: NonNullable<ResumoDoChamadoNoChat['abrir']>) => {
-    const destino = enderecoDoChamado(chamado.numero, onde);
-    if (onde === 'chat') void roteador.navigate({ href: destino });
-    else abrirForaDoChat(destino);
-  };
+  const abrir = (onde: NonNullable<ResumoDoChamadoNoChat['abrir']>) =>
+    irNoChat(enderecoDoChamado(chamado.numero, onde));
   return (
     <div className={estilos.cartao}>
       <p className={estilos.cabecalho}>
@@ -198,7 +197,7 @@ function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
               onPress={() => dados.abrir !== null && abrir(dados.abrir)}
             >
               Abrir chamado
-              {dados.abrir === 'chamados' && (
+              {dados.abrir === 'chamados' && noApp && (
                 <span className={estilos.paraOLeitor}>, no Grafite, numa janela nova</span>
               )}
             </Botao>

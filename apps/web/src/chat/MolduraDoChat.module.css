@@ -9,6 +9,19 @@
   color: var(--cor-texto);
 }
 
+/*
+ * A janela do Chat da casca (spec modulo-chat, "Chat na casca"): a mesma moldura, que pede a janela
+ * inteira (`data-janela-inteira="rola-por-dentro"`) e vai até as bordas, por cima do respiro dela,
+ * com a lista e a tela rolando por dentro.
+ */
+.app[data-na-casca] {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  block-size: auto;
+  min-block-size: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
 /* A trilha (spec modulo-chat, "Trilha do chat"): as vistas no alto e o menu da conta no pé. */
 .trilha {
   display: flex;
@@ -83,6 +96,11 @@
   min-inline-size: var(--esp-4);
   padding: 0 var(--esp-1);
   line-height: var(--esp-4);
+}
+
+/* "Abrir no app do chat", no pé da trilha da casca, no lugar do menu da conta. */
+.abrirNoApp {
+  flex: none;
 }
 
 /* O menu da conta: a foto ou as iniciais, sem o preenchimento do botão de texto. */
@@ -261,6 +279,38 @@
 :root[data-postura="celular"] .vista .contadorDaVista {
   inset-block-start: 0;
   inset-inline: calc(50% + var(--esp-1)) auto;
+}
+
+/*
+ * Na janela do Chat da casca, no celular, a trilha fica no alto, porque embaixo fica a barra de abas
+ * da casca, e some na tela de um item, como a barra de baixo do app.
+ */
+:root[data-postura="celular"] .app[data-na-casca] {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .app[data-na-casca][data-item] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .trilha {
+  grid-row: 1;
+  align-items: center;
+  padding: var(--esp-1);
+  border-block-start: 0;
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .conteudo {
+  grid-row: 2;
+}
+
+:root[data-postura="celular"] .app[data-na-casca][data-item] .conteudo {
+  grid-row: 1;
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .vista[aria-current="page"]::before {
+  inset-block: auto calc(var(--esp-1) * -1);
 }
 
 /* A conta na barra de baixo: a foto no lugar do ícone e "Conta" embaixo, como as vistas, sem a

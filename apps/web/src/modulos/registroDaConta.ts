@@ -21,27 +21,36 @@ function semALinha<TEndereco extends string>(
 }
 
 /**
- * Os itens que a conta pode usar; o submenu que fica sem itens some também, e o primeiro item que
- * fica, no menu e em cada submenu, perde a linha antes dele, que separava de um item que sumiu.
+ * Os itens que a conta pode usar, sem os que levam a um módulo desligado; o submenu que fica sem
+ * itens some também, e o primeiro item que fica, no menu e em cada submenu, perde a linha antes
+ * dele, que separava de um item que sumiu.
  */
 export function itensPermitidos<TEndereco extends string>(
   itens: readonly ItemDoMenuDoModulo<TEndereco>[],
   pode: Pode,
+  desligados: readonly string[] = [],
 ): ItemDoMenuDoModulo<TEndereco>[] {
   const [primeiro, ...outros] = itens.flatMap((item): ItemDoMenuDoModulo<TEndereco>[] => {
     if (!permite(pode, item)) return [];
+    if (item.comOModulo !== undefined && desligados.includes(item.comOModulo)) return [];
     if (!('filhos' in item)) return [item];
-    const filhos = itensPermitidos(item.filhos, pode);
+    const filhos = itensPermitidos(item.filhos, pode, desligados);
     return filhos.length > 0 ? [{ ...item, filhos }] : [];
   });
   return primeiro ? [semALinha(primeiro), ...outros] : [];
 }
 
-function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
+function moduloDaConta(
+  modulo: ModuloRegistrado,
+  pode: Pode,
+  desligados: readonly string[],
+): ModuloRegistrado {
   const {
     menu,
     menuDinamico,
     primeiraTela,
+    appProprio,
+    selo,
     menusDaBarra,
     busca,
     ocorrencias,
@@ -53,6 +62,8 @@ function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
     !menu &&
     !menuDinamico &&
     !primeiraTela &&
+    !appProprio &&
+    !selo &&
     !menusDaBarra &&
     !busca &&
     !ocorrencias &&
@@ -64,11 +75,13 @@ function moduloDaConta(modulo: ModuloRegistrado, pode: Pode): ModuloRegistrado {
   }
   return {
     ...modulo,
-    menu: menu && itensPermitidos(menu, pode),
+    menu: menu && itensPermitidos(menu, pode, desligados),
     menuDinamico: menuDinamico && permite(pode, menuDinamico) ? menuDinamico : undefined,
     primeiraTela: primeiraTela && permite(pode, primeiraTela) ? primeiraTela : undefined,
+    appProprio: appProprio && permite(pode, appProprio) ? appProprio : undefined,
+    selo: selo && permite(pode, selo) ? selo : undefined,
     menusDaBarra: menusDaBarra
-      ?.map((barra) => ({ ...barra, itens: itensPermitidos(barra.itens, pode) }))
+      ?.map((barra) => ({ ...barra, itens: itensPermitidos(barra.itens, pode, desligados) }))
       .filter((barra) => barra.itens.length > 0),
     busca: busca && {
       entradas: busca.entradas?.filter((entrada) => permite(pode, entrada)),
@@ -93,5 +106,5 @@ export function registroDaConta(
 ): ModuloRegistrado[] {
   return registro
     .filter((modulo) => !desligados.includes(interruptorDe(modulo)) && permite(pode, modulo))
-    .map((modulo) => moduloDaConta(modulo, pode));
+    .map((modulo) => moduloDaConta(modulo, pode, desligados));
 }

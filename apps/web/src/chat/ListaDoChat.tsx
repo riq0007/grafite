@@ -10,6 +10,7 @@ import { BellOff, ChevronRight, Hash, LifeBuoy } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import { useServidor } from '../sessao/useSessao.tsx';
+import { rotaComoNoApp } from './base.tsx';
 import { Contador, contagemEmTexto, nomeParaOLeitor } from './Contador.tsx';
 import { useChamadoNovo } from './chamadoNovo.tsx';
 import {
@@ -42,14 +43,14 @@ const parametro = (rota: RotaCasada | undefined, nome: string): string | undefin
 /** A conversa do endereço, em minúsculas, como a lista compara os ids. */
 const conversaDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => {
   const ultima = matches.at(-1);
-  if (ultima?.routeId !== '/chat/c/$conversa') return null;
+  if (!ultima || rotaComoNoApp(ultima.routeId) !== '/chat/c/$conversa') return null;
   return parametro(ultima, 'conversa')?.toLowerCase() ?? null;
 };
 
 /** O número do chamado do endereço. */
 export const chamadoDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => {
   const ultima = matches.at(-1);
-  if (ultima?.routeId !== '/chat/chamados/$numero') return null;
+  if (!ultima || rotaComoNoApp(ultima.routeId) !== '/chat/chamados/$numero') return null;
   const numero = Number(parametro(ultima, 'numero'));
   return Number.isSafeInteger(numero) ? numero : null;
 };

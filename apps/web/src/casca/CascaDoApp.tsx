@@ -26,6 +26,7 @@ import { ContextoDaAberturaDaBusca } from '../busca/abrirBusca.tsx';
 import { ContextoDasAcoesDaTela, criarRegistroDasAcoesDaTela } from '../busca/acoesDaTela.tsx';
 import type { EntradaDeBusca } from '../busca/tipos.ts';
 import { useBusca } from '../busca/useBusca.ts';
+import { paraAJanelaDoChat } from '../chat/enderecos.ts';
 import { useChegada } from '../chegada/avisos.tsx';
 import { interruptorDe, registroDaConta } from '../modulos/registroDaConta.ts';
 import { ouvirAberturaPeloPush } from '../notificacoes/aberturaPeloPush.ts';
@@ -48,6 +49,7 @@ import { useMenusDinamicos } from './menusDinamicos.ts';
 import { moduloAtual, modulosDaCasca } from './modulosDaCasca.ts';
 import { ContextoDosModulosDaConta } from './modulosDaConta.tsx';
 import { useMarcaDaAba } from './primeiraTela.ts';
+import { comOsSelos, useSelosDoDock } from './selosDoDock.ts';
 import { ItemDeRede } from './status/ItemDeRede.tsx';
 import { Relogio } from './status/Relogio.tsx';
 
@@ -112,10 +114,16 @@ export function CascaDoApp() {
   // a conta: a dela, a dos padrões da organização ou a do registro.
   const doDock = useMenusDinamicos(registro, pode);
   const escolha = preferencias.dock.modulos;
-  const { modulos, modulosNoMais, modulosDoFim } = useMemo(
-    () => modulosDaCasca(doDock, escolha),
-    [doDock, escolha],
-  );
+  // O selo de cada módulo que tem um, como o total do Chat, no dock e na barra de abas.
+  const selos = useSelosDoDock(registro);
+  const { modulos, modulosNoMais, modulosDoFim } = useMemo(() => {
+    const daCasca = modulosDaCasca(doDock, escolha);
+    return {
+      modulos: comOsSelos(daCasca.modulos, selos),
+      modulosNoMais: comOsSelos(daCasca.modulosNoMais, selos),
+      modulosDoFim: comOsSelos(daCasca.modulosDoFim, selos),
+    };
+  }, [doDock, escolha, selos]);
   // O módulo do endereço sai do registro inteiro: a barra diz onde se está, mesmo sem permissão.
   const atual = moduloAtual(todos, idsDasRotas);
   // O módulo que liga e desliga o atual: ele mesmo ou, para o que é parte de outro, o dono, cujo
@@ -139,12 +147,13 @@ export function CascaDoApp() {
       : navegar({ to: destino, ...(foco ? { search: { foco } } : {}) });
   };
 
-  // O toque no push com o Grafite aberto: o service worker pede o endereço, e a casca o abre.
+  // O toque no push com o Grafite aberto: o service worker pede o endereço, e a casca o abre. O do
+  // app do chat abre o mesmo lugar na janela do Chat.
   useEffect(
     () =>
       ouvirAberturaPeloPush(
         typeof navigator === 'undefined' ? undefined : navigator.serviceWorker,
-        (destino) => void navegar({ href: destino }),
+        (destino) => void navegar({ href: paraAJanelaDoChat(destino) }),
       ),
     [navegar],
   );

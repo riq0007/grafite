@@ -2,7 +2,8 @@
 // ativo na mensagem"; change chat-com-chamados, design, decisão 15, "O chamado no chat"): o retrato
 // do ativo como foi mandado, com a miniatura do tipo, o nome em peso forte, o modelo e o patrimônio
 // em mono, o selo do toner crítico, a barra do nível com o número ao lado, o IP, a situação e a hora
-// dos dados. "Abrir a ficha" abre o Grafite na ficha, numa janela nova, só a quem vê os ativos.
+// dos dados. "Abrir a ficha" abre o Grafite na ficha, só a quem vê os ativos: no app do chat, numa
+// janela nova, e, na janela do Chat da casca, nela mesma.
 import { tintaDoSuprimento } from '@grafite/domain';
 import { type DataHora, Icone, Medidor, MiniaturaDeAtivo, RotuloDeSituacao } from '@grafite/ui';
 import { ArrowUpRight, CircleAlert } from 'lucide-react';
@@ -10,6 +11,7 @@ import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor } from '../sessao/useSessao.tsx';
 import estilos from './CartaoDoAtivoNaMensagem.module.css';
 import { type CartaoDoAtivo, momentoDaEtapa } from './chamado.ts';
+import { LinkDoChat } from './LinkDoChat.tsx';
 
 const NENHUM_DESLIGADO: readonly string[] = [];
 
@@ -70,15 +72,10 @@ export function CartaoDoAtivoNaMensagem({
         </div>
       </dl>
       {abrirAFicha && (
-        <a
-          className={estilos.abrir}
-          href={`/ativos/${cartao.ativo}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <LinkDoChat className={estilos.abrir} para={`/ativos/${cartao.ativo}`}>
           Abrir a ficha
           <Icone icone={ArrowUpRight} tamanho={14} />
-        </a>
+        </LinkDoChat>
       )}
     </article>
   );

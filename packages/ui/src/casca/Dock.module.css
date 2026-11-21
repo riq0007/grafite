@@ -152,6 +152,29 @@
   top: calc(50% - 2px);
 }
 
+/*
+ * O selo do item, como o total do chat (change chat-com-chamados, m05 e m11): a cápsula no canto,
+ * com o número em mono, no azul da informação, que cresce com a ampliação do item.
+ */
+.selo {
+  position: absolute;
+  top: calc(var(--esp-1) * -1.5);
+  right: calc(var(--esp-1) * -1.5);
+  box-sizing: border-box;
+  min-inline-size: var(--esp-5);
+  block-size: var(--esp-5);
+  padding: 0 calc(var(--esp-1) * 1.5);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-info-forte);
+  color: var(--cor-sobre-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--esp-5);
+  text-align: center;
+  pointer-events: none;
+}
+
 .separador {
   flex: none;
   border: 0;

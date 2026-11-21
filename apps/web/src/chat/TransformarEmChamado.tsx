@@ -26,7 +26,6 @@ import {
   usePostura,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
 import { LifeBuoy } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { pedir } from '../api/pedir.ts';
@@ -34,6 +33,7 @@ import { useApi } from '../api/useApi.tsx';
 import { Recusa } from '../modulos/chamados/formulario/Recusa.tsx';
 import { ICONES_DOS_TIPOS_DE_CHAMADO } from '../modulos/chamados/icones.ts';
 import { useSessao } from '../sessao/useSessao.tsx';
+import { useIrNoChat } from './base.tsx';
 import { useChamadoNovo } from './chamadoNovo.tsx';
 import {
   type AtivoSugeridoPeloChat,
@@ -119,7 +119,7 @@ function FormularioDoChamado({
 }) {
   const api = useApi();
   const consultas = useQueryClient();
-  const roteador = useRouter();
+  const irNoChat = useIrNoChat();
   const sessao = useSessao();
   const chamadoNovo = useChamadoNovo();
   const tipos = useTiposDaAberturaPeloChat(true);
@@ -238,7 +238,7 @@ function FormularioDoChamado({
       avisar({
         situacao: 'sucesso',
         titulo: `Chamado #${numero} aberto.`,
-        aoAbrir: () => void roteador.navigate({ href: `/chat/chamados/${numero}` }),
+        aoAbrir: () => irNoChat(`/chat/chamados/${numero}`),
       });
       fechar();
     } finally {

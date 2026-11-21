@@ -50,6 +50,31 @@
   line-height: var(--entrelinha-justa);
 }
 
+/* O ícone leva o selo no canto, como o total do chat, sem mudar o tamanho da aba. */
+.icone {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.selo {
+  position: absolute;
+  top: calc(var(--esp-2) * -1);
+  left: calc(100% - var(--esp-2));
+  box-sizing: border-box;
+  min-inline-size: var(--esp-4);
+  block-size: var(--esp-4);
+  padding: 0 var(--esp-1);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-info-forte);
+  color: var(--cor-sobre-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: var(--esp-4);
+  text-align: center;
+}
+
 /* Montagem, só depois das boas-vindas (spec chegada): no celular, a barra de abas sobe com mola. */
 :global(html[data-chegada="montando"]) .barra {
   animation: subir var(--dur-montagem-dock) var(--curva-mola) var(--atraso-montagem-dock) backwards;

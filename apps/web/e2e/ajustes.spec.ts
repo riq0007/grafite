@@ -57,18 +57,19 @@ test('a ordem do dock muda pelos Ajustes, o foco acompanha o módulo, e o tirado
       .getByRole('button')
       .evaluateAll((itens) => itens.map((item) => item.getAttribute('aria-label')));
   const botao = (nome: string) => page.getByRole('button', { name: nome, exact: true });
-  // Os Chamados vêm antes do Início na ordem de fábrica (change chamados-da-ti).
-  expect((await noDock()).slice(0, 2)).toEqual(['Chamados', 'Início']);
+  // Os Chamados e o Chat vêm antes do Início na ordem de fábrica (changes chamados-da-ti e
+  // chat-com-chamados).
+  expect((await noDock()).slice(0, 3)).toEqual(['Chamados', 'Chat', 'Início']);
 
   // Primeiro da lista: o dock muda na hora, o Subir fica desabilitado, e o foco vai ao Descer.
-  await botao('Subir Início').focus();
+  await botao('Subir Chat').focus();
   await page.keyboard.press('Enter');
-  await expect(botao('Subir Início')).toBeDisabled();
-  await expect(botao('Descer Início')).toBeFocused();
-  expect((await noDock()).slice(0, 2)).toEqual(['Início', 'Chamados']);
+  await expect(botao('Subir Chat')).toBeDisabled();
+  await expect(botao('Descer Chat')).toBeFocused();
+  expect((await noDock()).slice(0, 3)).toEqual(['Chat', 'Chamados', 'Início']);
   await page.keyboard.press('Enter');
-  await expect(botao('Descer Início')).toBeFocused();
-  expect((await noDock()).slice(0, 2)).toEqual(['Chamados', 'Início']);
+  await expect(botao('Descer Chat')).toBeFocused();
+  expect((await noDock()).slice(0, 3)).toEqual(['Chamados', 'Chat', 'Início']);
 
   // No meio da lista, a linha muda de lugar, e o foco continua no mesmo botão.
   await botao('Subir Operação').focus();
@@ -76,8 +77,9 @@ test('a ordem do dock muda pelos Ajustes, o foco acompanha o módulo, e o tirado
   await expect(botao('Subir Operação')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(botao('Subir Operação')).toBeFocused();
-  expect((await noDock()).slice(0, 5)).toEqual([
+  expect((await noDock()).slice(0, 6)).toEqual([
     'Chamados',
+    'Chat',
     'Início',
     'Ativos',
     'Operação',

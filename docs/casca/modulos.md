@@ -1152,7 +1152,7 @@ export function registroDaConta(
 ): ModuloRegistrado[] {
   return registro
     .filter((modulo) => !desligados.includes(interruptorDe(modulo)) && permite(pode, modulo))
-    .map((modulo) => moduloDaConta(modulo, pode));
+    .map((modulo) => moduloDaConta(modulo, pode, desligados));
 }
 ```
 
@@ -2538,6 +2538,7 @@ import { ajustes } from './ajustes/modulo.ts';
 import { alertas } from './alertas/modulo.ts';
 import { ativos } from './ativos/modulo.ts';
 import { chamados } from './chamados/modulo.ts';
+import { chat } from './chat/modulo.ts';
 import { cofre } from './cofre/modulo.ts';
 import { gestao } from './gestao/modulo.ts';
 import { inicio } from './inicio/modulo.ts';
@@ -2550,10 +2551,12 @@ import { salas } from './salas/modulo.ts';
  * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
  * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
  * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
- * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI.
+ * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI, e o Chat logo depois
+ * deles (spec modulo-chat, "Chat na casca").
  */
 export const REGISTRO = [
   chamados,
+  chat,
   inicio,
   ativos,
   gestao,

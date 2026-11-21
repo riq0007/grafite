@@ -76,8 +76,9 @@ function relidasPor(tipo: TipoDeEvento) {
 
 describe('o módulo Chamados no registro', () => {
   it('Conta que nunca arrumou o dock: o dock começa por Chamados, com a boia, seguido do Início', () => {
-    expect(REGISTRO[0]?.id).toBe('chamados');
-    expect(REGISTRO[1]?.id).toBe('inicio');
+    // Entre o Chamados e o Início fica só o Chat, que aparece a quem usa o chat (change
+    // chat-com-chamados).
+    expect(REGISTRO.slice(0, 3).map(({ id }) => id)).toEqual(['chamados', 'chat', 'inicio']);
     expect(chamados).toMatchObject({ nome: 'Chamados', icone: LifeBuoy, endereco: '/chamados' });
     const { modulos } = modulosDaCasca(registroDaConta(REGISTRO, com('chamados.atender')));
     expect(modulos.slice(0, 2).map(({ nome }) => nome)).toEqual(['Chamados', 'Início']);

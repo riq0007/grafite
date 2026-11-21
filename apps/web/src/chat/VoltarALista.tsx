@@ -7,16 +7,19 @@ import { BotaoDeIcone, usePostura } from '@grafite/ui';
 import { useRouter, useRouterState } from '@tanstack/react-router';
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { noChatDeAgora, useOndeEstaOChat } from './base.tsx';
 import { enderecoDaVista, vistaDaTela } from './MolduraDoChat.tsx';
 import estilos from './VoltarALista.module.css';
 import { voltarParaALista } from './voltar.ts';
 
 export function VoltarALista() {
   const roteador = useRouter();
+  const onde = useOndeEstaOChat();
   const vista = useRouterState({ select: vistaDaTela });
   const celular = usePostura() === 'celular';
   if (!celular) return null;
-  const lista = enderecoDaVista(vista ?? 'chat');
+  // A lista de onde o chat está: a do app ou a da janela do Chat da casca.
+  const lista = noChatDeAgora(enderecoDaVista(vista ?? 'chat'), onde);
   return (
     <BotaoDeIcone
       icone={ChevronLeft}

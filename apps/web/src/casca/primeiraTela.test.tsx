@@ -20,25 +20,40 @@ import { destinoAoEntrar } from './primeiraTela.ts';
 
 // A primeira tela ao entrar (spec modulo-chamados, "Primeira tela ao entrar"; change chamados-da-ti,
 // design, decisão 14): só na primeira carga de cada aba, a raiz pura leva ao Início dos chamados a
-// conta que os vê, com o módulo ligado; a marca da aba, com a conta, faz o recarregar ficar onde
-// estava.
+// conta que os vê, com o módulo ligado, e ao app do chat a que, entre os módulos da casca, só vê o
+// Chat (change chat-com-chamados, design, decisão 12); a marca da aba, com a conta, faz o recarregar
+// ficar onde estava.
+
+/** A troca da página pela de fora da casca, que o jsdom não faz: o teste vê o endereço pedido. */
+const trocarPelaPaginaDeFora = vi.hoisted(() => vi.fn<(endereco: string) => void>());
+vi.mock('./paginaDeFora.ts', () => ({ trocarPelaPaginaDeFora }));
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   localStorage.clear();
+  sessionStorage.clear();
+  trocarPelaPaginaDeFora.mockReset();
 });
 
 const ATENDE = naOrganizacao('chamados.atender');
+/** Fernanda Rocha, do Financeiro, que usa o chat e pede chamados por ele, sem outro módulo. */
+const SO_O_CHAT = naOrganizacao('chat.usar', 'chamados.pedir');
+const FERNANDA = { usuario: 'fernanda.rocha', nome: 'Fernanda Rocha' };
 const rotasDoSem = createRoute({ getParentRoute: () => raiz, path: '/sem' });
 const rotasDoPrimeiro = createRoute({ getParentRoute: () => raiz, path: '/primeiro' });
 const rotasDoSegundo = createRoute({ getParentRoute: () => raiz, path: '/segundo' });
+const rotasDoComApp = createRoute({ getParentRoute: () => raiz, path: '/com-app' });
 const RAIZ: Pick<HistoryLocation, 'pathname' | 'search' | 'hash'> = {
   pathname: '/',
   search: '',
   hash: '',
 };
+/** A tela da casca aonde a raiz leva. */
+const naCasca = (endereco: string) => ({ endereco, foraDaCasca: false });
+/** O app de fora da casca aonde a raiz leva, como o do chat. */
+const foraDaCasca = (endereco: string) => ({ endereco, foraDaCasca: true });
 
 describe('destinoAoEntrar', () => {
   const destino = (
@@ -55,8 +70,8 @@ describe('destinoAoEntrar', () => {
   ) => destinoAoEntrar({ sessao, modulos, local, marca });
 
   it('leva da raiz ao Início dos chamados quem os vê e quem os atende', () => {
-    expect(destino(sessaoAtiva(naOrganizacao('chamados.ver')))).toBe('/chamados');
-    expect(destino(sessaoAtiva(ATENDE))).toBe('/chamados');
+    expect(destino(sessaoAtiva(naOrganizacao('chamados.ver')))).toEqual(naCasca('/chamados'));
+    expect(destino(sessaoAtiva(ATENDE))).toEqual(naCasca('/chamados'));
   });
 
   it('deixa no Início quem só configura, quem não tem os chamados e quem os tem desligados', () => {
@@ -76,7 +91,7 @@ describe('destinoAoEntrar', () => {
   it('com a marca da conta, fica no Início; com a de outra conta, troca', () => {
     const sessao = sessaoAtiva(ATENDE);
     expect(destino(sessao, { marca: CONTA_DE_EXEMPLO.usuario })).toBeNull();
-    expect(destino(sessao, { marca: 'bruno.lima' })).toBe('/chamados');
+    expect(destino(sessao, { marca: 'bruno.lima' })).toEqual(naCasca('/chamados'));
   });
 
   it('com a sessão desconhecida, fica no Início', () => {
@@ -112,8 +127,82 @@ describe('destinoAoEntrar', () => {
     });
     const modulos = [sem, primeiro, segundo];
     const comAsDuas = sessaoAtiva(naOrganizacao('ativos.ver', 'chamados.ver'));
-    expect(destino(comAsDuas, { modulos })).toBe('/primeiro');
-    expect(destino(sessaoAtiva(naOrganizacao('chamados.ver')), { modulos })).toBe('/segundo');
+    expect(destino(comAsDuas, { modulos })).toEqual(naCasca('/primeiro'));
+    expect(destino(sessaoAtiva(naOrganizacao('chamados.ver')), { modulos })).toEqual(
+      naCasca('/segundo'),
+    );
+  });
+
+  it('leva ao app do chat quem, entre os módulos da casca, só vê o Chat', () => {
+    expect(destino(sessaoAtiva(SO_O_CHAT))).toEqual(foraDaCasca('/chat'));
+    expect(destino(sessaoAtiva(naOrganizacao('chat.usar')))).toEqual(foraDaCasca('/chat'));
+  });
+
+  it('deixa na casca quem vê o Chat e outro módulo', () => {
+    expect(destino(sessaoAtiva(naOrganizacao('chat.usar', 'ativos.ver')))).toBeNull();
+    expect(destino(sessaoAtiva(naOrganizacao('chat.usar', 'chamados.atender')))).toEqual(
+      naCasca('/chamados'),
+    );
+  });
+
+  it('com o Chat desligado, quem só usa o chat fica no Início', () => {
+    const desligado = sessaoAtiva(SO_O_CHAT, {}, {}, FERNANDA, { modulosDesligados: ['chat'] });
+    expect(destino(desligado)).toBeNull();
+  });
+
+  it('o app do chat também só vale na raiz pura e sem a marca da conta na aba', () => {
+    const sessao = sessaoAtiva(SO_O_CHAT, {}, {}, FERNANDA);
+    expect(destino(sessao, { local: { ...RAIZ, pathname: '/conversas' } })).toBeNull();
+    expect(destino(sessao, { local: { ...RAIZ, search: '?foco=conteudo' } })).toBeNull();
+    expect(destino(sessao, { marca: FERNANDA.usuario })).toBeNull();
+    expect(destino(sessao, { marca: CONTA_DE_EXEMPLO.usuario })).toEqual(foraDaCasca('/chat'));
+  });
+
+  it('o app próprio vale quando ele é o único módulo da casca que exige permissão', () => {
+    // Os módulos sem permissão, como o Início e os Ajustes, são de todos e não contam.
+    const sem = definirModulo({
+      id: 'sem',
+      nome: 'Sem',
+      icone: Box,
+      endereco: '/sem',
+      prioridadeNoCelular: 1,
+      rotas: rotasDoSem,
+    });
+    const comApp = definirModulo({
+      id: 'com-app',
+      nome: 'Com app',
+      icone: Box,
+      endereco: '/com-app',
+      prioridadeNoCelular: 2,
+      rotas: rotasDoComApp,
+      permissoes: ['ativos.ver'],
+      appProprio: { endereco: '/app' },
+    });
+    const outro = definirModulo({
+      id: 'primeiro',
+      nome: 'Primeiro',
+      icone: Box,
+      endereco: '/primeiro',
+      prioridadeNoCelular: 3,
+      rotas: rotasDoPrimeiro,
+      permissoes: ['pessoas.ver'],
+    });
+    const modulos = [sem, comApp, outro];
+    expect(destino(sessaoAtiva(naOrganizacao('ativos.ver')), { modulos })).toEqual(
+      foraDaCasca('/app'),
+    );
+    expect(
+      destino(sessaoAtiva(naOrganizacao('ativos.ver', 'pessoas.ver')), { modulos }),
+    ).toBeNull();
+    expect(destino(sessaoAtiva(naOrganizacao('pessoas.ver')), { modulos })).toBeNull();
+  });
+
+  it('o app próprio só vale para quem tem a permissão dele, como quem usa o chat', () => {
+    // Quem só configura o chat não usa o app dele e fica na casca.
+    expect(destino(sessaoAtiva(naOrganizacao('chat.configurar')))).toBeNull();
+    expect(destino(sessaoAtiva(naOrganizacao('chat.usar', 'chat.configurar')))).toEqual(
+      foraDaCasca('/chat'),
+    );
   });
 });
 
@@ -241,6 +330,26 @@ describe('a primeira tela ao entrar', () => {
     await titulo('O que resolver agora');
     await umInstante();
     expect(recarregado.state.location.pathname).toBe('/');
+  });
+
+  it('Fernanda, que só usa o chat, vai da raiz ao app do chat, sem a casca, com a aba marcada', async () => {
+    const roteador = abrir('/', sessaoAtiva(SO_O_CHAT, {}, {}, FERNANDA));
+    await waitFor(() => expect(trocarPelaPaginaDeFora).toHaveBeenCalledWith('/chat'));
+    expect(trocarPelaPaginaDeFora).toHaveBeenCalledTimes(1);
+    // A casca não chega a montar, e o roteador não sai da raiz: a página dá lugar à do chat.
+    await umInstante();
+    expect(screen.queryByRole('navigation', { name: 'Dock' })).toBeNull();
+    expect(roteador.state.location.pathname).toBe('/');
+    expect(sessionStorage.getItem('grafite.entrou')).toBe(FERNANDA.usuario);
+  });
+
+  it('com a aba marcada, Fernanda na raiz fica no Início da casca', async () => {
+    sessionStorage.setItem('grafite.entrou', FERNANDA.usuario);
+    const roteador = abrir('/', sessaoAtiva(SO_O_CHAT, {}, {}, FERNANDA));
+    await titulo('O que resolver agora');
+    await umInstante();
+    expect(trocarPelaPaginaDeFora).not.toHaveBeenCalled();
+    expect(roteador.state.location.pathname).toBe('/');
   });
 
   it('sem o sessionStorage, a raiz leva aos chamados a cada carga, sem erro', async () => {

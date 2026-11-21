@@ -309,6 +309,13 @@ export const test = base.extend<{
         ? rota.fulfill({ json: { itens: [], naoLidas: 0, proximo: null } })
         : rota.fallback(),
     );
+    // O selo do Chat no dock lê o resumo do chat (change chat-com-chamados): nada novo, de fábrica;
+    // o teste do chat responde o dele.
+    await context.route('**/api/chat/resumo', (rota) =>
+      rota.request().method() === 'GET'
+        ? rota.fulfill({ json: { naoLidas: 0, chamadosComRespostaNova: 0 } })
+        : rota.fallback(),
+    );
     // Os canais de fora da conta (change p3c-email-e-push): o servidor sem o e-mail e sem o push,
     // de fábrica; o teste dos canais responde os dele.
     await context.route('**/api/conta/canais', (rota) =>

@@ -3,18 +3,33 @@
 // lista da vista do endereço e, ao lado dela, a tela escolhida. Sem o chat, a vista dá lugar ao
 // motivo, e as telas dela nem montam, sem pedir dados. No celular, uma coluna só, com a lista ou a
 // tela escolhida nela, e a trilha na barra de baixo, que dá lugar à seta de voltar na tela.
-import { EstadoVazio, Icone, RegiaoDeAvisos, usePostura } from '@grafite/ui';
+//
+// Na janela do Chat da casca (spec modulo-chat, "Chat na casca"), a mesma moldura ocupa a janela
+// inteira, sem os Avisos, que ficam no sino da casca, e com "Abrir no app do chat" no lugar do menu
+// da conta; no celular, a trilha fica no alto, porque embaixo fica a barra de abas da casca.
+import { BotaoDeIcone, EstadoVazio, Icone, RegiaoDeAvisos, usePostura } from '@grafite/ui';
 import { Outlet, useRouterState } from '@tanstack/react-router';
-import { Bell, LifeBuoy, type LucideIcon, MessageCircle, Users, WifiOff } from 'lucide-react';
+import {
+  Bell,
+  LifeBuoy,
+  type LucideIcon,
+  MessageCircle,
+  SquareArrowOutUpRight,
+  Users,
+  WifiOff,
+} from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useRef } from 'react';
 import { SemPermissao } from '../modulos/administracao/SemPermissao.tsx';
 import { useNotificacoes } from '../notificacoes/useNotificacoes.tsx';
 import type { EstadoDaSessao } from '../sessao/loja.ts';
 import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../sessao/useSessao.tsx';
+import { rotaComoNoApp, useOndeEstaOChat } from './base.tsx';
 import { Contador, contagemEmTexto, nomeParaOLeitor, type TomDoContador } from './Contador.tsx';
 import { useChamadoNovo } from './chamadoNovo.tsx';
 import { useResumoDoChat } from './consultas.ts';
+import { paraOAppDoChat } from './enderecos.ts';
+import { abrirForaDoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { ListaDaVista } from './ListaDaVista.tsx';
 import { MenuDaConta } from './MenuDaConta.tsx';
@@ -39,9 +54,10 @@ const VISTAS: readonly VistaDaTrilha[] = [
 ];
 
 /**
- * A vista de cada tela do chat, pelo id da rota dela (`rotas.tsx`): a conversa, a direta que ainda
- * não nasceu e o chamado são da vista Chat, que lista os chamados abertos e os fechados. O chamado
- * aberto pela vista Chamados leva a vista na busca (`vistaNaBusca`), para a lista dela ficar ao lado.
+ * A vista de cada tela do chat, pelo id da rota dela como o app a chama (`rotas.tsx`; na janela da
+ * casca, pelo `rotaComoNoApp`): a conversa, a direta que ainda não nasceu e o chamado são da vista
+ * Chat, que lista os chamados abertos e os fechados. O chamado aberto pela vista Chamados leva a
+ * vista na busca (`vistaNaBusca`), para a lista dela ficar ao lado.
  */
 const VISTA_DA_ROTA: Readonly<Record<string, IdDaVista>> = {
   '/chat/': 'chat',
@@ -104,16 +120,15 @@ function ultimaQueCobre({ location, resolvedLocation, matches }: EstadoDaTela) {
  * barra de baixo.
  */
 export const naTelaDeUmItem = (estado: EstadoDaTela) =>
-  ROTAS_DE_ITEM.has(ultimaQueCobre(estado)?.routeId ?? '');
+  ROTAS_DE_ITEM.has(rotaComoNoApp(ultimaQueCobre(estado)?.routeId ?? ''));
 
 /** A vista da tela aberta, pela última rota casada; a página não encontrada não é de nenhuma. */
 export function vistaDaTela(estado: EstadoDaTela): IdDaVista | null {
   const ultima = ultimaQueCobre(estado);
   if (!ultima) return null;
-  if (ultima.routeId === '/chat/chamados/$numero' && daVistaChamados(ultima.search)) {
-    return 'chamados';
-  }
-  return VISTA_DA_ROTA[ultima.routeId] ?? null;
+  const rota = rotaComoNoApp(ultima.routeId);
+  if (rota === '/chat/chamados/$numero' && daVistaChamados(ultima.search)) return 'chamados';
+  return VISTA_DA_ROTA[rota] ?? null;
 }
 
 /** Por que o chat não abre para a conta. */
@@ -142,6 +157,7 @@ export function motivoSemOChat({
 const NENHUM_DESLIGADO: readonly string[] = [];
 
 export function MolduraDoChat() {
+  const naCasca = useOndeEstaOChat() === 'casca';
   const sessao = useSessao();
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
   const { pode } = useAcesso();
@@ -161,9 +177,12 @@ export function MolduraDoChat() {
     if (vistaDeAntes.current === 'chat' && atual !== 'chat') marcar(null);
     vistaDeAntes.current = atual;
   }, [atual, marcar]);
-  // A vista Chamados só existe com o módulo Chamados ligado.
+  // A vista Chamados só existe com o módulo Chamados ligado, e os Avisos, só no app: na casca, eles
+  // ficam no sino dela.
   const vistas = VISTAS.filter(
-    (vista) => vista.id !== 'chamados' || !desligados.includes('chamados'),
+    (vista) =>
+      (vista.id !== 'chamados' || !desligados.includes('chamados')) &&
+      (vista.id !== 'avisos' || !naCasca),
   );
   let conteudo: ReactNode;
   if (motivo !== null) {
@@ -200,17 +219,44 @@ export function MolduraDoChat() {
   // têm lista, e as que dizem o motivo.
   const coluna =
     motivo === null && atual !== null && atual !== 'avisos' && !doItem ? 'lista' : 'tela';
+  // Na casca, a janela já está dentro do conteúdo dela, e os avisos aparecem na região da casca.
+  const Conteudo = naCasca ? 'div' : 'main';
   return (
-    <div className={estilos.app} data-item={doItem || undefined}>
+    <div
+      className={estilos.app}
+      data-item={doItem || undefined}
+      data-na-casca={naCasca || undefined}
+      data-janela-inteira={naCasca ? 'rola-por-dentro' : undefined}
+    >
       <nav aria-label="Vistas do chat" className={estilos.trilha}>
         {motivo === null && <VistasDaTrilha vistas={vistas} atual={atual} />}
-        {sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} naBarraDeBaixo={celular} />}
+        {naCasca ? (
+          <AbrirNoAppDoChat />
+        ) : (
+          sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} naBarraDeBaixo={celular} />
+        )}
       </nav>
-      <main className={estilos.conteudo} data-coluna={coluna}>
+      <Conteudo className={estilos.conteudo} data-coluna={coluna}>
         {conteudo}
-      </main>
-      <RegiaoDeAvisos />
+      </Conteudo>
+      {!naCasca && <RegiaoDeAvisos />}
     </div>
+  );
+}
+
+/**
+ * "Abrir no app do chat" (spec modulo-chat, "Chat na casca"): o mesmo lugar, com a busca, em /chat,
+ * numa janela nova.
+ */
+function AbrirNoAppDoChat() {
+  const endereco = useRouterState({ select: (estado) => estado.location.href });
+  return (
+    <BotaoDeIcone
+      icone={SquareArrowOutUpRight}
+      rotulo="Abrir no app do chat"
+      className={estilos.abrirNoApp}
+      onPress={() => abrirForaDoChat(paraOAppDoChat(endereco))}
+    />
   );
 }
 

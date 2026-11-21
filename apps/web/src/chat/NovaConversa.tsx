@@ -3,9 +3,9 @@
 // mesma conversa; a outra abre a direta que ainda não nasceu, que nasce com a primeira mensagem.
 import { nomeNoChat } from '@grafite/domain';
 import { Botao, BotaoDeIcone, BuscaComSugestoes, Dialogo } from '@grafite/ui';
-import { useRouter } from '@tanstack/react-router';
 import { SquarePen } from 'lucide-react';
 import { useState } from 'react';
+import { useIrNoChat } from './base.tsx';
 import { type PessoaDoChat, usePessoasDoChat } from './consultas.ts';
 
 /** O endereço da conversa com a pessoa: a que já existe, ou a direta por nascer. */
@@ -13,7 +13,7 @@ const enderecoDaPessoa = (pessoa: Pick<PessoaDoChat, 'conta' | 'conversa'>) =>
   pessoa.conversa ? `/chat/c/${pessoa.conversa}` : `/chat/direta/${pessoa.conta}`;
 
 export function NovaConversa({ className }: { className?: string | undefined }) {
-  const roteador = useRouter();
+  const irNoChat = useIrNoChat();
   const [aberta, definirAberta] = useState(false);
   return (
     <>
@@ -35,9 +35,8 @@ export function NovaConversa({ className }: { className?: string | undefined }) 
               fechar();
               // A direta por nascer mostra a pessoa, que vem no estado da navegação.
               const { conta, nome, daTi, foto } = pessoa;
-              void roteador.navigate({
-                href: enderecoDaPessoa(pessoa),
-                state: (antes) => ({ ...antes, pessoa: { conta, nome, daTi, foto } }),
+              irNoChat(enderecoDaPessoa(pessoa), {
+                comOEstado: { pessoa: { conta, nome, daTi, foto } },
               });
             }}
           />

@@ -191,7 +191,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - o cabeçalho do chamado, com quem atende e a previsão.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`, a 375 px.
-- [ ] 4.10 O Chat na casca e a primeira tela:
+- [x] 4.10 O Chat na casca e a primeira tela:
   - o módulo depois do Chamados, no endereço `/conversas`, com o selo, o menu, a janela e "Abrir no app do chat";
   - a tradução dos destinos `/chat/...` para a janela do Chat no `navegar` do `App.tsx`, com a busca;
   - quem só vê o Chat entre os módulos da casca, que vai ao `/chat`;

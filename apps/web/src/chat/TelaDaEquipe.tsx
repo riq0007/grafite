@@ -3,10 +3,10 @@
 // pessoas, "Abrir a conversa" e quem participa, pelo nome, com a foto ou as iniciais.
 import { nomeNoChat } from '@grafite/domain';
 import { Avatar, Botao, Icone, usePostura } from '@grafite/ui';
-import { useRouter } from '@tanstack/react-router';
 import { Hash } from 'lucide-react';
 import { useId } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
+import { useIrNoChat } from './base.tsx';
 import { useEquipesDoChat, usePessoasDaConversa } from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { LinkDoChat } from './LinkDoChat.tsx';
@@ -30,7 +30,7 @@ export function EquipeNaoEncontrada() {
 export function TelaDaEquipe({ id }: { id: string }) {
   const idDoNome = useId();
   const idDeQuem = useId();
-  const roteador = useRouter();
+  const irNoChat = useIrNoChat();
   const equipes = useEquipesDoChat();
   const equipe = equipes.data?.itens.find((item) => item.id.toLowerCase() === id) ?? null;
   const pessoas = usePessoasDaConversa(id, equipe !== null);
@@ -84,7 +84,7 @@ export function TelaDaEquipe({ id }: { id: string }) {
         <Botao
           nivel="primario"
           className={estilos.abrir}
-          onPress={() => void roteador.navigate({ href: `/chat/c/${equipe.id}` })}
+          onPress={() => irNoChat(`/chat/c/${equipe.id}`)}
         >
           Abrir a conversa
         </Botao>
