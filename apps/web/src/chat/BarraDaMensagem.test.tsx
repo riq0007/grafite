@@ -205,7 +205,8 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Transformar em chamado' })).toBeNull(),
     );
-    expect(document.activeElement).toBe(mais);
+    // O React Aria devolve o foco no quadro seguinte ao do fechamento.
+    await waitFor(() => expect(document.activeElement).toBe(mais));
   });
 
   it('a mensagem que já virou chamado dá "Já virou o #1045", sem ação, e o atalho a ignora', async () => {

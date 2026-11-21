@@ -87,9 +87,10 @@ export function BarraDaMensagem({
   const barra = useRef<HTMLDivElement>(null);
   const [abertos, definirAbertos] = useState(0);
   const [escrevendo, definirEscrevendo] = useState(false);
-  // A reação escrita e o responder do menu agem depois de o menu fechar e devolver o foco ao botão
-  // dele: o popover aberto antes perderia o foco para essa volta, e, com o menu aberto, o resto da
-  // página fica inerte, e o foco na caixa não pegaria.
+  // A reação escrita, o responder e o transformar do menu agem depois de o menu fechar e devolver o
+  // foco ao botão dele: o popover aberto antes perderia o foco para essa volta; com o menu aberto, o
+  // resto da página fica inerte, e o foco na caixa não pegaria; e o diálogo aberto antes guardaria o
+  // item do menu, que sai, como o lugar da volta do foco.
   const naVolta = useRef<(() => void) | null>(null);
   const voltou = () => {
     const agir = naVolta.current;
@@ -206,7 +207,9 @@ export function BarraDaMensagem({
             atalho={['ctrl', 'shift', 'T']}
             isDisabled={mensagem.chamado !== null}
             descricao={mensagem.chamado ? `Já virou o #${mensagem.chamado.numero}` : undefined}
-            onAction={() => transformar(mensagem, autor)}
+            onAction={() => {
+              naVolta.current = () => transformar(mensagem, autor);
+            }}
           >
             Transformar em chamado
           </ItemDeMenu>
