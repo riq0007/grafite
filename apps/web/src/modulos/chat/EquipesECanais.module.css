@@ -77,3 +77,16 @@
 .pe > :first-child:not(:last-child) {
   margin-right: auto;
 }
+
+/* Os grupos que não carregam, no lugar da escolha: a falha, a recusa do grupo e "Tentar de novo". */
+.semOsGrupos {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+}
+
+.recusaDoGrupo {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}

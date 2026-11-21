@@ -537,8 +537,29 @@ function EscolhaDoGrupo({
   aoEscolher: (grupoId: string) => void;
   erro: string | undefined;
 }) {
-  if (grupos.isError && !grupos.data)
-    return <MensagemDoPasso texto={grupos.error.message} chave={0} />;
+  const idDoErro = useId();
+  // Sem os grupos, a escolha não abre: a falha, a recusa do grupo, se houver, e "Tentar de novo",
+  // que recebe o foco da recusa, como o botão da escolha (o `RECUSADO`).
+  if (grupos.isError && !grupos.data) {
+    return (
+      <div className={estilos.semOsGrupos} data-invalid={erro ? true : undefined}>
+        <MensagemDoPasso texto={grupos.error.message} chave={0} />
+        {erro ? (
+          <p id={idDoErro} className={estilos.recusaDoGrupo}>
+            {erro}
+          </p>
+        ) : null}
+        <Botao
+          carregando={grupos.isFetching}
+          rotuloCarregando="Tentando de novo"
+          aria-describedby={erro ? idDoErro : undefined}
+          onPress={() => void grupos.refetch()}
+        >
+          Tentar de novo
+        </Botao>
+      </div>
+    );
+  }
   if (!grupos.data) {
     return (
       <p role="status" className={estilos.nota}>

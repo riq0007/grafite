@@ -186,4 +186,49 @@ describe('as equipes e os canais na casca', () => {
       avisar: false,
     });
   });
+
+  it('os grupos que não carregam: "Tentar de novo" no lugar da escolha, e a recusa do grupo fica à vista, com o foco nele', async () => {
+    let gruposFalham = true;
+    abrir('/conversas/equipes-e-canais', ['chat.configurar'], {
+      'GET /api/chat/grupos': () =>
+        gruposFalham
+          ? Response.json(
+              {
+                type: 'urn:grafite:problema:interno',
+                title: 'Erro interno',
+                status: 500,
+                detail: 'Erro interno.',
+                codigoDeRastreio: 'ABCD-1234',
+              },
+              { status: 500 },
+            )
+          : Response.json({ itens: [{ id: FINANCEIRO, nome: 'Financeiro' }] }),
+      'GET /api/chat/equipes-e-canais': () => Response.json({ itens: [] }),
+      'POST /api/chat/equipes-e-canais': () =>
+        Response.json(
+          {
+            type: 'urn:grafite:problema:validacao',
+            title: 'Dados inválidos',
+            status: 400,
+            detail: 'Confira os campos.',
+            codigoDeRastreio: 'ABCD-1234',
+            campos: { grupoId: 'Escolha o grupo da equipe.' },
+          },
+          { status: 400 },
+        ),
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Nova equipe' }));
+    const gaveta = await screen.findByRole('dialog', { name: 'Nova equipe' });
+    const tentar = await within(gaveta).findByRole('button', { name: 'Tentar de novo' });
+    fireEvent.change(within(gaveta).getByRole('textbox', { name: /^Nome/ }), {
+      target: { value: 'Equipe Financeiro' },
+    });
+    fireEvent.click(within(gaveta).getByRole('button', { name: 'Salvar' }));
+    expect(await within(gaveta).findByText('Escolha o grupo da equipe.')).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(tentar));
+    gruposFalham = false;
+    fireEvent.click(tentar);
+    expect(await within(gaveta).findByRole('button', { name: /Grupo da equipe/ })).toBeTruthy();
+    expect(within(gaveta).getByText('Escolha o grupo da equipe.')).toBeTruthy();
+  });
 });
