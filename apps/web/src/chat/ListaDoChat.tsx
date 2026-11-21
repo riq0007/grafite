@@ -47,7 +47,7 @@ const conversaDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => 
 };
 
 /** O número do chamado do endereço. */
-const chamadoDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => {
+export const chamadoDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => {
   const ultima = matches.at(-1);
   if (ultima?.routeId !== '/chat/chamados/$numero') return null;
   const numero = Number(parametro(ultima, 'numero'));
@@ -55,13 +55,13 @@ const chamadoDoEndereco = ({ matches }: { matches: readonly RotaCasada[] }) => {
 };
 
 /** O chamado com as datas, como as ordens do domínio as leem. */
-const comAsDatas = (chamado: ChamadoDeQuemParticipa) => ({
+export const comAsDatas = (chamado: ChamadoDeQuemParticipa) => ({
   ...chamado,
   abertoEm: new Date(chamado.abertoEm),
   resolvidoEm: chamado.resolvidoEm === null ? null : new Date(chamado.resolvidoEm),
 });
 
-type ChamadoNaLista = ReturnType<typeof comAsDatas>;
+export type ChamadoNaLista = ReturnType<typeof comAsDatas>;
 
 export function ListaDoChat() {
   const idDoTitulo = useId();

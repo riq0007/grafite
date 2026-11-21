@@ -182,7 +182,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   - a caixa do aberto, do resolvido (com "Reabrir até 18/11") e do fechado.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.7 A vista Chamados (m10), as Equipes e os Avisos, com "Receber neste aparelho" pelo `inscreverEsteAparelho` dos Ajustes, os motivos em texto e o "Abrir" do endereço da casca numa janela nova. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
+- [x] 4.7 A vista Chamados (m10), as Equipes e os Avisos, com "Receber neste aparelho" pelo `inscreverEsteAparelho` dos Ajustes, os motivos em texto e o "Abrir" do endereço da casca numa janela nova. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.8 O chamado citado (m12): o chip de 32 px e o resumo, pelo mouse e pelo foco, com o Esc. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [ ] 4.9 O celular (m08 e m09):
   - a lista e a conversa em telas, com a trilha na barra de baixo e os alvos de 44 px;

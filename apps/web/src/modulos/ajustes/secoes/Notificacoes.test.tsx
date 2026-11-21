@@ -443,6 +443,28 @@ describe('seção Notificações: no celular', () => {
     expect(gravar).not.toHaveBeenCalled();
   });
 
+  it('sem o service worker, diz que o navegador não recebe os avisos, e o botão sai', async () => {
+    const gravar = vi.fn();
+    abrir(undefined, {
+      ambiente: { ...navegadorComPush(), registro: async () => null },
+      servidor: { 'POST /api/conta/push': gravar },
+    });
+    const botao = await within(noCelular()).findByRole('button', {
+      name: 'Receber neste aparelho',
+    });
+    botao.focus();
+    fireEvent.click(botao);
+    const frase = await within(noCelular()).findByText(
+      'Este navegador não recebe avisos fora da aplicação.',
+    );
+    expect(
+      within(noCelular()).queryByRole('button', { name: 'Receber neste aparelho' }),
+    ).toBeNull();
+    // O botão saiu com o foco nele: o foco vai à frase, que diz o motivo.
+    await waitFor(() => expect(document.activeElement).toBe(frase));
+    expect(gravar).not.toHaveBeenCalled();
+  });
+
   it('tira este aparelho: some da lista e a inscrição sai do navegador', async () => {
     let canais: Canais = { ...CANAIS, push: { ...CANAIS.push, aparelhos: [aparelho()] } };
     const navegador = navegadorComPush({ permissao: 'granted', inscrito: true });

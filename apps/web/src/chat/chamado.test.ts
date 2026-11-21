@@ -10,11 +10,13 @@ import {
   diaDoReabrir,
   type EventoDoChamado,
   horaNaConversa,
+  horaNaLista,
   type ItemDoChamadoNaTela,
   itensDoChamado,
   type MensagemDoChamado,
   momentoDaEtapa,
   quandoAs,
+  quemEscreveuNaLista,
 } from './chamado.ts';
 
 const dataHora = criarDataHora('America/Sao_Paulo');
@@ -190,6 +192,24 @@ describe('a hora das etapas e do painel', () => {
   it('dá a hora na conversa só com a hora hoje, e com o dia nos outros', () => {
     expect(horaNaConversa(new Date('2026-11-11T13:53:00Z'), AGORA, dataHora)).toBe('10:53');
     expect(horaNaConversa(new Date('2026-11-10T20:05:00Z'), AGORA, dataHora)).toBe('ontem 17:05');
+  });
+
+  it('dá a hora na vista Chamados só com a hora hoje e, nos outros dias, só com o dia', () => {
+    expect(horaNaLista(new Date('2026-11-11T12:21:00Z'), AGORA, dataHora)).toBe('09:21');
+    expect(horaNaLista(new Date('2026-11-10T20:05:00Z'), AGORA, dataHora)).toBe('ontem');
+    expect(horaNaLista(new Date('2026-11-02T13:00:00Z'), AGORA, dataHora)).toBe('02/11');
+    expect(horaNaLista(new Date('2025-12-30T13:00:00Z'), AGORA, dataHora)).toBe('30/12/2025');
+  });
+});
+
+describe('quem escreveu a última mensagem na vista Chamados', () => {
+  it('diz o primeiro nome, ou "Você" na mensagem da conta', () => {
+    expect(quemEscreveuNaLista({ autor: 'Bruno Lima', minha: false })).toBe('Bruno');
+    expect(quemEscreveuNaLista({ autor: 'Fernanda Rocha', minha: true })).toBe('Você');
+  });
+
+  it('sem o nome, não diz ninguém', () => {
+    expect(quemEscreveuNaLista({ autor: '  ', minha: false })).toBeNull();
   });
 });
 

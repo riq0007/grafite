@@ -105,6 +105,31 @@ export function horaNaConversa(em: Date, agora: Date, dataHora: DataHora): strin
     : momentoDaEtapa(em, agora, dataHora);
 }
 
+/**
+ * A hora da última mensagem no cartão da vista Chamados: só a hora hoje e, nos outros dias, só o
+ * dia, como "ontem", "18/11" e, de outro ano, "30/12/2025".
+ */
+export function horaNaLista(em: Date, agora: Date, dataHora: DataHora): string {
+  return rotuloDoDia(em, agora, dataHora) === 'Hoje'
+    ? dataHora.formatarHora(em)
+    : diaNaFrase(em, agora, dataHora);
+}
+
+/**
+ * Quem escreveu a última mensagem, no cartão da vista Chamados, como em "Bruno: Já vi aqui": o
+ * primeiro nome, ou "Você" na mensagem da conta. `null` sem o nome.
+ */
+export function quemEscreveuNaLista({
+  autor,
+  minha,
+}: {
+  autor: string;
+  minha: boolean;
+}): string | null {
+  if (minha) return 'Você';
+  return autor.trim().split(/\s+/)[0] || null;
+}
+
 /** Um anexo do chamado em "Neste chamado": o arquivo e, embaixo, de onde ele veio. */
 export interface AnexoNoPainel {
   id: string;

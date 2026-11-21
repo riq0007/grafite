@@ -7,21 +7,35 @@ import { cleanup, render } from '@testing-library/react';
 import { AppDoChat } from '../chat/AppDoChat.tsx';
 import { criarRoteadorDoChat } from '../chat/rotas.tsx';
 import type { CanalDeEventos } from '../eventos/canal.ts';
+import { ProvedorDoAmbienteDoPush } from '../notificacoes/ambienteDoPush.tsx';
+import type { AmbienteDoPush } from '../notificacoes/push.ts';
 import type { LojaDaSessao, ServidorDaSessao } from '../sessao/loja.ts';
 import { FUSO_DOS_MOCKUPS } from './chamados.ts';
 import { naOrganizacao, type ServidorDeTeste, sessaoAtiva } from './sessao.ts';
 
 let lojas: LojaDaSessao[] = [];
 
-/** Abre o app no endereço, como a entrada dele: a sessão ainda por validar é validada ali. */
+/**
+ * Abre o app no endereço, como a entrada dele: a sessão ainda por validar é validada ali. O navegador
+ * do push, sem um dado, é o do jsdom, sem o push.
+ */
 export function abrirOChat(
   endereco: string,
   loja: LojaDaSessao,
-  { chamadoNovo, canal }: { chamadoNovo?: number; canal?: CanalDeEventos } = {},
+  {
+    chamadoNovo,
+    canal,
+    ambiente,
+  }: { chamadoNovo?: number; canal?: CanalDeEventos; ambiente?: AmbienteDoPush } = {},
 ) {
   lojas.push(loja);
   const roteador = criarRoteadorDoChat(createMemoryHistory({ initialEntries: [endereco] }));
-  render(<AppDoChat roteador={roteador} sessao={loja} chamadoNovo={chamadoNovo} canal={canal} />);
+  const app = (
+    <AppDoChat roteador={roteador} sessao={loja} chamadoNovo={chamadoNovo} canal={canal} />
+  );
+  render(
+    ambiente ? <ProvedorDoAmbienteDoPush ambiente={ambiente}>{app}</ProvedorDoAmbienteDoPush> : app,
+  );
   if (loja.ler().tipo === 'validando') void loja.validar();
   return roteador;
 }
@@ -36,11 +50,12 @@ export function fecharOChat() {
   document.documentElement.removeAttribute('data-theme');
 }
 
-/** O chat de quem ainda não tem nada: sem não lidas, sem conversas e sem chamados. */
+/** O chat de quem ainda não tem nada: sem não lidas, sem conversas, sem chamados e sem equipes. */
 export const CHAT_VAZIO: ServidorDeTeste = {
   'GET /api/chat/resumo': () => Response.json({ naoLidas: 0, chamadosComRespostaNova: 0 }),
   'GET /api/chat/conversas': () => Response.json({ equipesECanais: [], recentes: [] }),
   'GET /api/chat/chamados': () => Response.json({ abertos: [], resolvidos: [], seguintes: false }),
+  'GET /api/chat/equipes': () => Response.json({ itens: [] }),
 };
 
 /**

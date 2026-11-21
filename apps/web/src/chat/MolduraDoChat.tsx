@@ -4,15 +4,7 @@
 // dela nem montam, sem pedir dados.
 import { EstadoVazio, Icone, RegiaoDeAvisos } from '@grafite/ui';
 import { Outlet, useRouterState } from '@tanstack/react-router';
-import {
-  Bell,
-  LifeBuoy,
-  type LucideIcon,
-  MessageCircle,
-  PowerOff,
-  Users,
-  WifiOff,
-} from 'lucide-react';
+import { Bell, LifeBuoy, type LucideIcon, MessageCircle, Users, WifiOff } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { SemPermissao } from '../modulos/administracao/SemPermissao.tsx';
 import { useNotificacoes } from '../notificacoes/useNotificacoes.tsx';
@@ -25,6 +17,7 @@ import { useResumoDoChat } from './consultas.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { ListaDaVista } from './ListaDaVista.tsx';
 import { MenuDaConta } from './MenuDaConta.tsx';
+import { ModuloDesligado } from './ModuloDesligado.tsx';
 import estilos from './MolduraDoChat.module.css';
 
 export type IdDaVista = 'chat' | 'equipes' | 'chamados' | 'avisos';
@@ -54,6 +47,7 @@ const VISTA_DA_ROTA: Readonly<Record<string, IdDaVista>> = {
   '/chat/c/$conversa': 'chat',
   '/chat/direta/$conta': 'chat',
   '/chat/equipes': 'equipes',
+  '/chat/equipes/$conversa': 'equipes',
   '/chat/chamados': 'chamados',
   '/chat/chamados/$numero': 'chat',
   '/chat/avisos': 'avisos',
@@ -67,7 +61,7 @@ const daVistaChamados = (busca: unknown) =>
 
 /**
  * A vista da tela aberta, pela última rota casada. A página não encontrada não é de nenhuma: o
- * roteador casa o começo do endereço, como o /chat/equipes do /chat/equipes/outra, e a última rota
+ * roteador casa o começo do endereço, como o /chat/avisos do /chat/avisos/outra, e a última rota
  * não cobre o endereço inteiro. No meio de uma navegação, o roteador troca o endereço antes das rotas
  * casadas e o endereço resolvido depois delas: as rotas cobrem um dos dois, e a vista não some entre
  * duas telas dela, o que desmontaria a lista.
@@ -151,6 +145,13 @@ export function MolduraDoChat() {
   } else if (atual === null) {
     // A página não encontrada fica sozinha, sem a lista de nenhuma vista.
     conteudo = <Outlet />;
+  } else if (atual === 'chamados' && desligados.includes('chamados')) {
+    // A vista Chamados pelo endereço, com o módulo desligado: nem a lista nem a tela montam.
+    conteudo = (
+      <div className={estilos.motivo}>
+        <ModuloDesligado titulo="O módulo Chamados está desligado nesta organização." />
+      </div>
+    );
   } else {
     conteudo = (
       <>
@@ -247,20 +248,9 @@ function VistasDaTrilha({
 }
 
 function SemOChat({ motivo }: { motivo: MotivoSemOChat }) {
-  const { pode } = useAcesso();
   if (motivo === 'sem-acesso') return <SemPermissao a="ao chat" />;
   if (motivo === 'desligado') {
-    return (
-      <EstadoVazio
-        icone={PowerOff}
-        titulo="O chat está desligado nesta organização."
-        descricao={
-          pode('organizacao.editar')
-            ? 'Você pode ligá-lo na seção Módulos da Administração do Grafite.'
-            : 'Peça a quem define os padrões da organização para ligá-lo.'
-        }
-      />
-    );
+    return <ModuloDesligado titulo="O chat está desligado nesta organização." />;
   }
   return (
     <EstadoVazio

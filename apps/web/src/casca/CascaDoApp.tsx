@@ -6,7 +6,6 @@ import {
   Casca,
   CentralDeNotificacoes,
   CursorSuavizado,
-  type NotificacaoDaCentral,
   RegiaoDeAvisos,
   SinoDeNotificacoes,
   useDataHora,
@@ -30,10 +29,9 @@ import { useBusca } from '../busca/useBusca.ts';
 import { useChegada } from '../chegada/avisos.tsx';
 import { interruptorDe, registroDaConta } from '../modulos/registroDaConta.ts';
 import { ouvirAberturaPeloPush } from '../notificacoes/aberturaPeloPush.ts';
+import { paraACentral } from '../notificacoes/naCentral.ts';
 import {
   type Notificacao,
-  ROTULO_DO_ADIAR,
-  temAcoesDoAlerta,
   useNotificacoes,
   useNotificacoesDaCentral,
 } from '../notificacoes/useNotificacoes.tsx';
@@ -315,37 +313,6 @@ export function CascaDoApp() {
     </ContextoDasAbas.Provider>
   );
 }
-
-/** Como está o alerta da notificação, em texto, depois de tratado ou resolvido. */
-function situacaoDoAlerta(
-  alerta: Notificacao['alerta'],
-  formatarHora: (momento: Date) => string,
-): string | undefined {
-  if (!alerta) return undefined;
-  if (alerta.situacao === 'resolvido') return 'Resolvido';
-  if (alerta.reconhecido) return `Reconhecido por ${alerta.reconhecido.nome}`;
-  if (alerta.adiado) return `Adiado até ${formatarHora(new Date(alerta.adiado.ate))}`;
-  return undefined;
-}
-
-/** Uma notificação do servidor como a central a mostra, com as ações do alerta que pede ação. */
-const paraACentral = (
-  notificacao: Notificacao,
-  formatarHora: (momento: Date) => string,
-): NotificacaoDaCentral => ({
-  id: notificacao.id,
-  severidade: notificacao.severidade,
-  titulo: notificacao.titulo,
-  descricao: notificacao.descricao,
-  origem: notificacao.origem,
-  momento: notificacao.momento,
-  lida: notificacao.lida,
-  temDestino: notificacao.destino !== undefined,
-  podeReconhecer: temAcoesDoAlerta(notificacao),
-  podeAdiar: temAcoesDoAlerta(notificacao),
-  rotuloDoAdiar: ROTULO_DO_ADIAR,
-  situacaoDoAlerta: situacaoDoAlerta(notificacao.alerta, formatarHora),
-});
 
 /**
  * Depois de cada navegação que troca o endereço, o foco vai ao título do novo conteúdo, e o leitor

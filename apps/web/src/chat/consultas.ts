@@ -44,6 +44,15 @@ export const CHAVE_DOS_CHAMADOS_DO_CHAT = [...CHAVE_DO_CHAT, 'chamados'] as cons
 export const chaveDoChamadoDoChat = (numero: number) =>
   [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'chamado', numero] as const;
 
+/**
+ * As páginas da vista Chamados, debaixo da chave dos chamados: os abertos e os resolvidos da
+ * primeira e os resolvidos das seguintes.
+ */
+export const CHAVE_DAS_PAGINAS_DOS_CHAMADOS = [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'paginas'] as const;
+
+/** As equipes e os canais de que a conta participa, na vista Equipes. */
+export const CHAVE_DAS_EQUIPES_DO_CHAT = [...CHAVE_DO_CHAT, 'equipes'] as const;
+
 /** As pessoas da escolha da conversa direta, pela busca. */
 export const CHAVE_DAS_PESSOAS_DO_CHAT = [...CHAVE_DO_CHAT, 'pessoas'] as const;
 
@@ -71,6 +80,8 @@ export type TipoParaAbrirPeloChat = components['schemas']['TipoParaAbrirPeloChat
 export type AtivoSugeridoPeloChat =
   components['schemas']['AtivosSugeridosPeloChat']['ativos'][number];
 export type ConversaDoChamadoNoChat = components['schemas']['ConversaDoChamadoDeQuemParticipa'];
+export type EquipeDoChat = components['schemas']['EquipeDaConta'];
+export type ContaDoChat = components['schemas']['ContaDoChat'];
 
 export function useResumoDoChat() {
   const api = useApi();
@@ -99,6 +110,55 @@ export function useChamadosDoChat(ligado: boolean) {
     enabled: ligado,
     queryFn: ({ signal }) =>
       consultar(() => api.GET('/chat/chamados', { signal }), 'carregar os seus chamados'),
+  });
+}
+
+/**
+ * Os chamados da vista Chamados, só com o módulo Chamados ligado: os abertos, na primeira página, e
+ * os resolvidos e os fechados, o resolvido mais novo primeiro, de 50 em 50, que FECHADOS carrega ao
+ * rolar.
+ */
+export function useChamadosDaVista(ligado: boolean) {
+  const api = useApi();
+  return useInfiniteQuery({
+    queryKey: CHAVE_DAS_PAGINAS_DOS_CHAMADOS,
+    enabled: ligado,
+    initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) =>
+      consultar(
+        () =>
+          api.GET('/chat/chamados', {
+            params: { query: pageParam === undefined ? {} : { resolvidosAntes: pageParam } },
+            signal,
+          }),
+        'carregar os seus chamados',
+      ),
+    getNextPageParam: (pagina) => (pagina.seguintes ? pagina.resolvidos.at(-1)?.numero : undefined),
+  });
+}
+
+/** As equipes e os canais de que a conta participa, pelo nome, com quantas pessoas cada um tem. */
+export function useEquipesDoChat() {
+  const api = useApi();
+  return useQuery({
+    queryKey: CHAVE_DAS_EQUIPES_DO_CHAT,
+    queryFn: ({ signal }) =>
+      consultar(() => api.GET('/chat/equipes', { signal }), 'carregar as equipes e os canais'),
+  });
+}
+
+/** Quem participa da conversa agora, pelo nome. */
+export function usePessoasDaConversa(conversa: string, ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...chaveDaConversa(conversa), 'pessoas'],
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(
+        () =>
+          api.GET('/chat/conversas/{id}/pessoas', { params: { path: { id: conversa } }, signal }),
+        'carregar quem participa',
+      ),
   });
 }
 
@@ -141,6 +201,7 @@ export function useAcoesDoChamado(numero: number) {
     if ('dados' in resultado) {
       consultas.setQueryData(chaveDoChamadoDoChat(numero), resultado.dados);
       void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT, exact: true });
+      void consultas.invalidateQueries({ queryKey: CHAVE_DAS_PAGINAS_DOS_CHAMADOS });
       void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
     } else if (resultado.problema?.status === 409) {
       void consultas.invalidateQueries({ queryKey: chaveDoChamadoDoChat(numero) });
@@ -420,14 +481,15 @@ const daConversa = ({ alvo }: { alvo: { tipo: string; id: string | null } | null
 
 /**
  * O que cada evento relê no chat. A mensagem, a reação, a leitura e as equipes e os canais mudam as
- * conversas, o total e o que é da conversa do evento; o chamado muda a lista dos chamados e a
- * resposta nova. O nome, a foto, quem usa o chat e os módulos ligados mudam tudo.
+ * conversas, o total, a vista Equipes e o que é da conversa do evento; o chamado muda as listas dos
+ * chamados e a resposta nova. O nome, a foto, quem usa o chat e os módulos ligados mudam tudo.
  */
 export const EVENTOS_DO_CHAT: EventosDoModulo = {
   'chat.mudou': (evento) => [
     CHAVE_DAS_CONVERSAS,
     CHAVE_DO_RESUMO_DO_CHAT,
     CHAVE_DAS_PESSOAS_DO_CHAT,
+    CHAVE_DAS_EQUIPES_DO_CHAT,
     ...daConversa(evento),
   ],
   'chamados.mudaram': () => [CHAVE_DOS_CHAMADOS_DO_CHAT, CHAVE_DO_RESUMO_DO_CHAT],

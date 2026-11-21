@@ -124,6 +124,32 @@ describe('o app do chat', () => {
     expect(nomesDosLinks(await trilha())).toEqual(['Chat', 'Equipes', 'Avisos']);
   });
 
+  it.each(['/chat/chamados', '/chat/chamados/1041?vista=chamados'])(
+    'sem o módulo Chamados, a vista Chamados em %s diz que ele está desligado, sem pedir os chamados',
+    async (endereco) => {
+      const pedidos: string[] = [];
+      const contar = (pedido: Request) => {
+        pedidos.push(new URL(pedido.url).pathname);
+        return Response.json({ abertos: [], resolvidos: [], seguintes: false });
+      };
+      abrir(
+        endereco,
+        comOChat(
+          { 'GET /api/chat/chamados': contar, 'GET /api/chat/chamados/1041': contar },
+          { modulosDesligados: ['chamados'] },
+        ),
+      );
+      expect(
+        await screen.findByText('O módulo Chamados está desligado nesta organização.'),
+      ).toBeTruthy();
+      expect(
+        screen.getByText('Peça a quem define os padrões da organização para ligá-lo.'),
+      ).toBeTruthy();
+      expect(screen.queryByRole('heading', { level: 1, name: 'Chamados' })).toBeNull();
+      expect(pedidos).toEqual([]);
+    },
+  );
+
   it('sem chat.usar, diz que a conta não tem acesso ao chat, com a quem pedir, sem as vistas', async () => {
     abrir(
       '/chat/c/0199a6e0-0000-7000-8000-00000000c0a1',
@@ -175,7 +201,7 @@ describe('o app do chat', () => {
     ).toBeTruthy();
   });
 
-  it.each(['/chat/c/abc/outra', '/chat/equipes/outra', '/chat/nada'])(
+  it.each(['/chat/c/abc/outra', '/chat/equipes/abc/outra', '/chat/nada'])(
     'um endereço que não existe no chat, como %s, diz que a página não foi encontrada, sem vista marcada',
     async (endereco) => {
       abrir(endereco, comOChat());
@@ -619,9 +645,9 @@ describe('a vista da tela', () => {
   });
 
   it('o começo de um endereço que não existe não é de nenhuma vista', () => {
-    const fora = { pathname: '/chat/equipes/outra' };
-    const equipes = { routeId: '/chat/equipes', pathname: '/chat/equipes', search: {} };
-    expect(vistaDaTela({ location: fora, resolvedLocation: fora, matches: [equipes] })).toBeNull();
+    const fora = { pathname: '/chat/avisos/outra' };
+    const avisos = { routeId: '/chat/avisos', pathname: '/chat/avisos', search: {} };
+    expect(vistaDaTela({ location: fora, resolvedLocation: fora, matches: [avisos] })).toBeNull();
   });
 
   it('o chamado é da vista Chat e, aberto pela vista Chamados, dela', () => {

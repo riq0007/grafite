@@ -1,27 +1,20 @@
-// A lista de cada vista do chat, ao lado da tela escolhida: a do Chat e, até as tarefas delas, as da
-// vista Chamados, das Equipes e dos Avisos, só com o título. A lista fica montada enquanto a vista é
-// a mesma, também ao trocar de conversa.
+// A lista de cada vista do chat, ao lado da tela escolhida: a do Chat, a da vista Chamados e a das
+// Equipes. Os Avisos não têm lista: a tela deles ocupa a largura. A lista fica montada enquanto a
+// vista é a mesma, também ao trocar de conversa.
+import { ListaDasEquipes } from './ListaDasEquipes.tsx';
 import { ListaDoChat } from './ListaDoChat.tsx';
-import estilos from './MolduraDoChat.module.css';
+import { ListaDosChamados } from './ListaDosChamados.tsx';
 import type { IdDaVista } from './MolduraDoChat.tsx';
-
-function ColunaDaVista({ titulo }: { titulo: string }) {
-  return (
-    <section aria-label={titulo} className={estilos.lista}>
-      <h1 className={estilos.tituloDaLista}>{titulo}</h1>
-    </section>
-  );
-}
 
 export function ListaDaVista({ vista }: { vista: IdDaVista }) {
   switch (vista) {
     case 'chat':
       return <ListaDoChat />;
     case 'chamados':
-      return <ColunaDaVista titulo="Chamados" />;
+      return <ListaDosChamados />;
     case 'equipes':
-      return <ColunaDaVista titulo="Equipes" />;
+      return <ListaDasEquipes />;
     case 'avisos':
-      return <ColunaDaVista titulo="Avisos" />;
+      return null;
   }
 }

@@ -34,10 +34,12 @@ export {
 export { Casca, JanelaDeConteudo, type PropsDaCasca, TituloDaJanela } from './casca/Casca.tsx';
 export {
   CentralDeNotificacoes,
+  ConteudoDaCentralDeNotificacoes,
   type FiltroDeSeveridade,
   type FiltrosDaCentral,
   type NotificacaoDaCentral,
   type PropsDaCentralDeNotificacoes,
+  type PropsDoConteudoDaCentral,
 } from './casca/CentralDeNotificacoes.tsx';
 export { CursorSuavizado, type PropsDoCursorSuavizado } from './casca/CursorSuavizado.tsx';
 export { Dock, type PropsDoDock } from './casca/Dock.tsx';

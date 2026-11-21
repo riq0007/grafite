@@ -6,15 +6,7 @@
 // fechado, sem caixa; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
 // popover, pelo botão do cabeçalho. Sem o módulo Chamados, a tela diz que ele está desligado.
 import { SITUACOES_PARA_QUEM_PARTICIPA } from '@grafite/domain';
-import {
-  avisar,
-  Botao,
-  type DataHora,
-  EstadoVazio,
-  Icone,
-  Popover,
-  useDataHora,
-} from '@grafite/ui';
+import { avisar, Botao, type DataHora, Icone, Popover, useDataHora } from '@grafite/ui';
 import {
   CircleCheck,
   CircleDashed,
@@ -22,11 +14,9 @@ import {
   LifeBuoy,
   Lock,
   PanelRight,
-  PowerOff,
   RotateCcw,
 } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
-import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor } from '../sessao/useSessao.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
@@ -46,6 +36,7 @@ import { naoEncontrada } from './FluxoDaConversa.tsx';
 import { type ControleDaConversaDoChamado, FluxoDoChamado } from './FluxoDoChamado.tsx';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { ModuloDesligado } from './ModuloDesligado.tsx';
 import { NesteChamado } from './NesteChamado.tsx';
 import { rascunhoDoChamado } from './rascunhos.tsx';
 import { marcaDaPalavra, SeloDoChamado } from './SeloDoChamado.tsx';
@@ -77,20 +68,11 @@ export function TelaDoChamado({
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
   const ligado = !desligados.includes('chamados');
   const consulta = useChamadoDoChat(numero, ligado);
-  const { pode } = useAcesso();
 
   if (!ligado) {
     return (
       <div className={estilos.estado}>
-        <EstadoVazio
-          icone={PowerOff}
-          titulo="O módulo Chamados está desligado nesta organização."
-          descricao={
-            pode('organizacao.editar')
-              ? 'Você pode ligá-lo na seção Módulos da Administração do Grafite.'
-              : 'Peça a quem define os padrões da organização para ligá-lo.'
-          }
-        />
+        <ModuloDesligado titulo="O módulo Chamados está desligado nesta organização." />
       </div>
     );
   }

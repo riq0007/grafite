@@ -9,14 +9,17 @@ import {
   type RouterHistory,
   useRouterState,
 } from '@tanstack/react-router';
-import { MessageCircle } from 'lucide-react';
+import { LifeBuoy, MessageCircle, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useAcesso } from '../sessao/useAcesso.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import estilos from './MolduraDoChat.module.css';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
 import { TelaDaConversa } from './TelaDaConversa.tsx';
 import { type PessoaDaDireta, TelaDaDireta } from './TelaDaDireta.tsx';
+import { EquipeNaoEncontrada, TelaDaEquipe } from './TelaDaEquipe.tsx';
 import { ChamadoNaoEncontrado, TelaDoChamado } from './TelaDoChamado.tsx';
+import { TelaDosAvisos } from './TelaDosAvisos.tsx';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -29,6 +32,33 @@ function NadaEscolhido() {
         titulo="Escolha uma conversa ou um chamado na lista."
         descricao="Para falar com alguém, use Nova conversa."
       />
+    </div>
+  );
+}
+
+/** A vista Chamados sem nenhum escolhido na lista. */
+function NenhumChamadoEscolhido() {
+  const { pode } = useAcesso();
+  return (
+    <div className={estilos.nadaEscolhido}>
+      <EstadoVazio
+        icone={LifeBuoy}
+        titulo="Escolha um chamado na lista."
+        descricao={
+          pode('chamados.pedir')
+            ? 'Para abrir um chamado, use Transformar em chamado no menu de uma mensagem.'
+            : undefined
+        }
+      />
+    </div>
+  );
+}
+
+/** A vista Equipes sem nenhuma escolhida na lista. */
+function NenhumaEquipeEscolhida() {
+  return (
+    <div className={estilos.nadaEscolhido}>
+      <EstadoVazio icone={Users} titulo="Escolha uma equipe ou um canal na lista." />
     </div>
   );
 }
@@ -48,8 +78,6 @@ const raiz = createRootRoute({ component: MolduraDoChat, notFoundComponent: Chat
 
 const chat = createRoute({ getParentRoute: () => raiz, path: '/chat' });
 
-// As telas ao lado da lista ainda vazias chegam na tarefa delas: as vistas Chamados, Equipes e
-// Avisos na 4.7.
 const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: NadaEscolhido });
 
 /**
@@ -97,7 +125,11 @@ function DiretaDoEndereco(): ReactNode {
   return <TelaDaDireta key={conta} conta={conta} pessoa={daConta} />;
 }
 
-const vistaChamados = createRoute({ getParentRoute: () => chat, path: 'chamados' });
+const vistaChamados = createRoute({
+  getParentRoute: () => chat,
+  path: 'chamados',
+  component: NenhumChamadoEscolhido,
+});
 
 /**
  * Um chamado de quem participa, na vista Chat, com os abertos e os fechados na lista; aberto pela
@@ -124,9 +156,32 @@ function ChamadoDoEndereco(): ReactNode {
   return <TelaDoChamado key={lido} numero={lido} vista={vista ?? null} />;
 }
 
-const vistaEquipes = createRoute({ getParentRoute: () => chat, path: 'equipes' });
+const vistaEquipes = createRoute({
+  getParentRoute: () => chat,
+  path: 'equipes',
+  component: NenhumaEquipeEscolhida,
+});
 
-const vistaAvisos = createRoute({ getParentRoute: () => chat, path: 'avisos' });
+/** Uma equipe ou um canal de que a conta participa, na vista Equipes, com quem participa. */
+export const rotaDaEquipe = createRoute({
+  getParentRoute: () => chat,
+  path: 'equipes/$conversa',
+  component: EquipeDoEndereco,
+});
+
+/** O id fora do formato não é de nenhuma equipe: a tela diz isso sem pedir nada. */
+function EquipeDoEndereco(): ReactNode {
+  const conversa = (rotaDaEquipe.useParams() as { conversa: string }).conversa.toLowerCase();
+  if (!UUID.test(conversa)) return <EquipeNaoEncontrada />;
+  return <TelaDaEquipe key={conversa} id={conversa} />;
+}
+
+/** Os avisos, sem a lista ao lado: a tela ocupa a largura. */
+const vistaAvisos = createRoute({
+  getParentRoute: () => chat,
+  path: 'avisos',
+  component: TelaDosAvisos,
+});
 
 export const arvoreDoChat = raiz.addChildren([
   chat.addChildren([
@@ -136,6 +191,7 @@ export const arvoreDoChat = raiz.addChildren([
     vistaChamados,
     rotaDoChamado,
     vistaEquipes,
+    rotaDaEquipe,
     vistaAvisos,
   ]),
 ]);
