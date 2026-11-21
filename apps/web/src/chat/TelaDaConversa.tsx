@@ -412,7 +412,7 @@ function ChamadosDaConversa({
         >
           {itens.map((chamado) => (
             <li key={chamado.numero}>
-              <ComOResumoDoChamado chamado={chamado} className={estilos.chamado}>
+              <ComOResumoDoChamado chamado={chamado} className={estilos.chamado} soAoEscolher>
                 <span className={estilos.linhaDoChamado}>
                   <span className={estilos.paraOLeitor}>Chamado </span>
                   <span className={estilos.numero}>#{chamado.numero}</span>

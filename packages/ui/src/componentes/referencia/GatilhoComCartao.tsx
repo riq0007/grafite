@@ -7,9 +7,10 @@
 // de volta no botão. Escolher o botão abre o cartão na hora e, pelo teclado ou pelo leitor de tela,
 // leva o foco a ele, como a seta para baixo na referência com cartão. No toque, que não tem ponteiro
 // parado, o toque abre e fecha o cartão, o toque fora o fecha, e o toque longo o abre com o foco nele.
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+// Numa lista, o cartão abre só ao escolher o botão (`soAoEscolher`).
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { useInteractOutside } from 'react-aria';
-import { Button, type PressEvent, PreviewTrigger } from 'react-aria-components';
+import { Button, DialogTrigger, type PressEvent, PreviewTrigger } from 'react-aria-components';
 import { tempos } from '../../tokens/tempos.ts';
 import { PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import estilos from './GatilhoComCartao.module.css';
@@ -26,9 +27,32 @@ export interface PropsDoGatilhoComCartao {
    * cancelada quando ele sai antes da resposta.
    */
   cartao: () => ReactNode;
+  /**
+   * O cartão abre só ao escolher o botão (o clique, o toque, o Enter, o espaço e a seta para baixo),
+   * sem o ponteiro nem o foco parados: numa lista, como "Chamados da equipe", o cartão do ponteiro
+   * parado numa linha cobriria as de baixo.
+   */
+  soAoEscolher?: boolean;
 }
 
-export function GatilhoComCartao({ children, className, titulo, cartao }: PropsDoGatilhoComCartao) {
+/** A seta para baixo sozinha, sem o Alt, o Ctrl, o Meta e o Shift, que leva ao cartão. */
+const setaParaBaixo = (
+  evento: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'>,
+) =>
+  evento.key === 'ArrowDown' &&
+  !evento.altKey &&
+  !evento.ctrlKey &&
+  !evento.metaKey &&
+  !evento.shiftKey;
+
+export function GatilhoComCartao({ soAoEscolher = false, ...props }: PropsDoGatilhoComCartao) {
+  return soAoEscolher ? <CartaoAoEscolher {...props} /> : <CartaoPeloPonteiro {...props} />;
+}
+
+type PropsDoCartao = Omit<PropsDoGatilhoComCartao, 'soAoEscolher'>;
+
+/** O cartão do ponteiro e do foco parados, e da escolha. */
+function CartaoPeloPonteiro({ children, className, titulo, cartao }: PropsDoCartao) {
   const [aberto, definirAberto] = useState(false);
   const botao = useRef<HTMLButtonElement>(null);
   const painel = useRef<HTMLElement>(null);
@@ -96,8 +120,7 @@ export function GatilhoComCartao({ children, className, titulo, cartao }: PropsD
         className={className}
         onPress={escolher}
         onKeyDown={(evento) => {
-          const sozinha = !evento.altKey && !evento.ctrlKey && !evento.metaKey && !evento.shiftKey;
-          if (evento.key === 'ArrowDown' && sozinha) {
+          if (setaParaBaixo(evento)) {
             evento.preventDefault();
             levarAoCartao();
             return;
@@ -119,5 +142,45 @@ export function GatilhoComCartao({ children, className, titulo, cartao }: PropsD
         {cartao()}
       </PainelFlutuante>
     </PreviewTrigger>
+  );
+}
+
+/**
+ * O cartão só da escolha: o botão abre o diálogo do cartão, com o foco nele, e o Esc e o clique fora
+ * o fecham, com o foco de volta no botão. O nome do cartão vem do título, e não do botão, que o
+ * DialogTrigger do React Aria daria a ele.
+ */
+function CartaoAoEscolher({ children, className, titulo, cartao }: PropsDoCartao) {
+  const [aberto, definirAberto] = useState(false);
+  const idDoTitulo = useId();
+  return (
+    <DialogTrigger isOpen={aberto} onOpenChange={definirAberto}>
+      <Button
+        className={className}
+        onKeyDown={(evento) => {
+          if (setaParaBaixo(evento)) {
+            evento.preventDefault();
+            definirAberto(true);
+            return;
+          }
+          // As outras teclas seguem, como os atalhos da tela em volta.
+          evento.continuePropagation();
+        }}
+      >
+        {children}
+      </Button>
+      <PainelFlutuante
+        opaco
+        placement="bottom start"
+        offset={8}
+        aria-labelledby={idDoTitulo}
+        className={estilos.painel}
+      >
+        <span id={idDoTitulo} hidden>
+          {titulo}
+        </span>
+        {cartao()}
+      </PainelFlutuante>
+    </DialogTrigger>
   );
 }

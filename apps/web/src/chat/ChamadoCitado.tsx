@@ -59,14 +59,18 @@ async function copiarOLink(numero: number, abrir: ResumoDoChamadoNoChat['abrir']
 export function ComOResumoDoChamado({
   chamado,
   className,
+  soAoEscolher = false,
   children,
 }: {
   chamado: ChamadoNoChip;
   className: string | undefined;
+  /** Numa lista, o resumo abre só ao escolher a linha, para não cobrir as de baixo. */
+  soAoEscolher?: boolean;
   children: ReactNode;
 }) {
   return (
     <GatilhoComCartao
+      soAoEscolher={soAoEscolher}
       className={className}
       titulo={`Resumo do chamado ${chamado.numero}`}
       cartao={() => <ResumoDoChamado chamado={chamado} />}
@@ -104,6 +108,10 @@ function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
   const dados = resumo.data;
   const detalhes = dados?.detalhes ?? null;
   const titulo = dados?.titulo ?? chamado.titulo;
+  // A situação e quem atende de agora vêm do resumo: o chip só segue o chamado na conversa de origem,
+  // e o citado em outra conversa fica com a última leitura dela. Antes do resumo, valem os do chip.
+  const situacao = dados?.situacao ?? chamado.situacao;
+  const atende = dados ? dados.atende : chamado.atende;
   // A hora de hoje vai sozinha, como no m12; a de outro dia leva o dia.
   const quando = (em: string) => {
     const data = new Date(em);
@@ -123,7 +131,7 @@ function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
           <Icone icone={LifeBuoy} tamanho={12} />
           Chamado <span className={estilos.mono}>#{chamado.numero}</span>
         </span>
-        <SeloDoChamado texto={chamado.situacao} />
+        <SeloDoChamado texto={situacao} />
       </p>
       {titulo !== undefined && <p className={estilos.titulo}>{titulo}</p>}
       {resumo.isPending && (
@@ -157,12 +165,12 @@ function ResumoDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
           ))}
         </ul>
       )}
-      {(chamado.atende !== null || detalhes) && (
+      {(atende !== null || detalhes) && (
         <dl className={estilos.dados}>
-          {chamado.atende !== null && (
+          {atende !== null && (
             <div>
               <dt>Atende</dt>
-              <dd>{chamado.atende}</dd>
+              <dd>{atende}</dd>
             </div>
           )}
           {detalhes?.ativo && (

@@ -161,3 +161,75 @@ export const PeloLeitorDeTela: Historia = {
     await waitFor(() => expect(botao).toHaveFocus());
   },
 };
+
+/** Os chamados numa lista, como em "Chamados da equipe": cada linha é o botão do cartão. */
+const ListaDeChamados = () => (
+  <ul style={{ display: 'grid', gap: 'var(--esp-1)', margin: 0, padding: 0, listStyle: 'none' }}>
+    {[
+      { numero: 1045, titulo: 'Impressora manchando' },
+      { numero: 1046, titulo: 'Teclado com teclas falhando' },
+    ].map(({ numero, titulo }) => (
+      <li key={numero}>
+        <GatilhoComCartao
+          soAoEscolher
+          titulo={`Resumo do chamado ${numero}`}
+          cartao={() => (
+            <div style={{ display: 'grid', gap: 'var(--esp-3)', padding: 'var(--esp-4)' }}>
+              <strong>{titulo}</strong>
+              <Botao nivel="primario">Abrir chamado</Botao>
+            </div>
+          )}
+        >
+          {`#${numero} · ${titulo}`}
+        </GatilhoComCartao>
+      </li>
+    ))}
+  </ul>
+);
+
+/**
+ * Numa lista, o cartão abre só ao escolher a linha: o ponteiro e o foco parados não o abrem, para
+ * ele não cobrir as linhas de baixo. O clique, o Enter e a seta para baixo o abrem, com o foco nele,
+ * e o Esc e o clique fora o fecham.
+ */
+export const SoAoEscolher: Historia = {
+  render: () => <ListaDeChamados />,
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    const [primeira, segunda] = within(canvasElement).getAllByRole('button');
+    if (!primeira || !segunda) throw new Error('A lista não tem as duas linhas.');
+    // O ponteiro chega de fora, como em PeloPonteiro.
+    await userEvent.pointer({
+      target: canvasElement.ownerDocument.body,
+      coords: { clientX: 1, clientY: 1 },
+    });
+    await ponteiroSobre(primeira);
+    await esperar(tempos.cartao.abrir + 200);
+    await expect(corpo.queryByRole('dialog')).toBeNull();
+    await userEvent.tab();
+    await expect(primeira).toHaveFocus();
+    await esperar(tempos.cartao.abrir + 200);
+    await expect(corpo.queryByRole('dialog')).toBeNull();
+
+    await userEvent.keyboard('{Enter}');
+    const cartao = await corpo.findByRole('dialog', { name: 'Resumo do chamado 1045' });
+    await waitFor(() => expect(cartao).toHaveFocus());
+    await expect(primeira).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(primeira).toHaveFocus());
+
+    await userEvent.keyboard('{ArrowDown}');
+    const pelaSeta = await corpo.findByRole('dialog', { name: 'Resumo do chamado 1045' });
+    await waitFor(() => expect(pelaSeta).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('dialog')).toBeNull());
+
+    await ponteiroSobre(segunda);
+    await userEvent.click(segunda);
+    const daSegunda = await corpo.findByRole('dialog', { name: 'Resumo do chamado 1046' });
+    await waitFor(() => expect(daSegunda).toBeVisible());
+    await userEvent.click(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(corpo.queryByRole('dialog')).toBeNull());
+  },
+};

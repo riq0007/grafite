@@ -423,6 +423,20 @@ describe('o chamado citado', () => {
     await waitFor(() => expect(document.activeElement).toBe(chip));
   });
 
+  it('o resumo diz a situação e quem atende de agora, que o chip da mensagem antiga não segue', async () => {
+    // O chip diz "Em andamento · Bruno Lima", da última leitura da conversa; o chamado já mudou.
+    const { servidor } = servidorDoResumo(() =>
+      Response.json({ ...RESUMO, situacao: 'Aguardando você', atende: 'Ana Souza' }),
+    );
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const { resumo } = await abrirOResumo();
+    expect(await within(resumo).findByText('Aguardando você')).toBeTruthy();
+    expect(within(resumo).queryByText('Em andamento')).toBeNull();
+    expect(within(resumo).getByText('Atende').closest('dl')?.textContent).toBe(
+      'AtendeAna SouzaAtivoPAT-0912Abertoontem, 17:05',
+    );
+  });
+
   it('"Abrir chamado" leva à conversa do chamado; a quem o vê só no Chamados, abre o Grafite numa janela nova', async () => {
     const janela = vi.spyOn(window, 'open').mockReturnValue(null);
     let abrirEm: ResumoDoChamadoNoChat['abrir'] = 'chamados';
