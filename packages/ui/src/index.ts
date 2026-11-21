@@ -311,6 +311,10 @@ export {
   type PropsDoCartaoDoRegistro,
 } from './componentes/referencia/CartaoDoRegistro.tsx';
 export {
+  GatilhoComCartao,
+  type PropsDoGatilhoComCartao,
+} from './componentes/referencia/GatilhoComCartao.tsx';
+export {
   type PropsDaReferenciaComCartao,
   ReferenciaComCartao,
 } from './componentes/referencia/ReferenciaComCartao.tsx';

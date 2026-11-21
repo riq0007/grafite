@@ -182,6 +182,28 @@ export function useChamadoDoChat(numero: number, ligado: boolean) {
   });
 }
 
+/**
+ * O resumo do chamado citado, do chip e de "Chamados da equipe", debaixo da chave dos chamados: o
+ * evento dos chamados relê o resumo aberto.
+ */
+export const chaveDoResumoDoChamado = (numero: number) =>
+  [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'resumo', numero] as const;
+
+export type ResumoDoChamadoNoChat = components['schemas']['ResumoDoChamadoNoChat'];
+
+/** O resumo do chamado citado, lido quando o cartão dele abre. */
+export function useResumoDoChamadoNoChat(numero: number) {
+  const api = useApi();
+  return useQuery({
+    queryKey: chaveDoResumoDoChamado(numero),
+    queryFn: ({ signal }) =>
+      consultar(
+        () => api.GET('/chat/chamados/{numero}/resumo', { params: { path: { numero } }, signal }),
+        'carregar o resumo do chamado',
+      ),
+  });
+}
+
 /** O nível da avaliação do atendimento, de `ruim` a `otimo`. */
 export type NivelDaAvaliacao = NonNullable<ConversaDoChamadoNoChat['avaliacao']>['nivel'];
 

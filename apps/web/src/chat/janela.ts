@@ -4,6 +4,11 @@
 // fora do pacote dele (decisão 12).
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+/** O destino de fora do chat, como o de um alerta, abre o Grafite numa janela nova. */
+export const abrirForaDoChat = (destino: string) => {
+  window.open(destino, '_blank', 'noopener');
+};
+
 /** A aba visível e a janela com o foco. */
 const aVistaAgora = () => document.visibilityState === 'visible' && document.hasFocus();
 

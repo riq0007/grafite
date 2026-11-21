@@ -11341,6 +11341,9 @@
                         "autor": {
                           "type": "string"
                         },
+                        "minha": {
+                          "type": "boolean"
+                        },
                         "em": {
                           "type": "string"
                         }
@@ -11349,6 +11352,7 @@
                         "especie",
                         "texto",
                         "autor",
+                        "minha",
                         "em"
                       ]
                     }
@@ -40923,6 +40927,9 @@
                         "autor": {
                           "type": "string"
                         },
+                        "minha": {
+                          "type": "boolean"
+                        },
                         "em": {
                           "type": "string"
                         }
@@ -40931,6 +40938,7 @@
                         "especie",
                         "texto",
                         "autor",
+                        "minha",
                         "em"
                       ],
                       "additionalProperties": false

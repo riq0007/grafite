@@ -261,6 +261,14 @@ describe('o resumo do chip', () => {
     avancar(1);
     expect((await daTi('mensagem', numero, { texto: 'Já vi aqui.' })).statusCode).toBe(200);
     avancar(1);
+    const respondeu = await c.cliente.enviar(
+      'POST',
+      `/chat/chamados/${numero}/mensagens`,
+      c.como('fernanda'),
+      { texto: 'Pode ser.', anexos: [] },
+    );
+    expect(respondeu.statusCode, respondeu.body).toBe(200);
+    avancar(1);
     expect((await daTi('nota', numero, { texto: 'Pedir ao patrimônio.' })).statusCode).toBe(200);
     await c.deixarAguardando(numero);
 
@@ -270,7 +278,9 @@ describe('o resumo do chip', () => {
       numero: number;
       situacao: string;
       atende: string | null;
-      detalhes: { ultimas: { especie: string; texto: string; autor: string }[] } | null;
+      detalhes: {
+        ultimas: { especie: string; texto: string; autor: string; minha: boolean }[];
+      } | null;
     };
 
     // Paulo é da conversa de origem: vê o resumo sem as últimas mensagens, e a espera é a da TI.
@@ -285,17 +295,24 @@ describe('o resumo do chip', () => {
 
     const daFernanda = (await resumo('fernanda')).json() as Resumo;
     expect(daFernanda.situacao).toBe('Aguardando você');
+    // As duas últimas que ela vê, sem a nota, com a dela marcada.
     expect(daFernanda.detalhes?.ultimas).toEqual([
-      expect.objectContaining({ especie: 'mensagem', texto: 'Já vi aqui.', autor: 'Ana Souza' }),
+      expect.objectContaining({
+        especie: 'mensagem',
+        texto: 'Já vi aqui.',
+        autor: 'Ana Souza',
+        minha: false,
+      }),
+      expect.objectContaining({ especie: 'mensagem', texto: 'Pode ser.', minha: true }),
     ]);
 
     // Ana vê o chamado com chamados.ver, pelo chamados.atender: as duas últimas que ela vê, também a
-    // nota.
+    // nota, que é dela.
     const daAna = (await resumo('ana')).json() as Resumo;
     expect(daAna.situacao).toBe('Aguardando o colaborador');
-    expect(daAna.detalhes?.ultimas.map(({ texto }) => texto)).toEqual([
-      'Já vi aqui.',
-      'Pedir ao patrimônio.',
+    expect(daAna.detalhes?.ultimas.map(({ texto, minha }) => [texto, minha])).toEqual([
+      ['Pode ser.', false],
+      ['Pedir ao patrimônio.', true],
     ]);
 
     // Tatiana não participa do chamado nem da conversa, e não o vê.

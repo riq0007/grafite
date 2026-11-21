@@ -19,6 +19,7 @@ import { ProvedorDaSessao } from '../sessao/useSessao.tsx';
 import { ProvedorDoChamadoNovo } from './chamadoNovo.tsx';
 import { EVENTOS_DO_CHAT } from './consultas.ts';
 import { ehDoChat } from './enderecos.ts';
+import { abrirForaDoChat } from './janela.ts';
 import { ProvedorDosRascunhos } from './rascunhos.tsx';
 import type { RoteadorDoChat } from './rotas.tsx';
 
@@ -52,7 +53,7 @@ export function AppDoChat({
   const navegar = useCallback(
     (destino: string) => {
       if (ehDoChat(destino)) void roteador.navigate({ href: destino });
-      else window.open(destino, '_blank', 'noopener');
+      else abrirForaDoChat(destino);
     },
     [roteador],
   );

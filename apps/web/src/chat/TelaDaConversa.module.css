@@ -150,10 +150,30 @@
   font-size: var(--texto-dado);
 }
 
+/* O chamado é o botão do resumo (change chat-com-chamados, design, decisão 15): o contorno acende com
+   o mouse e com o resumo aberto. */
 .chamado {
+  box-sizing: border-box;
   flex-direction: column;
   align-items: stretch;
   gap: var(--esp-1);
+  inline-size: 100%;
+  color: var(--cor-texto);
+  font-family: inherit;
+  line-height: inherit;
+  text-align: start;
+  outline: none;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.chamado[data-hovered],
+.chamado[aria-expanded="true"] {
+  border-color: var(--cor-linha-forte);
+}
+
+.chamado[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
 }
 
 .iconeDoArquivo {
@@ -194,6 +214,15 @@
 .numero {
   font-family: var(--fonte-mono);
   font-weight: var(--peso-forte);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .tituloDoChamado {

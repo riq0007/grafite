@@ -2,6 +2,7 @@
 // mensagem" e "Chamados da conversa"): o cabeçalho e as abas, as mensagens seguidas juntas, os dias
 // e o evento, a abertura na primeira não lida, na última ou na mensagem do link, a leitura com a
 // conversa à vista, "Mensagens anteriores", a conversa presa embaixo e "Mensagens novas · 2".
+import { filaDeAvisos } from '@grafite/ui';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { criarCanalDeEventos } from '../eventos/canal.ts';
@@ -26,6 +27,8 @@ import {
   varias,
 } from '../teste/conversaDoChat.ts';
 import { estadoDaSessaoAtiva, naOrganizacao, type ServidorDeTeste } from '../teste/sessao.ts';
+import type { CitacaoNaMensagem } from './citacoes.ts';
+import type { ResumoDoChamadoNoChat } from './consultas.ts';
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'], now: AGORA });
@@ -306,6 +309,211 @@ describe('as mensagens', () => {
     expect(await within(area).findByText('Mensagem 1')).toBeTruthy();
     expect(estado.paginas.at(-1)).toBe(`antes=${id(11)}`);
     expect(within(area).queryByRole('button', { name: 'Mensagens anteriores' })).toBeNull();
+  });
+});
+
+describe('o chamado citado', () => {
+  const TEXTO = 'A impressora do #1045 voltou a manchar. E o #77 também.';
+  // O nome do chip, que o jsdom monta com o espaço em volta do selo, que é um bloco na linha.
+  const CHIP = /^Chamado #1045 ?, Em andamento ?, atende Bruno Lima$/;
+  const citacao = (mudar: Partial<CitacaoNaMensagem> = {}): CitacaoNaMensagem => ({
+    numero: 1045,
+    inicio: TEXTO.indexOf('#1045'),
+    fim: TEXTO.indexOf('#1045') + '#1045'.length,
+    situacao: 'Em andamento',
+    atende: 'Bruno Lima',
+    ...mudar,
+  });
+  const RESUMO: ResumoDoChamadoNoChat = {
+    numero: 1045,
+    titulo: 'Impressora do Financeiro manchando as folhas',
+    situacao: 'Em andamento',
+    atende: 'Bruno Lima',
+    abrir: 'chat',
+    detalhes: {
+      ultimas: [
+        {
+          especie: 'mensagem',
+          texto: 'Troquei o toner, mas continua manchando.',
+          autor: 'Bruno Lima',
+          minha: false,
+          em: as('10:21'),
+        },
+        {
+          especie: 'nota',
+          texto: 'A peça chega amanhã.',
+          autor: 'Ana Souza',
+          minha: true,
+          em: as('10:30'),
+        },
+      ],
+      ativo: { nome: 'Impressora do Financeiro', patrimonio: 'PAT-0912' },
+      abertoEm: as('17:05', 19),
+    },
+  };
+  const avisos = () => filaDeAvisos.naTela.map(({ aviso }) => aviso.titulo);
+
+  /** A conversa com a mensagem que cita o #1045 e o resumo dele, como o servidor o dá à conta. */
+  function servidorDoResumo(resumo: () => Response = () => Response.json(RESUMO)) {
+    const pedidos: string[] = [];
+    const { servidor } = servidorDaConversa({
+      mensagens: [
+        mensagem(1),
+        mensagem(2, { texto: TEXTO, criadaEm: as('10:35'), citacoes: [citacao()] }),
+      ],
+      outros: {
+        'GET /api/chat/chamados/1045/resumo': () => {
+          pedidos.push('resumo');
+          return resumo();
+        },
+      },
+    });
+    return { servidor, pedidos };
+  }
+
+  /** O resumo aberto pelo chip, como pelo teclado: o clique sem o ponteiro. */
+  async function abrirOResumo() {
+    const chip = await screen.findByRole('button', { name: CHIP });
+    fireEvent.click(chip);
+    const resumo = await screen.findByRole('dialog', { name: 'Resumo do chamado 1045' });
+    return { chip, resumo };
+  }
+
+  it('o número citado vira o chip, com a situação e quem atende; o que a conta não vê fica no texto', async () => {
+    const { servidor, pedidos } = servidorDoResumo();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const chip = await screen.findByRole('button', { name: CHIP });
+    const texto = chip.closest('p');
+    if (!texto) throw new Error('O chip não está no texto da mensagem.');
+    expect(within(texto).getAllByRole('button')).toEqual([chip]);
+    expect(texto.textContent?.startsWith('A impressora do ')).toBe(true);
+    expect(texto.textContent?.endsWith(' voltou a manchar. E o #77 também.')).toBe(true);
+    expect(chip.getAttribute('aria-expanded')).toBe('false');
+    // O resumo só é lido quando o cartão abre.
+    expect(pedidos).toEqual([]);
+  });
+
+  it('escolher o chip abre o resumo, com o foco nele, e o Esc fecha, com o foco de volta no chip', async () => {
+    const { servidor } = servidorDoResumo();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const { chip, resumo } = await abrirOResumo();
+    expect(chip.getAttribute('aria-expanded')).toBe('true');
+    await waitFor(() => expect(document.activeElement).toBe(resumo));
+    expect(
+      await within(resumo).findByText('Impressora do Financeiro manchando as folhas'),
+    ).toBeTruthy();
+    expect(within(resumo).getByText('Em andamento')).toBeTruthy();
+    const ultimas = within(resumo).getByRole('list', { name: 'Últimas mensagens' });
+    expect(
+      within(ultimas)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual([
+      'BLBruno Lima · 10:21Troquei o toner, mas continua manchando.',
+      'ASVocê · 10:30NotaA peça chega amanhã.',
+    ]);
+    const dados = within(resumo).getByText('Atende').closest('dl');
+    expect(dados?.textContent).toBe('AtendeBruno LimaAtivoPAT-0912Abertoontem, 17:05');
+    expect(within(resumo).getByRole('button', { name: 'Abrir chamado' })).toBeTruthy();
+    expect(within(resumo).getByRole('button', { name: 'Copiar link' })).toBeTruthy();
+
+    fireEvent.keyDown(resumo, { key: 'Escape' });
+    expect(chip.getAttribute('aria-expanded')).toBe('false');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(chip));
+  });
+
+  it('"Abrir chamado" leva à conversa do chamado; a quem o vê só no Chamados, abre o Grafite numa janela nova', async () => {
+    const janela = vi.spyOn(window, 'open').mockReturnValue(null);
+    let abrirEm: ResumoDoChamadoNoChat['abrir'] = 'chamados';
+    const { servidor } = servidorDoResumo(() => Response.json({ ...RESUMO, abrir: abrirEm }));
+    const roteador = abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    let { resumo } = await abrirOResumo();
+    fireEvent.click(
+      await within(resumo).findByRole('button', {
+        name: /^Abrir chamado ?, no Grafite, numa janela nova$/,
+      }),
+    );
+    expect(janela).toHaveBeenCalledWith('/chamados/1045', '_blank', 'noopener');
+    expect(roteador.state.location.pathname).toBe(`/chat/c/${CONVERSA}`);
+
+    fireEvent.keyDown(resumo, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    abrirEm = 'chat';
+    ({ resumo } = await abrirOResumo());
+    fireEvent.click(await within(resumo).findByRole('button', { name: 'Abrir chamado' }));
+    await waitFor(() => expect(roteador.state.location.pathname).toBe('/chat/chamados/1045'));
+    expect(janela).toHaveBeenCalledTimes(1);
+  });
+
+  it('a quem não participa, o resumo tem a situação, o título, quem atende e "Copiar link"', async () => {
+    const escrever = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: escrever },
+      configurable: true,
+    });
+    const { servidor } = servidorDoResumo(() =>
+      Response.json({ ...RESUMO, abrir: null, detalhes: null }),
+    );
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const { resumo } = await abrirOResumo();
+    const copiar = await within(resumo).findByRole('button', { name: 'Copiar link' });
+    expect(within(resumo).getByText('Impressora do Financeiro manchando as folhas')).toBeTruthy();
+    expect(within(resumo).getByText('Atende').closest('dl')?.textContent).toBe('AtendeBruno Lima');
+    expect(within(resumo).queryByRole('list', { name: 'Últimas mensagens' })).toBeNull();
+    expect(within(resumo).queryByRole('button', { name: /Abrir chamado/ })).toBeNull();
+
+    fireEvent.click(copiar);
+    await waitFor(() =>
+      expect(escrever).toHaveBeenCalledWith(`${window.location.origin}/chat/chamados/1045`),
+    );
+    await waitFor(() => expect(avisos()).toContain('Link copiado.'));
+  });
+
+  it('o resumo que falha diz o motivo e tenta de novo', async () => {
+    let falhar = true;
+    const { servidor } = servidorDoResumo(() => (falhar ? erroInterno() : Response.json(RESUMO)));
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const { resumo } = await abrirOResumo();
+    const falha = await within(resumo).findByRole('alert');
+    expect(falha.textContent).toContain(
+      'Não foi possível carregar o resumo do chamado. Informe à TI o código R7K2-9QXM.',
+    );
+    falhar = false;
+    fireEvent.click(within(falha).getByRole('button', { name: 'Tentar de novo' }));
+    expect(await within(resumo).findByRole('list', { name: 'Últimas mensagens' })).toBeTruthy();
+    expect(within(resumo).queryByRole('alert')).toBeNull();
+  });
+
+  it('"Chamados da equipe" abre o mesmo resumo', async () => {
+    const { servidor } = servidorDaConversa({
+      outros: {
+        [`GET ${CAMINHO}/chamados`]: () =>
+          Response.json({
+            itens: [
+              {
+                numero: 1045,
+                titulo: 'Impressora do Financeiro manchando as folhas',
+                situacao: 'Em andamento',
+                atende: 'Bruno Lima',
+                abriu: 'Paulo Nunes',
+                abertoEm: as('17:05', 19),
+              },
+            ],
+            seguintes: false,
+          }),
+        'GET /api/chat/chamados/1045/resumo': () => Response.json(RESUMO),
+      },
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Chamados da equipe' }));
+    const chamado = await screen.findByRole('button', {
+      name: /^Chamado #1045 Impressora do Financeiro manchando as folhas/,
+    });
+    fireEvent.click(chamado);
+    const resumo = await screen.findByRole('dialog', { name: 'Resumo do chamado 1045' });
+    expect(await within(resumo).findByRole('list', { name: 'Últimas mensagens' })).toBeTruthy();
+    expect(chamado.getAttribute('aria-expanded')).toBe('true');
   });
 });
 

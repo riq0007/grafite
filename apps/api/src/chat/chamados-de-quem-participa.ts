@@ -245,6 +245,8 @@ export const ResumoDoChamadoNoChat = z
             especie: z.enum(['mensagem', 'nota']),
             texto: z.string(),
             autor: z.string(),
+            /** A mensagem da própria conta, que a tela mostra como "Você". */
+            minha: z.boolean(),
             em: z.string(),
           }),
         ),
@@ -850,6 +852,7 @@ export async function resumoDoChamadoNoChat(
           ultima.autorConta !== null
             ? nome.conta(ultima.autorConta)
             : nome.pessoa(ultima.autorPessoa ?? ''),
+        minha: ultima.autorConta === conta.id || ultima.autorPessoa === conta.pessoaId,
         em: ultima.criadaEm.toISOString(),
       })),
       ativo: ligado ? { nome: ligado.rotulo, patrimonio: ligado.patrimonio } : null,

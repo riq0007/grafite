@@ -18,6 +18,7 @@ import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../sessao/useSessao.tsx';
 import type { AcoesDaMensagem } from './BarraDaMensagem.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
+import { ComOResumoDoChamado } from './ChamadoCitado.tsx';
 import {
   CHAVE_DAS_CONVERSAS,
   CHAVE_DO_RESUMO_DO_CHAT,
@@ -410,21 +411,24 @@ function ChamadosDaConversa({
           aria-label={tipo === 'canal' ? 'Chamados do canal' : 'Chamados da equipe'}
         >
           {itens.map((chamado) => (
-            <li key={chamado.numero} className={estilos.chamado}>
-              <span className={estilos.linhaDoChamado}>
-                <span className={estilos.numero}>#{chamado.numero}</span>
-                <span className={estilos.tituloDoChamado}>{chamado.titulo}</span>
-                <SeloDoChamado texto={chamado.situacao} />
-              </span>
-              <small>
-                {[
-                  chamado.atende === null ? null : `${chamado.atende} atende`,
-                  chamado.abriu === null ? 'Aberto' : `Aberto por ${chamado.abriu}`,
-                  quandoNoChat(new Date(chamado.abertoEm), agora, dataHora),
-                ]
-                  .filter((parte) => parte !== null)
-                  .join(' · ')}
-              </small>
+            <li key={chamado.numero}>
+              <ComOResumoDoChamado chamado={chamado} className={estilos.chamado}>
+                <span className={estilos.linhaDoChamado}>
+                  <span className={estilos.paraOLeitor}>Chamado </span>
+                  <span className={estilos.numero}>#{chamado.numero}</span>
+                  <span className={estilos.tituloDoChamado}>{chamado.titulo}</span>
+                  <SeloDoChamado texto={chamado.situacao} />
+                </span>
+                <small>
+                  {[
+                    chamado.atende === null ? null : `${chamado.atende} atende`,
+                    chamado.abriu === null ? 'Aberto' : `Aberto por ${chamado.abriu}`,
+                    quandoNoChat(new Date(chamado.abertoEm), agora, dataHora),
+                  ]
+                    .filter((parte) => parte !== null)
+                    .join(' · ')}
+                </small>
+              </ComOResumoDoChamado>
             </li>
           ))}
         </ul>

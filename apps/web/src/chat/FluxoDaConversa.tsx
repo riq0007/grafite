@@ -12,6 +12,7 @@ import { nomeNoChat } from '@grafite/domain';
 import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
 import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
 import {
+  Fragment,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -32,6 +33,8 @@ import {
   type Reagir,
   reagirAvisando,
 } from './BarraDaMensagem.tsx';
+import { ChipDoChamado } from './ChamadoCitado.tsx';
+import { type CitacaoNaMensagem, partesDoTexto } from './citacoes.ts';
 import { type CargaDoTrecho, type MensagensDaConversa, useLeituraDaConversa } from './consultas.ts';
 import { type ItemNaTela, itensDaConversa, type MensagemDoChat, novasDesde } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
@@ -617,6 +620,26 @@ function ItemDaConversa({
   }
 }
 
+/** O texto da mensagem, com o chip no lugar de cada chamado citado de que a conta vê o resumo. */
+function TextoDaMensagem({
+  texto,
+  citacoes,
+}: {
+  texto: string;
+  citacoes: readonly CitacaoNaMensagem[];
+}) {
+  let ate = 0;
+  return partesDoTexto(texto, citacoes).map((parte) => {
+    const onde = ate;
+    ate += parte.texto.length;
+    return parte.tipo === 'texto' ? (
+      <Fragment key={onde}>{parte.texto}</Fragment>
+    ) : (
+      <ChipDoChamado key={onde} chamado={parte.citacao} />
+    );
+  });
+}
+
 /** O endereço da mensagem na conversa, que abre a conversa nela. */
 const daConversaEm = (conversa: string, mensagem: string) => `/chat/c/${conversa}?m=${mensagem}`;
 
@@ -702,7 +725,11 @@ function MensagemNaConversa({
             <span className={estilos.comecoDaRespondida}>{respondida.comeco}</span>
           </LinkDoChat>
         )}
-        {mensagem.texto && <p className={estilos.texto}>{mensagem.texto}</p>}
+        {mensagem.texto && (
+          <p className={estilos.texto}>
+            <TextoDaMensagem texto={mensagem.texto} citacoes={mensagem.citacoes} />
+          </p>
+        )}
         {mensagem.anexos.length > 0 && (
           <ul className={estilos.anexos} aria-label="Anexos">
             {mensagem.anexos.map((anexo) => (

@@ -40398,6 +40398,7 @@ export interface components {
                     especie: "mensagem" | "nota";
                     texto: string;
                     autor: string;
+                    minha: boolean;
                     em: string;
                 }[];
                 ativo: {
@@ -46270,6 +46271,7 @@ export interface components {
                     especie: "mensagem" | "nota";
                     texto: string;
                     autor: string;
+                    minha: boolean;
                     em: string;
                 }[];
                 ativo: {

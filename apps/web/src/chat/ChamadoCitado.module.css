@@ -1,0 +1,177 @@
+/* O chip do chamado citado (m12): 32 px, na linha do texto, no fundo do chamado, o azul a 9% sobre a
+   superfície, como o cartão da lista do Chat, com o contorno azul, que acende com o mouse e com o
+   resumo aberto (change chat-com-chamados, design, decisão 15). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  box-sizing: border-box;
+  block-size: var(--esp-8);
+  margin-inline: calc(var(--esp-1) / 2);
+  padding: 0 var(--esp-3) 0 var(--esp-2);
+  border: 1.5px solid var(--cor-info-borda);
+  border-radius: var(--raio-capsula);
+  background-color: color-mix(in srgb, var(--cor-info) 9%, var(--cor-superficie));
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: var(--texto-dado);
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+  outline: none;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.chip[data-hovered],
+.chip[aria-expanded="true"] {
+  border-color: var(--cor-info);
+}
+
+.chip[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.numero {
+  color: var(--cor-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* O resumo (m12): a marca do chamado com o selo, o título, as duas últimas mensagens entre os fios,
+   quem atende, o ativo e a hora da abertura, e as ações. */
+.cartao {
+  display: grid;
+  gap: var(--esp-3);
+  box-sizing: border-box;
+  inline-size: calc(var(--esp-10) * 10);
+  max-inline-size: calc(100vw - var(--esp-8));
+  padding: var(--esp-4);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+}
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: calc(var(--esp-1) / 2) var(--esp-2);
+  border: 1px solid var(--cor-info-borda);
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-info);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O título inteiro: quebra a linha e não corta. */
+.titulo {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.estado {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.ultimas {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: var(--esp-2) 0;
+  border-block: 1px solid var(--cor-linha);
+  list-style: none;
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-normal);
+}
+
+.ultimas > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--esp-3);
+}
+
+.foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-6);
+}
+
+.quem {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+}
+
+.nota {
+  margin-inline-start: var(--esp-2);
+  padding: 0 var(--esp-1);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  text-transform: uppercase;
+}
+
+/* O começo da mensagem, em até três linhas: o resto fica na conversa do chamado. */
+.textoDaUltima {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-5);
+  margin: 0;
+  font-size: var(--texto-rotulo);
+}
+
+.dados dd {
+  margin: 0;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
