@@ -219,3 +219,32 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Na conversa de um chamado: o que vem antes do texto, como o cadeado do resolvido, a dica à
+   direita da caixa vazia ("# cita um chamado") e, no lugar do envio com a caixa vazia, o
+   "Reabrir até 18/11". Os três ficam na altura da última linha, como o clipe e o envio. */
+.inicio,
+.dica,
+.semTexto {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  align-self: flex-end;
+  block-size: var(--altura-da-linha);
+}
+
+.inicio {
+  margin-inline-end: var(--esp-2);
+  color: var(--cor-texto-2);
+}
+
+.dica {
+  padding-inline: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+}
+
+.dica[hidden] {
+  display: none;
+}

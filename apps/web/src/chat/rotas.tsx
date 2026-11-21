@@ -16,6 +16,7 @@ import estilos from './MolduraDoChat.module.css';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
 import { TelaDaConversa } from './TelaDaConversa.tsx';
 import { type PessoaDaDireta, TelaDaDireta } from './TelaDaDireta.tsx';
+import { ChamadoNaoEncontrado, TelaDoChamado } from './TelaDoChamado.tsx';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -47,8 +48,8 @@ const raiz = createRootRoute({ component: MolduraDoChat, notFoundComponent: Chat
 
 const chat = createRoute({ getParentRoute: () => raiz, path: '/chat' });
 
-// As telas ao lado da lista ainda vazias chegam nas tarefas delas: o chamado na 4.6 e as vistas
-// Chamados, Equipes e Avisos na 4.7.
+// As telas ao lado da lista ainda vazias chegam na tarefa delas: as vistas Chamados, Equipes e
+// Avisos na 4.7.
 const vistaChat = createRoute({ getParentRoute: () => chat, path: '/', component: NadaEscolhido });
 
 /**
@@ -107,7 +108,21 @@ export const rotaDoChamado = createRoute({
   path: 'chamados/$numero',
   validateSearch: (busca: Record<string, unknown>): { vista?: 'chamados' } =>
     busca.vista === 'chamados' ? { vista: 'chamados' } : {},
+  component: ChamadoDoEndereco,
 });
+
+/** O número do chamado no endereço: um inteiro positivo, sem zero à esquerda, que cabe no banco. */
+const NUMERO_DO_CHAMADO = /^[1-9]\d{0,9}$/;
+const MAIOR_NUMERO = 2_147_483_647;
+
+/** A tela de cada chamado começa do zero, com a rolagem e o que se marca nela. */
+function ChamadoDoEndereco(): ReactNode {
+  const { numero } = rotaDoChamado.useParams() as { numero: string };
+  const { vista } = rotaDoChamado.useSearch() as { vista?: 'chamados' };
+  const lido = NUMERO_DO_CHAMADO.test(numero) ? Number(numero) : null;
+  if (lido === null || lido > MAIOR_NUMERO) return <ChamadoNaoEncontrado />;
+  return <TelaDoChamado key={lido} numero={lido} vista={vista ?? null} />;
+}
 
 const vistaEquipes = createRoute({ getParentRoute: () => chat, path: 'equipes' });
 

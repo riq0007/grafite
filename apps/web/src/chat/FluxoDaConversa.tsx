@@ -48,11 +48,11 @@ const ACIMA_DAS_NOVAS = 16;
 /** O quanto antes de a ponta aparecer as anteriores e as seguintes já começam a vir. */
 const ANTES_DA_PONTA = '160px 0px';
 
-const estaNoFim = (elemento: HTMLElement) =>
+export const estaNoFim = (elemento: HTMLElement) =>
   elemento.scrollHeight - elemento.scrollTop - elemento.clientHeight <= PERTO_DO_FIM;
 
 /** A distância do elemento ao topo do conteúdo que rola. */
-const topoNaRolagem = (rolagem: HTMLElement, elemento: HTMLElement) =>
+export const topoNaRolagem = (rolagem: HTMLElement, elemento: HTMLElement) =>
   elemento.getBoundingClientRect().top - rolagem.getBoundingClientRect().top + rolagem.scrollTop;
 
 /** A API respondeu que não há o que se pediu, como a mensagem do link de outra conversa. */

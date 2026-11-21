@@ -10,7 +10,7 @@ import {
 import { RotuloDeSituacao, type Situacao } from '@grafite/ui';
 import { Archive, CircleCheck, Hourglass, type LucideIcon, Ticket, Wrench } from 'lucide-react';
 
-interface MarcaDaPalavra {
+export interface MarcaDaPalavra {
   situacao: Situacao;
   icone: LucideIcon;
 }
@@ -27,13 +27,16 @@ const MARCAS: ReadonlyMap<string, MarcaDaPalavra> = new Map([
   [SITUACAO_FECHADA, { situacao: 'neutra', icone: Archive }],
 ]);
 
+/** A marca e o ícone da palavra, que a etapa de agora do chamado também usa. */
+export const marcaDaPalavra = (texto: string): MarcaDaPalavra => MARCAS.get(texto) ?? ABERTO;
+
 export function SeloDoChamado({
   texto,
 }: {
   /** A situação nas palavras do chat, como a API a manda: "Aguardando você". */
   texto: string;
 }) {
-  const marca = MARCAS.get(texto) ?? ABERTO;
+  const marca = marcaDaPalavra(texto);
   return (
     <RotuloDeSituacao situacao={marca.situacao} icone={marca.icone}>
       {texto}

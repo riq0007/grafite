@@ -16,6 +16,7 @@ import {
 import { ArrowUp, CornerUpLeft, FileText, Paperclip } from 'lucide-react';
 import {
   type KeyboardEvent,
+  type ReactNode,
   type RefObject,
   useId,
   useLayoutEffect,
@@ -50,6 +51,17 @@ export interface PropsDaCaixaDoChat<T> {
   citar: boolean;
   /** A caixa de texto, para o "Responder" pôr o foco nela. */
   caixa?: RefObject<HTMLTextAreaElement | null>;
+  /** Para onde os anexos sobem: os do chat ou, na conversa de um chamado, os dos chamados. */
+  anexosEm?: '/chat/anexos' | '/chamados/anexos';
+  /**
+   * A dica à direita da caixa vazia, como "# cita um chamado", que o leitor de tela ouve como a
+   * descrição da caixa.
+   */
+  dica?: string;
+  /** O que vem antes do texto, como o cadeado do chamado resolvido. */
+  inicio?: ReactNode;
+  /** O que fica no lugar do envio com a caixa vazia, como o "Reabrir até 18/11". */
+  semTexto?: ReactNode;
 }
 
 export function CaixaDoChat<T>({
@@ -59,6 +71,10 @@ export function CaixaDoChat<T>({
   aoEnviar,
   citar,
   caixa: deFora,
+  anexosEm = '/chat/anexos',
+  dica,
+  inicio,
+  semTexto,
 }: PropsDaCaixaDoChat<T>) {
   const [rascunho, mudarRascunho] = useRascunho(chave);
   const { texto, respondida, anexos } = rascunho;
@@ -69,15 +85,17 @@ export function CaixaDoChat<T>({
   const [recusa, definirRecusa] = useState<string | null>(null);
   const [cursor, definirCursor] = useState<number | null>(null);
   const idDaRecusa = useId();
+  const idDaDica = useId();
   const { fila, progresso, recusas, receber, limparRecusas } = useFilaDeAnexos({
     ocupados: anexos.length,
     soNoNavegador: false,
-    endereco: '/chat/anexos',
+    endereco: anexosEm,
     aoAnexar: (id, { nome, bytes }) =>
       mudarRascunho((antes) => ({ ...antes, anexos: [...antes.anexos, { id, nome, bytes }] })),
   });
   const vazia = texto.trim() === '';
   const cabeMais = anexos.length + fila.length < MAXIMO_DE_ANEXOS;
+  const semNada = vazia && anexos.length === 0 && fila.length === 0;
 
   // A caixa cresce com o texto, até o limite do CSS; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto.
@@ -207,6 +225,7 @@ export function CaixaDoChat<T>({
           </div>
         )}
         <div className={estilos.linha}>
+          {inicio && <span className={estilos.inicio}>{inicio}</span>}
           <textarea
             ref={caixa}
             className={estilos.texto}
@@ -215,7 +234,11 @@ export function CaixaDoChat<T>({
             placeholder={ajuda}
             aria-label={ajuda.replace(/…$/u, '')}
             aria-invalid={recusa !== null || undefined}
-            aria-describedby={recusasAVista.length > 0 ? idDaRecusa : undefined}
+            aria-describedby={
+              [recusasAVista.length > 0 ? idDaRecusa : null, dica ? idDaDica : null]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
             aria-autocomplete={citar ? 'list' : undefined}
             aria-controls={lista.aberta ? lista.id : undefined}
             aria-activedescendant={lista.aberta ? lista.idDaAtiva : undefined}
@@ -229,6 +252,12 @@ export function CaixaDoChat<T>({
             onBlur={() => definirCursor(null)}
             onKeyDown={aoTeclar}
           />
+          {dica && (
+            // Escondida com o que se escreve, a dica segue como a descrição da caixa.
+            <span id={idDaDica} className={estilos.dica} hidden={!semNada}>
+              {dica}
+            </span>
+          )}
           {cabeMais && (
             <>
               <input
@@ -252,14 +281,18 @@ export function CaixaDoChat<T>({
               />
             </>
           )}
-          <BotaoDeIcone
-            icone={ArrowUp}
-            rotulo="Enviar"
-            className={estilos.enviar}
-            isDisabled={(vazia && anexos.length === 0) || fila.length > 0}
-            isPending={enviando}
-            onPress={() => void enviar()}
-          />
+          {semTexto && semNada ? (
+            <span className={estilos.semTexto}>{semTexto}</span>
+          ) : (
+            <BotaoDeIcone
+              icone={ArrowUp}
+              rotulo="Enviar"
+              className={estilos.enviar}
+              isDisabled={(vazia && anexos.length === 0) || fila.length > 0}
+              isPending={enviando}
+              onPress={() => void enviar()}
+            />
+          )}
         </div>
         {(anexos.length > 0 || fila.length > 0) && (
           <ul className={estilos.anexos} aria-label="Anexos da mensagem">

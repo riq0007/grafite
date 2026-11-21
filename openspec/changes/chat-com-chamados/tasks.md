@@ -173,7 +173,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
 - [x] 4.5 Transformar em chamado (m02 e m03): o diálogo, os tipos em chips, o título com o contador, o ativo sugerido e "Trocar", "No nome de", e o evento e a marca na conversa. O evento passou a dizer o nome de quem transformou também à conta que agiu, como a spec (a 4.3 dizia "Você"), e o chamado aberto entra marcado no alto de CHAMADOS. Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.6 O chamado no chat (m04, m06, m07 e m10):
+- [x] 4.6 O chamado no chat (m04, m06, m07 e m10):
   - o cabeçalho, as etapas com as horas e "Seus outros chamados"; a hora da etapa como a spec a escreve, "ontem 17:05", sem a vírgula do `momentoNaConversa` da TI ("ontem, 17:05");
   - a conversa, com a espera em "Aguardando você", a resposta nova e "Marcar como vista";
   - a pergunta pelo teclado e o cartão do ativo;

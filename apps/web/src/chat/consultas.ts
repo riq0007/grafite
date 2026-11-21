@@ -11,7 +11,7 @@ import {
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { consultar } from '../api/consultas.ts';
-import { pedir } from '../api/pedir.ts';
+import { type FalhaDoPedido, pedir } from '../api/pedir.ts';
 import { useApi } from '../api/useApi.tsx';
 import type { EventosDoModulo } from '../modulos/tipos.ts';
 import {
@@ -36,6 +36,13 @@ export const CHAVE_DAS_CONVERSAS = [...CHAVE_DO_CHAT, 'conversas'] as const;
 
 /** Os chamados de que a conta participa, na lista, e o que é de cada um. */
 export const CHAVE_DOS_CHAMADOS_DO_CHAT = [...CHAVE_DO_CHAT, 'chamados'] as const;
+
+/**
+ * A conversa de um chamado de que a conta participa, debaixo da chave dos chamados: o evento dos
+ * chamados relê a lista e o chamado aberto.
+ */
+export const chaveDoChamadoDoChat = (numero: number) =>
+  [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'chamado', numero] as const;
 
 /** As pessoas da escolha da conversa direta, pela busca. */
 export const CHAVE_DAS_PESSOAS_DO_CHAT = [...CHAVE_DO_CHAT, 'pessoas'] as const;
@@ -63,6 +70,7 @@ export type ChamadoDaConversa = components['schemas']['ChamadoDaConversa'];
 export type TipoParaAbrirPeloChat = components['schemas']['TipoParaAbrirPeloChat'];
 export type AtivoSugeridoPeloChat =
   components['schemas']['AtivosSugeridosPeloChat']['ativos'][number];
+export type ConversaDoChamadoNoChat = components['schemas']['ConversaDoChamadoDeQuemParticipa'];
 
 export function useResumoDoChat() {
   const api = useApi();
@@ -93,6 +101,87 @@ export function useChamadosDoChat(ligado: boolean) {
       consultar(() => api.GET('/chat/chamados', { signal }), 'carregar os seus chamados'),
   });
 }
+
+/**
+ * A conversa de um chamado de que a conta participa, nas palavras do colaborador, só com o módulo
+ * Chamados ligado.
+ */
+export function useChamadoDoChat(numero: number, ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: chaveDoChamadoDoChat(numero),
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(
+        () => api.GET('/chat/chamados/{numero}', { params: { path: { numero } }, signal }),
+        'abrir o chamado',
+      ),
+  });
+}
+
+/** O nível da avaliação do atendimento, de `ruim` a `otimo`. */
+export type NivelDaAvaliacao = NonNullable<ConversaDoChamadoNoChat['avaliacao']>['nivel'];
+
+/**
+ * O que quem participa faz no chamado: responder, escolher uma opção, reabrir, avaliar e marcar como
+ * vista. Cada ação devolve a conversa depois dela, que entra na tela na hora; a lista e os contadores
+ * se releem. A recusa de um chamado que mudou em outra tela, como a pergunta já respondida, relê a
+ * conversa, para a tela mostrar o que vale.
+ */
+export function useAcoesDoChamado(numero: number) {
+  const api = useApi();
+  const consultas = useQueryClient();
+  const params = { path: { numero } };
+  const depois = (
+    resultado: { dados: ConversaDoChamadoNoChat } | FalhaDoPedido,
+  ): { dados: ConversaDoChamadoNoChat } | FalhaDoPedido => {
+    if ('dados' in resultado) {
+      consultas.setQueryData(chaveDoChamadoDoChat(numero), resultado.dados);
+      void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT, exact: true });
+      void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+    } else if (resultado.problema?.status === 409) {
+      void consultas.invalidateQueries({ queryKey: chaveDoChamadoDoChat(numero) });
+    }
+    return resultado;
+  };
+  return {
+    responder: ({ texto, anexos }: { texto: string; anexos?: string[] }) =>
+      pedir(
+        () =>
+          api.POST('/chat/chamados/{numero}/mensagens', {
+            params,
+            body: { texto, anexos: anexos ?? [] },
+          }),
+        'mandar a mensagem',
+      ).then(depois),
+    escolher: (mensagem: string, opcao: string) =>
+      pedir(
+        () => api.POST('/chat/chamados/{numero}/escolha', { params, body: { mensagem, opcao } }),
+        'escolher a resposta',
+      ).then(depois),
+    reabrir: () =>
+      pedir(
+        () => api.POST('/chat/chamados/{numero}/reabertura', { params }),
+        'reabrir o chamado',
+      ).then(depois),
+    avaliar: (nivel: NivelDaAvaliacao | null, comentario: string) =>
+      pedir(
+        () =>
+          api.POST('/chat/chamados/{numero}/avaliacao', {
+            params,
+            body: { nivel, comentario: comentario.trim() === '' ? null : comentario },
+          }),
+        'enviar a avaliação',
+      ).then(depois),
+    marcarComoVista: () =>
+      pedir(
+        () => api.POST('/chat/chamados/{numero}/vista', { params }),
+        'marcar a resposta como vista',
+      ).then(depois),
+  };
+}
+
+export type AcoesDoChamado = ReturnType<typeof useAcoesDoChamado>;
 
 /**
  * As pessoas que usam o chat, pelas palavras do nome, até 20, para a conversa direta. Enquanto a

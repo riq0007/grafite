@@ -33,9 +33,10 @@ export interface RascunhoDoChat {
 
 export const RASCUNHO_VAZIO: RascunhoDoChat = { texto: '', respondida: null, anexos: [] };
 
-/** A chave do rascunho: a conversa, ou a pessoa da direta que ainda não nasceu. */
+/** A chave do rascunho: a conversa, a pessoa da direta que ainda não nasceu ou o chamado. */
 export const rascunhoDaConversa = (conversa: string) => `conversa:${conversa.toLowerCase()}`;
 export const rascunhoDaDireta = (conta: string) => `direta:${conta.toLowerCase()}`;
+export const rascunhoDoChamado = (numero: number) => `chamado:${numero}`;
 
 type MudarRascunho = (mudar: (antes: RascunhoDoChat) => RascunhoDoChat) => void;
 
