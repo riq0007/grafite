@@ -1,8 +1,9 @@
 // O acesso efetivo na sessão (specs permissoes, entrada-e-sessoes e verificacao-em-dois-passos): o
 // estado da sessão traz as permissões com o escopo, toda mudança vale na requisição seguinte, e um
 // perfil que exige os dois passos faz uma sessão que vale pedir o cadastro, sem mudar o fim dela.
-import { naOrganizacao, perfis, sessoes } from '@grafite/db';
-import { eq } from 'drizzle-orm';
+// Os grupos da conta (change chat-com-chamados) são os ativos de que ela é agora.
+import { grupos, membrosDoGrupo, naOrganizacao, perfis, sessoes } from '@grafite/db';
+import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   type ApiDeTeste,
@@ -15,6 +16,7 @@ import {
   criarPerfil,
   incluirNoGrupo,
 } from '../../test/integracao.ts';
+import { carregarGrupos } from './acesso.ts';
 import { decodificarBase32, gerarCodigoTotp } from './totp.ts';
 
 const host = 'grafite.acesso.local';
@@ -189,5 +191,27 @@ describe('dois passos exigidos pelo perfil', () => {
     });
     expect(desativacao.statusCode).toBe(409);
     expect(desativacao.json().type).toBe('urn:grafite:problema:dois-passos-exigidos');
+  });
+});
+
+describe('grupos da conta', () => {
+  it('são os grupos ativos de que ela é agora, sem os inativos e sem os de que saiu', async () => {
+    const conta = (await criarConta(api, org, { usuario: 'helena', senha })).id;
+    const suporte = await criarGrupo(api, org, { nome: 'Suporte' });
+    const redes = await criarGrupo(api, org, { nome: 'Redes' });
+    const antigo = await criarGrupo(api, org, { nome: 'Antigo' });
+    for (const grupoId of [suporte, redes, antigo]) {
+      await incluirNoGrupo(api, org, { grupoId, contaId: conta });
+    }
+    await naOrganizacao(api.banco, org, async (tx) => {
+      await tx.update(grupos).set({ situacao: 'inativo' }).where(eq(grupos.id, antigo));
+      await tx
+        .update(membrosDoGrupo)
+        .set({ encerradaEm: api.relogio.agora() })
+        .where(and(eq(membrosDoGrupo.grupoId, redes), eq(membrosDoGrupo.contaId, conta)));
+    });
+    expect(await naOrganizacao(api.banco, org, (tx) => carregarGrupos(tx, conta))).toEqual([
+      suporte,
+    ]);
   });
 });

@@ -54,18 +54,19 @@ export function linhaDoEvento(
 ): LinhaDoEvento | null {
   const em = new Date(evento.em);
   const hora = momentoDaMensagem(em, agora, dataHora);
-  const quem = evento.autor.nome;
+  // Só o `fechou` vem sem autor, porque ninguém o faz (chat-com-chamados, tarefa 3.11).
+  const quem = evento.autor?.nome ?? '';
   const linha = (...partes: (string | null)[]): LinhaDoEvento => ({
     texto: juntar(...partes),
     aguardando: false,
   });
   /** A conta dos dados que não é quem agiu, como quem estava com o chamado que outro passou. */
   const outra = (conta: { conta: string; nome: string } | null) =>
-    conta !== null && conta.conta !== evento.autor.id ? conta : null;
+    conta !== null && conta.conta !== evento.autor?.id ? conta : null;
   switch (evento.evento) {
     case 'abertura':
       return linha(
-        evento.autor.tipo === 'pessoa'
+        evento.autor?.tipo === 'pessoa'
           ? `${quem} abriu o chamado`
           : `${quem} abriu o chamado para ${pessoa}`,
         momentoNaConversa(em, agora, dataHora),
@@ -135,6 +136,10 @@ export function linhaDoEvento(
       return evento.motivo
         ? linha(fraseDaSolicitacaoNaoGerada(evento.motivo).replace(/\.$/u, ''), hora)
         : null;
+    case 'avaliou':
+    case 'fechou':
+      // A avaliação de quem participa e o fechamento entram na conversa da TI na tarefa 4.13.
+      return null;
   }
 }
 

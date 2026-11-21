@@ -18,3 +18,10 @@ export const miniaturasDaPessoa = (pessoaId: string, foto: { id: string } | null
 /** As miniaturas da foto da pessoa da própria conta, que ela vê sem permissão. */
 export const miniaturasDaConta = (foto: { id: string } | null) =>
   miniaturas('/api/conta/foto', foto);
+
+/**
+ * As miniaturas da foto de uma conta que usa o chat, que quem usa o chat vê sem o `pessoas.ver`
+ * (change chat-com-chamados, design, decisão 15).
+ */
+export const miniaturasNoChat = (conta: string, foto: { id: string } | null) =>
+  miniaturas(`/api/chat/contas/${conta}/foto`, foto);

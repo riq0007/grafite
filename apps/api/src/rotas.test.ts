@@ -68,6 +68,28 @@ describe('declaração das rotas do escopo de acesso', () => {
     ).rejects.toThrow('A rota GET /ambas declara a permissão e a exceção ao mesmo tempo.');
   });
 
+  it('a lista de permissões, de que a conta precisa de uma, só com as do catálogo', async () => {
+    await expect(
+      registrarNoEscopo((escopo) => {
+        escopo.post(
+          '/anexos',
+          // @ts-expect-error a chave errada não compila; a guarda também a recusa em tempo de execução.
+          { config: { permissao: ['chat.usar', 'anexos.enviar'] } },
+          responder,
+        );
+      }),
+    ).rejects.toThrow('A rota POST /anexos exige uma permissão fora do catálogo: anexos.enviar.');
+    await expect(
+      registrarNoEscopo((escopo) => {
+        escopo.post(
+          '/anexos',
+          { config: { permissao: ['chamados.atender', 'chat.usar'] } },
+          responder,
+        );
+      }),
+    ).resolves.toBeUndefined();
+  });
+
   it('aceita as rotas declaradas', async () => {
     await expect(
       registrarNoEscopo((escopo) => {

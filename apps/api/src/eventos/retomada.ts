@@ -31,6 +31,8 @@ export function eventoDaLinha(linha: typeof eventos.$inferSelect): EventoDeSaida
       ...(linha.todas ? { todas: true } : {}),
       ...(linha.permissao ? { permissao: linha.permissao as Permissao } : {}),
       ...(linha.locais ? { locais: linha.locais } : {}),
+      // A lista vazia também volta: sem ela, o evento iria a todos com a permissão.
+      ...(linha.grupos ? { grupos: linha.grupos } : {}),
       ...(linha.permissoes ? { permissoes: linha.permissoes as Permissao[] } : {}),
       ...(linha.contas ? { contas: linha.contas } : {}),
       ...(linha.sessoes ? { sessoes: linha.sessoes } : {}),

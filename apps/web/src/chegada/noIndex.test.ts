@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import CHAT from '../../chat/index.html?raw';
 import INDEX from '../../index.html?raw';
-import { comAChegada, ROTEIRO_DA_CHEGADA } from './noIndex.ts';
+import { chegadaNoIndex, comAChegada, ROTEIRO_DA_CHEGADA } from './noIndex.ts';
 
 const analisar = (html: string) => new DOMParser().parseFromString(html, 'text/html');
 
@@ -94,5 +95,24 @@ describe('roteiro da chegada', () => {
     rodar(900);
     vi.advanceTimersByTime(0);
     expect(camada().hasAttribute('data-visivel')).toBe(true);
+  });
+});
+
+describe('o plugin da chegada', () => {
+  /** O que o plugin faz com a página do caminho dado, como o Vite a pede na compilação. */
+  const transformar = (html: string, path: string) => {
+    const { transformIndexHtml } = chegadaNoIndex() as unknown as {
+      transformIndexHtml: { handler: (html: string, contexto: { path: string }) => string };
+    };
+    return transformIndexHtml.handler(html, { path });
+  };
+
+  it('leva a chegada à página da casca', () => {
+    expect(transformar(INDEX, '/index.html')).toBe(comAChegada(INDEX, { desenvolvimento: false }));
+  });
+
+  it('pula a página do app do chat, que não tem a chegada', () => {
+    expect(transformar(CHAT, '/chat/index.html')).toBe(CHAT);
+    expect(CHAT).not.toContain('id="chegada"');
   });
 });

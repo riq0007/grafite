@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { BellOff, CornerUpLeft, LifeBuoy, Link, SmilePlus } from 'lucide-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { iconesDeAtivo } from '../../icones/ativos.ts';
 import { centro, criarPonteiro } from '../../teste/ponteiro.ts';
@@ -155,6 +156,91 @@ export const ItensComIcone: Historia = {
       await expect(icone).toHaveAttribute('aria-hidden', 'true');
       await expect(item).toHaveAccessibleName(item.textContent ?? '');
     }
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+/** O painel do menu: o popover em volta dele. */
+const painelDo = (menu: HTMLElement) => {
+  const painel = menu.closest<HTMLElement>('[data-trigger]');
+  if (!painel) throw new Error('O menu está fora do painel.');
+  return painel;
+};
+
+/**
+ * O menu em camada opaca, como o da mensagem do chat: o Reagir com a dica e o submenu também opaco,
+ * e "Transformar em chamado" no azul do chamado, com o atalho, que o leitor de tela ouve.
+ */
+export const OpacoComAtalho: Historia = {
+  render: () => (
+    <Menu rotulo="Ações da mensagem" gatilho={<Botao>Mais</Botao>} opaco nomePeloRotulo>
+      <ItemDeMenu icone={CornerUpLeft}>Responder</ItemDeMenu>
+      <Submenu rotulo="Reagir" icone={SmilePlus} dica="+1 · ok · visto">
+        <ItemDeMenu>+1</ItemDeMenu>
+        <ItemDeMenu>ok</ItemDeMenu>
+        <ItemDeMenu>visto</ItemDeMenu>
+      </Submenu>
+      <ItemDeMenu icone={Link}>Copiar link da mensagem</ItemDeMenu>
+      <Separador />
+      <ItemDeMenu icone={LifeBuoy} informativo atalho={['ctrl', 'shift', 'T']}>
+        Transformar em chamado
+      </ItemDeMenu>
+      <ItemDeMenu icone={BellOff}>Silenciar a conversa</ItemDeMenu>
+    </Menu>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Mais' }));
+    const menu = await corpo.findByRole('menu', { name: 'Ações da mensagem' });
+    await expect(getComputedStyle(painelDo(menu)).backdropFilter).toBe('none');
+    const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
+    await expect(transformar).toHaveAttribute('data-informativo', 'true');
+    await expect(transformar).toHaveAccessibleDescription(expect.stringContaining('Shift'));
+    const reagir = within(menu).getByRole('menuitem', { name: 'Reagir' });
+    await expect(reagir).toHaveTextContent('+1 · ok · visto');
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(reagir).toHaveFocus());
+    await userEvent.keyboard('{ArrowRight}');
+    const submenu = await corpo.findByRole('menu', { name: 'Reagir' });
+    await expect(getComputedStyle(painelDo(submenu)).backdropFilter).toBe('none');
+    await userEvent.keyboard('{Escape}{Escape}');
+  },
+};
+
+/**
+ * O item informativo sem ação, como o da mensagem que já virou chamado: o motivo, na descrição,
+ * segue legível, no azul do nome; a opacidade do desabilitado fica no ícone, no nome e no atalho.
+ */
+/** O motivo do item sem ação, com o número do chamado, que o verificador de cores leria como hex. */
+const MOTIVO = `Já virou o #${1045}`;
+
+export const InformativoSemAcaoDizOMotivo: Historia = {
+  render: () => (
+    <Menu rotulo="Ações da mensagem" gatilho={<Botao>Mais</Botao>} opaco nomePeloRotulo>
+      <ItemDeMenu icone={CornerUpLeft}>Responder</ItemDeMenu>
+      <ItemDeMenu
+        icone={LifeBuoy}
+        informativo
+        atalho={['ctrl', 'shift', 'T']}
+        isDisabled
+        descricao={MOTIVO}
+      >
+        Transformar em chamado
+      </ItemDeMenu>
+    </Menu>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Mais' }));
+    const menu = await corpo.findByRole('menu', { name: 'Ações da mensagem' });
+    const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
+    await expect(transformar).toHaveAttribute('aria-disabled', 'true');
+    await expect(transformar).toHaveAccessibleDescription(expect.stringContaining(MOTIVO));
+    const motivo = within(transformar).getByText(MOTIVO);
+    await expect(getComputedStyle(transformar).opacity).toBe('1');
+    await expect(getComputedStyle(motivo).color).toBe(getComputedStyle(transformar).color);
+    const icone = transformar.querySelector('svg')?.parentElement;
+    await expect(icone && Number(getComputedStyle(icone).opacity)).toBeLessThan(1);
     await userEvent.keyboard('{Escape}');
   },
 };

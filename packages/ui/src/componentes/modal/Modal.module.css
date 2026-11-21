@@ -34,6 +34,11 @@
   animation: crescer var(--dur-deslocamento) var(--curva-padrao);
 }
 
+/* O diálogo largo, de um formulário curto, como o transformar em chamado do chat. */
+.janelaLarga {
+  width: min(100%, calc(var(--esp-12) * 12));
+}
+
 .dialogo {
   display: grid;
   gap: var(--esp-4);
@@ -60,6 +65,89 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--esp-2);
+}
+
+/* O diálogo em tela cheia no celular (m09): "Cancelar" e o título no alto, numa faixa com a linha
+   embaixo, e o conteúdo, que rola, com o recuo que o pé preso do conteúdo usa para ocupar a
+   largura. Sobe da borda de baixo, sem deslocamento com movimento reduzido. */
+.veuDaTelaCheia {
+  place-items: stretch;
+  padding: 0;
+}
+
+.telaCheia {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--cor-superficie);
+  outline: none;
+}
+
+.telaCheia[data-entering] {
+  animation: subirDaBorda var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.dialogoDaTelaCheia {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  outline: none;
+}
+
+.topoDaTelaCheia {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: calc(var(--esp-12) + var(--esp-2));
+  padding: var(--esp-1) var(--esp-2);
+  border-bottom: 1px solid var(--cor-linha);
+}
+
+/* "Cancelar" com o alvo de toque de 44 px, no texto do corpo maior, acima da altura do botão. */
+.topoDaTelaCheia .cancelarNoTopo {
+  min-height: var(--alvo-toque);
+  font-size: var(--texto-subtitulo);
+}
+
+/* O título no meio do espaço ao lado do "Cancelar", como no m09. */
+.tituloDaTelaCheia {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  text-align: center;
+}
+
+.conteudoDaTelaCheia {
+  --recuo-da-tela-cheia: var(--esp-4);
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--esp-3) var(--recuo-da-tela-cheia) 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+/* As ações do diálogo em tela cheia, num pé preso embaixo. */
+.acoesDaTelaCheia {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4) calc(var(--esp-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--cor-linha);
 }
 
 /* Gaveta: presa à borda direita, na altura toda; entra deslizando (some com movimento reduzido). */
@@ -153,6 +241,12 @@
 @keyframes crescer {
   from {
     transform: scale(0.97);
+  }
+}
+
+@keyframes subirDaBorda {
+  from {
+    transform: translateY(100%);
   }
 }
 

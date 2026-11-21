@@ -39,6 +39,7 @@ interface Pedido {
   rotulo: string;
   texto: string;
   esperaAResposta: boolean;
+  opcoes?: string[];
   tipos: string[];
 }
 
@@ -47,6 +48,7 @@ interface RespostaLida {
   rotulo: string;
   texto: string;
   esperaAResposta: boolean;
+  opcoes: string[];
   tipos: { id: string; nome: string }[];
 }
 
@@ -248,6 +250,7 @@ describe('o cadastro', () => {
       rotulo: 'Pedir o print do erro',
       texto: 'Oi, {nome}! Pode mandar um print do erro?',
       esperaAResposta: true,
+      opcoes: [],
       tipos: [],
     });
     expect(await acoesDa(r)).toEqual([
@@ -261,6 +264,7 @@ describe('o cadastro', () => {
           rotulo: 'Pedir o print do erro',
           texto: 'Oi, {nome}! Pode mandar um print do erro?',
           esperaAResposta: true,
+          opcoes: [],
           tipos: [],
         },
       },
@@ -317,12 +321,14 @@ describe('o cadastro', () => {
           rotulo: 'Pedir o print do erro',
           texto: 'Oi, {nome}! Pode mandar um print do erro?',
           esperaAResposta: true,
+          opcoes: [],
           tipos: [],
         },
         depois: {
           rotulo: 'Pedir o print do erro',
           texto: 'Oi, {nome}! Manda um print da tela inteira?',
           esperaAResposta: true,
+          opcoes: [],
           tipos: ['Software'],
         },
       },
@@ -358,6 +364,7 @@ describe('o cadastro', () => {
           rotulo: 'Pedir o caminho da pasta',
           texto: '{nome}, qual o caminho da pasta?',
           esperaAResposta: true,
+          opcoes: [],
           tipos: ['Acesso e senha'],
         },
         depois: null,

@@ -6,6 +6,7 @@
 // conta as respostas depois da trava. A ficha do chamado (tarefa 4.11) as lê com o `{nome}` trocado.
 import { nomeCurto } from '../pessoas/pessoa.ts';
 import { normalizarTexto } from '../texto.ts';
+import { conferirOpcoes } from './pergunta.ts';
 
 /** As respostas prontas de uma organização. */
 export const MAXIMO_DE_RESPOSTAS_PRONTAS = 100;
@@ -34,6 +35,8 @@ export interface PedidoDaRespostaPronta {
   texto: string;
   /** Ligado, mandar a resposta põe o chamado em Aguardando o colaborador. */
   esperaAResposta: boolean;
+  /** As opções de resposta da pergunta, de 2 a 3, ou nenhuma (`conferirOpcoes`). */
+  opcoes?: readonly string[] | undefined;
   /** Os tipos de chamado em que a resposta aparece; nenhum, ela aparece em todos. */
   tipos: readonly string[];
 }
@@ -51,11 +54,13 @@ export interface RespostaProntaConferida {
   /** Sem os espaços e as quebras das pontas; as de dentro ficam. */
   texto: string;
   esperaAResposta: boolean;
+  /** Sem os espaços das pontas; a resposta sem pergunta fica com a lista vazia. */
+  opcoes: string[];
   /** Sem repetir, em minúsculas e em ordem, para a mesma escolha gravar sempre igual. */
   tipos: string[];
 }
 
-export type CampoDaRespostaPronta = 'rotulo' | 'texto' | 'tipos';
+export type CampoDaRespostaPronta = 'rotulo' | 'texto' | 'opcoes' | 'tipos';
 
 export type ConferenciaDaRespostaPronta =
   | { ok: true; resposta: RespostaProntaConferida }
@@ -80,10 +85,13 @@ export function conferirRespostaPronta(
   if (texto === '') erros.texto = M.texto;
   else if (caracteres(texto) > LIMITE_DO_TEXTO) erros.texto = M.textoLongo;
 
+  const opcoes = conferirOpcoes(pedido.opcoes ?? []);
+  if (!opcoes.ok) erros.opcoes = opcoes.erro;
+
   const tipos = [...new Set(pedido.tipos.map((tipo) => tipo.toLowerCase()))].sort();
   if (tipos.some((tipo) => !contexto.tiposDaLista.has(tipo))) erros.tipos = M.tipos;
 
-  if (Object.keys(erros).length > 0) return { ok: false, erros };
+  if (Object.keys(erros).length > 0 || !opcoes.ok) return { ok: false, erros };
   return {
     ok: true,
     resposta: {
@@ -91,6 +99,7 @@ export function conferirRespostaPronta(
       rotuloNormalizado: normalizarTexto(rotulo),
       texto,
       esperaAResposta: pedido.esperaAResposta,
+      opcoes: opcoes.opcoes,
       tipos,
     },
   };

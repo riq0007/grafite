@@ -27,6 +27,7 @@ function resposta(mudar: Partial<RespostaPronta> = {}): RespostaPronta {
     rotulo: 'Pedir o print do erro',
     texto: 'Oi, {nome}! Pode mandar um print da tela com o erro?',
     esperaAResposta: true,
+    opcoes: [],
     tipos: [ACESSO, IMPRESSORA],
     ...mudar,
   };
@@ -73,21 +74,23 @@ describe('limiteDasRespostas', () => {
 });
 
 describe('edicaoDaResposta', () => {
-  it('a nova começa vazia, sem esperar a resposta e em todos os tipos', () => {
+  it('a nova começa vazia, sem esperar a resposta, sem pergunta e em todos os tipos', () => {
     expect(edicaoDaResposta(null)).toEqual({
       rotulo: '',
       texto: '',
       esperaAResposta: false,
+      opcoes: [],
       tipos: [],
     });
     expect(edicaoDaResposta(null)).toEqual(RESPOSTA_NOVA);
   });
 
-  it('a gravada, com os tipos pelo id, como a gravação os pede', () => {
-    expect(edicaoDaResposta(resposta())).toEqual({
+  it('a gravada, com as opções e os tipos pelo id, como a gravação os pede', () => {
+    expect(edicaoDaResposta(resposta({ opcoes: ['Sim', 'Não'] }))).toEqual({
       rotulo: 'Pedir o print do erro',
       texto: 'Oi, {nome}! Pode mandar um print da tela com o erro?',
       esperaAResposta: true,
+      opcoes: ['Sim', 'Não'],
       tipos: [ACESSO.id, IMPRESSORA.id],
     });
   });
@@ -99,12 +102,14 @@ describe('mudouAResposta', () => {
     expect(mudouAResposta(edicaoDaResposta(resposta()), resposta())).toBe(false);
   });
 
-  it('o rótulo, o texto, a espera ou os tipos mudados mudam a resposta', () => {
-    const gravada = resposta();
+  it('o rótulo, o texto, a espera, as opções ou os tipos mudados mudam a resposta', () => {
+    const gravada = resposta({ opcoes: ['Sim', 'Não'] });
     const edicao = edicaoDaResposta(gravada);
     expect(mudouAResposta({ ...edicao, rotulo: 'Pedir o print' }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, texto: 'Pode mandar o print?' }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, esperaAResposta: false }, gravada)).toBe(true);
+    expect(mudouAResposta({ ...edicao, opcoes: ['Não', 'Sim'] }, gravada)).toBe(true);
+    expect(mudouAResposta({ ...edicao, opcoes: ['Sim', 'Não', 'Talvez'] }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, tipos: [ACESSO.id] }, gravada)).toBe(true);
     expect(mudouAResposta({ ...RESPOSTA_NOVA, rotulo: 'P' }, null)).toBe(true);
   });

@@ -28169,6 +28169,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/cartao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A prévia do cartão do ativo pelo patrimônio, o mesmo retrato que a mensagem grava */
+        get: {
+            parameters: {
+                query: {
+                    patrimonio: string;
+                };
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartaoDoAtivo"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/{numero}/assumir": {
         parameters: {
             query?: never;
@@ -28562,7 +28647,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Enviar uma mensagem à pessoa do chamado, com os anexos */
+        /** Enviar uma mensagem à pessoa do chamado, com os anexos, as opções e o cartão */
         post: {
             parameters: {
                 query?: never;
@@ -28754,7 +28839,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Gravar uma nota interna no chamado, com os anexos */
+        /** Gravar uma nota interna no chamado, com os anexos e o cartão */
         post: {
             parameters: {
                 query?: never;
@@ -28766,7 +28851,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["PedidoDaConversaDoChamadoInput"];
+                    "application/json": components["schemas"]["PedidoDaNotaDoChamadoInput"];
                 };
             };
             responses: {
@@ -29612,6 +29697,3305 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/resumo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O total do chat e os chamados com resposta nova, para a trilha e o dock */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResumoDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As conversas da conta: as equipes e os canais e as diretas, com os contadores */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/pessoas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As pessoas que usam o chat, para escolher a conversa direta, até 20 */
+        get: {
+            parameters: {
+                query?: {
+                    busca?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PessoasDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/contas/{id}/foto/{arquivo}/{tamanho}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um tamanho da foto da pessoa de uma conta que usa o chat */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    arquivo: string;
+                    tamanho: "64" | "128" | "256" | "512" | "completa";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A imagem: a completa no tipo do registro, e as miniaturas em WebP */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
+                        "image/svg+xml": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conversa aberta: o nome, quem escreve, o silenciar e a última lida */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaAberta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/mensagens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As mensagens da conversa, de 50 em 50: as mais novas, antes, depois ou ao redor */
+        get: {
+            parameters: {
+                query?: {
+                    antes?: string;
+                    depois?: string;
+                    em?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaginaDeMensagens"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Manda a mensagem na conversa, com os anexos e a resposta a outra dela */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        texto: string;
+                        anexos?: string[];
+                        respondeA?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MensagemDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/diretas/{conta}/mensagens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda a mensagem à pessoa: a primeira cria a conversa direta */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    conta: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        texto: string;
+                        anexos?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MensagemNaDireta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os tipos que a abertura pelo chat oferece, na ordem dos tipos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TiposParaAbrirPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/sugestoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os ativos sugeridos para a pessoa no tipo, só com o id, o nome e o patrimônio */
+        get: {
+            parameters: {
+                query: {
+                    tipo: string;
+                    pessoa: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AtivosSugeridosPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/mensagens/{id}/chamado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abre um chamado a partir da mensagem, que vira um chamado só */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAberturaPeloChatInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAbertoPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os chamados de que a conta participa: os abertos e uma página dos resolvidos */
+        get: {
+            parameters: {
+                query?: {
+                    resolvidosAntes?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadosDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conversa do chamado nas palavras do colaborador, a quem participa dele */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/resumo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O resumo do chip do chamado citado, a quem vê o resumo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResumoDoChamadoNoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/anexos/{arquivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um anexo do chamado, para baixar, a quem participa dele */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O anexo, para baixar, no tipo conferido e com o nome original */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/mensagens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A mensagem de quem participa no chamado, que retoma o aguardando e reabre o resolvido */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaMensagemDeQuemParticipaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/escolha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A escolha de uma opção da pergunta da TI, que vale para sempre */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaEscolhaDeQuemParticipaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/reabertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O "Reabrir" do chamado resolvido, sem escrever */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/avaliacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A avaliação do atendimento, uma por resolução */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAvaliacaoDeQuemParticipaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/chamados/{numero}/vista": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O "Marcar como vista", que tira a resposta nova sem responder */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConversaDoChamadoDeQuemParticipa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/mensagens/{id}/reacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dá a reação à mensagem, ou a tira, se a conta já deu a mesma */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        texto: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MensagemDoChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/leitura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca a conversa como lida até a mensagem, com as notificações dela */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        ate: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LeituraDaConversa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/silenciada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Silencia a conversa para a conta, ou volta a ouvi-la */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SilencioDaConversaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SilencioDaConversa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/anexos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enviar um anexo do chat, sem dono até a mensagem que o usa */
+        post: {
+            parameters: {
+                query?: {
+                    nome?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnexoEnviado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/anexos/{arquivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O anexo do chat ainda sem dono, para baixar, só a quem o enviou */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O anexo, para baixar, no tipo conferido e com o nome original */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/anexos/{arquivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um anexo da conversa, para baixar, a quem participa dela agora */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O anexo, para baixar, no tipo conferido e com o nome original */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/equipes-e-canais": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As equipes e os canais da organização, com os grupos e a situação */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListaDasEquipesECanais"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Criar a equipe ou o canal */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaEquipeOuCanalInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipeOuCanal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/grupos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os grupos ativos, para a escolha da gaveta, sem o acessos.ver */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GruposParaEscolher"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/equipes-e-canais/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A equipe ou o canal, para a gaveta, com os grupos gravados e a situação deles */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipeOuCanal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Salvar a equipe ou o canal, com o tipo gravado */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaEquipeOuCanalInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipeOuCanal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/equipes-e-canais/{id}/arquivamento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arquivar a equipe ou o canal: sai da lista e não recebe mensagens */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipeOuCanal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/equipes-e-canais/{id}/reativacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reativar a equipe ou o canal, com a conversa, se o nome e o teto deixam */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipeOuCanal"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/equipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** As equipes e os canais ativos de que a conta participa, com quantas pessoas */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipesDaConta"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/pessoas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem participa da conversa agora, pelo nome */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PessoasDaConversa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/arquivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os anexos da conversa, o mais novo primeiro, de 50 em 50 */
+        get: {
+            parameters: {
+                query?: {
+                    antesDe?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArquivosDaConversa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/chamados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Os chamados abertos das mensagens da conversa, o mais novo primeiro, de 50 em 50 */
+        get: {
+            parameters: {
+                query?: {
+                    antes?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadosDaConversa"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -35540,7 +38924,7 @@ export interface components {
         AcessoDaSessaoInput: {
             permissoes: {
                 /** @enum {string} */
-                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
+                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar";
                 organizacao: boolean;
                 locais: string[];
             }[];
@@ -36519,7 +39903,7 @@ export interface components {
         };
         AtribuicaoCriadaInput: {
             atribuicao: components["schemas"]["AtribuicaoInput"];
-            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
         };
         PedidoDeAtribuicaoInput: {
             /** Format: uuid */
@@ -36583,7 +39967,7 @@ export interface components {
         };
         PermissaoEfetivaInput: {
             /** @enum {string} */
-            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
+            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar";
             organizacao: boolean;
             locais: {
                 /** Format: uuid */
@@ -36775,6 +40159,35 @@ export interface components {
                 })[];
             }[];
         };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
+        CartaoDoAtivoInput: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+        };
         TipoDeChamadoInput: {
             /** Format: uuid */
             id: string;
@@ -36830,6 +40243,170 @@ export interface components {
             icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamadoInput"];
+        };
+        AnexoEnviadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        AnexoDoChamadoNoChatInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ChamadoDeQuemParticipaInput: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            resolvidoEm: string | null;
+            atende: string | null;
+            respostaNova: number;
+            ultimaMensagem: {
+                autor: string;
+                minha: boolean;
+                comeco: string;
+                em: string;
+            } | null;
+        };
+        ChamadosDeQuemParticipaInput: {
+            abertos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
+            resolvidos: components["schemas"]["ChamadoDeQuemParticipaInput"][];
+            seguintes: boolean;
+        };
+        ResumoDosTemposNoChatInput: {
+            abertoEm: string;
+            primeiraResposta: {
+                em: string;
+                tempo: string;
+            } | null;
+            resolvido: {
+                em: string;
+                tempo: string;
+            };
+            atendeu: string;
+        };
+        ItemDaConversaDeQuemParticipaInput: {
+            /** @constant */
+            especie: "mensagem";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            autor: {
+                nome: string;
+                daTi: boolean;
+                minha: boolean;
+            };
+            texto: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+            opcoes: string[] | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
+            cartao: components["schemas"]["CartaoDoAtivoInput"] | null;
+        } | {
+            /** @constant */
+            especie: "evento";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            evento: string;
+            frase: string;
+            resumo: components["schemas"]["ResumoDosTemposNoChatInput"] | null;
+        };
+        ConversaDoChamadoDeQuemParticipaInput: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            atende: {
+                nome: string;
+                desde: string;
+            } | null;
+            etapas: {
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                agora: boolean;
+                /** @enum {string} */
+                estado: "chegou" | "pulada" | "ainda-nao";
+                em: string | null;
+            }[];
+            previsao: string | null;
+            reabrirAte: string | null;
+            ativo: {
+                nome: string;
+                patrimonio: string | null;
+            } | null;
+            resumo: string;
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            origem: {
+                autor: string;
+                texto: string;
+                em: string;
+                anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+            } | null;
+            conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
+            respostaNova: {
+                quantas: number;
+                desde: string | null;
+            };
+            avaliacao: {
+                /** @enum {string} */
+                nivel: "ruim" | "regular" | "bom" | "otimo";
+                minha: boolean;
+            } | null;
+        };
+        ResumoDoChamadoNoChatInput: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abrir: ("chat" | "chamados") | null;
+            detalhes: {
+                ultimas: {
+                    /** @enum {string} */
+                    especie: "mensagem" | "nota";
+                    texto: string;
+                    autor: string;
+                    minha: boolean;
+                    em: string;
+                }[];
+                ativo: {
+                    nome: string;
+                    patrimonio: string | null;
+                } | null;
+                abertoEm: string;
+            } | null;
         };
         LocalDaOrdemInput: {
             /** Format: uuid */
@@ -37394,6 +40971,29 @@ export interface components {
                 } | null;
             }[];
         };
+        CartaoDoAtivoNaFichaInput: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+            abrir: boolean;
+        };
         CompativelNoResumoDoAtivoInput: {
             /** Format: uuid */
             id: string;
@@ -37432,9 +41032,35 @@ export interface components {
             situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
             versao: number;
             /** @enum {string} */
-            origem: "ti";
+            origem: "ti" | "chat";
+            origemNoChat: {
+                conversa: {
+                    /** @enum {string} */
+                    tipo: "direta" | "equipe" | "canal";
+                    nome: string;
+                };
+                autor: string;
+                texto: string;
+                /** Format: date-time */
+                em: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                abrir: {
+                    /** Format: uuid */
+                    conversa: string;
+                    /** Format: uuid */
+                    mensagem: string;
+                } | null;
+            } | null;
             /** Format: date-time */
             abertoEm: string;
+            fechado: boolean;
+            reabrirAte: string | null;
             tipo: {
                 /** Format: uuid */
                 id: string;
@@ -37452,6 +41078,7 @@ export interface components {
                     email: string | null;
                     telefone: string | null;
                 } | null;
+                usaOChat: boolean;
             };
             responsavel: {
                 /** Format: uuid */
@@ -37574,6 +41201,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFichaInput"] | null;
                 /** @constant */
                 especie: "mensagem";
             } | {
@@ -37596,6 +41231,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFichaInput"] | null;
                 /** @constant */
                 especie: "nota";
             } | {
@@ -37611,9 +41254,9 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     nome: string;
-                };
+                } | null;
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou" | "fechou";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -37648,6 +41291,12 @@ export interface components {
                     como: "juntou" | "pediu" | "gerou";
                 } | null;
                 motivo: string | null;
+                avaliacao: {
+                    /** @enum {string} */
+                    nivel: "ruim" | "regular" | "bom" | "otimo";
+                    comentario: string | null;
+                } | null;
+                resumo: components["schemas"]["ResumoDosTemposNoChatInput"] | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -37665,6 +41314,7 @@ export interface components {
                 rotulo: string;
                 texto: string;
                 esperaAResposta: boolean;
+                opcoes: string[];
             }[];
         };
         PedidoDaAcaoDoChamadoInput: {
@@ -37683,10 +41333,18 @@ export interface components {
             feito: string;
             versao?: number;
         };
+        PedidoDaNotaDoChamadoInput: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+            cartao?: string | null;
+        };
         PedidoDaConversaDoChamadoInput: {
             /** @default  */
             texto: string;
             anexos?: string[];
+            cartao?: string | null;
+            opcoes?: string[];
         };
         PedidoDaTrocaDoAtivoDoChamadoInput: {
             ativo: string | null;
@@ -37769,19 +41427,13 @@ export interface components {
                 nome: string;
             } | null;
         };
-        AnexoEnviadoInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         RespostaProntaInput: {
             /** Format: uuid */
             id: string;
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            opcoes: string[];
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -37795,6 +41447,8 @@ export interface components {
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            /** @default [] */
+            opcoes: string[];
             tipos: string[];
         };
         ContasQueAtendemOsChamadosInput: {
@@ -37848,6 +41502,238 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamadoInput"];
             pedeOAtivo: boolean;
             abertos: number;
+        };
+        ConversaNaListaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+        };
+        ListaDoChatInput: {
+            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
+            recentes: components["schemas"]["ConversaNaListaInput"][];
+        };
+        ResumoDoChatInput: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChatInput: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                conversa: string | null;
+            }[];
+        };
+        AnexoDaMensagemInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagemInput: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamadoInput: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChatInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChatInput"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagemInput"][];
+            anexos: components["schemas"]["AnexoDaMensagemInput"][];
+            citacoes: components["schemas"]["CitacaoDeChamadoInput"][];
+            chamado: {
+                numero: number;
+                abrir: boolean;
+                mensagem: string | null;
+            } | null;
+        };
+        PaginaDeMensagensInput: {
+            itens: components["schemas"]["MensagemDoChatInput"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        TipoParaAbrirPeloChatInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            pedeOAtivo: boolean;
+        };
+        TiposParaAbrirPeloChatInput: {
+            itens: components["schemas"]["TipoParaAbrirPeloChatInput"][];
+        };
+        AtivosSugeridosPeloChatInput: {
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                patrimonio: string | null;
+            }[];
+        };
+        PedidoDaAberturaPeloChatInput: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+        };
+        ChamadoAbertoPeloChatInput: {
+            numero: number;
+        };
+        PedidoDaMensagemDeQuemParticipaInput: {
+            /** @default  */
+            texto: string;
+            /** @default [] */
+            anexos: string[];
+        };
+        PedidoDaEscolhaDeQuemParticipaInput: {
+            /** Format: uuid */
+            mensagem: string;
+            /** @default  */
+            opcao: string;
+        };
+        PedidoDaAvaliacaoDeQuemParticipaInput: {
+            nivel?: string | null;
+            comentario?: string | null;
+        };
+        EquipeDaContaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            nome: string;
+            pessoas: number;
+        };
+        EquipesDaContaInput: {
+            itens: components["schemas"]["EquipeDaContaInput"][];
+        };
+        PessoasDaConversaInput: {
+            pessoas: components["schemas"]["ContaDoChatInput"][];
+        };
+        ArquivoDaConversaInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+            /** Format: uuid */
+            mensagem: string;
+            autor: components["schemas"]["ContaDoChatInput"];
+            enviadoEm: string;
+        };
+        ArquivosDaConversaInput: {
+            itens: components["schemas"]["ArquivoDaConversaInput"][];
+            seguintes: boolean;
+        };
+        ChamadoDaConversaInput: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abriu: string | null;
+            abertoEm: string;
+        };
+        ChamadosDaConversaInput: {
+            itens: components["schemas"]["ChamadoDaConversaInput"][];
+            seguintes: boolean;
+        };
+        GrupoDaEquipeOuCanalInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            ativo: boolean;
+        };
+        EquipeOuCanalInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            nome: string;
+            grupo: components["schemas"]["GrupoDaEquipeOuCanalInput"] | null;
+            escreve: components["schemas"]["GrupoDaEquipeOuCanalInput"] | null;
+            avisar: boolean;
+            arquivada: boolean;
+        };
+        ListaDasEquipesECanaisInput: {
+            itens: components["schemas"]["EquipeOuCanalInput"][];
+        };
+        GruposParaEscolherInput: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        PedidoDaEquipeOuCanalInput: {
+            nome: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            grupoId: string | null;
+            /** @enum {string} */
+            quemEscreve: "todos" | "grupo";
+            escreveGrupoId: string | null;
+            avisar: boolean;
+        };
+        LeituraDaConversaInput: {
+            /** Format: uuid */
+            lidaAte: string;
+        };
+        SilencioDaConversaInput: {
+            silenciada: boolean;
+        };
+        ConversaAbertaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+            pessoas: number | null;
+            escreveGrupo: string | null;
+            arquivada: boolean;
+            silenciada: boolean;
+            lidaAte: string | null;
+            escreve: boolean;
+            recusa: string | null;
+        };
+        MensagemNaDiretaInput: {
+            /** Format: uuid */
+            conversa: string;
+            mensagem: components["schemas"]["MensagemDoChatInput"];
         };
         PessoaDoSegredoInput: {
             /** Format: uuid */
@@ -39423,7 +43309,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -39466,7 +43352,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -40910,7 +44796,7 @@ export interface components {
         AcessoDaSessao: {
             permissoes: {
                 /** @enum {string} */
-                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
+                chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar";
                 organizacao: boolean;
                 locais: string[];
             }[];
@@ -41889,7 +45775,7 @@ export interface components {
         };
         AtribuicaoCriada: {
             atribuicao: components["schemas"]["Atribuicao"];
-            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            ignoradas: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
         };
         PedidoDeAtribuicao: {
             /** Format: uuid */
@@ -41953,7 +45839,7 @@ export interface components {
         };
         PermissaoEfetiva: {
             /** @enum {string} */
-            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar";
+            chave: "pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar";
             organizacao: boolean;
             locais: {
                 /** Format: uuid */
@@ -42146,6 +46032,35 @@ export interface components {
                 })[];
             }[];
         };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
+        CartaoDoAtivo: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+        };
         TipoDeChamado: {
             /** Format: uuid */
             id: string;
@@ -42201,6 +46116,170 @@ export interface components {
             icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamado"];
+        };
+        AnexoEnviado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        AnexoDoChamadoNoChat: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ChamadoDeQuemParticipa: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            resolvidoEm: string | null;
+            atende: string | null;
+            respostaNova: number;
+            ultimaMensagem: {
+                autor: string;
+                minha: boolean;
+                comeco: string;
+                em: string;
+            } | null;
+        };
+        ChamadosDeQuemParticipa: {
+            abertos: components["schemas"]["ChamadoDeQuemParticipa"][];
+            resolvidos: components["schemas"]["ChamadoDeQuemParticipa"][];
+            seguintes: boolean;
+        };
+        ResumoDosTemposNoChat: {
+            abertoEm: string;
+            primeiraResposta: {
+                em: string;
+                tempo: string;
+            } | null;
+            resolvido: {
+                em: string;
+                tempo: string;
+            };
+            atendeu: string;
+        };
+        ItemDaConversaDeQuemParticipa: {
+            /** @constant */
+            especie: "mensagem";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            autor: {
+                nome: string;
+                daTi: boolean;
+                minha: boolean;
+            };
+            texto: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+            opcoes: string[] | null;
+            escolhida: {
+                opcao: string;
+                por: string;
+                minha: boolean;
+                em: string;
+            } | null;
+            cartao: components["schemas"]["CartaoDoAtivo"] | null;
+        } | {
+            /** @constant */
+            especie: "evento";
+            /** Format: uuid */
+            id: string;
+            em: string;
+            evento: string;
+            frase: string;
+            resumo: components["schemas"]["ResumoDosTemposNoChat"] | null;
+        };
+        ConversaDoChamadoDeQuemParticipa: {
+            numero: number;
+            titulo: string;
+            tipo: {
+                nome: string;
+                /** @enum {string} */
+                icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            };
+            /** @enum {string} */
+            situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+            fechado: boolean;
+            situacaoEmTexto: string;
+            abertoEm: string;
+            atende: {
+                nome: string;
+                desde: string;
+            } | null;
+            etapas: {
+                /** @enum {string} */
+                situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
+                agora: boolean;
+                /** @enum {string} */
+                estado: "chegou" | "pulada" | "ainda-nao";
+                em: string | null;
+            }[];
+            previsao: string | null;
+            reabrirAte: string | null;
+            ativo: {
+                nome: string;
+                patrimonio: string | null;
+            } | null;
+            resumo: string;
+            anexosDosCampos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                tipo: string;
+                bytes: number;
+                campo: string;
+            }[];
+            origem: {
+                autor: string;
+                texto: string;
+                em: string;
+                anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+            } | null;
+            conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
+            respostaNova: {
+                quantas: number;
+                desde: string | null;
+            };
+            avaliacao: {
+                /** @enum {string} */
+                nivel: "ruim" | "regular" | "bom" | "otimo";
+                minha: boolean;
+            } | null;
+        };
+        ResumoDoChamadoNoChat: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abrir: ("chat" | "chamados") | null;
+            detalhes: {
+                ultimas: {
+                    /** @enum {string} */
+                    especie: "mensagem" | "nota";
+                    texto: string;
+                    autor: string;
+                    minha: boolean;
+                    em: string;
+                }[];
+                ativo: {
+                    nome: string;
+                    patrimonio: string | null;
+                } | null;
+                abertoEm: string;
+            } | null;
         };
         LocalDaOrdem: {
             /** Format: uuid */
@@ -42765,6 +46844,29 @@ export interface components {
                 } | null;
             }[];
         };
+        CartaoDoAtivoNaFicha: {
+            /** Format: uuid */
+            ativo: string;
+            icone: string;
+            tipo: string;
+            nome: string;
+            modelo: string | null;
+            patrimonio: string | null;
+            ip: string | null;
+            disponibilidade: {
+                /** @enum {string} */
+                situacao: "online" | "offline" | "sem-dado" | "nao-verificado";
+                texto: string;
+            } | null;
+            suprimento: {
+                descricao: string;
+                percentual: number;
+                critico: boolean;
+            } | null;
+            /** Format: date-time */
+            em: string;
+            abrir: boolean;
+        };
         CompativelNoResumoDoAtivo: {
             /** Format: uuid */
             id: string;
@@ -42803,9 +46905,35 @@ export interface components {
             situacao: "triagem" | "em-atendimento" | "aguardando" | "resolvido";
             versao: number;
             /** @enum {string} */
-            origem: "ti";
+            origem: "ti" | "chat";
+            origemNoChat: {
+                conversa: {
+                    /** @enum {string} */
+                    tipo: "direta" | "equipe" | "canal";
+                    nome: string;
+                };
+                autor: string;
+                texto: string;
+                /** Format: date-time */
+                em: string;
+                anexos: {
+                    /** Format: uuid */
+                    id: string;
+                    nome: string;
+                    tipo: string;
+                    bytes: number;
+                }[];
+                abrir: {
+                    /** Format: uuid */
+                    conversa: string;
+                    /** Format: uuid */
+                    mensagem: string;
+                } | null;
+            } | null;
             /** Format: date-time */
             abertoEm: string;
+            fechado: boolean;
+            reabrirAte: string | null;
             tipo: {
                 /** Format: uuid */
                 id: string;
@@ -42823,6 +46951,7 @@ export interface components {
                     email: string | null;
                     telefone: string | null;
                 } | null;
+                usaOChat: boolean;
             };
             responsavel: {
                 /** Format: uuid */
@@ -42945,6 +47074,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFicha"] | null;
                 /** @constant */
                 especie: "mensagem";
             } | {
@@ -42967,6 +47104,14 @@ export interface components {
                     tipo: string;
                     bytes: number;
                 }[];
+                opcoes: string[] | null;
+                escolhida: {
+                    opcao: string;
+                    por: string;
+                    /** Format: date-time */
+                    em: string;
+                } | null;
+                cartao: components["schemas"]["CartaoDoAtivoNaFicha"] | null;
                 /** @constant */
                 especie: "nota";
             } | {
@@ -42982,9 +47127,9 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     nome: string;
-                };
+                } | null;
                 /** @enum {string} */
-                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada";
+                evento: "abertura" | "assumiu" | "passou" | "devolveu" | "desfez" | "aguardando" | "retomou" | "resolveu" | "reabriu" | "ativo" | "os" | "solicitacao" | "solicitacao-nao-gerada" | "avaliou" | "fechou";
                 de: {
                     /** Format: uuid */
                     conta: string;
@@ -43019,6 +47164,12 @@ export interface components {
                     como: "juntou" | "pediu" | "gerou";
                 } | null;
                 motivo: string | null;
+                avaliacao: {
+                    /** @enum {string} */
+                    nivel: "ruim" | "regular" | "bom" | "otimo";
+                    comentario: string | null;
+                } | null;
+                resumo: components["schemas"]["ResumoDosTemposNoChat"] | null;
             } | {
                 /** @constant */
                 especie: "alerta";
@@ -43036,6 +47187,7 @@ export interface components {
                 rotulo: string;
                 texto: string;
                 esperaAResposta: boolean;
+                opcoes: string[];
             }[];
         };
         PedidoDaAcaoDoChamado: {
@@ -43054,10 +47206,18 @@ export interface components {
             feito: string;
             versao?: number;
         };
+        PedidoDaNotaDoChamado: {
+            /** @default  */
+            texto: string;
+            anexos?: string[];
+            cartao?: string | null;
+        };
         PedidoDaConversaDoChamado: {
             /** @default  */
             texto: string;
             anexos?: string[];
+            cartao?: string | null;
+            opcoes?: string[];
         };
         PedidoDaTrocaDoAtivoDoChamado: {
             ativo: string | null;
@@ -43140,19 +47300,13 @@ export interface components {
                 nome: string;
             } | null;
         };
-        AnexoEnviado: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         RespostaPronta: {
             /** Format: uuid */
             id: string;
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            opcoes: string[];
             tipos: {
                 /** Format: uuid */
                 id: string;
@@ -43166,6 +47320,8 @@ export interface components {
             rotulo: string;
             texto: string;
             esperaAResposta: boolean;
+            /** @default [] */
+            opcoes: string[];
             tipos: string[];
         };
         ContasQueAtendemOsChamados: {
@@ -43219,6 +47375,238 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamado"];
             pedeOAtivo: boolean;
             abertos: number;
+        };
+        ConversaNaLista: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChat"] | null;
+        };
+        ListaDoChat: {
+            equipesECanais: components["schemas"]["ConversaNaLista"][];
+            recentes: components["schemas"]["ConversaNaLista"][];
+        };
+        ResumoDoChat: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChat: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoa"] | null;
+                conversa: string | null;
+            }[];
+        };
+        AnexoDaMensagem: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        ReacaoDaMensagem: {
+            texto: string;
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+            }[];
+            minha: boolean;
+        };
+        CitacaoDeChamado: {
+            numero: number;
+            inicio: number;
+            fim: number;
+            situacao: string;
+            atende: string | null;
+        };
+        MensagemDoChat: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            especie: "mensagem" | "evento";
+            autor: components["schemas"]["ContaDoChat"];
+            texto: string | null;
+            evento: string | null;
+            criadaEm: string;
+            respondida: {
+                /** Format: uuid */
+                id: string;
+                autor: string;
+                comeco: string;
+            } | null;
+            reacoes: components["schemas"]["ReacaoDaMensagem"][];
+            anexos: components["schemas"]["AnexoDaMensagem"][];
+            citacoes: components["schemas"]["CitacaoDeChamado"][];
+            chamado: {
+                numero: number;
+                abrir: boolean;
+                mensagem: string | null;
+            } | null;
+        };
+        PaginaDeMensagens: {
+            itens: components["schemas"]["MensagemDoChat"][];
+            lidaAte: string | null;
+            anteriores: boolean;
+            seguintes: boolean;
+        };
+        TipoParaAbrirPeloChat: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** @enum {string} */
+            icone: "gota" | "notebook" | "impressora" | "cadeado" | "janela" | "globo" | "telefone" | "reticencias" | "setas" | "computador" | "torre" | "fone" | "chave" | "caixa" | "camera" | "wi-fi";
+            frase: string | null;
+            pedeOAtivo: boolean;
+        };
+        TiposParaAbrirPeloChat: {
+            itens: components["schemas"]["TipoParaAbrirPeloChat"][];
+        };
+        AtivosSugeridosPeloChat: {
+            ativos: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+                patrimonio: string | null;
+            }[];
+        };
+        PedidoDaAberturaPeloChat: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+        };
+        ChamadoAbertoPeloChat: {
+            numero: number;
+        };
+        PedidoDaMensagemDeQuemParticipa: {
+            /** @default  */
+            texto: string;
+            /** @default [] */
+            anexos: string[];
+        };
+        PedidoDaEscolhaDeQuemParticipa: {
+            /** Format: uuid */
+            mensagem: string;
+            /** @default  */
+            opcao: string;
+        };
+        PedidoDaAvaliacaoDeQuemParticipa: {
+            nivel?: string | null;
+            comentario?: string | null;
+        };
+        EquipeDaConta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            nome: string;
+            pessoas: number;
+        };
+        EquipesDaConta: {
+            itens: components["schemas"]["EquipeDaConta"][];
+        };
+        PessoasDaConversa: {
+            pessoas: components["schemas"]["ContaDoChat"][];
+        };
+        ArquivoDaConversa: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+            /** Format: uuid */
+            mensagem: string;
+            autor: components["schemas"]["ContaDoChat"];
+            enviadoEm: string;
+        };
+        ArquivosDaConversa: {
+            itens: components["schemas"]["ArquivoDaConversa"][];
+            seguintes: boolean;
+        };
+        ChamadoDaConversa: {
+            numero: number;
+            titulo: string;
+            situacao: string;
+            atende: string | null;
+            abriu: string | null;
+            abertoEm: string;
+        };
+        ChamadosDaConversa: {
+            itens: components["schemas"]["ChamadoDaConversa"][];
+            seguintes: boolean;
+        };
+        GrupoDaEquipeOuCanal: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            ativo: boolean;
+        };
+        EquipeOuCanal: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            nome: string;
+            grupo: components["schemas"]["GrupoDaEquipeOuCanal"] | null;
+            escreve: components["schemas"]["GrupoDaEquipeOuCanal"] | null;
+            avisar: boolean;
+            arquivada: boolean;
+        };
+        ListaDasEquipesECanais: {
+            itens: components["schemas"]["EquipeOuCanal"][];
+        };
+        GruposParaEscolher: {
+            itens: {
+                /** Format: uuid */
+                id: string;
+                nome: string;
+            }[];
+        };
+        PedidoDaEquipeOuCanal: {
+            nome: string;
+            /** @enum {string} */
+            tipo: "equipe" | "canal";
+            grupoId: string | null;
+            /** @enum {string} */
+            quemEscreve: "todos" | "grupo";
+            escreveGrupoId: string | null;
+            avisar: boolean;
+        };
+        LeituraDaConversa: {
+            /** Format: uuid */
+            lidaAte: string;
+        };
+        SilencioDaConversa: {
+            silenciada: boolean;
+        };
+        ConversaAberta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            outra: components["schemas"]["ContaDoChat"] | null;
+            pessoas: number | null;
+            escreveGrupo: string | null;
+            arquivada: boolean;
+            silenciada: boolean;
+            lidaAte: string | null;
+            escreve: boolean;
+            recusa: string | null;
+        };
+        MensagemNaDireta: {
+            /** Format: uuid */
+            conversa: string;
+            mensagem: components["schemas"]["MensagemDoChat"];
         };
         PessoaDoSegredo: {
             /** Format: uuid */
@@ -44794,7 +49182,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;
@@ -44837,7 +49225,7 @@ export interface components {
             id: string;
             nome: string;
             descricao: string | null;
-            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar")[];
+            permissoes: ("pessoas.ver" | "pessoas.editar" | "pessoas.anonimizar" | "contas.administrar" | "acessos.ver" | "acessos.administrar" | "diretorio.administrar" | "locais.editar" | "fornecedores.ver" | "fornecedores.editar" | "organizacao.editar" | "auditoria.ver" | "tarefas.administrar" | "backup.administrar" | "catalogo.administrar" | "modelos.editar" | "ativos.ver" | "ativos.editar" | "ativos.restritos" | "coletores.administrar" | "cofre.usar" | "cofre.administrar" | "alertas.ver" | "alertas.tratar" | "alertas.administrar" | "consumiveis.ver" | "consumiveis.editar" | "estoque.ver" | "estoque.movimentar" | "solicitacoes.ver" | "solicitacoes.atender" | "ordens.ver" | "ordens.atender" | "operacao.administrar" | "controlid.ver" | "controlid.backup" | "controlid.restaurar" | "mapa.ver" | "mapa.editar" | "software.distribuir" | "software.administrar" | "ativos.acesso-remoto" | "salas.ver" | "salas.administrar" | "paineis.ver" | "paineis.administrar" | "chamados.ver" | "chamados.atender" | "chamados.configurar" | "chamados.pedir" | "chat.usar" | "chat.configurar")[];
             todasAsPermissoes: boolean;
             protegido: boolean;
             exigeDoisPassos: boolean;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Map as Mapa, Users, Vault } from 'lucide-react';
+import { Map as Mapa, MessageCircle, Users, Vault } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { BarraDeAbas } from './BarraDeAbas.tsx';
 import { AJUSTES_DE_EXEMPLO, MODULOS_DE_EXEMPLO } from './exemplos.tsx';
@@ -110,5 +110,35 @@ export const SeteModulosEUmEmMais: Historia = {
       .map((botao) => botao.textContent)
       .filter((texto) => texto !== '');
     await expect(outros).toEqual(['Rede', 'Cofre', 'Ajustes', 'Administração']);
+  },
+};
+
+/**
+ * O selo no canto do ícone da aba, como o total do Chat: o número à vista é só desenho, e o leitor
+ * de tela ouve a contagem em texto no nome da aba.
+ */
+export const ComSelo: Historia = {
+  args: {
+    modulos: [
+      ...CINCO.slice(0, 1),
+      {
+        id: 'chat',
+        nome: 'Chat',
+        icone: MessageCircle,
+        prioridadeNoCelular: 1,
+        selo: { texto: '99+', descricao: 'mais de 99 não lidas' },
+      },
+      ...CINCO.slice(1, 3),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await expect(nomesDasAbas(canvasElement)).toEqual([
+      'Início',
+      'Chat, mais de 99 não lidas',
+      'Ativos',
+      'Operação',
+    ]);
+    const chat = within(canvasElement).getByRole('button', { name: 'Chat, mais de 99 não lidas' });
+    await expect(within(chat).getByText('99+')).toHaveAttribute('aria-hidden', 'true');
   },
 };

@@ -89,6 +89,19 @@ export function CentralDeNotificacoes({
   );
 }
 
+export type PropsDoConteudoDaCentral = Omit<
+  PropsDaCentralDeNotificacoes,
+  'aberta' | 'aoMudarAberta'
+>;
+
+/**
+ * O conteúdo da central fora da gaveta, numa página, como os Avisos do app do chat: os filtros, os
+ * grupos por dia, com os dias em `h3`, e as ações. "Abrir" não fecha nada.
+ */
+export function ConteudoDaCentralDeNotificacoes(props: PropsDoConteudoDaCentral) {
+  return <ConteudoDaCentral {...props} fechar={() => {}} />;
+}
+
 const FILTROS_DE_SEVERIDADE: ReadonlyArray<{ id: FiltroDeSeveridade; nome: string }> = [
   { id: 'todas', nome: 'Todas' },
   { id: 'critico', nome: 'Crítico' },

@@ -9,7 +9,10 @@ import { and, asc, eq, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
 import { localEm } from '../estoque/leitura.ts';
 import { naoEncontrado } from '../problemas.ts';
 
-/** Quantos ativos as sugestões trazem, no máximo: o campo busca os outros pelo nome. */
+/**
+ * Quantos ativos as sugestões trazem, no máximo, na TI: o campo busca os outros pelo nome. A abertura
+ * pelo chat, sem a busca, pede todos (change chat-com-chamados, design, decisão 15).
+ */
 export const LIMITE_DAS_SUGESTOES = 10;
 
 export interface AtivoSugerido {
@@ -30,12 +33,23 @@ export interface SugestoesDaPessoa {
 /**
  * As sugestões para a pessoa: primeiro os ativos sob a responsabilidade dela, de qualquer local,
  * e depois os do local de trabalho dela, sem os de dentro dele nem os dela de novo; cada grupo pelo
- * patrimônio, até o limite. A pessoa que não existe, ou de outra organização, é recusada.
+ * patrimônio, até o limite, que o nulo tira. A pessoa que não existe, ou de outra organização, é
+ * recusada.
  */
 export async function sugestoesDaPessoa(
   tx: Transacao,
   pessoaId: string,
-  { tipos, acesso, arvore }: { tipos: readonly string[]; acesso: Acesso; arvore: ArvoreDeLocais },
+  {
+    tipos,
+    acesso,
+    arvore,
+    limite = LIMITE_DAS_SUGESTOES,
+  }: {
+    tipos: readonly string[];
+    acesso: Acesso;
+    arvore: ArvoreDeLocais;
+    limite?: number | null;
+  },
 ): Promise<SugestoesDaPessoa> {
   const [pessoa] = await tx
     .select({ localId: pessoas.localId })
@@ -74,7 +88,10 @@ export async function sugestoesDaPessoa(
           ...condicoes,
         ),
       )
-      .orderBy(asc(ativos.patrimonio), asc(ativos.id));
+      .orderBy(asc(ativos.patrimonio), asc(ativos.id))
+      .$dynamic();
+  const ate = (consulta: ReturnType<typeof ativosOnde>, quantos: number | null) =>
+    quantos === null ? consulta : consulta.limit(quantos);
 
   const comoSugestao =
     (motivo: AtivoSugerido['motivo']) =>
@@ -86,19 +103,22 @@ export async function sugestoesDaPessoa(
       motivo,
     });
 
-  const dela = (
-    await ativosOnde(eq(ativos.responsavelId, pessoaId)).limit(LIMITE_DAS_SUGESTOES)
-  ).map(comoSugestao('responsavel'));
+  const dela = (await ate(ativosOnde(eq(ativos.responsavelId, pessoaId)), limite)).map(
+    comoSugestao('responsavel'),
+  );
 
   // Os do local de trabalho entram nas vagas que sobram.
-  const vagas = LIMITE_DAS_SUGESTOES - dela.length;
+  const vagas = limite === null ? null : limite - dela.length;
   const doLocal =
-    localId !== null && vagas > 0
+    localId !== null && (vagas === null || vagas > 0)
       ? (
-          await ativosOnde(
-            eq(ativos.localId, localId),
-            or(isNull(ativos.responsavelId), ne(ativos.responsavelId, pessoaId)),
-          ).limit(vagas)
+          await ate(
+            ativosOnde(
+              eq(ativos.localId, localId),
+              or(isNull(ativos.responsavelId), ne(ativos.responsavelId, pessoaId)),
+            ),
+            vagas,
+          )
         ).map(comoSugestao('local'))
       : [];
 

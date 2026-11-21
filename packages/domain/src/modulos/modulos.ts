@@ -22,6 +22,12 @@ export const MODULOS_OPCIONAIS = [
     descricao:
       'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
   },
+  {
+    id: 'chat',
+    nome: 'Chat',
+    descricao:
+      'As conversas das pessoas da organização: as diretas, as equipes, os canais e os chamados de cada uma.',
+  },
   { id: 'ativos', nome: 'Ativos', descricao: 'O catálogo, o cadastro e a lista dos ativos.' },
   {
     id: 'cofre',

@@ -41,6 +41,8 @@ const RespostaPronta = z
     texto: z.string(),
     /** Ligado, mandar a resposta põe o chamado em Aguardando o colaborador. */
     esperaAResposta: z.boolean(),
+    /** As opções da pergunta, de 2 a 3, que a mensagem leva; nenhuma, a resposta sem pergunta. */
+    opcoes: z.array(z.string()),
     /** Os tipos em que a resposta aparece, na ordem dos tipos; nenhum, ela aparece em todos. */
     tipos: z.array(z.object({ id: z.uuid(), nome: z.string() })),
   })
@@ -56,6 +58,11 @@ const PedidoDaResposta = z
     rotulo: z.string(),
     texto: z.string(),
     esperaAResposta: z.boolean(),
+    /**
+     * As opções da pergunta, de 2 a 3, cada uma de 1 a 40 caracteres e diferentes entre si; sem
+     * elas, a resposta sem pergunta. As recusas vêm no campo `opcoes`.
+     */
+    opcoes: z.array(z.string()).default([]),
     /** Os tipos em que ela aparece, entre os Em uso e os Inativos; nenhum, ela aparece em todos. */
     tipos: z.array(z.uuid()),
   })
@@ -67,7 +74,10 @@ const PROBLEMAS = { 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO };
 const PROBLEMAS_DA_GRAVACAO = { ...PROBLEMAS, 409: RespostaDeProblema };
 
 type LinhaDaResposta = typeof respostasProntas.$inferSelect;
-type ConteudoDaResposta = Pick<LinhaDaResposta, 'rotulo' | 'texto' | 'esperaAResposta' | 'tipos'>;
+type ConteudoDaResposta = Pick<
+  LinhaDaResposta,
+  'rotulo' | 'texto' | 'esperaAResposta' | 'opcoes' | 'tipos'
+>;
 
 /** Os tipos de chamado na ordem, para os nomes da resposta e para a lista da conferência. */
 function lerTipos(tx: Transacao) {
@@ -91,6 +101,7 @@ const respostaLida = (linha: LinhaDaResposta, tipos: TiposLidos) => ({
   rotulo: linha.rotulo,
   texto: linha.texto,
   esperaAResposta: linha.esperaAResposta,
+  opcoes: linha.opcoes,
   tipos: tiposDa(linha, tipos).map(({ id, nome }) => ({ id, nome })),
 });
 
@@ -99,6 +110,7 @@ const visaoDaResposta = (resposta: ConteudoDaResposta, tipos: TiposLidos) => ({
   rotulo: resposta.rotulo,
   texto: resposta.texto,
   esperaAResposta: resposta.esperaAResposta,
+  opcoes: resposta.opcoes,
   tipos: tiposDa(resposta, tipos).map(({ nome }) => nome),
 });
 
@@ -107,6 +119,7 @@ const conteudoDa = (resposta: ConteudoDaResposta): ConteudoDaResposta => ({
   rotulo: resposta.rotulo,
   texto: resposta.texto,
   esperaAResposta: resposta.esperaAResposta,
+  opcoes: resposta.opcoes,
   tipos: resposta.tipos,
 });
 

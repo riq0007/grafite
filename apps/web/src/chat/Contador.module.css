@@ -1,0 +1,22 @@
+/* O contador do chat: a cápsula com o número em peso forte, nos algarismos de mesma largura. O
+   neutro é o das conversas e dos avisos, no destaque da conta; o do chamado, no azul do chamado. */
+.contador {
+  box-sizing: border-box;
+  display: inline-block;
+  flex: none;
+  min-inline-size: var(--esp-5);
+  padding: 0 calc(var(--esp-1) * 1.5);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--esp-5);
+  text-align: center;
+}
+
+.contador[data-tom="chamado"] {
+  background-color: var(--cor-info-forte);
+  color: var(--cor-sobre-info);
+}

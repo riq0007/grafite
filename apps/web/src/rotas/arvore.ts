@@ -1,4 +1,5 @@
 import { createRouter, type RouterHistory } from '@tanstack/react-router';
+import { lembrarAsEntradas } from '../chat/voltar.ts';
 import { REGISTRO } from '../modulos/registro.ts';
 import type { ModuloRegistrado } from '../modulos/tipos.ts';
 import { raiz } from './raiz.tsx';
@@ -14,11 +15,15 @@ export function criarRoteador(
   historico?: RouterHistory,
   modulos: readonly ModuloRegistrado[] = REGISTRO,
 ) {
-  return createRouter({
+  const roteador = createRouter({
     routeTree: arvoreDeRotas,
     history: historico,
     context: { modulos },
   });
+  // A seta de voltar da janela do Chat, no celular, sabe se a entrada anterior é a lista
+  // (`chat/voltar.ts`).
+  lembrarAsEntradas(roteador.history);
+  return roteador;
 }
 
 declare module '@tanstack/react-router' {

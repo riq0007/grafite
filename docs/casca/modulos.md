@@ -554,7 +554,7 @@ Um módulo notifica pela API, na transação da mudança que pede a atenção, c
 
 ```ts
 // packages/domain/src/notificacoes/notificacoes.ts (trecho)
-/** A notificação que um módulo grava para uma conta. */
+/** A notificação que um módulo grava para uma conta, com as colunas da tabela. */
 export interface NovaNotificacao {
   contaId: string;
   severidade: SeveridadeDaNotificacao;
@@ -566,6 +566,21 @@ export interface NovaNotificacao {
   destino: string | null;
   /** O alerta de que ela trata, que dá as ações de reconhecer e de adiar. */
   alertaId: string | null;
+  /**
+   * A notificação de uma mensagem, do chat ou de um chamado: vai por push qualquer que seja a
+   * severidade e nunca no Foco.
+   */
+  mensagem: boolean;
+  /**
+   * O assunto da mensagem, que a leitura da conversa ou do chamado marca como lido: `conversa:<id>`
+   * ou `chamado:<id>`, com o id em minúsculas, como o banco o devolve. A mensagem sempre tem.
+   */
+  assunto: string | null;
+  /**
+   * A mensagem do chat de que ela trata, para a leitura da conversa marcar só as notificações até a
+   * mensagem lida; a de um chamado não tem.
+   */
+  mensagemDoChatId: string | null;
 }
 ```
 
@@ -588,6 +603,7 @@ O que acontece:
 - **Aviso na tela:** a notificação que chega com a aplicação aberta vira aviso numa aba só, a usada por último. O Crítico sempre vira aviso e fica até ser reconhecido, adiado ou fechado. Atenção e Informação só viram aviso com essa severidade ligada em Ajustes › Notificações e o modo Foco desligado, e somem no tempo escolhido (6 s de fábrica, 10 s ou 20 s). O Foco liga e desliga na seção Notificações dos Ajustes ou na própria central, e o sino mostra "Foco" enquanto ele vale.
 - **Reconhecer e adiar:** aparecem na notificação Crítica de um alerta que ainda pede ação, para quem pode tratá-lo.
 - **E-mail e push:** com o `enviar` da fila, a mesma notificação sai pelos canais de fora, sem nada a mais no módulo. O Crítico vai por e-mail na hora, e o resto, ainda não lido, vai no resumo diário das 8h. O push vai aos aparelhos que a conta inscreveu, nas severidades que ela escolheu, e, com o Foco, só o Crítico. A rota passa o `enviar` da fila do app, quando ela está no ar, e a tarefa, o do contexto dela.
+- **Mensagens:** só o chat e os chamados notificam mensagens, com o `mensagem` ligado e o `assunto`. A mensagem vai por push qualquer que seja a severidade escolhida, e nunca com o Foco, e ler a conversa ou o chamado a marca como lida. As outras notificações vão com o `mensagem` desligado e o `assunto` e a `mensagemDoChatId` vazios.
 - **Texto que sai da aplicação:** o e-mail e o push levam o título, a descrição, a origem e o `destino`, no endereço da organização, e nada que a central não mostre. Como eles aparecem fora da aplicação, como na tela bloqueada do celular, o título e a descrição nunca levam um segredo nem um valor restrito.
 - **Retenção:** a manutenção diária apaga as notificações de mais de 90 dias. Nenhum módulo inventa notificações para preencher a central.
 
@@ -1136,7 +1152,7 @@ export function registroDaConta(
 ): ModuloRegistrado[] {
   return registro
     .filter((modulo) => !desligados.includes(interruptorDe(modulo)) && permite(pode, modulo))
-    .map((modulo) => moduloDaConta(modulo, pode));
+    .map((modulo) => moduloDaConta(modulo, pode, desligados));
 }
 ```
 
@@ -1332,8 +1348,11 @@ Toda rota declara a permissão que exige, ou a exceção que só pede a sessão,
 ```ts
 // apps/api/src/acesso/escopo.ts (trecho)
   interface FastifyContextConfig {
-    /** A permissão que a rota exige, em algum escopo: a guarda confere antes de validar o pedido. */
-    permissao?: Permissao;
+    /**
+     * A permissão que a rota exige, em algum escopo: a guarda confere antes de validar o pedido. Com
+     * a lista, basta uma delas, e a recusa cita a primeira.
+     */
+    permissao?: Permissao | readonly [Permissao, ...Permissao[]];
     /** A rota que exige só a sessão. */
     semPermissao?: ExcecaoDePermissao;
     /** A rota que nunca conta como uso da sessão, como a conexão de eventos. */
@@ -1421,6 +1440,12 @@ export const MODULOS_OPCIONAIS = [
     nome: 'Chamados',
     descricao:
       'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
+  },
+  {
+    id: 'chat',
+    nome: 'Chat',
+    descricao:
+      'As conversas das pessoas da organização: as diretas, as equipes, os canais e os chamados de cada uma.',
   },
   { id: 'ativos', nome: 'Ativos', descricao: 'O catálogo, o cadastro e a lista dos ativos.' },
   {
@@ -1813,6 +1838,7 @@ export const TIPOS_DE_EVENTO = [
   'software.mudou',
   'chamados.mudaram',
   'ajustes-dos-chamados.mudaram',
+  'chat.mudou',
 ] as const;
 ```
 
@@ -2512,6 +2538,7 @@ import { ajustes } from './ajustes/modulo.ts';
 import { alertas } from './alertas/modulo.ts';
 import { ativos } from './ativos/modulo.ts';
 import { chamados } from './chamados/modulo.ts';
+import { chat } from './chat/modulo.ts';
 import { cofre } from './cofre/modulo.ts';
 import { gestao } from './gestao/modulo.ts';
 import { inicio } from './inicio/modulo.ts';
@@ -2524,10 +2551,12 @@ import { salas } from './salas/modulo.ts';
  * Registro de módulos, na ordem de fábrica do dock: a conta escolhe outra ordem e tira módulos do
  * dock em Ajustes › Dock. A casca monta o dock, a barra de abas e as rotas a partir dele. Um módulo
  * novo entra com uma linha aqui, antes de Ajustes, que fica sempre no fim, depois do separador do
- * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI.
+ * dock. Os Chamados vêm antes do Início, porque são a primeira tela da TI, e o Chat logo depois
+ * deles (spec modulo-chat, "Chat na casca").
  */
 export const REGISTRO = [
   chamados,
+  chat,
   inicio,
   ativos,
   gestao,

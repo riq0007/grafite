@@ -19,6 +19,7 @@ import { itensDoMenu } from './itensDoMenu.tsx';
 import { MenuDoDock } from './MenuDoDock.tsx';
 import { criarMenusDoDock, type MenusDoDock } from './menusDoDock.ts';
 import { criarOcultarDoDock, type OcultarDoDock } from './ocultarDoDock.ts';
+import { nomeComOSelo } from './selo.ts';
 import type { ModuloDaCasca, PosicaoDoDock } from './tipos.ts';
 
 export interface PropsDoDock {
@@ -373,7 +374,7 @@ function ItemDoDock({
   const botao = (
     <Button
       ref={registrar}
-      aria-label={modulo.nome}
+      aria-label={nomeComOSelo(modulo)}
       aria-current={atual ? 'page' : undefined}
       aria-haspopup={modulo.menu ? 'menu' : undefined}
       aria-expanded={modulo.menu ? menuAberto : undefined}
@@ -392,6 +393,11 @@ function ItemDoDock({
       }}
     >
       <Icone icone={modulo.icone} tamanho={Math.round(tamanho * 0.48)} />
+      {modulo.selo && (
+        <span className={estilos.selo} data-parte="selo" aria-hidden="true">
+          {modulo.selo.texto}
+        </span>
+      )}
       {atual && <span className={estilos.ponto} data-parte="ponto" aria-hidden="true" />}
     </Button>
   );

@@ -220,6 +220,16 @@ export {
 } from './campos/tipos.ts';
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
+  conferirAberturaPeloChat,
+  jaVirouChamado,
+  type LidoParaAAberturaPeloChat,
+  MENSAGENS_DA_ABERTURA_PELO_CHAT,
+  type PedidoDaAberturaPeloChat,
+  semAtivoSugerido,
+  type TipoParaAbrirPeloChat,
+  tipoAbrePeloChat,
+} from './chamados/abertura-pelo-chat.ts';
+export {
   ACOES_DO_CHAMADO,
   type AcaoComVersao,
   type AcaoDoChamado,
@@ -257,6 +267,24 @@ export {
   type TextoDaAcao,
 } from './chamados/acoes.ts';
 export {
+  ACOES_DE_QUEM_PARTICIPA,
+  type AcaoDeQuemParticipa,
+  type CelulaDeQuemParticipa,
+  type ChamadoParaQuemParticipa,
+  type DecisaoDeQuemParticipa,
+  decidirAcaoDeQuemParticipa,
+  type EntradaDeQuemParticipa,
+  type EventoDeQuemParticipa,
+  MATRIZ_DE_QUEM_PARTICIPA,
+  type MudancaDeQuemParticipa,
+  mensagemDaRecusaDeQuemParticipa,
+  type PedidoDeQuemParticipa,
+  type PerguntaParaEscolher,
+  type RecusaDaCelulaDeQuemParticipa,
+  type RecusaDeQuemParticipa,
+  SITUACOES_DE_QUEM_PARTICIPA,
+} from './chamados/acoes-de-quem-participa.ts';
+export {
   type AlcanceDeQuemAtende,
   type AlcanceDeQuemVe,
   type Atendimento,
@@ -271,10 +299,26 @@ export {
   veOChamado,
 } from './chamados/atendimento.ts';
 export {
+  type ConferenciaDaAvaliacao,
+  conferirAvaliacao,
+  LIMITE_DO_COMENTARIO,
+  NIVEIS_DA_AVALIACAO,
+  type NivelDaAvaliacao,
+  nivelDaAvaliacao,
+  ROTULOS_DOS_NIVEIS_DA_AVALIACAO,
+} from './chamados/avaliacao.ts';
+export {
   MAIOR_NUMERO_DE_CHAMADO,
   type TermoDaBusca,
   termoDaBusca,
 } from './chamados/busca.ts';
+export {
+  caminhoDaSituacao,
+  type EtapaDoChamado,
+  type EventoNoCaminho,
+  etapasDoChamado,
+  type PassoDoCaminho,
+} from './chamados/caminho.ts';
 export {
   AVISO_DO_ALCANCE,
   type CargaDasPessoas,
@@ -288,6 +332,7 @@ export {
   textoDoResolvidoHoje,
   textoDosAbertos,
 } from './chamados/carga.ts';
+export { type ComandoDoAtivo, comandoDoAtivo } from './chamados/cartao-do-ativo.ts';
 export { type CorDoTonerPedida, corDoToner } from './chamados/cor-do-toner.ts';
 export {
   type AntesDoAssumir,
@@ -315,6 +360,18 @@ export {
   type TipoDeChamadoDeFabrica,
 } from './chamados/fabrica.ts';
 export {
+  type ChamadoParaOFechamento,
+  DIAS_PARA_REABRIR,
+  type DiaDoCalendario,
+  type EventoDoFechamento,
+  estaFechado,
+  limiteDoFechamento,
+  momentoDoFechamento,
+  type SituacaoComOFechado,
+  situacaoDoChamado,
+  ultimoDiaParaReabrir,
+} from './chamados/fechamento.ts';
+export {
   type CampoDoFormulario,
   type ClausulaDaCondicao,
   type ConferenciaDoFormulario,
@@ -339,14 +396,19 @@ export {
 } from './chamados/formulario.ts';
 export {
   type AcaoQueNotifica,
+  assuntoDoChamado,
   type ChamadoQueNotifica,
+  type ChamadoQueNotificaAMensagem,
   type ContaQueRecebeATriagem,
   destinoDoChamado,
+  destinoDoChamadoNoChat,
   notificacaoDoPassado,
   notificacoesDaAbertura,
   notificacoesDaAcao,
   notificacoesDaTriagem,
+  notificacoesDeQuemParticipa,
   notificacoesDoEstouro,
+  notificacoesParaQuemParticipa,
   ORIGEM_DOS_CHAMADOS,
 } from './chamados/notificacoes.ts';
 export {
@@ -365,6 +427,23 @@ export {
   recusaDoVirarOs,
   type SolicitacaoNaoGerada,
 } from './chamados/os-e-solicitacao.ts';
+export {
+  type ContaNaFrase,
+  ESPERA_DE_OUTRO,
+  type EventoParaQuemParticipa,
+  fraseDoEventoParaQuemParticipa,
+  previsaoDaResposta,
+  SITUACAO_FECHADA,
+  SITUACOES_PARA_QUEM_PARTICIPA,
+  situacaoNoChat,
+  situacaoParaQuemParticipa,
+  textoDaEtapa,
+} from './chamados/palavras-do-colaborador.ts';
+export {
+  conferirOpcoes,
+  LIMITES_DA_PERGUNTA,
+  MENSAGENS_DA_PERGUNTA,
+} from './chamados/pergunta.ts';
 export {
   type ConferenciaDoHorario,
   conferirHorario,
@@ -426,6 +505,13 @@ export {
   textoDaRespostaPronta,
 } from './chamados/respostas-prontas.ts';
 export {
+  type LinhaDoResumoDosTempos,
+  linhasDoResumoDosTempos,
+  type ResumoDosTempos,
+  resumoDosTempos,
+  type TempoDesdeAAbertura,
+} from './chamados/resumo-dos-tempos.ts';
+export {
   compararPrazos,
   GRUPOS_DO_PRAZO,
   type GrupoDoPrazo,
@@ -458,12 +544,84 @@ export {
   camposNaAuditoria,
   comMinuscula,
   conferirTituloDoChamado,
+  LIMITE_DO_TITULO_DO_CHAMADO,
   nomeNoResumo,
   type ParteDoResumo,
   partesDoResumo,
   resumoDasRespostas,
+  tamanhoDoTitulo,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
+export {
+  type CampoDaEquipeOuCanal,
+  type ConferenciaDaEquipeOuCanal,
+  type ContextoDaEquipeOuCanal,
+  conferirEquipeOuCanal,
+  type EquipeOuCanalConferido,
+  LIMITE_DE_EQUIPES_E_CANAIS,
+  MENSAGENS_DA_EQUIPE_OU_CANAL,
+  type PedidoDaEquipeOuCanal,
+  recusaDoTeto,
+} from './chat/equipes-e-canais.ts';
+export {
+  type ChamadoNaLista,
+  chamadoAberto,
+  chamadosComRespostaNova,
+  contadorDoChat,
+  GRUPOS_DA_VISTA_CHAMADOS,
+  type GrupoDaVistaChamados,
+  gruposDaVistaChamados,
+  type LinhaParaARespostaNova,
+  MAXIMO_NO_CONTADOR,
+  ordemDasEquipesECanais,
+  ordemDasRecentes,
+  respostaNova,
+  secoesDoChat,
+  totalDoChat,
+} from './chat/listas.ts';
+export {
+  type CitacaoDeChamado,
+  citacoesDeChamados,
+  comecoDoTexto,
+  conferirMensagem,
+  conferirReacao,
+  ESPECIES_DO_CHAT,
+  type EspecieDoChat,
+  LIMITE_DE_CITACOES,
+  LIMITE_DO_COMECO,
+  LIMITES_DA_MENSAGEM,
+  LIMITES_DA_REACAO,
+  REACOES_DE_SEMPRE,
+} from './chat/mensagens.ts';
+export {
+  assuntoDaConversa,
+  type ContaQueRecebeAMensagem,
+  type ConversaQueNotifica,
+  destinoDaMensagem,
+  type MensagemQueNotifica,
+  notificacoesDaMensagemDoChat,
+  ORIGEM_DO_CHAT,
+} from './chat/notificacoes.ts';
+export {
+  type ChamadoParaParticipar,
+  type ContaDaDireta,
+  type ContaNoChat,
+  type ContaQueUsaOChat,
+  type ConversaParaParticipar,
+  daTi,
+  fraseNoLugarDaCaixa,
+  type GrupoDaConversa,
+  mensagemDaRecusaDaEscrita,
+  nomeDaConversa,
+  nomeNoChat,
+  type Participacao,
+  participacao,
+  participaDoChamado,
+  type RecusaDaEscrita,
+  TIPOS_DE_CONVERSA,
+  type TipoDeConversa,
+  usaOChat,
+} from './chat/participacao.ts';
 export {
   type AcessoAoSegredo,
   alcancaOSegredo,
@@ -737,7 +895,7 @@ export {
   nomeNormalizadoDoFornecedor,
   validarFornecedor,
 } from './fornecedores/fornecedor.ts';
-export { comecoDoAno, comecoDoDia, nomeDoFuso } from './fuso.ts';
+export { comecoDoAno, comecoDoDia, comecoDoDiaDoCalendario, nomeDoFuso } from './fuso.ts';
 export {
   type AtivoNoIndice,
   type CampoDoCasamento,
@@ -899,6 +1057,7 @@ export {
   type CanaisDoServidor,
   canaisNaHora,
   type DestinoDosCanais,
+  type NotificacaoDosCanais,
   recebeResumo,
 } from './notificacoes/canais.ts';
 export {

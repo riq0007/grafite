@@ -8,6 +8,7 @@ import { type Banco, naOrganizacao } from '@grafite/db';
 import { type EventoDeSaida, podeReceber } from '@grafite/domain';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { carregarGrupos } from '../acesso/acesso.ts';
 import { exigirAtiva, sessaoDa } from '../acesso/escopo.ts';
 import { lerSessao, NOME_DO_COOKIE } from '../acesso/sessoes.ts';
 import { lerArvore } from '../arvore.ts';
@@ -89,6 +90,9 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
       const sessao = sessaoDa(requisicao);
       const orgId = requisicao.organizacao?.id ?? '';
       const token = requisicao.cookies[NOME_DO_COOKIE] ?? '';
+      // Os grupos da conta, que a equipe do chat pede (change chat-com-chamados, design, decisão 4),
+      // lidos antes da contagem, que fica sem espera entre a conferência e a soma.
+      const grupos = await naOrganizacao(banco, orgId, (tx) => carregarGrupos(tx, sessao.contaId));
       const daSessao = porSessao.get(sessao.id) ?? 0;
       if (daSessao >= CONEXOES_POR_SESSAO) throw conexoesDemais();
       porSessao.set(sessao.id, daSessao + 1);
@@ -121,6 +125,7 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
         contaId: sessao.contaId,
         sessaoId: sessao.id,
         acesso: sessao.acesso,
+        grupos,
         enviar: (evento) => {
           if (aoVivo) aoVivo.push(evento);
           else entregar(evento);
@@ -157,6 +162,8 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
       }
       abertas.add(fechar);
       saida.on('close', fechar);
+      // O fim chega uma vez só: o cliente que saiu enquanto a abertura lia o banco não o manda de novo.
+      if (saida.destroyed) fechar();
 
       if (typeof ultimo === 'string') {
         const retomados = await naOrganizacao(banco, orgId, async (tx) => {

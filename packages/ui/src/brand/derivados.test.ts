@@ -14,7 +14,7 @@ const dimensoesDoPng = (png: Buffer) => [png.readUInt32BE(16), png.readUInt32BE(
 
 describe('derivados da marca', () => {
   it('todos saem da fonte: gerar de novo produz exatamente os arquivos gravados', () => {
-    expect(arquivos.size).toBe(13);
+    expect(arquivos.size).toBe(14);
     for (const [caminho, conteudo] of arquivos) {
       const gravado = readFileSync(join(raiz, caminho));
       expect(gravado.equals(Buffer.from(conteudo)), caminho).toBe(true);
@@ -65,6 +65,25 @@ describe('derivados da marca', () => {
     for (const icone of manifesto.icons) {
       expect([...arquivos.keys()]).toContain(`apps/web/public${icone.src}`);
     }
+  });
+
+  it('o app do chat tem o manifesto próprio, no /chat, com os ícones e as cores do Grafite', () => {
+    const ler = (caminho: string) =>
+      JSON.parse(String(arquivos.get(caminho))) as Record<string, unknown>;
+    const grafite = ler('apps/web/public/manifest.webmanifest');
+    const chat = ler('apps/web/public/chat/manifest.webmanifest');
+    expect(chat).toMatchObject({
+      id: '/chat',
+      name: 'Grafite · Chat',
+      short_name: 'Chat',
+      start_url: '/chat',
+      scope: '/chat',
+      display: 'standalone',
+      lang: 'pt-BR',
+    });
+    expect(chat.icons).toEqual(grafite.icons);
+    expect(chat.background_color).toBe(grafite.background_color);
+    expect(chat.theme_color).toBe(grafite.theme_color);
   });
 
   it('no maskable, o desenho fica dentro da área segura (círculo de 80% do ícone)', () => {

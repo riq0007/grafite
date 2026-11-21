@@ -1,0 +1,155 @@
+/* A conversa do chamado (m04, m07 e m10): as mensagens sem balão, como as do chat, e, no meio da
+   coluna, as pílulas dos eventos, a resposta nova, o resumo dos tempos e a avaliação. A área que
+   rola, os dias, os textos e os anexos são os da conversa do chat. */
+.mensagem {
+  display: grid;
+  grid-template-columns: var(--esp-8) minmax(0, 1fr);
+  column-gap: var(--esp-3);
+  max-inline-size: var(--largura-previa);
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.mensagem .foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+/* "Resposta nova": o rótulo em peso forte entre dois fios, com "Marcar como vista" no fim da linha. */
+.nova {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.fio {
+  flex: 1;
+  block-size: 1px;
+  background-color: var(--cor-linha-forte);
+}
+
+.rotuloDaNova {
+  color: var(--cor-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+/* O evento: a pílula no meio da coluna e, no resolvido, o resumo dos tempos embaixo. */
+.evento {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-3);
+}
+
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  max-inline-size: 100%;
+  margin: 0;
+  padding: var(--esp-1) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-justa);
+}
+
+.pilula[data-tom="atencao"] {
+  border-color: var(--cor-atencao-borda);
+  background-color: var(--cor-atencao-fundo);
+}
+
+.pilula[data-tom="ok"] {
+  border-color: var(--cor-ok-borda);
+  background-color: var(--cor-ok-fundo);
+}
+
+.iconeDoEvento {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.pilula[data-tom="atencao"] .iconeDoEvento {
+  color: var(--cor-atencao);
+}
+
+.pilula[data-tom="ok"] .iconeDoEvento {
+  color: var(--cor-ok);
+}
+
+.frase {
+  font-weight: var(--peso-medio);
+}
+
+/* A hora na cor do texto: o secundário não chega a 4,5:1 sobre o fundo dos tons. */
+.hora {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* O resumo dos tempos: o rótulo em cima e o tempo embaixo, em colunas que quebram a linha. */
+.tempos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-2) var(--esp-8);
+  margin: 0;
+}
+
+.tempos dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.tempos dd {
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-medio);
+}
+
+.forte {
+  font-weight: var(--peso-forte);
+}
+
+/* A abertura: a pílula no meio e, embaixo, a mensagem de onde o chamado veio, citada, ou o resumo
+   das respostas, num quadro com o fio do azul do chamado, na coluna das mensagens. */
+.abertura {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-3);
+}
+
+.abertura > .pilula {
+  justify-self: center;
+}
+
+.origem {
+  box-sizing: border-box;
+  inline-size: min(100%, var(--largura-previa));
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-inline-start: 3px solid var(--cor-info);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+}
+
+.deOnde {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.citada {
+  margin: 0;
+}
+
+.avaliacao {
+  display: grid;
+  justify-items: center;
+}

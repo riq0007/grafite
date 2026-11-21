@@ -61,6 +61,7 @@
   --atraso-montagem-janela: 80ms;
   --atraso-montagem-dock: 160ms;
   --dur-deslocamento: var(--dur-media);
+  --dur-folha: var(--dur-lenta);
   --dur-opacidade: var(--dur-rapida);
   --dur-escala-menu: var(--dur-menu);
   --dur-escala-busca: var(--dur-busca);
@@ -811,6 +812,7 @@
 
 [data-motion="reduzido"] {
   --dur-deslocamento: 0ms;
+  --dur-folha: 0ms;
   --dur-mola-aviso: 0ms;
   --dur-giro: 0ms;
   --dur-ciclo: 0ms;
@@ -830,6 +832,7 @@
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion]) {
     --dur-deslocamento: 0ms;
+    --dur-folha: 0ms;
     --dur-mola-aviso: 0ms;
     --dur-giro: 0ms;
     --dur-ciclo: 0ms;

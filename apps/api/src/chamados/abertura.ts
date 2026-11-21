@@ -9,9 +9,14 @@
 // - o atendimento, o número da organização e o prazo do tipo em minutos;
 // - o chamado, com a primeira resposta dada, o evento de abertura, sem o resumo pronto, os anexos
 //   tomados pelos campos, a solicitação gerada pelo tipo (`solicitacao-gerada.ts`, tarefa 4.18), a
-//   auditoria e o `chamados.mudaram`;
+//   auditoria e o `chamados.mudaram`, também às contas de quem participa pelo chat (change
+//   chat-com-chamados, tarefa 3.12);
 // - as notificações de quem recebe o chamado pelo tipo ou da triagem (tarefa 4.8).
+// A gravação, depois das conferências, é a mesma da abertura pelo chat (`gravarAbertura`; change
+// chat-com-chamados, design, decisão 8, tarefa 3.7), que confere do jeito dela
+// (`chat/abertura-pelo-chat.ts`), com a origem `chat` e a linha da origem.
 import {
+  anexosDosChamados,
   ativos,
   chamados,
   locais,
@@ -56,11 +61,11 @@ import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { notificar } from '../notificacoes/notificar.ts';
 import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
-import { publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
+import { publicoComQuemParticipa } from './quem-participa.ts';
 import { gerarSolicitacao } from './solicitacao-gerada.ts';
 
 export const RECUSAS_DA_ABERTURA = {
@@ -104,7 +109,7 @@ export interface AtivoDaResposta extends AtivoDasRespostas {
 type Recusas = Record<string, string>;
 
 /** A pessoa pelo id, travada para leitura: a de outra organização não aparece, pelo RLS. */
-async function lerPessoa(tx: Transacao, id: string) {
+export async function lerPessoa(tx: Transacao, id: string) {
   const [pessoa] = await tx
     .select({
       id: pessoas.id,
@@ -119,13 +124,44 @@ async function lerPessoa(tx: Transacao, id: string) {
 }
 
 /** O tipo pelo id, travado para leitura até o fim da abertura, como a gravação dele o trava. */
-async function lerTipo(tx: Transacao, id: string) {
+export async function lerTipo(tx: Transacao, id: string) {
   const [tipo] = await tx
     .select()
     .from(tiposDeChamado)
     .where(eq(tiposDeChamado.id, id))
     .for('share');
   return tipo ?? null;
+}
+
+type PessoaDaAbertura = NonNullable<Awaited<ReturnType<typeof lerPessoa>>>;
+type TipoDaAbertura = NonNullable<Awaited<ReturnType<typeof lerTipo>>>;
+
+/** De onde o chamado vem: da TI, com o "Fica comigo", ou de uma mensagem do chat. */
+export type OrigemDaAbertura =
+  | { tipo: 'ti'; ficaComigo: boolean }
+  | {
+      tipo: 'chat';
+      conversaId: string;
+      mensagemId: string;
+      /** O texto da mensagem, quem a escreveu e quando, para a linha da origem. */
+      texto: string;
+      autorConta: string;
+      escritaEm: Date;
+      /** Os arquivos dos anexos da mensagem, que passam a ser também do chamado. */
+      anexos: readonly string[];
+    };
+
+/** A abertura conferida, que a TI e o chat gravam do mesmo jeito. */
+export interface AberturaConferida {
+  pessoa: PessoaDaAbertura;
+  tipo: TipoDaAbertura;
+  formulario: Formulario;
+  respostas: Record<string, unknown>;
+  titulo: string;
+  ativoLigado: AtivoDaResposta | null;
+  /** O local da pessoa e o do ativo ligado. */
+  locais: ReturnType<typeof locaisDaSolicitacao>;
+  origem: OrigemDaAbertura;
 }
 
 /**
@@ -250,7 +286,7 @@ export async function abrirChamado(
     enviar,
   }: { requisicao: FastifyRequest; momento: Date; enviar?: EnviarTarefa },
 ): Promise<ChamadoAberto> {
-  const { acesso, contaId } = sessaoDa(requisicao);
+  const { acesso } = sessaoDa(requisicao);
   const arvore = await lerArvore(tx);
   const leitor: Leitor = { acesso, arvore };
   const recusas: Recusas = {};
@@ -296,24 +332,74 @@ export async function abrirChamado(
   });
   if (recusa) throw conflito(recusa);
 
-  // A abertura lê o horário sem a trava `horario-da-ti` (design, decisão 3, que só a pede nas ações
-  // que mexem nos relógios). Se o horário muda junto, o chamado nasce com o prazo e o atendimento do
-  // horário antigo, e os segundos dele contam pelo novo, como se tivesse sido aberto logo antes.
-  const horario = await lerHorarioDaTi(tx);
-  const atendimento = decidirAtendimento({
-    ficaComigo: pedido.ficaComigo ? contaId : null,
-    padrao: tipo.atendePorPadrao ? await lerContaQueAtende(tx, tipo.atendePorPadrao, arvore) : null,
-    semNinguem: tipo.semNinguem,
-    locais: doChamado,
-    horario,
-    agora: momento,
-  });
   const titulo =
     tituloEscrito ??
     tituloDasRespostas(formulario, respostas, {
       nomeDoTipo: tipo.nome,
       ativos: referencias.ativos,
     });
+  const { numero, situacao, responsavel } = await gravarAbertura(
+    tx,
+    {
+      pessoa,
+      tipo,
+      formulario,
+      respostas,
+      titulo,
+      ativoLigado,
+      locais: doChamado,
+      origem: { tipo: 'ti', ficaComigo: pedido.ficaComigo },
+    },
+    { requisicao, momento, enviar, leitor },
+  );
+  return { numero, situacao, responsavel };
+}
+
+/**
+ * Grava a abertura conferida: o atendimento, o número, o chamado, a linha da origem com os anexos
+ * da mensagem, no chat, o evento de abertura, os anexos dos campos, a solicitação gerada pelo tipo,
+ * a auditoria e as notificações. O leitor é quem lê o ativo e os locais da solicitação gerada.
+ */
+export async function gravarAbertura(
+  tx: Transacao,
+  {
+    pessoa,
+    tipo,
+    formulario,
+    respostas,
+    titulo,
+    ativoLigado,
+    locais: doChamado,
+    origem,
+  }: AberturaConferida,
+  {
+    requisicao,
+    momento,
+    enviar,
+    leitor,
+  }: {
+    requisicao: FastifyRequest;
+    momento: Date;
+    enviar?: EnviarTarefa | undefined;
+    leitor: Leitor;
+  },
+): Promise<ChamadoAberto & { id: string }> {
+  const { contaId } = sessaoDa(requisicao);
+  const { arvore } = leitor;
+  const peloChat = origem.tipo === 'chat' ? origem : null;
+
+  // A abertura lê o horário sem a trava `horario-da-ti` (design, decisão 3, que só a pede nas ações
+  // que mexem nos relógios). Se o horário muda junto, o chamado nasce com o prazo e o atendimento do
+  // horário antigo, e os segundos dele contam pelo novo, como se tivesse sido aberto logo antes.
+  const horario = await lerHorarioDaTi(tx);
+  const atendimento = decidirAtendimento({
+    ficaComigo: origem.tipo === 'ti' && origem.ficaComigo ? contaId : null,
+    padrao: tipo.atendePorPadrao ? await lerContaQueAtende(tx, tipo.atendePorPadrao, arvore) : null,
+    semNinguem: tipo.semNinguem,
+    locais: doChamado,
+    horario,
+    agora: momento,
+  });
 
   const numero = await proximoNumero(tx);
   const [aberto] = await tx
@@ -325,7 +411,9 @@ export async function abrirChamado(
       titulo,
       tituloNormalizado: normalizarTexto(titulo),
       pessoaId: pessoa.id,
-      origem: 'ti',
+      origem: origem.tipo,
+      origemConversaId: peloChat?.conversaId ?? null,
+      origemMensagemId: peloChat?.mensagemId ?? null,
       abertoPor: contaId,
       abertoEm: momento,
       formulario: { ...formulario },
@@ -349,21 +437,55 @@ export async function abrirChamado(
         ),
       },
       contadoS: 0,
-      // A pessoa já falou com a TI: o relógio conta desde a abertura, com a primeira resposta dada.
+      // O relógio conta desde a abertura. Pela TI, a pessoa já falou com ela, e a primeira resposta
+      // vem dada; pelo chat, a primeira mensagem da TI a grava (`cumpreAPrimeiraResposta`).
       relogioDesde: momento,
-      primeiraRespostaEm: momento,
+      primeiraRespostaEm: peloChat ? null : momento,
     })
     .returning({ id: chamados.id });
   if (!aberto) throw new Error('O chamado não foi aberto.');
 
-  // O evento de abertura não guarda o resumo: a leitura o monta da cópia (decisão 8).
+  // Pelo chat, a linha da origem vem primeiro, com a mensagem como estava, e os anexos dela passam a
+  // ser também do chamado, sobre os mesmos arquivos (change chat-com-chamados, decisão 8).
+  if (peloChat) {
+    const [daOrigem] = await tx
+      .insert(mensagensDosChamados)
+      .values({
+        orgId: sql`app.current_org()`,
+        chamadoId: aberto.id,
+        especie: 'origem',
+        autorConta: peloChat.autorConta,
+        texto: peloChat.texto,
+        dados: {
+          conversa: peloChat.conversaId,
+          mensagem: peloChat.mensagemId,
+          em: peloChat.escritaEm.toISOString(),
+        },
+        criadaEm: momento,
+      })
+      .returning({ id: mensagensDosChamados.id });
+    if (!daOrigem) throw new Error('A linha da origem não foi gravada.');
+    if (peloChat.anexos.length > 0) {
+      await tx.insert(anexosDosChamados).values(
+        peloChat.anexos.map((arquivoId) => ({
+          orgId: sql`app.current_org()`,
+          arquivoId,
+          chamadoId: aberto.id,
+          mensagemId: daOrigem.id,
+        })),
+      );
+    }
+  }
+
+  // O evento de abertura não guarda o resumo: a leitura o monta da cópia (decisão 8). O `para` é
+  // quem nasce atendendo, ou nulo na triagem, que a ficha lê (change chat-com-chamados, decisão 15).
   await tx.insert(mensagensDosChamados).values({
     orgId: sql`app.current_org()`,
     chamadoId: aberto.id,
     especie: 'evento',
     autorConta: contaId,
     evento: 'abertura',
-    dados: {},
+    dados: { para: atendimento.atende },
     criadaEm: momento,
   });
   for (const campo of formulario.campos) {
@@ -406,6 +528,8 @@ export async function abrirChamado(
       : null,
     // A solicitação a que o chamado nasceu ligado, gerada pelo tipo ou a pendente do Toner.
     solicitacao: solicitacao?.numero ?? null,
+    // De onde o chamado veio: a TI ou o chat (change chat-com-chamados, decisão 8).
+    origem: origem.tipo,
   };
   await registrarNaAuditoria(tx, {
     acao: 'chamado.aberto',
@@ -414,7 +538,13 @@ export async function abrirChamado(
     depois: Object.fromEntries(Object.entries(visao).filter(([, valor]) => valor !== null)),
     origem: origemDa(requisicao),
     momento,
-    saida: { publico: publicoDoChamado(doChamado) },
+    saida: {
+      publico: await publicoComQuemParticipa(
+        tx,
+        { pessoaId: pessoa.id, origem: origem.tipo, abertoPor: contaId },
+        doChamado,
+      ),
+    },
   });
 
   // As notificações: a de quem recebe o chamado pelo tipo, ou as da triagem, fora quem abriu. As
@@ -436,5 +566,5 @@ export async function abrirChamado(
     momento,
     enviar ? { enviar } : {},
   );
-  return { numero, situacao: atendimento.situacao, responsavel };
+  return { id: aberto.id, numero, situacao: atendimento.situacao, responsavel };
 }

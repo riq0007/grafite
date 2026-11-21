@@ -1,0 +1,280 @@
+/* A caixa de escrever do chat (m01): a cápsula com a borda à vista, de 48 px, na coluna das
+   mensagens, com o texto, o clipe e o envio redondo na linha dela, a respondida em cima e os
+   anexos embaixo. A recusa fica fora dela, embaixo. A área é a base do texto só para o leitor de
+   tela, que fica dentro dela. */
+.area {
+  --altura-da-linha: calc(var(--esp-12) - 2px);
+  --lado-do-envio: calc(var(--esp-8) + var(--esp-1));
+
+  position: relative;
+  display: grid;
+  flex: none;
+  gap: var(--esp-1);
+  max-inline-size: var(--largura-previa);
+  margin: 0 var(--esp-5) var(--esp-4);
+}
+
+.caixa {
+  position: relative;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--esp-6);
+  background-color: var(--cor-superficie-2);
+}
+
+/* O foco na caixa de texto contorna a cápsula inteira, como o campo do kit. */
+.caixa:has(.texto:focus-visible) {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 1px;
+}
+
+.caixa[data-invalida] {
+  border-color: var(--cor-critico);
+}
+
+.linha {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--esp-1);
+  padding-inline: var(--esp-4) calc((var(--altura-da-linha) - var(--lado-do-envio)) / 2);
+}
+
+/* O texto cresce com o que se escreve, até a metade da janela; dali em diante, rola. */
+.texto {
+  flex: 1;
+  min-inline-size: 0;
+  max-block-size: 50vh;
+  margin: 0;
+  padding: calc((var(--altura-da-linha) - 1lh) / 2) 0;
+  overflow-y: auto;
+  border: 0;
+  background: none;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  resize: none;
+  outline: none;
+}
+
+.texto::placeholder {
+  color: var(--cor-texto-2);
+  opacity: 1;
+}
+
+.clipe {
+  flex: none;
+  margin-block-end: calc((var(--altura-da-linha) - var(--altura-controle)) / 2);
+}
+
+/* O envio é o botão de ícone do kit, redondo e no destaque, como o primário. */
+.linha .enviar {
+  flex: none;
+  inline-size: var(--lado-do-envio);
+  block-size: var(--lado-do-envio);
+  margin-block-end: calc((var(--altura-da-linha) - var(--lado-do-envio)) / 2);
+  border-radius: 50%;
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.linha .enviar[data-hovered] {
+  background-color: var(--cor-destaque-hover);
+}
+
+.linha .enviar[data-pressed] {
+  background-color: var(--cor-destaque-pressionado);
+}
+
+.linha .enviar:is([data-disabled], [data-pending]) {
+  background-color: var(--cor-destaque);
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* A mensagem respondida, em cima, como a resposta a mostra na conversa. */
+.respondida {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+  padding: var(--esp-1) var(--esp-2) 0 var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.autorDaRespondida {
+  flex: none;
+  color: var(--cor-texto);
+  font-weight: var(--peso-forte);
+}
+
+/* A contenção da largura impede que o começo longo alargue a caixa e a conversa, como no celular:
+   ele termina nas reticências. */
+.comecoDaRespondida {
+  flex: 1;
+  min-inline-size: 0;
+  contain: inline-size;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Os anexos, embaixo, cada um com o nome, o tamanho e "Tirar", e os que ainda vão. */
+.anexos {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0 var(--esp-2) var(--esp-2) var(--esp-4);
+  list-style: none;
+}
+
+.anexo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+  min-block-size: var(--altura-controle);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+}
+
+/* O nome longo também termina nas reticências, sem alargar a caixa. */
+.nomeDoAnexo {
+  flex: 1;
+  min-inline-size: 0;
+  contain: inline-size;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tamanho {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.progresso {
+  flex: none;
+  inline-size: calc(var(--esp-12) * 2);
+}
+
+/* A lista do "#", em camada opaca acima da caixa, com o escolhido no destaque, como o menu. */
+.lista {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  inset-block-end: calc(100% + var(--esp-1));
+  display: grid;
+  max-block-size: 40vh;
+  margin: 0;
+  padding: var(--esp-1);
+  overflow-y: auto;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-material-solido);
+  box-shadow: var(--sombra-sobreposta);
+  list-style: none;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-block-size: calc(var(--altura-controle) - var(--esp-1));
+  padding: 0 var(--esp-2);
+  border-radius: max(0px, calc(var(--raio-menu) - var(--esp-1)));
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  cursor: default;
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .opcao {
+  min-block-size: var(--alvo-toque);
+}
+
+.opcao[aria-selected="true"] {
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+}
+
+.numero {
+  flex: none;
+  font-family: var(--fonte-mono);
+  font-weight: var(--peso-forte);
+}
+
+.tituloDoChamado {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recusas {
+  display: grid;
+  gap: var(--esp-1);
+  padding-inline: var(--esp-4);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Na conversa de um chamado: o que vem antes do texto, como o cadeado do resolvido, a dica à
+   direita da caixa vazia ("# cita um chamado") e, no lugar do envio com a caixa vazia, o
+   "Reabrir até 18/11". Os três ficam na altura da última linha, como o clipe e o envio. */
+.inicio,
+.dica,
+.semTexto {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  align-self: flex-end;
+  block-size: var(--altura-da-linha);
+}
+
+.inicio {
+  margin-inline-end: var(--esp-2);
+  color: var(--cor-texto-2);
+}
+
+.dica {
+  padding-inline: var(--esp-2);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+}
+
+.dica[hidden] {
+  display: none;
+}
+
+/* No toque, o clipe e o envio no alvo de 44 px (spec modulo-chat, "Chat no celular"). */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .area {
+  --lado-do-envio: var(--alvo-toque);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .clipe {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  margin-block-end: calc((var(--altura-da-linha) - var(--alvo-toque)) / 2);
+}
+
+/* E o "Tirar" da respondida e dos anexos. */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .tirar {
+  min-block-size: var(--alvo-toque);
+}
+
+/* No celular, a caixa no recuo da tela, acima da área do gesto do aparelho, e sem a dica. */
+:root[data-postura="celular"] .area {
+  margin: 0 var(--esp-3) max(var(--esp-3), env(safe-area-inset-bottom));
+}
+
+:root[data-postura="celular"] .dica {
+  display: none;
+}

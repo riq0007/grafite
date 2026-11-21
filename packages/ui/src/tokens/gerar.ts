@@ -112,6 +112,8 @@ function escalasFixas(): Declaracoes {
       `${ms}ms`,
     ]),
     ['--dur-deslocamento', 'var(--dur-media)'],
+    // A folha de baixo do celular sobe em 300 ms (spec modulo-chat, "Selos e movimento do chat").
+    ['--dur-folha', 'var(--dur-lenta)'],
     ['--dur-opacidade', 'var(--dur-rapida)'],
     ['--dur-escala-menu', 'var(--dur-menu)'],
     ['--dur-escala-busca', 'var(--dur-busca)'],
@@ -143,6 +145,7 @@ function escalasFixas(): Declaracoes {
 
 const MOVIMENTO_REDUZIDO: Declaracoes = [
   ['--dur-deslocamento', '0ms'],
+  ['--dur-folha', '0ms'],
   ['--dur-mola-aviso', '0ms'],
   ['--dur-giro', '0ms'],
   ['--dur-ciclo', '0ms'],

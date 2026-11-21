@@ -391,6 +391,30 @@ export const PERMISSOES = [
     escopo: 'organizacao',
     inclui: [],
   },
+  // O pedido pelo chat (change chat-com-chamados, design, decisão 14): quem pede não vê os chamados
+  // dos outros, e o próprio chamado se lê sem nenhuma permissão dos chamados.
+  {
+    chave: 'chamados.pedir',
+    area: 'Chamados',
+    descricao: 'Pedir chamados pelo chat, em nome de si ou de outra pessoa',
+    escopo: 'organizacao',
+    inclui: [],
+  },
+  // O chat (change chat-com-chamados): as conversas e as equipes valem na organização inteira.
+  {
+    chave: 'chat.usar',
+    area: 'Chat',
+    descricao: 'Usar o chat: as conversas diretas, as equipes e os canais',
+    escopo: 'organizacao',
+    inclui: [],
+  },
+  {
+    chave: 'chat.configurar',
+    area: 'Chat',
+    descricao: 'Configurar as equipes e os canais do chat',
+    escopo: 'organizacao',
+    inclui: [],
+  },
 ] as const satisfies readonly DefinicaoDePermissao[];
 
 export type Permissao = (typeof PERMISSOES)[number]['chave'];

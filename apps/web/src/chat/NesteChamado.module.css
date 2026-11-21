@@ -1,0 +1,80 @@
+/* "Neste chamado" (m04): as seções com o carimbo e, embaixo de cada uma, os cartões na superfície. */
+.painel {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-4);
+}
+
+.secao {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.cartoes {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cartao {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-inline-size: 0;
+  padding: var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+
+a.cartao:hover {
+  border-color: var(--cor-linha-forte);
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+a.cartao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.icone {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+.textos {
+  display: grid;
+  gap: calc(var(--esp-1) / 2);
+  min-inline-size: 0;
+}
+
+.nome {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.textos small {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.textos .mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.nenhum {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

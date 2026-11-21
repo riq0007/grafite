@@ -16,7 +16,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { z } from 'zod';
-import { carregarAcesso } from './acesso/acesso.ts';
+import { carregarAcesso, carregarGrupos } from './acesso/acesso.ts';
 import { instalarAcesso } from './acesso/escopo.ts';
 import { exigirModuloLigado } from './acesso/modulos.ts';
 import {
@@ -63,6 +63,15 @@ import { rotasDosAnexosDosChamados } from './rotas/chamados-anexos.ts';
 import { rotasDoHorarioDaTi } from './rotas/chamados-horario.ts';
 import { rotasDasRespostasProntas } from './rotas/chamados-respostas-prontas.ts';
 import { rotasDosTiposDeChamado } from './rotas/chamados-tipos.ts';
+import { rotasDoChat } from './rotas/chat.ts';
+import { rotasDosAnexosDoChat } from './rotas/chat-anexos.ts';
+import { rotasDosChamadosDoChat } from './rotas/chat-chamados.ts';
+import { rotasDasAcoesDosChamadosDoChat } from './rotas/chat-chamados-acoes.ts';
+import { rotasDaLeituraDosChamadosDoChat } from './rotas/chat-chamados-leitura.ts';
+import { rotasDasEquipesDoChat } from './rotas/chat-equipes.ts';
+import { rotasDasEquipesECanais } from './rotas/chat-equipes-e-canais.ts';
+import { rotasDaLeituraDoChat } from './rotas/chat-leitura.ts';
+import { rotasDasMensagensDoChat } from './rotas/chat-mensagens.ts';
 import { rotasDoCofre } from './rotas/cofre.ts';
 import { rotasDoAcessoAoCofre } from './rotas/cofre-acesso.ts';
 import { rotasDoLoginDoControle } from './rotas/cofre-login-do-controle.ts';
@@ -223,9 +232,11 @@ export async function criarApp({
     requestIdHeader: false,
     // /api/... chega às mesmas rotas, como no proxy do desenvolvimento (a web chama /api). Com a
     // web compilada, o pedido de uma página fora do /api é dela, mesmo no endereço de uma rota da
-    // API, como /ativos: recebe o index.html.
+    // API, como /ativos: recebe o index.html, ou, em /chat, a página do app do chat.
     rewriteUrl: (requisicao) =>
-      pastaDaWeb && pedePagina(requisicao) ? '/index.html' : semPrefixoDaApi(requisicao.url ?? '/'),
+      pastaDaWeb && pedePagina(requisicao)
+        ? paginaDoEndereco(requisicao.url)
+        : semPrefixoDaApi(requisicao.url ?? '/'),
     // Só o proxy na frente diz o endereço do cliente (design do F2d, decisão 10).
     trustProxy: proxiesConfiaveis,
   }).withTypeProvider<ZodTypeProvider>();
@@ -253,7 +264,11 @@ export async function criarApp({
   // às conexões abertas.
   const distribuidor = criarDistribuidor({
     lerArvore: (orgId) => naOrganizacao(banco, orgId, lerArvore),
-    lerAcesso: (orgId, contaId) => naOrganizacao(banco, orgId, (tx) => carregarAcesso(tx, contaId)),
+    lerAcesso: (orgId, contaId) =>
+      naOrganizacao(banco, orgId, async (tx) => ({
+        acesso: await carregarAcesso(tx, contaId),
+        grupos: await carregarGrupos(tx, contaId),
+      })),
     avisar: (erro) => app.log.warn({ err: erro }, 'falha na distribuição dos eventos'),
   });
   const ouvinte =
@@ -445,6 +460,20 @@ export async function criarApp({
       await dosChamados.register(rotasDosAnexosDosChamados, { banco, agora, armazenamento });
       await dosChamados.register(rotasDosChamados, { banco, agora, fila });
     });
+    // O módulo Chat, opcional: as conversas, as equipes e os canais e os chamados de quem participa
+    // (change chat-com-chamados, design, decisão 14).
+    await escopo.register(async (doChat) => {
+      exigirModuloLigado(doChat, { banco, modulo: 'chat' });
+      await doChat.register(rotasDoChat, { banco, armazenamento });
+      await doChat.register(rotasDasMensagensDoChat, { banco, agora, fila });
+      await doChat.register(rotasDosChamadosDoChat, { banco, agora, fila });
+      await doChat.register(rotasDaLeituraDosChamadosDoChat, { banco, agora, armazenamento });
+      await doChat.register(rotasDasAcoesDosChamadosDoChat, { banco, agora, fila });
+      await doChat.register(rotasDaLeituraDoChat, { banco, agora });
+      await doChat.register(rotasDosAnexosDoChat, { banco, agora, armazenamento });
+      await doChat.register(rotasDasEquipesECanais, { banco, agora });
+      await doChat.register(rotasDasEquipesDoChat, { banco, agora });
+    });
     // O módulo Painéis, opcional: os painéis das VMs e a verificação (change painel-de-dashboards).
     await escopo.register(async (dosPaineis) => {
       exigirModuloLigado(dosPaineis, { banco, modulo: 'paineis' });
@@ -492,6 +521,14 @@ export function semPrefixoDaApi(url: string): string {
 
 /** Arquivo com extensão (script, estilo, imagem): se não existe, é 404, nunca o index.html. */
 const EXTENSAO = /\.[a-z0-9]+$/i;
+
+/** Os endereços do app do chat, que tem a página própria (change chat-com-chamados, decisão 12). */
+const DO_CHAT = /^\/chat(\/|$)/;
+
+/** A página da web de um pedido de página: a do app do chat em /chat e abaixo; a da casca no resto. */
+export function paginaDoEndereco(url = '/'): string {
+  return DO_CHAT.test(url.split('?')[0] ?? '') ? '/chat/index.html' : '/index.html';
+}
 
 /** Onde o Vite põe os arquivos com a versão no nome: o único lugar com cache longo. */
 const PASTA_COM_VERSAO = 'assets';

@@ -1,0 +1,63 @@
+/* A vista Avisos: sem a lista ao lado, a página inteira na superfície, que rola, com a coluna de
+   leitura no meio: o título, "Neste aparelho" e as notificações, como na central da casca. */
+.avisos {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.conteudo {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-6);
+  max-inline-size: calc(var(--esp-10) * 18);
+  margin-inline: auto;
+  padding: var(--esp-6) var(--esp-5) var(--esp-8);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+/* O título de cada parte, como os das seções da lista: a legenda em maiúsculas, no secundário. */
+.tituloDaParte {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  line-height: var(--entrelinha-justa);
+  text-transform: uppercase;
+}
+
+/* "Neste aparelho": a frase e o botão na mesma linha quando cabem, no quadro da superfície afundada. */
+.esteAparelho {
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.linhaDoAparelho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.texto {
+  flex: 1 1 calc(var(--esp-10) * 6);
+  margin: 0;
+  font-size: var(--texto-corpo);
+}
+
+.notificacoes {
+  display: grid;
+  gap: var(--esp-4);
+}

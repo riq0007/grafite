@@ -18,6 +18,10 @@ beforeAll(() => {
   writeFileSync(join(pasta, 'favicon.svg'), '<svg/>');
   mkdirSync(join(pasta, 'icones'));
   writeFileSync(join(pasta, 'icones', 'pwa-192.png'), 'png');
+  // O app do chat, com a página e o manifesto próprios (change chat-com-chamados, decisão 12).
+  mkdirSync(join(pasta, 'chat'));
+  writeFileSync(join(pasta, 'chat', 'index.html'), '<!doctype html><title>Grafite · Chat</title>');
+  writeFileSync(join(pasta, 'chat', 'manifest.webmanifest'), '{"name":"Grafite · Chat"}');
 });
 
 const html = { accept: 'text/html,application/xhtml+xml' };
@@ -56,6 +60,46 @@ describe('web compilada servida pela API', () => {
     });
     expect(r.headers['content-type']).toContain('application/problem+json');
     expect(r.body).not.toContain('<title>Grafite</title>');
+  });
+
+  it('os endereços do app do chat, pedidos como página, recebem a página do chat, sem cache', async () => {
+    const app = await comWeb();
+    for (const url of [
+      '/chat',
+      '/chat/',
+      '/chat?m=12',
+      '/chat/c/0199a6e0-0000-7000-8000-00000000c0a1',
+      '/chat/chamados/1045?m=12',
+      '/chat/equipes',
+    ]) {
+      const r = await app.inject({ method: 'GET', url, headers: html });
+      expect(r.statusCode, url).toBe(200);
+      expect(r.body, url).toContain('<title>Grafite · Chat</title>');
+      expect(r.headers['cache-control'], url).toContain('no-cache');
+    }
+  });
+
+  it('fora do /chat, a página é a da casca, mesmo no endereço que começa com chat', async () => {
+    const r = await (await comWeb()).inject({ method: 'GET', url: '/chatbot', headers: html });
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toContain('<title>Grafite</title>');
+  });
+
+  it('os endereços do chat pedidos sem ser página continuam na API', async () => {
+    const r = await (await comWeb()).inject({
+      method: 'GET',
+      url: '/chat/chamados',
+      headers: { accept: 'application/json' },
+    });
+    expect(r.headers['content-type']).toContain('application/problem+json');
+    expect(r.body).not.toContain('Grafite · Chat');
+  });
+
+  it('o manifesto do app do chat vem como arquivo, sem cache longo', async () => {
+    const r = await (await comWeb()).inject({ method: 'GET', url: '/chat/manifest.webmanifest' });
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toContain('Grafite · Chat');
+    expect(r.headers['cache-control']).toBe('no-cache');
   });
 
   it('a saúde continua na API, mesmo pedida como página', async () => {

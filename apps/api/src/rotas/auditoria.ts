@@ -8,6 +8,7 @@ import {
   type Banco,
   chamados,
   contas,
+  conversas,
   grupos,
   modelos,
   naOrganizacao,
@@ -73,7 +74,7 @@ const RegistroDeAuditoria = z
       /**
        * O nome atual do alvo, quando ele tem nome: a pessoa, a conta, o perfil, o grupo, o caminho
        * do local, o dispositivo, o ativo, o segredo, a solicitação, a OS, o chamado, o tipo de
-       * chamado ou a resposta pronta.
+       * chamado, a resposta pronta, a equipe ou o canal.
        */
       nome: z.string().nullable(),
       /** O usuário, quando o alvo é uma conta. */
@@ -247,6 +248,18 @@ const LEITORES_DOS_NOMES = new Map<string, LeitorDosNomes>([
           .from(tiposDeChamado)
           .where(inArray(tiposDeChamado.id, ids))
       ).map(({ id, nome }) => [id, nome]),
+  ],
+  // A equipe e o canal do chat pelo nome de agora (spec chat, "Permissões, auditoria e eventos do
+  // chat").
+  [
+    'conversa',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({ id: conversas.id, nome: conversas.nome })
+          .from(conversas)
+          .where(inArray(conversas.id, ids))
+      ).map(({ id, nome }) => [id, nome ?? '']),
   ],
   [
     'resposta-pronta',

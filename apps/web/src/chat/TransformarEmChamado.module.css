@@ -1,0 +1,243 @@
+/* O formulário do transformar em chamado (m02): os campos um embaixo do outro, com os rótulos curtos
+   em peso forte, como no mockup, e as ações no fim, à direita. */
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+.formulario [data-parte="rotulo"],
+.rotulo {
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+  color: var(--cor-texto);
+}
+
+.campo {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+/* A mensagem citada, como ela é (m02): quem escreveu e a hora em cima, e o texto, com o fio do azul
+   do chamado. */
+.citada {
+  position: relative;
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-inline-start: 3px solid var(--cor-info);
+  border-radius: 0 var(--raio-controle) var(--raio-controle) 0;
+  background-color: var(--cor-superficie-2);
+  font-size: var(--texto-dado);
+}
+
+.quem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+}
+
+.autor {
+  font-weight: var(--peso-forte);
+}
+
+.hora {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.texto {
+  margin: 2px 0 0;
+  line-height: var(--entrelinha-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Os tipos em chips, que quebram em linhas, e nenhum se corta: o nome longo quebra dentro do chip. */
+.tipos [data-parte="opcoes"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.tipo {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  max-width: 100%;
+  min-height: var(--altura-controle);
+  padding: var(--esp-1) var(--esp-3) var(--esp-1) var(--esp-2);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  cursor: default;
+  outline: none;
+  transition:
+    background-color var(--dur-rapida) var(--curva-padrao),
+    border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.tipo > svg {
+  flex: none;
+}
+
+/* O nome no meio da altura do chip, também no alvo de toque: o kit alinha o nome à bolinha, que aqui
+   sai. */
+.tipos [data-parte="opcoes"] .tipo {
+  align-items: center;
+}
+
+/* A bolinha do rádio do kit sai: a escolha é o chip cheio, no destaque, com o nome em peso forte. */
+.tipo > [data-parte="bolinha"] {
+  display: none;
+}
+
+.tipo[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.tipo[data-selected] {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+  font-weight: var(--peso-forte);
+}
+
+.tipo[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.tipo[data-invalid]:not([data-selected]) {
+  border-color: var(--cor-critico);
+}
+
+/* O ativo sugerido e "No nome de": o escolhido numa linha, com "Trocar" no fim, num fieldset sem a
+   margem e a largura mínima dele. */
+.linhaDaEscolha {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: var(--esp-12);
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie);
+  font-size: var(--texto-dado);
+}
+
+.linhaDaEscolha[data-recusada] {
+  border-color: var(--cor-critico);
+}
+
+.iconeDoAtivo {
+  display: inline-grid;
+  flex: none;
+  color: var(--cor-texto);
+}
+
+.escolhido {
+  display: grid;
+  min-width: 0;
+}
+
+.nomeDoEscolhido {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+}
+
+.patrimonio {
+  font-family: var(--fonte-mono);
+}
+
+.fotoDaPessoa {
+  flex: none;
+}
+
+.fotoDaPessoa[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+.ninguem {
+  color: var(--cor-texto-2);
+}
+
+.trocar {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+/* A busca da pessoa, no popover do "Trocar". */
+.busca {
+  inline-size: calc(var(--esp-12) * 6);
+  max-inline-size: 100%;
+}
+
+/* Os tipos e os ativos carregando, ou nenhum. */
+.estado {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  margin-block-start: var(--esp-1);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Os tipos no toque, no alvo de 44 px; e o "Trocar". */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .tipo {
+  min-height: var(--alvo-toque);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .trocar {
+  min-height: var(--alvo-toque);
+}
+
+/* No celular, na tela cheia (m09): o formulário ocupa a altura, e o pé, com "Abrir chamado" na
+   largura toda, fica preso embaixo, no recuo da tela cheia, por cima dos campos que rolam. */
+:root[data-postura="celular"] .formulario {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+:root[data-postura="celular"] .acoes {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  margin: auto calc(var(--recuo-da-tela-cheia) * -1) 0;
+  padding: var(--esp-3) var(--recuo-da-tela-cheia) calc(var(--esp-3) + env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie);
+}
+
+:root[data-postura="celular"] .acoes .abrir {
+  flex: 1;
+  min-height: calc(var(--esp-12) + var(--esp-1));
+  border-radius: var(--raio-capsula);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}

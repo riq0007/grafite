@@ -17,15 +17,29 @@ import estilos from './Flutuante.module.css';
 
 export interface PropsDoPainelFlutuante extends Omit<PopoverProps, 'className'> {
   className?: string;
+  /** O painel, para quem leva o foco a ele ou observa o toque fora dele. */
+  ref?: Ref<HTMLElement>;
+  /**
+   * A camada opaca, com o material sólido no lugar do vidro, para o que se lê por cima de outro
+   * conteúdo, como o resumo de um registro.
+   */
+  opaco?: boolean;
 }
 
 /** Painel sobreposto: material translúcido, que vira sólido com a transparência reduzida. */
-export function PainelFlutuante({ className, offset = 4, ...resto }: PropsDoPainelFlutuante) {
+export function PainelFlutuante({
+  className,
+  offset = 4,
+  opaco = false,
+  ...resto
+}: PropsDoPainelFlutuante) {
   return (
     <Popover
       {...resto}
       offset={offset}
-      className={[estilos.painel, className].filter(Boolean).join(' ')}
+      className={[estilos.painel, opaco ? estilos.opaco : null, className]
+        .filter(Boolean)
+        .join(' ')}
     />
   );
 }

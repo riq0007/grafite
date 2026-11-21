@@ -40,8 +40,11 @@ declare module 'fastify' {
   }
 
   interface FastifyContextConfig {
-    /** A permissão que a rota exige, em algum escopo: a guarda confere antes de validar o pedido. */
-    permissao?: Permissao;
+    /**
+     * A permissão que a rota exige, em algum escopo: a guarda confere antes de validar o pedido. Com
+     * a lista, basta uma delas, e a recusa cita a primeira.
+     */
+    permissao?: Permissao | readonly [Permissao, ...Permissao[]];
     /** A rota que exige só a sessão. */
     semPermissao?: ExcecaoDePermissao;
     /** A rota que nunca conta como uso da sessão, como a conexão de eventos. */
@@ -121,8 +124,10 @@ function aplicarGuardas(rota: RouteOptions) {
       `${nome} não declara a permissão que exige (config.permissao) nem a exceção (config.semPermissao).`,
     );
   }
-  if (permissao !== undefined && !permissaoConhecida(permissao)) {
-    throw new Error(`${nome} exige uma permissão fora do catálogo: ${permissao}.`);
+  for (const chave of permissao === undefined ? [] : [permissao].flat()) {
+    if (!permissaoConhecida(chave)) {
+      throw new Error(`${nome} exige uma permissão fora do catálogo: ${chave}.`);
+    }
   }
   if (semPermissao !== undefined && !EXCECOES_DE_PERMISSAO.includes(semPermissao)) {
     throw new Error(`${nome} declara uma exceção desconhecida: ${semPermissao}.`);
@@ -199,11 +204,14 @@ export async function exigirAtiva(requisicao: FastifyRequest) {
 }
 
 /** A conta tem a permissão em algum escopo. A rota que lê um registro com local usa o `exigirEm`. */
-export function exigirPermissao(permissao: Permissao) {
+export function exigirPermissao(permissao: Permissao | readonly [Permissao, ...Permissao[]]) {
+  const chaves: readonly Permissao[] = [permissao].flat();
   return async (requisicao: FastifyRequest) => {
     const { sessao } = requisicao;
     if (!sessao) throw semSessao();
-    if (!pode(sessao.acesso, permissao)) throw new RecusaDePermissao(permissao);
+    if (!chaves.some((chave) => pode(sessao.acesso, chave))) {
+      throw new RecusaDePermissao(chaves[0] as Permissao);
+    }
   };
 }
 

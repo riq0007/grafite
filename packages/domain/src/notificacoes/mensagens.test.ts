@@ -116,6 +116,13 @@ describe('push', () => {
     });
   });
 
+  it('a mensagem leva só o título, sem a severidade (change chat-com-chamados)', () => {
+    const conteudo = conteudoDoPush(
+      notificacao({ severidade: 'info', titulo: 'Mensagem de Paulo Nunes', mensagem: true }),
+    );
+    expect(conteudo.titulo).toBe('Mensagem de Paulo Nunes');
+  });
+
   it('sem descrição, o corpo é a origem; sem destino, abre a tela inicial', () => {
     const conteudo = conteudoDoPush(notificacao({ descricao: null, destino: null }));
     expect(conteudo.corpo).toBe('Alertas');

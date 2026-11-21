@@ -95,6 +95,19 @@ const notificacao = (org: string, colunas: Record<string, unknown>) =>
     ...colunas,
   });
 
+const canal = (org: string) => {
+  const nome = unico('Canal');
+  return incluir('conversas', org, { tipo: 'canal', nome, nome_normalizado: nome.toLowerCase() });
+};
+
+const mensagemDoChat = (org: string, conversa: string, autor: string) =>
+  incluir('mensagens_do_chat', org, {
+    conversa_id: conversa,
+    especie: 'mensagem',
+    autor_conta: autor,
+    texto: 'A impressora do Financeiro está manchando.',
+  });
+
 /** O erro do PostgreSQL de uma inclusão que devia ser recusada. */
 async function recusada(promessa: Promise<unknown>): Promise<string> {
   try {
@@ -184,6 +197,82 @@ describe('notificações', () => {
     expect(
       await recusada(notificacao(orgA, { conta_id: daConta, destino: 'https://outro.site/' })),
     ).toBe('notificacoes_destino_valido');
+  });
+
+  // A notificação de uma mensagem do chat ou de um chamado (change chat-com-chamados, design,
+  // decisão 6).
+  it('a de uma mensagem leva o assunto e, no chat, a mensagem de que trata', async () => {
+    const daConta = await conta(orgA);
+    const conversa = await canal(orgA);
+    const doChat = await mensagemDoChat(orgA, conversa, daConta);
+    const doCanal = await notificacao(orgA, {
+      conta_id: daConta,
+      mensagem: true,
+      assunto: `conversa:${conversa}`,
+      mensagem_do_chat_id: doChat,
+    });
+    // A do chamado tem o assunto, sem a mensagem do chat; a de antes fica sem os dois.
+    const chamado = 'chamado:0199a3f0-0000-7000-8000-000000000001';
+    const doChamado = await notificacao(orgA, {
+      conta_id: daConta,
+      mensagem: true,
+      assunto: chamado,
+    });
+    const resolvido = await notificacao(orgA, { conta_id: daConta, assunto: chamado });
+    const doAlerta = await notificacao(orgA, { conta_id: daConta });
+    const { rows } = await emTransacao(app, orgA, (c) =>
+      c.query(
+        `select mensagem, assunto, mensagem_do_chat_id from notificacoes
+          where id = any($1) order by array_position($1, id)`,
+        [[doCanal, doChamado, resolvido, doAlerta]],
+      ),
+    );
+    expect(rows).toEqual([
+      { mensagem: true, assunto: `conversa:${conversa}`, mensagem_do_chat_id: doChat },
+      { mensagem: true, assunto: chamado, mensagem_do_chat_id: null },
+      { mensagem: false, assunto: chamado, mensagem_do_chat_id: null },
+      { mensagem: false, assunto: null, mensagem_do_chat_id: null },
+    ]);
+  });
+
+  it('confere o assunto, a mensagem e a mensagem do chat', async () => {
+    const daConta = await conta(orgA);
+    const conversa = await canal(orgA);
+    const doChat = await mensagemDoChat(orgA, conversa, daConta);
+    const assunto = `conversa:${conversa}`;
+    const comAssunto = (outro: string) => notificacao(orgA, { conta_id: daConta, assunto: outro });
+    // O id como o banco o devolve, em minúsculas, com o tipo antes, até 80 caracteres.
+    expect(await recusada(comAssunto(assunto.toUpperCase()))).toBe('notificacoes_assunto_valido');
+    expect(await recusada(comAssunto(conversa))).toBe('notificacoes_assunto_valido');
+    expect(await recusada(comAssunto(`chamado:${'a'.repeat(73)}`))).toBe(
+      'notificacoes_assunto_valido',
+    );
+    // A mensagem sem o assunto; a mensagem do chat sem a marca ou com o assunto de um chamado.
+    expect(await recusada(notificacao(orgA, { conta_id: daConta, mensagem: true }))).toBe(
+      'notificacoes_mensagem_coerente',
+    );
+    expect(
+      await recusada(
+        notificacao(orgA, { conta_id: daConta, assunto, mensagem_do_chat_id: doChat }),
+      ),
+    ).toBe('notificacoes_mensagem_coerente');
+    expect(
+      await recusada(
+        notificacao(orgA, {
+          conta_id: daConta,
+          mensagem: true,
+          assunto: `chamado:${conversa}`,
+          mensagem_do_chat_id: doChat,
+        }),
+      ),
+    ).toBe('notificacoes_mensagem_coerente');
+    // A mensagem do chat é da própria organização.
+    const deB = await mensagemDoChat(orgB, await canal(orgB), await conta(orgB));
+    expect(
+      await recusada(
+        notificacao(orgA, { conta_id: daConta, mensagem: true, assunto, mensagem_do_chat_id: deB }),
+      ),
+    ).toBe('notificacoes_mensagem_do_chat_fk');
   });
 
   it('a leitura fica com o momento dela', async () => {

@@ -315,17 +315,22 @@ function evento(
     os: null,
     solicitacao: null,
     motivo: null,
+    avaliacao: null,
+    resumo: null,
     ...dados,
   };
 }
 
-const mensagem = (em: string, autor: Evento['autor']): Item => ({
+const mensagem = (em: string, autor: NonNullable<Evento['autor']>): Item => ({
   especie: 'mensagem',
   id: proximoId(),
   em,
   autor,
   texto: 'Pode testar agora?',
   anexos: [],
+  opcoes: null,
+  escolhida: null,
+  cartao: null,
 });
 
 // Hoje é 18/11, ao meio-dia de São Paulo.
@@ -381,6 +386,32 @@ describe('a linha do tempo (spec modulo-chamados, "Chamado aberto")', () => {
   it('a abertura pela TI diz para quem', () => {
     expect(linha([evento('abertura', '2026-11-18T10:40:00Z', ANA)], 'Marina Rocha')).toMatchObject([
       { titulo: 'Na triagem', texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha' },
+    ]);
+  });
+
+  it('a abertura com quem atende nasce Em atendimento, com quem atende quando não é quem abriu', () => {
+    // O "Fica comigo": quem abriu é quem atende.
+    expect(
+      linha(
+        [evento('abertura', '2026-11-18T10:40:00Z', ANA, { para: contaDe(ANA) })],
+        'Marina Rocha',
+      ),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha',
+        agora: true,
+      },
+    ]);
+    // Quem atende o tipo por padrão.
+    expect(
+      linha([evento('abertura', '2026-11-18T10:40:00Z', FERNANDA, { para: contaDe(BRUNO) })]),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Fernanda Rocha · com Bruno Lima',
+        agora: true,
+      },
     ]);
   });
 

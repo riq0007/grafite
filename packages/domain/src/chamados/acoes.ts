@@ -28,14 +28,17 @@ export const SITUACOES_DO_CHAMADO = [
 export type SituacaoDoChamado = (typeof SITUACOES_DO_CHAMADO)[number];
 
 /**
- * As origens do chamado, com os textos do banco. Nesta change, todo chamado nasce da TI; o chat e a
- * aba trazem as origens deles.
+ * As origens do chamado, com os textos do banco: a TI e o chat, a partir de uma mensagem (change
+ * chat-com-chamados, design, decisão 2). A aba traz a dela.
  */
-export const ORIGENS_DO_CHAMADO = ['ti'] as const;
+export const ORIGENS_DO_CHAMADO = ['ti', 'chat'] as const;
 export type OrigemDoChamado = (typeof ORIGENS_DO_CHAMADO)[number];
 
-/** As espécies da conversa: a mensagem para a pessoa, a nota interna e o evento. */
-export const ESPECIES_DA_CONVERSA = ['mensagem', 'nota', 'evento'] as const;
+/**
+ * As espécies da conversa: a mensagem para a pessoa, a nota interna, o evento e a origem, a cópia da
+ * mensagem do chat de onde o chamado foi aberto.
+ */
+export const ESPECIES_DA_CONVERSA = ['mensagem', 'nota', 'evento', 'origem'] as const;
 export type EspecieDaConversa = (typeof ESPECIES_DA_CONVERSA)[number];
 
 /** As ações da matriz, na ordem da tabela da spec. */
@@ -160,6 +163,11 @@ export interface ChamadoParaAcao {
   versao: number;
   /** Quando a TI escreveu à pessoa pela primeira vez, ou nulo, com a primeira resposta pendente. */
   primeiraRespostaEm: Date | null;
+  /**
+   * O resolvido fechado, pelo `estaFechado`: o que a tarefa fechou e o vencido que ela ainda não
+   * fechou. Nada muda mais nele (change chat-com-chamados, decisão 7).
+   */
+  fechado: boolean;
 }
 
 /** Quem age, com o alcance de `chamados.atender` da conta. */
@@ -255,9 +263,12 @@ export type EventoDaAcao =
    */
   | { evento: 'solicitacao-nao-gerada'; dados: DadosDaSolicitacaoNaoGerada };
 
-/** O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. */
+/**
+ * O que a ação grava na conversa: a mensagem para a pessoa, a nota ou o evento. A origem, só a
+ * abertura pelo chat a grava.
+ */
 export type EntradaDaConversa =
-  | { especie: Exclude<EspecieDaConversa, 'evento'>; texto: string }
+  | { especie: Extract<EspecieDaConversa, 'mensagem' | 'nota'>; texto: string }
   | ({ especie: 'evento' } & EventoDaAcao);
 
 /** O que a rota aplica no chamado. */
@@ -277,6 +288,7 @@ export interface MudancaDoChamado {
 /** Por que a ação não acontece; `mensagemDaRecusaDaAcao` escreve a frase. */
 export type RecusaDaAcao =
   | { motivo: 'resolvido' }
+  | { motivo: 'fechado' }
   | { motivo: 'ja-na-triagem' }
   | { motivo: 'aguardando'; pessoa: string }
   | { motivo: 'nao-aguardando' }
@@ -420,6 +432,8 @@ export function decidirAcao(
   if (daVersao) return recusada(daVersao);
   const daConta = recusaDeQuemAge(quemAge, chamado);
   if (daConta) return recusada(daConta);
+  // O fechado no lugar da célula: nada muda mais nele, nem o reabrir.
+  if (chamado.fechado) return recusada({ motivo: 'fechado' });
   const celula = MATRIZ_DAS_ACOES[pedido.acao][chamado.situacao];
   if ('recusa' in celula) return recusada(recusaDaCelula(celula.recusa, chamado));
   const de = chamado.responsavel;
@@ -608,6 +622,8 @@ export function mensagemDaRecusaDaAcao(numero: number, recusa: RecusaDaAcao): st
   switch (recusa.motivo) {
     case 'resolvido':
       return `O chamado #${numero} está resolvido.`;
+    case 'fechado':
+      return `O chamado #${numero} está fechado.`;
     case 'ja-na-triagem':
       return `O chamado #${numero} já está na triagem.`;
     case 'aguardando':

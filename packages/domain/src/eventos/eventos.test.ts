@@ -50,6 +50,7 @@ const conexao = (acesso: Acesso, extra: Partial<ConexaoQueRecebe> = {}): Conexao
   contaId: 'conta-bruno',
   sessaoId: 'sessao-bruno',
   acesso,
+  grupos: [],
   ...extra,
 });
 
@@ -104,6 +105,7 @@ describe('tipos de evento', () => {
       'software.mudou',
       'chamados.mudaram',
       'ajustes-dos-chamados.mudaram',
+      'chat.mudou',
     ]);
   });
 
@@ -297,6 +299,9 @@ describe('publicoDerivado', () => {
     expect(publicoDerivado('metas.mudaram', { tipo: 'indicador', id: 'i1' })).toBeNull();
     // O dos chamados são os locais dele, os de antes e os de depois (change chamados-da-ti).
     expect(publicoDerivado('chamados.mudaram', { tipo: 'chamado', id: 'c1' })).toBeNull();
+    // O do chat são as contas da direta, o grupo da equipe ou quem usa o chat, no canal (change
+    // chat-com-chamados).
+    expect(publicoDerivado('chat.mudou', { tipo: 'conversa', id: 'c1' })).toBeNull();
   });
 });
 
@@ -365,6 +370,41 @@ describe('podeReceber', () => {
         ARVORE,
       ),
     ).toBe(recebe);
+  });
+
+  // Os grupos restringem a permissão, como os locais (change chat-com-chamados, design, decisão 4).
+  // A permissão do chat chega na tarefa das permissões; aqui vale qualquer uma.
+  it('com os grupos, entrega a quem tem a permissão e é de um dos grupos', () => {
+    const daEquipe = evento(
+      { permissao: 'pessoas.ver', grupos: ['grupo-suporte', 'grupo-redes'] },
+      { tipo: 'chat.mudou', alvo: { tipo: 'conversa', id: 'c1' } },
+    );
+    const doGrupo = { grupos: ['grupo-compras', 'grupo-redes'] };
+    expect(podeReceber(daEquipe, conexao(PESSOAS_NA_ORGANIZACAO, doGrupo), ARVORE)).toBe(true);
+    expect(podeReceber(daEquipe, conexao(PESSOAS_EM_CAMPINAS, doGrupo), ARVORE)).toBe(true);
+    // Fora dos grupos, a permissão não basta; no grupo, sem a permissão, também não.
+    const deOutroGrupo = { grupos: ['grupo-compras'] };
+    expect(podeReceber(daEquipe, conexao(PESSOAS_NA_ORGANIZACAO, deOutroGrupo), ARVORE)).toBe(
+      false,
+    );
+    expect(podeReceber(daEquipe, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
+    expect(podeReceber(daEquipe, conexao(SEM_PERMISSOES, doGrupo), ARVORE)).toBe(false);
+  });
+
+  it('com os grupos e os locais, pede os dois; a conta do público recebe sem eles', () => {
+    const publico = {
+      permissao: 'pessoas.ver' as const,
+      locais: ['exp'],
+      grupos: ['grupo-redes'],
+      contas: ['conta-carla'],
+    };
+    const doGrupo = { grupos: ['grupo-redes'] };
+    expect(podeReceber(evento(publico), conexao(PESSOAS_EM_JUNDIAI, doGrupo), ARVORE)).toBe(true);
+    expect(podeReceber(evento(publico), conexao(PESSOAS_EM_CAMPINAS, doGrupo), ARVORE)).toBe(false);
+    expect(podeReceber(evento(publico), conexao(PESSOAS_EM_JUNDIAI), ARVORE)).toBe(false);
+    expect(
+      podeReceber(evento(publico), conexao(SEM_PERMISSOES, { contaId: 'conta-carla' }), ARVORE),
+    ).toBe(true);
   });
 
   it('não entrega o evento sem público', () => {

@@ -1,0 +1,258 @@
+/* A conversa aberta, ao lado da lista (m01): o cabeçalho no alto, as abas e, embaixo, a parte
+   escolhida, que rola por dentro. */
+.conversa {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.abrindo {
+  margin: 0;
+  padding: var(--esp-4) var(--esp-5);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A conversa que não existe para a conta: o motivo e o caminho de volta, no meio da tela. */
+.naoEncontrada {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: auto;
+  padding: var(--esp-6);
+}
+
+.naoEncontrada p {
+  margin: 0;
+}
+
+.naoEncontrada a {
+  color: var(--cor-destaque-texto);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-5);
+}
+
+/* A direta não tem abas: a linha de baixo do cabeçalho fica no lugar da faixa delas. */
+.cabecalho[data-sem-abas] {
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+.cabecalho .foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+/* O nome e, ao lado, o que a conversa é, que desce para baixo do nome quando não cabe. */
+.titulos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--esp-3);
+  min-inline-size: 0;
+}
+
+.marcaDoCanal {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--esp-8);
+  block-size: var(--esp-8);
+  border: 1px solid var(--cor-linha);
+  border-radius: 50%;
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto-2);
+}
+
+.nome {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.sobre {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* As abas ocupam o resto da altura, com a faixa no recuo do cabeçalho. */
+.abas {
+  --recuo-das-abas: var(--esp-5);
+
+  flex: 1;
+  min-block-size: 0;
+}
+
+/* No canal e na equipe em que a conta não escreve, a frase fica no lugar da caixa, na forma dela. */
+.semCaixa {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  max-inline-size: var(--largura-previa);
+  min-block-size: var(--esp-12);
+  margin: 0 var(--esp-5) var(--esp-4);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--esp-6);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  text-align: center;
+}
+
+/* A direta que ainda não nasceu: o lugar das mensagens, sem nenhuma. */
+.semMensagens {
+  flex: 1;
+  margin: 0;
+  padding: var(--esp-4) var(--esp-5);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* Os arquivos e os chamados da conversa, numa coluna que rola. */
+.lista {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--esp-3);
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--esp-4) var(--esp-5);
+}
+
+.nenhum {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.itens {
+  display: grid;
+  gap: var(--esp-2);
+  inline-size: 100%;
+  max-inline-size: var(--largura-previa);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arquivo,
+.chamado {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+  font-size: var(--texto-dado);
+}
+
+/* O chamado é o botão do resumo (change chat-com-chamados, design, decisão 15): o contorno acende com
+   o mouse e com o resumo aberto. */
+.chamado {
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--esp-1);
+  inline-size: 100%;
+  color: var(--cor-texto);
+  font-family: inherit;
+  line-height: inherit;
+  text-align: start;
+  outline: none;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.chamado[data-hovered],
+.chamado[aria-expanded="true"] {
+  border-color: var(--cor-linha-forte);
+}
+
+.chamado[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.iconeDoArquivo {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-texto-2);
+}
+
+.sobreOArquivo {
+  min-inline-size: 0;
+}
+
+.nomeDoArquivo {
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.nomeDoArquivo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.arquivo small,
+.chamado small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.linhaDoChamado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-weight: var(--peso-forte);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tituloDoChamado {
+  min-inline-size: 0;
+  font-weight: var(--peso-forte);
+  overflow-wrap: anywhere;
+}
+
+/* No celular, o cabeçalho na largura da tela, com a seta de voltar, e o que a conversa é embaixo do
+   nome; a faixa das abas, no mesmo recuo. */
+:root[data-postura="celular"] .cabecalho {
+  gap: var(--esp-2);
+  padding: var(--esp-1) var(--esp-4);
+  min-block-size: calc(var(--esp-12) + var(--esp-2));
+}
+
+:root[data-postura="celular"] .titulos {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+:root[data-postura="celular"] .abas {
+  --recuo-das-abas: var(--esp-4);
+}

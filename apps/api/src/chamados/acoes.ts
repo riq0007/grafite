@@ -9,13 +9,18 @@
 // - a decisão do domínio, com a versão primeiro: a recusa da versão e o "mudou" do desfazer saem
 //   como o `chamado-mudou`; a do texto e a dos anexos, como o 400 no campo, como as do formulário; e
 //   as outras, como o conflito da abertura;
+// - as opções da pergunta e o retrato do cartão do ativo, depois da decisão, com as recusas juntas no
+//   400 (change chat-com-chamados, tarefa 3.10);
 // - o horário da TI, só quando a ação para ou volta o relógio, lido depois da trava do chamado: a
 //   troca do horário que travou o chamado antes já fechou o relógio dele pelo horário antigo, e a
 //   ação conta desde a troca pelo novo (decisão 3);
 // - o chamado, com o relógio, a primeira resposta, a resolução e a versão, que sobe só quando a
 //   situação ou quem atende muda; a conversa, uma linha por vez, na ordem da mudança, com os anexos
 //   tomados para a mensagem ou a nota; a auditoria, com o `chamados.mudaram`, das ações que mudam a
-//   situação ou quem atende, e só o `chamados.mudaram` das outras; e as notificações.
+//   situação ou quem atende, e só o `chamados.mudaram` das outras, também às contas de quem participa
+//   pelo chat, fora o da nota, com o `chat.mudou` da conversa de origem quando a situação ou quem
+//   atende muda (change chat-com-chamados, decisão 4; tarefa 3.12); e as notificações, também as de
+//   quem participa pelo chat, com o módulo Chat ligado.
 import { chamados, mensagensDosChamados, pessoas, type Transacao } from '@grafite/db';
 import {
   type AcaoDaAuditoria,
@@ -25,6 +30,7 @@ import {
   alcance,
   antesDoAssumir,
   type ChamadoParaAcao,
+  conferirOpcoes,
   type DecisaoDaAcao,
   decidirAcao,
   decidirDesfazer,
@@ -32,9 +38,11 @@ import {
   desdeNaTriagem,
   type EntradaDaConversa,
   type EventoNaConversa,
+  estaFechado,
   mensagemDaRecusaDaAcao,
   modoDoPrazoGuardado,
   notificacoesDaAcao,
+  notificacoesParaQuemParticipa,
   type QuemAge,
   type RecusaDaAcao,
   relogioDepois,
@@ -46,6 +54,7 @@ import type { FastifyRequest } from 'fastify';
 import { sessaoDa } from '../acesso/escopo.ts';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
+import { avisarAsConversasDeOrigem } from '../chat/conversa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { notificar } from '../notificacoes/notificar.ts';
@@ -53,9 +62,11 @@ import { chamadoMudou, conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { chamadoNaoEncontrado, publicoDoChamado } from './alcance.ts';
 import { tomarAnexos } from './anexos.ts';
+import { ATIVO_DO_CARTAO_NAO_ENCONTRADO, type CartaoDoAtivo, retratoDoAtivo } from './cartao.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
+import { comQuemParticipa, contasQueParticipam } from './quem-participa.ts';
 
 /**
  * O pedido de cada rota, depois do schema: a versão que a tela mostra, nas ações dos botões, com a
@@ -71,6 +82,10 @@ export type PedidoDoAtendimento =
       acao: 'mensagem' | 'esperar' | 'nota';
       texto: string;
       anexos?: readonly string[] | undefined;
+      /** As opções da pergunta, na mensagem para a pessoa; a nota não as tem. */
+      opcoes?: readonly string[] | undefined;
+      /** O ativo do cartão, que quem escreve vê, ou nulo, sem cartão. */
+      cartao?: string | null | undefined;
     };
 
 export type AcaoDoAtendimento = PedidoDoAtendimento['acao'];
@@ -133,9 +148,15 @@ export async function travarOChamado(
       relogioDesde: chamados.relogioDesde,
       primeiraRespostaEm: chamados.primeiraRespostaEm,
       resolvidoPor: chamados.resolvidoPor,
+      resolvidoEm: chamados.resolvidoEm,
+      fechadoEm: chamados.fechadoEm,
       ativo: chamados.ativoId,
       localDaPessoa: chamados.localDaPessoa,
       pessoa: pessoas.nome,
+      pessoaId: chamados.pessoaId,
+      origem: chamados.origem,
+      abertoPor: chamados.abertoPor,
+      origemConversaId: chamados.origemConversaId,
     })
     .from(chamados)
     .innerJoin(pessoas, eq(pessoas.id, chamados.pessoaId))
@@ -306,18 +327,62 @@ async function comoNotifica(
   }
 }
 
+/** As opções e o cartão da mensagem ou da nota, conferidos; nulos sem eles. */
+interface ExtrasDoEscrito {
+  opcoes: string[] | null;
+  cartao: CartaoDoAtivo | null;
+}
+
+/**
+ * As opções e o cartão do pedido, conferidos depois da decisão do domínio, com as recusas juntas,
+ * cada uma no campo dela: as opções pela pergunta (`conferirOpcoes`), gravadas nulas sem pergunta,
+ * como o CHECK da conversa pede; e o cartão, pelo retrato do ativo que quem escreve vê.
+ */
+async function conferirOsExtras(
+  tx: Transacao,
+  pedido: PedidoDoAtendimento,
+  leitura: { acesso: Acesso; arvore: ArvoreDeLocais; agora: Date },
+): Promise<ExtrasDoEscrito> {
+  if (pedido.acao !== 'mensagem' && pedido.acao !== 'esperar' && pedido.acao !== 'nota') {
+    return { opcoes: null, cartao: null };
+  }
+  const erros: Record<string, string> = {};
+  const conferidas = conferirOpcoes(pedido.acao === 'nota' ? [] : (pedido.opcoes ?? []));
+  if (!conferidas.ok) erros.opcoes = conferidas.erro;
+  let cartao: CartaoDoAtivo | null = null;
+  if (pedido.cartao !== null && pedido.cartao !== undefined) {
+    cartao = await retratoDoAtivo(tx, { ativo: pedido.cartao }, leitura);
+    if (cartao === null) erros.cartao = ATIVO_DO_CARTAO_NAO_ENCONTRADO;
+  }
+  if (Object.keys(erros).length > 0 || !conferidas.ok) throw dadosInvalidos(erros);
+  return { opcoes: conferidas.opcoes.length > 0 ? conferidas.opcoes : null, cartao };
+}
+
 /**
  * Grava a conversa da ação na ordem da mudança, uma linha por vez: o id vem do `uuidv7()` do banco,
  * que cresce na mesma conexão, e a conversa lida pelo momento e pelo id fica na ordem da gravação.
- * Os anexos ficam com a mensagem ou a nota da ação; o que não se toma recusa a ação inteira.
+ * Os anexos e o cartão ficam com a mensagem ou a nota da ação, e as opções, só com a mensagem; o
+ * anexo que não se toma recusa a ação inteira.
  */
 async function gravarAConversa(
   tx: Transacao,
   chamadoId: string,
   conversa: readonly EntradaDaConversa[],
-  { contaId, momento, anexos }: { contaId: string; momento: Date; anexos: readonly string[] },
+  {
+    contaId,
+    momento,
+    anexos,
+    extras,
+  }: { contaId: string; momento: Date; anexos: readonly string[]; extras: ExtrasDoEscrito },
 ) {
   for (const entrada of conversa) {
+    const doEscrito =
+      entrada.especie === 'evento'
+        ? {}
+        : {
+            cartao: extras.cartao,
+            opcoes: entrada.especie === 'mensagem' ? extras.opcoes : null,
+          };
     const [gravada] = await tx
       .insert(mensagensDosChamados)
       .values({
@@ -326,6 +391,7 @@ async function gravarAConversa(
         autorConta: contaId,
         criadaEm: momento,
         ...entrada,
+        ...doEscrito,
       })
       .returning({ id: mensagensDosChamados.id });
     if (entrada.especie !== 'evento' && gravada) {
@@ -353,7 +419,7 @@ export async function agirNoChamado(
     enviar,
   }: { requisicao: FastifyRequest; momento: Date; enviar?: EnviarTarefa },
 ): Promise<ChamadoDepoisDaAcao> {
-  const { contaId, arvore, lido, quemAge } = await travarParaMudar(tx, numero, requisicao);
+  const { acesso, contaId, arvore, lido, quemAge } = await travarParaMudar(tx, numero, requisicao);
   const eventos = await eventosDoChamado(tx, lido.id);
   const chamado: ChamadoParaAcao = {
     numero: lido.numero,
@@ -365,9 +431,14 @@ export async function agirNoChamado(
     semLocal: lido.semLocal,
     versao: lido.versao,
     primeiraRespostaEm: lido.primeiraRespostaEm,
+    // O fechado pelo `estaFechado`, também o vencido que a tarefa ainda não fechou, no fuso do
+    // horário de agora, lido só no resolvido (chat-com-chamados, tarefa 3.11).
+    fechado:
+      lido.situacao === 'resolvido' && estaFechado(lido, momento, (await lerHorarioDaTi(tx)).fuso),
   };
   const decisao = await decidir(tx, chamado, quemAge, pedido, { eventos, arvore, lido });
   if (!decisao.aceita) throw problemaDaRecusa(lido.numero, decisao.recusa);
+  const extras = await conferirOsExtras(tx, pedido, { acesso, arvore, agora: momento });
 
   // O horário só entra quando o relógio para ou volta, lido depois da trava do chamado (decisão 3).
   const relogio =
@@ -411,6 +482,7 @@ export async function agirNoChamado(
     contaId,
     momento,
     anexos: 'anexos' in pedido ? (pedido.anexos ?? []) : [],
+    extras,
   });
 
   const responsavel =
@@ -418,7 +490,14 @@ export async function agirNoChamado(
       ? null
       : { id: decisao.responsavel, nome: await nomeDaConta(tx, decisao.responsavel) };
   const locais = { locais: lido.locais, semLocal: lido.semLocal };
-  const publico = publicoDoChamado(locais);
+  // Quem participa, lido uma vez para o público e para as notificações, recebe o que muda o que ele
+  // lê; a nota fica só com quem vê o chamado (tarefa 3.12).
+  const participante = { pessoaId: lido.pessoaId, origem: lido.origem, abertoPor: lido.abertoPor };
+  const participam = await contasQueParticipam(tx, participante);
+  const publico =
+    pedido.acao === 'nota'
+      ? publicoDoChamado(locais)
+      : comQuemParticipa(publicoDoChamado(locais), participam);
   const acaoNaAuditoria = decisao.sobeAVersao ? NA_AUDITORIA[pedido.acao] : null;
   if (acaoNaAuditoria === null) {
     await registrarEvento(tx, {
@@ -439,6 +518,10 @@ export async function agirNoChamado(
       saida: { publico },
     });
   }
+  // O chip da conversa de origem segue a situação e quem atende (decisão 4).
+  if (decisao.situacao !== lido.situacao || decisao.responsavel !== lido.responsavel) {
+    await avisarAsConversasDeOrigem(tx, [lido.origemConversaId]);
+  }
 
   await notificar(
     tx,
@@ -446,6 +529,18 @@ export async function agirNoChamado(
       { numero: lido.numero, titulo: lido.titulo, locais },
       await comoNotifica(tx, pedido, decisao.responsavel, arvore),
       contaId,
+    ),
+    momento,
+    enviar ? { enviar } : {},
+  );
+  // A mensagem para a pessoa e o resolvido vão também a quem participa pelo chat (decisão 13).
+  await notificar(
+    tx,
+    notificacoesParaQuemParticipa(
+      { id: lido.id, numero: lido.numero, titulo: lido.titulo, ...participante },
+      decisao,
+      { contaId, nome: await nomeDaConta(tx, contaId) },
+      participam,
     ),
     momento,
     enviar ? { enviar } : {},

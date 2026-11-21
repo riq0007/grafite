@@ -7,6 +7,7 @@ import type {
   MudancaDoChamado,
   SituacaoDoChamado,
 } from './acoes.ts';
+import type { MudancaDeQuemParticipa } from './acoes-de-quem-participa.ts';
 import { objeto } from './leitura.ts';
 
 /**
@@ -97,11 +98,12 @@ export function desdeNaTriagem(abertoEm: Date, conversa: readonly EventoNaConver
  * Desde quando quem atende está com o chamado depois da ação: sem ninguém, nulo, e a triagem conta
  * pela conversa; no desfazer, o de antes do assumir, que o evento dele guarda; no reabrir, agora,
  * mesmo com a conta que já estava com o resolvido, para o tempo resolvido não contar; com a mesma
- * conta, o de antes; com outra, agora.
+ * conta, o de antes; com outra, agora. Vale também para a mudança de quem participa
+ * (`decidirAcaoDeQuemParticipa`): a retomada segue com quem atende, e a reabertura é agora.
  */
 export function desdeDeQuemAtende(
   chamado: Pick<ChamadoParaAcao, 'responsavel' | 'desde'>,
-  mudanca: Pick<MudancaDoChamado, 'responsavel' | 'conversa'>,
+  mudanca: Pick<MudancaDoChamado | MudancaDeQuemParticipa, 'responsavel' | 'conversa'>,
   agora: Date,
 ): Date | null {
   if (mudanca.responsavel === null) return null;

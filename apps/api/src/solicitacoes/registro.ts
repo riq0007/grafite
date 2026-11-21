@@ -417,11 +417,18 @@ export function comoDados(pedido: z.infer<typeof PedidoDaSolicitacao>): DadosDaS
 export interface SolicitacaoDoChamado {
   numero: number;
   tipoDeChamado: string;
+  /**
+   * Quem lê as referências, os consumíveis e a solicitação registrada: o leitor da abertura, que na
+   * abertura pelo chat é a organização inteira, porque quem abre não tem o `ativos.ver` (change
+   * chat-com-chamados, design, decisão 15).
+   */
+  leitor: LeitorDasSolicitacoes;
 }
 
 /**
  * Registra a solicitação e a devolve lida. Com o `doChamado`, o registro é delegado pelo tipo de
- * chamado: não pede `solicitacoes.atender` a quem abre, e a auditoria leva o chamado e o tipo.
+ * chamado: não pede `solicitacoes.atender` a quem abre, lê pelo leitor da abertura, e a auditoria
+ * leva o chamado e o tipo.
  */
 export async function registrar(
   tx: Transacao,
@@ -437,8 +444,11 @@ export async function registrar(
   const erros = validarSolicitacao(dados);
   if (Object.keys(erros).length > 0) throw dadosInvalidos(erros);
 
-  const arvore = await lerArvore(tx);
-  const leitor: LeitorDasSolicitacoes = { acesso, arvore };
+  const leitor: LeitorDasSolicitacoes = doChamado?.leitor ?? {
+    acesso,
+    arvore: await lerArvore(tx),
+  };
+  const { arvore } = leitor;
   const referencias = await conferirReferencias(tx, dados, leitor);
   const daSolicitacao = locaisDas(dados, referencias);
   if (!doChamado) exigirAtender(requisicao, daSolicitacao, arvore);

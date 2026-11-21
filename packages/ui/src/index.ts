@@ -34,10 +34,12 @@ export {
 export { Casca, JanelaDeConteudo, type PropsDaCasca, TituloDaJanela } from './casca/Casca.tsx';
 export {
   CentralDeNotificacoes,
+  ConteudoDaCentralDeNotificacoes,
   type FiltroDeSeveridade,
   type FiltrosDaCentral,
   type NotificacaoDaCentral,
   type PropsDaCentralDeNotificacoes,
+  type PropsDoConteudoDaCentral,
 } from './casca/CentralDeNotificacoes.tsx';
 export { CursorSuavizado, type PropsDoCursorSuavizado } from './casca/CursorSuavizado.tsx';
 export { Dock, type PropsDoDock } from './casca/Dock.tsx';
@@ -62,6 +64,7 @@ export type {
   MenuDaBarra,
   ModuloDaCasca,
   PosicaoDoDock,
+  SeloDoModulo,
 } from './casca/tipos.ts';
 export {
   atualizarCarregamento,
@@ -235,6 +238,7 @@ export {
 } from './componentes/filtros/FiltrosAtivos.tsx';
 export { Dica, type PropsDaDica } from './componentes/flutuante/Dica.tsx';
 export { Popover, type PropsDoPopover } from './componentes/flutuante/Popover.tsx';
+export { Folha, type PropsDaFolha } from './componentes/folha/Folha.tsx';
 export {
   type ItemDaListaDoHistorico,
   ListaDoHistorico,
@@ -261,9 +265,11 @@ export {
 export {
   ItemDeMenu,
   Menu,
+  MenuNaFolha,
   type PropsDaSecaoDeMenu,
   type PropsDoItemDeMenu,
   type PropsDoMenu,
+  type PropsDoMenuNaFolha,
   type PropsDoSubmenu,
   SecaoDeMenu,
   Separador,
@@ -308,6 +314,10 @@ export {
   type EstadoDoCartao,
   type PropsDoCartaoDoRegistro,
 } from './componentes/referencia/CartaoDoRegistro.tsx';
+export {
+  GatilhoComCartao,
+  type PropsDoGatilhoComCartao,
+} from './componentes/referencia/GatilhoComCartao.tsx';
 export {
   type PropsDaReferenciaComCartao,
   ReferenciaComCartao,

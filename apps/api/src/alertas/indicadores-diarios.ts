@@ -156,6 +156,9 @@ export async function avaliarIndicadores(
           origem,
           destino,
           alertaId: null,
+          mensagem: false,
+          assunto: null,
+          mensagemDoChatId: null,
         });
       }
     }

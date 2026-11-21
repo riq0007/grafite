@@ -1,8 +1,8 @@
 // A fila dos anexos que vão um a um pelo `POST /chamados/anexos`, antes da gravação que os toma
 // (change chamados-da-ti, design, decisões 10 e 21, e "O campo de escrever (tarefa 5.12)"): a do
-// campo Anexo do formulário que se preenche e a do campo de escrever do chamado aberto. Até 5; os
-// escolhidos a mais ficam de fora, com o nome. Na prévia, o arquivo não é enviado: entra só no
-// navegador.
+// campo Anexo do formulário que se preenche e a do campo de escrever do chamado aberto. A caixa do
+// chat usa a mesma fila, pelo `POST /chat/anexos` (change chat-com-chamados). Até 5; os escolhidos a
+// mais ficam de fora, com o nome. Na prévia, o arquivo não é enviado: entra só no navegador.
 import type { components } from '@grafite/api-client';
 import { recusaAntesDoEnvio } from '@grafite/ui';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -44,12 +44,15 @@ export interface PropsDaFilaDeAnexos {
   soNoNavegador: boolean;
   /** O arquivo que entrou: o enviado, ou o da prévia, que só está no navegador. */
   aoAnexar: (id: string, anexo: AnexoCitado) => void;
+  /** Para onde o arquivo vai; sem ele, os anexos dos chamados. */
+  endereco?: '/chamados/anexos' | '/chat/anexos';
 }
 
 export function useFilaDeAnexos({
   ocupados,
   soNoNavegador,
   aoAnexar,
+  endereco = '/chamados/anexos',
 }: PropsDaFilaDeAnexos): FilaDeAnexos {
   const api = useApi();
   const [fila, definirFila] = useState<readonly AnexoNaFila[]>([]);
@@ -86,7 +89,7 @@ export function useFilaDeAnexos({
         const resultado = await pedir(
           () =>
             api.enviarArquivo<AnexoEnviado>(
-              `/chamados/anexos?nome=${encodeURIComponent(arquivo.name)}`,
+              `${endereco}?nome=${encodeURIComponent(arquivo.name)}`,
               arquivo,
               definirProgresso,
               'POST',

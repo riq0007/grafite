@@ -26,13 +26,33 @@
   color: var(--cor-critico);
 }
 
+/* A ação que leva ao chamado: o nome forte no azul do chamado, sobre o fundo e a borda dele. O foco
+   pinta o item no destaque, como os outros. */
+.item[data-informativo] {
+  background-color: var(--cor-info-fundo);
+  box-shadow: inset 0 0 0 1px var(--cor-info-borda);
+  color: var(--cor-info);
+  font-weight: var(--peso-forte);
+}
+
 /* Item em foco, e o item cujo submenu está aberto: o destaque, como no macOS. */
 .item:is([data-focused], [data-open]) {
   background-color: var(--cor-destaque);
+  box-shadow: none;
   color: var(--cor-sobre-destaque);
 }
 
 .item[data-disabled] {
+  opacity: var(--opacidade-desabilitado);
+}
+
+/* O item informativo sem ação diz o motivo na descrição, como "Já virou o #1045": a opacidade do
+   desabilitado fica no ícone, no nome e no atalho, e o motivo segue legível, no azul do nome. */
+.item[data-informativo][data-disabled]:has(.descricao) {
+  opacity: 1;
+}
+
+.item[data-informativo][data-disabled]:has(.descricao) :is(.icone, .nome, .atalho) {
   opacity: var(--opacidade-desabilitado);
 }
 
@@ -63,8 +83,29 @@
   color: var(--cor-texto-2);
 }
 
-.item:is([data-focused], [data-open]) :is(.descricao, .icone) {
+/* O texto curto no fim do item, como "+1 · ok · visto", e o atalho de teclado da ação, em texto,
+   como nos menus do macOS; no item informativo, a descrição e o atalho seguem o azul do nome: o
+   secundário não chega a 4,5:1 sobre o fundo dele. */
+.dica,
+.atalho {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+}
+
+.item[data-informativo] :is(.descricao, .atalho),
+.item:is([data-focused], [data-open]) :is(.descricao, .icone, .dica, .atalho) {
   color: inherit;
+}
+
+.paraOLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .tituloDaSecao {
@@ -83,4 +124,35 @@
   margin: var(--esp-1) var(--esp-2);
   border: 0;
   background-color: var(--cor-linha);
+}
+
+/* O menu numa folha de baixo (m09): os itens de 52 px, também nas posturas de toque, no texto
+   maior, com o ícone de 24 px; o informativo, de 56 px, com a borda do azul do chamado, que sai no
+   foco, como a de fora da folha. Fica no fim, depois das regras do item que ele refina. */
+.menuNaFolha {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu.menuNaFolha .item {
+  gap: var(--esp-3);
+  min-height: calc(var(--esp-12) + var(--esp-1));
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-controle);
+  font-size: var(--texto-subtitulo);
+}
+
+.menu.menuNaFolha .item[data-informativo] {
+  min-height: calc(var(--esp-12) + var(--esp-2));
+  margin-block: var(--esp-1);
+}
+
+.menu.menuNaFolha .item[data-informativo]:not([data-focused], [data-open]) {
+  box-shadow: inset 0 0 0 1.5px var(--cor-info);
+}
+
+.menuNaFolha .icone svg {
+  width: var(--esp-6);
+  height: var(--esp-6);
 }

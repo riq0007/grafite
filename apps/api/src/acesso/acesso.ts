@@ -102,6 +102,30 @@ export async function carregarAcesso(tx: Transacao, contaId: string): Promise<Ac
 }
 
 /**
+ * Os grupos ativos de que a conta é agora, na ordem do id (change chat-com-chamados, design,
+ * decisão 4): a equipe do chat é de quem é do grupo dela, e os eventos dela vão só a essas contas.
+ * A conexão de eventos os lê com o acesso e os relê no `acessos.mudaram`.
+ */
+export async function carregarGrupos(tx: Transacao, contaId: string): Promise<string[]> {
+  const linhas = await tx
+    .select({ id: grupos.id })
+    .from(membrosDoGrupo)
+    .innerJoin(
+      grupos,
+      and(eq(grupos.orgId, membrosDoGrupo.orgId), eq(grupos.id, membrosDoGrupo.grupoId)),
+    )
+    .where(
+      and(
+        eq(membrosDoGrupo.contaId, contaId),
+        isNull(membrosDoGrupo.encerradaEm),
+        eq(grupos.situacao, 'ativo'),
+      ),
+    )
+    .orderBy(grupos.id);
+  return linhas.map((linha) => linha.id);
+}
+
+/**
  * O acesso de cada conta ativa, de pessoa ativa, da organização do contexto, numa leitura só das
  * atribuições diretas e de outra das dos grupos (design do P3b, decisão 3): a avaliação dos
  * alertas decide quem recebe cada notificação sem uma consulta por conta. As contas vêm na ordem da

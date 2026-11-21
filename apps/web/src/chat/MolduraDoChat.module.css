@@ -1,0 +1,344 @@
+/* O app do chat (spec modulo-chat, "App do chat"): a trilha à esquerda e a vista ao lado, na janela
+   inteira, sem a casca. A tela escolhida fica na superfície, a lista da vista na afundada e a
+   trilha no fundo, como no m01. */
+.app {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  block-size: 100dvh;
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+/*
+ * A janela do Chat da casca (spec modulo-chat, "Chat na casca"): a mesma moldura, que pede a janela
+ * inteira (`data-janela-inteira="rola-por-dentro"`) e vai até as bordas, por cima do respiro dela,
+ * com a lista e a tela rolando por dentro.
+ */
+.app[data-na-casca] {
+  --respiro: var(--respiro-da-janela, var(--esp-6));
+
+  block-size: auto;
+  min-block-size: 0;
+  margin: calc(-1 * var(--respiro));
+}
+
+/* A trilha (spec modulo-chat, "Trilha do chat"): as vistas no alto e o menu da conta no pé. */
+.trilha {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-2);
+  inline-size: calc(var(--esp-12) + var(--esp-4));
+  padding: var(--esp-2) var(--esp-1);
+  border-inline-end: 1px solid var(--cor-linha);
+  background-color: var(--cor-fundo);
+}
+
+.vistas {
+  display: grid;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada vista: o ícone e o nome embaixo, em texto. */
+.vista {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-1);
+  inline-size: calc(var(--esp-12) + var(--esp-2));
+  padding: var(--esp-2) 0;
+  border-radius: var(--raio-controle);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  text-decoration: none;
+  outline: none;
+}
+
+.vista:hover {
+  background-color: var(--cor-hover);
+  color: var(--cor-texto);
+}
+
+.vista:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A vista à vista: a barra do destaque na borda da trilha, como o indicador das abas, o fundo e o
+   nome em peso forte, para não depender só da cor. */
+.vista[aria-current="page"] {
+  background-color: color-mix(in srgb, var(--cor-destaque) 13%, transparent);
+  color: var(--cor-texto);
+  font-weight: var(--peso-forte);
+}
+
+.vista[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--esp-1);
+  inset-inline-start: calc(var(--esp-1) * -1);
+  inline-size: 2px;
+  border-radius: 1px;
+  background-color: var(--cor-destaque);
+}
+
+/* O contador da vista, no canto de cima do item, como no m01, menor que o da lista. */
+.vista .contadorDaVista {
+  position: absolute;
+  inset-block-start: calc(var(--esp-1) / -2);
+  inset-inline-end: calc(var(--esp-1) * -1);
+  min-inline-size: var(--esp-4);
+  padding: 0 var(--esp-1);
+  line-height: var(--esp-4);
+}
+
+/* "Abrir no app do chat", no pé da trilha da casca, no lugar do menu da conta. */
+.abrirNoApp {
+  flex: none;
+}
+
+/* O menu da conta: a foto ou as iniciais, sem o preenchimento do botão de texto. */
+.trilha .conta {
+  padding: var(--esp-1);
+}
+
+.conteudo {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* A coluna da lista: na tela larga, a lista fica ao lado da tela escolhida, como se a coluna não
+   existisse; no celular, as duas ficam no mesmo lugar, e a coluna mostra uma delas. */
+.colunaDaLista {
+  display: contents;
+}
+
+/* Sem o chat: o motivo no meio da janela. */
+.motivo {
+  margin: auto;
+}
+
+/* A coluna da lista da vista, com o título no alto, de 280 px, como no m01. */
+.lista {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--esp-3);
+  inline-size: calc(var(--esp-10) * 7);
+  min-block-size: 0;
+  padding: var(--esp-4);
+  border-inline-end: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+/* A tela escolhida, ao lado da lista. */
+.tela {
+  display: flex;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* Sem nada escolhido na lista: o convite no meio da tela. */
+.nadaEscolhido {
+  margin: auto;
+  padding: var(--esp-6);
+}
+
+.tituloDaLista {
+  margin: 0;
+  font-size: var(--texto-titulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+/* O endereço que não leva a nenhuma vista. */
+.naoEncontrada {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: auto;
+}
+
+.naoEncontrada p {
+  margin: 0;
+  color: var(--cor-texto-2);
+}
+
+.naoEncontrada a {
+  color: var(--cor-destaque-texto);
+}
+
+/* O celular (spec modulo-chat, "Chat no celular"; m08): uma coluna só, com a lista da vista ou a
+   tela escolhida, e a trilha na barra de baixo, com as vistas e a conta em partes iguais. A tela de
+   um item, como a conversa, fica sem a barra, com a seta de voltar no alto. A lista escondida fica
+   montada, sem ser vista, com a rolagem e as seções abertas, para a volta a achar como estava. */
+:root[data-postura="celular"] .app {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+:root[data-postura="celular"] .app[data-item] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .conteudo {
+  display: grid;
+  grid-row: 1;
+  grid-column: 1;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .colunaDaLista,
+:root[data-postura="celular"] .tela {
+  grid-area: 1 / 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+:root[data-postura="celular"] .colunaDaLista {
+  display: flex;
+}
+
+:root[data-postura="celular"] .conteudo[data-coluna="lista"] .tela {
+  display: none;
+}
+
+:root[data-postura="celular"] .conteudo[data-coluna="tela"] .colunaDaLista {
+  visibility: hidden;
+}
+
+:root[data-postura="celular"] .lista {
+  flex: 1;
+  inline-size: auto;
+  border-inline-end: 0;
+  background-color: var(--cor-superficie);
+}
+
+/* A barra de baixo, na superfície afundada, como no m08, acima da área do gesto do aparelho. */
+:root[data-postura="celular"] .trilha {
+  grid-row: 2;
+  grid-column: 1;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  inline-size: auto;
+  padding: var(--esp-1) var(--esp-1) max(var(--esp-2), env(safe-area-inset-bottom));
+  border-inline-end: 0;
+  border-block-start: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+:root[data-postura="celular"] .app[data-item] .trilha {
+  display: none;
+}
+
+:root[data-postura="celular"] .vistas {
+  display: flex;
+  flex: var(--quantas-vistas) 1 0;
+  gap: 0;
+  min-inline-size: 0;
+}
+
+:root[data-postura="celular"] .vistas > li {
+  display: grid;
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+/* Cada vista, com o ícone de 24 px e o nome embaixo, no alvo de 48 px. */
+:root[data-postura="celular"] .vista {
+  align-content: center;
+  gap: calc(var(--esp-1) / 2);
+  inline-size: auto;
+  min-block-size: var(--esp-12);
+  padding: var(--esp-1) 0;
+}
+
+:root[data-postura="celular"] .vista svg {
+  inline-size: var(--esp-6);
+  block-size: var(--esp-6);
+}
+
+/* A vista à vista: a barra do destaque na borda de cima da barra, como na borda da trilha. */
+:root[data-postura="celular"] .vista[aria-current="page"]::before {
+  inset-block: calc(var(--esp-1) * -1) auto;
+  inset-inline: var(--esp-4);
+  inline-size: auto;
+  block-size: 2px;
+}
+
+/* O contador no canto de cima do ícone, como no m08. */
+:root[data-postura="celular"] .vista .contadorDaVista {
+  inset-block-start: 0;
+  inset-inline: calc(50% + var(--esp-1)) auto;
+}
+
+/*
+ * Na janela do Chat da casca, no celular, a trilha fica no alto, porque embaixo fica a barra de abas
+ * da casca, e some na tela de um item, como a barra de baixo do app.
+ */
+:root[data-postura="celular"] .app[data-na-casca] {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .app[data-na-casca][data-item] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .trilha {
+  grid-row: 1;
+  align-items: center;
+  padding: var(--esp-1);
+  border-block-start: 0;
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .conteudo {
+  grid-row: 2;
+}
+
+:root[data-postura="celular"] .app[data-na-casca][data-item] .conteudo {
+  grid-row: 1;
+}
+
+:root[data-postura="celular"] .app[data-na-casca] .vista[aria-current="page"]::before {
+  inset-block: auto calc(var(--esp-1) * -1);
+}
+
+/* A conta na barra de baixo: a foto no lugar do ícone e "Conta" embaixo, como as vistas, sem a
+   borda do botão, que a deixaria mais larga que elas. */
+.trilha .conta.contaNaBarra {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  min-block-size: var(--esp-12);
+  padding: var(--esp-1) 0;
+  border: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  line-height: var(--entrelinha-justa);
+}
+
+.contaNaBarra > span:first-child {
+  flex-direction: column;
+  gap: calc(var(--esp-1) / 2);
+}
+
+.contaNaBarra .fotoDaConta[data-tamanho] {
+  --lado-do-avatar: var(--esp-6);
+}
+
+/*
+ * O título de chegada, que recebe o foco quando a conta chega ao Chat de outro módulo da casca, como
+ * o título da janela: o leitor de tela o anuncia, e ele não ganha o contorno de um controle.
+ */
+.app [data-titulo-de-chegada] {
+  outline: none;
+}

@@ -339,16 +339,24 @@ const ICONES_DA_PWA = [
   { nome: 'pwa-maskable-512.png', lado: 512, finalidade: 'maskable', desenho: iconeMascaravel },
 ];
 
-/** Manifesto da PWA: nome, cores do tema padrão (Grafite) e os ícones gerados aqui. */
-export function manifestoDaPwa(): string {
+/** Um app instalável: o endereço, que é o começo e o alcance dele, os nomes e a descrição. */
+interface AppInstalavel {
+  endereco: string;
+  nome: string;
+  nomeCurto: string;
+  descricao: string;
+}
+
+/** O manifesto de um app instalável, com as cores do tema padrão (Grafite) e os ícones gerados aqui. */
+function manifesto({ endereco, nome, nomeCurto, descricao }: AppInstalavel): string {
   const manifesto = {
-    id: '/',
-    name: NOME_DO_PRODUTO,
-    short_name: NOME_DO_PRODUTO,
-    description: 'Gestão de ativos, operação e governança de TI.',
+    id: endereco,
+    name: nome,
+    short_name: nomeCurto,
+    description: descricao,
     lang: 'pt-BR',
-    start_url: '/',
-    scope: '/',
+    start_url: endereco,
+    scope: endereco,
     display: 'standalone',
     background_color: PLACA,
     theme_color: PLACA,
@@ -361,6 +369,27 @@ export function manifestoDaPwa(): string {
   };
   return `${JSON.stringify(manifesto, null, 2)}\n`;
 }
+
+/** Manifesto da PWA: o Grafite inteiro, no alcance de todos os endereços. */
+export const manifestoDaPwa = (): string =>
+  manifesto({
+    endereco: '/',
+    nome: NOME_DO_PRODUTO,
+    nomeCurto: NOME_DO_PRODUTO,
+    descricao: 'Gestão de ativos, operação e governança de TI.',
+  });
+
+/**
+ * O manifesto do app do chat (spec pwa, "App do chat instalado"): instalado à parte, ao lado do
+ * Grafite, com o alcance do /chat.
+ */
+export const manifestoDoChat = (): string =>
+  manifesto({
+    endereco: '/chat',
+    nome: `${NOME_DO_PRODUTO} · Chat`,
+    nomeCurto: 'Chat',
+    descricao: 'As conversas da empresa e os chamados com a TI.',
+  });
 
 const MARCA = 'packages/ui/src/brand';
 const PUBLICO = 'apps/web/public';
@@ -387,6 +416,7 @@ export function arquivosDaMarca(): Map<string, string | Buffer> {
         [`${PUBLICO}/icones/${nome}`, png(desenho(lado), lado)] as [string, Buffer],
     ),
     [`${PUBLICO}/manifest.webmanifest`, manifestoDaPwa()],
+    [`${PUBLICO}/chat/manifest.webmanifest`, manifestoDoChat()],
   ]);
 }
 

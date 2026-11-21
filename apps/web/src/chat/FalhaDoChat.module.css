@@ -1,0 +1,21 @@
+/* O que não carregou no chat: o motivo, com a marca do crítico, e "Tentar de novo". */
+.falha {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: var(--esp-3) var(--esp-2);
+}
+
+.falha p {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.marcaDaFalha {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-critico);
+}

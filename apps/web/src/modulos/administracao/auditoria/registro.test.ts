@@ -850,6 +850,7 @@ describe('o registro dos chamados na auditoria', () => {
             rotulo: 'Pedir o print',
             texto: 'Oi, {nome}! Pode mandar o print?',
             esperaAResposta: true,
+            opcoes: [],
             tipos: [],
           },
         }),
@@ -858,23 +859,32 @@ describe('o registro dos chamados na auditoria', () => {
       { rotulo: 'Rótulo', valor: 'Pedir o print' },
       { rotulo: 'Texto', valor: 'Oi, {nome}! Pode mandar o print?' },
       { rotulo: 'Espera a resposta', valor: 'Sim' },
+      { rotulo: 'Opções da pergunta', valor: 'Sem pergunta' },
       { rotulo: 'Tipos', valor: 'Todos os tipos' },
     ]);
     expect(
       doRegistro(
         resposta({
           acao: 'resposta-pronta.alterada',
-          antes: { rotulo: 'Pedir o print', texto: 'a', esperaAResposta: true, tipos: [] },
+          antes: {
+            rotulo: 'Pedir o print',
+            texto: 'a',
+            esperaAResposta: true,
+            opcoes: [],
+            tipos: [],
+          },
           depois: {
             rotulo: 'Pedir o print',
             texto: 'a',
             esperaAResposta: false,
+            opcoes: ['Sim', 'Não'],
             tipos: ['Toner', 'Impressora'],
           },
         }),
       ),
     ).toEqual([
       { rotulo: 'Espera a resposta', valor: 'Sim → Não' },
+      { rotulo: 'Opções da pergunta', valor: 'Sem pergunta → Sim, Não' },
       { rotulo: 'Tipos', valor: 'Todos os tipos → Toner, Impressora' },
     ]);
     expect(

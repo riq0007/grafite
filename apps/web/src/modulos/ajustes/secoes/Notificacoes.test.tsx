@@ -1,6 +1,7 @@
 import type { components } from '@grafite/api-client';
 import { filaDeAvisos } from '@grafite/ui';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { focusManager } from '@tanstack/react-query';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProvedorDoAmbienteDoPush } from '../../../notificacoes/ambienteDoPush.tsx';
 import type { AmbienteDoPush } from '../../../notificacoes/push.ts';
@@ -441,6 +442,64 @@ describe('seção Notificações: no celular', () => {
       ),
     ).toBeTruthy();
     expect(gravar).not.toHaveBeenCalled();
+  });
+
+  it('sem o service worker, diz que o navegador não recebe os avisos, e o botão sai', async () => {
+    const gravar = vi.fn();
+    abrir(undefined, {
+      ambiente: { ...navegadorComPush(), registro: async () => null },
+      servidor: { 'POST /api/conta/push': gravar },
+    });
+    const botao = await within(noCelular()).findByRole('button', {
+      name: 'Receber neste aparelho',
+    });
+    botao.focus();
+    fireEvent.click(botao);
+    const frase = await within(noCelular()).findByText(
+      'Este navegador não recebe avisos fora da aplicação.',
+    );
+    expect(
+      within(noCelular()).queryByRole('button', { name: 'Receber neste aparelho' }),
+    ).toBeNull();
+    // O botão saiu com o foco nele: o foco vai à frase, que diz o motivo.
+    await waitFor(() => expect(document.activeElement).toBe(frase));
+    expect(gravar).not.toHaveBeenCalled();
+  });
+
+  it('com o pedido dos avisos dispensado, o botão fica, e o foco não vai depois à frase', async () => {
+    let canais: Canais = CANAIS;
+    abrir(undefined, {
+      ambiente: navegadorComPush({ responde: 'default' }),
+      servidor: { 'GET /api/conta/canais': () => Response.json(canais) },
+    });
+    const botao = await within(noCelular()).findByRole('button', {
+      name: 'Receber neste aparelho',
+    });
+    botao.focus();
+    fireEvent.click(botao);
+    expect(botao.hasAttribute('data-pending')).toBe(true);
+    await waitFor(() => expect(botao.hasAttribute('data-pending')).toBe(false));
+    expect(
+      within(noCelular()).getByRole('button', { name: 'Receber neste aparelho' }),
+    ).toBeTruthy();
+
+    // Mais tarde, o servidor deixa de mandar os avisos, e os canais se releem na volta à janela.
+    canais = {
+      ...CANAIS,
+      push: { situacao: 'sem-configuracao', chavePublica: null, aparelhos: [] },
+    };
+    try {
+      act(() => {
+        focusManager.setFocused(false);
+        focusManager.setFocused(true);
+      });
+      const frase = await within(noCelular()).findByText(
+        'Os avisos no celular não estão configurados neste servidor.',
+      );
+      expect(document.activeElement).not.toBe(frase);
+    } finally {
+      focusManager.setFocused(undefined);
+    }
   });
 
   it('tira este aparelho: some da lista e a inscrição sai do navegador', async () => {
