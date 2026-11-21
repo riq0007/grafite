@@ -69,39 +69,47 @@ const ROTAS_DE_ITEM: ReadonlySet<string> = new Set([
   '/chat/equipes/$conversa',
 ]);
 
-/** A tela aberta é a de um item da lista. */
-export const naTelaDeUmItem = ({ matches }: { matches: readonly { routeId: string }[] }) =>
-  ROTAS_DE_ITEM.has(matches.at(-1)?.routeId ?? '');
-
 /** O caminho como o roteador o casa: sem as barras do fim e sem diferenciar as maiúsculas. */
 const comoORoteadorCasa = (caminho: string) => caminho.replace(/\/+$/, '').toLowerCase();
 
 const daVistaChamados = (busca: unknown) =>
   typeof busca === 'object' && busca !== null && 'vista' in busca && busca.vista === 'chamados';
 
-/**
- * A vista da tela aberta, pela última rota casada. A página não encontrada não é de nenhuma: o
- * roteador casa o começo do endereço, como o /chat/avisos do /chat/avisos/outra, e a última rota
- * não cobre o endereço inteiro. No meio de uma navegação, o roteador troca o endereço antes das rotas
- * casadas e o endereço resolvido depois delas: as rotas cobrem um dos dois, e a vista não some entre
- * duas telas dela, o que desmontaria a lista.
- */
-export function vistaDaTela({
-  location,
-  resolvedLocation,
-  matches,
-}: {
+/** O estado do roteador que diz qual é a tela aberta. */
+interface EstadoDaTela {
   location: { pathname: string };
   resolvedLocation?: { pathname: string } | undefined;
   matches: readonly { routeId: string; pathname: string; search?: unknown }[];
-}): IdDaVista | null {
+}
+
+/**
+ * A última rota casada, quando ela cobre o endereço inteiro. A página não encontrada não tem
+ * nenhuma: o roteador casa o começo do endereço, como o /chat/avisos do /chat/avisos/outra, e a
+ * última rota não cobre o endereço inteiro. No meio de uma navegação, o roteador troca o endereço
+ * antes das rotas casadas e o endereço resolvido depois delas: as rotas cobrem um dos dois, e a tela
+ * não some entre duas dela, o que desmontaria a lista.
+ */
+function ultimaQueCobre({ location, resolvedLocation, matches }: EstadoDaTela) {
   const ultima = matches.at(-1);
   if (!ultima) return null;
   const caminho = comoORoteadorCasa(ultima.pathname);
   const cobre = [location, resolvedLocation].some(
     (endereco) => endereco !== undefined && comoORoteadorCasa(endereco.pathname) === caminho,
   );
-  if (!cobre) return null;
+  return cobre ? ultima : null;
+}
+
+/**
+ * A tela aberta é a de um item da lista. A página não encontrada não é: no celular, ela fica com a
+ * barra de baixo.
+ */
+export const naTelaDeUmItem = (estado: EstadoDaTela) =>
+  ROTAS_DE_ITEM.has(ultimaQueCobre(estado)?.routeId ?? '');
+
+/** A vista da tela aberta, pela última rota casada; a página não encontrada não é de nenhuma. */
+export function vistaDaTela(estado: EstadoDaTela): IdDaVista | null {
+  const ultima = ultimaQueCobre(estado);
+  if (!ultima) return null;
   if (ultima.routeId === '/chat/chamados/$numero' && daVistaChamados(ultima.search)) {
     return 'chamados';
   }

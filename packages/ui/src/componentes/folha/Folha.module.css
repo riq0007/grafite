@@ -1,12 +1,28 @@
 /* A folha de baixo: presa à borda de baixo, na largura toda no celular e com 576 px no meio no
    tablet, com a alça no alto. Acima dela, sobre o véu, o que ela é de. Sobe em 300 ms e desce na
    saída, sem deslocamento com "reduzir movimento", pelo token. */
+
+/* O véu próprio, como o do modal: escurece a tela atrás, acima da barra e do dock da casca e abaixo
+   dos avisos. A folha fica dentro dele, e a opacidade dele vale para ela: a saída dele dura o mesmo
+   que a dela, para a folha não voltar à tela no meio da descida, quando a saída do véu, mais curta,
+   acabasse. No "reduzir movimento", a folha não desce, e os dois só esmaecem. */
 .veu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 0;
+  background-color: var(--cor-veu);
+}
+
+.veu[data-entering] {
+  animation: aparecer var(--dur-opacidade) var(--curva-padrao);
+}
+
+.veu[data-exiting] {
+  animation: aparecer max(var(--dur-folha), var(--dur-opacidade)) var(--curva-saida) reverse;
 }
 
 .folha {
@@ -102,5 +118,11 @@
 @keyframes subir {
   from {
     transform: translateY(100%);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
   }
 }

@@ -16,7 +16,7 @@ import {
   sessaoDesconhecida,
 } from '../teste/sessao.ts';
 import type { ChamadoDeQuemParticipa, ConversaNaLista, PessoaDoChat } from './consultas.ts';
-import { vistaDaTela } from './MolduraDoChat.tsx';
+import { naTelaDeUmItem, vistaDaTela } from './MolduraDoChat.tsx';
 
 const CONVERSA = '0199a6e0-0000-7000-8000-00000000c0a1';
 
@@ -648,6 +648,17 @@ describe('a vista da tela', () => {
     const fora = { pathname: '/chat/avisos/outra' };
     const avisos = { routeId: '/chat/avisos', pathname: '/chat/avisos', search: {} };
     expect(vistaDaTela({ location: fora, resolvedLocation: fora, matches: [avisos] })).toBeNull();
+  });
+
+  it('o começo de um endereço que não existe não é a tela de um item', () => {
+    // Sem isso, o celular esconderia a barra de baixo da página não encontrada, sem a seta de voltar.
+    const item = { routeId: '/chat/c/$conversa', pathname: '/chat/c/abc', search: {} };
+    const fora = { pathname: '/chat/c/abc/outra' };
+    expect(naTelaDeUmItem({ location: fora, resolvedLocation: fora, matches: [item] })).toBe(false);
+    const dentro = { pathname: '/chat/c/abc' };
+    expect(naTelaDeUmItem({ location: dentro, resolvedLocation: dentro, matches: [item] })).toBe(
+      true,
+    );
   });
 
   it('o chamado é da vista Chat e, aberto pela vista Chamados, dela', () => {

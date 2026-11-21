@@ -7,7 +7,6 @@ import { X } from 'lucide-react';
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
 import { Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { BotaoDeIcone } from '../../icones/Icone.tsx';
-import estilosDoModal from '../modal/Modal.module.css';
 import estilos from './Folha.module.css';
 
 /** Conteúdo fixo, ou uma função que recebe o fechar (para as ações que fecham a folha). */
@@ -48,7 +47,7 @@ export function Folha({
       isOpen={aberta}
       onOpenChange={aoMudarAberta}
       isDismissable
-      className={`${estilosDoModal.veu} ${estilos.veu}`}
+      className={estilos.veu}
     >
       <Modal className={estilos.folha}>
         <Dialog aria-label={titulo ? undefined : rotulo} className={estilos.dialogo}>
