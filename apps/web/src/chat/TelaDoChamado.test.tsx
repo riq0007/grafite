@@ -147,3 +147,37 @@ describe('a volta a um chamado', () => {
     expect(await screen.findByText('Abrindo o chamado…')).toBeTruthy();
   });
 });
+
+describe('"Seus outros chamados"', () => {
+  it('seguem a ordem da lista do Chat: os que aguardam a pessoa e depois o aberto mais novo', async () => {
+    abrirOChat(
+      '/chat/chamados/1041',
+      comOChat({
+        // A API não ordena os abertos.
+        'GET /api/chat/chamados': () =>
+          Response.json({
+            abertos: [
+              naLista(1041, PASTA),
+              { ...naLista(1044, 'Teclado com teclas falhando'), abertoEm: '2026-11-11T12:40:00Z' },
+              { ...naLista(1045, IMPRESSORA_MANCHANDO), abertoEm: '2026-11-11T13:32:00Z' },
+              {
+                ...naLista(1039, 'Sem acesso à VPN'),
+                situacao: 'aguardando',
+                situacaoEmTexto: 'Aguardando você',
+                abertoEm: '2026-11-10T20:05:00Z',
+              },
+            ],
+            resolvidos: [],
+            seguintes: false,
+          }),
+        'GET /api/chat/chamados/1041': () => Response.json(conversa(1041, PASTA)),
+      }),
+    );
+    const outros = await screen.findByRole('navigation', { name: 'Seus outros chamados' });
+    expect(
+      within(outros)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['/chat/chamados/1039', '/chat/chamados/1045', '/chat/chamados/1044']);
+  });
+});

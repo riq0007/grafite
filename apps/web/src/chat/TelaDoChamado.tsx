@@ -5,7 +5,7 @@
 // conversa; a caixa do aberto, a do resolvido, que reabre, com "Reabrir até 18/11", e a frase do
 // fechado, sem caixa; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
 // popover, pelo botão do cabeçalho. Sem o módulo Chamados, a tela diz que ele está desligado.
-import { SITUACOES_PARA_QUEM_PARTICIPA } from '@grafite/domain';
+import { SITUACOES_PARA_QUEM_PARTICIPA, secoesDoChat } from '@grafite/domain';
 import { avisar, Botao, type DataHora, Icone, Popover, useDataHora } from '@grafite/ui';
 import {
   CircleCheck,
@@ -25,17 +25,13 @@ import {
   type EtapaNoChat,
   momentoDaEtapa,
 } from './chamado.ts';
-import {
-  type ChamadoDeQuemParticipa,
-  useAcoesDoChamado,
-  useChamadoDoChat,
-  useChamadosDoChat,
-} from './consultas.ts';
+import { useAcoesDoChamado, useChamadoDoChat, useChamadosDoChat } from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { naoEncontrada } from './FluxoDaConversa.tsx';
 import { type ControleDaConversaDoChamado, FluxoDoChamado } from './FluxoDoChamado.tsx';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { type ChamadoNaLista, comAsDatas } from './ListaDoChat.tsx';
 import { ModuloDesligado } from './ModuloDesligado.tsx';
 import { NesteChamado } from './NesteChamado.tsx';
 import { rascunhoDoChamado } from './rascunhos.tsx';
@@ -117,7 +113,11 @@ function ChamadoNaTela({
   const caixa = useRef<HTMLTextAreaElement>(null);
   const [reabrindo, definirReabrindo] = useState(false);
   const daConta = useChamadosDoChat(true);
-  const outros = daConta.data?.abertos.filter((outro) => outro.numero !== numero) ?? [];
+  // Na ordem da seção CHAMADOS da lista do Chat: os que aguardam a pessoa e depois o aberto mais
+  // novo. A API não ordena os abertos.
+  const outros = secoesDoChat(
+    (daConta.data?.abertos ?? []).filter((outro) => outro.numero !== numero).map(comAsDatas),
+  ).chamados;
   const resolvido = chamado.situacao === 'resolvido';
   const reabrirAte =
     chamado.reabrirAte === null ? null : diaDoReabrir(chamado.reabrirAte, agora, dataHora);
@@ -267,7 +267,7 @@ function OutrosChamados({
   chamados,
   vista,
 }: {
-  chamados: readonly ChamadoDeQuemParticipa[];
+  chamados: readonly ChamadoNaLista[];
   vista: 'chamados' | null;
 }) {
   const idDoRotulo = useId();
