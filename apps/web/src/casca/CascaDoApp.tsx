@@ -27,8 +27,10 @@ import { ContextoDasAcoesDaTela, criarRegistroDasAcoesDaTela } from '../busca/ac
 import type { EntradaDeBusca } from '../busca/tipos.ts';
 import { useBusca } from '../busca/useBusca.ts';
 import { paraAJanelaDoChat } from '../chat/enderecos.ts';
+import { esquecerAChegada } from '../chat/focoNaChegada.ts';
 import { useChegada } from '../chegada/avisos.tsx';
 import { interruptorDe, registroDaConta } from '../modulos/registroDaConta.ts';
+import type { ModuloRegistrado } from '../modulos/tipos.ts';
 import { ouvirAberturaPeloPush } from '../notificacoes/aberturaPeloPush.ts';
 import { paraACentral } from '../notificacoes/naCentral.ts';
 import {
@@ -133,7 +135,7 @@ export function CascaDoApp() {
   const menusDaBarra = [...modulos, ...modulosNoMais, ...modulosDoFim].find(
     (modulo) => modulo.id === atual?.id,
   )?.menusDaBarra;
-  useFocoNoTituloAoNavegar();
+  useFocoNoTituloAoNavegar(todos);
   const abas = useAbasDoApp();
 
   // O id de um item que navega é o próprio destino, conferido contra as rotas no registro. O
@@ -327,17 +329,34 @@ export function CascaDoApp() {
  * Depois de cada navegação que troca o endereço, o foco vai ao título do novo conteúdo, e o leitor
  * de tela anuncia aonde o usuário chegou. Na abertura da página (sem endereço anterior) o foco
  * fica onde está, para o primeiro Tab ir a "Ir para o conteúdo". Com `foco` no endereço, até na
- * abertura, o foco vai ao elemento marcado (design do F1b, decisão 4).
+ * abertura, o foco vai ao elemento marcado (design do F1b, decisão 4). A janela sem o título da
+ * janela, como a do Chat, recebe o foco no título de chegada só quando a conta chega de outro
+ * módulo (change chat-com-chamados, design, decisão 15).
  */
-function useFocoNoTituloAoNavegar() {
+function useFocoNoTituloAoNavegar(registro: readonly ModuloRegistrado[]) {
   const roteador = useRouter();
-  useEffect(
-    () =>
-      roteador.subscribe('onRendered', ({ fromLocation, pathChanged, toLocation }) => {
+  useEffect(() => {
+    const moduloDoEndereco = () =>
+      moduloAtual(
+        registro,
+        roteador.state.matches.map(({ routeId }) => routeId),
+      )?.id;
+    let anterior = moduloDoEndereco();
+    const pararAntes = roteador.subscribe('onBeforeNavigate', esquecerAChegada);
+    const pararDepois = roteador.subscribe(
+      'onRendered',
+      ({ fromLocation, pathChanged, toLocation }) => {
+        const atual = moduloDoEndereco();
+        const chegada = atual !== anterior;
+        anterior = atual;
         const { foco } = toLocation.search as BuscaDaRaiz;
         if (!foco && (!fromLocation || !pathChanged)) return;
-        focarDestino(foco);
-      }),
-    [roteador],
-  );
+        focarDestino(foco, { chegada });
+      },
+    );
+    return () => {
+      pararAntes();
+      pararDepois();
+    };
+  }, [roteador, registro]);
 }

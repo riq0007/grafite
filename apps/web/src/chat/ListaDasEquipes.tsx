@@ -39,7 +39,7 @@ export function ListaDasEquipes() {
   return (
     <section aria-labelledby={idDoTitulo} className={`${moldura.lista} ${lista.lista}`}>
       <div className={lista.cabecalho}>
-        <h1 id={idDoTitulo} className={lista.titulo}>
+        <h1 id={idDoTitulo} className={lista.titulo} tabIndex={-1} data-titulo-de-chegada="lista">
           Equipes
         </h1>
       </div>

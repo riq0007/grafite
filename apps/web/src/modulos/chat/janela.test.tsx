@@ -109,6 +109,12 @@ async function naTerceiraMensagem(
   const marcada = await mensagemNaTela('Mensagem 3');
   expect(marcada.getAttribute('aria-current')).toBe('true');
   expect(estado.paginas[0]).toBe(`em=${id(3)}`);
+  // Chegou de outro módulo: o foco vai ao nome da conversa, que o leitor de tela anuncia.
+  await waitFor(() =>
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { level: 2, name: 'Paulo Nunes' }),
+    ),
+  );
   expect(
     within(await dock())
       .getByRole('button', { name: 'Chat' })
@@ -163,6 +169,20 @@ describe('o Chat na casca', () => {
     expect(within(trilha).queryByRole('link', { name: /^Avisos/ })).toBeNull();
   });
 
+  it('chegar ao Chat pelo dock leva o foco ao título da lista, e trocar de vista dentro dele o deixa onde estava', async () => {
+    abrirACasca('/ajustes', COM_O_FINANCEIRO);
+    await screen.findByRole('heading', { level: 1, name: 'Aparência' });
+    fireEvent.click(within(await dock()).getByRole('button', { name: 'Chat' }));
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Chat' });
+    await waitFor(() => expect(document.activeElement).toBe(titulo));
+    const equipes = within(await vistasDoChat()).getByRole('link', { name: 'Equipes' });
+    equipes.focus();
+    fireEvent.click(equipes);
+    await screen.findByRole('heading', { level: 1, name: 'Equipes' });
+    await new Promise((resolver) => setTimeout(resolver, 50));
+    expect(document.activeElement).toBe(equipes);
+  });
+
   it('"Abrir no app do chat" abre o mesmo lugar em /chat, numa janela nova', async () => {
     const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
     abrirACasca(`/conversas/equipes/${FINANCEIRO}`, COM_O_FINANCEIRO);
@@ -171,6 +191,16 @@ describe('o Chat na casca', () => {
       within(await vistasDoChat()).getByRole('button', { name: 'Abrir no app do chat' }),
     );
     expect(abrirJanela).toHaveBeenCalledWith(`/chat/equipes/${FINANCEIRO}`, '_blank', 'noopener');
+  });
+
+  it('"Abrir no app do chat" na direta que ainda não nasceu abre o Chat do app, porque a pessoa não vai à janela nova', async () => {
+    const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
+    abrirACasca(`/conversas/direta/${PAULO.conta}`, COM_O_FINANCEIRO);
+    await screen.findByText('Escolha a pessoa de novo em Nova conversa.');
+    fireEvent.click(
+      within(await vistasDoChat()).getByRole('button', { name: 'Abrir no app do chat' }),
+    );
+    expect(abrirJanela).toHaveBeenCalledWith('/chat', '_blank', 'noopener');
   });
 
   it('o "Abrir" da notificação do chat, na central da casca, abre a conversa na janela do Chat, na mensagem', async () => {

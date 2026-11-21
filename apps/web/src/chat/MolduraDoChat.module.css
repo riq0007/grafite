@@ -334,3 +334,11 @@
 .contaNaBarra .fotoDaConta[data-tamanho] {
   --lado-do-avatar: var(--esp-6);
 }
+
+/*
+ * O título de chegada, que recebe o foco quando a conta chega ao Chat de outro módulo da casca, como
+ * o título da janela: o leitor de tela o anuncia, e ele não ganha o contorno de um controle.
+ */
+.app [data-titulo-de-chegada] {
+  outline: none;
+}

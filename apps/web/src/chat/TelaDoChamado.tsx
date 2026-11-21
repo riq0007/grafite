@@ -42,6 +42,7 @@ import { useAcoesDoChamado, useChamadoDoChat, useChamadosDoChat } from './consul
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { naoEncontrada } from './FluxoDaConversa.tsx';
 import { type ControleDaConversaDoChamado, FluxoDoChamado } from './FluxoDoChamado.tsx';
+import { focarAoChegar } from './focoNaChegada.ts';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { type ChamadoNaLista, comAsDatas } from './ListaDoChat.tsx';
@@ -172,7 +173,13 @@ function ChamadoNaTela({
               <SeloDoChamado texto={chamado.situacaoEmTexto} />
             </div>
             <div className={estilos.linhaDoTitulo}>
-              <h2 id={idDoTitulo} className={estilos.titulo}>
+              <h2
+                id={idDoTitulo}
+                className={estilos.titulo}
+                tabIndex={-1}
+                data-titulo-de-chegada="item"
+                ref={focarAoChegar}
+              >
                 {chamado.titulo}
               </h2>
               <BotaoDeIcone
@@ -193,7 +200,13 @@ function ChamadoNaTela({
               <Icone icone={LifeBuoy} tamanho={14} />
               Chamado <span className={estilos.numero}>#{numero}</span>
             </span>
-            <h2 id={idDoTitulo} className={estilos.titulo}>
+            <h2
+              id={idDoTitulo}
+              className={estilos.titulo}
+              tabIndex={-1}
+              data-titulo-de-chegada="item"
+              ref={focarAoChegar}
+            >
               {chamado.titulo}
             </h2>
             <SeloDoChamado texto={chamado.situacaoEmTexto} />

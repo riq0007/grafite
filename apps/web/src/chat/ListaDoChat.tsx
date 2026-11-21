@@ -90,7 +90,7 @@ export function ListaDoChat() {
   return (
     <section aria-labelledby={idDoTitulo} className={`${moldura.lista} ${estilos.lista}`}>
       <div className={estilos.cabecalho}>
-        <h1 id={idDoTitulo} className={estilos.titulo}>
+        <h1 id={idDoTitulo} className={estilos.titulo} tabIndex={-1} data-titulo-de-chegada="lista">
           Chat
         </h1>
         <NovaConversa className={estilos.novaConversa} />

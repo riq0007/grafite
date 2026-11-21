@@ -9,6 +9,7 @@ import { miniaturasNoChat } from '../api/fotos.ts';
 import { useIrNoChat } from './base.tsx';
 import { useEquipesDoChat, usePessoasDaConversa } from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
+import { focarAoChegar } from './focoNaChegada.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { pessoasEmTexto } from './ListaDasEquipes.tsx';
 import conversa from './TelaDaConversa.module.css';
@@ -74,7 +75,13 @@ export function TelaDaEquipe({ id }: { id: string }) {
           <Avatar nome={equipe.nome} className={conversa.foto} decorativo />
         )}
         <div className={conversa.titulos}>
-          <h2 id={idDoNome} className={conversa.nome}>
+          <h2
+            id={idDoNome}
+            className={conversa.nome}
+            tabIndex={-1}
+            data-titulo-de-chegada="item"
+            ref={focarAoChegar}
+          >
             {equipe.nome}
           </h2>
           <span className={conversa.sobre}>

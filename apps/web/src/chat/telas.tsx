@@ -63,7 +63,9 @@ export function NenhumaEquipeEscolhida() {
 export function ChatNaoEncontrado() {
   return (
     <div className={estilos.naoEncontrada}>
-      <h1 className={estilos.tituloDaLista}>Página não encontrada</h1>
+      <h1 className={estilos.tituloDaLista} tabIndex={-1} data-titulo-de-chegada="lista">
+        Página não encontrada
+      </h1>
       <p>Este endereço não leva a nenhuma tela do chat.</p>
       <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
     </div>

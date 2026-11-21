@@ -19,6 +19,7 @@ import {
   type ConversaAberta,
   useConversasDoChat,
 } from './consultas.ts';
+import { focarAoChegar } from './focoNaChegada.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { rascunhoDaDireta } from './rascunhos.tsx';
 import estilos from './TelaDaConversa.module.css';
@@ -77,7 +78,13 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
           decorativo
         />
         <div className={estilos.titulos}>
-          <h2 id={idDoNome} className={estilos.nome}>
+          <h2
+            id={idDoNome}
+            className={estilos.nome}
+            tabIndex={-1}
+            data-titulo-de-chegada="item"
+            ref={focarAoChegar}
+          >
             {nome}
           </h2>
         </div>

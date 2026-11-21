@@ -32,6 +32,7 @@ import {
 import { quandoNoChat } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { type ControleDoFluxo, FluxoDaConversa, naoEncontrada } from './FluxoDaConversa.tsx';
+import { focarAoChegar } from './focoNaChegada.ts';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { rascunhoDaConversa, useRascunho } from './rascunhos.tsx';
@@ -259,7 +260,13 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
           />
         )}
         <div className={estilos.titulos}>
-          <h2 id={idDoNome} className={estilos.nome}>
+          <h2
+            id={idDoNome}
+            className={estilos.nome}
+            tabIndex={-1}
+            data-titulo-de-chegada="item"
+            ref={focarAoChegar}
+          >
             {aberta.nome}
           </h2>
           {sobre !== null && <span className={estilos.sobre}>{sobre}</span>}

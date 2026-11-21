@@ -246,10 +246,16 @@ export function MolduraDoChat() {
 
 /**
  * "Abrir no app do chat" (spec modulo-chat, "Chat na casca"): o mesmo lugar, com a busca, em /chat,
- * numa janela nova.
+ * numa janela nova. A direta que ainda não nasceu abre no Chat do app: a pessoa dela vem no estado do
+ * histórico, que não vai à janela nova.
  */
 function AbrirNoAppDoChat() {
-  const endereco = useRouterState({ select: (estado) => estado.location.href });
+  const endereco = useRouterState({
+    select: (estado) =>
+      rotaComoNoApp(ultimaQueCobre(estado)?.routeId ?? '') === '/chat/direta/$conta'
+        ? '/chat'
+        : estado.location.href,
+  });
   return (
     <BotaoDeIcone
       icone={SquareArrowOutUpRight}
