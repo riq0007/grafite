@@ -89,7 +89,7 @@ export function ChipDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
       <span className={estilos.paraOLeitor}>, </span>
       <SeloDoChamado texto={chamado.situacao} />
       {chamado.atende !== null && (
-        <span>
+        <span className={estilos.atende}>
           <span aria-hidden="true">· </span>
           <span className={estilos.paraOLeitor}>, atende </span>
           {chamado.atende}

@@ -1,0 +1,105 @@
+/* A mensagem levantada e as reações, acima da folha, sobre o véu (m09). */
+
+/* As reações de sempre e a escrita, numa cápsula, cada uma no alvo de toque. */
+.reacoes {
+  display: flex;
+  justify-self: start;
+  gap: 2px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--esp-1);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+}
+
+.reacao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-1);
+  min-inline-size: var(--alvo-toque);
+  min-block-size: var(--alvo-toque);
+  margin: 0;
+  padding: 0 var(--esp-3);
+  border: 1px solid transparent;
+  border-radius: var(--raio-capsula);
+  background: none;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  outline: none;
+  transition: background-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.reacao:active {
+  background-color: var(--cor-pressionado);
+}
+
+.reacao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* A da conta: o visto, a borda do destaque e o peso forte, além do aria-pressed. */
+.reacao[aria-pressed="true"] {
+  border-color: var(--cor-destaque);
+  font-weight: var(--peso-forte);
+}
+
+/* A mensagem levantada: a foto, o nome e a hora, e o começo do texto, em até quatro linhas, com o
+   contorno do destaque. */
+.levantada {
+  display: grid;
+  grid-template-columns: var(--esp-8) minmax(0, 1fr);
+  column-gap: var(--esp-3);
+  padding: var(--esp-3);
+  border: 1.5px solid var(--cor-destaque);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-sobreposta);
+}
+
+.levantada .foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+.corpo {
+  min-inline-size: 0;
+}
+
+.quem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.nome {
+  font-weight: var(--peso-forte);
+}
+
+.quem time {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.texto {
+  display: -webkit-box;
+  margin: var(--esp-1) 0 0;
+  overflow: hidden;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}

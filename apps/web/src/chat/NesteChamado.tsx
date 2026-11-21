@@ -22,6 +22,41 @@ const ultimaResolucao = (conversa: ConversaDoChamado['conversa']) =>
       item.especie === 'evento' && item.evento === 'resolveu' && item.resumo !== null,
   );
 
+/**
+ * Quem atende o chamado, desde quando assumiu, ou, no resolvido, quem atendeu, pelo resumo dos
+ * tempos da última resolução, e quando resolveu. Nulo com ninguém.
+ */
+export function quemAtende(
+  chamado: ConversaDoChamado,
+): { nome: string; assumiu: Date | null; resolveu: Date | null } | null {
+  if (chamado.situacao === 'resolvido') {
+    const resumo = ultimaResolucao(chamado.conversa)?.resumo ?? null;
+    if (resumo) {
+      return { nome: resumo.atendeu, assumiu: null, resolveu: new Date(resumo.resolvido.em) };
+    }
+    return chamado.atende && { nome: chamado.atende.nome, assumiu: null, resolveu: null };
+  }
+  return (
+    chamado.atende && {
+      nome: chamado.atende.nome,
+      assumiu: new Date(chamado.atende.desde),
+      resolveu: null,
+    }
+  );
+}
+
+/**
+ * Quem atende e a previsão da resposta numa linha, no cabeçalho do chamado no celular (m08), como
+ * "Atende: Ana Souza · responde em ~1 h"; sem ninguém, "Na fila da TI"; no resolvido, quem atendeu.
+ * Nulo no resolvido sem registro de quem atendeu.
+ */
+export function linhaDeQuemAtende(chamado: ConversaDoChamado): string | null {
+  const quem = quemAtende(chamado);
+  if (chamado.situacao === 'resolvido') return quem && `Atendeu: ${quem.nome}`;
+  const atende = quem ? `Atende: ${quem.nome}` : 'Na fila da TI';
+  return chamado.previsao === null ? atende : `${atende} · ${chamado.previsao}`;
+}
+
 export function NesteChamado({
   chamado,
   agora,
@@ -38,21 +73,11 @@ export function NesteChamado({
   const resolvido = chamado.situacao === 'resolvido';
   const { ativo } = chamado;
 
-  let quem: { nome: string; sobre: string | null } | null;
-  if (resolvido) {
-    const resumo = ultimaResolucao(chamado.conversa)?.resumo ?? null;
-    quem = resumo
-      ? {
-          nome: resumo.atendeu,
-          sobre: `resolveu ${quandoAs(new Date(resumo.resolvido.em), agora, dataHora)}`,
-        }
-      : chamado.atende && { nome: chamado.atende.nome, sobre: null };
-  } else {
-    quem = chamado.atende && {
-      nome: chamado.atende.nome,
-      sobre: `assumiu ${quandoAs(new Date(chamado.atende.desde), agora, dataHora)}`,
-    };
-  }
+  const atende = quemAtende(chamado);
+  let sobre: string | null = null;
+  if (atende?.resolveu) sobre = `resolveu ${quandoAs(atende.resolveu, agora, dataHora)}`;
+  else if (atende?.assumiu) sobre = `assumiu ${quandoAs(atende.assumiu, agora, dataHora)}`;
+  const quem = atende && { nome: atende.nome, sobre };
 
   return (
     <div className={estilos.painel}>

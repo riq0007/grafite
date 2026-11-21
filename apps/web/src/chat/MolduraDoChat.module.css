@@ -96,6 +96,12 @@
   min-block-size: 0;
 }
 
+/* A coluna da lista: na tela larga, a lista fica ao lado da tela escolhida, como se a coluna não
+   existisse; no celular, as duas ficam no mesmo lugar, e a coluna mostra uma delas. */
+.colunaDaLista {
+  display: contents;
+}
+
 /* Sem o chat: o motivo no meio da janela. */
 .motivo {
   margin: auto;
@@ -150,4 +156,131 @@
 
 .naoEncontrada a {
   color: var(--cor-destaque-texto);
+}
+
+/* O celular (spec modulo-chat, "Chat no celular"; m08): uma coluna só, com a lista da vista ou a
+   tela escolhida, e a trilha na barra de baixo, com as vistas e a conta em partes iguais. A tela de
+   um item, como a conversa, fica sem a barra, com a seta de voltar no alto. A lista escondida fica
+   montada, sem ser vista, com a rolagem e as seções abertas, para a volta a achar como estava. */
+:root[data-postura="celular"] .app {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+:root[data-postura="celular"] .app[data-item] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .conteudo {
+  display: grid;
+  grid-row: 1;
+  grid-column: 1;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .colunaDaLista,
+:root[data-postura="celular"] .tela {
+  grid-area: 1 / 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+:root[data-postura="celular"] .colunaDaLista {
+  display: flex;
+}
+
+:root[data-postura="celular"] .conteudo[data-coluna="lista"] .tela {
+  display: none;
+}
+
+:root[data-postura="celular"] .conteudo[data-coluna="tela"] .colunaDaLista {
+  visibility: hidden;
+}
+
+:root[data-postura="celular"] .lista {
+  flex: 1;
+  inline-size: auto;
+  border-inline-end: 0;
+  background-color: var(--cor-superficie);
+}
+
+/* A barra de baixo, na superfície afundada, como no m08, acima da área do gesto do aparelho. */
+:root[data-postura="celular"] .trilha {
+  grid-row: 2;
+  grid-column: 1;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  inline-size: auto;
+  padding: var(--esp-1) var(--esp-1) max(var(--esp-2), env(safe-area-inset-bottom));
+  border-inline-end: 0;
+  border-block-start: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie-afundada);
+}
+
+:root[data-postura="celular"] .app[data-item] .trilha {
+  display: none;
+}
+
+:root[data-postura="celular"] .vistas {
+  display: flex;
+  flex: var(--quantas-vistas) 1 0;
+  gap: 0;
+  min-inline-size: 0;
+}
+
+:root[data-postura="celular"] .vistas > li {
+  display: grid;
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+/* Cada vista, com o ícone de 24 px e o nome embaixo, no alvo de 48 px. */
+:root[data-postura="celular"] .vista {
+  align-content: center;
+  gap: calc(var(--esp-1) / 2);
+  inline-size: auto;
+  min-block-size: var(--esp-12);
+  padding: var(--esp-1) 0;
+}
+
+:root[data-postura="celular"] .vista svg {
+  inline-size: var(--esp-6);
+  block-size: var(--esp-6);
+}
+
+/* A vista à vista: a barra do destaque na borda de cima da barra, como na borda da trilha. */
+:root[data-postura="celular"] .vista[aria-current="page"]::before {
+  inset-block: calc(var(--esp-1) * -1) auto;
+  inset-inline: var(--esp-4);
+  inline-size: auto;
+  block-size: 2px;
+}
+
+/* O contador no canto de cima do ícone, como no m08. */
+:root[data-postura="celular"] .vista .contadorDaVista {
+  inset-block-start: 0;
+  inset-inline: calc(50% + var(--esp-1)) auto;
+}
+
+/* A conta na barra de baixo: a foto no lugar do ícone e "Conta" embaixo, como as vistas, sem a
+   borda do botão, que a deixaria mais larga que elas. */
+.trilha .conta.contaNaBarra {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  min-block-size: var(--esp-12);
+  padding: var(--esp-1) 0;
+  border: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  line-height: var(--entrelinha-justa);
+}
+
+.contaNaBarra > span:first-child {
+  flex-direction: column;
+  gap: calc(var(--esp-1) / 2);
+}
+
+.contaNaBarra .fotoDaConta[data-tamanho] {
+  --lado-do-avatar: var(--esp-6);
 }

@@ -66,3 +66,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* No celular, "Abrir a conversa" desce para a linha de baixo, na largura toda, no alvo de toque. */
+:root[data-postura="celular"] .abrir {
+  flex: 1 0 100%;
+  min-block-size: var(--alvo-toque);
+  margin-block-end: var(--esp-2);
+}
+
+:root[data-postura="celular"] .quem {
+  padding: var(--esp-3) var(--esp-4);
+}

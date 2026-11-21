@@ -327,3 +327,88 @@
     display: none;
   }
 }
+
+/* O cabeçalho do celular (m08): a seta de voltar, a marca e o selo no alto, o título, com o botão
+   da folha "Neste chamado", e quem atende, com a previsão da resposta, embaixo, numa coluna. */
+:root[data-postura="celular"] .cabecalho {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--esp-1);
+  padding: var(--esp-1) var(--esp-4) var(--esp-3);
+}
+
+.linhaDoAlto,
+.linhaDoTitulo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+}
+
+.linhaDoAlto > :last-child {
+  margin-inline-start: auto;
+}
+
+.linhaDoTitulo {
+  align-items: flex-start;
+}
+
+.linhaDoTitulo .titulo {
+  padding-block-start: calc(var(--esp-1) * 2.5);
+}
+
+button.botaoDaFolha {
+  flex: none;
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  margin-inline-end: calc(var(--esp-2) * -1);
+  color: var(--cor-texto);
+}
+
+button.botaoDaFolha svg {
+  width: var(--esp-5);
+  height: var(--esp-5);
+}
+
+.quemAtende {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+}
+
+/* As etapas e o painel na folha, uma parte embaixo da outra. */
+.naFolha {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.etapas[data-empilhadas] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-1);
+  padding: 0;
+}
+
+.etapas[data-empilhadas] .etapa {
+  border-block-start: 0;
+  border-inline-start: 3px solid var(--tom-da-etapa);
+  border-radius: 0 var(--raio-controle) var(--raio-controle) 0;
+}
+
+/* Os outros chamados no celular: o recuo da tela e as pílulas no alvo de toque. */
+:root[data-postura="celular"] .outros {
+  padding-inline: var(--esp-4);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .outros {
+  --linha-dos-outros: calc(var(--alvo-toque) + 2 * var(--esp-1));
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .outro {
+  min-block-size: var(--alvo-toque);
+}
+
+:root[data-postura="celular"] .semCaixa {
+  margin-inline: var(--esp-4);
+}

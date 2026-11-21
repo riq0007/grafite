@@ -2,10 +2,12 @@
 // a sessão, a API, as consultas, o canal dos eventos e as notificações, e, atrás da porta da
 // entrada, o roteador do chat. A entrada não muda o endereço: depois dela, o app abre no endereço
 // do chat que foi pedido. Os eventos relêem as consultas do chat (spec modulo-chat, "Telas do chat
-// atualizadas e avisos").
+// atualizadas e avisos"). A postura do aparelho vai no <html>, como na casca, para as regras do toque
+// e do celular valerem também nas camadas em portal, como os menus e as folhas.
+import { usePostura } from '@grafite/ui';
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { criarClienteDeConsultas } from '../api/consultas.ts';
 import { ProvedorDaApi } from '../api/useApi.tsx';
 import { type CanalDeEventos, criarCanalDeEventos } from '../eventos/canal.ts';
@@ -44,6 +46,12 @@ export function AppDoChat({
 }) {
   const [consultas] = useState(() => consultasDeFora ?? criarClienteDeConsultas());
   const [canal] = useState(() => canalDeFora ?? criarCanalDeEventos());
+  const postura = usePostura();
+  useLayoutEffect(() => {
+    const raiz = document.documentElement;
+    raiz.setAttribute('data-postura', postura);
+    return () => raiz.removeAttribute('data-postura');
+  }, [postura]);
   useEffect(
     () => ligarEventosDosModulos({ registro: REGISTRO_DO_CHAT, canal, consultas }),
     [canal, consultas],

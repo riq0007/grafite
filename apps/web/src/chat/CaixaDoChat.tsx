@@ -209,11 +209,12 @@ export function CaixaDoChat<T>({
         {respondida && (
           <div className={estilos.respondida}>
             <Icone icone={CornerUpLeft} tamanho={14} />
-            <span className={estilos.paraOLeitor}>Respondendo a</span>
+            <span className={estilos.paraOLeitor}>Respondendo a </span>
             <span className={estilos.autorDaRespondida}>{respondida.autor}</span>
             <span className={estilos.comecoDaRespondida}>{respondida.comeco}</span>
             <Botao
               nivel="terciario"
+              className={estilos.tirar}
               aria-label="Tirar a mensagem respondida"
               onPress={() => {
                 mudarRascunho((antes) => ({ ...antes, respondida: null }));
@@ -305,6 +306,7 @@ export function CaixaDoChat<T>({
                 <span className={estilos.tamanho}>{formatarTamanho(anexo.bytes)}</span>
                 <Botao
                   nivel="terciario"
+                  className={estilos.tirar}
                   aria-label={`Tirar ${anexo.nome}`}
                   onPress={() =>
                     mudarRascunho((antes) => ({

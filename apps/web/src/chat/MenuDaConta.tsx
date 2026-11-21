@@ -1,6 +1,7 @@
 // O menu da conta no pé da trilha (spec modulo-chat, "App do chat"): a foto ou as iniciais abrem o
 // tema, que vale na hora e é gravado na conta, como nos Ajustes, e "Sair". Quem só usa o chat
-// nunca chega aos Ajustes, e o tema é o que muda de um aparelho para outro.
+// nunca chega aos Ajustes, e o tema é o que muda de um aparelho para outro. Na barra de baixo do
+// celular, a foto vai com "Conta" embaixo, como as vistas, e o menu abre acima dela.
 import { TEMAS_DA_ESCOLHA } from '@grafite/domain';
 import {
   Avatar,
@@ -29,7 +30,13 @@ const GRUPOS_DE_TEMAS = [
   { nome: 'Claros', temas: IDS_DOS_TEMAS.filter((id) => temas[id].tom === 'claro') },
 ];
 
-export function MenuDaConta({ conta }: { conta: ContaDaSessao }) {
+export function MenuDaConta({
+  conta,
+  naBarraDeBaixo = false,
+}: {
+  conta: ContaDaSessao;
+  naBarraDeBaixo?: boolean;
+}) {
   const loja = useLojaDaSessao();
   const { preferencias, mudar } = usePreferencias();
   const tema = preferencias.aparencia.tema;
@@ -63,11 +70,23 @@ export function MenuDaConta({ conta }: { conta: ContaDaSessao }) {
   return (
     <Menu
       rotulo={conta.nome}
-      posicao="end bottom"
+      posicao={naBarraDeBaixo ? 'top end' : 'end bottom'}
       gatilho={
-        <Botao nivel="terciario" aria-label={conta.nome} className={estilos.conta}>
-          <Avatar nome={conta.nome} imagens={miniaturasDaConta(conta.foto)} decorativo />
-        </Botao>
+        naBarraDeBaixo ? (
+          <Botao nivel="terciario" className={`${estilos.conta} ${estilos.contaNaBarra}`}>
+            <Avatar
+              nome={conta.nome}
+              imagens={miniaturasDaConta(conta.foto)}
+              className={estilos.fotoDaConta}
+              decorativo
+            />
+            Conta
+          </Botao>
+        ) : (
+          <Botao nivel="terciario" aria-label={conta.nome} className={estilos.conta}>
+            <Avatar nome={conta.nome} imagens={miniaturasDaConta(conta.foto)} decorativo />
+          </Botao>
+        )
       }
     >
       <Submenu rotulo="Tema">

@@ -23,6 +23,7 @@ import { LinkDoChat } from './LinkDoChat.tsx';
 import { rascunhoDaDireta } from './rascunhos.tsx';
 import estilos from './TelaDaConversa.module.css';
 import { ajudaDaCaixa } from './TelaDaConversa.tsx';
+import { EstadoComAVolta, VoltarALista } from './VoltarALista.tsx';
 
 /** A pessoa da direta, como a escolha em "Nova conversa" a passa na navegação. */
 export type PessoaDaDireta = NonNullable<ConversaAberta['outra']>;
@@ -46,17 +47,21 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
 
   if (nascida || (!pessoa && conversas.isPending)) {
     return (
-      <p role="status" className={estilos.abrindo}>
-        Abrindo a conversa…
-      </p>
+      <EstadoComAVolta>
+        <p role="status" className={estilos.abrindo}>
+          Abrindo a conversa…
+        </p>
+      </EstadoComAVolta>
     );
   }
   if (!pessoa) {
     return (
-      <div role="alert" className={estilos.naoEncontrada}>
-        <p>Escolha a pessoa de novo em Nova conversa.</p>
-        <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
-      </div>
+      <EstadoComAVolta>
+        <div role="alert" className={estilos.naoEncontrada}>
+          <p>Escolha a pessoa de novo em Nova conversa.</p>
+          <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
+        </div>
+      </EstadoComAVolta>
     );
   }
 
@@ -64,15 +69,18 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
   return (
     <section className={estilos.conversa} aria-labelledby={idDoNome}>
       <header className={estilos.cabecalho} data-sem-abas>
+        <VoltarALista />
         <Avatar
           nome={pessoa.nome}
           imagens={miniaturasNoChat(pessoa.conta, pessoa.foto)}
           className={estilos.foto}
           decorativo
         />
-        <h2 id={idDoNome} className={estilos.nome}>
-          {nome}
-        </h2>
+        <div className={estilos.titulos}>
+          <h2 id={idDoNome} className={estilos.nome}>
+            {nome}
+          </h2>
+        </div>
       </header>
       <p className={estilos.semMensagens}>Nenhuma mensagem ainda.</p>
       <CaixaDoChat

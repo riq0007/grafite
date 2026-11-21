@@ -94,6 +94,24 @@ export function Menu({
   );
 }
 
+export interface PropsDoMenuNaFolha {
+  /** Nome do menu para o leitor de tela, como "Ações da mensagem". */
+  rotulo: string;
+  children: ReactNode;
+}
+
+/**
+ * O menu solto numa folha de baixo, como o da mensagem do chat no celular (m09): os itens de 52 px,
+ * no texto maior, com o ícone de 24 px. As setas andam pelos itens, como no menu que abre.
+ */
+export function MenuNaFolha({ rotulo, children }: PropsDoMenuNaFolha) {
+  return (
+    <MenuDoReactAria aria-label={rotulo} className={`${estilos.menu} ${estilos.menuNaFolha}`}>
+      {children}
+    </MenuDoReactAria>
+  );
+}
+
 export interface PropsDoItemDeMenu extends Omit<MenuItemProps, 'children' | 'className'> {
   children: string;
   /** Ação que apaga ou encerra algo: texto na cor crítica. */

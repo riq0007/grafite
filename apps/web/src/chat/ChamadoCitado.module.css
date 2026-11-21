@@ -22,6 +22,18 @@
   transition: border-color var(--dur-rapida) var(--curva-padrao);
 }
 
+/* O chip cabe na linha do texto, com as margens: na tela estreita, o nome de quem atende corta, e o
+   número e a situação ficam inteiros. */
+.chip {
+  max-inline-size: calc(100% - var(--esp-1));
+}
+
+.atende {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .chip[data-hovered],
 .chip[aria-expanded="true"] {
   border-color: var(--cor-info);

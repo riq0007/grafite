@@ -87,6 +87,12 @@
   flex: none;
 }
 
+/* O nome no meio da altura do chip, também no alvo de toque: o kit alinha o nome à bolinha, que aqui
+   sai. */
+.tipos [data-parte="opcoes"] .tipo {
+  align-items: center;
+}
+
 /* A bolinha do rádio do kit sai: a escolha é o chip cheio, no destaque, com o nome em peso forte. */
 .tipo > [data-parte="bolinha"] {
   display: none;
@@ -199,4 +205,39 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* Os tipos no toque, no alvo de 44 px; e o "Trocar". */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .tipo {
+  min-height: var(--alvo-toque);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .trocar {
+  min-height: var(--alvo-toque);
+}
+
+/* No celular, na tela cheia (m09): o formulário ocupa a altura, e o pé, com "Abrir chamado" na
+   largura toda, fica preso embaixo, no recuo da tela cheia, por cima dos campos que rolam. */
+:root[data-postura="celular"] .formulario {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+:root[data-postura="celular"] .acoes {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  margin: auto calc(var(--recuo-da-tela-cheia) * -1) 0;
+  padding: var(--esp-3) var(--recuo-da-tela-cheia) calc(var(--esp-3) + env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--cor-linha);
+  background-color: var(--cor-superficie);
+}
+
+:root[data-postura="celular"] .acoes .abrir {
+  flex: 1;
+  min-height: calc(var(--esp-12) + var(--esp-1));
+  border-radius: var(--raio-capsula);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
 }

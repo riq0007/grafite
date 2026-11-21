@@ -63,7 +63,8 @@ export function reagirAvisando(reagir: Reagir, mensagem: MensagemDoChat, texto: 
 export const linkDaMensagem = (conversa: string, mensagem: string) =>
   `${window.location.origin}/chat/c/${conversa}?m=${mensagem}`;
 
-async function copiarOLink(conversa: string, mensagem: string) {
+/** Copia o link da mensagem, com o aviso de que copiou ou de que não deu. */
+export async function copiarOLink(conversa: string, mensagem: string) {
   try {
     await copiarParaAreaDeTransferencia(linkDaMensagem(conversa, mensagem));
     avisar({ situacao: 'sucesso', titulo: 'Link copiado.' });
@@ -234,14 +235,17 @@ export function BarraDaMensagem({
   );
 }
 
-/** A reação escrita, de 1 a 20 caracteres, num popover opaco, com a recusa no campo. */
-function ReacaoEscrita({
+/**
+ * A reação escrita, de 1 a 20 caracteres, num popover opaco, com a recusa no campo, preso à barra
+ * da mensagem ou, no celular, à mensagem.
+ */
+export function ReacaoEscrita({
   ancora,
   aberta,
   aoMudarAberta,
   reagir,
 }: {
-  ancora: RefObject<HTMLDivElement | null>;
+  ancora: RefObject<Element | null>;
   aberta: boolean;
   aoMudarAberta: (aberta: boolean) => void;
   reagir: (texto: string) => Promise<string | null>;

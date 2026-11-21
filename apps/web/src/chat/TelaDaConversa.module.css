@@ -48,6 +48,15 @@
   --lado-do-avatar: var(--esp-8);
 }
 
+/* O nome e, ao lado, o que a conversa é, que desce para baixo do nome quando não cabe. */
+.titulos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--esp-3);
+  min-inline-size: 0;
+}
+
 .marcaDoCanal {
   display: inline-grid;
   flex: none;
@@ -229,4 +238,21 @@
   min-inline-size: 0;
   font-weight: var(--peso-forte);
   overflow-wrap: anywhere;
+}
+
+/* No celular, o cabeçalho na largura da tela, com a seta de voltar, e o que a conversa é embaixo do
+   nome; a faixa das abas, no mesmo recuo. */
+:root[data-postura="celular"] .cabecalho {
+  gap: var(--esp-2);
+  padding: var(--esp-1) var(--esp-4);
+  min-block-size: calc(var(--esp-12) + var(--esp-2));
+}
+
+:root[data-postura="celular"] .titulos {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+:root[data-postura="celular"] .abas {
+  --recuo-das-abas: var(--esp-4);
 }

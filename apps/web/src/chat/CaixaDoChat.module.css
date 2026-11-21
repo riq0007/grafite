@@ -107,9 +107,12 @@
   font-weight: var(--peso-forte);
 }
 
+/* A contenção da largura impede que o começo longo alargue a caixa e a conversa, como no celular:
+   ele termina nas reticências. */
 .comecoDaRespondida {
   flex: 1;
   min-inline-size: 0;
+  contain: inline-size;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -134,9 +137,11 @@
   font-size: var(--texto-dado);
 }
 
+/* O nome longo também termina nas reticências, sem alargar a caixa. */
 .nomeDoAnexo {
   flex: 1;
   min-inline-size: 0;
+  contain: inline-size;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -246,5 +251,30 @@
 }
 
 .dica[hidden] {
+  display: none;
+}
+
+/* No toque, o clipe e o envio no alvo de 44 px (spec modulo-chat, "Chat no celular"). */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .area {
+  --lado-do-envio: var(--alvo-toque);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .clipe {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  margin-block-end: calc((var(--altura-da-linha) - var(--alvo-toque)) / 2);
+}
+
+/* E o "Tirar" da respondida e dos anexos. */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .tirar {
+  min-block-size: var(--alvo-toque);
+}
+
+/* No celular, a caixa no recuo da tela, acima da área do gesto do aparelho, e sem a dica. */
+:root[data-postura="celular"] .area {
+  margin: 0 var(--esp-3) max(var(--esp-3), env(safe-area-inset-bottom));
+}
+
+:root[data-postura="celular"] .dica {
   display: none;
 }

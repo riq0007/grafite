@@ -125,3 +125,34 @@
   border: 0;
   background-color: var(--cor-linha);
 }
+
+/* O menu numa folha de baixo (m09): os itens de 52 px, também nas posturas de toque, no texto
+   maior, com o ícone de 24 px; o informativo, de 56 px, com a borda do azul do chamado, que sai no
+   foco, como a de fora da folha. Fica no fim, depois das regras do item que ele refina. */
+.menuNaFolha {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu.menuNaFolha .item {
+  gap: var(--esp-3);
+  min-height: calc(var(--esp-12) + var(--esp-1));
+  padding: 0 var(--esp-3);
+  border-radius: var(--raio-controle);
+  font-size: var(--texto-subtitulo);
+}
+
+.menu.menuNaFolha .item[data-informativo] {
+  min-height: calc(var(--esp-12) + var(--esp-2));
+  margin-block: var(--esp-1);
+}
+
+.menu.menuNaFolha .item[data-informativo]:not([data-focused], [data-open]) {
+  box-shadow: inset 0 0 0 1.5px var(--cor-info);
+}
+
+.menuNaFolha .icone svg {
+  width: var(--esp-6);
+  height: var(--esp-6);
+}

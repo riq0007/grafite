@@ -7,7 +7,8 @@
 // a que chega mostra "Mensagens novas · 2", que leva ao fim. As mais antigas vêm ao rolar para cima,
 // com "Mensagens anteriores", e, no trecho que não chega ao fim, as seguintes vêm ao rolar para
 // baixo. A última mostrada fica lida com a conversa à vista. O mouse e o foco numa mensagem mostram a
-// barra dela; as setas andam pelas mensagens, e Ctrl+Shift+T abre o transformar em chamado.
+// barra dela; as setas andam pelas mensagens, e Ctrl+Shift+T abre o transformar em chamado. No toque,
+// a barra não aparece, e o toque longo abre a folha da mensagem.
 import { nomeNoChat } from '@grafite/domain';
 import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
 import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
@@ -39,8 +40,10 @@ import { type CargaDoTrecho, type MensagensDaConversa, useLeituraDaConversa } fr
 import { type ItemNaTela, itensDaConversa, type MensagemDoChat, novasDesde } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import estilos from './FluxoDaConversa.module.css';
+import { FolhaDaMensagem } from './FolhaDaMensagem.tsx';
 import { useAgoraNoChat, useJanelaAVista } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { useToqueLongo } from './toqueLongo.ts';
 
 /** A folga, em px, em que quem lê ainda está no fim da conversa. */
 const PERTO_DO_FIM = 32;
@@ -199,6 +202,19 @@ export function FluxoDaConversa({
   const [comOFoco, definirComOFoco] = useState<string | null>(null);
   /** A mensagem com o mouse em cima. */
   const [comOPonteiro, definirComOPonteiro] = useState<string | null>(null);
+  /** A mensagem do toque longo, com a folha dela; a vez muda a cada toque longo, e a folha abre. */
+  const [segurada, definirSegurada] = useState<{
+    vez: number;
+    id: string;
+    elemento: HTMLElement;
+  } | null>(null);
+  const toqueLongo = useToqueLongo((elemento) => {
+    const id = elemento.dataset.mensagem;
+    if (!id) return;
+    // A mensagem fica com o foco, que volta a ela quando a folha fecha.
+    elemento.focus({ preventScroll: true });
+    definirSegurada((antes) => ({ vez: (antes?.vez ?? 0) + 1, id, elemento }));
+  });
   const daVez = escritas.some(({ id }) => id === comOFoco)
     ? comOFoco
     : (escritas.at(-1)?.id ?? null);
@@ -418,6 +434,7 @@ export function FluxoDaConversa({
   }));
 
   const novas = dados && !dados.seguintes ? novasDesde(dados.itens, conta, vistaAte) : 0;
+  const daFolha = segurada && escritas.find(({ id }) => id === segurada.id);
   const carregando = mais.isPending ? mais.variables : null;
   const falhou = mais.isError ? mais.variables : null;
   const naMensagem: NaMensagem = {
@@ -474,7 +491,14 @@ export function FluxoDaConversa({
         <ol
           ref={conteudo}
           className={estilos.itens}
-          onPointerOver={(evento) => definirComOPonteiro(escritaEmVolta(evento.target))}
+          data-toque-longo={acoes ? '' : undefined}
+          {...(acoes ? toqueLongo : undefined)}
+          // O toque não para em cima da mensagem: a barra fica para o mouse e a caneta.
+          onPointerOver={(evento) => {
+            if (evento.pointerType !== 'touch') {
+              definirComOPonteiro(escritaEmVolta(evento.target));
+            }
+          }}
           onPointerLeave={() => definirComOPonteiro(null)}
           onFocus={(evento) => {
             const id = escritaEmVolta(evento.target);
@@ -524,6 +548,16 @@ export function FluxoDaConversa({
             </div>
           )
         ))}
+      {acoes && segurada && daFolha && (
+        <FolhaDaMensagem
+          key={segurada.vez}
+          mensagem={daFolha}
+          autor={nomeDoAutor(daFolha.autor, conta)}
+          conversa={conversa}
+          acoes={acoes}
+          elemento={segurada.elemento}
+        />
+      )}
     </div>
   );
 }

@@ -226,3 +226,31 @@
   display: inline-flex;
   color: var(--cor-texto-2);
 }
+
+/* No toque, as linhas, os chamados, "Fechados" e "Nova conversa" no alvo de 44 px (spec
+   modulo-chat, "Chat no celular"). */
+:root:is([data-postura="tablet"], [data-postura="celular"]) .conversa,
+:root:is([data-postura="tablet"], [data-postura="celular"]) .chamado,
+:root:is([data-postura="tablet"], [data-postura="celular"]) .recolher {
+  min-block-size: var(--alvo-toque);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .novaConversa {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+}
+
+/* No celular, a lista na largura da tela: o título no recuo dela e as linhas um pouco mais altas,
+   como no m08. */
+:root[data-postura="celular"] .cabecalho {
+  padding: var(--esp-2) var(--esp-2) var(--esp-1) var(--esp-4);
+}
+
+:root[data-postura="celular"] .titulo {
+  font-size: var(--texto-titulo);
+}
+
+:root[data-postura="celular"] .conversa {
+  min-block-size: calc(var(--esp-12) + var(--esp-1));
+  padding-inline: var(--esp-3);
+}

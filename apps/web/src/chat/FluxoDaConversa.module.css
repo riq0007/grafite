@@ -108,15 +108,16 @@
 
 /* No mouse, no foco do teclado e com um menu da barra aberto (m01): o fundo diz de qual mensagem é
    o menu. O clique que dá o foco à mensagem, como ao selecionar o texto, não a prende. O destino do
-   salto pela respondida fica com o fundo até o próximo clique ou a próxima tecla. */
-.mensagem:is(
-  :hover,
-  :focus-visible,
-  :has(:focus-visible),
-  :has(> .barra[data-presa]),
-  [data-saltada]
-) {
+   salto pela respondida fica com o fundo até o próximo clique ou a próxima tecla. O mouse só vale
+   onde há mouse: no toque, o navegador deixaria o fundo e a barra presos na mensagem tocada. */
+.mensagem:is(:focus-visible, :has(:focus-visible), :has(> .barra[data-presa]), [data-saltada]) {
   background-color: var(--cor-hover);
+}
+
+@media (hover: hover) {
+  .mensagem:hover {
+    background-color: var(--cor-hover);
+  }
 }
 
 .mensagem:focus-visible {
@@ -143,10 +144,17 @@
   pointer-events: none;
 }
 
-.mensagem:is(:hover, :focus-visible, :has(:focus-visible)) > .barra,
+.mensagem:is(:focus-visible, :has(:focus-visible)) > .barra,
 .barra[data-presa] {
   opacity: 1;
   pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .mensagem:hover > .barra {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .barra .botaoDaBarra {
@@ -208,8 +216,28 @@
   transition: opacity var(--dur-rapida) var(--curva-padrao);
 }
 
-.mensagem:is(:hover, :focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) .horaAoLado {
+.mensagem:is(:focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) .horaAoLado {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .mensagem:hover .horaAoLado {
+    opacity: 1;
+  }
+}
+
+/* No toque, sem o mouse para mostrar a hora da seguida, ela fica sempre à vista; e a mensagem não
+   seleciona o texto nem abre o menu do navegador no toque longo, que abre a folha, com "Copiar o
+   texto". */
+@media (hover: none) {
+  .horaAoLado {
+    opacity: 1;
+  }
+
+  .itens[data-toque-longo] .mensagem {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
 }
 
 .corpo {
@@ -491,4 +519,9 @@ button.reacao:focus-visible {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* No celular, a conversa no recuo da tela, e as mensagens até a borda dele. */
+:root[data-postura="celular"] .rolagem {
+  padding: var(--esp-3) var(--esp-2);
 }

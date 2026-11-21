@@ -61,6 +61,7 @@ export const variaveis = [
   '--atraso-montagem-janela',
   '--atraso-montagem-dock',
   '--dur-deslocamento',
+  '--dur-folha',
   '--dur-opacidade',
   '--dur-escala-menu',
   '--dur-escala-busca',

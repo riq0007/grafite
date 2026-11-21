@@ -2,7 +2,7 @@
 // change chat-com-chamados, design, decisão 15): o cabeçalho, como o da conversa, com quantas
 // pessoas, "Abrir a conversa" e quem participa, pelo nome, com a foto ou as iniciais.
 import { nomeNoChat } from '@grafite/domain';
-import { Avatar, Botao, Icone } from '@grafite/ui';
+import { Avatar, Botao, Icone, usePostura } from '@grafite/ui';
 import { useRouter } from '@tanstack/react-router';
 import { Hash } from 'lucide-react';
 import { useId } from 'react';
@@ -13,14 +13,17 @@ import { LinkDoChat } from './LinkDoChat.tsx';
 import { pessoasEmTexto } from './ListaDasEquipes.tsx';
 import conversa from './TelaDaConversa.module.css';
 import estilos from './TelaDaEquipe.module.css';
+import { EstadoComAVolta, VoltarALista } from './VoltarALista.tsx';
 
 /** A equipe ou o canal que não existe para a conta, com o caminho de volta. */
 export function EquipeNaoEncontrada() {
   return (
-    <div role="alert" className={conversa.naoEncontrada}>
-      <p>Equipe ou canal não encontrado.</p>
-      <LinkDoChat para="/chat/equipes">Ir para as Equipes</LinkDoChat>
-    </div>
+    <EstadoComAVolta>
+      <div role="alert" className={conversa.naoEncontrada}>
+        <p>Equipe ou canal não encontrado.</p>
+        <LinkDoChat para="/chat/equipes">Ir para as Equipes</LinkDoChat>
+      </div>
+    </EstadoComAVolta>
   );
 }
 
@@ -31,14 +34,30 @@ export function TelaDaEquipe({ id }: { id: string }) {
   const equipes = useEquipesDoChat();
   const equipe = equipes.data?.itens.find((item) => item.id.toLowerCase() === id) ?? null;
   const pessoas = usePessoasDaConversa(id, equipe !== null);
+  const celular = usePostura() === 'celular';
 
   if (!equipes.data) {
-    // A falha fica na lista ao lado, com o motivo e "Tentar de novo".
-    if (equipes.isError) return null;
+    // A falha fica na lista ao lado, com o motivo e "Tentar de novo"; no celular, a lista fica
+    // escondida, e a falha vem na tela, com a seta de voltar.
+    if (equipes.isError) {
+      return celular ? (
+        <EstadoComAVolta>
+          <div className={conversa.abrindo}>
+            <FalhaDoChat
+              mensagem={equipes.error.message}
+              relendo={equipes.isFetching}
+              tentarDeNovo={() => void equipes.refetch()}
+            />
+          </div>
+        </EstadoComAVolta>
+      ) : null;
+    }
     return (
-      <p role="status" className={conversa.abrindo}>
-        Abrindo a equipe…
-      </p>
+      <EstadoComAVolta>
+        <p role="status" className={conversa.abrindo}>
+          Abrindo a equipe…
+        </p>
+      </EstadoComAVolta>
     );
   }
   if (!equipe) return <EquipeNaoEncontrada />;
@@ -46,6 +65,7 @@ export function TelaDaEquipe({ id }: { id: string }) {
   return (
     <section className={estilos.equipe} aria-labelledby={idDoNome}>
       <header className={`${conversa.cabecalho} ${estilos.cabecalho}`}>
+        <VoltarALista />
         {equipe.tipo === 'canal' ? (
           <span className={conversa.marcaDoCanal} aria-hidden="true">
             <Icone icone={Hash} tamanho={16} />
@@ -53,12 +73,14 @@ export function TelaDaEquipe({ id }: { id: string }) {
         ) : (
           <Avatar nome={equipe.nome} className={conversa.foto} decorativo />
         )}
-        <h2 id={idDoNome} className={conversa.nome}>
-          {equipe.nome}
-        </h2>
-        <span className={conversa.sobre}>
-          {`${equipe.tipo === 'canal' ? 'Canal' : 'Equipe'} · ${pessoasEmTexto(equipe.pessoas)}`}
-        </span>
+        <div className={conversa.titulos}>
+          <h2 id={idDoNome} className={conversa.nome}>
+            {equipe.nome}
+          </h2>
+          <span className={conversa.sobre}>
+            {`${equipe.tipo === 'canal' ? 'Canal' : 'Equipe'} · ${pessoasEmTexto(equipe.pessoas)}`}
+          </span>
+        </div>
         <Botao
           nivel="primario"
           className={estilos.abrir}

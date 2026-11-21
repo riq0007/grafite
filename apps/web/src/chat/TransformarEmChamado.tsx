@@ -4,7 +4,9 @@
 // título, com o contador; no tipo que pede o ativo, o ativo sugerido, o primeiro escolhido, e
 // "Trocar", que lista os sugeridos; e "No nome de", a pessoa da conta, com "Trocar", que busca a
 // pessoa pelo nome. Aberto o chamado, o diálogo fecha, e a lista e a conversa se releem: o chamado
-// entra no alto de CHAMADOS, e o evento, no fim da conversa. A recusa fica no campo dela.
+// entra no alto de CHAMADOS, e o evento, no fim da conversa. A recusa fica no campo dela. No celular
+// (m09), o formulário ocupa a tela, com "Cancelar" e o título no alto e "Abrir chamado", de 52 px,
+// num pé preso embaixo.
 import { LIMITE_DO_TITULO_DO_CHAMADO, semAtivoSugerido, tamanhoDoTitulo } from '@grafite/domain';
 import {
   Avatar,
@@ -21,6 +23,7 @@ import {
   Radio,
   SecaoDeMenu,
   useDataHora,
+  usePostura,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
@@ -89,6 +92,7 @@ export function TransformarEmChamado({
         if (!aberto) aoFechar();
       }}
       largo
+      telaCheiaNoCelular
     >
       {(fechar) =>
         citada && (
@@ -134,6 +138,7 @@ function FormularioDoChamado({
   const [enviando, definirEnviando] = useState(false);
   const [pedidoDeFoco, definirPedidoDeFoco] = useState(0);
   const formulario = useRef<HTMLFormElement>(null);
+  const celular = usePostura() === 'celular';
 
   // O tipo escolhido que saiu da lista, como o que deixou de abrir pelo chat, deixa a escolha vazia.
   const tipo = tipos.data?.itens.find(({ id }) => id === tipoEscolhido) ?? null;
@@ -276,11 +281,13 @@ function FormularioDoChamado({
       <NoNomeDe pessoa={pessoa} aoEscolher={escolherPessoa} recusa={recusas.pessoa} />
       {falha && <Recusa texto={falha} />}
       <div className={estilos.acoes}>
-        <Botao onPress={fechar}>Cancelar</Botao>
+        {/* No celular, o "Cancelar" do alto da tela cheia fecha. */}
+        {!celular && <Botao onPress={fechar}>Cancelar</Botao>}
         <Botao
           type="submit"
           nivel="primario"
           icone={LifeBuoy}
+          className={estilos.abrir}
           isDisabled={semAcao}
           carregando={enviando}
           rotuloCarregando="Abrindo o chamado"

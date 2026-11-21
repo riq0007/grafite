@@ -20,6 +20,7 @@ import { type PessoaDaDireta, TelaDaDireta } from './TelaDaDireta.tsx';
 import { EquipeNaoEncontrada, TelaDaEquipe } from './TelaDaEquipe.tsx';
 import { ChamadoNaoEncontrado, TelaDoChamado } from './TelaDoChamado.tsx';
 import { TelaDosAvisos } from './TelaDosAvisos.tsx';
+import { lembrarAsEntradas } from './voltar.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -198,11 +199,14 @@ export const arvoreDoChat = raiz.addChildren([
 
 /** O roteador do app do chat. Sem histórico, usa o do navegador; os testes passam um em memória. */
 export function criarRoteadorDoChat(historico?: RouterHistory) {
-  return createRouter({
+  const roteador = createRouter({
     routeTree: arvoreDoChat,
     history: historico,
     defaultNotFoundComponent: ChatNaoEncontrado,
   });
+  // A seta de voltar do celular sabe se a entrada anterior é a lista (`voltar.ts`).
+  lembrarAsEntradas(roteador.history);
+  return roteador;
 }
 
 export type RoteadorDoChat = ReturnType<typeof criarRoteadorDoChat>;

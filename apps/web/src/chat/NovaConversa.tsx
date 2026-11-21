@@ -12,12 +12,17 @@ import { type PessoaDoChat, usePessoasDoChat } from './consultas.ts';
 const enderecoDaPessoa = (pessoa: Pick<PessoaDoChat, 'conta' | 'conversa'>) =>
   pessoa.conversa ? `/chat/c/${pessoa.conversa}` : `/chat/direta/${pessoa.conta}`;
 
-export function NovaConversa() {
+export function NovaConversa({ className }: { className?: string | undefined }) {
   const roteador = useRouter();
   const [aberta, definirAberta] = useState(false);
   return (
     <>
-      <BotaoDeIcone icone={SquarePen} rotulo="Nova conversa" onPress={() => definirAberta(true)} />
+      <BotaoDeIcone
+        icone={SquarePen}
+        rotulo="Nova conversa"
+        className={className}
+        onPress={() => definirAberta(true)}
+      />
       <Dialogo
         titulo="Nova conversa"
         aberto={aberta}

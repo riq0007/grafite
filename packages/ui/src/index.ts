@@ -237,6 +237,7 @@ export {
 } from './componentes/filtros/FiltrosAtivos.tsx';
 export { Dica, type PropsDaDica } from './componentes/flutuante/Dica.tsx';
 export { Popover, type PropsDoPopover } from './componentes/flutuante/Popover.tsx';
+export { Folha, type PropsDaFolha } from './componentes/folha/Folha.tsx';
 export {
   type ItemDaListaDoHistorico,
   ListaDoHistorico,
@@ -263,9 +264,11 @@ export {
 export {
   ItemDeMenu,
   Menu,
+  MenuNaFolha,
   type PropsDaSecaoDeMenu,
   type PropsDoItemDeMenu,
   type PropsDoMenu,
+  type PropsDoMenuNaFolha,
   type PropsDoSubmenu,
   SecaoDeMenu,
   Separador,

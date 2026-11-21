@@ -92,7 +92,7 @@ export function ListaDoChat() {
         <h1 id={idDoTitulo} className={estilos.titulo}>
           Chat
         </h1>
-        <NovaConversa />
+        <NovaConversa className={estilos.novaConversa} />
       </div>
       <div className={estilos.secoes}>
         {comChamados && chamados.isError && !chamados.data && (

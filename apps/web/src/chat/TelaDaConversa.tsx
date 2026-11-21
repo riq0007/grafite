@@ -38,6 +38,7 @@ import { rascunhoDaConversa, useRascunho } from './rascunhos.tsx';
 import { SeloDoChamado } from './SeloDoChamado.tsx';
 import estilos from './TelaDaConversa.module.css';
 import { type MensagemATransformar, TransformarEmChamado } from './TransformarEmChamado.tsx';
+import { EstadoComAVolta, VoltarALista } from './VoltarALista.tsx';
 
 const NENHUM_DESLIGADO: readonly string[] = [];
 
@@ -81,27 +82,33 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   if (!aberta) {
     if (!cabecalho.isError) {
       return (
-        <p role="status" className={estilos.abrindo}>
-          Abrindo a conversa…
-        </p>
+        <EstadoComAVolta>
+          <p role="status" className={estilos.abrindo}>
+            Abrindo a conversa…
+          </p>
+        </EstadoComAVolta>
       );
     }
     if (!naoEncontrada(cabecalho.error)) {
       return (
-        <div className={estilos.abrindo}>
-          <FalhaDoChat
-            mensagem={cabecalho.error.message}
-            relendo={cabecalho.isFetching}
-            tentarDeNovo={() => void cabecalho.refetch()}
-          />
-        </div>
+        <EstadoComAVolta>
+          <div className={estilos.abrindo}>
+            <FalhaDoChat
+              mensagem={cabecalho.error.message}
+              relendo={cabecalho.isFetching}
+              tentarDeNovo={() => void cabecalho.refetch()}
+            />
+          </div>
+        </EstadoComAVolta>
       );
     }
     return (
-      <div role="alert" className={estilos.naoEncontrada}>
-        <p>{alvo === null ? cabecalho.error.message : SEM_A_MENSAGEM}</p>
-        <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
-      </div>
+      <EstadoComAVolta>
+        <div role="alert" className={estilos.naoEncontrada}>
+          <p>{alvo === null ? cabecalho.error.message : SEM_A_MENSAGEM}</p>
+          <LinkDoChat para="/chat">Ir para o Chat</LinkDoChat>
+        </div>
+      </EstadoComAVolta>
     );
   }
 
@@ -236,6 +243,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   return (
     <section className={estilos.conversa} aria-labelledby={idDoNome}>
       <header className={estilos.cabecalho} data-sem-abas={abas === null || undefined}>
+        <VoltarALista />
         {aberta.tipo === 'canal' ? (
           <span className={estilos.marcaDoCanal} aria-hidden="true">
             <Icone icone={Hash} tamanho={16} />
@@ -250,10 +258,12 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
             decorativo
           />
         )}
-        <h2 id={idDoNome} className={estilos.nome}>
-          {aberta.nome}
-        </h2>
-        {sobre !== null && <span className={estilos.sobre}>{sobre}</span>}
+        <div className={estilos.titulos}>
+          <h2 id={idDoNome} className={estilos.nome}>
+            {aberta.nome}
+          </h2>
+          {sobre !== null && <span className={estilos.sobre}>{sobre}</span>}
+        </div>
       </header>
       {abas === null ? (
         fluxo(true)

@@ -1,11 +1,12 @@
-// O app do chat por inteiro (spec modulo-chat, "App do chat", "Trilha do chat" e "Lista do Chat"):
-// a trilha à esquerda, com as vistas, os contadores e o menu da conta no pé, a lista da vista do
-// endereço e, ao lado dela, a tela escolhida. Sem o chat, a vista dá lugar ao motivo, e as telas
-// dela nem montam, sem pedir dados.
-import { EstadoVazio, Icone, RegiaoDeAvisos } from '@grafite/ui';
+// O app do chat por inteiro (spec modulo-chat, "App do chat", "Trilha do chat", "Lista do Chat" e
+// "Chat no celular"): a trilha à esquerda, com as vistas, os contadores e o menu da conta no pé, a
+// lista da vista do endereço e, ao lado dela, a tela escolhida. Sem o chat, a vista dá lugar ao
+// motivo, e as telas dela nem montam, sem pedir dados. No celular, uma coluna só, com a lista ou a
+// tela escolhida nela, e a trilha na barra de baixo, que dá lugar à seta de voltar na tela.
+import { EstadoVazio, Icone, RegiaoDeAvisos, usePostura } from '@grafite/ui';
 import { Outlet, useRouterState } from '@tanstack/react-router';
 import { Bell, LifeBuoy, type LucideIcon, MessageCircle, Users, WifiOff } from 'lucide-react';
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useRef } from 'react';
 import { SemPermissao } from '../modulos/administracao/SemPermissao.tsx';
 import { useNotificacoes } from '../notificacoes/useNotificacoes.tsx';
 import type { EstadoDaSessao } from '../sessao/loja.ts';
@@ -52,6 +53,25 @@ const VISTA_DA_ROTA: Readonly<Record<string, IdDaVista>> = {
   '/chat/chamados/$numero': 'chat',
   '/chat/avisos': 'avisos',
 };
+
+/** O endereço da lista da vista, aonde a seta de voltar do celular leva. */
+export const enderecoDaVista = (vista: IdDaVista) =>
+  VISTAS.find(({ id }) => id === vista)?.endereco ?? '/chat';
+
+/**
+ * As telas de um item da lista, a conversa, a direta, o chamado e a equipe: no celular, elas ficam no
+ * lugar da lista, com a seta de voltar, e sem a barra de baixo.
+ */
+const ROTAS_DE_ITEM: ReadonlySet<string> = new Set([
+  '/chat/c/$conversa',
+  '/chat/direta/$conta',
+  '/chat/chamados/$numero',
+  '/chat/equipes/$conversa',
+]);
+
+/** A tela aberta é a de um item da lista. */
+export const naTelaDeUmItem = ({ matches }: { matches: readonly { routeId: string }[] }) =>
+  ROTAS_DE_ITEM.has(matches.at(-1)?.routeId ?? '');
 
 /** O caminho como o roteador o casa: sem as barras do fim e sem diferenciar as maiúsculas. */
 const comoORoteadorCasa = (caminho: string) => caminho.replace(/\/+$/, '').toLowerCase();
@@ -123,6 +143,8 @@ export function MolduraDoChat() {
     usaOChat: pode('chat.usar'),
   });
   const atual = useRouterState({ select: vistaDaTela });
+  const doItem = useRouterState({ select: naTelaDeUmItem });
+  const celular = usePostura() === 'celular';
   // O chamado que a conta acaba de abrir sai do alto quando a lista do Chat sai da tela: ela volta
   // na ordem de sempre (spec modulo-chat, "Lista do Chat").
   const { marcar } = useChamadoNovo();
@@ -153,22 +175,32 @@ export function MolduraDoChat() {
       </div>
     );
   } else {
+    // No celular, a lista fica montada por baixo da tela do item, sem ser vista nem receber o foco:
+    // a volta a encontra como estava, com a rolagem e as seções abertas.
     conteudo = (
       <>
-        <ListaDaVista vista={atual} />
+        <div className={estilos.colunaDaLista} inert={(celular && doItem) || undefined}>
+          <ListaDaVista vista={atual} />
+        </div>
         <div className={estilos.tela}>
           <Outlet />
         </div>
       </>
     );
   }
+  // O que a coluna do celular mostra: a lista da vista, ou a tela, a do item, a dos Avisos, que não
+  // têm lista, e as que dizem o motivo.
+  const coluna =
+    motivo === null && atual !== null && atual !== 'avisos' && !doItem ? 'lista' : 'tela';
   return (
-    <div className={estilos.app}>
+    <div className={estilos.app} data-item={doItem || undefined}>
       <nav aria-label="Vistas do chat" className={estilos.trilha}>
         {motivo === null && <VistasDaTrilha vistas={vistas} atual={atual} />}
-        {sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} />}
+        {sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} naBarraDeBaixo={celular} />}
       </nav>
-      <main className={estilos.conteudo}>{conteudo}</main>
+      <main className={estilos.conteudo} data-coluna={coluna}>
+        {conteudo}
+      </main>
       <RegiaoDeAvisos />
     </div>
   );
@@ -211,8 +243,9 @@ function VistasDaTrilha({
     },
     avisos: { quantos: avisos, tom: 'neutro', um: 'não lido', varios: 'não lidos' },
   };
+  // Na barra de baixo do celular, as vistas e a conta dividem a largura em partes iguais.
   return (
-    <ul className={estilos.vistas}>
+    <ul className={estilos.vistas} style={{ '--quantas-vistas': vistas.length } as CSSProperties}>
       {vistas.map((vista) => {
         const contagem = contagens[vista.id];
         return (
