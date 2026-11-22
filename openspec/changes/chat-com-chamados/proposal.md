@@ -31,7 +31,7 @@ A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre,
     - FECHADOS, recolhido;
     - EQUIPES E CANAIS;
     - RECENTES;
-  - a conversa, com as reações, a resposta a uma mensagem, o link da mensagem, os anexos e o silenciar;
+  - a conversa, com as reações, a resposta a uma mensagem, o link da mensagem, os anexos e o silenciar, e a caixa de escrever na largura da coluna;
   - a vista Chamados, com os grupos pela vez de quem age: Aguardando você, Em andamento e Fechados.
 - **As mensagens:**
   - o texto, os anexos e as reações;
@@ -40,7 +40,7 @@ A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre,
   - o contador de cada conversa e o da trilha;
   - a "Resposta nova" azul do chamado aberto, que fica até a pessoa responder ou marcar como vista.
 - **Transformar em chamado** (m01, m02 e m09):
-  - pelo menu da mensagem, ou por Ctrl+Shift+T;
+  - pelo menu da mensagem, que também abre pelo botão direito, ou por Ctrl+Shift+T;
   - o formulário curto: a mensagem citada, o tipo em chips, o título, o ativo sugerido e "No nome de", trocáveis;
   - na conversa de origem, o evento com "Abrir chamado" e o fio azul na mensagem;
   - a aba "Chamados da equipe".
@@ -83,6 +83,7 @@ A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre,
 
 Fica fora:
 - **a aba dos colaboradores** (S8, changes 4 a 7);
+- **mudar o andamento do chamado pelo chat e transformar várias mensagens num chamado só,** pedidos do usuário de 22/11: vêm na change seguinte, logo depois desta;
 - **abrir um chamado com o formulário do tipo, pela grade dos tipos:** vem na `abrir-chamado-pela-aba`, que o leva também ao chat. Aqui o chat abre o chamado a partir de uma mensagem;
 - **a presença** (quem está online agora), as conversas em grupo fora das equipes e dos canais, as menções e o "escrevendo";
 - **editar e apagar uma mensagem.** A conversa guarda o que foi dito, como a do chamado;

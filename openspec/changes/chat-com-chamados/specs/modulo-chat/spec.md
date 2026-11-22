@@ -99,6 +99,8 @@ A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas",
 
 A caixa SHALL ser arredondada, com a borda à vista, o texto de ajuda, como "Escrever uma mensagem em Equipe Financeiro…", e, dentro dela, o clipe e o envio. Enter SHALL mandar, e Shift+Enter SHALL quebrar a linha. O envio SHALL ficar sem ação enquanto a caixa está vazia.
 
+A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa.
+
 A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo dela e "Tirar", e embaixo os anexos, cada um com o nome, o tamanho e "Tirar".
 
 Escrever "#" SHALL abrir a lista dos chamados de que a conta participa, pelo número e pelo título, para citar (requisito "Chamado citado na tela"). A dica "# cita um chamado" SHALL ficar no texto de ajuda da caixa de uma conversa de chamado.
@@ -115,6 +117,10 @@ O que se escreve SHALL continuar na caixa quando a conversa se atualiza e quando
 - **WHEN** Fernanda Rocha escreve na Equipe Financeiro sem mandar, abre o #1041 e volta
 - **THEN** o texto continua na caixa da Equipe Financeiro
 
+#### Scenario: Caixa na largura da coluna
+- **WHEN** Fernanda Rocha abre a Equipe Financeiro numa tela de 2560 px
+- **THEN** a caixa vai de uma borda à outra da coluna, e o texto das mensagens quebra a linha na largura de leitura
+
 ### Requirement: Menu da mensagem
 
 Passar o mouse ou pôr o foco numa mensagem SHALL mostrar a barra dela, com "Responder", "Reagir" e "Mais". "Mais" SHALL abrir o menu, em camada opaca:
@@ -124,11 +130,21 @@ Passar o mouse ou pôr o foco numa mensagem SHALL mostrar a barra dela, com "Res
 - "Transformar em chamado", com o atalho Ctrl+Shift+T, no azul do chamado, só a quem pode abrir pelo chat (spec chamados, "Abrir um chamado pelo chat"), e sem ação na mensagem que já virou chamado, com "Já virou o #1045";
 - "Silenciar a conversa" ou "Voltar a ouvir a conversa".
 
-Ctrl+Shift+T SHALL abrir o transformar na mensagem com o foco ou com o mouse. As conversas dos chamados SHALL NOT ter a barra, porque não têm reações.
+Ctrl+Shift+T SHALL abrir o transformar na mensagem com o foco ou com o mouse. As conversas dos chamados SHALL NOT ter a barra nem o menu, porque não têm reações.
+
+O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro está, e a tecla de menu do teclado, na mensagem com o foco, SHALL abri-lo junto do "Mais". Num link, numa imagem e no texto selecionado, o menu SHALL ser o do navegador, para abrir e copiar. No toque, o toque longo SHALL continuar abrindo a folha (requisito "Chat no celular").
 
 #### Scenario: Menu da mensagem do Paulo
 - **WHEN** Fernanda Rocha passa o mouse na mensagem das 10:19 de Paulo Nunes e escolhe "Mais"
 - **THEN** o menu abre com "Transformar em chamado" no azul, com "Ctrl+Shift+T"
+
+#### Scenario: Botão direito na mensagem
+- **WHEN** Fernanda Rocha clica com o botão direito na mensagem das 10:19 de Paulo Nunes
+- **THEN** o menu da mensagem abre onde o ponteiro está, com "Transformar em chamado" no azul
+
+#### Scenario: Botão direito num link
+- **WHEN** Fernanda Rocha clica com o botão direito no link da mensagem de Paulo Nunes
+- **THEN** abre o menu do navegador, e não o da mensagem
 
 ### Requirement: Transformar em chamado na tela
 

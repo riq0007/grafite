@@ -215,6 +215,8 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
   Verificar: o `pnpm test:e2e` dos chamados, o lint, o typecheck e as telas no `pnpm dev`.
 - [x] 4.14 Os registros na Auditoria (`registro.ts`): os alvos e os campos das equipes e dos canais, a abertura pelo chat e o retomar e o reabrir pela pessoa, nos termos da operação. Verificar: os testes do `registro.test.ts`, o lint, o typecheck e a Auditoria no `pnpm dev`. O alvo `conversa` sai pelo tipo da ação (`textoDoAlvo` com a ação), os campos pelos da lista do cadastro e a ordem das telas vale para todo alvo que a tem (`ORDEM_NAS_TELAS`); o retomar e o reabrir pela pessoa já saíam nos termos da TI, e os testes os fixam (decisão 15, "A Auditoria").
+- [ ] 4.15 A caixa de escrever na largura da coluna (pedido do usuário de 22/11): a caixa e a frase que fica no lugar dela, na conversa e no chamado do chat, vão de uma borda à outra da coluna, e as mensagens ficam na largura de leitura (decisão 15, "Os pedidos do usuário de 22/11"). Verificar: o lint, as pontas a ponta e as referências visuais que ela mudar e as telas no `pnpm dev`, no app e na casca.
+- [ ] 4.16 O botão direito na mensagem (pedido do usuário de 22/11): abre o menu do "Mais" onde o ponteiro está, e a tecla de menu, no canto da mensagem; o menu do navegador fica no link, na imagem e no texto selecionado e, no toque, a folha do toque longo; as conversas dos chamados ficam sem ele. Verificar: os testes da conversa e da barra da mensagem, o lint, o typecheck e a conversa no `pnpm dev`.
 
 ## 5. Fechamento
 

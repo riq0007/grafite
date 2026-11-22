@@ -393,6 +393,11 @@ Todas com `orgScoped()`, RLS ativo e forçado e as chaves estrangeiras em `(org_
   - os campos da equipe e do canal são os da lista do cadastro, na ordem dela: Nome, Tipo, Grupo, Quem escreve, "Avisar a cada mensagem", com "Ligado" ou "Desligado", e Situação. No canal, o grupo é "Todos que usam o chat", como a lista;
   - a abertura tem a "Origem", "Chat" ou "TI", depois da pessoa. Quem abriu pelo chat no nome de outra pessoa fica em "Quem fez";
   - o retomar e o reabrir pela pessoa têm o registro da TI, com ela em "Quem fez": a situação e quem atende pelo texto, só o que mudou.
+- **Os pedidos do usuário de 22/11** (tarefas 4.15 e 4.16), **confirmados por ele pela pergunta:**
+  - a caixa de escrever do chat, e a frase que fica no lugar dela, vão de uma borda à outra da coluna, na conversa e no chamado, sem o teto da largura de leitura; as margens da coluna ficam. As mensagens, a origem, o resumo dos tempos, a avaliação e os cartões ficam na largura de leitura (`--largura-previa`), alinhados à esquerda com a caixa, para a linha do texto não ficar longa nas telas largas;
+  - o botão direito na mensagem abre o menu do "Mais", com os mesmos itens, onde o ponteiro está, pelo `MenuDeContexto` do kit, como no quadro dos chamados. A mensagem recebe o foco antes e fica marcada, como com o ponteiro em cima, enquanto o menu está aberto; fechado o menu, o foco volta a ela. A tecla de menu do teclado, que chega sem o ponteiro, abre o menu no canto da mensagem, onde fica o "Mais";
+  - o menu do navegador fica no link, na imagem e no texto selecionado dentro da mensagem, para abrir e copiar, e no toque, em que o toque longo segue com a folha (`toqueLongo.ts`). As conversas dos chamados, sem a barra, ficam com o menu do navegador;
+  - mudar o andamento do chamado pelo chat, a quem atende, com as ações da tela do Chamados, e transformar até 20 mensagens da mesma conversa num chamado só ficam para a change seguinte, logo depois desta.
 
 ## Risks / Trade-offs
 
