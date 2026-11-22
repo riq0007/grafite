@@ -389,7 +389,7 @@ export async function chamadosDeQuemParticipa(
   const ultimaDe = new Map(ultimas.map((ultima) => [ultima.chamadoId, ultima]));
   const anexosDaUltima = await nomesDosAnexosDasMensagens(
     tx,
-    ultimas.map(({ id }) => id),
+    ultimas.flatMap(({ id, texto }) => (texto === null ? [id] : [])),
   );
 
   const idsDasContas = new Set<string>();
@@ -844,7 +844,7 @@ export async function resumoDoChamadoNoChat(
   ).reverse();
   const anexosDasUltimas = await nomesDosAnexosDasMensagens(
     tx,
-    ultimas.map(({ id }) => id),
+    ultimas.flatMap(({ id, texto }) => (texto === null ? [id] : [])),
   );
   const nome = await nomesDe(
     tx,

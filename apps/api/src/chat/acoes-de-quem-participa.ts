@@ -399,9 +399,12 @@ export async function agirComoQuemParticipa(
   if (decisao.conversa.length === 0) return;
 
   const vaiATriagem = reabriu?.especie === 'evento' && reabriu.dados.para === null;
-  // A resposta só com os anexos começa pelo nome do primeiro (tarefa 4.18).
+  // A resposta só com os anexos começa pelo nome do primeiro (tarefa 4.18). Só ela lê os nomes.
+  const soComOsAnexos = decisao.conversa.some(
+    (entrada) => entrada.especie === 'mensagem' && entrada.texto === null,
+  );
   const anexos =
-    mensagemId === null
+    mensagemId === null || !soComOsAnexos
       ? []
       : ((await nomesDosAnexosDasMensagens(tx, [mensagemId])).get(mensagemId) ?? []);
   await notificar(

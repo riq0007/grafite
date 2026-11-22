@@ -539,9 +539,12 @@ export async function agirNoChamado(
     enviar ? { enviar } : {},
   );
   // A mensagem para a pessoa e o resolvido vão também a quem participa pelo chat (decisão 13); a
-  // mensagem só com os anexos começa pelo nome do primeiro (tarefa 4.18).
+  // mensagem só com os anexos começa pelo nome do primeiro (tarefa 4.18). Só ela lê os nomes.
+  const soComOsAnexos = decisao.conversa.some(
+    (entrada) => entrada.especie !== 'evento' && entrada.texto === null,
+  );
   const anexos =
-    escrito === null || pedido.acao === 'nota'
+    escrito === null || pedido.acao === 'nota' || !soComOsAnexos
       ? []
       : ((await nomesDosAnexosDasMensagens(tx, [escrito])).get(escrito) ?? []);
   await notificar(

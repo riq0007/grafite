@@ -195,7 +195,7 @@ export async function prazosDosChamados(
     );
   const anexosDaUltima = await nomesDosAnexosDasMensagens(
     tx,
-    ultimas.map(({ id }) => id),
+    ultimas.flatMap(({ id, texto }) => (texto === null ? [id] : [])),
   );
   const ultimaDe = new Map(
     ultimas.map((mensagem) => [

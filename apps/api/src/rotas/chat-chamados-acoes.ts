@@ -34,8 +34,8 @@ const IdDoAnexo = z.uuid();
 const PedidoDaMensagemDeQuemParticipa = z
   .object({
     /**
-     * O texto, sem os espaços das pontas, com até 4.000 caracteres: o vazio e o longo são recusados
-     * pelo domínio, no campo `texto`.
+     * O texto, sem os espaços das pontas, com até 4.000 caracteres: o vazio vai só com um anexo, e
+     * o domínio recusa o vazio sem anexo e o longo, no campo `texto`.
      */
     texto: z.string().default(''),
     /**
