@@ -37,12 +37,12 @@ Na postura celular, o submenu SHALL abrir embaixo do item que o abre, por cima d
 
 Com um menu do kit aberto, de botão, de contexto, do dock ou submenu, com a lista de uma seleção, de uma busca com sugestões ou da escolha em árvore aberta, ou com um popover aberto, como o editor de um filtro e o cartão de uma referência, o botão direito fora dele SHALL fechá-lo e valer onde cai, como se ele não estivesse aberto:
 - onde a tela abre o próprio menu, como em outra linha, outro cartão ou outra mensagem, esse menu SHALL abrir, com o foco nele;
-- num campo de texto, num link e no texto selecionado, o menu do navegador SHALL abrir no mesmo clique, como sem nada aberto, para colar, abrir e copiar;
+- num campo em que se digita, num link e no texto selecionado, o menu do navegador SHALL abrir no mesmo clique, como sem nada aberto, para colar, abrir e copiar. No campo, o foco e o cursor do texto SHALL ir para o ponto do clique, ou a seleção dele SHALL ficar, quando o clique cai nela;
 - em outro lugar, o clique SHALL só fechar o menu, a lista ou o popover, sem o menu do navegador, e o foco SHALL voltar a quem o abriu. O clique seguinte SHALL abrir o menu do navegador.
 
 No macOS, o Ctrl+clique SHALL valer como o botão direito.
 
-O menu do navegador SHALL NOT abrir por cima de um menu, de uma lista ou de um popover do kit aberto: o botão direito dentro dele, como num item ou no submenu, e o que o navegador manda ao soltar a tecla de menu, no item que já tem o foco, SHALL ficar com o app. O botão direito no campo de texto, no link e no texto selecionado dentro dele, como no filtro da escolha em árvore e no link do cartão de uma referência, SHALL abrir o menu do navegador, como fora dele.
+O menu do navegador SHALL NOT abrir por cima de um menu, de uma lista ou de um popover do kit aberto: o botão direito dentro dele, como num item ou no submenu, e o que o navegador manda ao soltar a tecla de menu, no item que já tem o foco, SHALL ficar com o app. O botão direito no campo em que se digita, no link e no texto selecionado dentro dele, como no filtro da escolha em árvore e no link do cartão de uma referência, SHALL abrir o menu do navegador, como fora dele.
 
 #### Scenario: Outra linha com o menu aberto
 - **WHEN** o menu de contexto de uma linha da tabela está aberto, e o usuário clica com o botão direito em outra linha
@@ -50,7 +50,7 @@ O menu do navegador SHALL NOT abrir por cima de um menu, de uma lista ou de um p
 
 #### Scenario: Fora de um menu de botão
 - **WHEN** o menu "Mais" de uma mensagem está aberto, e o usuário clica com o botão direito na caixa de escrever
-- **THEN** o menu fecha, e o menu do navegador abre na caixa, com o foco nela, para colar
+- **THEN** o menu fecha, e o menu do navegador abre na caixa, com o foco nela e o cursor do texto no ponto do clique, para colar ali
 
 #### Scenario: No campo da busca com a lista aberta
 - **WHEN** a lista de sugestões de uma busca está aberta, e o usuário clica com o botão direito no campo dela

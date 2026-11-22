@@ -113,7 +113,7 @@ A entrega SHALL seguir a conversa dona do anexo (requisito "Entrega dos arquivos
 
 O anexo PNG, JPG, WebP ou AVIF de um chamado ou de uma mensagem do chat (requisitos "Anexos dos chamados" e "Anexos do chat") SHALL ganhar, no envio, a miniatura de 512 px, com as regras de "Miniaturas", regravada sem os metadados e na orientação certa, como em "Imagem regravada sem metadados". O arquivo SHALL continuar guardado como chegou e ser entregue para baixar, como os outros anexos.
 
-A miniatura SHALL ser entregue para ser exibida na página, com a largura e a altura dela na resposta, para a tela reservar o lugar antes de ela chegar, e SHALL sair com o anexo, na remoção. A imagem que o servidor não consegue ler, a que passa de 10 MB e a de mais de 50 megapixels SHALL ficar sem a miniatura, como um documento, e o anexo SHALL entrar assim mesmo. Os anexos guardados sem a miniatura, como os de antes dela, SHALL ficar como estão.
+A miniatura SHALL ser entregue para ser exibida na página, com a largura e a altura dela na resposta, para a tela reservar o lugar antes de ela chegar, e SHALL sair com o anexo, na remoção. A imagem que o servidor não consegue ler e a de mais de 50 megapixels SHALL ficar sem a miniatura, como um documento, e o anexo SHALL entrar assim mesmo, também acima dos 10 MB das imagens dos registros, até os 25 MB do anexo. Os anexos guardados sem a miniatura, como os de antes dela, SHALL ficar como estão.
 
 #### Scenario: Print anexado
 - **WHEN** Fernanda Rocha anexa no chat um print PNG de 1920 × 1080 px
