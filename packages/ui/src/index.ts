@@ -236,6 +236,11 @@ export {
   FiltrosAtivos,
   type PropsDosFiltrosAtivos,
 } from './componentes/filtros/FiltrosAtivos.tsx';
+export {
+  noTextoSelecionado,
+  type PontoNaJanela,
+  trechosSelecionados,
+} from './componentes/flutuante/botaoDireito.ts';
 export { Dica, type PropsDaDica } from './componentes/flutuante/Dica.tsx';
 export { Popover, type PropsDoPopover } from './componentes/flutuante/Popover.tsx';
 export { Folha, type PropsDaFolha } from './componentes/folha/Folha.tsx';

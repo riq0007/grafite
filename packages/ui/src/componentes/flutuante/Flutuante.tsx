@@ -1,18 +1,21 @@
 // Camada flutuante em material translúcido e lista de opções, compartilhadas pela seleção,
 // pela busca com sugestões e, adiante, pelo popover e pelo menu.
 import { Check } from 'lucide-react';
-import type { Ref } from 'react';
-import { VisuallyHidden } from 'react-aria';
+import { type Ref, useContext, useEffectEvent, useLayoutEffect, useMemo, useRef } from 'react';
+import { mergeRefs, VisuallyHidden } from 'react-aria';
 import {
+  ComboBoxStateContext,
   ListBox,
   ListBoxItem,
   type ListBoxItemProps,
   type ListBoxProps,
+  OverlayTriggerStateContext,
   Popover,
   type PopoverProps,
   Text,
 } from 'react-aria-components';
 import { Icone } from '../../icones/Icone.tsx';
+import { registrarPainelAberto } from './botaoDireito.ts';
 import estilos from './Flutuante.module.css';
 
 export interface PropsDoPainelFlutuante extends Omit<PopoverProps, 'className'> {
@@ -24,18 +27,53 @@ export interface PropsDoPainelFlutuante extends Omit<PopoverProps, 'className'> 
    * conteúdo, como o resumo de um registro.
    */
   opaco?: boolean;
+  /**
+   * Fecha o painel na hora, quando quem o abre fecha depois de uma espera, como o cartão do ponteiro
+   * parado: o botão direito fora do painel o fecha por aqui, e não pela espera.
+   */
+  fecharNaHora?: () => void;
 }
 
-/** Painel sobreposto: material translúcido, que vira sólido com a transparência reduzida. */
+/**
+ * Painel sobreposto: material translúcido, que vira sólido com a transparência reduzida. Aberto, ele
+ * entra no registro do botão direito (`botaoDireito.ts`): o botão direito fora dele o fecha e vale
+ * onde cai, e o menu do navegador não abre por cima dele.
+ */
 export function PainelFlutuante({
   className,
   offset = 4,
   opaco = false,
+  ref,
+  fecharNaHora,
   ...resto
 }: PropsDoPainelFlutuante) {
+  const elemento = useRef<HTMLElement>(null);
+  const juntas = useMemo(() => mergeRefs(ref, elemento), [ref]);
+  // O painel aberto por fora, como o menu de contexto, segue o `isOpen`; o outro, o estado de quem o
+  // abre, como o menu de botão, a seleção e o cartão, como o Popover do React Aria faz.
+  const doGatilho = useContext(OverlayTriggerStateContext);
+  // A lista de uma busca: o `close` dela confirma o texto, como ao sair do campo, e, sem o texto
+  // livre, o apaga. O botão direito no campo, para colar, não é sair dele: a lista só fecha.
+  const daBusca = useContext(ComboBoxStateContext);
+  const porFora = resto.isOpen != null;
+  const aberto = porFora ? Boolean(resto.isOpen) : Boolean(doGatilho?.isOpen);
+  const fechar = useEffectEvent(() => {
+    if (fecharNaHora) fecharNaHora();
+    else if (porFora) resto.onOpenChange?.(false);
+    else if (daBusca && daBusca === doGatilho) {
+      if (daBusca.isOpen) daBusca.toggle();
+    } else doGatilho?.close();
+  });
+  // A cópia que o React Aria monta fora da tela para ler os itens de uma coleção, como a do submenu,
+  // não tem o painel e não entra no registro.
+  useLayoutEffect(() => {
+    if (!aberto || !elemento.current) return;
+    return registrarPainelAberto({ elemento: () => elemento.current, fechar: () => fechar() });
+  }, [aberto]);
   return (
     <Popover
       {...resto}
+      ref={juntas}
       offset={offset}
       className={[estilos.painel, opaco ? estilos.opaco : null, className]
         .filter(Boolean)

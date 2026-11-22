@@ -12,13 +12,21 @@
 // junto do "Mais"; no link e no texto selecionado fica o menu do navegador. No toque, a barra não
 // aparece, e o toque longo abre a folha da mensagem.
 import { nomeNoChat } from '@grafite/domain';
-import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
+import {
+  Avatar,
+  Botao,
+  type DataHora,
+  formatarTamanho,
+  Icone,
+  noTextoSelecionado,
+  trechosSelecionados,
+  useDataHora,
+} from '@grafite/ui';
 import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
 import {
   Fragment,
   type KeyboardEvent,
   type MouseEvent,
-  type PointerEvent,
   type ReactNode,
   type Ref,
   useEffect,
@@ -131,23 +139,6 @@ interface Ponto {
 /** A tecla de menu ou o Shift+F10, como na tabela e no quadro do kit. */
 const pedeOMenu = (evento: KeyboardEvent) =>
   evento.key === 'ContextMenu' || (evento.shiftKey && evento.key === 'F10');
-
-/** Os trechos do texto selecionado na página, sem nenhum quando nada está selecionado. */
-function trechosSelecionados(): Range[] {
-  const selecao = window.getSelection();
-  if (!selecao || selecao.isCollapsed) return [];
-  return Array.from({ length: selecao.rangeCount }, (_, posicao) =>
-    selecao.getRangeAt(posicao).cloneRange(),
-  );
-}
-
-/** O ponto cai no texto selecionado. */
-const noTextoSelecionado = (trechos: readonly Range[], { x, y }: Ponto) =>
-  trechos.some((trecho) =>
-    Array.from(trecho.getClientRects()).some(
-      (caixa) => x >= caixa.left && x <= caixa.right && y >= caixa.top && y <= caixa.bottom,
-    ),
-  );
 
 const entre = (valor: number, de: number, ate: number) => Math.min(Math.max(valor, de), ate);
 
@@ -280,10 +271,18 @@ export function FluxoDaConversa({
     posicao: Ponto;
   } | null>(null);
   /**
-   * O tipo do último ponteiro que apertou na conversa e o texto selecionado antes dele: no macOS, o
-   * botão direito seleciona a palavra antes de o menu abrir.
+   * O tipo do último ponteiro que apertou e o texto selecionado antes dele: no macOS, o botão direito
+   * seleciona a palavra antes de o menu abrir. O aperto se lê na captura da janela: com um menu
+   * aberto, a conversa fica inerte, e o aperto cai no corpo da página, antes de o kit fechar o menu.
    */
   const apertou = useRef<{ tipo: string; trechos: Range[] }>({ tipo: '', trechos: [] });
+  useEffect(() => {
+    const aoApertar = (evento: PointerEvent) => {
+      apertou.current = { tipo: evento.pointerType, trechos: trechosSelecionados() };
+    };
+    window.addEventListener('pointerdown', aoApertar, true);
+    return () => window.removeEventListener('pointerdown', aoApertar, true);
+  }, []);
   const abrirOMenu = (elemento: HTMLElement, posicao: Ponto) => {
     const id = elemento.dataset.mensagem;
     if (!id) return;
@@ -293,10 +292,6 @@ export function FluxoDaConversa({
   };
   const ouvintesDoMenu = {
     ...toqueLongo,
-    onPointerDown: (evento: PointerEvent<HTMLOListElement>) => {
-      apertou.current = { tipo: evento.pointerType, trechos: trechosSelecionados() };
-      toqueLongo.onPointerDown(evento);
-    },
     onContextMenu: (evento: MouseEvent<HTMLOListElement>) => {
       // O toque longo em curso abre a folha, no lugar do menu do navegador.
       toqueLongo.onContextMenu(evento);

@@ -4,8 +4,8 @@
 // rolar a conversa, e marcada enquanto o menu está aberto. O que leva o foco a outro lugar, como o
 // responder, o transformar e a reação escrita, age depois de o menu sair, com o foco de volta na
 // mensagem, que fica como o lugar da volta do diálogo e do popover, como na folha do celular. O menu
-// do navegador não abre por cima deste, nem no que o Chromium no Windows manda ao soltar a tecla de
-// menu, ao item que já tem o foco.
+// do navegador não abre por cima deste, como em todo menu do kit, nem no que o Chromium no Windows
+// manda ao soltar a tecla de menu, ao item que já tem o foco.
 import { MenuDeContexto, usePostura } from '@grafite/ui';
 import { useEffect, useRef, useState } from 'react';
 import { type AcoesDaMensagem, itensDaMensagem, ReacaoEscrita } from './BarraDaMensagem.tsx';
@@ -55,7 +55,6 @@ export function MenuDaMensagem({
         opaco
         origem={elemento}
         semRolar
-        semMenuDoNavegador
         aoFechar={() => definirAberto(false)}
         aoVoltarOFoco={() => {
           const agir = depois.current;

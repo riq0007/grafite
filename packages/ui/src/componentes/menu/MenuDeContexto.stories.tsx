@@ -181,7 +181,6 @@ function MensagemComMenu({ aoEscolher }: Espioes) {
         origem={alvo.current}
         opaco
         semRolar
-        semMenuDoNavegador
         aoVoltarOFoco={() => {
           const acao = depois.current;
           depois.current = null;

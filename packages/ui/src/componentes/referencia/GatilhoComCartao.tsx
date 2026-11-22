@@ -138,6 +138,8 @@ function CartaoPeloPonteiro({ children, className, titulo, cartao }: PropsDoCart
         offset={8}
         aria-label={titulo}
         className={estilos.painel}
+        // O fechar do React Aria espera o ponteiro que sai: o botão direito fora do cartão o fecha já.
+        fecharNaHora={() => definirAberto(false)}
       >
         {cartao()}
       </PainelFlutuante>
