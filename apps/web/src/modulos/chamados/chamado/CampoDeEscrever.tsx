@@ -112,6 +112,12 @@ const PAUSA_DO_COMANDO = 600;
 /** O "/ativo" como o campo o reconhece: pelo patrimônio escrito ou, sozinho, pelo ativo ligado. */
 const chaveDoComando = (comando: ComandoDoAtivo) => comando.patrimonio ?? '';
 
+/** O "/ativo" lido pela prévia: o texto de agora sem a linha do comando, e o cartão. */
+interface ComandoLido {
+  texto: string;
+  cartao: CartaoDoAtivo;
+}
+
 const NENHUM_DESLIGADO: readonly string[] = [];
 
 export interface PropsDoCampoDeEscrever {
@@ -250,6 +256,13 @@ function Escrever({
   // O texto de agora, para a prévia que chega depois de quem continuou escrevendo.
   const textoDeAgora = useRef(texto);
   textoDeAgora.current = texto;
+  // A leitura do "/ativo" no ar, pelo comando: o envio espera por ela em vez de pedir outra.
+  const leituraNoAr = useRef<{ chave: string; lido: Promise<ComandoLido | null> } | null>(null);
+  // O comando cuja leitura falhou sem conexão ou no servidor: a pausa não o lê de novo sozinha, e o
+  // envio o relê.
+  const falhouNaLeitura = useRef<string | null>(null);
+  // O comando recusado com que o envio já parou uma vez: o envio seguinte o manda como está.
+  const paradoNaRecusa = useRef<string | null>(null);
 
   // A caixa cresce com o texto, até a metade da janela; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto e a cada modo.
@@ -295,15 +308,28 @@ function Escrever({
   const mudar = (parte: Partial<Rascunho>) => definirRascunho((antes) => ({ ...antes, ...parte }));
 
   /**
-   * Lê o "/ativo" pela prévia do cartão: achado, o cartão entra no campo e a linha do comando sai do
-   * texto de agora; recusado, a frase fica embaixo da caixa e o texto, como foi escrito. Devolve o
-   * texto e o cartão com que o envio segue, ou nulo.
+   * Lê o "/ativo" pela prévia do cartão, uma leitura por comando de cada vez: a que está no ar serve
+   * também ao envio. Devolve o texto e o cartão com que o envio segue, ou nulo.
    */
-  async function lerOComando(
-    lido: ComandoDoAtivo,
-  ): Promise<{ texto: string; cartao: CartaoDoAtivo } | null> {
+  function lerOComando(lido: ComandoDoAtivo): Promise<ComandoLido | null> {
     const chave = chaveDoComando(lido);
+    const noAr = leituraNoAr.current;
+    if (noAr?.chave === chave) return noAr.lido;
+    const leitura = buscarOCartao(lido, chave).finally(() => {
+      if (leituraNoAr.current?.lido === leitura) leituraNoAr.current = null;
+    });
+    leituraNoAr.current = { chave, lido: leitura };
+    return leitura;
+  }
+
+  /**
+   * Achado, o cartão entra no campo e a linha do comando sai do texto de agora. Não encontrado, a
+   * frase fica embaixo da caixa e o texto, como foi escrito. Sem conexão ou com o erro do servidor,
+   * a falha vai ao pé, e o comando não é recusado: o envio o lê de novo.
+   */
+  async function buscarOCartao(lido: ComandoDoAtivo, chave: string): Promise<ComandoLido | null> {
     const recusar = (frase: string) => {
+      falhouNaLeitura.current = null;
       definirRecusaDoComando({ chave, texto: frase });
       return null;
     };
@@ -319,12 +345,16 @@ function Escrever({
       'buscar o ativo',
     );
     if ('erro' in resultado) {
-      return recusar(
-        resultado.problema?.status === 404
-          ? ativoNaoEncontrado(lido.patrimonio ?? ligado?.patrimonio ?? null)
-          : resultado.erro,
-      );
+      if (resultado.problema?.status === 404) {
+        return recusar(ativoNaoEncontrado(lido.patrimonio ?? ligado?.patrimonio ?? null));
+      }
+      falhouNaLeitura.current = chave;
+      definirFalha(resultado.erro);
+      definirTentativa((anterior) => anterior + 1);
+      return null;
     }
+    falhouNaLeitura.current = null;
+    definirFalha(null);
     // Quem continuou escrevendo pode ter trocado o comando: a prévia vale só para o mesmo.
     const deAgora = comandoDoAtivo(textoDeAgora.current);
     if (deAgora === null || chaveDoComando(deAgora) !== chave) return null;
@@ -334,14 +364,21 @@ function Escrever({
     return { texto: deAgora.semOComando, cartao: resultado.dados };
   }
 
-  // O "/ativo" lido depois da pausa na escrita, uma vez por comando recusado.
+  // O "/ativo" lido depois da pausa na escrita, uma vez por comando recusado ou que falhou.
   const chaveParaLer = (() => {
     const paraLer = comandoParaLer(texto);
     return paraLer === null ? null : chaveDoComando(paraLer);
   })();
   // biome-ignore lint/correctness/useExhaustiveDependencies: a leitura segue o texto e a recusa do comando.
   useEffect(() => {
-    if (chaveParaLer === null || recusaDoComando?.chave === chaveParaLer || enviando) return;
+    if (
+      chaveParaLer === null ||
+      recusaDoComando?.chave === chaveParaLer ||
+      falhouNaLeitura.current === chaveParaLer ||
+      enviando
+    ) {
+      return;
+    }
     const espera = window.setTimeout(() => {
       const paraLer = comandoParaLer(textoDeAgora.current);
       if (paraLer) void lerOComando(paraLer);
@@ -373,21 +410,34 @@ function Escrever({
 
   async function enviar() {
     if (enviando || fila.length > 0 || texto.trim() === '') return;
-    definirEnviando(true);
     let textoDoEnvio = texto;
     let cartaoDoEnvio = cartao;
-    // O "/ativo" que a pausa ainda não leu, o envio o lê antes; o recusado vai como foi escrito.
-    if (comando !== null && recusaDoComando?.chave !== chaveDoComando(comando)) {
-      const lido = await lerOComando(comando);
-      if (lido === null || lido.texto.trim() === '') {
-        // Só com o comando, o cartão entra no campo, e quem escreve escreve a mensagem.
-        definirEnviando(false);
+    if (comando !== null) {
+      const chave = chaveDoComando(comando);
+      if (recusaDoComando?.chave !== chave) {
+        // O "/ativo" que a pausa não leu, ou cuja leitura falhou, o envio o lê antes, ou espera a
+        // leitura que está no ar.
+        definirEnviando(true);
+        const lido = await lerOComando(comando);
+        if (lido === null || lido.texto.trim() === '') {
+          // Só com o comando, o cartão entra no campo, e quem escreve escreve a mensagem. Recusado,
+          // a frase fica à vista, e o envio seguinte manda o texto como está.
+          paradoNaRecusa.current = chave;
+          definirEnviando(false);
+          caixa.current?.focus();
+          return;
+        }
+        textoDoEnvio = lido.texto;
+        cartaoDoEnvio = lido.cartao;
+      } else if (paradoNaRecusa.current !== chave) {
+        // O que a pausa recusou para o primeiro envio, com a frase à vista, para quem escreveu sem
+        // a ver; o seguinte manda o texto como está.
+        paradoNaRecusa.current = chave;
         caixa.current?.focus();
         return;
       }
-      textoDoEnvio = lido.texto;
-      cartaoDoEnvio = lido.cartao;
     }
+    definirEnviando(true);
     const comum = {
       texto: textoDoEnvio,
       anexos: ids.length > 0 ? [...ids] : undefined,
@@ -437,7 +487,10 @@ function Escrever({
     definirRecusaDoComando(null);
     definirFalha(null);
     limparRecusas();
+    paradoNaRecusa.current = null;
     aoEnviar();
+    // A caixa vazia recebe o foco para a mensagem seguinte, e não o "Enviar", que desliga.
+    caixa.current?.focus();
   }
 
   const pedirUmaEscolha = () => {
@@ -459,6 +512,8 @@ function Escrever({
             definirErroDoTexto(null);
             definirErroDasOpcoes(null);
             definirFalha(null);
+            // As opções que voltam com a mensagem não tomam o foco da chave.
+            definirFocarNaPergunta(false);
           }}
         >
           <Segmento value="mensagem" className={estilos.segmento}>
@@ -481,95 +536,101 @@ function Escrever({
           </p>
         )}
       </div>
-      <AreaDeTexto
-        id={ID_DO_CAMPO_DE_ESCREVER}
-        ref={caixa}
-        rotulo={nota ? 'Nota interna' : `Mensagem para ${pessoa}`}
-        ocultarRotulo
-        aria-describedby={nota ? undefined : idDaAjuda}
-        placeholder={
-          nota ? `Escreva a nota. ${pessoa} não a vê.` : `Escreva a resposta para ${pessoa}.`
-        }
-        value={texto}
-        onChange={(novo) => {
-          mudar({ texto: novo });
-          definirErroDoTexto(null);
-        }}
-        isReadOnly={enviando}
-        erro={erroDoTexto ?? undefined}
-        className={estilos.caixa}
-        onKeyDown={(evento) => {
-          if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
-            evento.preventDefault();
-            void enviar();
-            return;
+      <div className={estilos.meio}>
+        <AreaDeTexto
+          id={ID_DO_CAMPO_DE_ESCREVER}
+          ref={caixa}
+          rotulo={nota ? 'Nota interna' : `Mensagem para ${pessoa}`}
+          ocultarRotulo
+          aria-describedby={nota ? undefined : idDaAjuda}
+          placeholder={
+            nota ? `Escreva a nota. ${pessoa} não a vê.` : `Escreva a resposta para ${pessoa}.`
           }
-          // O resto das teclas segue para os atalhos da casca.
-          evento.continuePropagation();
-        }}
-      />
-      {recusaDeAgora && <Recusa texto={recusaDeAgora} />}
-      {cartao && (
-        <div className={estilos.cartao}>
-          <CartaoDoAtivoNaMensagem
-            cartao={cartao}
-            agora={agora}
-            dataHora={dataHora}
-            abrir={false}
-            acao={
-              !enviando && (
-                <Botao
-                  nivel="terciario"
-                  aria-label={`Tirar o cartão de ${cartao.nome}`}
-                  onPress={() => {
-                    mudar({ cartao: null });
-                    definirErroDoCartao(null);
-                    caixa.current?.focus();
-                  }}
-                >
-                  Tirar
-                </Botao>
-              )
+          value={texto}
+          onChange={(novo) => {
+            mudar({ texto: novo });
+            definirErroDoTexto(null);
+          }}
+          isReadOnly={enviando}
+          erro={erroDoTexto ?? undefined}
+          className={estilos.caixa}
+          onKeyDown={(evento) => {
+            if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+              evento.preventDefault();
+              void enviar();
+              return;
             }
-          />
-          {erroDoCartao && <Recusa texto={erroDoCartao} />}
-        </div>
-      )}
-      {!nota && opcoes !== null && (
-        <EditorDasOpcoes
-          opcoes={opcoes}
-          editavel={!enviando}
-          erro={erroDasOpcoes}
-          focarAoAparecer={focarNaPergunta}
-          aoMudar={(novas) => {
-            definirErroDasOpcoes(null);
-            // Sem nenhuma opção, a pergunta sai, e "Pedir uma escolha" volta.
-            mudar({ opcoes: novas.length === 0 ? null : novas });
-            if (novas.length === 0) caixa.current?.focus();
+            // O resto das teclas segue para os atalhos da casca.
+            evento.continuePropagation();
           }}
         />
-      )}
-      <ListaDeAnexos
-        ids={ids}
-        anexos={anexos}
-        fila={fila}
-        progresso={progresso}
-        numero={ficha.numero}
-        editavel={!enviando}
-        rotulo={nota ? 'Anexos da nota' : 'Anexos da mensagem'}
-        aoTirar={(id) => {
-          definirErroDosAnexos(null);
-          definirRascunho((antes) => {
-            const restantes = new Map(antes.anexos);
-            restantes.delete(id);
-            return { ...antes, ids: antes.ids.filter((outro) => outro !== id), anexos: restantes };
-          });
-        }}
-      />
-      {recusas.map(({ chave, texto: recusa }) => (
-        <Recusa key={chave} texto={recusa} />
-      ))}
-      {erroDosAnexos && <Recusa texto={erroDosAnexos} />}
+        {recusaDeAgora && <Recusa texto={recusaDeAgora} />}
+        {cartao && (
+          <div className={estilos.cartao}>
+            <CartaoDoAtivoNaMensagem
+              cartao={cartao}
+              agora={agora}
+              dataHora={dataHora}
+              abrir={false}
+              acao={
+                !enviando && (
+                  <Botao
+                    nivel="terciario"
+                    aria-label={`Tirar o cartão de ${cartao.nome}`}
+                    onPress={() => {
+                      mudar({ cartao: null });
+                      definirErroDoCartao(null);
+                      caixa.current?.focus();
+                    }}
+                  >
+                    Tirar
+                  </Botao>
+                )
+              }
+            />
+            {erroDoCartao && <Recusa texto={erroDoCartao} />}
+          </div>
+        )}
+        {!nota && opcoes !== null && (
+          <EditorDasOpcoes
+            opcoes={opcoes}
+            editavel={!enviando}
+            erro={erroDasOpcoes}
+            focarAoAparecer={focarNaPergunta}
+            aoMudar={(novas) => {
+              definirErroDasOpcoes(null);
+              // Sem nenhuma opção, a pergunta sai, e "Pedir uma escolha" volta.
+              mudar({ opcoes: novas.length === 0 ? null : novas });
+              if (novas.length === 0) caixa.current?.focus();
+            }}
+          />
+        )}
+        <ListaDeAnexos
+          ids={ids}
+          anexos={anexos}
+          fila={fila}
+          progresso={progresso}
+          numero={ficha.numero}
+          editavel={!enviando}
+          rotulo={nota ? 'Anexos da nota' : 'Anexos da mensagem'}
+          aoTirar={(id) => {
+            definirErroDosAnexos(null);
+            definirRascunho((antes) => {
+              const restantes = new Map(antes.anexos);
+              restantes.delete(id);
+              return {
+                ...antes,
+                ids: antes.ids.filter((outro) => outro !== id),
+                anexos: restantes,
+              };
+            });
+          }}
+        />
+        {recusas.map(({ chave, texto: recusa }) => (
+          <Recusa key={chave} texto={recusa} />
+        ))}
+        {erroDosAnexos && <Recusa texto={erroDosAnexos} />}
+      </div>
       <div className={estilos.linha}>
         {respostas.length > 0 && (
           <>

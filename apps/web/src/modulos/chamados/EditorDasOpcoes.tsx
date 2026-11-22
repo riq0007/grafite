@@ -39,11 +39,14 @@ export function EditorDasOpcoes({
   while (chaves.current.length < opcoes.length) chaves.current.push(proxima.current++);
   chaves.current.length = opcoes.length;
   const campos = useRef<(HTMLInputElement | null)[]>([]);
-  // A opção que recebe o foco ao aparecer e depois de acrescentar ou de tirar outra.
-  const focar = useRef<number | null>(focarAoAparecer ? 0 : null);
+  const botaoDeAcrescentar = useRef<HTMLButtonElement>(null);
+  // A opção que recebe o foco ao aparecer e depois de acrescentar ou de tirar outra; sem nenhuma, o
+  // "Acrescentar opção", onde o editor fica, como na gaveta da resposta pronta.
+  const focar = useRef<number | 'acrescentar' | null>(focarAoAparecer ? 0 : null);
   useEffect(() => {
     if (focar.current === null) return;
-    campos.current[focar.current]?.focus();
+    if (focar.current === 'acrescentar') botaoDeAcrescentar.current?.focus();
+    else campos.current[focar.current]?.focus();
     focar.current = null;
   });
 
@@ -52,7 +55,8 @@ export function EditorDasOpcoes({
   const tirar = (posicao: number) => {
     chaves.current.splice(posicao, 1);
     const restantes = opcoes.filter((_, outra) => outra !== posicao);
-    focar.current = restantes.length === 0 ? null : Math.min(posicao, restantes.length - 1);
+    focar.current =
+      restantes.length === 0 ? 'acrescentar' : Math.min(posicao, restantes.length - 1);
     aoMudar(restantes);
   };
   const acrescentar = () => {
@@ -104,7 +108,7 @@ export function EditorDasOpcoes({
         </ol>
       )}
       {editavel && opcoes.length < LIMITES_DA_PERGUNTA.maximo && (
-        <Botao nivel="terciario" icone={Plus} onPress={acrescentar}>
+        <Botao ref={botaoDeAcrescentar} nivel="terciario" icone={Plus} onPress={acrescentar}>
           Acrescentar opção
         </Botao>
       )}
