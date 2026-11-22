@@ -385,17 +385,17 @@ Na volta à versão anterior, os chamados deixam de aparecer, e os abertos depoi
 
 ### A versão com o chat
 
-A versão que traz o chat (S7) acrescenta o módulo Chat, ligado, sem equipes nem canais, e o app do chat, no endereço da organização com `/chat`. Até alguém receber o perfil, só o Administrador usa o chat. Depois de atualizar:
+A versão que traz o chat (S7) acrescenta o módulo Chat, ligado, sem equipes nem canais, e o app do chat, no endereço da organização com `/chat`. Até alguém receber o perfil, só o Administrador usa o chat. Ela também muda os chamados que já existem: no primeiro minuto depois da atualização, a rotina "Fechamento dos chamados" fecha, de 500 em 500, os resolvidos há mais de sete dias, que passam a Fechado e não se reabrem mais (veja **Fechamento** em [Chamados](#chamados)). Depois de atualizar:
 1. em **Administração › Perfis**:
-   - crie o perfil "Colaborador", com `chat.usar` ("Usar o chat") e `chamados.pedir` ("Pedir chamados pelo chat");
+   - crie o perfil "Colaborador", com "Usar o chat: as conversas diretas, as equipes e os canais" (`chat.usar`), na área Chat, e "Pedir chamados pelo chat, em nome de si ou de outra pessoa" (`chamados.pedir`), na área Chamados;
    - dê `chat.configurar` ao perfil de quem cuida das equipes e dos canais;
    - dê `chat.usar` aos perfis da TI se a TI também conversa pelo chat. A resposta ao chamado sai do chamado aberto, com o `chamados.atender` de sempre;
-2. em **Administração › Grupos**, na ficha do grupo com todas as pessoas que usam o chat, atribua o "Colaborador" no escopo **Organização inteira**. As três permissões do chat valem só na organização, e a atribuição num local as deixa de fora. Com o AD, o grupo é o mapeado do grupo do AD com todos (veja [Diretório (AD)](#diretório-ad));
+2. em **Administração › Grupos**, na ficha do grupo com todas as pessoas que usam o chat, atribua o "Colaborador" no escopo **Organização inteira**. O `chat.usar`, o `chat.configurar` e o `chamados.pedir` valem só na organização, e a atribuição num local os deixa de fora. Com o AD, o grupo é o mapeado do grupo do AD com todos (veja [Diretório (AD)](#diretório-ad));
 3. em **Chat › Equipes e canais**, crie as equipes, cada uma com um grupo do Grafite, e os canais, como "Avisos da TI", com quem escreve neles;
 4. mostre às pessoas o app do chat e o "Receber neste aparelho" (veja [Chat](#chat));
 5. a organização que ainda não usa o chat o desliga em **Administração › Módulos**.
 
-A volta à versão anterior tem uma exceção para esta versão: veja [Volta à versão anterior](#volta-à-versão-anterior).
+Na volta à versão anterior, o Chat e o app dele deixam de aparecer, e as conversas ficam no banco até a versão nova voltar. A volta tem uma exceção para esta versão: veja [Volta à versão anterior](#volta-à-versão-anterior).
 
 ### Atualização que falhou
 
@@ -422,7 +422,7 @@ A volta troca a versão atual pela anterior, sem desfazer migrations: toda mudan
 
 A exceção é a versão que traz os campos de arquivo e de imagem: ela só volta à anterior enquanto nenhum campo desses foi criado no catálogo, porque a anterior não conhece os dois tipos e não lê os campos da organização com um deles. Depois do primeiro, o caminho é corrigir numa versão nova ou restaurar a produção com o backup de antes da atualização, como diz "Restauração da produção".
 
-A versão que traz o chat tem a mesma exceção: ela só volta à anterior enquanto nenhum chamado foi aberto pelo chat, porque a anterior não conhece essa origem. Depois do primeiro, o caminho também é corrigir numa versão nova ou restaurar a produção com o backup de antes da atualização. Na anterior, o chamado fechado aparece como resolvido, e o "Reabrir" dele falha com o erro e o código de rastreio: ele continua fechado.
+A versão que traz o chat tem a mesma exceção: ela só volta à anterior enquanto nenhum chamado foi aberto pelo chat, porque a anterior não conhece essa origem. Em **Administração › Auditoria**, o aberto pelo chat é o "Chamado aberto" com a origem "Chat". Depois do primeiro, o caminho também é corrigir numa versão nova ou restaurar a produção com o backup de antes da atualização. Na anterior, o chamado fechado aparece como resolvido, e o "Reabrir" dele falha com o erro e o código de rastreio: ele continua fechado.
 
 O atalho "Grafite" segue a produção: a volta devolve o `Grafite.cmd` da versão de antes. Voltar a uma versão sem o painel, como a v0.1.1, faz o atalho abrir o menu dela, e ir de novo à versão nova devolve o painel. A v0.1.0 não tem nem o menu: a volta da produção para ela diz que o atalho não foi trocado, e ele mostra "Comando desconhecido" e a ajuda, sem mudar nada. Nesse caso, apague o atalho da área de trabalho de todos os usuários (`C:\Users\Public\Desktop\Grafite.lnk`) e opere pelos comandos.
 
@@ -627,14 +627,18 @@ Na entrada pelo AD:
 
 Mantenha uma conta local de administrador como acesso de emergência. Com o AD fora do ar, só as contas locais entram, e a recusa das outras diz "O AD não respondeu. Tente de novo ou use uma conta local.".
 
-**O grupo de todos, para o chat.** O perfil "Colaborador" (veja [A versão com o chat](#a-versão-com-o-chat)) vai a um grupo do Grafite com todas as pessoas que usam o chat, mapeado de um grupo do AD com elas. Use um grupo comum, como um "Grafite Colaboradores" criado para isso. O "Usuários do domínio" não serve: ele é o grupo principal das contas, e o AD não o põe no `memberOf`, que o Grafite lê. Para criar o grupo com as pessoas de uma OU:
+**O grupo de todos, para o chat.** O perfil "Colaborador" (veja [A versão com o chat](#a-versão-com-o-chat)) vai a um grupo do Grafite com todas as pessoas que usam o chat, mapeado de um grupo do AD com elas. Use um grupo comum, como um "Grafite Colaboradores" criado para isso. O "Usuários do domínio" não serve: ele é o grupo principal das contas, e o AD não o põe no `memberOf`, que o Grafite lê. Os membros do grupo são as contas, direto: o Grafite lê só o `memberOf` de cada conta, sem seguir um grupo dentro do outro, e o grupo montado com os grupos dos setores fica vazio para ele. Para criar o grupo com as contas ativas de uma OU:
 
 ```powershell
 New-ADGroup -Name "Grafite Colaboradores" -GroupScope Global -GroupCategory Security -Path "OU=Grupos,DC=empresa,DC=local"
-Add-ADGroupMember -Identity "Grafite Colaboradores" -Members (Get-ADUser -Filter * -SearchBase "OU=Pessoas,DC=empresa,DC=local")
+Add-ADGroupMember -Identity "Grafite Colaboradores" -Members (Get-ADUser -Filter 'Enabled -eq $true' -SearchBase "OU=Pessoas,DC=empresa,DC=local")
 ```
 
-Quem chega à empresa depois entra no grupo também, e a próxima entrada dessa pessoa no Grafite já traz o perfil.
+Esse comando serve só para a criação: rodado de novo, ele é recusado pelos que já são membros. Quem chega à empresa depois entra no grupo pela TI, junto com a conta nova, e a próxima entrada dessa pessoa no Grafite já traz o perfil:
+
+```powershell
+Add-ADGroupMember -Identity "Grafite Colaboradores" -Members <usuário>
+```
 
 ## Agentes do GLPI
 
@@ -750,16 +754,16 @@ A API de cada ambiente avalia as regras de alerta de cada organização a cada m
 
 ## Chat
 
-**O app do chat.** O chat tem um app próprio, o "Grafite · Chat", no endereço da organização com `/chat`, como `https://grafite.empresa.com.br/chat`. Quem só usa o chat, sem outro módulo da casca, vai direto a ele ao abrir o endereço da organização. As pessoas o instalam pelo navegador:
+**O app do chat.** O chat tem um app próprio, o "Grafite · Chat", no endereço da organização com `/chat`, como `https://grafite.empresa.com.br/chat`. Quem só usa o chat, sem outro módulo da casca, vai direto a ele ao abrir o endereço da organização. As pessoas o instalam pelo navegador, com o `/chat` aberto; quem está na casca chega a ele pelo "Abrir no app do chat". Na casca, o navegador instalaria o Grafite, e não o app do chat:
 - no computador, no Chrome ou no Edge, pelo ícone de instalar na barra de endereço;
 - no Android, no Chrome, pelo menu, em "Instalar app" ou "Adicionar à tela inicial";
 - no iPhone e no iPad, no Safari, em Compartilhar › "Adicionar à Tela de Início".
 
-**Os avisos no aparelho.** No app do chat, em **Avisos**, "Receber neste aparelho" inscreve o aparelho no push, como **Ajustes › Notificações › No celular** no Grafite. No iPhone e no iPad, só no app instalado. Sem o push no servidor, a tela diz o motivo (veja [Push](#push)). As mensagens vão pelo push qualquer que seja a severidade escolhida, e nunca no modo Foco. A notificação de uma mensagem espera 10 s e não sai a quem a leu nesse tempo.
+**Os avisos no aparelho.** No app do chat, em **Avisos**, "Receber neste aparelho" inscreve o aparelho no push, como **Ajustes › Notificações › No celular** no Grafite. No iPhone e no iPad, só no app instalado. Sem o push no servidor, a tela diz o motivo (veja [Push](#push)). As mensagens vão pelo push qualquer que seja a severidade escolhida, e nunca no modo Foco. A notificação de uma mensagem de conversa espera 10 s e não sai a quem a leu nesse tempo nem a quem silenciou a conversa; a de um chamado sai na hora.
 
 **Transformar em chamado.** A mensagem vira chamado pelo menu dela, com `chamados.pedir` e o módulo Chamados ligado. O atalho Ctrl+Shift+T vale só no app instalado: na aba do navegador, o Chrome o guarda para reabrir a aba fechada.
 
-**Equipes e canais.** Quem tem `chat.configurar` os cria em **Chat › Equipes e canais**. A equipe tem as pessoas de um grupo do Grafite, e o AD a preenche pelos grupos mapeados. O canal é de todos que usam o chat, com quem escreve escolhido, como só a TI nos "Avisos da TI". O "Avisar a cada mensagem" começa desligado. Ligado, cada mensagem do canal notifica todas as contas dele e põe o push de cada aparelho na fila. A organização tem até 100 equipes e canais ativos, somados.
+**Equipes e canais.** Quem tem `chat.configurar` os cria em **Chat › Equipes e canais**. A equipe tem as pessoas de um grupo do Grafite, e o AD a preenche pelos grupos mapeados. O canal é de todos que usam o chat, com quem escreve escolhido, como só a TI nos "Avisos da TI". O "Avisar a cada mensagem", da equipe e do canal, começa desligado: sem ele, a mensagem fica só no contador das não lidas. Ligado, cada mensagem notifica as contas da equipe ou do canal e põe o push de cada aparelho na fila. A organização tem até 100 equipes e canais ativos, somados.
 
 ## E-mail e push
 
