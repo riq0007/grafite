@@ -94,7 +94,7 @@ As recusas SHALL ser:
 
 A mensagem SHALL ter o texto, de 1 a 4.000 caracteres, sem os espaços das pontas, contados em caracteres, ou só os anexos, e até 5 anexos (spec arquivos-e-imagens, "Anexos do chat"). Cada mensagem SHALL guardar quem escreveu e quando, na hora do servidor, e SHALL NOT ser editada nem apagada.
 
-O começo da mensagem só com os anexos, na resposta, nas notificações e nas listas, SHALL ser o nome do anexo, como "folha-manchada.jpg", e, com mais de um, o do primeiro com quantos vêm depois, como "folha-manchada.jpg e mais 2 arquivos".
+O começo da mensagem só com os anexos, na resposta, nas notificações e nas listas, SHALL ser o nome do anexo, como "folha-manchada.jpg", e, com mais de um, o do primeiro com quantos vêm depois, como "folha-manchada.jpg e mais 1 arquivo" e "folha-manchada.jpg e mais 2 arquivos".
 
 A mensagem SHALL poder responder a outra da mesma conversa. A resposta SHALL mostrar, em cima, quem escreveu a respondida e o começo dela, e levar a ela.
 

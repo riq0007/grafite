@@ -37,9 +37,12 @@ Na postura celular, o submenu SHALL abrir embaixo do item que o abre, por cima d
 
 Com um menu do kit aberto, de botão, de contexto, do dock ou submenu, ou com a lista de uma seleção, de uma busca com sugestões ou da escolha em árvore aberta, o botão direito fora dele SHALL fechá-lo e valer onde cai, como se ele não estivesse aberto:
 - onde a tela abre o próprio menu, como em outra linha, outro cartão ou outra mensagem, esse menu SHALL abrir, com o foco nele;
+- num campo de texto, num link e no texto selecionado, o menu do navegador SHALL abrir no mesmo clique, como sem o menu aberto, para colar, abrir e copiar;
 - em outro lugar, o clique SHALL só fechar o menu ou a lista, sem o menu do navegador, e o foco SHALL voltar a quem o abriu. O clique seguinte SHALL abrir o menu do navegador.
 
-O menu do navegador SHALL NOT abrir por cima de um menu ou de uma lista do kit aberta: o botão direito dentro dele, num item ou no submenu, e o que o navegador manda ao soltar a tecla de menu, no item que já tem o foco, SHALL ficar com o app.
+No macOS, o Ctrl+clique SHALL valer como o botão direito.
+
+O menu do navegador SHALL NOT abrir por cima de um menu ou de uma lista do kit aberta: o botão direito dentro dele, num item ou no submenu, e o que o navegador manda ao soltar a tecla de menu, no item que já tem o foco, SHALL ficar com o app. O campo de texto dentro dele, como o filtro da escolha em árvore, SHALL ficar com o menu do navegador.
 
 #### Scenario: Outra linha com o menu aberto
 - **WHEN** o menu de contexto de uma linha da tabela está aberto, e o usuário clica com o botão direito em outra linha
@@ -47,7 +50,11 @@ O menu do navegador SHALL NOT abrir por cima de um menu ou de uma lista do kit a
 
 #### Scenario: Fora de um menu de botão
 - **WHEN** o menu "Mais" de uma mensagem está aberto, e o usuário clica com o botão direito na caixa de escrever
-- **THEN** o menu fecha, sem o menu do navegador, e o foco volta ao "Mais"
+- **THEN** o menu fecha, e o menu do navegador abre na caixa, com o foco nela, para colar
+
+#### Scenario: No campo da busca com a lista aberta
+- **WHEN** a lista de sugestões de uma busca está aberta, e o usuário clica com o botão direito no campo dela
+- **THEN** a lista fecha, e o menu do navegador abre no campo no mesmo clique
 
 #### Scenario: Fora da lista de uma escolha
 - **WHEN** a lista do fuso horário está aberta em Ajustes, e o usuário clica com o botão direito no texto da tela

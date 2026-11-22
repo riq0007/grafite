@@ -110,7 +110,9 @@ A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo 
 
 Além do clipe, os anexos SHALL entrar na caixa, com as mesmas regras e recusas:
 - **colados:** colar arquivos, ou uma imagem sem o texto, como um print, SHALL anexá-los. A imagem colada SHALL ganhar o nome "Imagem colada 22-11-2026 14.05.33.png", com a data e a hora em que foi colada, no fuso da conta. Colar o que traz o texto SHALL colar o texto, também quando traz a imagem junto, como uma célula de planilha;
-- **soltos:** arrastar arquivos sobre a conversa SHALL mostrar "Solte para anexar" sobre ela, e soltá-los SHALL anexá-los.
+- **soltos:** arrastar arquivos sobre a conversa SHALL mostrar "Solte para anexar" sobre ela, e soltá-los SHALL anexá-los. Na conversa sem a caixa e durante o envio, o arquivo solto SHALL NOT entrar.
+
+Em nenhum lugar da janela do Chat o arquivo solto SHALL abrir no lugar do Grafite, nem fora da conversa, como na lista das conversas.
 
 Escrever "#" SHALL abrir a lista dos chamados de que a conta participa, pelo número e pelo título, para citar (requisito "Chamado citado na tela"). A dica "# cita um chamado" SHALL ficar no texto de ajuda da caixa de uma conversa de chamado.
 
