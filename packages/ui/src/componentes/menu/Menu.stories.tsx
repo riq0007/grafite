@@ -193,6 +193,49 @@ export const SubmenuNaJanelaEstreita: Historia = {
   },
 };
 
+/**
+ * O submenu curto embaixo do item de um menu largo, na postura celular: ele fica com ao menos a
+ * largura do menu, nas bordas dele, para cobrir os itens de baixo inteiros (pontos da revisão da
+ * tarefa 4.17c). Sem a regra, ele ficaria na largura dos itens dele, mais estreito que o menu.
+ */
+export const SubmenuCurtoNoMenuLargo: Historia = {
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  render: () => (
+    <Menu rotulo="Chamado" gatilho={<Botao>Chamado</Botao>}>
+      <ItemDeMenu>Mandar a mensagem para quem abriu o chamado</ItemDeMenu>
+      <Submenu rotulo="Prioridade">
+        <ItemDeMenu>Alta</ItemDeMenu>
+        <ItemDeMenu>Baixa</ItemDeMenu>
+      </Submenu>
+      <ItemDeMenu>Resolver</ItemDeMenu>
+    </Menu>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.tab();
+    await userEvent.keyboard('{Enter}');
+    const menu = await corpo.findByRole('menu', { name: 'Chamado' });
+    await waitFor(() => expect(within(menu).getAllByRole('menuitem')[0]).toHaveFocus());
+    await waitFor(() => expect(painelDe(menu)).not.toHaveAttribute('data-entering'), {
+      timeout: 10_000,
+    });
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard('{ArrowRight}');
+    const submenu = await corpo.findByRole('menu', { name: 'Prioridade' });
+    await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Alta' })).toHaveFocus());
+    const painel = painelDe(submenu);
+    await waitFor(() => expect(painel).not.toHaveAttribute('data-entering'), { timeout: 10_000 });
+    const caixa = painel.getBoundingClientRect();
+    const doMenu = painelDe(menu).getBoundingClientRect();
+    // O menu passa do piso de largura do painel, e o submenu fica nas bordas dele.
+    await expect(doMenu.width).toBeGreaterThan(260);
+    await expect(caixa.left).toBeCloseTo(doMenu.left, 0);
+    await expect(caixa.right).toBeCloseTo(doMenu.right, 0);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('menu', { name: 'Prioridade' })).toBeNull());
+  },
+};
+
 /** O menu da conta na barra de baixo do celular: abre acima do botão, com o "Tema" no alto. */
 function MenuDaConta() {
   return (
