@@ -227,5 +227,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
   Verificar: o teste da documentação dos módulos e o lint.
 
   Feito: a spec mestre ganhou também o push das mensagens e a entrada de quem só vê o Chat; o runbook, a seção Chat, o fechamento e o grupo de todos no AD, que não pode ser o "Usuários do domínio", fora do `memberOf`; o contrato, o selo dos dados e o `comOModulo`, com o teste da documentação deles.
-- [ ] 5.2 O ponta a ponta da pilha (`e2e-pilha/caminho.spec.ts`): uma conta de colaborador transforma uma mensagem da equipe em chamado, a TI responde no chamado, e a resposta chega à pessoa no outro navegador. Verificar: `pnpm test:e2e:pilha`.
+- [x] 5.2 O ponta a ponta da pilha (`e2e-pilha/caminho.spec.ts`): uma conta de colaborador transforma uma mensagem da equipe em chamado, a TI responde no chamado, e a resposta chega à pessoa no outro navegador. Verificar: `pnpm test:e2e:pilha`.
+
+  Feito: o passo 39, pela tela: o perfil Colaborador vem do grupo da recepção de Campinas, que também é o da equipe, e a conta de Carla Dias, só com ele, cai no app do chat ao entrar; a etapa de agora e a resposta mudam na tela aberta dela, sem recarregar.
 - [ ] 5.3 O ponta a ponta da web e o visual que faltarem: o app do chat na web simulada (a entrada, a lista, a conversa e o chamado) e as referências da regressão visual dos componentes novos do kit que as tarefas não gravaram. Verificar: `pnpm test:e2e` e `pnpm test:visual`.
