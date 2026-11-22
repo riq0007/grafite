@@ -291,13 +291,15 @@ As arquivadas, em `openspec/changes/archive/`, na ordem em que foram arquivadas;
 - **Ajuste do medidor** (o conserto que a conferência da ajustes-dos-tokens achou, no D1: a régua do medidor compacto cabe na caixa de 40 px da célula dos suprimentos, com o número à vista nas três densidades; e a idade e o "Desatualizado" de cada cartucho da ficha ficam embaixo dele, centrados, numa coluna que cresce até caber o rótulo): `openspec/changes/archive/2026-11-14-ajuste-do-medidor/`
 - **Software por pacote** (a segunda da rodada 3 dos mockups, no S6: a base de pacotes como painel, com as categorias da TI e cada pacote frente ao inventário das máquinas; a ficha do pacote, com o que a instalação faz em português; o assistente da distribuição em quatro passos, com as máquinas por local, por visão, pela busca ou pela lista colada, e o quando: agora, na janela da noite ou num dia marcado; o agente chamado pela porta 62354 quando o pedido pode seguir e trazido de volta pelo `expiration` do CONTACT, no lugar do "Pedir agora"; a distribuição aberta com o que precisa de você, o tentar de novo e o tirar da fila; a matriz por máquina e por local; a aba Software da ficha frente à base; o agente sem contato, com o prazo da organização; e o pacote inativado, que segura a fila): `openspec/changes/archive/2026-11-15-software-por-pacote/`; guia `docs/operacao/runbook.md`
 - **Chamados da TI** (a terceira da rodada 3 dos mockups e a primeira do S7: o módulo Chamados, a primeira tela de quem atende, com o Início dos chamados, quem está com o quê e o chamado aberto, com a conversa e a nota interna; os prazos em barras, com o prazo de cada tipo em horas corridas ou no horário da TI; os tipos de chamado com o formulário no construtor, as respostas prontas, o "Virar OS" e o "Pedir toner"; e os registros na Auditoria): `openspec/changes/archive/2026-11-19-chamados-da-ti/`; guia `docs/operacao/runbook.md`
-- **Chat com chamados**, em andamento: a quarta da rodada 3 dos mockups e a segunda e última do S7. Ela traz:
+- **Chat com chamados**, em andamento: a quarta da rodada 3 dos mockups e a segunda do S7. Ela traz:
   - o módulo Chat, com o app "Grafite · Chat", que se instala no computador e no celular, com o push, e o Chat na casca;
   - as conversas diretas, as equipes, pelos grupos do Grafite, e os canais, com as reações, a resposta a uma mensagem, o link e o silenciar;
   - a mensagem que vira chamado, e o chamado da pessoa como uma conversa em azul, com as etapas, o cartão do ativo, a pergunta com respostas em botões, a avaliação e o fechamento 7 dias depois da resolução;
   - o lado da TI no chamado aberto, as equipes e os canais na tela e os registros na Auditoria.
 
   As capacidades novas `chat` e `modulo-chat` estão nas specs da change e entram na tabela das capacidades no arquivamento. Change: `openspec/changes/chat-com-chamados/`; guia `docs/operacao/runbook.md`
+
+  A seguinte, ainda no S7, vem logo depois dela e antes das changes da aba dos colaboradores (S8), pelos pedidos do usuário de 22/11: mudar o andamento do chamado pelo chat, a quem atende, com as ações da tela do Chamados, e transformar até 20 mensagens da mesma conversa num chamado só.
 
 ## 7. Glossário
 

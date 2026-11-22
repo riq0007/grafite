@@ -10,7 +10,7 @@ A ideia 17 da rodada 3 desenha o chat e o lado da TI: os mockups `r3-17-chat-tic
 - **A TI no chat do chamado.**
 - **O chamado citado numa conversa.**
 
-A change é a segunda e última do subprojeto **S7 · Chamados** da spec mestre, que a `chamados-da-ti` criou. É a quarta das 24 da rodada 3. O **S8 · Aba dos colaboradores** (as changes 4 a 7) leva o mesmo chat e os mesmos chamados para a aba.
+A change é a segunda do subprojeto **S7 · Chamados** da spec mestre, que a `chamados-da-ti` criou, e a seguinte também é dele (em "Fica fora"). É a quarta das 24 da rodada 3. O **S8 · Aba dos colaboradores** (as changes 4 a 7) leva o mesmo chat e os mesmos chamados para a aba.
 
 ## What Changes
 
@@ -165,6 +165,7 @@ Fica fora:
   - o toque no push (`sw-avisos.js`);
   - o chamado aberto e o campo de escrever do módulo Chamados;
   - a primeira tela.
+- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem.
 - **Documentação:**
   - a linha do S7 na spec mestre;
   - o contrato de módulo, se mudar;
