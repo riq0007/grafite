@@ -304,6 +304,46 @@ describe('a resposta', () => {
     ]);
   });
 
+  it('só com o anexo, a resposta e a da TI vão com o texto nulo, e a notificação começa pelo nome dele (tarefa 4.18)', async () => {
+    const numero = await c.abrirChamado('fernanda');
+    const anexoDe = async (usuario: UsuarioDoChat, nome: string) => {
+      const enviado = await c.cliente.enviarBytes(
+        'POST',
+        `/chamados/anexos?nome=${encodeURIComponent(`${nome}.pdf`)}`,
+        c.como(usuario),
+        PDF(nome),
+      );
+      expect(enviado.statusCode, enviado.body).toBe(201);
+      return (enviado.json() as { id: string }).id;
+    };
+
+    const daFernanda = await anexoDe('fernanda', 'foto da cadeira');
+    const respondido = await agiu('fernanda', numero, 'mensagens', { anexos: [daFernanda] });
+    expect(respondido.conversa.at(-1)).toMatchObject({
+      especie: 'mensagem',
+      texto: null,
+      anexos: [{ id: daFernanda }],
+    });
+    expect((await notificacoesDa('ana')).map(({ descricao }) => descricao)).toEqual([
+      'foto da cadeira.pdf',
+    ]);
+
+    const daAna = await anexoDe('ana', 'passo a passo');
+    const daTiSoComOAnexo = await daTi('mensagem', numero, { anexos: [daAna] });
+    expect(daTiSoComOAnexo.statusCode, daTiSoComOAnexo.body).toBe(200);
+    expect((await ler('fernanda', numero)).conversa.at(-1)).toMatchObject({
+      especie: 'mensagem',
+      texto: null,
+      anexos: [{ nome: 'passo a passo.pdf' }],
+    });
+    expect(await notificacoesDa('fernanda')).toContainEqual(
+      expect.objectContaining({
+        titulo: `Ana Souza respondeu o #${numero}`,
+        descricao: 'passo a passo.pdf',
+      }),
+    );
+  });
+
   it('a mensagem no resolvido o reabre com quem resolveu, e o "Reabrir" fora do resolvido é recusado', async () => {
     const numero = await c.abrirChamado('fernanda');
     const { id } = await linhaDo(numero);

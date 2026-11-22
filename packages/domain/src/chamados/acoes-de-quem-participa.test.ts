@@ -347,7 +347,16 @@ describe('a mensagem de quem participa', () => {
     ).toEqual(recusa({ motivo: 'texto-longo', texto: 'mensagem' }));
   });
 
-  it('pede o texto e aceita até 5 anexos', () => {
+  it('pede o texto ou um anexo e aceita até 5 anexos', () => {
+    expect(
+      decidirAcaoDeQuemParticipa(EM_ATENDIMENTO, {
+        acao: 'responder',
+        texto: ' \n ',
+        anexos: 0,
+        quemResolveu: null,
+      }),
+    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    // Só com os anexos, o texto fica nulo (tarefa 4.18).
     expect(
       decidirAcaoDeQuemParticipa(EM_ATENDIMENTO, {
         acao: 'responder',
@@ -355,7 +364,7 @@ describe('a mensagem de quem participa', () => {
         anexos: 1,
         quemResolveu: null,
       }),
-    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    ).toMatchObject({ aceita: true, conversa: [{ especie: 'mensagem', texto: null }] });
     expect(
       decidirAcaoDeQuemParticipa(AGUARDANDO, {
         acao: 'responder',

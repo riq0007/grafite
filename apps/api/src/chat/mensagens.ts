@@ -416,8 +416,16 @@ export async function mensagensParaAConta(
       arquivos,
       and(eq(arquivos.orgId, anexosDoChat.orgId), eq(arquivos.id, anexosDoChat.arquivoId)),
     )
-    .where(and(inArray(anexosDoChat.mensagemId, ids), isNull(arquivos.removidoEm)))
+    // Os das respondidas também, para o começo da respondida só com os anexos (tarefa 4.18).
+    .where(
+      and(
+        inArray(anexosDoChat.mensagemId, [...new Set([...ids, ...idsDasRespondidas])]),
+        isNull(arquivos.removidoEm),
+      ),
+    )
     .orderBy(asc(arquivos.enviadoEm), asc(arquivos.id));
+  const nomesDosAnexos = (mensagemId: string) =>
+    anexos.filter((anexo) => anexo.mensagemId === mensagemId).map(({ nome }) => nome ?? '');
 
   const contas = await lerContas(tx, [
     ...linhas.map(({ autorConta }) => autorConta),
@@ -468,7 +476,7 @@ export async function mensagensParaAConta(
         ? {
             id: respondida.id,
             autor: nomeDa(respondida.autorConta),
-            comeco: comecoDoTexto(respondida.texto ?? ''),
+            comeco: comecoDoTexto(respondida.texto, nomesDosAnexos(respondida.id)),
           }
         : null,
       reacoes: [...porTexto].map(([texto, contasDoTexto]) => ({
@@ -536,11 +544,11 @@ export async function gravarMensagem(
   if (daConta.participa && !daConta.escreve) {
     throw conflito(mensagemDaRecusaDaEscrita(daConta.recusa));
   }
-  const conferida = conferirMensagem({ texto: pedido.texto, anexos: 0 });
-  if (!conferida.ok) throw dadosInvalidos({ texto: conferida.erro });
   const anexos = [...new Set(pedido.anexos.map((id) => id.toLowerCase()))];
-  const comOsAnexos = conferirMensagem({ texto: pedido.texto, anexos: anexos.length });
-  if (!comOsAnexos.ok) throw dadosInvalidos({ anexos: comOsAnexos.erro });
+  // Sem o texto, a mensagem vai só com os anexos, e o domínio é a única guarda disso, porque os
+  // anexos estão em outra tabela (tarefa 4.18).
+  const conferida = conferirMensagem({ texto: pedido.texto, anexos: anexos.length });
+  if (!conferida.ok) throw dadosInvalidos({ [conferida.campo]: conferida.erro });
   if (pedido.respondeA !== null) {
     const [respondida] = await tx
       .select({ id: mensagensDoChat.id })

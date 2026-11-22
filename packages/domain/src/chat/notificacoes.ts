@@ -31,7 +31,10 @@ export type ConversaQueNotifica =
 export interface MensagemQueNotifica {
   /** O `uuidv7()` da mensagem, que segue a ordem das gravações na conversa. */
   id: string;
-  texto: string;
+  /** O texto, nulo na mensagem só com os anexos, que começa pelo nome do primeiro. */
+  texto: string | null;
+  /** Os nomes dos anexos, na ordem do envio. */
+  anexos?: readonly string[];
   autor: { contaId: string; nome: string };
 }
 
@@ -71,7 +74,7 @@ export function notificacoesDaMensagemDoChat(
       contaId: conta.id,
       severidade: 'info',
       titulo,
-      descricao: comecoDoTexto(mensagem.texto),
+      descricao: comecoDoTexto(mensagem.texto, mensagem.anexos),
       origem: ORIGEM_DO_CHAT,
       destino: destinoDaMensagem(conversa.id, mensagem.id),
       alertaId: null,

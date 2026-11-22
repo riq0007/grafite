@@ -287,11 +287,13 @@ describe('conversas', () => {
 });
 
 describe('mensagens do chat', () => {
-  it('Mensagem: de 1 a 4.000 caracteres sem os espaços das pontas, sempre de uma conta', async () => {
+  it('Mensagem: de 1 a 4.000 caracteres sem os espaços das pontas, ou nulo só com os anexos, sempre de uma conta', async () => {
     expect(await mensagem(orgA, conversaDeA, autor, { texto: `  ${'a'.repeat(4000)}  ` })).toEqual(
       expect.any(String),
     );
-    for (const texto of [null, '   ', 'a'.repeat(4001)]) {
+    // Só com os anexos, o texto é nulo (tarefa 4.18 do chat-com-chamados).
+    expect(await mensagem(orgA, conversaDeA, autor, { texto: null })).toEqual(expect.any(String));
+    for (const texto of ['   ', 'a'.repeat(4001)]) {
       expect(await recusada(mensagem(orgA, conversaDeA, autor, { texto }))).toBe(
         'mensagens_do_chat_conteudo_valido',
       );

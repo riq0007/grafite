@@ -154,6 +154,49 @@ describe('a mensagem e a nota', () => {
     expect(await c.eventosDo(1043)).toEqual([MUDOU_O_CHAMADO, MUDOU_O_CHAMADO]);
   });
 
+  it('só com os anexos, a mensagem e a nota vão com o texto nulo, e a pergunta pede o texto (tarefa 4.18)', async () => {
+    const planta = await anexo('ana', 'planta da sala');
+    const orcamento = await anexo('ana', 'orçamento da cadeira');
+    const pergunta = await escrever(1047, 'mensagem', 'ana', {
+      anexos: [planta],
+      opcoes: ['Pode ser', 'Mais tarde'],
+    });
+    expect(pergunta.statusCode, pergunta.body).toBe(400);
+    expect(pergunta.json().campos).toEqual({ texto: 'Escreva a mensagem.' });
+    expect(await donoDo(planta)).toEqual({ chamadoId: null, mensagemId: null });
+
+    await escreveu(1047, 'nota', 'ana', { anexos: [orcamento] });
+    await escreveu(1047, 'mensagem', 'ana', { texto: '   ', anexos: [planta] });
+    const [nota, mensagem] = (await c.conversaDo(1047)).slice(-2);
+    expect(nota).toMatchObject({ especie: 'nota', texto: null });
+    expect(mensagem).toMatchObject({ especie: 'mensagem', texto: null });
+    expect(await donoDo(planta)).toEqual({
+      chamadoId: c.chamadoId(1047),
+      mensagemId: mensagem?.id,
+    });
+
+    // A ficha lê o texto nulo, com os anexos, e os Prazos, o nome do primeiro como o começo.
+    const ficha = await c.cliente.consultar('/chamados/1047', c.como('ana'));
+    expect(ficha.statusCode, ficha.body).toBe(200);
+    expect(
+      (ficha.json() as { conversa: { especie: string; texto?: string | null }[] }).conversa
+        .filter(({ especie }) => especie === 'mensagem' || especie === 'nota')
+        .slice(-2),
+    ).toMatchObject([
+      { especie: 'nota', texto: null, anexos: [{ nome: 'orçamento da cadeira.pdf' }] },
+      { especie: 'mensagem', texto: null, anexos: [{ nome: 'planta da sala.pdf' }] },
+    ]);
+    const prazos = await c.cliente.consultar(
+      '/chamados/prazos?fuso=America%2FSao_Paulo',
+      c.como('ana'),
+    );
+    expect(prazos.statusCode, prazos.body).toBe(200);
+    const doPrazo = (
+      prazos.json() as { chamados: { numero: number; ultimaMensagem: { texto: string } | null }[] }
+    ).chamados.find(({ numero }) => numero === 1047);
+    expect(doPrazo?.ultimaMensagem?.texto).toBe('planta da sala.pdf');
+  });
+
   it('o texto e os anexos recusados são o 400 no campo, e nada fica gravado', async () => {
     const antes = await c.conversaDo(1046);
     const vazia = await escrever(1046, 'mensagem', 'ana', { texto: '   ' });

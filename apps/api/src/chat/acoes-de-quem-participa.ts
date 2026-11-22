@@ -44,7 +44,7 @@ import type { FastifyRequest } from 'fastify';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
-import { tomarAnexos } from '../chamados/anexos.ts';
+import { nomesDosAnexosDasMensagens, tomarAnexos } from '../chamados/anexos.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from '../chamados/quem-atende.ts';
 import { publicoComQuemParticipa } from '../chamados/quem-participa.ts';
@@ -248,7 +248,8 @@ async function gravarOChamado(
 
 /**
  * Grava a conversa da ação na ordem da mudança, uma linha por vez, como a da TI: a mensagem pela
- * pessoa, com os anexos tomados pela conta, e os eventos pela conta.
+ * pessoa, com os anexos tomados pela conta, e os eventos pela conta. Devolve a mensagem gravada, ou
+ * nulo sem ela.
  */
 async function gravarAConversa(
   tx: Transacao,
@@ -259,7 +260,8 @@ async function gravarAConversa(
     momento,
     anexos,
   }: { conta: ContaQueLeAsMensagens; momento: Date; anexos: readonly string[] },
-) {
+): Promise<string | null> {
+  let mensagemId: string | null = null;
   for (const entrada of decisao.conversa) {
     const base = { orgId: sql`app.current_org()`, chamadoId, criadaEm: momento };
     if (entrada.especie === 'mensagem') {
@@ -268,6 +270,7 @@ async function gravarAConversa(
         .values({ ...base, especie: 'mensagem', autorPessoa: conta.pessoaId, texto: entrada.texto })
         .returning({ id: mensagensDosChamados.id });
       if (gravada) {
+        mensagemId = gravada.id;
         await tomarAnexos(tx, {
           arquivos: anexos,
           contaId: conta.id,
@@ -285,6 +288,7 @@ async function gravarAConversa(
       dados: entrada.dados,
     });
   }
+  return mensagemId;
 }
 
 /**
@@ -357,7 +361,7 @@ export async function agirComoQuemParticipa(
   if (!decisao.aceita) throw problemaDaRecusa(lido.numero, decisao.recusa);
 
   if (decisao.sobeAVersao) await gravarOChamado(tx, lido, decisao, momento);
-  await gravarAConversa(tx, lido.id, decisao, {
+  const mensagemId = await gravarAConversa(tx, lido.id, decisao, {
     conta,
     momento,
     anexos: pedido.acao === 'responder' ? pedido.anexos : [],
@@ -395,6 +399,11 @@ export async function agirComoQuemParticipa(
   if (decisao.conversa.length === 0) return;
 
   const vaiATriagem = reabriu?.especie === 'evento' && reabriu.dados.para === null;
+  // A resposta só com os anexos começa pelo nome do primeiro (tarefa 4.18).
+  const anexos =
+    mensagemId === null
+      ? []
+      : ((await nomesDosAnexosDasMensagens(tx, [mensagemId])).get(mensagemId) ?? []);
   await notificar(
     tx,
     notificacoesDeQuemParticipa(
@@ -402,6 +411,7 @@ export async function agirComoQuemParticipa(
       decisao,
       { contaId: conta.id, nome: await nomeDaConta(tx, conta.id) },
       vaiATriagem ? await contasDaTriagem(tx, arvore) : [],
+      anexos,
     ),
     momento,
     enviar ? { enviar } : {},

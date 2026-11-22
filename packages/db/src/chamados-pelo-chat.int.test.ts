@@ -348,6 +348,10 @@ describe('Conversa do chamado', () => {
     expect(await recusada(linha(orgA, outro, { ...origem, dados: null }))).toBe(
       'mensagens_dos_chamados_conteudo_valido',
     );
+    // A citada só com os anexos dá a origem com o texto nulo (tarefa 4.18).
+    await linha(orgA, outro, { ...origem, texto: null });
+    // A resposta da pessoa só com os anexos também.
+    await linha(orgA, outro, { especie: 'mensagem', autor_pessoa: deA.pessoa, texto: null });
     expect(
       await recusada(
         linha(orgA, outro, { ...origem, autor_conta: null, autor_pessoa: deA.pessoa }),
@@ -389,6 +393,10 @@ describe('Conversa do chamado', () => {
       ),
     ).toBe('mensagens_dos_chamados_opcoes_validas');
     expect(await recusada(daTi(orgA, deA, chamado, { especie: 'nota', opcoes }))).toBe(
+      'mensagens_dos_chamados_opcoes_validas',
+    );
+    // A pergunta tem o texto, mesmo com os anexos (tarefa 4.18).
+    expect(await recusada(daTi(orgA, deA, chamado, { texto: null, opcoes }))).toBe(
       'mensagens_dos_chamados_opcoes_validas',
     );
   });

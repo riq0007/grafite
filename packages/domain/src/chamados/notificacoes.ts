@@ -208,10 +208,12 @@ export function notificacoesDeQuemParticipa(
   mudanca: Pick<MudancaDeQuemParticipa, 'responsavel' | 'conversa'>,
   quem: { contaId: string; nome: string },
   contas: readonly ContaQueRecebeATriagem[],
+  /** Os nomes dos anexos da mensagem, na ordem do envio: o começo da que vai só com eles. */
+  anexos: readonly string[] = [],
 ): NovaNotificacao[] {
   let resposta: string | null = null;
   for (const entrada of mudanca.conversa) {
-    if (entrada.especie === 'mensagem') resposta = entrada.texto;
+    if (entrada.especie === 'mensagem') resposta = comecoDoTexto(entrada.texto, anexos);
     else if (entrada.evento === 'escolheu') resposta = entrada.dados.opcao;
     else if (entrada.evento === 'reabriu') {
       const { para } = entrada.dados;
@@ -247,11 +249,13 @@ export function notificacoesParaQuemParticipa(
   mudanca: Pick<MudancaDoChamado, 'conversa'>,
   autor: { contaId: string; nome: string },
   contas: readonly Pick<ContaNoChat, 'id' | 'pessoaId' | 'usaOChat'>[],
+  /** Os nomes dos anexos da mensagem, na ordem do envio: o começo da que vai só com eles. */
+  anexos: readonly string[] = [],
 ): NovaNotificacao[] {
   let texto: string | null = null;
   let resolveu = false;
   for (const entrada of mudanca.conversa) {
-    if (entrada.especie === 'mensagem') texto = entrada.texto;
+    if (entrada.especie === 'mensagem') texto = comecoDoTexto(entrada.texto, anexos);
     else if (entrada.especie === 'evento' && entrada.evento === 'resolveu') resolveu = true;
   }
   if (texto === null) return [];

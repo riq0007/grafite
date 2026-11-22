@@ -484,6 +484,13 @@
       "when": 1795102260561,
       "tag": "0068_chaves_da_escolha_e_da_avaliacao",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1795384954949,
+      "tag": "0069_mensagem_so_com_os_anexos",
+      "breakpoints": true
     }
   ]
 }

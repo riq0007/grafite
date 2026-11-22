@@ -19,6 +19,7 @@ import {
   type Acesso,
   type ArvoreDeLocais,
   alcance,
+  comecoDoTexto,
   compararPrazos,
   type DiaDaSemana,
   type GrupoDoPrazo,
@@ -34,6 +35,7 @@ import {
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { ondeAContaVe } from './alcance.ts';
+import { nomesDosAnexosDasMensagens } from './anexos.ts';
 import { lerHorarioDaTi } from './horario.ts';
 
 const ABERTOS = ['triagem', 'em-atendimento', 'aguardando'] as const;
@@ -75,7 +77,7 @@ export interface PrazosDosChamados {
 }
 
 /** O começo do texto, cortado em caracteres, e não em unidades do UTF-16, com as reticências. */
-function comecoDoTexto(texto: string): string {
+function comecoDaUltima(texto: string): string {
   const caracteres = [...texto];
   if (caracteres.length <= LIMITE_DA_ULTIMA_MENSAGEM) return texto;
   return `${caracteres.slice(0, LIMITE_DA_ULTIMA_MENSAGEM - 1).join('')}…`;
@@ -167,6 +169,7 @@ export async function prazosDosChamados(
   // A última mensagem de cada chamado, pelo momento e, no empate, pela gravada depois.
   const ultimas = await tx
     .selectDistinctOn([mensagensDosChamados.chamadoId], {
+      id: mensagensDosChamados.id,
       chamadoId: mensagensDosChamados.chamadoId,
       autor: sql<string>`coalesce(${pessoaDaConta.nome}, ${pessoaQueEscreveu.nome})`,
       texto: mensagensDosChamados.texto,
@@ -190,14 +193,22 @@ export async function prazosDosChamados(
       desc(mensagensDosChamados.criadaEm),
       desc(mensagensDosChamados.id),
     );
+  const anexosDaUltima = await nomesDosAnexosDasMensagens(
+    tx,
+    ultimas.map(({ id }) => id),
+  );
   const ultimaDe = new Map(
     ultimas.map((mensagem) => [
       mensagem.chamadoId,
       {
         autor: mensagem.autor,
         em: mensagem.criadaEm.toISOString(),
-        // A mensagem sempre tem o texto (mensagens_dos_chamados_conteudo_valido).
-        texto: comecoDoTexto(mensagem.texto ?? ''),
+        // A mensagem só com os anexos, de texto nulo, começa pelo nome do primeiro (tarefa 4.18 do
+        // chat-com-chamados).
+        texto:
+          mensagem.texto === null
+            ? comecoDoTexto(null, anexosDaUltima.get(mensagem.id))
+            : comecoDaUltima(mensagem.texto),
       },
     ]),
   );

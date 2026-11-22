@@ -346,9 +346,12 @@ function Abertura({
           <figcaption className={estilos.deOnde}>
             {`Mensagem de ${origem.autor} · ${horaNaConversa(new Date(origem.em), agora, dataHora)}`}
           </figcaption>
-          <blockquote className={estilos.citada}>
-            <p className={daConversa.texto}>{origem.texto}</p>
-          </blockquote>
+          {/* A citada só com os anexos fica sem o texto (tarefa 4.18). */}
+          {origem.texto && (
+            <blockquote className={estilos.citada}>
+              <p className={daConversa.texto}>{origem.texto}</p>
+            </blockquote>
+          )}
           <AnexosNoChamado anexos={origem.anexos} numero={chamado.numero} />
         </figure>
       ) : (
@@ -391,7 +394,7 @@ function MensagemNoChamado({
           </span>
           <time dateTime={mensagem.em}>{dataHora.formatarHora(new Date(mensagem.em))}</time>
         </p>
-        {mensagem.texto !== '' && <p className={daConversa.texto}>{mensagem.texto}</p>}
+        {mensagem.texto && <p className={daConversa.texto}>{mensagem.texto}</p>}
         <AnexosNoChamado anexos={mensagem.anexos} numero={numero} />
         {mensagem.cartao && (
           <CartaoDoAtivoNaMensagem cartao={mensagem.cartao} agora={agora} dataHora={dataHora} />

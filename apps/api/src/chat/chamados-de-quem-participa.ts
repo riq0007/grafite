@@ -45,6 +45,7 @@ import { z } from 'zod';
 import { arquivoNaoEncontrado } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
+import { nomesDosAnexosDasMensagens } from '../chamados/anexos.ts';
 import { CartaoDoAtivo, cartaoLido } from '../chamados/cartao.ts';
 import {
   type AnexoNaFicha,
@@ -149,7 +150,8 @@ const ItemDaConversaDeQuemParticipa = z
         /** A conta que lê a escreveu. */
         minha: z.boolean(),
       }),
-      texto: z.string(),
+      /** O texto, nulo na mensagem só com os anexos. */
+      texto: z.string().nullable(),
       anexos: z.array(AnexoNaLeitura),
       /** As opções da pergunta da TI, de 2 a 3; nulas na mensagem sem pergunta. */
       opcoes: z.array(z.string()).nullable(),
@@ -210,7 +212,8 @@ export const ConversaDoChamadoDeQuemParticipa = z
     origem: z
       .object({
         autor: z.string(),
-        texto: z.string(),
+        /** O texto, nulo na mensagem só com os anexos. */
+        texto: z.string().nullable(),
         em: z.string(),
         anexos: z.array(AnexoNaLeitura),
       })
@@ -243,6 +246,7 @@ export const ResumoDoChamadoNoChat = z
         ultimas: z.array(
           z.object({
             especie: z.enum(['mensagem', 'nota']),
+            /** O texto ou, na mensagem só com os anexos, o nome do primeiro, pelo `comecoDoTexto`. */
             texto: z.string(),
             autor: z.string(),
             /** A mensagem da própria conta, que a tela mostra como "Você". */
@@ -363,6 +367,7 @@ export async function chamadosDeQuemParticipa(
   // A última mensagem de cada chamado, sem as notas e os eventos.
   const ultimas = await tx
     .selectDistinctOn([mensagensDosChamados.chamadoId], {
+      id: mensagensDosChamados.id,
       chamadoId: mensagensDosChamados.chamadoId,
       autorConta: mensagensDosChamados.autorConta,
       autorPessoa: mensagensDosChamados.autorPessoa,
@@ -382,6 +387,10 @@ export async function chamadosDeQuemParticipa(
       desc(mensagensDosChamados.id),
     );
   const ultimaDe = new Map(ultimas.map((ultima) => [ultima.chamadoId, ultima]));
+  const anexosDaUltima = await nomesDosAnexosDasMensagens(
+    tx,
+    ultimas.map(({ id }) => id),
+  );
 
   const idsDasContas = new Set<string>();
   const idsDasPessoas = new Set<string>();
@@ -427,7 +436,7 @@ export async function chamadosDeQuemParticipa(
                 ? nome.conta(ultima.autorConta)
                 : nome.pessoa(ultima.autorPessoa ?? ''),
             minha: ultima.autorConta === conta.id || ultima.autorPessoa === conta.pessoaId,
-            comeco: comecoDoTexto(ultima.texto ?? ''),
+            comeco: comecoDoTexto(ultima.texto, anexosDaUltima.get(ultima.id)),
             em: ultima.criadaEm.toISOString(),
           }
         : null,
@@ -584,7 +593,7 @@ export async function conversaDeQuemParticipa(
     if (linha.especie === 'origem') {
       origem = {
         autor: nome.conta(linha.autorConta ?? ''),
-        texto: linha.texto ?? '',
+        texto: linha.texto,
         em: dadoDeTexto(linha.dados, 'em') ?? em,
         anexos: anexosDaLinha.get(linha.id) ?? [],
       };
@@ -603,7 +612,7 @@ export async function conversaDeQuemParticipa(
           daTi: linha.autorConta !== null,
           minha: linha.autorConta === conta.id || linha.autorPessoa === conta.pessoaId,
         },
-        texto: linha.texto ?? '',
+        texto: linha.texto,
         anexos: anexosDaLinha.get(linha.id) ?? [],
         opcoes: linha.opcoes,
         escolhida: escolhida(linha.id),
@@ -816,6 +825,7 @@ export async function resumoDoChamadoNoChat(
   const ultimas = (
     await tx
       .select({
+        id: mensagensDosChamados.id,
         especie: mensagensDosChamados.especie,
         texto: mensagensDosChamados.texto,
         autorConta: mensagensDosChamados.autorConta,
@@ -832,6 +842,10 @@ export async function resumoDoChamadoNoChat(
       .orderBy(desc(mensagensDosChamados.criadaEm), desc(mensagensDosChamados.id))
       .limit(ULTIMAS_DO_RESUMO)
   ).reverse();
+  const anexosDasUltimas = await nomesDosAnexosDasMensagens(
+    tx,
+    ultimas.map(({ id }) => id),
+  );
   const nome = await nomesDe(
     tx,
     new Set(ultimas.flatMap(({ autorConta }) => (autorConta === null ? [] : [autorConta]))),
@@ -847,7 +861,7 @@ export async function resumoDoChamadoNoChat(
     detalhes: {
       ultimas: ultimas.map((ultima) => ({
         especie: ultima.especie === 'nota' ? 'nota' : 'mensagem',
-        texto: ultima.texto ?? '',
+        texto: ultima.texto ?? comecoDoTexto(null, anexosDasUltimas.get(ultima.id)),
         autor:
           ultima.autorConta !== null
             ? nome.conta(ultima.autorConta)

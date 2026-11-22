@@ -148,7 +148,10 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
             respondida: {
               id: mensagem.id,
               autor: nomeNoChat(mensagem.autor.nome, mensagem.autor.daTi),
-              comeco: comecoDoTexto(mensagem.texto ?? ''),
+              comeco: comecoDoTexto(
+                mensagem.texto,
+                mensagem.anexos.map(({ nome }) => nome),
+              ),
             },
           }));
           caixa.current?.focus();

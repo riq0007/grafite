@@ -151,8 +151,8 @@ export type EventoDeQuemParticipa =
  * de quem participa (a `autor_conta`).
  */
 export type EntradaDeQuemParticipa =
-  | { especie: 'mensagem'; texto: string }
-  | ({ especie: 'evento' } & EventoDeQuemParticipa);
+  /** O texto, nulo na mensagem só com os anexos. */
+  { especie: 'mensagem'; texto: string | null } | ({ especie: 'evento' } & EventoDeQuemParticipa);
 
 /** O que a rota aplica no chamado. */
 export interface MudancaDeQuemParticipa {
@@ -190,14 +190,19 @@ const recusada = (recusa: RecusaDeQuemParticipa): DecisaoDeQuemParticipa => ({
   recusa,
 });
 
-/** A mensagem, como a da TI: o texto sem os espaços das pontas, contado em caracteres, e os anexos. */
+/**
+ * A mensagem, como a da TI: o texto sem os espaços das pontas, contado em caracteres, e os anexos.
+ * Sem o texto, ela vai só com os anexos, e o texto fica nulo (tarefa 4.18).
+ */
 function lerAMensagem(
   texto: string,
   anexos: number,
-): { texto: string } | { recusa: RecusaDeQuemParticipa } {
+): { texto: string | null } | { recusa: RecusaDeQuemParticipa } {
   const lido = lerTexto(texto, LIMITES_DA_CONVERSA.mensagem);
   if (!lido.ok) return { recusa: { motivo: 'texto-longo', texto: 'mensagem' } };
-  if (lido.valor === null) return { recusa: { motivo: 'sem-texto', texto: 'mensagem' } };
+  if (lido.valor === null && anexos === 0) {
+    return { recusa: { motivo: 'sem-texto', texto: 'mensagem' } };
+  }
   if (anexos > LIMITES_DA_CONVERSA.anexos) return { recusa: { motivo: 'anexos-demais' } };
   return { texto: lido.valor };
 }

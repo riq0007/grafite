@@ -1091,11 +1091,11 @@ describe('os textos da conversa', () => {
     ).toEqual(recusa({ motivo: 'texto-longo', texto: 'mensagem' }));
   });
 
-  it('pedem o texto na mensagem, na espera e na nota, de até 4.000 caracteres', () => {
+  it('pedem o texto ou um anexo na mensagem, na espera e na nota, de até 4.000 caracteres', () => {
     expect(decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: ' \n ', anexos: 0 })).toEqual(
       recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
     );
-    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 2 })).toEqual(
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 0 })).toEqual(
       recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
     );
     expect(decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: '', anexos: 0 })).toEqual(
@@ -1104,6 +1104,32 @@ describe('os textos da conversa', () => {
     expect(
       decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: 'a'.repeat(4001), anexos: 0 }),
     ).toEqual(recusa({ motivo: 'texto-longo', texto: 'nota' }));
+  });
+
+  it('vão só com os anexos, com o texto nulo, fora a pergunta, que pede o texto (tarefa 4.18)', () => {
+    const conversa = (pedido: Parameters<typeof decidirAcao>[2]) => {
+      const decisao = decidirAcao(COM_RENATO, ANA, pedido);
+      return decisao.aceita ? decisao.conversa : decisao;
+    };
+    expect(conversa({ acao: 'mensagem', texto: ' \n ', anexos: 1 })).toEqual([
+      { especie: 'mensagem', texto: null },
+    ]);
+    expect(conversa({ acao: 'nota', texto: '', anexos: 2 })).toEqual([
+      { especie: 'nota', texto: null },
+    ]);
+    expect(conversa({ acao: 'esperar', texto: '', anexos: 1 })).toEqual([
+      { especie: 'mensagem', texto: null },
+      { especie: 'evento', evento: 'aguardando', dados: {} },
+    ]);
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: '', anexos: 1, pergunta: true }),
+    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 1, pergunta: true }),
+    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: '', anexos: 6 })).toEqual(
+      recusa({ motivo: 'anexos-demais' }),
+    );
   });
 
   it('aceitam até 5 anexos', () => {

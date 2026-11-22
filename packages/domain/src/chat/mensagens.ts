@@ -12,18 +12,27 @@ export type EspecieDoChat = (typeof ESPECIES_DO_CHAT)[number];
 export const LIMITES_DA_MENSAGEM = { texto: 4000, anexos: 5 } as const;
 
 /**
- * A mensagem que se manda: de 1 a 4.000 caracteres, sem os espaços das pontas e contados em
- * caracteres, e até 5 anexos. As recusas dos anexos, da conversa e da respondida são da API.
+ * A mensagem que se manda: até 4.000 caracteres, sem os espaços das pontas e contados em
+ * caracteres, e até 5 anexos. Sem o texto, ela vai só com os anexos, e o texto fica nulo; sem
+ * nenhum dos dois, não há mensagem. O campo diz onde a recusa aparece. É a única guarda do "texto
+ * ou anexo", porque os anexos estão em outra tabela (change chat-com-chamados, tarefa 4.18). As
+ * recusas dos anexos, da conversa e da respondida são da API.
  */
 export function conferirMensagem(pedido: {
   texto: string;
   anexos: number;
-}): { ok: true; texto: string } | { ok: false; erro: string } {
+}): { ok: true; texto: string | null } | { ok: false; campo: 'texto' | 'anexos'; erro: string } {
   const lido = lerTexto(pedido.texto, LIMITES_DA_MENSAGEM.texto);
-  if (!lido.ok) return { ok: false, erro: lido.erro };
-  if (lido.valor === null) return { ok: false, erro: 'Escreva a mensagem.' };
+  if (!lido.ok) return { ok: false, campo: 'texto', erro: lido.erro };
+  if (lido.valor === null && pedido.anexos === 0) {
+    return { ok: false, campo: 'texto', erro: 'Escreva a mensagem.' };
+  }
   if (pedido.anexos > LIMITES_DA_MENSAGEM.anexos) {
-    return { ok: false, erro: `Anexe até ${LIMITES_DA_MENSAGEM.anexos} arquivos.` };
+    return {
+      ok: false,
+      campo: 'anexos',
+      erro: `Anexe até ${LIMITES_DA_MENSAGEM.anexos} arquivos.`,
+    };
   }
   return { ok: true, texto: lido.valor };
 }
@@ -59,20 +68,32 @@ export function conferirReacao(
 /** O começo do texto, nas notificações e nas citações, em caracteres, com as reticências. */
 export const LIMITE_DO_COMECO = 120;
 
-/**
- * O começo do texto numa linha só: até 120 caracteres, com as reticências, cortado no fim da última
- * palavra que cabe. A palavra maior que o começo inteiro é cortada no meio. Os caracteres são
- * contados como na mensagem, e não nas unidades do UTF-16.
- */
-export function comecoDoTexto(texto: string): string {
-  const linha = texto.trim().replace(/\s+/g, ' ');
+/** A linha cortada em até `limite` caracteres, no fim da última palavra que cabe, com as reticências. */
+function cortar(linha: string, limite: number): string {
   const letras = [...linha];
-  if (letras.length <= LIMITE_DO_COMECO) return linha;
-  const cabe = letras.slice(0, LIMITE_DO_COMECO - 1).join('');
-  const cortaNoEspaco = letras[LIMITE_DO_COMECO - 1] === ' ';
+  if (letras.length <= limite) return linha;
+  const cabe = letras.slice(0, limite - 1).join('');
+  const cortaNoEspaco = letras[limite - 1] === ' ';
   const fimDaPalavra = cortaNoEspaco ? cabe.length : cabe.lastIndexOf(' ');
   const comeco = fimDaPalavra > 0 ? cabe.slice(0, fimDaPalavra) : cabe;
   return `${comeco.trimEnd()}…`;
+}
+
+/**
+ * O começo do texto numa linha só: até 120 caracteres, com as reticências, cortado no fim da última
+ * palavra que cabe. A palavra maior que o começo inteiro é cortada no meio. Os caracteres são
+ * contados como na mensagem, e não nas unidades do UTF-16. A mensagem só com os anexos começa pelo
+ * nome do primeiro, como "folha-manchada.jpg e mais 1 arquivo", com o nome cortado para o resto
+ * caber; sem o texto e sem anexo, o começo é vazio.
+ */
+export function comecoDoTexto(texto: string | null, anexos: readonly string[] = []): string {
+  const linha = (texto ?? '').trim().replace(/\s+/g, ' ');
+  const [primeiro, ...outros] = anexos;
+  if (linha !== '' || primeiro === undefined) return cortar(linha, LIMITE_DO_COMECO);
+  const nome = primeiro.trim().replace(/\s+/g, ' ');
+  if (outros.length === 0) return cortar(nome, LIMITE_DO_COMECO);
+  const resto = ` e mais ${outros.length} ${outros.length === 1 ? 'arquivo' : 'arquivos'}`;
+  return `${cortar(nome, LIMITE_DO_COMECO - [...resto].length)}${resto}`;
 }
 
 /** Os chamados diferentes que uma mensagem cita, no máximo. */

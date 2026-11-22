@@ -4357,18 +4357,21 @@ export const mensagensDosChamados = orgScoped(
           and (${t.autorConta} is not null or ${t.evento} = 'fechou')))
         and (${t.especie} <> 'origem' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
     ),
+    // A mensagem, a nota e a origem só com os anexos têm o texto nulo (tarefa 4.18): o banco não
+    // confere o "texto ou anexo", porque os anexos estão em outra tabela, e a guarda é do domínio.
     check(
       'mensagens_dos_chamados_conteudo_valido',
-      sql`(${t.especie} not in ('mensagem', 'nota', 'origem') or (${t.texto} is not null
-          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null))
+      sql`(${t.especie} not in ('mensagem', 'nota', 'origem') or (${t.evento} is null
+          and (${t.texto} is null or length(trim(${t.texto})) between 1 and 4000)))
         and (${t.especie} not in ('mensagem', 'nota') or ${t.dados} is null)
         and (${t.especie} <> 'origem' or ${t.dados} is not null)
         and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null))`,
     ),
+    // A pergunta com as opções tem o texto, que é a pergunta.
     check(
       'mensagens_dos_chamados_opcoes_validas',
       sql`${t.opcoes} is null or (${t.especie} = 'mensagem' and ${t.autorConta} is not null
-        and ${opcoesValidas(t.opcoes)})`,
+        and ${t.texto} is not null and ${opcoesValidas(t.opcoes)})`,
     ),
     check(
       'mensagens_dos_chamados_cartao_valido',
@@ -4700,10 +4703,12 @@ export const mensagensDoChat = orgScoped(
       'mensagens_do_chat_especie_valida',
       sql`${t.especie} in (${lista(ESPECIES_DO_CHAT_NO_BANCO)})`,
     ),
+    // A mensagem só com os anexos tem o texto nulo (tarefa 4.18), e a guarda do "texto ou anexo" é
+    // do domínio, porque os anexos estão em outra tabela.
     check(
       'mensagens_do_chat_conteudo_valido',
-      sql`(${t.especie} <> 'mensagem' or (${t.texto} is not null
-          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null and ${t.dados} is null))
+      sql`(${t.especie} <> 'mensagem' or (${t.evento} is null and ${t.dados} is null
+          and (${t.texto} is null or length(trim(${t.texto})) between 1 and 4000)))
         and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null
           and ${t.respondeA} is null))`,
     ),

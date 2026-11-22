@@ -250,7 +250,8 @@ export type ItemDaConversa =
       id: string;
       em: string;
       autor: AutorNaFicha;
-      texto: string;
+      /** O texto, nulo na mensagem e na nota só com os anexos. */
+      texto: string | null;
       anexos: AnexoNaFicha[];
       /** As opções da pergunta da TI; nulas na mensagem sem pergunta e na nota. */
       opcoes: string[] | null;
@@ -298,7 +299,8 @@ export interface FichaDoChamado {
   origemNoChat: {
     conversa: { tipo: 'direta' | 'equipe' | 'canal'; nome: string };
     autor: string;
-    texto: string;
+    /** O texto, nulo na mensagem citada só com os anexos. */
+    texto: string | null;
     em: string;
     anexos: AnexoNaFicha[];
     abrir: { conversa: string; mensagem: string } | null;
@@ -549,7 +551,7 @@ async function origemNaFicha(
   return {
     conversa: { tipo: lida?.tipo ?? 'equipe', nome },
     autor,
-    texto: linha.texto ?? '',
+    texto: linha.texto,
     em: dadoDeTexto(linha.dados, 'em') ?? linha.criadaEm.toISOString(),
     anexos,
     abrir:
@@ -783,7 +785,7 @@ export async function fichaDoChamado(
         id: linha.id,
         em,
         autor: autor(linha),
-        texto: linha.texto ?? '',
+        texto: linha.texto,
         anexos: anexosDaMensagem.get(linha.id) ?? [],
         opcoes: linha.opcoes,
         escolhida: escolha

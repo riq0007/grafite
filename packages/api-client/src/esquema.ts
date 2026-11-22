@@ -30229,7 +30229,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        texto: string;
+                        texto?: string;
                         anexos?: string[];
                         respondeA?: string | null;
                     };
@@ -30329,7 +30329,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        texto: string;
+                        texto?: string;
                         anexos?: string[];
                     };
                 };
@@ -40310,7 +40310,7 @@ export interface components {
                 daTi: boolean;
                 minha: boolean;
             };
-            texto: string;
+            texto: string | null;
             anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
             opcoes: string[] | null;
             escolhida: {
@@ -40372,7 +40372,7 @@ export interface components {
             }[];
             origem: {
                 autor: string;
-                texto: string;
+                texto: string | null;
                 em: string;
                 anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
             } | null;
@@ -41042,7 +41042,7 @@ export interface components {
                     nome: string;
                 };
                 autor: string;
-                texto: string;
+                texto: string | null;
                 /** Format: date-time */
                 em: string;
                 anexos: {
@@ -41195,7 +41195,7 @@ export interface components {
                     id: string;
                     nome: string;
                 };
-                texto: string;
+                texto: string | null;
                 anexos: {
                     /** Format: uuid */
                     id: string;
@@ -41225,7 +41225,7 @@ export interface components {
                     id: string;
                     nome: string;
                 };
-                texto: string;
+                texto: string | null;
                 anexos: {
                     /** Format: uuid */
                     id: string;
@@ -46184,7 +46184,7 @@ export interface components {
                 daTi: boolean;
                 minha: boolean;
             };
-            texto: string;
+            texto: string | null;
             anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
             opcoes: string[] | null;
             escolhida: {
@@ -46246,7 +46246,7 @@ export interface components {
             }[];
             origem: {
                 autor: string;
-                texto: string;
+                texto: string | null;
                 em: string;
                 anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
             } | null;
@@ -46916,7 +46916,7 @@ export interface components {
                     nome: string;
                 };
                 autor: string;
-                texto: string;
+                texto: string | null;
                 /** Format: date-time */
                 em: string;
                 anexos: {
@@ -47069,7 +47069,7 @@ export interface components {
                     id: string;
                     nome: string;
                 };
-                texto: string;
+                texto: string | null;
                 anexos: {
                     /** Format: uuid */
                     id: string;
@@ -47099,7 +47099,7 @@ export interface components {
                     id: string;
                     nome: string;
                 };
-                texto: string;
+                texto: string | null;
                 anexos: {
                     /** Format: uuid */
                     id: string;

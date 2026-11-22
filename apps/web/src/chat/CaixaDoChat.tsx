@@ -129,7 +129,7 @@ export function CaixaDoChat<T>({
 
   async function enviar() {
     if (enviando || fila.length > 0 || (vazia && anexos.length === 0)) return;
-    // A regra da API, sem o pedido: só com os anexos, a mensagem pede o texto.
+    // A regra da API, sem o pedido: a mensagem vai com o texto ou só com os anexos (tarefa 4.18).
     const conferida = conferirMensagem({ texto, anexos: anexos.length });
     if (!conferida.ok) {
       definirRecusa(conferida.erro);

@@ -69,8 +69,11 @@ const ParametrosDaConversa = z.object({ id: z.uuid({ error: 'Conversa não encon
 
 const ParametrosDaDireta = z.object({ conta: z.uuid({ error: 'Pessoa não encontrada.' }) });
 
-/** O texto passa pelo domínio, que conta os caracteres sem os espaços das pontas. */
-const TextoDaMensagem = z.string().max(40_000, { error: 'Use até 4.000 caracteres.' });
+/**
+ * O texto passa pelo domínio, que conta os caracteres sem os espaços das pontas. Sem ele, a mensagem
+ * vai só com os anexos (tarefa 4.18 do chat-com-chamados).
+ */
+const TextoDaMensagem = z.string().max(40_000, { error: 'Use até 4.000 caracteres.' }).optional();
 
 /**
  * Os anexos enviados antes (`POST /chat/anexos`), até 5 pelo domínio; o teto aqui só barra o pedido
@@ -213,7 +216,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
         const conversa = await travarParaAMensagem(tx, conta, requisicao.params.id, momento);
         const gravada = await gravarMensagem(tx, conversa, {
           contaId: conta.id,
-          texto: requisicao.body.texto,
+          texto: requisicao.body.texto ?? '',
           respondeA: requisicao.body.respondeA ?? null,
           anexos: requisicao.body.anexos ?? [],
           momento,
@@ -265,7 +268,7 @@ export const rotasDasMensagensDoChat: FastifyPluginAsyncZod<{
         const conversa = await travarADireta(tx, conta, outraId, momento);
         const gravada = await gravarMensagem(tx, conversa, {
           contaId: conta.id,
-          texto: requisicao.body.texto,
+          texto: requisicao.body.texto ?? '',
           respondeA: null,
           anexos: requisicao.body.anexos ?? [],
           momento,

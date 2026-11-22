@@ -226,7 +226,7 @@ export async function abrirPeloChat(
         tipo: 'chat',
         conversaId: linha.id,
         mensagemId: mensagem.id,
-        texto: mensagem.texto ?? '',
+        texto: mensagem.texto,
         autorConta: mensagem.autorConta,
         escritaEm: mensagem.criadaEm,
         anexos: anexos.map(({ id }) => id),

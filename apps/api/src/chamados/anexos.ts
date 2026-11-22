@@ -3,7 +3,7 @@
 // chamado na gravação que o usa, a mensagem, a nota, a abertura ou o campo da TI, na transação
 // dela. O anexo esquecido sai na manutenção diária, passadas 24 h.
 import { anexosDosChamados, arquivos, type Transacao } from '@grafite/db';
-import { and, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { dadosInvalidos } from '../problemas.ts';
 
 export const ANEXO_NAO_ENCONTRADO = 'O anexo não foi encontrado. Envie o arquivo de novo.';
@@ -75,6 +75,33 @@ export async function tomarAnexos(
     .returning({ arquivoId: anexosDosChamados.arquivoId });
   if (tomados.length !== ids.length) throw recusa();
   return ids;
+}
+
+/**
+ * Os nomes dos anexos que ainda existem de cada mensagem (ou nota), na ordem do envio, como a
+ * conversa os mostra: o começo da mensagem só com os anexos é o nome do primeiro (change
+ * chat-com-chamados, tarefa 4.18). A mensagem sem anexo fica de fora do mapa.
+ */
+export async function nomesDosAnexosDasMensagens(
+  tx: Transacao,
+  mensagens: readonly string[],
+): Promise<Map<string, string[]>> {
+  const ids = [...new Set(mensagens)];
+  const nomes = new Map<string, string[]>();
+  if (ids.length === 0) return nomes;
+  const linhas = await tx
+    .select({ mensagemId: anexosDosChamados.mensagemId, nome: arquivos.nome })
+    .from(anexosDosChamados)
+    .innerJoin(arquivos, eq(arquivos.id, anexosDosChamados.arquivoId))
+    .where(and(inArray(anexosDosChamados.mensagemId, ids), isNull(arquivos.removidoEm)))
+    .orderBy(asc(arquivos.enviadoEm), asc(arquivos.id));
+  for (const { mensagemId, nome } of linhas) {
+    if (mensagemId === null) continue;
+    const daMensagem = nomes.get(mensagemId) ?? [];
+    daMensagem.push(nome ?? '');
+    nomes.set(mensagemId, daMensagem);
+  }
+  return nomes;
 }
 
 /**

@@ -282,6 +282,9 @@ function Escrever({
   const nota = modo === 'nota';
   const respostas = nota ? [] : ficha.respostasProntas;
   const cabeMais = ids.length + fila.length < MAXIMO_DE_ANEXOS;
+  // A mensagem e a nota vão com o texto ou só com os anexos; a pergunta sem o texto vai à API, que
+  // recusa com o "Escreva a mensagem." embaixo do campo (tarefa 4.18).
+  const semNada = texto.trim() === '' && ids.length === 0;
   const usaOCartao = pode('ativos.ver') && !desligados.includes('ativos');
   const comando = comandoDoAtivo(texto);
   const recusaDeAgora =
@@ -482,7 +485,7 @@ function Escrever({
   }
 
   async function enviar() {
-    if (enviando || fila.length > 0 || texto.trim() === '') return;
+    if (enviando || fila.length > 0 || semNada) return;
     let textoDoEnvio = texto;
     let cartaoDoEnvio = cartao;
     if (comando !== null) {
@@ -799,7 +802,7 @@ function Escrever({
               icone={Send}
               carregando={enviando}
               rotuloCarregando={envio.carregando}
-              isDisabled={fila.length > 0 || texto.trim() === ''}
+              isDisabled={fila.length > 0 || semNada}
               onPress={() => void enviar()}
             >
               {envio.rotulo}

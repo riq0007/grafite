@@ -61,7 +61,7 @@ import { notificar } from '../notificacoes/notificar.ts';
 import { chamadoMudou, conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
 import { chamadoNaoEncontrado, publicoDoChamado } from './alcance.ts';
-import { tomarAnexos } from './anexos.ts';
+import { nomesDosAnexosDasMensagens, tomarAnexos } from './anexos.ts';
 import { ATIVO_DO_CARTAO_NAO_ENCONTRADO, type CartaoDoAtivo, retratoDoAtivo } from './cartao.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
@@ -274,6 +274,8 @@ async function decidir(
         acao: pedido.acao,
         texto: pedido.texto,
         anexos: pedido.anexos?.length ?? 0,
+        // A pergunta com as opções pede o texto, mesmo com os anexos (tarefa 4.18).
+        pergunta: pedido.acao !== 'nota' && (pedido.opcoes?.length ?? 0) > 0,
       });
   }
 }
@@ -362,7 +364,7 @@ async function conferirOsExtras(
  * Grava a conversa da ação na ordem da mudança, uma linha por vez: o id vem do `uuidv7()` do banco,
  * que cresce na mesma conexão, e a conversa lida pelo momento e pelo id fica na ordem da gravação.
  * Os anexos e o cartão ficam com a mensagem ou a nota da ação, e as opções, só com a mensagem; o
- * anexo que não se toma recusa a ação inteira.
+ * anexo que não se toma recusa a ação inteira. Devolve a mensagem ou a nota gravada, ou nulo sem ela.
  */
 async function gravarAConversa(
   tx: Transacao,
@@ -374,7 +376,8 @@ async function gravarAConversa(
     anexos,
     extras,
   }: { contaId: string; momento: Date; anexos: readonly string[]; extras: ExtrasDoEscrito },
-) {
+): Promise<string | null> {
+  let escrito: string | null = null;
   for (const entrada of conversa) {
     const doEscrito =
       entrada.especie === 'evento'
@@ -395,6 +398,7 @@ async function gravarAConversa(
       })
       .returning({ id: mensagensDosChamados.id });
     if (entrada.especie !== 'evento' && gravada) {
+      escrito = gravada.id;
       await tomarAnexos(tx, {
         arquivos: anexos,
         contaId,
@@ -403,6 +407,7 @@ async function gravarAConversa(
       });
     }
   }
+  return escrito;
 }
 
 /**
@@ -478,7 +483,7 @@ export async function agirNoChamado(
       versao,
     })
     .where(eq(chamados.id, lido.id));
-  await gravarAConversa(tx, lido.id, decisao.conversa, {
+  const escrito = await gravarAConversa(tx, lido.id, decisao.conversa, {
     contaId,
     momento,
     anexos: 'anexos' in pedido ? (pedido.anexos ?? []) : [],
@@ -533,7 +538,12 @@ export async function agirNoChamado(
     momento,
     enviar ? { enviar } : {},
   );
-  // A mensagem para a pessoa e o resolvido vão também a quem participa pelo chat (decisão 13).
+  // A mensagem para a pessoa e o resolvido vão também a quem participa pelo chat (decisão 13); a
+  // mensagem só com os anexos começa pelo nome do primeiro (tarefa 4.18).
+  const anexos =
+    escrito === null || pedido.acao === 'nota'
+      ? []
+      : ((await nomesDosAnexosDasMensagens(tx, [escrito])).get(escrito) ?? []);
   await notificar(
     tx,
     notificacoesParaQuemParticipa(
@@ -541,6 +551,7 @@ export async function agirNoChamado(
       decisao,
       { contaId, nome: await nomeDaConta(tx, contaId) },
       participam,
+      anexos,
     ),
     momento,
     enviar ? { enviar } : {},

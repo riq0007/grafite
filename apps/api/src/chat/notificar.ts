@@ -6,6 +6,8 @@
 // de fora, e a equipe ou o canal arquivado nesse tempo, que sai da lista de quem participa, não
 // notifica ninguém.
 import {
+  anexosDoChat,
+  arquivos,
   type Banco,
   conversas,
   leiturasDasConversas,
@@ -15,7 +17,7 @@ import {
   type Transacao,
 } from '@grafite/db';
 import { type ConversaQueNotifica, notificacoesDaMensagemDoChat } from '@grafite/domain';
-import { and, eq, gte, inArray } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { FILA_DAS_FALHAS } from '../fila/falhas.ts';
@@ -73,7 +75,7 @@ export async function notificarMensagemDoChat(
       })
       .from(mensagensDoChat)
       .where(and(eq(mensagensDoChat.id, mensagemId), eq(mensagensDoChat.especie, 'mensagem')));
-    if (!mensagem?.texto) return { notificadas: 0 };
+    if (!mensagem) return { notificadas: 0 };
     const [linha] = await tx.select().from(conversas).where(eq(conversas.id, mensagem.conversaId));
     if (!linha) return { notificadas: 0 };
     // A equipe e o canal sem o aviso não notificam, e o arquivado não tem quem participa.
@@ -117,11 +119,22 @@ export async function notificarMensagemDoChat(
       );
     const leituraDe = new Map(leituras.map((leitura) => [leitura.contaId, leitura]));
     const autor = (await lerContas(tx, [mensagem.autorConta])).get(mensagem.autorConta);
+    // A mensagem só com os anexos começa pelo nome do primeiro (tarefa 4.18).
+    const anexos = await tx
+      .select({ nome: arquivos.nome })
+      .from(anexosDoChat)
+      .innerJoin(
+        arquivos,
+        and(eq(arquivos.orgId, anexosDoChat.orgId), eq(arquivos.id, anexosDoChat.arquivoId)),
+      )
+      .where(and(eq(anexosDoChat.mensagemId, mensagem.id), isNull(arquivos.removidoEm)))
+      .orderBy(asc(arquivos.enviadoEm), asc(arquivos.id));
     const novas = notificacoesDaMensagemDoChat(
       conversaQueNotifica(linha),
       {
         id: mensagem.id,
         texto: mensagem.texto,
+        anexos: anexos.map(({ nome }) => nome ?? ''),
         autor: { contaId: mensagem.autorConta, nome: autor?.nome ?? '' },
       },
       ids.map((id) => ({

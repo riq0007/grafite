@@ -284,7 +284,10 @@ const ChamadoNosPrazos = z.object({
   relogio: RelogioDoChamado,
   /** O grupo no momento da leitura, no dia do fuso de quem olha; nulo com o prazo estragado. */
   grupo: z.enum(GRUPOS_DO_PRAZO).nullable(),
-  /** A última mensagem, de quem pediu ou da TI, com o começo do texto, até 280 caracteres. */
+  /**
+   * A última mensagem, de quem pediu ou da TI, com o começo do texto, até 280 caracteres, ou, só com
+   * os anexos, o nome do primeiro.
+   */
   ultimaMensagem: z
     .object({ autor: z.string(), em: z.iso.datetime(), texto: z.string() })
     .nullable(),
@@ -326,7 +329,8 @@ const EscritoNaConversa = z.object({
   id: z.uuid(),
   em: z.iso.datetime(),
   autor: AutorNaConversa,
-  texto: z.string(),
+  /** O texto, nulo na mensagem e na nota só com os anexos. */
+  texto: z.string().nullable(),
   anexos: z.array(AnexoDaFicha),
   /** As opções da pergunta da TI, de 2 a 3; nulas na mensagem sem pergunta e na nota. */
   opcoes: z.array(z.string()).nullable(),
@@ -448,7 +452,8 @@ const FichaDoChamado = z
       .object({
         conversa: z.object({ tipo: z.enum(['direta', 'equipe', 'canal']), nome: z.string() }),
         autor: z.string(),
-        texto: z.string(),
+        /** O texto, nulo na mensagem citada só com os anexos. */
+        texto: z.string().nullable(),
         em: z.iso.datetime(),
         anexos: z.array(AnexoDaFicha),
         abrir: z.object({ conversa: z.uuid(), mensagem: z.uuid() }).nullable(),

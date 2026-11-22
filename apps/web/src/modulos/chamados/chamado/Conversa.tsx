@@ -341,7 +341,7 @@ function OrigemNoChat({
               {momentoNaConversa(new Date(origem.em), agora, dataHora)}
             </time>
           </figcaption>
-          {origem.texto !== '' && (
+          {origem.texto && (
             <blockquote className={estilos.textoCitado}>
               <p>{origem.texto}</p>
             </blockquote>

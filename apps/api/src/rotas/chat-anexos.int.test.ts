@@ -120,6 +120,28 @@ describe('a entrega', () => {
     expect(diretas).toEqual([]);
   });
 
+  it('a mensagem só com os anexos vai sem o texto, e a respondida começa pelo nome do primeiro (tarefa 4.18)', async () => {
+    const equipe = await c.criarEquipe('Equipe Financeiro', c.grupos.financeiro);
+    const folha = await anexo('paulo');
+    const nota = await anexo('paulo', 'nota fiscal');
+    const vazia = await escrever('paulo', equipe, {});
+    expect(vazia.statusCode).toBe(400);
+    expect(vazia.json()).toMatchObject({ campos: { texto: 'Escreva a mensagem.' } });
+
+    const soComOsAnexos = await escrever('paulo', equipe, { anexos: [folha, nota] });
+    expect(soComOsAnexos.statusCode, soComOsAnexos.body).toBe(201);
+    const enviada = soComOsAnexos.json() as { id: string; texto: string | null };
+    expect(enviada).toMatchObject({
+      texto: null,
+      anexos: [{ nome: 'folha manchada.pdf' }, { nome: 'nota fiscal.pdf' }],
+    });
+    const resposta = await escrever('fernanda', equipe, { texto: 'Vi.', respondeA: enviada.id });
+    expect(resposta.statusCode, resposta.body).toBe(201);
+    expect(resposta.json()).toMatchObject({
+      respondida: { id: enviada.id, comeco: 'folha manchada.pdf e mais 1 arquivo' },
+    });
+  });
+
   it('até 5 anexos, e o envio pede o chat.usar', async () => {
     const equipe = await c.criarEquipe('Equipe Financeiro', c.grupos.financeiro);
     const seis = [];

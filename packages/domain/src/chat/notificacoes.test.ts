@@ -76,6 +76,12 @@ describe('notificacoesDaMensagemDoChat', () => {
     ]);
   });
 
+  it('a mensagem só com os anexos começa pelo nome do primeiro (tarefa 4.18)', () => {
+    const soComAnexos = { ...DE_PAULO, texto: null, anexos: ['folha-manchada.jpg', 'nota.pdf'] };
+    const [nova] = notificacoesDaMensagemDoChat(DIRETA, soComAnexos, [conta('conta-fernanda')]);
+    expect(nova?.descricao).toBe('folha-manchada.jpg e mais 1 arquivo');
+  });
+
   it('o canal e a equipe com "Avisar a cada mensagem" notificam quem participa: "Ana Souza em Avisos da TI"', () => {
     const contas = [conta('conta-ana'), conta('conta-bruno'), conta('conta-fernanda')];
     const doCanal = notificacoesDaMensagemDoChat(AVISOS_DA_TI, DE_ANA, contas);

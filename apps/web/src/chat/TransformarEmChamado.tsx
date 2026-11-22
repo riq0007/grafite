@@ -7,7 +7,12 @@
 // entra no alto de CHAMADOS, e o evento, no fim da conversa. A recusa fica no campo dela. No celular
 // (m09), o formulário ocupa a tela, com "Cancelar" e o título no alto e "Abrir chamado", de 52 px,
 // num pé preso embaixo.
-import { LIMITE_DO_TITULO_DO_CHAMADO, semAtivoSugerido, tamanhoDoTitulo } from '@grafite/domain';
+import {
+  comecoDoTexto,
+  LIMITE_DO_TITULO_DO_CHAMADO,
+  semAtivoSugerido,
+  tamanhoDoTitulo,
+} from '@grafite/domain';
 import {
   Avatar,
   avisar,
@@ -299,7 +304,10 @@ function FormularioDoChamado({
   );
 }
 
-/** A mensagem citada como ela é: quem escreveu e a hora em cima, e o texto, com o fio do chamado. */
+/**
+ * A mensagem citada como ela é: quem escreveu e a hora em cima, e o texto, com o fio do chamado; só
+ * com os anexos, o nome do primeiro, como no começo da mensagem (tarefa 4.18).
+ */
 function MensagemCitada({ citada }: { citada: MensagemATransformar }) {
   const dataHora = useDataHora();
   return (
@@ -311,8 +319,14 @@ function MensagemCitada({ citada }: { citada: MensagemATransformar }) {
           {dataHora.formatarHora(new Date(citada.mensagem.criadaEm))}
         </time>
       </figcaption>
-      {citada.mensagem.texto && (
-        <blockquote className={estilos.texto}>{citada.mensagem.texto}</blockquote>
+      {(citada.mensagem.texto || citada.mensagem.anexos.length > 0) && (
+        <blockquote className={estilos.texto}>
+          {citada.mensagem.texto ||
+            comecoDoTexto(
+              null,
+              citada.mensagem.anexos.map(({ nome }) => nome),
+            )}
+        </blockquote>
       )}
     </figure>
   );

@@ -24,28 +24,37 @@ describe('a mensagem', () => {
     expect(conferirMensagem({ texto: `${'é'.repeat(4000)}`, anexos: 0 }).ok).toBe(true);
     expect(conferirMensagem({ texto: '😀'.repeat(4001), anexos: 0 })).toEqual({
       ok: false,
+      campo: 'texto',
       erro: 'Use até 4.000 caracteres.',
     });
   });
 
-  it('recusa a vazia, a longa e a com anexos demais, com as frases da spec', () => {
-    expect(conferirMensagem({ texto: '', anexos: 0 })).toEqual({
+  it('recusa a sem texto e sem anexo, a longa e a com anexos demais, com as frases da spec', () => {
+    for (const texto of ['', ' \n\t ']) {
+      expect(conferirMensagem({ texto, anexos: 0 })).toEqual({
+        ok: false,
+        campo: 'texto',
+        erro: 'Escreva a mensagem.',
+      });
+    }
+    expect(conferirMensagem({ texto: 'a'.repeat(4001), anexos: 1 })).toEqual({
       ok: false,
-      erro: 'Escreva a mensagem.',
-    });
-    expect(conferirMensagem({ texto: ' \n\t ', anexos: 1 })).toEqual({
-      ok: false,
-      erro: 'Escreva a mensagem.',
-    });
-    expect(conferirMensagem({ texto: 'a'.repeat(4001), anexos: 0 })).toEqual({
-      ok: false,
+      campo: 'texto',
       erro: 'Use até 4.000 caracteres.',
     });
     expect(conferirMensagem({ texto: 'Os prints', anexos: 5 }).ok).toBe(true);
-    expect(conferirMensagem({ texto: 'Os prints', anexos: 6 })).toEqual({
-      ok: false,
-      erro: 'Anexe até 5 arquivos.',
-    });
+    for (const texto of ['Os prints', '']) {
+      expect(conferirMensagem({ texto, anexos: 6 })).toEqual({
+        ok: false,
+        campo: 'anexos',
+        erro: 'Anexe até 5 arquivos.',
+      });
+    }
+  });
+
+  it('só com os anexos, vai sem o texto (tarefa 4.18)', () => {
+    expect(conferirMensagem({ texto: '', anexos: 1 })).toEqual({ ok: true, texto: null });
+    expect(conferirMensagem({ texto: ' \n\t ', anexos: 5 })).toEqual({ ok: true, texto: null });
   });
 
   it('as espécies das mensagens do chat, com os textos do banco', () => {
@@ -120,6 +129,27 @@ describe('o começo do texto', () => {
   it('conta em caracteres, e não nas unidades do UTF-16', () => {
     const comeco = comecoDoTexto(`${'é'.repeat(60)} ${'😀'.repeat(80)}`);
     expect(comeco).toBe(`${'é'.repeat(60)}…`);
+  });
+
+  it('só com os anexos, é o nome do primeiro, com os outros contados (tarefa 4.18)', () => {
+    expect(comecoDoTexto(null, ['folha-manchada.jpg'])).toBe('folha-manchada.jpg');
+    expect(comecoDoTexto('  ', ['folha-manchada.jpg', 'nota.pdf'])).toBe(
+      'folha-manchada.jpg e mais 1 arquivo',
+    );
+    expect(comecoDoTexto(null, ['folha-manchada.jpg', 'nota.pdf', 'log.txt'])).toBe(
+      'folha-manchada.jpg e mais 2 arquivos',
+    );
+    // Com o texto, os anexos não entram no começo.
+    expect(comecoDoTexto('Os prints', ['folha-manchada.jpg'])).toBe('Os prints');
+    expect(comecoDoTexto(null)).toBe('');
+  });
+
+  it('o nome longo é cortado para a contagem caber nos 120', () => {
+    const nome = `${'n'.repeat(150)}.jpg`;
+    const comeco = comecoDoTexto(null, [nome, 'nota.pdf']);
+    expect([...comeco].length).toBeLessThanOrEqual(120);
+    expect(comeco.endsWith('… e mais 1 arquivo')).toBe(true);
+    expect(comecoDoTexto(null, [nome])).toBe(`${'n'.repeat(119)}…`);
   });
 });
 

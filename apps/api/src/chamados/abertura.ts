@@ -143,8 +143,11 @@ export type OrigemDaAbertura =
       tipo: 'chat';
       conversaId: string;
       mensagemId: string;
-      /** O texto da mensagem, quem a escreveu e quando, para a linha da origem. */
-      texto: string;
+      /**
+       * O texto da mensagem, quem a escreveu e quando, para a linha da origem; o texto é nulo na
+       * mensagem só com os anexos.
+       */
+      texto: string | null;
       autorConta: string;
       escritaEm: Date;
       /** Os arquivos dos anexos da mensagem, que passam a ser também do chamado. */

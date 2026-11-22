@@ -296,6 +296,17 @@ describe('notificacoesDeQuemParticipa', () => {
     ]);
   });
 
+  it('a resposta só com os anexos começa pelo nome do primeiro (tarefa 4.18)', () => {
+    const [nova] = notificacoesDeQuemParticipa(
+      doChat(),
+      { responsavel: 'conta-bruno', conversa: [{ especie: 'mensagem', texto: null }] },
+      FERNANDA,
+      CONTAS,
+      ['impressora.jpg', 'erro.png', 'nota.pdf'],
+    );
+    expect(nova?.descricao).toBe('impressora.jpg e mais 2 arquivos');
+  });
+
   it('a escolha leva a opção escolhida', () => {
     const [nova] = notificacoesDeQuemParticipa(
       doChat(),
@@ -461,6 +472,17 @@ describe('notificacoesParaQuemParticipa', () => {
         mensagemDoChatId: null,
       },
     ]);
+  });
+
+  it('a resposta da TI só com os anexos começa pelo nome do primeiro (tarefa 4.18)', () => {
+    const [nova] = notificacoesParaQuemParticipa(
+      doChat(),
+      { conversa: [{ especie: 'mensagem', texto: null }] },
+      ANA,
+      [FERNANDA],
+      ['passo-a-passo.pdf'],
+    );
+    expect(nova?.descricao).toBe('passo-a-passo.pdf');
   });
 
   it('a mensagem da espera também é resposta da TI', () => {

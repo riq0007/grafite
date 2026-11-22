@@ -200,7 +200,7 @@ describe('a caixa de escrever', () => {
     );
   });
 
-  it('só com o anexo, o envio diz que falta o texto, sem mandar, e com ele a mensagem vai', async () => {
+  it('só com o anexo, a mensagem vai sem o texto (tarefa 4.18 do chat-com-chamados)', async () => {
     const { servidor, pedidos } = servidorQueRecebe({
       outros: {
         'POST /api/chat/anexos': () =>
@@ -219,16 +219,8 @@ describe('a caixa de escrever', () => {
     const enviar = screen.getByRole('button', { name: 'Enviar' });
     expect(enviar.hasAttribute('disabled')).toBe(false);
     fireEvent.keyDown(caixa, { key: 'Enter' });
-    expect((await screen.findByRole('alert')).textContent).toBe('Escreva a mensagem.');
-    expect(caixa.getAttribute('aria-invalid')).toBe('true');
-    expect(pedidos).toEqual([]);
-
-    escrever(caixa, 'Olha a folha');
+    await waitFor(() => expect(pedidos).toEqual([{ texto: '', anexos: ['a-1'], respondeA: null }]));
     expect(screen.queryByRole('alert')).toBeNull();
-    fireEvent.click(enviar);
-    await waitFor(() =>
-      expect(pedidos).toEqual([{ texto: 'Olha a folha', anexos: ['a-1'], respondeA: null }]),
-    );
   });
 
   it('o anexo que termina de subir enquanto a mensagem vai fica na caixa para a próxima', async () => {

@@ -203,7 +203,13 @@ export type AcaoComVersao = 'assumir' | 'passar' | 'devolver' | 'retomar' | 'res
 export type PedidoDeAcao =
   | { acao: 'assumir' | 'devolver' | 'retomar'; versao?: number }
   | { acao: 'passar'; para: ContaQueRecebe; versao?: number }
-  | { acao: 'mensagem' | 'esperar' | 'nota'; texto: string; anexos: number }
+  | {
+      acao: 'mensagem' | 'esperar' | 'nota';
+      texto: string;
+      anexos: number;
+      /** A mensagem pergunta, com as opções de resposta: o texto é a pergunta. */
+      pergunta?: boolean;
+    }
   | {
       acao: 'resolver';
       feito: string;
@@ -268,7 +274,8 @@ export type EventoDaAcao =
  * abertura pelo chat a grava.
  */
 export type EntradaDaConversa =
-  | { especie: Extract<EspecieDaConversa, 'mensagem' | 'nota'>; texto: string }
+  /** O texto, nulo na mensagem e na nota só com os anexos; o "O que foi feito" sempre o tem. */
+  | { especie: Extract<EspecieDaConversa, 'mensagem' | 'nota'>; texto: string | null }
   | ({ especie: 'evento' } & EventoDaAcao);
 
 /** O que a rota aplica no chamado. */
@@ -392,11 +399,22 @@ function lerOTexto(texto: string, de: TextoDaAcao): Lido {
   return { texto: lido.valor };
 }
 
-/** A mensagem ou a nota: o texto e, depois, os anexos. */
-function lerAMensagem(pedido: { texto: string; anexos: number }, de: 'mensagem' | 'nota'): Lido {
-  const lido = lerOTexto(pedido.texto, de);
-  if ('recusa' in lido || pedido.anexos <= LIMITES_DA_CONVERSA.anexos) return lido;
-  return { recusa: { motivo: 'anexos-demais' } };
+/**
+ * A mensagem ou a nota: o texto e, depois, os anexos. Sem o texto, ela vai só com os anexos, e o
+ * texto fica nulo; a pergunta com as opções pede o texto, que é a pergunta (change
+ * chat-com-chamados, tarefa 4.18).
+ */
+function lerAMensagem(
+  pedido: { texto: string; anexos: number; pergunta?: boolean },
+  de: 'mensagem' | 'nota',
+): { texto: string | null } | { recusa: RecusaDaAcao } {
+  const lido = lerTexto(pedido.texto, limiteDoTexto(de));
+  if (!lido.ok) return { recusa: { motivo: 'texto-longo', texto: de } };
+  if (lido.valor === null && (pedido.anexos === 0 || pedido.pergunta === true)) {
+    return { recusa: { motivo: 'sem-texto', texto: de } };
+  }
+  if (pedido.anexos > LIMITES_DA_CONVERSA.anexos) return { recusa: { motivo: 'anexos-demais' } };
+  return { texto: lido.valor };
 }
 
 /**

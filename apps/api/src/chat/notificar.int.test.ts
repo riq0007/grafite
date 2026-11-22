@@ -125,6 +125,29 @@ describe('a tarefa chat.notificar', () => {
     expect(await quemRecebeu(mensagem)).toEqual(['fernanda']);
   });
 
+  it('a mensagem só com os anexos notifica com o nome do primeiro (tarefa 4.18)', async () => {
+    const direta = await c.criarDireta('paulo', 'fernanda');
+    const enviado = await c.cliente.enviarBytes(
+      'POST',
+      `/chat/anexos?nome=${encodeURIComponent('folha manchada.pdf')}`,
+      c.como('paulo'),
+      Buffer.from('%PDF-1.7\n% folha\n%%EOF\n'),
+    );
+    expect(enviado.statusCode, enviado.body).toBe(201);
+    const escrita = await c.cliente.enviar(
+      'POST',
+      `/chat/conversas/${direta}/mensagens`,
+      c.como('paulo'),
+      { anexos: [(enviado.json() as { id: string }).id] },
+    );
+    expect(escrita.statusCode, escrita.body).toBe(201);
+    const mensagem = (escrita.json() as { id: string }).id;
+    expect(await rodarATarefa(mensagem)).toEqual({ notificadas: 1 });
+    expect(await notificadosDa(mensagem)).toMatchObject([
+      { usuario: 'fernanda', descricao: 'folha manchada.pdf' },
+    ]);
+  });
+
   it('a equipe com o aviso notifica quem participa, fora quem silenciou e quem já leu', async () => {
     const equipe = await c.criarEquipe('Equipe Financeiro', c.grupos.financeiro, { avisar: true });
     await c.silenciar('tatiana', equipe);
