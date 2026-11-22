@@ -90,12 +90,16 @@
   opacity: var(--opacidade-desabilitado);
 }
 
-/* A mensagem respondida, em cima, como a resposta a mostra na conversa. */
+/* A mensagem respondida, em cima, como a resposta a mostra na conversa. Ela e os anexos ficam na
+   largura de leitura, à esquerda, como as mensagens e a lista do "#": com a caixa de uma borda à
+   outra, o "Tirar" não vai para a outra ponta da tela, longe do que ele tira. */
 .respondida {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--esp-2);
   min-inline-size: 0;
+  max-inline-size: var(--largura-previa);
   padding: var(--esp-1) var(--esp-2) 0 var(--esp-4);
   color: var(--cor-texto-2);
   font-size: var(--texto-rotulo);
@@ -120,8 +124,10 @@
 
 /* Os anexos, embaixo, cada um com o nome, o tamanho e "Tirar", e os que ainda vão. */
 .anexos {
+  box-sizing: border-box;
   display: grid;
   gap: var(--esp-1);
+  max-inline-size: var(--largura-previa);
   margin: 0;
   padding: 0 var(--esp-2) var(--esp-2) var(--esp-4);
   list-style: none;
