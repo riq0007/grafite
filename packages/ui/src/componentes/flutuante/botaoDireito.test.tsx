@@ -94,6 +94,14 @@ describe('o botão direito com uma lista ou um popover aberto', () => {
     expect(fireEvent.contextMenu(aplicar)).toBe(false);
   });
 
+  it('o toque longo numa opção da lista fica com o app, que não tem texto para copiar', async () => {
+    render(<EditorComALista aoMudarOEditor={vi.fn()} />);
+    const lista = await screen.findByRole('listbox');
+    const opcao = within(lista).getByRole('option', { name: 'Aberto' });
+    fireEvent.pointerDown(opcao, { pointerType: 'touch', button: 0, ...PONTO });
+    expect(fireEvent.contextMenu(opcao, PONTO)).toBe(false);
+  });
+
   it('no campo da busca com a lista aberta, a lista fecha com o texto digitado, e o campo fica com o navegador', async () => {
     render(<BuscaComSugestoes rotulo="Local" sugestoes={SITUACOES} aceitaTextoLivre={false} />);
     const campo = screen.getByRole('combobox', { name: 'Local' }) as HTMLInputElement;

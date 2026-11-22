@@ -174,7 +174,7 @@ function focarNoPonto(campo: HTMLElement, { x, y }: PontoNaJanela) {
  * no link e no texto selecionado, o menu do navegador, que ali é o útil; no resto, o kit o cancela,
  * e o clique só fecha. Sem o botão direito, como na tecla de menu solta no item com o foco, dentro
  * de um painel aberto o app fica com ele, fora do campo em que se digita e do link. O do toque longo
- * fica com o navegador.
+ * fica com o navegador, fora de um menu e de uma lista.
  */
 function aoPedirOMenu(evento: MouseEvent) {
   const desteClique = clique;
@@ -182,9 +182,12 @@ function aoPedirOMenu(evento: MouseEvent) {
   const alvo = evento.target instanceof Element ? evento.target : null;
   if (!alvo || evento.defaultPrevented) return;
   if (!desteClique) {
-    if (doToque) return;
     if (!abertos.some((painel) => painel.elemento()?.contains(alvo))) return;
     if (campoEmQueSeDigita(alvo) || noLink(alvo)) return;
+    // O toque longo fica com o navegador, para copiar o texto de um cartão ou de um popover. Num
+    // menu e numa lista, que não têm texto para copiar, fica com o app, como a tecla de menu: o menu
+    // que a tabela abre pelo toque longo recebe depois o `contextmenu` do mesmo toque.
+    if (doToque && !alvo.closest('[role="menu"], [role="listbox"]')) return;
     evento.preventDefault();
     return;
   }

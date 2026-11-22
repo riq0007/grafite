@@ -541,6 +541,15 @@ describe('o botão direito fora do menu aberto', () => {
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
   });
 
+  // A tabela abre o menu pelo toque longo, no ponto do dedo, e o "contextmenu" do mesmo toque vem
+  // depois, no Windows ao soltar o dedo: dentro do menu, que não tem texto para copiar, fica com o app.
+  it('o "contextmenu" do toque longo dentro do menu fica com o app', () => {
+    abrirOMenu();
+    const responder = screen.getByRole('menuitem', { name: 'Responder' });
+    fireEvent.pointerDown(responder, { pointerType: 'touch', button: 0, ...PONTO });
+    expect(soltarEm(responder)).toBe(false);
+  });
+
   it('no macOS, o Ctrl+clique vale como o botão direito', () => {
     Object.defineProperty(navigator, 'platform', { configurable: true, value: 'MacIntel' });
     const { aoFechar } = abrirOMenu();
