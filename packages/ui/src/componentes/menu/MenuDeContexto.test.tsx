@@ -481,8 +481,64 @@ describe('o botão direito fora do menu aberto', () => {
     abrirOMenu();
     const texto = naTela('p');
     apertarFora();
-    fireEvent.keyDown(document.body, { key: 'Shift' });
+    fireEvent.keyDown(document.body, { key: 'F10', shiftKey: true });
     expect(soltarEm(texto)).toBe(true);
+  });
+
+  // No Windows, o "contextmenu" vem ao soltar o botão, e o Shift ou o Ctrl segurado repete o keydown
+  // até lá. Nem a repetição nem a tecla que só modifica abrem um menu: a marca fica.
+  it('a tecla que repete e a que só modifica não tiram a marca do clique', () => {
+    abrirOMenu();
+    const texto = naTela('p');
+    apertarFora();
+    fireEvent.keyDown(document.body, { key: 'Shift', shiftKey: true, repeat: true });
+    fireEvent.keyDown(document.body, { key: 'Control', ctrlKey: true });
+    expect(soltarEm(texto)).toBe(false);
+  });
+
+  /** O menu da mensagem com o submenu das reações, que fecha de verdade. */
+  function MenuComSubmenu({ aoFechar }: { aoFechar: () => void }) {
+    const [posicao, definirPosicao] = useState<{ x: number; y: number } | null>({ x: 40, y: 40 });
+    return (
+      <MenuDeContexto
+        rotulo="Ações da mensagem"
+        posicao={posicao}
+        aoFechar={() => {
+          aoFechar();
+          definirPosicao(null);
+        }}
+      >
+        <ItemDeMenu>Responder</ItemDeMenu>
+        <Submenu rotulo="Reagir">
+          <ItemDeMenu>+1</ItemDeMenu>
+        </Submenu>
+      </MenuDeContexto>
+    );
+  }
+
+  // O submenu fica no contêiner do menu (o mesmo pai), e os dois são um grupo: o aperto num deles não
+  // fecha o outro. Se o React Aria mudar onde põe o submenu, este teste acusa.
+  it('com o submenu aberto, o aperto no menu ou no submenu não fecha nenhum; fora, fecha os dois', async () => {
+    const aoFechar = vi.fn();
+    render(<MenuComSubmenu aoFechar={aoFechar} />);
+    const menu = screen.getByRole('menu', { name: 'Ações da mensagem' });
+    const reagir = within(menu).getByRole('menuitem', { name: 'Reagir' });
+    act(() => reagir.focus());
+    fireEvent.keyDown(reagir, { key: 'ArrowRight' });
+    const submenu = await screen.findByRole('menu', { name: 'Reagir' });
+    const responder = within(menu).getByRole('menuitem', { name: 'Responder' });
+    fireEvent.pointerDown(responder, { pointerType: 'mouse', button: 2, ...PONTO });
+    expect(soltarEm(responder)).toBe(false);
+    expect(screen.getByRole('menu', { name: 'Reagir' })).toBe(submenu);
+    const maisUm = within(submenu).getByRole('menuitem', { name: '+1' });
+    fireEvent.pointerDown(maisUm, { pointerType: 'mouse', button: 2, ...PONTO });
+    expect(soltarEm(maisUm)).toBe(false);
+    expect(screen.getByRole('menu', { name: 'Ações da mensagem' })).toBe(menu);
+    expect(screen.getByRole('menu', { name: 'Reagir' })).toBe(submenu);
+    expect(aoFechar).not.toHaveBeenCalled();
+    apertarFora();
+    expect(aoFechar).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
   });
 
   it('no macOS, o Ctrl+clique vale como o botão direito', () => {

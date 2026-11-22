@@ -34,10 +34,21 @@ const abertos: PainelAberto[] = [];
 /**
  * O botão direito apertado com um painel aberto, até o `contextmenu` dele: se fechou algum painel, e
  * o texto selecionado ao apertar, porque no macOS o botão direito seleciona a palavra antes do
- * `contextmenu`. Cai quando o `contextmenu` chega, no `pointerdown` seguinte e numa tecla, sem
- * relógio: o Firefox manda o `contextmenu` numa tarefa à parte, e o Windows só ao soltar o botão.
+ * `contextmenu`. Cai quando o `contextmenu` chega, no `pointerdown` seguinte e numa tecla (fora a
+ * repetição e a que só modifica), sem relógio: o Firefox manda o `contextmenu` numa tarefa à parte, e
+ * o Windows só ao soltar o botão.
  */
 let clique: { fechou: boolean; trechos: Range[] } | null = null;
+
+/**
+ * O último aperto foi de toque ou de caneta, sem tecla depois: o `contextmenu` sem a marca é o do
+ * toque longo, que fica com o navegador, para selecionar e copiar o texto, como no cartão do resumo
+ * aberto pelo toque no tablet.
+ */
+let doToque = false;
+
+/** As teclas que só modificam: sozinhas, não abrem um menu. */
+const MODIFICADORAS = new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta']);
 
 let ouvindo = false;
 
@@ -112,6 +123,7 @@ function temOPonto(painel: PainelAberto, alvo: EventTarget | null, { x, y }: Pon
  */
 function aoApertar(evento: PointerEvent) {
   clique = null;
+  doToque = evento.pointerType === 'touch' || evento.pointerType === 'pen';
   if (abertos.length === 0 || !doBotaoDireito(evento)) return;
   const ponto = { x: evento.clientX, y: evento.clientY };
   const onde = abertos.findLastIndex((painel) => temOPonto(painel, evento.target, ponto));
@@ -128,8 +140,15 @@ function aoApertar(evento: PointerEvent) {
   });
 }
 
-const aoTeclar = () => {
+/**
+ * A tecla tira a marca: o `contextmenu` seguinte pode ser o da tecla de menu. A repetição e a tecla
+ * que só modifica não tiram: no Windows, o `contextmenu` vem ao soltar o botão, e o Shift ou o Ctrl
+ * segurado repete o keydown até lá.
+ */
+const aoTeclar = (evento: KeyboardEvent) => {
+  if (evento.repeat || MODIFICADORAS.has(evento.key)) return;
   clique = null;
+  doToque = false;
 };
 
 /**
@@ -154,7 +173,8 @@ function focarNoPonto(campo: HTMLElement, { x, y }: PontoNaJanela) {
  * O `contextmenu`, depois de a tela tratá-lo: o que a tela abriu fica; no campo em que se digita,
  * no link e no texto selecionado, o menu do navegador, que ali é o útil; no resto, o kit o cancela,
  * e o clique só fecha. Sem o botão direito, como na tecla de menu solta no item com o foco, dentro
- * de um painel aberto o app fica com ele, fora do campo em que se digita e do link.
+ * de um painel aberto o app fica com ele, fora do campo em que se digita e do link. O do toque longo
+ * fica com o navegador.
  */
 function aoPedirOMenu(evento: MouseEvent) {
   const desteClique = clique;
@@ -162,6 +182,7 @@ function aoPedirOMenu(evento: MouseEvent) {
   const alvo = evento.target instanceof Element ? evento.target : null;
   if (!alvo || evento.defaultPrevented) return;
   if (!desteClique) {
+    if (doToque) return;
     if (!abertos.some((painel) => painel.elemento()?.contains(alvo))) return;
     if (campoEmQueSeDigita(alvo) || noLink(alvo)) return;
     evento.preventDefault();

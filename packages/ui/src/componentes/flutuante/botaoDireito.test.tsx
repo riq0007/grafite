@@ -119,4 +119,21 @@ describe('o botão direito com uma lista ou um popover aberto', () => {
     apertar(document.body);
     expect(screen.queryByText('Impressora manchando')).toBeNull();
   });
+
+  // No tablet, o cartão abre pelo toque, e o texto dele é para copiar (decisão 15): o toque longo
+  // manda o "contextmenu" sem o botão direito, e o menu do navegador, com o copiar, fica.
+  it('o toque longo dentro do cartão aberto pelo toque fica com o navegador; a tecla de menu, com o app', () => {
+    render(
+      <GatilhoComCartao titulo="Resumo do chamado 1045" cartao={() => <p>Impressora manchando</p>}>
+        Chamado 1045
+      </GatilhoComCartao>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Chamado 1045' }));
+    const texto = screen.getByText('Impressora manchando');
+    fireEvent.pointerDown(texto, { pointerType: 'touch', button: 0, ...PONTO });
+    expect(fireEvent.contextMenu(texto, PONTO)).toBe(true);
+    // A tecla de menu depois do toque, no mesmo cartão: o app fica com o "contextmenu" dela.
+    fireEvent.keyDown(texto, { key: 'ContextMenu' });
+    expect(fireEvent.contextMenu(texto)).toBe(false);
+  });
 });
