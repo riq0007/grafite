@@ -278,6 +278,7 @@ export const ComOsItensDoMenu: Historia = {
  */
 export const JuntoDaBorda: Historia = {
   render: (args) => <MensagemComMenu {...args} />,
+  globals: { viewport: { value: 'celular390', isRotated: false } },
   play: async ({ canvasElement }) => {
     const avisos: string[] = [];
     const anotar = (evento: ErrorEvent) => avisos.push(evento.message);
@@ -285,32 +286,115 @@ export const JuntoDaBorda: Historia = {
     try {
       const corpo = within(canvasElement.ownerDocument.body);
       const mensagem = within(canvasElement).getByRole('article', { name: MENSAGEM });
-      const caixa = mensagem.getBoundingClientRect();
       fireEvent.contextMenu(mensagem, {
         clientX: window.innerWidth - 24,
-        clientY: caixa.top + 8,
+        clientY: mensagem.getBoundingClientRect().top + 8,
       });
-      const menu = await corpo.findByRole('menu', { name: DA_MENSAGEM });
-      const painel = menu.closest<HTMLElement>('[data-placement]');
-      if (!painel) throw new Error('O menu está fora do painel.');
-      // A entrada e o reposicionamento do React Aria, que o laço repetiria.
-      await new Promise((pronto) => setTimeout(pronto, 400));
-      const aberto = painel.getBoundingClientRect();
-      for (const item of within(menu).getAllByRole('menuitem')) {
+      const painel = await painelAberto(corpo);
+      const aberto = caixaDoPainel(painel);
+      for (const item of within(painel).getAllByRole('menuitem')) {
         // O nome que quebra faz o item passar da altura de uma linha.
         await expect(item.offsetHeight).toBeLessThanOrEqual(
           Number.parseFloat(getComputedStyle(item).minHeight) + 0.5,
         );
       }
-      await expect(aberto.left).toBeGreaterThanOrEqual(12 - 0.5);
-      await expect(aberto.right).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+      await expect(aberto.esquerda).toBeGreaterThanOrEqual(12 - 0.5);
+      await expect(aberto.direita).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+      // A janela em que o laço apareceria.
       await new Promise((pronto) => setTimeout(pronto, 300));
-      const depois = painel.getBoundingClientRect();
-      await expect([depois.left, depois.width, depois.height]).toEqual([
-        aberto.left,
-        aberto.width,
-        aberto.height,
-      ]);
+      await expect(caixaDoPainel(painel)).toEqual(aberto);
+      await expect(avisos.filter((aviso) => /ResizeObserver/.test(aviso))).toEqual([]);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
+    } finally {
+      window.removeEventListener('error', anotar);
+    }
+  },
+};
+
+/**
+ * O painel do menu da mensagem, depois da entrada: a escala dela muda a caixa medida, e o executor
+ * carregado a atrasa, então a espera é pelo fim dela, e não por um tempo.
+ */
+async function painelAberto(corpo: ReturnType<typeof within>) {
+  const menu: HTMLElement = await corpo.findByRole('menu', { name: DA_MENSAGEM });
+  const painel = menu.closest('[data-placement]');
+  if (!(painel instanceof HTMLElement)) throw new Error('O menu está fora do painel.');
+  await waitFor(() => expect(painel).not.toHaveAttribute('data-entering'), { timeout: 10_000 });
+  return painel;
+}
+
+/** A caixa do painel: a largura e a altura sem a escala, e as bordas na janela. */
+function caixaDoPainel(painel: HTMLElement) {
+  const { left, right } = painel.getBoundingClientRect();
+  return {
+    esquerda: left,
+    direita: right,
+    largura: painel.offsetWidth,
+    altura: painel.offsetHeight,
+  };
+}
+
+const ITEM_LONGO = 'Avisar a equipe do Financeiro e a da Manutenção predial no canal do chamado';
+
+/** A mensagem com um item de nome mais largo que a janela estreita, como um nome de equipe longo. */
+function MensagemComItemLongo() {
+  const [posicao, definirPosicao] = useState<{ x: number; y: number } | null>(null);
+  return (
+    <>
+      <article
+        aria-label={MENSAGEM}
+        style={{ padding: 'var(--esp-3)', color: 'var(--cor-texto)' }}
+        onContextMenu={(evento) => {
+          evento.preventDefault();
+          definirPosicao({ x: evento.clientX, y: evento.clientY });
+        }}
+      >
+        A impressora do Financeiro está manchando todas as folhas.
+      </article>
+      <MenuDeContexto
+        rotulo={DA_MENSAGEM}
+        posicao={posicao}
+        aoFechar={() => definirPosicao(null)}
+        opaco
+      >
+        <ItemDeMenu icone={CornerUpLeft}>Responder</ItemDeMenu>
+        <ItemDeMenu icone={LifeBuoy}>{ITEM_LONGO}</ItemDeMenu>
+      </MenuDeContexto>
+    </>
+  );
+}
+
+/**
+ * O teto da largura: o item mais largo que a janela deixa o painel na janela menos os 12 px de cada
+ * lado, e o nome dele quebra a linha, sem cortar nem sair do painel, e sem o laço.
+ */
+export const NoTetoDaJanela: Historia = {
+  render: () => <MensagemComItemLongo />,
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const avisos: string[] = [];
+    const anotar = (evento: ErrorEvent) => avisos.push(evento.message);
+    window.addEventListener('error', anotar);
+    try {
+      const corpo = within(canvasElement.ownerDocument.body);
+      const mensagem = within(canvasElement).getByRole('article', { name: MENSAGEM });
+      fireEvent.contextMenu(mensagem, {
+        clientX: window.innerWidth - 24,
+        clientY: mensagem.getBoundingClientRect().top + 8,
+      });
+      const painel = await painelAberto(corpo);
+      const aberto = caixaDoPainel(painel);
+      await expect(aberto.largura).toBeCloseTo(window.innerWidth - 24, 0);
+      await expect(aberto.esquerda).toBeGreaterThanOrEqual(12 - 0.5);
+      await expect(aberto.direita).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+      const longo = within(painel).getByRole('menuitem', { name: ITEM_LONGO });
+      await expect(longo.offsetHeight).toBeGreaterThan(
+        Number.parseFloat(getComputedStyle(longo).minHeight) + 0.5,
+      );
+      await expect(longo.scrollWidth).toBeLessThanOrEqual(longo.clientWidth);
+      await new Promise((pronto) => setTimeout(pronto, 300));
+      await expect(caixaDoPainel(painel)).toEqual(aberto);
       await expect(avisos.filter((aviso) => /ResizeObserver/.test(aviso))).toEqual([]);
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
