@@ -6,7 +6,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BellOff, CornerUpLeft, LifeBuoy, Link, SmilePlus } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ItemDeMenu, SecaoDeMenu, Separador, Submenu } from './Menu.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from './MenuDeContexto.tsx';
 
@@ -267,5 +267,55 @@ export const ComOsItensDoMenu: Historia = {
     );
     // A ação age com o menu ainda saindo, na animação de saída do painel.
     await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
+  },
+};
+
+/**
+ * Cenário da spec "Menu junto da borda da janela estreita": o botão direito junto da borda direita
+ * abre o menu na largura do conteúdo, inteiro dentro da janela, menos os 12 px de cada lado, sem
+ * quebrar os nomes nem mudar de largura depois de aberto. Estreitado pelo espaço até a borda, o
+ * texto quebrava, a altura mudava, e o ResizeObserver do React Aria o reposicionava, num laço.
+ */
+export const JuntoDaBorda: Historia = {
+  render: (args) => <MensagemComMenu {...args} />,
+  play: async ({ canvasElement }) => {
+    const avisos: string[] = [];
+    const anotar = (evento: ErrorEvent) => avisos.push(evento.message);
+    window.addEventListener('error', anotar);
+    try {
+      const corpo = within(canvasElement.ownerDocument.body);
+      const mensagem = within(canvasElement).getByRole('article', { name: MENSAGEM });
+      const caixa = mensagem.getBoundingClientRect();
+      fireEvent.contextMenu(mensagem, {
+        clientX: window.innerWidth - 24,
+        clientY: caixa.top + 8,
+      });
+      const menu = await corpo.findByRole('menu', { name: DA_MENSAGEM });
+      const painel = menu.closest<HTMLElement>('[data-placement]');
+      if (!painel) throw new Error('O menu está fora do painel.');
+      // A entrada e o reposicionamento do React Aria, que o laço repetiria.
+      await new Promise((pronto) => setTimeout(pronto, 400));
+      const aberto = painel.getBoundingClientRect();
+      for (const item of within(menu).getAllByRole('menuitem')) {
+        // O nome que quebra faz o item passar da altura de uma linha.
+        await expect(item.offsetHeight).toBeLessThanOrEqual(
+          Number.parseFloat(getComputedStyle(item).minHeight) + 0.5,
+        );
+      }
+      await expect(aberto.left).toBeGreaterThanOrEqual(12 - 0.5);
+      await expect(aberto.right).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+      await new Promise((pronto) => setTimeout(pronto, 300));
+      const depois = painel.getBoundingClientRect();
+      await expect([depois.left, depois.width, depois.height]).toEqual([
+        aberto.left,
+        aberto.width,
+        aberto.height,
+      ]);
+      await expect(avisos.filter((aviso) => /ResizeObserver/.test(aviso))).toEqual([]);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
+    } finally {
+      window.removeEventListener('error', anotar);
+    }
   },
 };
