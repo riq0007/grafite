@@ -64,7 +64,9 @@ No campo, o cartão SHALL mostrar os dados de agora, que vão na mensagem como e
 
 A ajuda do campo SHALL dizer "Fernanda vê esta mensagem no chat." quando a conta da pessoa usa o chat, e "Fernanda ainda não usa o chat: a mensagem fica no chamado." quando não usa.
 
-"Enviar para Fernanda" e "Salvar a nota" SHALL ficar sem ação enquanto a caixa está vazia.
+"Enviar para Fernanda" e "Salvar a nota" SHALL ficar sem ação enquanto a caixa está vazia e sem anexo: com um anexo, a mensagem e a nota vão sem o texto (spec chamados, "Conversa do chamado"). Com as opções de resposta, o envio SHALL pedir o texto.
+
+Além do clipe, os anexos SHALL entrar no campo colados e soltos, como na caixa do chat (spec modulo-chat, "Caixa de escrever do chat"), com a conversa do chamado aberto como o lugar de soltar.
 
 O que se escreve SHALL continuar no campo quando a conversa se atualiza. Mandado, o campo SHALL esvaziar, e a conversa SHALL ir à última mensagem. A recusa SHALL ficar embaixo do campo, com a frase dela.
 
@@ -73,6 +75,10 @@ No chamado resolvido, o campo SHALL dar lugar a "Reabra o chamado para escrever.
 #### Scenario: Nota pelo atalho
 - **WHEN** Ana escolhe "Nota interna", escreve e aperta Ctrl+Enter
 - **THEN** a nota entra na conversa com "Só a TI vê", e o chamado continua na situação em que estava
+
+#### Scenario: Print colado na nota
+- **WHEN** Ana escolhe "Nota interna" no #1041, cola um print sem escrever e aperta Ctrl+Enter
+- **THEN** a nota entra na conversa só com o print, na miniatura, com "Só a TI vê"
 
 #### Scenario: Resposta pronta que espera a resposta
 - **WHEN** Ana escolhe "Pedir o print do erro", que espera a resposta, no #1041 de Fernanda Rocha
@@ -126,6 +132,7 @@ A conversa do chamado aberto SHALL mostrar, nas duas formas da conversa:
 - **a origem pelo chat,** no começo: "Aberto a partir da conversa Equipe Financeiro", com a mensagem citada (quem escreveu, a hora, o texto e os anexos) e, a quem participa da conversa, "Abrir a conversa", que leva ao chat nessa mensagem;
 - **a pergunta com opções:** as opções em botões, sem ação para a TI, e, respondida, a escolhida com o ✓, quem escolheu e a hora, e as outras apagadas;
 - **o cartão do ativo,** com "Abrir a ficha" a quem vê o ativo;
+- **a imagem anexada** a uma mensagem ou a uma nota, na miniatura (spec arquivos-e-imagens, "Miniatura do anexo de imagem"), que baixa o arquivo, com o nome, o tamanho e "Baixar" embaixo. A imagem sem a miniatura fica como os outros anexos;
 - **no resolvido,** o resumo dos tempos e, quando há, a avaliação, como "Fernanda Rocha avaliou: Ótimo · Resolveu muito bem", com o comentário.
 
 A conversa SHALL se atualizar sozinha com as mensagens e as escolhas de quem participa (requisito "Telas atualizadas e módulo desligado").

@@ -35,6 +35,7 @@ A change é a segunda do subprojeto **S7 · Chamados** da spec mestre, que a `ch
   - a vista Chamados, com os grupos pela vez de quem age: Aguardando você, Em andamento e Fechados.
 - **As mensagens:**
   - o texto, os anexos e as reações;
+  - a mensagem só com os anexos, que também se colam e se soltam na caixa, e a miniatura da imagem anexada;
   - o chamado citado com "#", que vira o chip com a situação e quem atende, e o resumo para quem participa (m12).
 - **As não lidas:**
   - o contador de cada conversa e o da trilha;
@@ -65,7 +66,8 @@ A change é a segunda do subprojeto **S7 · Chamados** da spec mestre, que a `ch
 - **A resposta da pessoa:** a mensagem e a escolha dela, no chamado que aguarda, voltam o chamado ao atendimento, e o relógio volta a contar.
 - **O lado da TI** (m05 e m11):
   - a conversa do chamado aberto mostra as mensagens da pessoa, as escolhas, a avaliação e a origem, "Aberto a partir da conversa Equipe Financeiro";
-  - o campo de escrever manda "Enviar para Fernanda", com o "/ativo" e as opções de resposta.
+  - o campo de escrever manda "Enviar para Fernanda", com o "/ativo" e as opções de resposta, e a mensagem e a nota também só com os anexos, colados ou soltos.
+- **O kit:** o botão direito com um menu ou uma lista aberta, o painel do menu na largura do conteúdo e o submenu na janela estreita.
 - **No celular** (m08 e m09):
   - a lista e a conversa em telas;
   - alvos de 44 px;
@@ -129,7 +131,8 @@ Fica fora:
   - o chamado fechado na tela.
 - `modulos-da-organizacao`: o Chat entra nos módulos opcionais.
 - `eventos-em-tempo-real`: o tipo de evento do chat na tabela, e o dos chamados passa a ir também à pessoa do chamado.
-- `arquivos-e-imagens`: os anexos do chat, entregues pela conversa dona, e os anexos que a pessoa manda no próprio chamado.
+- `arquivos-e-imagens`: os anexos do chat, entregues pela conversa dona, os anexos que a pessoa manda no próprio chamado e a miniatura da imagem anexada.
+- `componentes-base`: o botão direito com um menu ou uma lista aberta, o painel do menu na largura do conteúdo e o submenu na postura celular.
 - `notificacoes`: as notificações de mensagem vão pelo push fora do modo Foco, qualquer que seja a severidade escolhida para o push; o aparelho também se inscreve pelos Avisos do app do chat; e o toque no push escolhe a janela pelo endereço.
 - `pwa`: o app do chat instalado à parte, com o nome "Grafite · Chat", e o push que abre a conversa nele, ou na janela do Chat da casca.
 
@@ -144,7 +147,8 @@ Fica fora:
     - a resposta vista de quem participa (`leituras_dos_chamados`);
     - as opções e o cartão do ativo nas mensagens;
     - as opções nas respostas prontas;
-  - nas notificações, a marca da mensagem, o assunto e a mensagem do chat; nos eventos, o público por grupo.
+  - nas notificações, a marca da mensagem, o assunto e a mensagem do chat; nos eventos, o público por grupo;
+  - o texto nulo na mensagem só com os anexos, no chat e nos chamados.
 - **Domínio** (`packages/domain`):
   - as palavras do colaborador, as etapas e os grupos dos chamados;
   - as não lidas e a resposta nova;
@@ -158,14 +162,15 @@ Fica fora:
   - o chamado da pessoa: a lista, a conversa, responder, escolher, reabrir, avaliar e marcar como vista;
   - o cartão do ativo e as opções no campo da TI;
   - a tarefa do fechamento;
-  - os eventos, as notificações e a auditoria.
+  - os eventos, as notificações e a auditoria;
+  - a mensagem só com os anexos e a miniatura da imagem anexada.
 - **Web:**
   - o app do chat em `/chat`, com a entrada e o manifesto próprios;
   - o módulo Chat na casca, em `/conversas`, com a tradução dos endereços do chat;
   - o toque no push (`sw-avisos.js`);
   - o chamado aberto e o campo de escrever do módulo Chamados;
   - a primeira tela.
-- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem.
+- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem. Em todos os menus e listas, pelo `PainelFlutuante`: o botão direito com eles abertos, o painel do menu na largura do conteúdo e o submenu embaixo do item na postura celular.
 - **Documentação:**
   - a linha do S7 na spec mestre;
   - o contrato de módulo, se mudar;

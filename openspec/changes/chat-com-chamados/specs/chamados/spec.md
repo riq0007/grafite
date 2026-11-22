@@ -70,9 +70,9 @@ A conta que deixa de atender os locais de um chamado que está com ela, porque f
 ### Requirement: Conversa do chamado
 
 A conversa SHALL ter, na ordem em que aconteceram:
-- **as mensagens da TI para a pessoa,** de 1 a 4.000 caracteres, com até 5 anexos (spec arquivos-e-imagens, requisitos "Arquivos aceitos" e "Anexos dos chamados"), com as opções de resposta (requisito "Pergunta com opções") e o cartão do ativo (requisito "Cartão do ativo na mensagem");
-- **as mensagens de quem participa,** a pessoa do chamado e quem o abriu pelo chat, do mesmo tamanho e com os anexos (requisito "Resposta da pessoa");
-- **as notas internas,** do mesmo tamanho e com os anexos e o cartão do ativo, marcadas "Só a TI vê" (requisito "Quem vê e quem atende os chamados");
+- **as mensagens da TI para a pessoa,** com o texto, de 1 a 4.000 caracteres, ou só os anexos, até 5 (spec arquivos-e-imagens, requisitos "Arquivos aceitos" e "Anexos dos chamados"), com as opções de resposta (requisito "Pergunta com opções") e o cartão do ativo (requisito "Cartão do ativo na mensagem");
+- **as mensagens de quem participa,** a pessoa do chamado e quem o abriu pelo chat, como as da TI, com o texto ou só os anexos (requisito "Resposta da pessoa");
+- **as notas internas,** como as mensagens, com o texto ou só os anexos e com o cartão do ativo, marcadas "Só a TI vê" (requisito "Quem vê e quem atende os chamados");
 - **os eventos:**
   - a abertura, com o resumo das respostas e, pelo chat, a origem;
   - as ações do atendimento, também as da pessoa;
@@ -105,11 +105,21 @@ Os alertas do ativo ligado abertos depois da abertura do chamado SHALL aparecer 
 
 A mensagem para a pessoa SHALL chegar a ela no chat (spec chat), à conta da pessoa e à de quem abriu o chamado pelo chat, quando elas usam o chat. Sem isso, a mensagem SHALL ficar no chamado, e a aba dos colaboradores a entrega nas changes do S8.
 
-As recusas SHALL ser "Escreva a mensagem." (na nota, "Escreva a nota."), "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos arquivos e dos anexos. A mensagem, a nota e o "O que foi feito" SHALL perder os espaços das pontas e ser contados em caracteres, como os textos dos campos.
+A pergunta com opções SHALL ter o texto, e o "O que foi feito" também (requisito "Ações do atendimento"). O começo da mensagem só com os anexos, nas notificações e nas listas, SHALL ser o nome do anexo, como no chat (spec chat, "Mensagem").
+
+As recusas SHALL ser "Escreva a mensagem." (na nota, "Escreva a nota."), sem o texto e sem anexo e na pergunta com opções sem o texto, "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos arquivos e dos anexos. A mensagem, a nota e o "O que foi feito" SHALL perder os espaços das pontas e ser contados em caracteres, como os textos dos campos.
 
 #### Scenario: Nota interna
 - **WHEN** Ana grava a nota "A pasta é do Comercial, e não do Financeiro" no #1041
 - **THEN** a conversa mostra a nota no quadro "Só a TI vê", com Ana e a hora
+
+#### Scenario: Nota só com o print
+- **WHEN** Ana grava no #1041 uma nota só com o print "erro-vpn.png", sem texto
+- **THEN** a conversa mostra a nota no quadro "Só a TI vê", com o print, Ana e a hora
+
+#### Scenario: Pergunta sem o texto
+- **WHEN** Bruno manda pela API, no #1045, as opções "Pode ser" e "Daqui a meia hora" com um anexo e sem o texto
+- **THEN** a mensagem é recusada com "Escreva a mensagem.", e nada é gravado
 
 #### Scenario: Alerta do ativo na conversa
 - **WHEN** o alerta "Toner preto abaixo de 10%" da PAT-00139 abre às 09:36, e o #1042, ligado a ela, foi aberto às 07:40
@@ -178,7 +188,7 @@ No chat (spec chat), os chamados SHALL notificar como mensagem, na severidade In
 - **a mensagem da TI para a pessoa:** "Ana Souza respondeu o #1041", com o começo da mensagem;
 - **o resolvido:** "#1045 resolvido: Impressora manchando", com o começo do "O que foi feito".
 
-O começo SHALL ter até 120 caracteres, cortado no fim de uma palavra, com reticências quando foi cortado. As outras ações SHALL NOT notificar a pessoa: ela as vê na conversa. A nota interna SHALL NOT notificar ninguém.
+O começo SHALL ter até 120 caracteres, cortado no fim de uma palavra, com reticências quando foi cortado. Na mensagem só com os anexos, ele SHALL ser o nome do anexo (requisito "Conversa do chamado"). As outras ações SHALL NOT notificar a pessoa: ela as vê na conversa. A nota interna SHALL NOT notificar ninguém.
 
 Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado do próprio ato, e quem escreve SHALL NOT ser notificado da própria mensagem, também a conta da TI que é a pessoa do chamado. O desfazer SHALL NOT notificar: ele devolve o chamado a quem estava com ele, ou à triagem, e o assumir não avisou ninguém de que ele saiu. Retomar e resolver SHALL NOT notificar a TI: quem atende não muda, e nada cai na triagem. Pelo mesmo motivo, a troca do ativo, do título e dos campos da TI SHALL NOT notificar.
 
@@ -374,7 +384,7 @@ Responder, escolher, reabrir, avaliar e marcar como vista SHALL marcar como lida
 
 ### Requirement: Resposta da pessoa
 
-Quem participa SHALL mandar mensagens no chamado, de 1 a 4.000 caracteres, com até 5 anexos, e escolher as opções das perguntas (requisito "Pergunta com opções"). A mensagem e a escolha SHALL ter, pela situação:
+Quem participa SHALL mandar mensagens no chamado, com o texto, de 1 a 4.000 caracteres, ou só os anexos, até 5, e escolher as opções das perguntas (requisito "Pergunta com opções"). A mensagem e a escolha SHALL ter, pela situação:
 - **Na triagem e Em atendimento:** a mensagem entra na conversa, e a situação não muda;
 - **Aguardando o colaborador:** o chamado SHALL ser retomado, Em atendimento com quem atende, e o relógio volta a contar de onde parou;
 - **Resolvido:** a mensagem SHALL reabrir o chamado, como o "Reabrir" (requisito "Ações do atendimento"), e "Reabrir", sem escrever, faz o mesmo. A escolha SHALL ser recusada;

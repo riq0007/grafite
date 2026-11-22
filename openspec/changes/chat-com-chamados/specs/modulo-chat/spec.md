@@ -78,6 +78,7 @@ A conversa SHALL ter:
 - **o cabeçalho:** a foto ou as iniciais e o nome; na equipe, quantas pessoas participam, como "12 pessoas"; no canal, quem escreve, como "Só TI escreve";
 - **na equipe e no canal, as abas** "Conversa", "Arquivos" (os anexos das mensagens, o mais novo primeiro, com quem mandou e quando) e "Chamados da equipe" ou "Chamados do canal" (spec chat, "Chamados da conversa");
 - **as mensagens,** com a foto ou as iniciais, o nome em peso forte, a hora em mono, o texto em 14 px na cor principal, os anexos e as reações, e as mensagens seguidas da mesma pessoa juntas, sem repetir o nome;
+- **a imagem anexada,** na miniatura (spec arquivos-e-imagens, "Miniatura do anexo de imagem"), que baixa o arquivo, com o nome e o tamanho embaixo. A imagem sem a miniatura fica como os outros anexos, com o nome e o tamanho;
 - **o dia,** em separadores como "Hoje", "Ontem" e "12/11";
 - **os eventos,** numa linha, como "Fernanda Rocha transformou esta mensagem no chamado #1045 · 10:32", com "Abrir chamado".
 
@@ -95,13 +96,21 @@ A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas",
 - **WHEN** Tatiana Ramos entra no grupo Financeiro e abre a Equipe Financeiro pela primeira vez
 - **THEN** a conversa abre na última mensagem, sem o separador "Mensagens novas", e o contador da equipe some
 
+#### Scenario: Foto na conversa
+- **WHEN** Paulo Nunes manda na Equipe Financeiro a foto "folha-manchada.jpg"
+- **THEN** a conversa mostra a miniatura da foto, com "folha-manchada.jpg" e o tamanho embaixo, e escolher a miniatura baixa a foto
+
 ### Requirement: Caixa de escrever do chat
 
-A caixa SHALL ser arredondada, com a borda à vista, o texto de ajuda, como "Escrever uma mensagem em Equipe Financeiro…", e, dentro dela, o clipe e o envio. Enter SHALL mandar, e Shift+Enter SHALL quebrar a linha. O envio SHALL ficar sem ação enquanto a caixa está vazia.
+A caixa SHALL ser arredondada, com a borda à vista, o texto de ajuda, como "Escrever uma mensagem em Equipe Financeiro…", e, dentro dela, o clipe e o envio. Enter SHALL mandar, e Shift+Enter SHALL quebrar a linha. O envio SHALL ficar sem ação enquanto a caixa está vazia e sem anexo: com um anexo, a mensagem vai sem o texto (spec chat, "Mensagem").
 
 A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa.
 
 A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo dela e "Tirar", e embaixo os anexos, cada um com o nome, o tamanho e "Tirar".
+
+Além do clipe, os anexos SHALL entrar na caixa, com as mesmas regras e recusas:
+- **colados:** colar arquivos, ou uma imagem sem o texto, como um print, SHALL anexá-los. A imagem colada SHALL ganhar o nome "Imagem colada 22-11-2026 14.05.33.png", com a data e a hora em que foi colada, no fuso da conta. Colar o que traz o texto SHALL colar o texto, também quando traz a imagem junto, como uma célula de planilha;
+- **soltos:** arrastar arquivos sobre a conversa SHALL mostrar "Solte para anexar" sobre ela, e soltá-los SHALL anexá-los.
 
 Escrever "#" SHALL abrir a lista dos chamados de que a conta participa, pelo número e pelo título, para citar (requisito "Chamado citado na tela"). A dica "# cita um chamado" SHALL ficar no texto de ajuda da caixa de uma conversa de chamado.
 
@@ -120,6 +129,18 @@ O que se escreve SHALL continuar na caixa quando a conversa se atualiza e quando
 #### Scenario: Caixa na largura da coluna
 - **WHEN** Fernanda Rocha abre a Equipe Financeiro numa tela de 2560 px
 - **THEN** a caixa vai de uma borda à outra da coluna, e o texto das mensagens quebra a linha na largura de leitura
+
+#### Scenario: Colar um print
+- **WHEN** Fernanda Rocha tira um print da tela às 14:05:33 de 22/11/2026 e cola na caixa da Equipe Financeiro
+- **THEN** o print entra nos anexos da caixa como "Imagem colada 22-11-2026 14.05.33.png", e o envio ganha ação, sem o texto
+
+#### Scenario: Colar de uma planilha
+- **WHEN** Fernanda Rocha copia uma célula de uma planilha, que vai com a imagem dela, e cola na caixa
+- **THEN** o texto da célula entra na caixa, e nenhum anexo entra
+
+#### Scenario: Soltar um arquivo
+- **WHEN** Fernanda Rocha arrasta um PDF sobre a conversa da Equipe Financeiro
+- **THEN** a conversa mostra "Solte para anexar", e, solto, o PDF entra nos anexos da caixa
 
 ### Requirement: Menu da mensagem
 
@@ -174,7 +195,7 @@ A conversa de um chamado, para quem participa dele (spec chamados, "Leitura do c
 - **o cabeçalho:** "CHAMADO #1045" no selo, o título em peso forte e a situação à direita;
 - **as etapas,** Aberto, Em andamento, Aguardando você e Resolvido, cada uma com a hora ou "ainda não" (spec chamados, "Leitura do chamado pela pessoa"), com a de agora marcada em texto;
 - **"Seus outros chamados",** os outros chamados abertos da conta em pílulas com o título inteiro, que quebram a linha, e levam a eles;
-- **a conversa:** a abertura, com o resumo das respostas ou a mensagem citada, as mensagens da TI e as de quem participa e os eventos nas palavras do colaborador, como a espera, na linha "Aguardando você", com a hora;
+- **a conversa:** a abertura, com o resumo das respostas ou a mensagem citada, as mensagens da TI e as de quem participa, com a imagem anexada na miniatura, como na conversa (requisito "Conversa na tela"), e os eventos nas palavras do colaborador, como a espera, na linha "Aguardando você", com a hora;
 - **a resposta nova:** o separador "Resposta nova" antes da primeira mensagem dela e "Marcar como vista";
 - **a pergunta com opções:** as opções em chips de 36 px com a borda à vista, que se escolhem pelo teclado, com as setas, e pelo mouse; respondida, a escolhida cheia, na cor do destaque e com o ✓, e as outras apagadas;
 - **o cartão do ativo:** o ícone, o nome em peso forte, o modelo e o patrimônio em mono, o selo do suprimento e a barra do nível com o número ao lado, e o IP e a situação;

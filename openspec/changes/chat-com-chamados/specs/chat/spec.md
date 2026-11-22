@@ -92,12 +92,14 @@ As recusas SHALL ser:
 
 ### Requirement: Mensagem
 
-A mensagem SHALL ter de 1 a 4.000 caracteres, sem os espaços das pontas, contados em caracteres, e até 5 anexos (spec arquivos-e-imagens, "Anexos do chat"). Cada mensagem SHALL guardar quem escreveu e quando, na hora do servidor, e SHALL NOT ser editada nem apagada.
+A mensagem SHALL ter o texto, de 1 a 4.000 caracteres, sem os espaços das pontas, contados em caracteres, ou só os anexos, e até 5 anexos (spec arquivos-e-imagens, "Anexos do chat"). Cada mensagem SHALL guardar quem escreveu e quando, na hora do servidor, e SHALL NOT ser editada nem apagada.
+
+O começo da mensagem só com os anexos, na resposta, nas notificações e nas listas, SHALL ser o nome do anexo, como "folha-manchada.jpg", e, com mais de um, o do primeiro com quantos vêm depois, como "folha-manchada.jpg e mais 2 arquivos".
 
 A mensagem SHALL poder responder a outra da mesma conversa. A resposta SHALL mostrar, em cima, quem escreveu a respondida e o começo dela, e levar a ela.
 
 As recusas SHALL ser:
-- "Escreva a mensagem.", "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos anexos;
+- "Escreva a mensagem.", na mensagem sem o texto e sem anexo, "Use até 4.000 caracteres." e "Anexe até 5 arquivos.", além das recusas dos anexos;
 - "A mensagem respondida não está nesta conversa.";
 - "Só <grupo> escreve neste canal.", como "Só TI escreve neste canal.", na conta que não escreve no canal, e "Só <grupo> escreve nesta equipe.", na equipe;
 - "A equipe <nome> está arquivada." e "O canal <nome> está arquivado.".
@@ -109,6 +111,14 @@ As recusas SHALL ser:
 #### Scenario: Quem não escreve no canal
 - **WHEN** Fernanda Rocha tenta mandar uma mensagem no canal "Avisos da TI", em que só o grupo TI escreve
 - **THEN** a mensagem é recusada com "Só TI escreve neste canal.", e nada é gravado
+
+#### Scenario: Só a foto
+- **WHEN** Paulo Nunes manda a Fernanda Rocha só a foto "folha-manchada.jpg", sem texto
+- **THEN** a mensagem entra na conversa com a foto, e Fernanda recebe "Mensagem de Paulo Nunes", com "folha-manchada.jpg"
+
+#### Scenario: Mensagem vazia
+- **WHEN** Fernanda Rocha manda pela API uma mensagem só com espaços e sem anexo
+- **THEN** a mensagem é recusada com "Escreva a mensagem.", e nada é gravado
 
 ### Requirement: Reações
 
@@ -218,7 +228,7 @@ O chat SHALL notificar pela notificação da plataforma (spec notificacoes), com
 - **a mensagem direta,** à outra conta: "Mensagem de Paulo Nunes", com o começo do texto;
 - **a mensagem da equipe ou do canal com "Avisar a cada mensagem",** a cada conta que participa: "Ana Souza em Avisos da TI", com o começo do texto.
 
-O começo do texto SHALL ter até 120 caracteres, cortado no fim de uma palavra, com reticências quando foi cortado.
+O começo do texto SHALL ter até 120 caracteres, cortado no fim de uma palavra, com reticências quando foi cortado. Na mensagem só com os anexos, ele SHALL ser o nome do anexo (requisito "Mensagem").
 
 SHALL NOT ser notificados quem escreveu, quem silenciou a conversa e a conta que já leu a mensagem quando a notificação seria gravada.
 
