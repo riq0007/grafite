@@ -555,17 +555,22 @@ export function FluxoDaConversa({
     irPara: irParaAMensagem,
     reagir: acoes?.reagir ?? null,
   };
-  // A tecla de menu e o Shift+F10 na mensagem com o foco abrem o menu dela junto do "Mais".
+  // A tecla de menu e o Shift+F10 na mensagem com o foco, ou num botão dela, abrem o menu dela junto
+  // do "Mais": sem isso, o navegador mandaria o "contextmenu" ao botão, e o menu abriria no canto
+  // dele. No link, o menu do navegador, para abrir e copiar.
   const aoTeclar = (evento: KeyboardEvent<HTMLOListElement>) => {
     const alvo = evento.target;
+    const daMensagem =
+      alvo instanceof HTMLElement ? alvo.closest<HTMLElement>('[data-escrita]') : null;
     if (
       acoes &&
       pedeOMenu(evento) &&
-      alvo instanceof HTMLElement &&
-      alvo.matches('[data-escrita]')
+      daMensagem &&
+      evento.currentTarget.contains(daMensagem) &&
+      !(alvo as HTMLElement).closest('a')
     ) {
       evento.preventDefault();
-      abrirOMenu(alvo, juntoDoMais(alvo, rolagem.current));
+      abrirOMenu(daMensagem, juntoDoMais(daMensagem, rolagem.current));
       return;
     }
     andarPelasMensagens(evento);

@@ -9,9 +9,16 @@
 // motivo e as reações marcadas. Com eles, a escolha de qualquer item, também no submenu, fecha o
 // menu inteiro, como no menu que abre do botão, e o aviso da volta do foco deixa a ação que leva o
 // foco a outro lugar agir depois de o menu sair.
-import { Fragment, type ReactNode, useLayoutEffect, useRef } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import { Menu as MenuDoReactAria, RootMenuTriggerStateContext } from 'react-aria-components';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { useMenuTriggerState } from 'react-stately';
 import { PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import estilos from './Menu.module.css';
@@ -40,6 +47,9 @@ export interface SubmenuDoMenuDeContexto {
 }
 
 export type ItemDoMenuDeContexto = AcaoDoMenuDeContexto | SubmenuDoMenuDeContexto;
+
+/** O botão direito que o menu repete onde caiu, que não volta a ele. */
+const repetidos = new WeakSet<Event>();
 
 export interface PropsDoMenuDeContexto {
   /** O nome do menu para o leitor de tela. */
@@ -73,7 +83,9 @@ export interface PropsDoMenuDeContexto {
   /**
    * O menu do navegador não abre por cima deste, como no menu da mensagem do chat: o app fica com o
    * "contextmenu" dentro do menu, também no submenu, o do botão direito num item e o que o Chromium
-   * no Windows manda ao soltar a tecla de menu, ao item que já tem o foco.
+   * no Windows manda ao soltar a tecla de menu, ao item que já tem o foco. O botão direito fora do
+   * menu fecha este e vale onde caiu: o menu de lá abre no lugar deste, e onde nada o pede, este só
+   * fecha.
    */
   semMenuDoNavegador?: boolean;
 }
@@ -127,6 +139,42 @@ export function MenuDeContexto({
       aoVoltarOFoco?.();
     });
   };
+  // Com o menu aberto, o React Aria deixa o resto da tela inerte, e o botão direito fora do menu cai
+  // no corpo da página: o menu do navegador abriria com este aberto atrás. O clique vale onde caiu,
+  // como se o menu não estivesse aberto: este fecha já, a tela volta a receber o ponteiro, e o clique
+  // se repete no que está no ponto, que abre o menu de lá no lugar deste, como na mensagem errada e
+  // depois na certa. Onde nada o pede, este só fecha, sem o do navegador.
+  const aoBotaoDireitoFora = useEffectEvent((evento: MouseEvent) => {
+    // Dentro do menu e do submenu, o painel já ficou com ele.
+    if (evento.defaultPrevented || repetidos.has(evento)) return;
+    evento.preventDefault();
+    flushSync(fechar);
+    const noPonto = document.elementFromPoint(evento.clientX, evento.clientY);
+    if (!noPonto) return;
+    const repetido = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      clientX: evento.clientX,
+      clientY: evento.clientY,
+      screenX: evento.screenX,
+      screenY: evento.screenY,
+      button: evento.button,
+      buttons: evento.buttons,
+      ctrlKey: evento.ctrlKey,
+      shiftKey: evento.shiftKey,
+      altKey: evento.altKey,
+      metaKey: evento.metaKey,
+    });
+    repetidos.add(repetido);
+    noPonto.dispatchEvent(repetido);
+  });
+  useEffect(() => {
+    if (!aberto || !semMenuDoNavegador) return;
+    window.addEventListener('contextmenu', aoBotaoDireitoFora);
+    return () => window.removeEventListener('contextmenu', aoBotaoDireitoFora);
+  }, [aberto, semMenuDoNavegador]);
   // O menu fecha antes da ação, para a ação achar o foco já de volta em quem o abriu.
   const acao = ({ id, rotulo: nome, aoEscolher, destrutivo, descricao }: AcaoDoMenuDeContexto) => (
     <ItemDeMenu

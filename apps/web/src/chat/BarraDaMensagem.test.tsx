@@ -19,6 +19,7 @@ import {
   TATIANA,
   varias,
 } from '../teste/conversaDoChat.ts';
+import { noCelular } from '../teste/postura.ts';
 import type { ServidorDeTeste } from '../teste/sessao.ts';
 import type { ConversaAberta } from './consultas.ts';
 import type { MensagemDoChat } from './conversa.ts';
@@ -559,7 +560,7 @@ describe('o botão direito e a tecla de menu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('a tecla de menu e o Shift+F10, na mensagem com o foco, abrem o menu nela; num botão dela, não', async () => {
+  it('a tecla de menu e o Shift+F10, na mensagem com o foco ou num botão dela, abrem o menu nela', async () => {
     const { servidor } = servidorDoMenu();
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
     const item = await mensagemNaTela('Mensagem 2');
@@ -580,9 +581,81 @@ describe('o botão direito e a tecla de menu', () => {
     fireEvent.keyDown(await doMenu(), { key: 'Escape' });
     await waitFor(() => expect(document.activeElement).toBe(item));
 
+    // Num botão da mensagem, o mesmo menu, junto do "Mais": sem isso, o navegador mandaria o
+    // "contextmenu" ao botão, e o menu abriria no canto dele.
     const mais = within(item).getByRole('button', { name: 'Mais' });
-    expect(fireEvent.keyDown(mais, { key: 'ContextMenu' })).toBe(true);
+    act(() => mais.focus());
+    expect(fireEvent.keyDown(mais, { key: 'ContextMenu' })).toBe(false);
+    fireEvent.keyDown(await doMenu(), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(item));
+  });
+
+  it('a tecla de menu num link da mensagem fica com o navegador', async () => {
+    const resposta = mensagem(4, {
+      autor: TATIANA,
+      texto: 'Aqui também manchou',
+      respondida: { id: id(2), autor: 'Paulo Nunes', comeco: 'Mensagem 2' },
+    });
+    const { servidor } = servidorDoMenu({ mensagens: [...varias(1, 3), resposta] });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Aqui também manchou');
+    const link = within(item).getByRole('link', { name: /Paulo Nunes/ });
+    act(() => link.focus());
+    expect(fireEvent.keyDown(link, { key: 'ContextMenu' })).toBe(true);
+    expect(fireEvent.keyDown(link, { key: 'F10', shiftKey: true })).toBe(true);
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  /** O elemento no ponto, como o navegador daria com a conversa de novo fora do menu. */
+  function comNoPonto(elemento: Element) {
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: () => elemento,
+    });
+    return () => {
+      delete (document as unknown as Record<string, unknown>).elementFromPoint;
+    };
+  }
+
+  it('com o menu aberto, o botão direito em outra mensagem abre o menu dela, sem o do navegador', async () => {
+    const daTatiana = mensagem(4, { autor: TATIANA, texto: 'Aqui também manchou' });
+    const { servidor } = servidorDoMenu({ mensagens: [...varias(1, 3), daTatiana] });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const primeira = await mensagemNaTela('Mensagem 2');
+    const outra = await mensagemNaTela('Aqui também manchou');
+    botaoDireito(within(primeira).getByText('Mensagem 2'));
+    await doMenu();
+    // Com o menu aberto, a conversa fica inerte, e o clique cai no corpo da página: vale na mensagem
+    // que está no ponto.
+    const restaurar = comNoPonto(within(outra).getByText('Aqui também manchou'));
+    expect(fireEvent.contextMenu(document.body, { button: 2, clientX: 200, clientY: 300 })).toBe(
+      false,
+    );
+    restaurar();
+    await doMenu('Tatiana Ramos');
+    expect(screen.getAllByRole('menu')).toHaveLength(1);
+    expect(presa(outra)).toBe(true);
+    expect(presa(primeira)).toBe(false);
+  });
+
+  it('com o menu aberto, o botão direito fora das mensagens só fecha o menu, com o foco de volta', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Mensagem 2');
+    botaoDireito(within(item).getByText('Mensagem 2'));
+    await doMenu();
+    const caixa = screen.getByRole('textbox', {
+      name: 'Escrever uma mensagem em Equipe Financeiro',
+    });
+    const restaurar = comNoPonto(caixa);
+    expect(fireEvent.contextMenu(document.body, { button: 2, clientX: 200, clientY: 600 })).toBe(
+      false,
+    );
+    restaurar();
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(item));
+    await waitFor(() => expect(presa(item)).toBe(false));
   });
 
   it('"Responder" põe o foco na caixa depois de o menu sair', async () => {
@@ -640,5 +713,39 @@ describe('o botão direito e a tecla de menu', () => {
       expect(screen.queryByRole('dialog', { name: 'Escrever a reação' })).toBeNull(),
     );
     await waitFor(() => expect(presa(item)).toBe(false));
+  });
+
+  // Na janela estreita, o submenu "Reagir" não cabe ao lado do menu, de nenhum dos lados, e sairia
+  // da tela: as reações ficam no próprio menu, com o nome "Reagir" em cima, no menu do botão direito
+  // e no do "Mais".
+  it('na janela estreita, as reações ficam no próprio menu, sem o submenu', async () => {
+    noCelular();
+    const { servidor, reacoes } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Mensagem 2');
+    botaoDireito(within(item).getByText('Mensagem 2'));
+    const menu = await doMenu();
+    expect(within(menu).queryByRole('menuitem', { name: 'Reagir' })).toBeNull();
+    const reagir = within(menu).getByRole('group', { name: 'Reagir' });
+    expect(
+      within(reagir)
+        .getAllByRole('menuitemcheckbox')
+        .map((reacao) => reacao.textContent),
+    ).toEqual(['+1', 'ok', 'visto']);
+    expect(
+      posicoes(menu, [
+        'Responder',
+        'Escrever a reação…',
+        'Copiar link da mensagem',
+        'Silenciar a conversa',
+      ]),
+    ).toEqual([0, 1, 2, 3]);
+    fireEvent.click(within(reagir).getByRole('menuitemcheckbox', { name: '+1' }));
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(reacoes).toEqual([{ mensagem: id(2), texto: '+1' }]));
+
+    const mais = await abrirOMais(item);
+    expect(within(mais).queryByRole('menuitem', { name: 'Reagir' })).toBeNull();
+    expect(within(mais).getByRole('group', { name: 'Reagir' })).toBeTruthy();
   });
 });

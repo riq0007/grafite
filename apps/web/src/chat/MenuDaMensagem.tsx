@@ -6,7 +6,7 @@
 // mensagem, que fica como o lugar da volta do diálogo e do popover, como na folha do celular. O menu
 // do navegador não abre por cima deste, nem no que o Chromium no Windows manda ao soltar a tecla de
 // menu, ao item que já tem o foco.
-import { MenuDeContexto } from '@grafite/ui';
+import { MenuDeContexto, usePostura } from '@grafite/ui';
 import { useEffect, useRef, useState } from 'react';
 import { type AcoesDaMensagem, itensDaMensagem, ReacaoEscrita } from './BarraDaMensagem.tsx';
 import type { MensagemDoChat } from './conversa.ts';
@@ -40,6 +40,7 @@ export function MenuDaMensagem({
   // inteira, como na folha: o popover tem ao menos a largura de onde se prende.
   const ancora = useRef<Element | null>(elemento.firstElementChild ?? elemento);
   const depois = useRef<(() => void) | null>(null);
+  const celular = usePostura() === 'celular';
   const { reagir } = acoes;
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export function MenuDaMensagem({
             depois.current = agir;
           },
           escrever: () => definirEscrevendo(true),
+          celular,
         })}
       </MenuDeContexto>
       {reagir && (

@@ -163,6 +163,74 @@ describe('MenuDeContexto com os itens do menu', () => {
     expect(screen.getByRole('menu', { name: 'Ações da mensagem' })).toBe(menu);
   });
 
+  /** O elemento no ponto, como o navegador daria com a tela de novo fora do menu. */
+  function comNoPonto(elemento: Element) {
+    const espiao = vi.fn((_x: number, _y: number) => elemento);
+    Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: espiao });
+    return {
+      espiao,
+      restaurar: () => {
+        delete (document as unknown as Record<string, unknown>).elementFromPoint;
+      },
+    };
+  }
+
+  // Com o menu aberto, o React Aria deixa o resto da tela inerte, e o botão direito fora do menu cai
+  // no corpo da página: o menu do navegador abriria com este aberto atrás. Este fecha antes, para a
+  // tela voltar a receber o ponteiro, e o clique se repete no que está no ponto.
+  it('sem o menu do navegador, o botão direito fora do menu fecha este e vale no que está ali', () => {
+    const ordem: string[] = [];
+    const outra = document.createElement('div');
+    const pedido = vi.fn((evento: MouseEvent) => {
+      ordem.push('pediu');
+      evento.preventDefault();
+    });
+    outra.addEventListener('contextmenu', pedido);
+    document.body.append(outra);
+    render(
+      <MenuDeContexto
+        rotulo="Ações da mensagem"
+        posicao={{ x: 40, y: 40 }}
+        aoFechar={() => ordem.push('fechou')}
+        semMenuDoNavegador
+      >
+        <ItemDeMenu>Responder</ItemDeMenu>
+      </MenuDeContexto>,
+    );
+    const { espiao, restaurar } = comNoPonto(outra);
+    expect(fireEvent.contextMenu(document.body, { clientX: 300, clientY: 200, button: 2 })).toBe(
+      false,
+    );
+    expect(espiao).toHaveBeenCalledWith(300, 200);
+    expect(ordem).toEqual(['fechou', 'pediu']);
+    expect(pedido.mock.calls[0]?.[0]).toMatchObject({ clientX: 300, clientY: 200, button: 2 });
+    restaurar();
+    outra.remove();
+  });
+
+  it('sem o menu do navegador, o botão direito fora do menu, onde nada o pede, só fecha o menu', () => {
+    const nada = document.createElement('p');
+    document.body.append(nada);
+    const aoFechar = vi.fn();
+    render(
+      <MenuDeContexto
+        rotulo="Ações da mensagem"
+        posicao={{ x: 40, y: 40 }}
+        aoFechar={aoFechar}
+        semMenuDoNavegador
+      >
+        <ItemDeMenu>Responder</ItemDeMenu>
+      </MenuDeContexto>,
+    );
+    const { restaurar } = comNoPonto(nada);
+    expect(fireEvent.contextMenu(document.body, { clientX: 300, clientY: 200, button: 2 })).toBe(
+      false,
+    );
+    expect(aoFechar).toHaveBeenCalledTimes(1);
+    restaurar();
+    nada.remove();
+  });
+
   it('sem pedir, o "contextmenu" no item segue para o navegador, como antes', () => {
     render(
       <MenuDeContexto rotulo="Ações do chamado" posicao={{ x: 40, y: 40 }} aoFechar={vi.fn()}>

@@ -16,6 +16,7 @@ import {
   SecaoDeMenu,
   Separador,
   Submenu,
+  usePostura,
 } from '@grafite/ui';
 import {
   Bell,
@@ -88,18 +89,28 @@ interface PropsDosItens {
   agirDepois: (agir: () => void) => void;
   /** Abre a reação escrita. */
   escrever: () => void;
+  /**
+   * Na janela estreita, as reações ficam no próprio menu, com o nome "Reagir" em cima: o submenu
+   * não cabe ao lado do menu, de nenhum dos lados, e sairia da tela.
+   */
+  celular: boolean;
 }
 
-/** As reações de sempre, com a marca nas da conta, e a reação escrita, no "Reagir". */
+/**
+ * As reações de sempre, com a marca nas da conta, e a reação escrita: no menu do "Reagir" da barra,
+ * no submenu "Reagir" do "Mais" ou, na janela estreita, no próprio "Mais", com o nome em cima.
+ */
 function reacoesNoMenu(
   reagir: Reagir,
   { mensagem, agirDepois, escrever }: Pick<PropsDosItens, 'mensagem' | 'agirDepois' | 'escrever'>,
+  noProprioMenu = false,
 ) {
   const minhas = mensagem.reacoes.filter(({ minha }) => minha).map(({ texto }) => texto);
   return (
     <>
       <SecaoDeMenu
-        aria-label="Reações de sempre"
+        titulo={noProprioMenu ? 'Reagir' : undefined}
+        aria-label={noProprioMenu ? undefined : 'Reações de sempre'}
         selectionMode="multiple"
         shouldCloseOnSelect
         selectedKeys={minhas}
@@ -117,7 +128,7 @@ function reacoesNoMenu(
           </ItemDeMenu>
         ))}
       </SecaoDeMenu>
-      <Separador />
+      {!noProprioMenu && <Separador />}
       <ItemDeMenu id="escrever" icone={PenLine} onAction={() => agirDepois(escrever)}>
         Escrever a reação…
       </ItemDeMenu>
@@ -144,11 +155,18 @@ export function itensDaMensagem(props: PropsDosItens) {
           Responder
         </ItemDeMenu>
       )}
-      {reagir && (
-        <Submenu rotulo="Reagir" icone={SmilePlus} dica={REACOES_RAPIDAS.join(' · ')}>
-          {reacoesNoMenu(reagir, props)}
-        </Submenu>
-      )}
+      {reagir &&
+        (props.celular ? (
+          <>
+            {responder && <Separador />}
+            {reacoesNoMenu(reagir, props, true)}
+            <Separador />
+          </>
+        ) : (
+          <Submenu rotulo="Reagir" icone={SmilePlus} dica={REACOES_RAPIDAS.join(' · ')}>
+            {reacoesNoMenu(reagir, props)}
+          </Submenu>
+        ))}
       <ItemDeMenu id="link" icone={Link} onAction={() => void copiarOLink(conversa, mensagem.id)}>
         Copiar link da mensagem
       </ItemDeMenu>
@@ -219,6 +237,7 @@ export function BarraDaMensagem({
       naVolta.current = agir;
     },
     escrever: () => definirEscrevendo(true),
+    celular: usePostura() === 'celular',
   };
 
   return (
