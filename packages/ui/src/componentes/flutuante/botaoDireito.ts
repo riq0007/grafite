@@ -185,9 +185,10 @@ function aoPedirOMenu(evento: MouseEvent) {
     if (!abertos.some((painel) => painel.elemento()?.contains(alvo))) return;
     if (campoEmQueSeDigita(alvo) || noLink(alvo)) return;
     // O toque longo fica com o navegador, para copiar o texto de um cartão ou de um popover. Num
-    // menu e numa lista, que não têm texto para copiar, fica com o app, como a tecla de menu: o menu
-    // que a tabela abre pelo toque longo recebe depois o `contextmenu` do mesmo toque.
-    if (doToque && !alvo.closest('[role="menu"], [role="listbox"]')) return;
+    // menu e numa lista, como a árvore da escolha em árvore, que não têm texto para copiar, fica com
+    // o app, como a tecla de menu: o menu que a tabela abre pelo toque longo recebe depois o
+    // `contextmenu` do mesmo toque.
+    if (doToque && !alvo.closest('[role="menu"], [role="listbox"], [role="treegrid"]')) return;
     evento.preventDefault();
     return;
   }

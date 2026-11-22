@@ -3,8 +3,10 @@
 // aberto entra no registro, sem prop, como a lista de uma seleção, o editor de um filtro e o cartão
 // do resumo. Os casos do menu de contexto, como o campo e o link fora dele, ficam nos testes dele.
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { Building2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { EscolhaEmArvore } from '../arvore/EscolhaEmArvore.tsx';
 import { BuscaComSugestoes } from '../busca/BuscaComSugestoes.tsx';
 import { GatilhoComCartao } from '../referencia/GatilhoComCartao.tsx';
 import { Selecao } from '../selecao/Selecao.tsx';
@@ -100,6 +102,22 @@ describe('o botão direito com uma lista ou um popover aberto', () => {
     const opcao = within(lista).getByRole('option', { name: 'Aberto' });
     fireEvent.pointerDown(opcao, { pointerType: 'touch', button: 0, ...PONTO });
     expect(fireEvent.contextMenu(opcao, PONTO)).toBe(false);
+  });
+
+  it('o toque longo num item da escolha em árvore fica com o app, como numa lista', async () => {
+    render(
+      <EscolhaEmArvore
+        rotulo="Local de trabalho"
+        itens={[{ id: 'jundiai', rotulo: 'Jundiaí', icone: Building2 }]}
+        valor={null}
+        aoMudar={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Local de trabalho/ }));
+    const painel = await screen.findByRole('dialog', { name: 'Local de trabalho' });
+    const item = within(painel).getByRole('row', { name: /^Jundiaí/ });
+    fireEvent.pointerDown(item, { pointerType: 'touch', button: 0, ...PONTO });
+    expect(fireEvent.contextMenu(item, PONTO)).toBe(false);
   });
 
   it('no campo da busca com a lista aberta, a lista fecha com o texto digitado, e o campo fica com o navegador', async () => {
