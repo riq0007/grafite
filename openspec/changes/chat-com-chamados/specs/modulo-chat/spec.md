@@ -132,7 +132,7 @@ Passar o mouse ou pôr o foco numa mensagem SHALL mostrar a barra dela, com "Res
 
 Ctrl+Shift+T SHALL abrir o transformar na mensagem com o foco ou com o mouse. As conversas dos chamados SHALL NOT ter a barra nem o menu, porque não têm reações.
 
-O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro está, e a tecla de menu do teclado, na mensagem com o foco, SHALL abri-lo junto do "Mais". Num link e no texto selecionado, o menu SHALL ser o do navegador, para abrir e copiar. No toque, o toque longo SHALL continuar abrindo a folha (requisito "Chat no celular").
+O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro está, e a tecla de menu ou o Shift+F10, na mensagem com o foco, SHALL abri-lo junto do "Mais". Num link e no texto selecionado, o menu SHALL ser o do navegador, para abrir e copiar. No toque, o toque longo SHALL continuar abrindo a folha (requisito "Chat no celular").
 
 #### Scenario: Menu da mensagem do Paulo
 - **WHEN** Fernanda Rocha passa o mouse na mensagem das 10:19 de Paulo Nunes e escolhe "Mais"
