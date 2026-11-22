@@ -133,6 +133,13 @@
   max-width: calc(100vw - 2 * var(--esp-3));
 }
 
+/* O submenu por cima do menu, embaixo do item ou em cima dele, na postura celular: ao menos na
+   largura do menu, que é a do item mais o respiro e a borda de cada lado, para cobrir o menu de borda
+   a borda. */
+.painel.deMenu.porCimaDoMenu {
+  min-width: calc(var(--trigger-width) + 2 * (var(--esp-1) + 1px));
+}
+
 /* Menus: abrem com leve escala a partir do item (Apêndice B); a escala some com movimento reduzido. */
 .painel.deMenu[data-entering] {
   transform-origin: var(--trigger-anchor-point);

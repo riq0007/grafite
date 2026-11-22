@@ -3,6 +3,7 @@ import { BellOff, CornerUpLeft, LifeBuoy, Link, SmilePlus } from 'lucide-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { iconesDeAtivo } from '../../icones/ativos.ts';
 import { centro, criarPonteiro } from '../../teste/ponteiro.ts';
+import { temas } from '../../tokens/temas.ts';
 import { Botao } from '../botao/Botao.tsx';
 import { ItemDeMenu, Menu, Separador, Submenu } from './Menu.tsx';
 
@@ -128,6 +129,145 @@ export const AfastarDoSubmenuTrocaNaHora: Historia = {
     await waitFor(() => expect(corpo.queryByRole('menu', { name: 'Rede' })).toBeNull(), {
       timeout: 300,
     });
+  },
+};
+
+/** O painel em volta da lista de um menu. */
+function painelDe(menu: HTMLElement) {
+  const painel = menu.closest('[data-placement]');
+  if (!(painel instanceof HTMLElement)) throw new Error('O menu está fora do painel.');
+  return painel;
+}
+
+/**
+ * Cenário da spec "Submenu na janela estreita": na postura celular, o submenu não cabe ao lado do
+ * menu, de nenhum dos lados, e abre embaixo do item, por cima do menu, inteiro dentro da janela, com
+ * o mesmo teclado. O menu fica junto da borda direita, como o da conta.
+ */
+export const SubmenuNaJanelaEstreita: Historia = {
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  render: () => (
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <MenuDeAtivos />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.tab();
+    await userEvent.keyboard('{Enter}');
+    const menu = await corpo.findByRole('menu', { name: 'Ativos' });
+    await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Inventário' })).toHaveFocus());
+    // O submenu se posiciona pelo item medido ao abrir: com a escala da entrada do menu, o item
+    // estaria um pouco acima de onde fica.
+    await waitFor(() => expect(painelDe(menu)).not.toHaveAttribute('data-entering'), {
+      timeout: 10_000,
+    });
+    await userEvent.keyboard('{ArrowDown}');
+    const rede = corpo.getByRole('menuitem', { name: 'Rede' });
+    await expect(rede).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    const submenu = await corpo.findByRole('menu', { name: 'Rede' });
+    await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Switches' })).toHaveFocus());
+    const painel = painelDe(submenu);
+    await waitFor(() => expect(painel).not.toHaveAttribute('data-entering'), { timeout: 10_000 });
+    const caixa = painel.getBoundingClientRect();
+    const doMenu = painelDe(menu).getBoundingClientRect();
+    // Embaixo do item, que fica à vista.
+    await expect(caixa.top).toBeGreaterThanOrEqual(rede.getBoundingClientRect().bottom - 0.5);
+    // Por cima do menu, nas bordas dele: o item de baixo fica coberto pelo submenu.
+    await expect(caixa.left).toBeCloseTo(doMenu.left, 0);
+    await expect(caixa.right).toBeCloseTo(doMenu.right, 0);
+    const { x, y } = centro(
+      corpo.getByRole('menuitem', { name: 'Relatórios' }).getBoundingClientRect(),
+    );
+    await expect(painel.contains(document.elementFromPoint(x, y))).toBe(true);
+    // Inteiro dentro da janela, menos os 12 px de cada lado.
+    await expect(caixa.left).toBeGreaterThanOrEqual(12 - 0.5);
+    await expect(caixa.right).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+    await expect(caixa.bottom).toBeLessThanOrEqual(window.innerHeight - 12 + 0.5);
+    // O mesmo teclado: o Esc fecha só o submenu e volta ao item.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('menu', { name: 'Rede' })).toBeNull());
+    await expect(corpo.getByRole('menu', { name: 'Ativos' })).toBeVisible();
+    await waitFor(() => expect(rede).toHaveFocus());
+  },
+};
+
+/** O menu da conta na barra de baixo do celular: abre acima do botão, com o "Tema" no alto. */
+function MenuDaConta() {
+  return (
+    <Menu rotulo="Conta" posicao="top end" gatilho={<Botao>Conta</Botao>}>
+      <Submenu rotulo="Tema">
+        {Object.entries(temas).map(([id, tema]) => (
+          <ItemDeMenu key={id}>{tema.nome}</ItemDeMenu>
+        ))}
+        <ItemDeMenu>Personalizado</ItemDeMenu>
+      </Submenu>
+      <ItemDeMenu>Equipes e canais</ItemDeMenu>
+      <Separador />
+      <ItemDeMenu>Sair</ItemDeMenu>
+    </Menu>
+  );
+}
+
+/**
+ * Cenário da spec "Submenu sem espaço embaixo do item": o menu da conta abre da barra de baixo, e
+ * embaixo do "Tema" não cabem os temas. O submenu abre colado em cima do item, que fica à vista, nas
+ * bordas do menu, inteiro dentro da janela e sem rolar.
+ */
+export const SubmenuSemEspacoEmbaixo: Historia = {
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  parameters: { layout: 'fullscreen' },
+  render: () => (
+    <div
+      style={{
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+        height: '100vh',
+        padding: 'var(--esp-4)',
+      }}
+    >
+      <MenuDaConta />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    await userEvent.tab();
+    await userEvent.keyboard('{Enter}');
+    const menu = await corpo.findByRole('menu', { name: 'Conta' });
+    const tema = corpo.getByRole('menuitem', { name: 'Tema' });
+    await waitFor(() => expect(tema).toHaveFocus());
+    await waitFor(() => expect(painelDe(menu)).not.toHaveAttribute('data-entering'), {
+      timeout: 10_000,
+    });
+    await userEvent.keyboard('{ArrowRight}');
+    const submenu = await corpo.findByRole('menu', { name: 'Tema' });
+    const primeiro = within(submenu).getAllByRole('menuitem')[0];
+    await waitFor(() => expect(primeiro).toHaveFocus());
+    const painel = painelDe(submenu);
+    await waitFor(() => expect(painel).not.toHaveAttribute('data-entering'), { timeout: 10_000 });
+    const caixa = painel.getBoundingClientRect();
+    const doItem = tema.getBoundingClientRect();
+    const doMenu = painelDe(menu).getBoundingClientRect();
+    // Colado em cima do item, que fica à vista.
+    await expect(caixa.bottom).toBeCloseTo(doItem.top, 0);
+    const { x, y } = centro(doItem);
+    await expect(tema.contains(document.elementFromPoint(x, y))).toBe(true);
+    // Nas bordas do menu.
+    await expect(caixa.left).toBeCloseTo(doMenu.left, 0);
+    await expect(caixa.right).toBeCloseTo(doMenu.right, 0);
+    // Inteiro dentro da janela, menos os 12 px de cada lado, e sem rolar.
+    await expect(caixa.top).toBeGreaterThanOrEqual(12 - 0.5);
+    await expect(caixa.left).toBeGreaterThanOrEqual(12 - 0.5);
+    await expect(caixa.right).toBeLessThanOrEqual(window.innerWidth - 12 + 0.5);
+    await expect(painel.scrollHeight).toBeLessThanOrEqual(painel.clientHeight);
+    // O mesmo teclado: o Esc fecha só o submenu e volta ao item.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('menu', { name: 'Tema' })).toBeNull());
+    await expect(corpo.getByRole('menu', { name: 'Conta' })).toBeVisible();
+    await waitFor(() => expect(tema).toHaveFocus());
   },
 };
 

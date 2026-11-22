@@ -20,6 +20,7 @@ import {
   SubmenuTrigger,
   Text,
 } from 'react-aria-components';
+import { usePostura } from '../../casca/postura.ts';
 import { Icone } from '../../icones/Icone.tsx';
 import { tempos } from '../../tokens/tempos.ts';
 import { formatarAtalho, plataformaAtual } from '../atalho/atalho.ts';
@@ -226,16 +227,29 @@ export interface PropsDoSubmenu {
   children: ReactNode;
 }
 
-/** Item que abre um submenu; o submenu recebe o nome do item e a camada do menu. */
+/**
+ * Item que abre um submenu; o submenu recebe o nome do item e a camada do menu. Ao lado do menu, ele
+ * alinha o primeiro item ao de origem (o respiro de 4 px e a borda). Na postura celular, ao lado não
+ * cabe de nenhum dos lados: ele abre colado embaixo do item, que fica à vista, por cima do menu e nas
+ * bordas dele, e, sem espaço embaixo, em cima do item. O teclado é o mesmo.
+ */
 export function Submenu({ rotulo, icone, dica, children }: PropsDoSubmenu) {
   const opaco = useContext(MenuOpaco);
+  const celular = usePostura() === 'celular';
+  const posicao = celular
+    ? ({
+        placement: 'bottom start',
+        offset: 0,
+        crossOffset: -5,
+        className: `${classeDoPainel(opaco)} ${estilosDoFlutuante.porCimaDoMenu}`,
+      } as const)
+    : ({ offset: -2, crossOffset: -5, className: classeDoPainel(opaco) } as const);
   return (
     <SubmenuTrigger delay={tempos.menu.abrirSubmenu}>
       <ItemDeMenu icone={icone} dica={dica}>
         {rotulo}
       </ItemDeMenu>
-      {/* Alinha o primeiro item do submenu ao item de origem (respiro de 4 px + borda). */}
-      <PainelFlutuante offset={-2} crossOffset={-5} className={classeDoPainel(opaco)}>
+      <PainelFlutuante {...posicao}>
         <MenuDoReactAria className={estilos.menu}>{children}</MenuDoReactAria>
       </PainelFlutuante>
     </SubmenuTrigger>

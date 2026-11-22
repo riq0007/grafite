@@ -171,7 +171,7 @@ Fica fora:
   - o toque no push (`sw-avisos.js`);
   - o chamado aberto e o campo de escrever do módulo Chamados;
   - a primeira tela.
-- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem. Em todos os menus, listas e popovers, pelo `PainelFlutuante`: o botão direito com eles abertos, o painel do menu na largura do conteúdo e o submenu embaixo do item na postura celular. Na casca e no app do chat, a guarda do arquivo solto fora de um lugar de soltar.
+- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem. Em todos os menus, listas e popovers, pelo `PainelFlutuante`: o botão direito com eles abertos, o painel do menu na largura do conteúdo e o submenu embaixo do item, ou em cima dele, na postura celular. Na casca e no app do chat, a guarda do arquivo solto fora de um lugar de soltar.
 - **Documentação:**
   - a linha do S7 na spec mestre;
   - o contrato de módulo, se mudar;

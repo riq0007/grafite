@@ -13,7 +13,7 @@ Os tempos exatos SHALL ser os do Apêndice B da spec mestre.
 
 O painel do menu SHALL ter a largura do conteúdo, até a largura da janela menos as margens, também junto da borda da janela, onde SHALL NOT se estreitar nem crescer depois de aberto.
 
-Na postura celular, o submenu SHALL abrir embaixo do item que o abre, por cima do menu, inteiro dentro da janela, com o mesmo teclado. Nas outras posturas, ele SHALL abrir ao lado do menu, do lado com mais espaço.
+Na postura celular, o submenu SHALL abrir embaixo do item que o abre ou, sem espaço embaixo, em cima dele, por cima do menu e com o item à vista, inteiro dentro da janela e com o mesmo teclado. Nas outras posturas, ele SHALL abrir ao lado do menu, do lado com mais espaço.
 
 #### Scenario: Movimento diagonal até o submenu
 - **WHEN** o usuário move o ponteiro na diagonal do item "Rede" até o submenu, passando sobre o item seguinte
@@ -28,8 +28,12 @@ Na postura celular, o submenu SHALL abrir embaixo do item que o abre, por cima d
 - **THEN** o menu abre na largura do conteúdo, inteiro dentro da janela, e não muda de largura depois
 
 #### Scenario: Submenu na janela estreita
-- **WHEN** o usuário, numa janela de 390 px, abre o submenu "Tema" do menu da conta, que não cabe ao lado do menu
-- **THEN** o submenu abre embaixo do item "Tema", por cima do menu, inteiro dentro da janela
+- **WHEN** o usuário, numa janela de 390 px, abre o submenu "Passar para…" do menu de um cartão no alto do quadro, que não cabe ao lado do menu
+- **THEN** o submenu abre embaixo do item "Passar para…", por cima do menu, inteiro dentro da janela
+
+#### Scenario: Submenu sem espaço embaixo do item
+- **WHEN** o usuário, numa janela de 390 px, abre o submenu "Tema" do menu da conta, que abre da barra de baixo
+- **THEN** o submenu abre em cima do item "Tema", que fica à vista, por cima do menu, inteiro dentro da janela e sem rolar
 
 ## ADDED Requirements
 
