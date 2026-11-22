@@ -1,10 +1,13 @@
 // O menu de contexto (spec componentes-base, "Menu de contexto"): os itens com submenu e o texto de
 // apoio, como o "Passar para…" do quadro dos chamados, junto da borda direita, onde o submenu abre
-// para a esquerda. A história tem função de interação e fica fora das capturas: termina com o menu
-// fechado, e o que ela confere é o teclado e o lado do submenu.
+// para a esquerda; e os itens do menu com submenu, em camada opaca, como o da mensagem do chat. As
+// histórias têm função de interação e ficam fora das capturas: terminam com o menu fechado, e o que
+// elas conferem é o teclado, o lado do submenu, o fechar do menu inteiro e a volta do foco.
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { BellOff, CornerUpLeft, LifeBuoy, Link, SmilePlus } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { ItemDeMenu, SecaoDeMenu, Separador, Submenu } from './Menu.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from './MenuDeContexto.tsx';
 
 interface Espioes {
@@ -127,5 +130,143 @@ export const SubmenuNaBorda: Historia = {
     await expect(args.aoEscolher).toHaveBeenCalledWith('bruno');
     await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
     await waitFor(() => expect(chamado).toHaveFocus());
+  },
+};
+
+const MENSAGEM = 'Mensagem de Paulo Nunes';
+const DA_MENSAGEM = 'Ações da mensagem de Paulo Nunes';
+
+/**
+ * Uma mensagem com o menu do "Mais" no botão direito e na tecla de menu, como no chat (change
+ * chat-com-chamados, decisão 15): os itens do menu com submenu, em camada opaca, sem o menu do
+ * navegador por cima. O foco volta à mensagem sem rolar, e só depois a ação que leva o foco a outro
+ * lugar age.
+ */
+function MensagemComMenu({ aoEscolher }: Espioes) {
+  const alvo = useRef<HTMLElement>(null);
+  const [posicao, definirPosicao] = useState<{ x: number; y: number } | null>(null);
+  const [minhas, definirMinhas] = useState<string[]>(['+1']);
+  const depois = useRef<string | null>(null);
+  return (
+    <>
+      <article
+        ref={alvo}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a mensagem recebe o foco, como no chat.
+        tabIndex={0}
+        aria-label={MENSAGEM}
+        style={{
+          padding: 'var(--esp-3)',
+          border: '1px solid var(--cor-linha)',
+          borderRadius: 'var(--raio-controle)',
+          background: 'var(--cor-superficie)',
+          color: 'var(--cor-texto)',
+        }}
+        onKeyDown={(evento) => {
+          if (evento.key !== 'ContextMenu' && !(evento.shiftKey && evento.key === 'F10')) return;
+          evento.preventDefault();
+          const caixa = evento.currentTarget.getBoundingClientRect();
+          definirPosicao({ x: caixa.left + 16, y: caixa.bottom });
+        }}
+        onContextMenu={(evento) => {
+          evento.preventDefault();
+          definirPosicao({ x: evento.clientX, y: evento.clientY });
+        }}
+      >
+        A impressora do Financeiro está manchando todas as folhas.
+      </article>
+      <MenuDeContexto
+        rotulo={DA_MENSAGEM}
+        posicao={posicao}
+        aoFechar={() => definirPosicao(null)}
+        origem={alvo.current}
+        opaco
+        semRolar
+        semMenuDoNavegador
+        aoVoltarOFoco={() => {
+          const acao = depois.current;
+          depois.current = null;
+          if (acao) {
+            aoEscolher?.(
+              `${acao} com o foco ${document.activeElement === alvo.current ? 'na mensagem' : 'fora'}`,
+            );
+          }
+        }}
+      >
+        <ItemDeMenu
+          icone={CornerUpLeft}
+          onAction={() => {
+            depois.current = 'responder';
+          }}
+        >
+          Responder
+        </ItemDeMenu>
+        <Submenu rotulo="Reagir" icone={SmilePlus} dica="+1 · ok · visto">
+          <SecaoDeMenu
+            aria-label="Reações de sempre"
+            selectionMode="multiple"
+            shouldCloseOnSelect
+            selectedKeys={minhas}
+            onSelectionChange={(chaves) => {
+              if (chaves === 'all') return;
+              const novas = [...chaves].map(String);
+              definirMinhas(novas);
+              aoEscolher?.(`reações: ${novas.join(', ')}`);
+            }}
+          >
+            <ItemDeMenu id="+1">+1</ItemDeMenu>
+            <ItemDeMenu id="ok">ok</ItemDeMenu>
+            <ItemDeMenu id="visto">visto</ItemDeMenu>
+          </SecaoDeMenu>
+        </Submenu>
+        <ItemDeMenu icone={Link}>Copiar link da mensagem</ItemDeMenu>
+        <Separador />
+        <ItemDeMenu icone={LifeBuoy} informativo atalho={['ctrl', 'shift', 'T']}>
+          Transformar em chamado
+        </ItemDeMenu>
+        <ItemDeMenu icone={BellOff}>Silenciar a conversa</ItemDeMenu>
+      </MenuDeContexto>
+    </>
+  );
+}
+
+/**
+ * Com os itens do menu: Shift+F10 abre o menu opaco no primeiro item; a reação marcada no submenu
+ * fecha o menu inteiro, com o foco de volta na mensagem; e o "Responder" age depois de o foco voltar.
+ */
+export const ComOsItensDoMenu: Historia = {
+  render: (args) => <MensagemComMenu {...args} />,
+  play: async ({ args, canvasElement }) => {
+    const corpo = within(canvasElement.ownerDocument.body);
+    const mensagem = within(canvasElement).getByRole('article', { name: MENSAGEM });
+    await userEvent.tab();
+    await expect(mensagem).toHaveFocus();
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    const menu = await corpo.findByRole('menu', { name: DA_MENSAGEM });
+    const painel = menu.closest<HTMLElement>('[data-placement]');
+    if (!painel) throw new Error('O menu está fora do painel.');
+    await expect(getComputedStyle(painel).backdropFilter).toBe('none');
+    await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Responder' })).toHaveFocus());
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    const submenu = await corpo.findByRole('menu', { name: 'Reagir' });
+    const ok = within(submenu).getByRole('menuitemcheckbox', { name: 'ok' });
+    await waitFor(() =>
+      expect(within(submenu).getByRole('menuitemcheckbox', { name: '+1' })).toHaveFocus(),
+    );
+    await expect(within(submenu).getByRole('menuitemcheckbox', { name: '+1' })).toBeChecked();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(ok).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.aoEscolher).toHaveBeenCalledWith('reações: +1, ok');
+    await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(mensagem).toHaveFocus());
+
+    await userEvent.keyboard('{Shift>}{F10}{/Shift}');
+    await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Responder' })).toHaveFocus());
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.aoEscolher).toHaveBeenLastCalledWith('responder com o foco na mensagem'),
+    );
+    // A ação age com o menu ainda saindo, na animação de saída do painel.
+    await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
   },
 };

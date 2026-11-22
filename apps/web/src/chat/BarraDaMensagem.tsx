@@ -2,7 +2,8 @@
 // mensagem" e "Silenciar uma conversa"; change chat-com-chamados, design, decisão 15, "A caixa e o
 // menu da mensagem"; mockup m01): a barra no canto da mensagem, com o mouse ou o foco nela, com
 // "Reagir", "Responder" e "Mais". "Reagir" dá as três de sempre e a reação escrita; "Mais" abre o
-// menu em camada opaca, com "Transformar em chamado" no azul do chamado, a quem pode abri-lo.
+// menu em camada opaca, com "Transformar em chamado" no azul do chamado, a quem pode abri-lo. Os
+// itens do "Mais" servem também ao menu do botão direito e da tecla de menu (`MenuDaMensagem`).
 import {
   avisar,
   Botao,
@@ -73,17 +74,126 @@ export async function copiarOLink(conversa: string, mensagem: string) {
   }
 }
 
+/** O que os itens do menu da mensagem recebem de quem os mostra. */
+interface PropsDosItens {
+  mensagem: MensagemDoChat;
+  /** O nome de quem escreveu, como a mensagem o mostra. */
+  autor: string;
+  conversa: string;
+  acoes: AcoesDaMensagem;
+  /**
+   * Guarda o que leva o foco a outro lugar, como o responder, o transformar e a reação escrita, para
+   * agir depois de o menu fechar e devolver o foco.
+   */
+  agirDepois: (agir: () => void) => void;
+  /** Abre a reação escrita. */
+  escrever: () => void;
+}
+
+/** As reações de sempre, com a marca nas da conta, e a reação escrita, no "Reagir". */
+function reacoesNoMenu(
+  reagir: Reagir,
+  { mensagem, agirDepois, escrever }: Pick<PropsDosItens, 'mensagem' | 'agirDepois' | 'escrever'>,
+) {
+  const minhas = mensagem.reacoes.filter(({ minha }) => minha).map(({ texto }) => texto);
+  return (
+    <>
+      <SecaoDeMenu
+        aria-label="Reações de sempre"
+        selectionMode="multiple"
+        shouldCloseOnSelect
+        selectedKeys={minhas}
+        onSelectionChange={(chaves) => {
+          if (chaves === 'all') return;
+          const mudou = REACOES_RAPIDAS.find(
+            (texto) => chaves.has(texto) !== minhas.includes(texto),
+          );
+          if (mudou) reagirAvisando(reagir, mensagem, mudou);
+        }}
+      >
+        {REACOES_RAPIDAS.map((texto) => (
+          <ItemDeMenu key={texto} id={texto}>
+            {texto}
+          </ItemDeMenu>
+        ))}
+      </SecaoDeMenu>
+      <Separador />
+      <ItemDeMenu id="escrever" icone={PenLine} onAction={() => agirDepois(escrever)}>
+        Escrever a reação…
+      </ItemDeMenu>
+    </>
+  );
+}
+
+/**
+ * Os itens do "Mais", escritos uma vez para os dois menus da mensagem: o do botão e o do botão
+ * direito e da tecla de menu (change chat-com-chamados, decisão 15, "Os pedidos do usuário de
+ * 22/11").
+ */
+export function itensDaMensagem(props: PropsDosItens) {
+  const { mensagem, autor, conversa, acoes, agirDepois } = props;
+  const { responder, reagir, transformar } = acoes;
+  return (
+    <>
+      {responder && (
+        <ItemDeMenu
+          id="responder"
+          icone={CornerUpLeft}
+          onAction={() => agirDepois(() => responder(mensagem))}
+        >
+          Responder
+        </ItemDeMenu>
+      )}
+      {reagir && (
+        <Submenu rotulo="Reagir" icone={SmilePlus} dica={REACOES_RAPIDAS.join(' · ')}>
+          {reacoesNoMenu(reagir, props)}
+        </Submenu>
+      )}
+      <ItemDeMenu id="link" icone={Link} onAction={() => void copiarOLink(conversa, mensagem.id)}>
+        Copiar link da mensagem
+      </ItemDeMenu>
+      <Separador />
+      {transformar && (
+        <ItemDeMenu
+          id="transformar"
+          icone={LifeBuoy}
+          informativo
+          atalho={['ctrl', 'shift', 'T']}
+          isDisabled={mensagem.chamado !== null}
+          descricao={mensagem.chamado ? `Já virou o #${mensagem.chamado.numero}` : undefined}
+          onAction={() => agirDepois(() => transformar(mensagem, autor))}
+        >
+          Transformar em chamado
+        </ItemDeMenu>
+      )}
+      <ItemDeMenu
+        id="silenciar"
+        icone={acoes.silenciada ? Bell : BellOff}
+        onAction={() => acoes.silenciar(!acoes.silenciada)}
+      >
+        {acoes.silenciada ? 'Voltar a ouvir a conversa' : 'Silenciar a conversa'}
+      </ItemDeMenu>
+    </>
+  );
+}
+
 export function BarraDaMensagem({
   mensagem,
   autor,
   conversa,
   acoes,
+  presa = false,
 }: {
   mensagem: MensagemDoChat;
   /** O nome de quem escreveu, como a mensagem o mostra. */
   autor: string;
   conversa: string;
   acoes: AcoesDaMensagem;
+  /**
+   * A barra fica à vista, e a mensagem marcada, como com um menu dela aberto: o do botão direito ou
+   * da tecla de menu, que abre fora da barra.
+   */
+  presa?: boolean;
 }) {
   const barra = useRef<HTMLDivElement>(null);
   const [abertos, definirAbertos] = useState(0);
@@ -99,42 +209,24 @@ export function BarraDaMensagem({
     agir?.();
   };
   const prender = (aberto: boolean) => definirAbertos((antes) => antes + (aberto ? 1 : -1));
-  const minhas = mensagem.reacoes.filter(({ minha }) => minha).map(({ texto }) => texto);
-  const { responder, reagir, transformar } = acoes;
-
-  const rapidas = reagir && (
-    <SecaoDeMenu
-      aria-label="Reações de sempre"
-      selectionMode="multiple"
-      shouldCloseOnSelect
-      selectedKeys={minhas}
-      onSelectionChange={(chaves) => {
-        if (chaves === 'all') return;
-        const mudou = REACOES_RAPIDAS.find((texto) => chaves.has(texto) !== minhas.includes(texto));
-        if (mudou) reagirAvisando(reagir, mensagem, mudou);
-      }}
-    >
-      {REACOES_RAPIDAS.map((texto) => (
-        <ItemDeMenu key={texto} id={texto}>
-          {texto}
-        </ItemDeMenu>
-      ))}
-    </SecaoDeMenu>
-  );
-  const escrita = (
-    <ItemDeMenu
-      id="escrever"
-      icone={PenLine}
-      onAction={() => {
-        naVolta.current = () => definirEscrevendo(true);
-      }}
-    >
-      Escrever a reação…
-    </ItemDeMenu>
-  );
+  const { responder, reagir } = acoes;
+  const dosItens: PropsDosItens = {
+    mensagem,
+    autor,
+    conversa,
+    acoes,
+    agirDepois: (agir) => {
+      naVolta.current = agir;
+    },
+    escrever: () => definirEscrevendo(true),
+  };
 
   return (
-    <div ref={barra} className={estilos.barra} data-presa={abertos > 0 || escrevendo || undefined}>
+    <div
+      ref={barra}
+      className={estilos.barra}
+      data-presa={abertos > 0 || escrevendo || presa || undefined}
+    >
       {reagir && (
         <Menu
           rotulo="Reagir"
@@ -150,9 +242,7 @@ export function BarraDaMensagem({
             />
           }
         >
-          {rapidas}
-          <Separador />
-          {escrita}
+          {reacoesNoMenu(reagir, dosItens)}
         </Menu>
       )}
       {responder && (
@@ -175,53 +265,12 @@ export function BarraDaMensagem({
             rotulo="Mais"
             className={estilos.botaoDaBarra}
             onFocus={voltou}
+            // O menu do botão direito e da tecla de menu abre junto dele.
+            data-mais=""
           />
         }
       >
-        {responder && (
-          <ItemDeMenu
-            id="responder"
-            icone={CornerUpLeft}
-            onAction={() => {
-              naVolta.current = () => responder(mensagem);
-            }}
-          >
-            Responder
-          </ItemDeMenu>
-        )}
-        {reagir && (
-          <Submenu rotulo="Reagir" icone={SmilePlus} dica={REACOES_RAPIDAS.join(' · ')}>
-            {rapidas}
-            <Separador />
-            {escrita}
-          </Submenu>
-        )}
-        <ItemDeMenu id="link" icone={Link} onAction={() => void copiarOLink(conversa, mensagem.id)}>
-          Copiar link da mensagem
-        </ItemDeMenu>
-        <Separador />
-        {transformar && (
-          <ItemDeMenu
-            id="transformar"
-            icone={LifeBuoy}
-            informativo
-            atalho={['ctrl', 'shift', 'T']}
-            isDisabled={mensagem.chamado !== null}
-            descricao={mensagem.chamado ? `Já virou o #${mensagem.chamado.numero}` : undefined}
-            onAction={() => {
-              naVolta.current = () => transformar(mensagem, autor);
-            }}
-          >
-            Transformar em chamado
-          </ItemDeMenu>
-        )}
-        <ItemDeMenu
-          id="silenciar"
-          icone={acoes.silenciada ? Bell : BellOff}
-          onAction={() => acoes.silenciar(!acoes.silenciada)}
-        >
-          {acoes.silenciada ? 'Voltar a ouvir a conversa' : 'Silenciar a conversa'}
-        </ItemDeMenu>
+        {itensDaMensagem(dosItens)}
       </Menu>
       {reagir && (
         <ReacaoEscrita

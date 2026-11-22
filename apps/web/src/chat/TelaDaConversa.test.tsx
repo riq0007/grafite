@@ -300,6 +300,46 @@ describe('as mensagens', () => {
     expect(within(await mensagemNaTela('Já abri o chamado.')).getByText('Você')).toBeTruthy();
   });
 
+  it('o botão direito no dia, no evento e no "Abrir chamado" fica com o navegador; na foto, abre o menu da mensagem', async () => {
+    const chamado = { numero: 1045, abrir: true, mensagem: id(2) };
+    const { servidor } = servidorDaConversa({
+      mensagens: [
+        mensagem(2, { texto: 'A impressora está manchando.', criadaEm: as('10:19'), chamado }),
+        mensagem(4, {
+          especie: 'evento',
+          autor: ANA,
+          texto: null,
+          evento: 'virou-chamado',
+          criadaEm: as('10:32'),
+          chamado,
+        }),
+      ],
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const area = await areaDasMensagens();
+    const doPaulo = await mensagemNaTela('A impressora está manchando.');
+    /** O botão direito do mouse; devolve falso quando a conversa ficou com ele. */
+    const botaoDireito = (alvo: Element) => {
+      fireEvent.pointerDown(alvo, { pointerType: 'mouse', button: 2 });
+      return fireEvent.contextMenu(alvo, { button: 2, clientX: 40, clientY: 40 });
+    };
+    expect(botaoDireito(within(area).getByRole('heading', { name: 'Hoje' }))).toBe(true);
+    const evento = within(area)
+      .getAllByRole('listitem')
+      .find((item) => item.textContent?.includes('transformou'));
+    if (!evento) throw new Error('O evento não está na conversa.');
+    expect(botaoDireito(evento)).toBe(true);
+    expect(botaoDireito(within(doPaulo).getByRole('link', { name: 'Abrir chamado' }))).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+
+    const foto = doPaulo.firstElementChild;
+    if (!foto) throw new Error('A mensagem não tem a foto.');
+    expect(botaoDireito(foto)).toBe(false);
+    expect(
+      await screen.findByRole('menu', { name: 'Ações da mensagem de Paulo Nunes' }),
+    ).toBeTruthy();
+  });
+
   it('"Mensagens anteriores" traz as 50 de antes da primeira', async () => {
     const { servidor, estado } = servidorDaConversa({ mensagens: varias(1, 60) });
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));

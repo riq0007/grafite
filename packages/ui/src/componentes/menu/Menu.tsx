@@ -27,10 +27,10 @@ import estilosDoFlutuante from '../flutuante/Flutuante.module.css';
 import { PainelFlutuante } from '../flutuante/Flutuante.tsx';
 import estilos from './Menu.module.css';
 
-/** O menu em camada opaca: os submenus dele também são. */
-const MenuOpaco = createContext(false);
+/** O menu em camada opaca: os submenus dele também são. Também o do menu de contexto. */
+export const MenuOpaco = createContext(false);
 
-const classeDoPainel = (opaco: boolean) =>
+export const classeDoPainel = (opaco: boolean) =>
   [estilosDoFlutuante.deMenu, opaco && estilosDoFlutuante.opaco].filter(Boolean).join(' ');
 
 /** O menu sem o nome do gatilho, que o React Aria liga a ele: vale o rótulo. */

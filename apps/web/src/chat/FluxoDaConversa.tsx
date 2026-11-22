@@ -7,8 +7,10 @@
 // a que chega mostra "Mensagens novas · 2", que leva ao fim. As mais antigas vêm ao rolar para cima,
 // com "Mensagens anteriores", e, no trecho que não chega ao fim, as seguintes vêm ao rolar para
 // baixo. A última mostrada fica lida com a conversa à vista. O mouse e o foco numa mensagem mostram a
-// barra dela; as setas andam pelas mensagens, e Ctrl+Shift+T abre o transformar em chamado. No toque,
-// a barra não aparece, e o toque longo abre a folha da mensagem.
+// barra dela; as setas andam pelas mensagens, e Ctrl+Shift+T abre o transformar em chamado. O botão
+// direito na mensagem abre o menu do "Mais" onde o ponteiro está, e a tecla de menu e o Shift+F10,
+// junto do "Mais"; no link e no texto selecionado fica o menu do navegador. No toque, a barra não
+// aparece, e o toque longo abre a folha da mensagem.
 import { nomeNoChat } from '@grafite/domain';
 import { Avatar, Botao, type DataHora, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
 import { ArrowDown, CornerUpLeft, FileText, Image, LifeBuoy } from 'lucide-react';
@@ -16,6 +18,7 @@ import {
   Fragment,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactNode,
   type Ref,
   useEffect,
@@ -44,6 +47,7 @@ import estilos from './FluxoDaConversa.module.css';
 import { FolhaDaMensagem } from './FolhaDaMensagem.tsx';
 import { useAgoraNoChat, useJanelaAVista } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
+import { MenuDaMensagem } from './MenuDaMensagem.tsx';
 import { useToqueLongo } from './toqueLongo.ts';
 
 /** A folga, em px, em que quem lê ainda está no fim da conversa. */
@@ -117,6 +121,55 @@ function marcarODestino(destino: HTMLElement) {
 
 /** Uma janela por cima da conversa, como um diálogo ou um menu, fica com o atalho. */
 const COM_O_ATALHO = '[role="dialog"], [role="alertdialog"], [role="menu"]';
+
+/** Um ponto nas coordenadas da janela. */
+interface Ponto {
+  x: number;
+  y: number;
+}
+
+/** A tecla de menu ou o Shift+F10, como na tabela e no quadro do kit. */
+const pedeOMenu = (evento: KeyboardEvent) =>
+  evento.key === 'ContextMenu' || (evento.shiftKey && evento.key === 'F10');
+
+/** Os trechos do texto selecionado na página, sem nenhum quando nada está selecionado. */
+function trechosSelecionados(): Range[] {
+  const selecao = window.getSelection();
+  if (!selecao || selecao.isCollapsed) return [];
+  return Array.from({ length: selecao.rangeCount }, (_, posicao) =>
+    selecao.getRangeAt(posicao).cloneRange(),
+  );
+}
+
+/** O ponto cai no texto selecionado. */
+const noTextoSelecionado = (trechos: readonly Range[], { x, y }: Ponto) =>
+  trechos.some((trecho) =>
+    Array.from(trecho.getClientRects()).some(
+      (caixa) => x >= caixa.left && x <= caixa.right && y >= caixa.top && y <= caixa.bottom,
+    ),
+  );
+
+const entre = (valor: number, de: number, ate: number) => Math.min(Math.max(valor, de), ate);
+
+/**
+ * Onde o menu da tecla abre: junto do "Mais", no canto da mensagem, preso ao trecho dela que está à
+ * vista na conversa, como o da mensagem alta, que passa do alto da área.
+ */
+function juntoDoMais(mensagem: HTMLElement, area: HTMLElement | null): Ponto {
+  const caixa = mensagem.getBoundingClientRect();
+  const mais = mensagem.querySelector('[data-mais]')?.getBoundingClientRect();
+  const vista = area?.getBoundingClientRect() ?? caixa;
+  const topo = Math.max(caixa.top, vista.top);
+  const esquerda = Math.max(caixa.left, vista.left);
+  return {
+    x: entre(
+      mais?.left ?? caixa.right,
+      esquerda,
+      Math.max(esquerda, Math.min(caixa.right, vista.right)),
+    ),
+    y: entre(mais?.bottom ?? caixa.top, topo, Math.max(topo, Math.min(caixa.bottom, vista.bottom))),
+  };
+}
 
 /**
  * A abertura: a mensagem do link no meio da área, o separador "Mensagens novas" no alto ou, sem
@@ -216,6 +269,54 @@ export function FluxoDaConversa({
     elemento.focus({ preventScroll: true });
     definirSegurada((antes) => ({ vez: (antes?.vez ?? 0) + 1, id, elemento }));
   });
+  /**
+   * A mensagem do menu do botão direito ou da tecla de menu, com o ponto onde ele abre; a vez muda
+   * a cada abertura.
+   */
+  const [comMenu, definirComMenu] = useState<{
+    vez: number;
+    id: string;
+    elemento: HTMLElement;
+    posicao: Ponto;
+  } | null>(null);
+  /**
+   * O tipo do último ponteiro que apertou na conversa e o texto selecionado antes dele: no macOS, o
+   * botão direito seleciona a palavra antes de o menu abrir.
+   */
+  const apertou = useRef<{ tipo: string; trechos: Range[] }>({ tipo: '', trechos: [] });
+  const abrirOMenu = (elemento: HTMLElement, posicao: Ponto) => {
+    const id = elemento.dataset.mensagem;
+    if (!id) return;
+    // A mensagem fica com o foco, sem rolar a conversa, e o foco volta a ela quando o menu fecha.
+    elemento.focus({ preventScroll: true });
+    definirComMenu((antes) => ({ vez: (antes?.vez ?? 0) + 1, id, elemento, posicao }));
+  };
+  const ouvintesDoMenu = {
+    ...toqueLongo,
+    onPointerDown: (evento: PointerEvent<HTMLOListElement>) => {
+      apertou.current = { tipo: evento.pointerType, trechos: trechosSelecionados() };
+      toqueLongo.onPointerDown(evento);
+    },
+    onContextMenu: (evento: MouseEvent<HTMLOListElement>) => {
+      // O toque longo em curso abre a folha, no lugar do menu do navegador.
+      toqueLongo.onContextMenu(evento);
+      if (evento.defaultPrevented) return;
+      // O menu do navegador que vem de um toque sem o toque longo, como o de segurar uma reação,
+      // fica com o navegador: o tipo do ponteiro no próprio evento só vem no Chromium.
+      if (apertou.current.tipo === 'touch') return;
+      const alvo = evento.target;
+      if (!(alvo instanceof Element)) return;
+      const elemento = alvo.closest<HTMLElement>('[data-escrita]');
+      if (!elemento || !evento.currentTarget.contains(elemento)) return;
+      // No link e no texto selecionado, o menu do navegador, para abrir e copiar.
+      const ponto = { x: evento.clientX, y: evento.clientY };
+      const link = alvo.closest('a');
+      if (link && elemento.contains(link)) return;
+      if (noTextoSelecionado(apertou.current.trechos, ponto)) return;
+      evento.preventDefault();
+      abrirOMenu(elemento, ponto);
+    },
+  };
   const daVez = escritas.some(({ id }) => id === comOFoco)
     ? comOFoco
     : (escritas.at(-1)?.id ?? null);
@@ -435,16 +536,39 @@ export function FluxoDaConversa({
 
   const novas = dados && !dados.seguintes ? novasDesde(dados.itens, conta, vistaAte) : 0;
   const daFolha = segurada && escritas.find(({ id }) => id === segurada.id);
+  const doMenu = comMenu && escritas.find(({ id }) => id === comMenu.id);
   const carregando = mais.isPending ? mais.variables : null;
   const falhou = mais.isError ? mais.variables : null;
   const naMensagem: NaMensagem = {
     daVez,
     barra: (mensagem, autor) =>
-      acoes && (mensagem.id === daVez || mensagem.id === comOPonteiro) ? (
-        <BarraDaMensagem mensagem={mensagem} autor={autor} conversa={conversa} acoes={acoes} />
+      acoes &&
+      (mensagem.id === daVez || mensagem.id === comOPonteiro || mensagem.id === doMenu?.id) ? (
+        <BarraDaMensagem
+          mensagem={mensagem}
+          autor={autor}
+          conversa={conversa}
+          acoes={acoes}
+          presa={mensagem.id === doMenu?.id}
+        />
       ) : null,
     irPara: irParaAMensagem,
     reagir: acoes?.reagir ?? null,
+  };
+  // A tecla de menu e o Shift+F10 na mensagem com o foco abrem o menu dela junto do "Mais".
+  const aoTeclar = (evento: KeyboardEvent<HTMLOListElement>) => {
+    const alvo = evento.target;
+    if (
+      acoes &&
+      pedeOMenu(evento) &&
+      alvo instanceof HTMLElement &&
+      alvo.matches('[data-escrita]')
+    ) {
+      evento.preventDefault();
+      abrirOMenu(alvo, juntoDoMais(alvo, rolagem.current));
+      return;
+    }
+    andarPelasMensagens(evento);
   };
 
   return (
@@ -492,7 +616,7 @@ export function FluxoDaConversa({
           ref={conteudo}
           className={estilos.itens}
           data-toque-longo={acoes ? '' : undefined}
-          {...(acoes ? toqueLongo : undefined)}
+          {...(acoes ? ouvintesDoMenu : undefined)}
           // O toque não para em cima da mensagem: a barra fica para o mouse e a caneta.
           onPointerOver={(evento) => {
             if (evento.pointerType !== 'touch') {
@@ -504,7 +628,7 @@ export function FluxoDaConversa({
             const id = escritaEmVolta(evento.target);
             if (id) definirComOFoco(id);
           }}
-          onKeyDown={andarPelasMensagens}
+          onKeyDown={aoTeclar}
         >
           {itens.map((item) => (
             <ItemDaConversa
@@ -556,6 +680,18 @@ export function FluxoDaConversa({
           conversa={conversa}
           acoes={acoes}
           elemento={segurada.elemento}
+        />
+      )}
+      {acoes && comMenu && doMenu && (
+        <MenuDaMensagem
+          key={comMenu.vez}
+          mensagem={doMenu}
+          autor={nomeDoAutor(doMenu.autor, conta)}
+          conversa={conversa}
+          acoes={acoes}
+          elemento={comMenu.elemento}
+          posicao={comMenu.posicao}
+          aoSair={() => definirComMenu((agora) => (agora?.vez === comMenu.vez ? null : agora))}
         />
       )}
     </div>

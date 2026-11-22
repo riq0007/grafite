@@ -479,3 +479,166 @@ describe('o teclado e a respondida', () => {
     expect(await mensagemNaTela('Mensagem 2')).toBeTruthy();
   });
 });
+
+// O botão direito e a tecla de menu na mensagem (pedido do usuário de 22/11; change
+// chat-com-chamados, decisão 15, "Os pedidos do usuário de 22/11"): o mesmo menu do "Mais".
+describe('o botão direito e a tecla de menu', () => {
+  /** O botão direito do mouse no elemento; devolve falso quando a conversa ficou com ele. */
+  const botaoDireito = (alvo: Element, ponto = { clientX: 120, clientY: 80 }) => {
+    fireEvent.pointerDown(alvo, { pointerType: 'mouse', button: 2, ...ponto });
+    return fireEvent.contextMenu(alvo, { button: 2, ...ponto });
+  };
+  const doMenu = (autor = 'Paulo Nunes') =>
+    screen.findByRole('menu', { name: `Ações da mensagem de ${autor}` });
+  const presa = (item: HTMLElement) => item.querySelector('[data-presa]') !== null;
+
+  it('o botão direito abre o menu do "Mais", com a mensagem marcada, e o Esc devolve o foco a ela', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
+    const item = await mensagemNaTela('Mensagem 2');
+    const focar = vi.spyOn(item, 'focus');
+    expect(botaoDireito(within(item).getByText('Mensagem 2'))).toBe(false);
+    const menu = await doMenu();
+    expect(
+      posicoes(menu, [
+        'Responder',
+        'Reagir',
+        'Copiar link da mensagem',
+        'Transformar em chamado',
+        'Silenciar a conversa',
+      ]),
+    ).toEqual([0, 1, 2, 3, 4]);
+    // Os mesmos itens do "Mais": o azul do chamado e o atalho.
+    const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
+    expect(transformar.dataset.informativo).toBe('true');
+    expect(descricao(transformar)).toContain('Shift');
+    // A mensagem fica com o foco, sem rolar a conversa, e marcada, com a barra presa.
+    expect(focar).toHaveBeenCalledWith({ preventScroll: true });
+    expect(presa(item)).toBe(true);
+
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(item));
+    expect(focar).toHaveBeenLastCalledWith({ preventScroll: true });
+    await waitFor(() => expect(presa(item)).toBe(false));
+  });
+
+  it('no link, no texto selecionado e depois de um toque, fica o menu do navegador', async () => {
+    const resposta = mensagem(4, {
+      autor: TATIANA,
+      texto: 'Aqui também manchou',
+      respondida: { id: id(2), autor: 'Paulo Nunes', comeco: 'Mensagem 2' },
+      reacoes: [{ texto: 'ok', contas: [{ conta: ANA.conta, nome: ANA.nome }], minha: true }],
+    });
+    const { servidor } = servidorDoMenu({ mensagens: [...varias(1, 3), resposta] });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Aqui também manchou');
+    expect(botaoDireito(within(item).getByRole('link', { name: /Paulo Nunes/ }))).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+
+    // O texto selecionado vale como estava ao apertar o botão.
+    const caixa = { left: 100, right: 200, top: 60, bottom: 100 };
+    const selecao = vi.spyOn(window, 'getSelection').mockReturnValue({
+      isCollapsed: false,
+      rangeCount: 1,
+      getRangeAt: () => ({ cloneRange: () => ({ getClientRects: () => [caixa] }) }),
+    } as unknown as Selection);
+    const texto = within(item).getByText('Aqui também manchou');
+    expect(botaoDireito(texto, { clientX: 150, clientY: 80 })).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+    // Fora do trecho selecionado, o menu da mensagem.
+    expect(botaoDireito(texto, { clientX: 260, clientY: 80 })).toBe(false);
+    selecao.mockRestore();
+    fireEvent.keyDown(await doMenu('Tatiana Ramos'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+
+    // Segurar a reação com o dedo não é o toque longo da mensagem: o menu fica com o navegador.
+    const reacao = within(item).getByRole('button', { name: 'ok: você' });
+    fireEvent.pointerDown(reacao, { pointerType: 'touch', isPrimary: true });
+    expect(fireEvent.contextMenu(reacao)).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('a tecla de menu e o Shift+F10, na mensagem com o foco, abrem o menu nela; num botão dela, não', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Mensagem 2');
+    act(() => item.focus());
+    expect(fireEvent.keyDown(item, { key: 'ContextMenu' })).toBe(false);
+    // O foco no primeiro item, como no Chromium, o happy-dom não dá: ele fica no painel.
+    const menu = await doMenu();
+    // Ao soltar a tecla, o Chromium no Windows manda o "contextmenu" ao item com o foco, já no menu:
+    // o app fica com ele, sem o menu do navegador por cima deste.
+    expect(fireEvent.contextMenu(within(menu).getByRole('menuitem', { name: 'Responder' }))).toBe(
+      false,
+    );
+    expect(await doMenu()).toBe(menu);
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement).toBe(item));
+
+    expect(fireEvent.keyDown(item, { key: 'F10', shiftKey: true })).toBe(false);
+    fireEvent.keyDown(await doMenu(), { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement).toBe(item));
+
+    const mais = within(item).getByRole('button', { name: 'Mais' });
+    expect(fireEvent.keyDown(mais, { key: 'ContextMenu' })).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('"Responder" põe o foco na caixa depois de o menu sair', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Mensagem 2');
+    const caixa = screen.getByRole('textbox', {
+      name: 'Escrever uma mensagem em Equipe Financeiro',
+    });
+    const comOMenu: boolean[] = [];
+    const focar = caixa.focus.bind(caixa);
+    vi.spyOn(caixa, 'focus').mockImplementation((opcoes) => {
+      comOMenu.push(screen.queryByRole('menu') !== null);
+      focar(opcoes);
+    });
+    botaoDireito(within(item).getByText('Mensagem 2'));
+    fireEvent.click(within(await doMenu()).getByRole('menuitem', { name: 'Responder' }));
+    await waitFor(() => expect(document.activeElement).toBe(caixa));
+    expect(comOMenu).toEqual([false]);
+    expect(screen.getByRole('button', { name: 'Tirar a mensagem respondida' })).toBeTruthy();
+    await waitFor(() => expect(presa(item)).toBe(false));
+  });
+
+  it('o transformar abre o diálogo depois de o menu sair, e "Cancelar" devolve o foco à mensagem', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
+    const item = await mensagemNaTela('Mensagem 2');
+    botaoDireito(within(item).getByText('Mensagem 2'));
+    const menu = await doMenu();
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Transformar em chamado' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Transformar em chamado' });
+    expect(within(dialogo).getByText('Mensagem 2')).toBeTruthy();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Transformar em chamado' })).toBeNull(),
+    );
+    await waitFor(() => expect(document.activeElement).toBe(item));
+  });
+
+  it('a reação escrita abre depois de o menu sair, e a mensagem fica marcada até ela sair', async () => {
+    const { servidor } = servidorDoMenu();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const item = await mensagemNaTela('Mensagem 2');
+    botaoDireito(within(item).getByText('Mensagem 2'));
+    const reagir = within(await doMenu()).getByRole('menuitem', { name: 'Reagir' });
+    act(() => reagir.focus());
+    fireEvent.keyDown(reagir, { key: 'ArrowRight' });
+    const submenu = await screen.findByRole('menu', { name: 'Reagir' });
+    fireEvent.click(within(submenu).getByRole('menuitem', { name: 'Escrever a reação…' }));
+    const popover = await screen.findByRole('dialog', { name: 'Escrever a reação' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(presa(item)).toBe(true);
+    fireEvent.click(within(popover).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Escrever a reação' })).toBeNull(),
+    );
+    await waitFor(() => expect(presa(item)).toBe(false));
+  });
+});
