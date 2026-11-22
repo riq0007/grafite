@@ -296,7 +296,7 @@ As arquivadas, em `openspec/changes/archive/`, na ordem em que foram arquivadas;
   - as conversas diretas, as equipes, pelos grupos do Grafite, e os canais, com as reações, a resposta a uma mensagem, o link e o silenciar;
   - a mensagem que vira chamado, e o chamado da pessoa como uma conversa em azul, com as etapas, o cartão do ativo, a pergunta com respostas em botões, a avaliação e o fechamento 7 dias depois da resolução;
   - o lado da TI no chamado aberto, as equipes e os canais na tela e os registros na Auditoria;
-  - os anexos colados ou soltos na caixa, a mensagem só com eles e a miniatura da imagem anexada, e, no kit, o botão direito com um menu ou uma lista aberta.
+  - os anexos colados ou soltos na caixa, a mensagem só com eles e a miniatura da imagem anexada, o dia e os eventos no meio da largura de leitura, no kit, o botão direito com um menu, uma lista ou um popover aberto, e, na casca, o arquivo solto fora de um lugar de soltar, que não troca mais o Grafite pelo arquivo.
 
   As capacidades novas `chat` e `modulo-chat` estão nas specs da change e entram na tabela das capacidades no arquivamento. Change: `openspec/changes/chat-com-chamados/`; guia `docs/operacao/runbook.md`
 

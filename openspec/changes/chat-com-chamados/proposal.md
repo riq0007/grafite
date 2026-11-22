@@ -31,7 +31,7 @@ A change é a segunda do subprojeto **S7 · Chamados** da spec mestre, que a `ch
     - FECHADOS, recolhido;
     - EQUIPES E CANAIS;
     - RECENTES;
-  - a conversa, com as reações, a resposta a uma mensagem, o link da mensagem, os anexos e o silenciar, e a caixa de escrever na largura da coluna;
+  - a conversa, com as reações, a resposta a uma mensagem, o link da mensagem, os anexos e o silenciar, e a caixa de escrever na largura da coluna, com o dia e os eventos no meio da largura de leitura;
   - a vista Chamados, com os grupos pela vez de quem age: Aguardando você, Em andamento e Fechados.
 - **As mensagens:**
   - o texto, os anexos e as reações;
@@ -67,7 +67,7 @@ A change é a segunda do subprojeto **S7 · Chamados** da spec mestre, que a `ch
 - **O lado da TI** (m05 e m11):
   - a conversa do chamado aberto mostra as mensagens da pessoa, as escolhas, a avaliação e a origem, "Aberto a partir da conversa Equipe Financeiro";
   - o campo de escrever manda "Enviar para Fernanda", com o "/ativo" e as opções de resposta, e a mensagem e a nota também só com os anexos, colados ou soltos.
-- **O kit:** o botão direito com um menu ou uma lista aberta, o painel do menu na largura do conteúdo e o submenu na janela estreita.
+- **O kit e a casca:** o botão direito com um menu, uma lista ou um popover aberto, o painel do menu na largura do conteúdo, o submenu na janela estreita e o arquivo solto fora de um lugar de soltar, que não troca mais o Grafite pelo arquivo.
 - **No celular** (m08 e m09):
   - a lista e a conversa em telas;
   - alvos de 44 px;
@@ -132,7 +132,8 @@ Fica fora:
 - `modulos-da-organizacao`: o Chat entra nos módulos opcionais.
 - `eventos-em-tempo-real`: o tipo de evento do chat na tabela, e o dos chamados passa a ir também à pessoa do chamado.
 - `arquivos-e-imagens`: os anexos do chat, entregues pela conversa dona, os anexos que a pessoa manda no próprio chamado e a miniatura da imagem anexada.
-- `componentes-base`: o botão direito com um menu ou uma lista aberta, o painel do menu na largura do conteúdo e o submenu na postura celular.
+- `componentes-base`: o botão direito com um menu, uma lista ou um popover aberto, o painel do menu na largura do conteúdo e o submenu na postura celular.
+- `estrutura-da-casca`: o arquivo solto fora de um lugar de soltar não troca o Grafite pelo arquivo, em nenhuma tela.
 - `notificacoes`: as notificações de mensagem vão pelo push fora do modo Foco, qualquer que seja a severidade escolhida para o push; o aparelho também se inscreve pelos Avisos do app do chat; e o toque no push escolhe a janela pelo endereço.
 - `pwa`: o app do chat instalado à parte, com o nome "Grafite · Chat", e o push que abre a conversa nele, ou na janela do Chat da casca.
 
@@ -170,7 +171,7 @@ Fica fora:
   - o toque no push (`sw-avisos.js`);
   - o chamado aberto e o campo de escrever do módulo Chamados;
   - a primeira tela.
-- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem. Em todos os menus e listas, pelo `PainelFlutuante`: o botão direito com eles abertos, o painel do menu na largura do conteúdo e o submenu embaixo do item na postura celular.
+- **Kit** (`packages/ui`): a folha de baixo, o menu opaco e o menu na folha, que as telas do chat pedem, e o `MenuDeContexto` com os itens do menu com submenu e a camada opaca, para o botão direito na mensagem. Em todos os menus, listas e popovers, pelo `PainelFlutuante`: o botão direito com eles abertos, o painel do menu na largura do conteúdo e o submenu embaixo do item na postura celular. Na casca e no app do chat, a guarda do arquivo solto fora de um lugar de soltar.
 - **Documentação:**
   - a linha do S7 na spec mestre;
   - o contrato de módulo, se mudar;

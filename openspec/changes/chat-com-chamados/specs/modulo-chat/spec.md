@@ -104,7 +104,7 @@ A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas",
 
 A caixa SHALL ser arredondada, com a borda à vista, o texto de ajuda, como "Escrever uma mensagem em Equipe Financeiro…", e, dentro dela, o clipe e o envio. Enter SHALL mandar, e Shift+Enter SHALL quebrar a linha. O envio SHALL ficar sem ação enquanto a caixa está vazia e sem anexo: com um anexo, a mensagem vai sem o texto (spec chat, "Mensagem").
 
-A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa.
+A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa, e o dia e os eventos, no meio dela.
 
 A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo dela e "Tirar", e embaixo os anexos, cada um com o nome, o tamanho e "Tirar".
 
@@ -112,7 +112,7 @@ Além do clipe, os anexos SHALL entrar na caixa, com as mesmas regras e recusas:
 - **colados:** colar arquivos, ou uma imagem sem o texto, como um print, SHALL anexá-los. A imagem colada SHALL ganhar o nome "Imagem colada 22-11-2026 14.05.33.png", com a data e a hora em que foi colada, no fuso da conta. Colar o que traz o texto SHALL colar o texto, também quando traz a imagem junto, como uma célula de planilha;
 - **soltos:** arrastar arquivos sobre a conversa SHALL mostrar "Solte para anexar" sobre ela, e soltá-los SHALL anexá-los. Na conversa sem a caixa e durante o envio, o arquivo solto SHALL NOT entrar.
 
-Em nenhum lugar da janela do Chat o arquivo solto SHALL abrir no lugar do Grafite, nem fora da conversa, como na lista das conversas.
+No app do chat, como na casca (spec estrutura-da-casca, "Arquivo solto fora de um lugar de soltar"), o arquivo solto fora da conversa, como na lista das conversas, SHALL NOT trocar o Grafite pelo arquivo.
 
 Escrever "#" SHALL abrir a lista dos chamados de que a conta participa, pelo número e pelo título, para citar (requisito "Chamado citado na tela"). A dica "# cita um chamado" SHALL ficar no texto de ajuda da caixa de uma conversa de chamado.
 
@@ -130,7 +130,7 @@ O que se escreve SHALL continuar na caixa quando a conversa se atualiza e quando
 
 #### Scenario: Caixa na largura da coluna
 - **WHEN** Fernanda Rocha abre a Equipe Financeiro numa tela de 2560 px
-- **THEN** a caixa vai de uma borda à outra da coluna, e o texto das mensagens quebra a linha na largura de leitura
+- **THEN** a caixa vai de uma borda à outra da coluna, o texto das mensagens quebra a linha na largura de leitura, e o "Hoje" fica no meio dela, em cima das mensagens
 
 #### Scenario: Colar um print
 - **WHEN** Fernanda Rocha tira um print da tela às 14:05:33 de 22/11/2026 e cola na caixa da Equipe Financeiro

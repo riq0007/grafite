@@ -66,7 +66,7 @@ A ajuda do campo SHALL dizer "Fernanda vê esta mensagem no chat." quando a cont
 
 "Enviar para Fernanda" e "Salvar a nota" SHALL ficar sem ação enquanto a caixa está vazia e sem anexo: com um anexo, a mensagem e a nota vão sem o texto (spec chamados, "Conversa do chamado"). Com as opções de resposta, um anexo e sem o texto, o envio SHALL ter ação, e mandar SHALL mostrar a recusa "Escreva a mensagem." embaixo do campo, porque o texto é a pergunta.
 
-Além do clipe, os anexos SHALL entrar no campo colados e soltos, como na caixa do chat (spec modulo-chat, "Caixa de escrever do chat"), com a conversa do chamado aberto como o lugar de soltar. Em nenhum lugar da janela do Chamados o arquivo solto SHALL abrir no lugar do Grafite.
+Além do clipe, os anexos SHALL entrar no campo colados e soltos, como na caixa do chat (spec modulo-chat, "Caixa de escrever do chat"), com a conversa do chamado aberto como o lugar de soltar.
 
 O que se escreve SHALL continuar no campo quando a conversa se atualiza. Mandado, o campo SHALL esvaziar, e a conversa SHALL ir à última mensagem. A recusa SHALL ficar embaixo do campo, com a frase dela.
 
