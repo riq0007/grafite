@@ -5,7 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ItemDeMenu, Submenu } from './Menu.tsx';
 import { type ItemDoMenuDeContexto, MenuDeContexto } from './MenuDeContexto.tsx';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 /** O menu aberto num ponto, com os itens dados. */
 function abrir(itens: ItemDoMenuDeContexto[], aoFechar = vi.fn()) {
@@ -163,22 +166,25 @@ describe('MenuDeContexto com os itens do menu', () => {
     expect(screen.getByRole('menu', { name: 'Ações da mensagem' })).toBe(menu);
   });
 
-  /** O elemento no ponto, como o navegador daria com a tela de novo fora do menu. */
-  function comNoPonto(elemento: Element) {
-    const espiao = vi.fn((_x: number, _y: number) => elemento);
-    Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: espiao });
-    return {
-      espiao,
-      restaurar: () => {
-        delete (document as unknown as Record<string, unknown>).elementFromPoint;
-      },
-    };
+  /**
+   * O elemento no ponto, como o navegador daria com a tela de novo fora do menu; o
+   * `restoreAllMocks` do fim de cada teste o devolve, também quando um `expect` falha.
+   */
+  const comNoPonto = (elemento: Element) =>
+    vi.spyOn(document, 'elementFromPoint').mockReturnValue(elemento);
+
+  /** A origem do menu, que recebe o foco de volta. */
+  function criarOrigem() {
+    const origem = document.createElement('div');
+    origem.tabIndex = -1;
+    document.body.append(origem);
+    return { origem, focar: vi.spyOn(origem, 'focus') };
   }
 
   // Com o menu aberto, o React Aria deixa o resto da tela inerte, e o botão direito fora do menu cai
   // no corpo da página: o menu do navegador abriria com este aberto atrás. Este fecha antes, para a
   // tela voltar a receber o ponteiro, e o clique se repete no que está no ponto.
-  it('sem o menu do navegador, o botão direito fora do menu fecha este e vale no que está ali', () => {
+  it('sem o menu do navegador, o botão direito fora do menu fecha este e vale no que está ali', async () => {
     const ordem: string[] = [];
     const outra = document.createElement('div');
     const pedido = vi.fn((evento: MouseEvent) => {
@@ -187,48 +193,60 @@ describe('MenuDeContexto com os itens do menu', () => {
     });
     outra.addEventListener('contextmenu', pedido);
     document.body.append(outra);
+    const { origem, focar } = criarOrigem();
+    const voltou = vi.fn();
     render(
       <MenuDeContexto
         rotulo="Ações da mensagem"
         posicao={{ x: 40, y: 40 }}
+        origem={origem}
         aoFechar={() => ordem.push('fechou')}
+        aoVoltarOFoco={voltou}
         semMenuDoNavegador
       >
         <ItemDeMenu>Responder</ItemDeMenu>
       </MenuDeContexto>,
     );
-    const { espiao, restaurar } = comNoPonto(outra);
+    const noPonto = comNoPonto(outra);
     expect(fireEvent.contextMenu(document.body, { clientX: 300, clientY: 200, button: 2 })).toBe(
       false,
     );
-    expect(espiao).toHaveBeenCalledWith(300, 200);
+    expect(noPonto).toHaveBeenCalledWith(300, 200);
     expect(ordem).toEqual(['fechou', 'pediu']);
     expect(pedido.mock.calls[0]?.[0]).toMatchObject({ clientX: 300, clientY: 200, button: 2 });
-    restaurar();
+    // O menu de lá abriu e ficou com o foco: este não o devolve à origem no quadro seguinte, e o
+    // aviso da volta segue, para quem o usa saber que ele saiu.
+    await waitFor(() => expect(voltou).toHaveBeenCalledTimes(1));
+    expect(focar).not.toHaveBeenCalled();
     outra.remove();
+    origem.remove();
   });
 
-  it('sem o menu do navegador, o botão direito fora do menu, onde nada o pede, só fecha o menu', () => {
+  it('sem o menu do navegador, o botão direito fora do menu, onde nada o pede, só fecha o menu', async () => {
     const nada = document.createElement('p');
     document.body.append(nada);
+    const { origem, focar } = criarOrigem();
     const aoFechar = vi.fn();
     render(
       <MenuDeContexto
         rotulo="Ações da mensagem"
         posicao={{ x: 40, y: 40 }}
+        origem={origem}
         aoFechar={aoFechar}
         semMenuDoNavegador
       >
         <ItemDeMenu>Responder</ItemDeMenu>
       </MenuDeContexto>,
     );
-    const { restaurar } = comNoPonto(nada);
+    comNoPonto(nada);
     expect(fireEvent.contextMenu(document.body, { clientX: 300, clientY: 200, button: 2 })).toBe(
       false,
     );
     expect(aoFechar).toHaveBeenCalledTimes(1);
-    restaurar();
+    // Sem outro menu aberto, o foco volta a quem abriu este.
+    await waitFor(() => expect(focar).toHaveBeenCalledTimes(1));
     nada.remove();
+    origem.remove();
   });
 
   it('sem pedir, o "contextmenu" no item segue para o navegador, como antes', () => {

@@ -125,14 +125,16 @@ O que se escreve SHALL continuar na caixa quando a conversa se atualiza e quando
 
 Passar o mouse ou pôr o foco numa mensagem SHALL mostrar a barra dela, com "Responder", "Reagir" e "Mais". "Mais" SHALL abrir o menu, em camada opaca:
 - "Responder";
-- "Reagir", com "+1", "ok" e "visto" e a reação escrita;
+- "Reagir", com "+1", "ok" e "visto" e a reação escrita, num submenu ou, na postura celular, no próprio menu, com o nome "Reagir" em cima;
 - "Copiar link da mensagem";
 - "Transformar em chamado", com o atalho Ctrl+Shift+T, no azul do chamado, só a quem pode abrir pelo chat (spec chamados, "Abrir um chamado pelo chat"), e sem ação na mensagem que já virou chamado, com "Já virou o #1045";
 - "Silenciar a conversa" ou "Voltar a ouvir a conversa".
 
 Ctrl+Shift+T SHALL abrir o transformar na mensagem com o foco ou com o mouse. As conversas dos chamados SHALL NOT ter a barra nem o menu, porque não têm reações.
 
-O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro está, e a tecla de menu ou o Shift+F10, na mensagem com o foco, SHALL abri-lo junto do "Mais". Num link e no texto selecionado, o menu SHALL ser o do navegador, para abrir e copiar. No toque, o toque longo SHALL continuar abrindo a folha (requisito "Chat no celular").
+O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro está, e a tecla de menu ou o Shift+F10, na mensagem com o foco ou num botão dela, SHALL abri-lo junto do "Mais". Num link e no texto selecionado, o menu SHALL ser o do navegador, para abrir e copiar. No toque, o toque longo SHALL continuar abrindo a folha (requisito "Chat no celular").
+
+Com o menu da mensagem aberto, o botão direito fora dele SHALL fechá-lo e valer onde cai: em outra mensagem, o menu dela SHALL abrir no lugar deste. Em outro lugar, como a caixa, um link ou o texto selecionado, o clique SHALL só fechar o menu, sem o do navegador, e o foco SHALL voltar à mensagem; o clique seguinte abre o do navegador.
 
 #### Scenario: Menu da mensagem do Paulo
 - **WHEN** Fernanda Rocha passa o mouse na mensagem das 10:19 de Paulo Nunes e escolhe "Mais"
@@ -145,6 +147,10 @@ O botão direito do mouse na mensagem SHALL abrir o mesmo menu, onde o ponteiro 
 #### Scenario: Botão direito num link
 - **WHEN** Fernanda Rocha clica com o botão direito no link da mensagem de Paulo Nunes
 - **THEN** abre o menu do navegador, e não o da mensagem
+
+#### Scenario: Botão direito em outra mensagem com o menu aberto
+- **WHEN** Fernanda Rocha, com o menu da mensagem das 10:19 de Paulo Nunes aberto, clica com o botão direito na mensagem de Tatiana Ramos
+- **THEN** o menu da mensagem de Paulo fecha, e o da mensagem de Tatiana abre onde o ponteiro está, sem o menu do navegador
 
 ### Requirement: Transformar em chamado na tela
 

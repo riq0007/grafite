@@ -127,15 +127,20 @@ export function MenuDeContexto({
   const aberto = posicao !== null && (comOsItens || itens.length > 0);
   // O menu fecha uma vez por abertura, mesmo quando a escolha e o painel avisam os dois.
   const fechou = useRef(false);
+  // O botão direito fora deste abriu o menu de lá, que ficou com o foco: a volta do foco, agendada
+  // ao fechar, não o tira dele.
+  const trocou = useRef(false);
   useLayoutEffect(() => {
-    if (posicao) fechou.current = false;
+    if (!posicao) return;
+    fechou.current = false;
+    trocou.current = false;
   }, [posicao]);
   const fechar = () => {
     if (fechou.current) return;
     fechou.current = true;
     aoFechar();
     requestAnimationFrame(() => {
-      origem?.focus(semRolar ? { preventScroll: true } : undefined);
+      if (!trocou.current) origem?.focus(semRolar ? { preventScroll: true } : undefined);
       aoVoltarOFoco?.();
     });
   };
@@ -169,6 +174,7 @@ export function MenuDeContexto({
     });
     repetidos.add(repetido);
     noPonto.dispatchEvent(repetido);
+    trocou.current = repetido.defaultPrevented;
   });
   useEffect(() => {
     if (!aberto || !semMenuDoNavegador) return;

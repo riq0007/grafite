@@ -607,16 +607,20 @@ describe('o botão direito e a tecla de menu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  /** O elemento no ponto, como o navegador daria com a conversa de novo fora do menu. */
-  function comNoPonto(elemento: Element) {
-    Object.defineProperty(document, 'elementFromPoint', {
-      configurable: true,
-      value: () => elemento,
-    });
-    return () => {
-      delete (document as unknown as Record<string, unknown>).elementFromPoint;
-    };
-  }
+  /**
+   * O elemento no ponto, como o navegador daria com a conversa de novo fora do menu; o
+   * `restoreAllMocks` do fim de cada teste o devolve, também quando um `expect` falha.
+   */
+  const comNoPonto = (elemento: Element) =>
+    vi.spyOn(document, 'elementFromPoint').mockReturnValue(elemento);
+  /** Dois quadros de pintura: o da volta do foco agendada pelo menu que fechou e o seguinte. */
+  const doisQuadros = () =>
+    act(
+      () =>
+        new Promise<void>((pronto) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => pronto())),
+        ),
+    );
 
   it('com o menu aberto, o botão direito em outra mensagem abre o menu dela, sem o do navegador', async () => {
     const daTatiana = mensagem(4, { autor: TATIANA, texto: 'Aqui também manchou' });
@@ -626,17 +630,23 @@ describe('o botão direito e a tecla de menu', () => {
     const outra = await mensagemNaTela('Aqui também manchou');
     botaoDireito(within(primeira).getByText('Mensagem 2'));
     await doMenu();
+    const focarAPrimeira = vi.spyOn(primeira, 'focus');
     // Com o menu aberto, a conversa fica inerte, e o clique cai no corpo da página: vale na mensagem
     // que está no ponto.
-    const restaurar = comNoPonto(within(outra).getByText('Aqui também manchou'));
+    comNoPonto(within(outra).getByText('Aqui também manchou'));
     expect(fireEvent.contextMenu(document.body, { button: 2, clientX: 200, clientY: 300 })).toBe(
       false,
     );
-    restaurar();
     await doMenu('Tatiana Ramos');
     expect(screen.getAllByRole('menu')).toHaveLength(1);
     expect(presa(outra)).toBe(true);
     expect(presa(primeira)).toBe(false);
+    // O menu que fechou não devolve o foco à mensagem dele no quadro seguinte: o menu novo fica com
+    // ele, aberto.
+    await doisQuadros();
+    expect(focarAPrimeira).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('menu')).toHaveLength(1);
+    expect(screen.getByRole('menu', { name: 'Ações da mensagem de Tatiana Ramos' })).toBeTruthy();
   });
 
   it('com o menu aberto, o botão direito fora das mensagens só fecha o menu, com o foco de volta', async () => {
@@ -648,11 +658,10 @@ describe('o botão direito e a tecla de menu', () => {
     const caixa = screen.getByRole('textbox', {
       name: 'Escrever uma mensagem em Equipe Financeiro',
     });
-    const restaurar = comNoPonto(caixa);
+    comNoPonto(caixa);
     expect(fireEvent.contextMenu(document.body, { button: 2, clientX: 200, clientY: 600 })).toBe(
       false,
     );
-    restaurar();
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(item));
     await waitFor(() => expect(presa(item)).toBe(false));
