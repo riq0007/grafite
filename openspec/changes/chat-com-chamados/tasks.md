@@ -218,12 +218,14 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
 ## 5. Fechamento
 
-- [ ] 5.1 A documentação:
+- [x] 5.1 A documentação:
   - a linha do S7 na spec mestre;
   - o runbook: o perfil "Colaborador" e o grupo do AD, com a atribuição na organização inteira, porque as três permissões são da organização e a atribuição num local as deixa de fora, o app do chat instalado, com o "Receber neste aparelho", e a exceção da volta à versão anterior, com o erro ao reabrir um fechado nela;
   - o `docs/mapa.md`, com as specs novas;
   - o contrato de módulo (`docs/casca/modulos.md`), com o público por grupo e o app próprio.
 
   Verificar: o teste da documentação dos módulos e o lint.
+
+  Feito: a spec mestre ganhou também o push das mensagens e a entrada de quem só vê o Chat; o runbook, a seção Chat, o fechamento e o grupo de todos no AD, que não pode ser o "Usuários do domínio", fora do `memberOf`; o contrato, o selo dos dados e o `comOModulo`, com o teste da documentação deles.
 - [ ] 5.2 O ponta a ponta da pilha (`e2e-pilha/caminho.spec.ts`): uma conta de colaborador transforma uma mensagem da equipe em chamado, a TI responde no chamado, e a resposta chega à pessoa no outro navegador. Verificar: `pnpm test:e2e:pilha`.
 - [ ] 5.3 O ponta a ponta da web e o visual que faltarem: o app do chat na web simulada (a entrada, a lista, a conversa e o chamado) e as referências da regressão visual dos componentes novos do kit que as tarefas não gravaram. Verificar: `pnpm test:e2e` e `pnpm test:visual`.

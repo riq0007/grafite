@@ -332,6 +332,27 @@ describe('docs/casca/modulos.md', () => {
     expect(documento).toContain('## Primeira tela ao entrar');
   });
 
+  it('traz, do código, o app próprio, o selo dos dados e o item com o módulo, no Chat, e o público por grupo', () => {
+    const doArquivo = (caminho: string) =>
+      blocos
+        .filter((bloco) => bloco.caminho === caminho && bloco.trecho)
+        .map((bloco) => bloco.codigo)
+        .join('');
+    expect(doArquivo(`${PASTA}chat/modulo.ts`)).toContain(
+      "appProprio: { endereco: '/chat', permissoes: USA_O_CHAT },",
+    );
+    expect(doArquivo(`${PASTA}chat/modulo.ts`)).toContain("comOModulo: 'chamados',");
+    expect(doArquivo(`${PASTA}chat/modulo.ts`)).toContain('montar: ({ ler, api }) => seloDoChat(');
+    expect(doArquivo(`${PASTA}tipos.ts`)).toContain('export interface SeloDoModuloRegistrado');
+    expect(doArquivo('packages/domain/src/eventos/eventos.ts')).toContain(
+      'grupos?: readonly string[];',
+    );
+    expect(documento).toContain('| `appProprio` |');
+    expect(documento).toContain('| `selo` |');
+    expect(documento).toContain('### App próprio');
+    expect(documento).toContain('### Selo dos dados');
+  });
+
   it('reproduz cada exemplo exatamente como está no código', () => {
     for (const { caminho, trecho, codigo } of blocos) {
       const fonte = fontes.get(caminho);

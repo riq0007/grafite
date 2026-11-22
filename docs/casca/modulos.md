@@ -1,6 +1,6 @@
 # Contrato de módulo da casca
 
-Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor, a primeira tela ao entrar e as etapas da chegada também têm contratos prontos, descritos abaixo.
+Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, decisões 3, 4, 7, 8 e 12; design do F1c, decisões 2, 5, 7 e 8; design do F2a, decisões 12 e 13; design do F2b, decisões 2, 6, 14 e 15; design do F2c, decisões 4, 5, 8, 12 e 13; design do P1b, decisões 12 e 13; design do P1c, decisões 8 a 11; design do escolhas-a-vista, decisão 7; design do relacoes-vivas, decisões 2 a 5; spec mestre, seção 12.3). Um módulo novo entra com uma pasta e uma entrada no registro, sem mudar a casca: o dock, a barra de abas do celular, os menus da barra superior, as rotas, a busca, as ocorrências da tela inicial, as relações nas fichas dos outros módulos, os cadastros que os campos dos outros módulos abrem numa aba e a atualização pelos eventos do servidor saem do registro. As permissões, o módulo opcional, a sessão, o cliente da API, as consultas ao servidor, as preferências, a foto da pessoa, as notificações, as datas no fuso escolhido, a prévia na tabela, a tabela configurável com as visões, a referência com cartão, a tabela a partir de uma origem, as ações da tela na busca, as escolhas, o cursor, a primeira tela ao entrar, o app próprio do módulo, o selo dos dados no dock e as etapas da chegada também têm contratos prontos, descritos abaixo.
 
 ## Passo a passo
 
@@ -33,6 +33,8 @@ Como um módulo entra no Grafite (design do F1a, decisão 2; design do F1b, deci
 | `menu` | Menu em árvore do item do dock (opcional) |
 | `menuDinamico` | Os itens do menu do dock que vêm dos dados, como as visões fixadas: a permissão, as consultas e o `montar` (opcional) |
 | `primeiraTela` | As permissões com que o módulo é a primeira tela ao entrar, no lugar do Início (opcional; veja Primeira tela ao entrar) |
+| `appProprio` | O app do módulo fora da casca, no endereço dele, como o do chat em `/chat`, com as permissões de quem o usa (opcional; veja App próprio) |
+| `selo` | O selo do item do dock e da aba do celular, que vem dos dados, como o total do chat: a permissão, as consultas e o `montar` (opcional; veja Selo dos dados) |
 | `menusDaBarra` | Menus do módulo na barra superior, como Visualizar e Ações (opcional) |
 | `busca` | Entradas de busca e os provedores de busca, cada um com o grupo dele (opcional) |
 | `ocorrencias` | Fonte das ocorrências abertas do módulo, para a tela inicial (opcional) |
@@ -84,6 +86,18 @@ A Gestão de ativos põe as telas do catálogo num submenu, ao lado das importa�
 ```
 
 O submenu abre ao lado do item, no dock, e como mais um nível no painel do celular. Os filhos seguem as mesmas regras dos itens: cada um pode ter `permissoes`, e um submenu sem nenhum filho que a conta possa usar some.
+
+Com `comOModulo`, o item some quando aquele módulo está desligado na organização, como "Chamados" no menu do Chat, que leva aos chamados da pessoa (change chat-com-chamados). O registro da conta o tira junto com os itens sem permissão, e o submenu que fica sem itens some também:
+
+```ts
+// apps/web/src/modulos/chat/modulo.ts (trecho)
+    {
+      rotulo: 'Chamados',
+      destino: '/conversas/chamados',
+      permissoes: USA_O_CHAT,
+      comOModulo: 'chamados',
+    },
+```
 
 ### Itens de menu dos dados
 
@@ -161,6 +175,46 @@ export const MENU_DINAMICO_DOS_ATIVOS: MenuDinamicoDoModulo<EnderecosDe<typeof r
   },
 };
 ```
+
+### Selo dos dados
+
+O item do módulo no dock e na barra de abas do celular pode ter um selo que vem dos dados, como o total do chat (change chat-com-chamados). O módulo declara o `selo`, com a permissão dele, as consultas e o `montar`, que devolve o selo ou nenhum:
+
+```ts
+// apps/web/src/modulos/tipos.ts (trecho)
+/**
+ * O selo do item do módulo no dock e na barra de abas do celular, que vem dos dados, como o total do
+ * chat (change chat-com-chamados, design, decisão 12). A casca carrega as consultas pelo TanStack
+ * Query, só para a conta que tem a permissão e com o módulo ligado, e os eventos do módulo as
+ * relêem, como as do menu dinâmico.
+ */
+export interface SeloDoModuloRegistrado extends ExigePermissoes {
+  consultas: (api: ClienteDaApi) => readonly ConsultaDoMenu[];
+  /** O selo com os dados das consultas, ou nenhum, como no zero e enquanto elas carregam. */
+  montar: (contexto: {
+    /** O dado de uma das consultas do selo: nenhum enquanto ela carrega ou se ela falhou. */
+    ler: <TDado>(consulta: ConsultaDoMenu<TDado>) => TDado | undefined;
+    /** O cliente da sessão, para montar as consultas que `ler` lê. */
+    api: ClienteDaApi;
+  }) => SeloDoModulo | null;
+}
+```
+
+O Chat o monta com o resumo do chat:
+
+```ts
+// apps/web/src/modulos/chat/modulo.ts (trecho)
+  selo: {
+    permissoes: USA_O_CHAT,
+    consultas: (api) => [consultaDoResumoDoChat(api)],
+    montar: ({ ler, api }) => seloDoChat(ler(consultaDoResumoDoChat(api))),
+  },
+```
+
+As regras:
+- **O desenho:** a casca põe o `texto`, como "3" ou "99+", numa cápsula no canto de cima do ícone, com o número em mono, que cresce com a ampliação do item, e a mesma cápsula, menor, na barra de abas. O número fica só no desenho: a `descricao` entra no nome do item, e o leitor de tela ouve "Chat, 2 não lidas, 1 chamado com resposta nova".
+- **Sem selo:** no zero, e enquanto as consultas carregam ou se elas falham, o `montar` não devolve nada, e o item fica sem selo.
+- **Os eventos:** os do módulo relêem as consultas com qualquer módulo aberto, como as do menu dinâmico.
 
 ### Menus da barra
 
@@ -547,6 +601,20 @@ As regras:
 - **Quem:** vale o primeiro módulo do registro da conta que declara a primeira tela, para quem tem uma das permissões dela; o módulo desligado sai com o resto dele. Quem não tem nenhuma fica no Início.
 - **Antes do roteador:** a `PrimeiraCarga` (`apps/web/src/casca/primeiraTela.ts`) troca a raiz no histórico antes de o roteador montar, e ele já carrega a tela do módulo. O Início não começa a carregar, o voltar do navegador não leva à raiz e o foco da abertura fica onde estava.
 - **A sessão desconhecida:** sem resposta do servidor na abertura, a casca fica no Início, também quando ele volta.
+
+### App próprio
+
+Um módulo pode ter um app fora da casca, no endereço dele, que se instala à parte, como o "Grafite · Chat" em `/chat` (change chat-com-chamados, design, decisão 12). Ele declara o `appProprio`, com o endereço e as permissões de quem usa o app:
+
+```ts
+// apps/web/src/modulos/chat/modulo.ts (trecho)
+  appProprio: { endereco: '/chat', permissoes: USA_O_CHAT },
+```
+
+As regras:
+- **Quem vai ao app:** a conta que, entre os módulos da casca que exigem permissão, só vê este, e tem uma das permissões do app. O Início e os Ajustes, que não exigem permissão, não contam. Quem só configura o chat, com o `chat.configurar` sem o `chat.usar`, fica na casca, onde estão as equipes e os canais.
+- **Na regra da primeira tela:** só a raiz pura e só na primeira carga da aba. O app toma o lugar da página antes do roteador, e a casca nem monta; a aba fica marcada antes, e a raiz, de novo na mesma aba, fica no Início.
+- **A casca continua:** o módulo segue no dock, com a janela dele na casca, e quem tem outros módulos entra pela casca e chega ao app pelo link dele, como o "Abrir no app do chat" da trilha do Chat.
 
 ## Notificações
 
@@ -1887,6 +1955,36 @@ As regras:
 ### Na API
 
 O evento é gravado na transação da mudança: se ela for desfeita, o evento também é. Cada ação da auditoria diz no `EVENTO_DA_ACAO`, do `@grafite/domain`, o evento que grava, ou `null` quando não muda o que alguma tela mostra, e o `registrarNaAuditoria` grava os dois juntos. Um tipo novo de evento entra no `TIPOS_DE_EVENTO`, com o público dele, pela sessão orquestradora (regra 7 do `CLAUDE.md`).
+
+O público diz quem recebe o evento, e basta uma das partes valer:
+
+```ts
+// packages/domain/src/eventos/eventos.ts (trecho)
+/**
+ * Quem recebe o evento: basta uma das partes valer.
+ * - `todas`: toda sessão da organização;
+ * - `permissao`: quem tem a permissão, em algum escopo; com `locais`, só quem a tem no ramo de um
+ *   deles (o local de antes e o de depois da mudança), e `null` é o registro sem local, que só a
+ *   organização inteira alcança;
+ * - `grupos`: com a `permissao`, só quem também é de um deles, como na equipe do chat, que é do
+ *   grupo dela (change chat-com-chamados, design, decisão 4); com os `locais`, valem os dois;
+ * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
+ *   design, decisão 13);
+ * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
+ */
+export interface PublicoDoEvento {
+  todas?: boolean;
+  permissao?: Permissao;
+  locais?: readonly (string | null)[];
+  grupos?: readonly string[];
+  permissoes?: readonly Permissao[];
+  contas?: readonly string[];
+  sessoes?: readonly string[];
+}
+```
+
+- **Por grupo:** a mudança que só os membros de um grupo veem, como a mensagem da equipe do chat, vai com a `permissao` e os `grupos`. A conexão guarda os grupos ativos da conta com o acesso dela, relidos no `acessos.mudaram` da entrada e da saída de um grupo, e quem sai do grupo deixa de receber dali em diante.
+- **Por conta:** quem vê o registro por outro caminho, sem a permissão, como a pessoa do chamado e quem o abriu pelo chat, entra pelas `contas`, no mesmo evento.
 
 ## Valores coletados
 
