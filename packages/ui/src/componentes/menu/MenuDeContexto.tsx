@@ -78,9 +78,11 @@ export interface PropsDoMenuDeContexto {
 }
 
 /**
- * Com os itens do menu com submenu, o estado do menu que abre do botão, que os submenus seguem: a
- * escolha em qualquer nível fecha o menu inteiro por ele. Nasce a cada abertura, com o painel, e
- * nenhum submenu de uma abertura fica aberto na seguinte.
+ * O estado do menu que abre do botão, que os submenus seguem: com os itens do menu com submenu, a
+ * escolha em qualquer nível fecha o menu inteiro por ele. Ele vem antes do menu também com os itens
+ * da lista, porque o item do submenu o lê quando o React Aria monta a coleção, onde o estado que o
+ * menu cria sozinho ainda não chegou: é por ele que o toque no item fecha o submenu, no celular.
+ * Nasce a cada abertura, com o painel, e nenhum submenu de uma abertura fica aberto na seguinte.
  */
 function RaizDosItens({ aoFechar, children }: { aoFechar: () => void; children: ReactNode }) {
   const estado = useMenuTriggerState({
@@ -181,31 +183,31 @@ export function MenuDeContexto({
         className={classeDoPainel(opaco)}
       >
         <MenuOpaco.Provider value={opaco}>
-          {comOsItens ? (
-            <RaizDosItens aoFechar={fechar}>
+          <RaizDosItens aoFechar={fechar}>
+            {comOsItens ? (
               <MenuDoReactAria aria-label={rotulo} autoFocus="first" className={estilos.menu}>
                 {children}
               </MenuDoReactAria>
-            </RaizDosItens>
-          ) : (
-            <MenuDoReactAria
-              aria-label={rotulo}
-              autoFocus="first"
-              className={estilos.menu}
-              onClose={fechar}
-            >
-              {itens.map((item) => (
-                <Fragment key={item.id}>
-                  {item.separadoAntes && <Separador />}
-                  {'itens' in item ? (
-                    <Submenu rotulo={item.rotulo}>{item.itens.map(acao)}</Submenu>
-                  ) : (
-                    acao(item)
-                  )}
-                </Fragment>
-              ))}
-            </MenuDoReactAria>
-          )}
+            ) : (
+              <MenuDoReactAria
+                aria-label={rotulo}
+                autoFocus="first"
+                className={estilos.menu}
+                onClose={fechar}
+              >
+                {itens.map((item) => (
+                  <Fragment key={item.id}>
+                    {item.separadoAntes && <Separador />}
+                    {'itens' in item ? (
+                      <Submenu rotulo={item.rotulo}>{item.itens.map(acao)}</Submenu>
+                    ) : (
+                      acao(item)
+                    )}
+                  </Fragment>
+                ))}
+              </MenuDoReactAria>
+            )}
+          </RaizDosItens>
         </MenuOpaco.Provider>
       </PainelFlutuante>
     </>

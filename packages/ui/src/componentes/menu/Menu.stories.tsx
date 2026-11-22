@@ -194,9 +194,65 @@ export const SubmenuNaJanelaEstreita: Historia = {
 };
 
 /**
+ * Cenário da spec "Toque no item com o submenu aberto": na postura celular, o submenu cobre os itens
+ * de baixo, e o toque no item com ele aberto o fecha, com o menu aberto e os itens de baixo à vista
+ * de novo, no nome do item e fora dele, no respiro (pontos da revisão da tarefa 4.17c). O toque
+ * seguinte o abre de novo.
+ */
+export const SubmenuFechadoPeloToque: Historia = {
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  render: () => (
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <MenuDeAtivos />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    const tocar = (alvo: Element) => userEvent.pointer({ keys: '[TouchA]', target: alvo });
+    await tocar(within(canvasElement).getByRole('button', { name: 'Ativos' }));
+    const menu = await corpo.findByRole('menu', { name: 'Ativos' });
+    await waitFor(() => expect(painelDe(menu)).not.toHaveAttribute('data-entering'), {
+      timeout: 10_000,
+    });
+    const rede = corpo.getByRole('menuitem', { name: 'Rede' });
+    const relatorios = corpo.getByRole('menuitem', { name: 'Relatórios' });
+    const noMeioDeRelatorios = () => {
+      const { x, y } = centro(relatorios.getBoundingClientRect());
+      return document.elementFromPoint(x, y);
+    };
+    const abrirRede = async () => {
+      await tocar(rede);
+      const submenu = await corpo.findByRole('menu', { name: 'Rede' });
+      const painel = painelDe(submenu);
+      await waitFor(() => expect(painel).not.toHaveAttribute('data-entering'), {
+        timeout: 10_000,
+      });
+      // O submenu cobre o "Relatórios".
+      await expect(painel.contains(noMeioDeRelatorios())).toBe(true);
+    };
+    const fechouComOMenuAberto = async (toque: string) => {
+      await waitFor(() =>
+        expect(corpo.queryByRole('menu', { name: 'Rede' }), `${toque} fecha o submenu`).toBeNull(),
+      );
+      await expect(menu).toBeVisible();
+      await expect(relatorios.contains(noMeioDeRelatorios())).toBe(true);
+    };
+    // No respiro do item, fora do nome.
+    await abrirRede();
+    await tocar(rede);
+    await fechouComOMenuAberto('O toque fora do nome');
+    // No nome do item.
+    await abrirRede();
+    await tocar(within(rede).getByText('Rede'));
+    await fechouComOMenuAberto('O toque no nome');
+  },
+};
+
+/**
  * O submenu curto embaixo do item de um menu largo, na postura celular: ele fica com ao menos a
  * largura do menu, nas bordas dele, para cobrir os itens de baixo inteiros (pontos da revisão da
- * tarefa 4.17c). Sem a regra, ele ficaria na largura dos itens dele, mais estreito que o menu.
+ * tarefa 4.17c). Sem a regra, ele ficaria na largura do item que o abre, 10 px mais curto que o
+ * menu (o respiro e a borda dos dois lados).
  */
 export const SubmenuCurtoNoMenuLargo: Historia = {
   globals: { viewport: { value: 'celular390', isRotated: false } },
@@ -220,6 +276,7 @@ export const SubmenuCurtoNoMenuLargo: Historia = {
       timeout: 10_000,
     });
     await userEvent.keyboard('{ArrowDown}');
+    await expect(corpo.getByRole('menuitem', { name: 'Prioridade' })).toHaveFocus();
     await userEvent.keyboard('{ArrowRight}');
     const submenu = await corpo.findByRole('menu', { name: 'Prioridade' });
     await waitFor(() => expect(corpo.getByRole('menuitem', { name: 'Alta' })).toHaveFocus());

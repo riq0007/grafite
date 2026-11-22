@@ -13,7 +13,7 @@ Os tempos exatos SHALL ser os do Apêndice B da spec mestre.
 
 O painel do menu SHALL ter a largura do conteúdo, até a largura da janela menos as margens, também junto da borda da janela, onde SHALL NOT se estreitar nem crescer depois de aberto.
 
-Na postura celular, o submenu SHALL abrir embaixo do item que o abre ou, sem espaço embaixo, em cima dele, por cima do menu e com o item à vista, inteiro dentro da janela e com o mesmo teclado. Nas outras posturas, ele SHALL abrir ao lado do menu, do lado com mais espaço.
+Na postura celular, o submenu SHALL abrir embaixo do item que o abre ou, sem espaço embaixo, em cima dele, por cima do menu e com o item à vista, inteiro dentro da janela e com o mesmo teclado. O toque no item com o submenu aberto SHALL fechá-lo, com o menu aberto. Nas outras posturas, ele SHALL abrir ao lado do menu, do lado com mais espaço.
 
 #### Scenario: Movimento diagonal até o submenu
 - **WHEN** o usuário move o ponteiro na diagonal do item "Rede" até o submenu, passando sobre o item seguinte
@@ -34,6 +34,10 @@ Na postura celular, o submenu SHALL abrir embaixo do item que o abre ou, sem esp
 #### Scenario: Submenu sem espaço embaixo do item
 - **WHEN** o usuário, numa janela de 390 px, abre o submenu "Tema" do menu da conta, que abre da barra de baixo
 - **THEN** o submenu abre em cima do item "Tema", que fica à vista, por cima do menu, inteiro dentro da janela e sem rolar
+
+#### Scenario: Toque no item com o submenu aberto
+- **WHEN** o usuário, num celular, toca no item "Passar para…" com o submenu dele aberto, que cobre os itens de baixo do menu
+- **THEN** o submenu fecha, o menu fica aberto e os itens de baixo voltam à vista
 
 ## ADDED Requirements
 

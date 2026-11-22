@@ -5,6 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
   useContext,
+  useState,
 } from 'react';
 import {
   Header,
@@ -16,6 +17,8 @@ import {
   MenuSection,
   type MenuSectionProps,
   MenuTrigger,
+  type PressEvent,
+  RootMenuTriggerStateContext,
   Separator,
   SubmenuTrigger,
   Text,
@@ -228,10 +231,45 @@ export interface PropsDoSubmenu {
 }
 
 /**
+ * O item que abre o submenu. Na postura celular, o submenu cobre os itens de baixo, e o toque no item
+ * com ele aberto o fecha, com o menu aberto (pontos da revisão da tarefa 4.17c). No React Aria, o toque
+ * no item só abre o submenu, e o menu de origem conta como parte dele, então nada o fechava. Só o
+ * toque: no mouse, o ponteiro parado sobre o item abre o submenu antes do clique, que o fecharia.
+ */
+function ItemDoSubmenu({
+  rotulo,
+  icone,
+  dica,
+  celular,
+}: Omit<PropsDoSubmenu, 'children'> & { celular: boolean }) {
+  // Este componente só roda quando o React Aria monta a coleção do menu, fora do `SubmenuTrigger`:
+  // o estado do submenu não chega aqui. O do menu de origem é o mesmo nas duas passagens e guarda o
+  // submenu aberto de cada nível. O nível é o do React Aria: os submenus abertos quando este menu
+  // abriu (nenhum no menu de origem, um no submenu dele). O `Menu` e o `MenuDeContexto` o põem antes
+  // do menu; sem ele, o toque fica como o do React Aria.
+  const raiz = useContext(RootMenuTriggerStateContext);
+  const [nivel] = useState(() => raiz?.expandedKeysStack.length ?? 0);
+  const aoPressionar = (evento: PressEvent) => {
+    if (!celular || evento.pointerType !== 'touch' || !raiz) return;
+    // Aberto, o submenu do nível é o deste item, e não o de outro item do mesmo menu.
+    if (evento.target.getAttribute('aria-expanded') !== 'true') return;
+    // O React Aria abre o submenu antes, sem efeito com ele aberto: o fechar vem depois e vale.
+    const chave = raiz.expandedKeysStack[nivel];
+    if (chave !== undefined) raiz.closeSubmenu(chave, nivel);
+  };
+  return (
+    <ItemDeMenu icone={icone} dica={dica} onPress={aoPressionar}>
+      {rotulo}
+    </ItemDeMenu>
+  );
+}
+
+/**
  * Item que abre um submenu; o submenu recebe o nome do item e a camada do menu. Ao lado do menu, ele
  * alinha o primeiro item ao de origem (o respiro de 4 px e a borda). Na postura celular, ao lado não
  * cabe de nenhum dos lados: ele abre colado embaixo do item, que fica à vista, por cima do menu e nas
- * bordas dele, e, sem espaço embaixo, em cima do item. O teclado é o mesmo.
+ * bordas dele, e, sem espaço embaixo, em cima do item; o toque no item com ele aberto o fecha. O
+ * teclado é o mesmo.
  */
 export function Submenu({ rotulo, icone, dica, children }: PropsDoSubmenu) {
   const opaco = useContext(MenuOpaco);
@@ -246,9 +284,7 @@ export function Submenu({ rotulo, icone, dica, children }: PropsDoSubmenu) {
     : ({ offset: -2, crossOffset: -5, className: classeDoPainel(opaco) } as const);
   return (
     <SubmenuTrigger delay={tempos.menu.abrirSubmenu}>
-      <ItemDeMenu icone={icone} dica={dica}>
-        {rotulo}
-      </ItemDeMenu>
+      <ItemDoSubmenu rotulo={rotulo} icone={icone} dica={dica} celular={celular} />
       <PainelFlutuante {...posicao}>
         <MenuDoReactAria className={estilos.menu}>{children}</MenuDoReactAria>
       </PainelFlutuante>

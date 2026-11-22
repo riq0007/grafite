@@ -133,6 +133,55 @@ export const SubmenuNaBorda: Historia = {
   },
 };
 
+/**
+ * Cenário da spec "Toque no item com o submenu aberto", no menu de contexto dos itens, como o do
+ * quadro: a 390 px, o "Passar para…" abre embaixo do item e cobre o "Devolver à triagem", e o toque
+ * no item o fecha, com o menu aberto e o "Devolver à triagem" à vista de novo (pontos da revisão da
+ * tarefa 4.17c).
+ */
+export const SubmenuFechadoPeloToque: Historia = {
+  render: (args) => <ChamadoComMenu {...args} />,
+  globals: { viewport: { value: 'celular390', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const corpo = within(canvasElement.ownerDocument.body);
+    const chamado = within(canvasElement).getByRole('button', { name: CHAMADO });
+    const caixa = chamado.getBoundingClientRect();
+    fireEvent.contextMenu(chamado, { clientX: caixa.left + 8, clientY: caixa.bottom - 4 });
+    const menu = await corpo.findByRole('menu', { name: ACOES });
+    const doMenu = menu.closest('[data-placement]');
+    await waitFor(() => expect(doMenu).not.toHaveAttribute('data-entering'), { timeout: 10_000 });
+    const passar = corpo.getByRole('menuitem', { name: 'Passar para…' });
+    const devolver = corpo.getByRole('menuitem', { name: 'Devolver à triagem' });
+    const devolverAVista = () => {
+      const r = devolver.getBoundingClientRect();
+      return devolver.contains(
+        document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2),
+      );
+    };
+    const tocar = (alvo: Element) => userEvent.pointer({ keys: '[TouchA]', target: alvo });
+    await tocar(passar);
+    const submenu = await corpo.findByRole('menu', { name: 'Passar para…' });
+    await waitFor(
+      () => expect(submenu.closest('[data-placement]')).not.toHaveAttribute('data-entering'),
+      {
+        timeout: 10_000,
+      },
+    );
+    await expect(devolverAVista(), 'o submenu cobre o "Devolver à triagem"').toBe(false);
+    await tocar(within(passar).getByText('Passar para…'));
+    await waitFor(() =>
+      expect(
+        corpo.queryByRole('menu', { name: 'Passar para…' }),
+        'o toque fecha o submenu',
+      ).toBeNull(),
+    );
+    await expect(menu).toBeVisible();
+    await expect(devolverAVista()).toBe(true);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(corpo.queryByRole('menu')).toBeNull());
+  },
+};
+
 const MENSAGEM = 'Mensagem de Paulo Nunes';
 const DA_MENSAGEM = 'Ações da mensagem de Paulo Nunes';
 
