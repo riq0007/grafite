@@ -1,7 +1,8 @@
-/* A caixa de escrever do chat (m01): a cápsula com a borda à vista, de 48 px, na coluna das
-   mensagens, com o texto, o clipe e o envio redondo na linha dela, a respondida em cima e os
-   anexos embaixo. A recusa fica fora dela, embaixo. A área é a base do texto só para o leitor de
-   tela, que fica dentro dela. */
+/* A caixa de escrever do chat (m01): a cápsula com a borda à vista, de 48 px, de uma borda à outra
+   da coluna, sem o teto da largura de leitura das mensagens (pedido do usuário de 22/11), com o
+   texto, o clipe e o envio redondo na linha dela, a respondida em cima e os anexos embaixo. A
+   recusa fica fora dela, embaixo. A área é a base do texto só para o leitor de tela, que fica
+   dentro dela. */
 .area {
   --altura-da-linha: calc(var(--esp-12) - 2px);
   --lado-do-envio: calc(var(--esp-8) + var(--esp-1));
@@ -10,7 +11,6 @@
   display: grid;
   flex: none;
   gap: var(--esp-1);
-  max-inline-size: var(--largura-previa);
   margin: 0 var(--esp-5) var(--esp-4);
 }
 
@@ -158,12 +158,16 @@
   inline-size: calc(var(--esp-12) * 2);
 }
 
-/* A lista do "#", em camada opaca acima da caixa, com o escolhido no destaque, como o menu. */
+/* A lista do "#", em camada opaca acima da caixa, com o escolhido no destaque, como o menu. Ela fica
+   na largura de leitura, à esquerda, como as mensagens: com a caixa de uma borda à outra, não vira
+   uma faixa por cima da conversa nas telas largas. */
 .lista {
   position: absolute;
   z-index: 1;
-  inset-inline: 0;
+  inset-inline-start: 0;
   inset-block-end: calc(100% + var(--esp-1));
+  box-sizing: border-box;
+  inline-size: min(100%, var(--largura-previa));
   display: grid;
   max-block-size: 40vh;
   margin: 0;

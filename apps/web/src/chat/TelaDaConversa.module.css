@@ -92,13 +92,13 @@
   min-block-size: 0;
 }
 
-/* No canal e na equipe em que a conta não escreve, a frase fica no lugar da caixa, na forma dela. */
+/* No canal e na equipe em que a conta não escreve, a frase fica no lugar da caixa, na forma e na
+   largura dela, de uma borda à outra da coluna. */
 .semCaixa {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  max-inline-size: var(--largura-previa);
   min-block-size: var(--esp-12);
   margin: 0 var(--esp-5) var(--esp-4);
   padding: var(--esp-2) var(--esp-4);
