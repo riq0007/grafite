@@ -15,8 +15,9 @@ export default defineConfig({
   // Um caminho só, em ordem, sobre o mesmo banco.
   workers: 1,
   // O caminho cresce a cada subprojeto: com a ficha do ativo (P1d), passa de 1,5 min no CI; com as
-  // contagens dos locais (relacoes-vivas), de 2,5 min; e com os chamados (chamados-da-ti), de 3 min
-  // no CI e de 3,5 min na máquina.
+  // contagens dos locais (relacoes-vivas), de 2,5 min; com os chamados (chamados-da-ti), de 3 min
+  // no CI e de 3,5 min na máquina; e com o chat (chat-com-chamados), chega a 3,8 min no CI e a
+  // 3,6 min na máquina.
   timeout: 420_000,
   globalSetup: './e2e-pilha/subir.ts',
   use: { baseURL: `http://localhost:${PORTA_DA_PILHA}`, serviceWorkers: 'block' },

@@ -136,7 +136,10 @@ const doEndereco = (final: number) => ({
 /**
  * O mesmo navegador passa a chegar por outro endereço. Os trechos longos da administradora, com
  * uma recarga da página atrás da outra, passam das 600 por minuto num endereço só desde os módulos
- * de 28/10, que pesam mais na abertura da casca: ela troca de endereço no começo deles.
+ * de 28/10, que pesam mais na abertura da casca: ela troca de endereço no começo deles. Com o
+ * resumo do chat, que a casca também pede a cada abertura (change chat-com-chamados), o endereço
+ * dela do passo 1 ao 31 chegou a 609 num minuto no CI e a 588 na máquina: ela também troca nos
+ * passos 16, 23, 27, 29 e 30.
  */
 const trocarDeEndereco = (pagina: Page, final: number) =>
   pagina.setExtraHTTPHeaders({ 'X-Forwarded-For': `198.51.100.${final}` });
@@ -698,6 +701,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     await page.goto('/ativos/novo');
     await expect(etapa(page, 'Tipo')).toContainText('Falta escolher');
 
+    await trocarDeEndereco(page, 12);
     // 16. A administradora desliga o Ativos na seção Módulos. Ele some do dock da conta nova, e a
     // lista aberta passa a dizer que o módulo está desligado. Ligado de novo, ele volta com o ativo.
     await page.goto('/administracao/modulos');
@@ -896,6 +900,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     );
     expect(await doBruno.evaluate(() => window.__mesmaPagina)).toBe(true);
 
+    await trocarDeEndereco(page, 13);
     // 23. A administradora cadastra o campo de arquivo "PDF da nota fiscal", o inclui na impressora
     // e envia a nota da PAT-00412. A conta nova, na ficha aberta, baixa o PDF com o nome original.
     await page.goto('/gestao/catalogo/campos/novo');
@@ -1035,6 +1040,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       await semSessao.close();
     }
 
+    await trocarDeEndereco(page, 14);
     // 27. A administradora cadastra o campo IP, liga a disponibilidade e os suprimentos na
     // impressora pelo campo, com a comunidade public, e põe a PAT-00412 em 127.0.0.1 e a PAT-00600
     // em 192.0.2.1. A conta nova põe a coluna Disponibilidade na tabela aberta, que mostra as duas
@@ -1182,6 +1188,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       rmSync(filaDoColetor, { recursive: true, force: true });
     }
 
+    await trocarDeEndereco(page, 15);
     // 29. Os alertas (change p3a-regras-e-alertas) e as notificações deles (change
     // p3b-notificacoes-no-servidor): o toner da PAT-00412 que a coleta gravou, em 8%, fica acima do
     // limite de 5% da regra do toner. A administradora sobe o limite para 15%, e a mudança pede a
@@ -1336,6 +1343,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     ).toBeVisible();
     await expect(doTonerNosIndicadores.getByText('Sem dado', { exact: true })).toBeVisible();
 
+    await trocarDeEndereco(page, 16);
     // 30. O cofre: a administradora cadastra a senha do switch, ligada à PAT-00412, libera o cofre
     // com o código do app, revela e copia. A auditoria mostra a revelação pelo nome do segredo, sem
     // o valor, e a ficha da PAT-00412 mostra o segredo, com o caminho até o Cofre.
