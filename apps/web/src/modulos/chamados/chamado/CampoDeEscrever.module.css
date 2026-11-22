@@ -57,11 +57,21 @@
   gap: var(--esp-2);
 }
 
+/* O fim, à direita; na área estreita, ele desce de linha, com o "Enviar" no canto, sem sair dela. */
 .fim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-2) var(--esp-3);
+  margin-left: auto;
+}
+
+/* O atalho e o "Enviar", que descem juntos. */
+.envio {
   display: flex;
   align-items: center;
   gap: var(--esp-3);
-  margin-left: auto;
 }
 
 /* A caixa, sobre a superfície, que cresce com o texto até a metade da janela e, dali, rola. */

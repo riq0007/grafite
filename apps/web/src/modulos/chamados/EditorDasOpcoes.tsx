@@ -6,7 +6,7 @@
 import { LIMITES_DA_PERGUNTA } from '@grafite/domain';
 import { Botao, CampoDeTexto } from '@grafite/ui';
 import { Plus } from 'lucide-react';
-import { useEffect, useId, useRef } from 'react';
+import { type Ref, useEffect, useId, useRef } from 'react';
 import estilos from './EditorDasOpcoes.module.css';
 import { Recusa } from './formulario/Recusa.tsx';
 
@@ -21,6 +21,8 @@ export interface PropsDoEditorDasOpcoes {
   descricao?: string;
   /** A primeira opção recebe o foco quando o editor aparece, como depois do "Pedir uma escolha". */
   focarAoAparecer?: boolean;
+  /** O grupo das opções, para quem leva a recusa delas à vista, como o campo de escrever. */
+  ref?: Ref<HTMLFieldSetElement>;
 }
 
 export function EditorDasOpcoes({
@@ -30,6 +32,7 @@ export function EditorDasOpcoes({
   editavel = true,
   descricao,
   focarAoAparecer = false,
+  ref,
 }: PropsDoEditorDasOpcoes) {
   const idDaLegenda = useId();
   const idDaDescricao = useId();
@@ -66,6 +69,7 @@ export function EditorDasOpcoes({
 
   return (
     <fieldset
+      ref={ref}
       className={estilos.opcoes}
       aria-labelledby={idDaLegenda}
       aria-describedby={descricao ? idDaDescricao : undefined}

@@ -120,6 +120,27 @@ interface ComandoLido {
 
 const NENHUM_DESLIGADO: readonly string[] = [];
 
+/** A recusa do envio, pelo campo que a teve. */
+type CampoDaRecusa = 'texto' | 'anexos' | 'opcoes' | 'cartao';
+
+/** Rola o elemento para perto, no que rola em volta dele, como o meio do campo na janela baixa. */
+const trazerAVista = (elemento: Element | null | undefined) =>
+  elemento?.scrollIntoView({ block: 'nearest' });
+
+/**
+ * O que entra no meio do campo vem à vista quando o sinal muda para um valor que não é nulo: na
+ * janela baixa, o meio rola por dentro, e o que entra embaixo ficaria escondido. O primeiro valor
+ * não rola, e o rascunho que volta abre no alto.
+ */
+function useVemAVista(sinal: unknown, alvo: () => Element | null | undefined) {
+  const anterior = useRef(sinal);
+  useEffect(() => {
+    if (Object.is(sinal, anterior.current)) return;
+    anterior.current = sinal;
+    if (sinal !== null && sinal !== undefined) trazerAVista(alvo());
+  });
+}
+
 export interface PropsDoCampoDeEscrever {
   ficha: FichaDoChamado;
   /** O que se escreveu foi aceito: a conversa vai à última mensagem. */
@@ -228,6 +249,20 @@ function Escrever({
   } | null>(null);
   const [falha, definirFalha] = useState<string | null>(null);
   const [tentativa, definirTentativa] = useState(0);
+  // A recusa do envio que vem à vista, a cada vez, também quando repete a de antes.
+  const [recusaDoEnvio, definirRecusaDoEnvio] = useState<{
+    campo: CampoDaRecusa;
+    vez: number;
+  } | null>(null);
+  // O que entra no meio do campo, para vir à vista.
+  const recusaDoComandoNaTela = useRef<HTMLParagraphElement>(null);
+  const cartaoNaTela = useRef<HTMLDivElement>(null);
+  const erroDoCartaoNaTela = useRef<HTMLParagraphElement>(null);
+  const opcoesNaTela = useRef<HTMLFieldSetElement>(null);
+  const listaNaTela = useRef<HTMLUListElement>(null);
+  const ultimaRecusaNaTela = useRef<HTMLParagraphElement>(null);
+  const erroDosAnexosNaTela = useRef<HTMLParagraphElement>(null);
+  const falhaNaTela = useRef<HTMLParagraphElement>(null);
   const { fila, progresso, recusas, receber, limparRecusas } = useFilaDeAnexos({
     ocupados: rascunho.ids.length,
     soNoNavegador: false,
@@ -264,16 +299,54 @@ function Escrever({
   // O comando recusado com que o envio já parou uma vez: o envio seguinte o manda como está.
   const paradoNaRecusa = useRef<string | null>(null);
 
+  // O que entra no meio vem à vista: a recusa do "/ativo", o cartão, a recusa do envio e a última
+  // recusa dos arquivos. As opções da resposta pronta não, porque o foco fica no texto que entrou.
+  // A falha do pé também, a cada tentativa: na tela estreita, quem rola é a página.
+  useVemAVista(falha === null ? null : tentativa, () => falhaNaTela.current);
+  useVemAVista(recusaDeAgora, () => recusaDoComandoNaTela.current);
+  useVemAVista(cartao, () => cartaoNaTela.current);
+  useVemAVista(recusaDoEnvio, () => {
+    switch (recusaDoEnvio?.campo) {
+      case 'texto':
+        // O erro do kit, embaixo da caixa, que pode ser mais alta que o meio.
+        return caixa.current?.parentElement?.querySelector('[slot="errorMessage"]');
+      case 'anexos':
+        return erroDosAnexosNaTela.current;
+      case 'opcoes':
+        return opcoesNaTela.current?.querySelector('[role="alert"]');
+      case 'cartao':
+        return erroDoCartaoNaTela.current;
+      default:
+        return null;
+    }
+  });
+  useVemAVista(recusas.at(-1)?.chave ?? null, () => ultimaRecusaNaTela.current);
+  // O arquivo que entra na lista, e não o que sai dela nem o que acaba de subir.
+  const arquivosNoCampo = ids.length + fila.length;
+  const arquivosAntes = useRef(arquivosNoCampo);
+  useEffect(() => {
+    const entrou = arquivosNoCampo > arquivosAntes.current;
+    arquivosAntes.current = arquivosNoCampo;
+    if (entrou) trazerAVista(listaNaTela.current?.lastElementChild);
+  }, [arquivosNoCampo]);
+
   // A caixa cresce com o texto, até a metade da janela; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto e a cada modo.
   useLayoutEffect(() => {
     const elemento = caixa.current;
     if (!elemento) return;
     const medir = () => {
+      // Zerar a altura encolhe por um instante o que rola em volta, como o meio do campo e a tela
+      // estreita, e o navegador puxa a rolagem deles para cima: ela volta ao lugar depois da medida.
+      const rolagens: [Element, number][] = [];
+      for (let pai = elemento.parentElement; pai; pai = pai.parentElement) {
+        if (pai.scrollTop > 0) rolagens.push([pai, pai.scrollTop]);
+      }
       // Com a altura zerada, a medida é a do texto, e não a das duas linhas da caixa vazia.
       elemento.style.height = '0px';
       const bordas = elemento.offsetHeight - elemento.clientHeight;
       elemento.style.height = `${elemento.scrollHeight + bordas}px`;
+      for (const [pai, topo] of rolagens) pai.scrollTop = topo;
     };
     medir();
     window.addEventListener('resize', medir);
@@ -434,6 +507,7 @@ function Escrever({
         // a ver; o seguinte manda o texto como está.
         paradoNaRecusa.current = chave;
         caixa.current?.focus();
+        trazerAVista(recusaDoComandoNaTela.current);
         return;
       }
     }
@@ -464,15 +538,21 @@ function Escrever({
     void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS });
     if ('erro' in resultado) {
       const campos = resultado.problema?.campos;
+      const mostrar = (campo: CampoDaRecusa) =>
+        definirRecusaDoEnvio((antes) => ({ campo, vez: (antes?.vez ?? 0) + 1 }));
       if (campos?.texto) {
         definirErroDoTexto(campos.texto);
         caixa.current?.focus();
+        mostrar('texto');
       } else if (campos?.anexos) {
         definirErroDosAnexos(campos.anexos);
+        mostrar('anexos');
       } else if (campos?.opcoes && !nota) {
         definirErroDasOpcoes(campos.opcoes);
+        mostrar('opcoes');
       } else if (campos?.cartao) {
         definirErroDoCartao(campos.cartao);
+        mostrar('cartao');
       } else {
         definirFalha(resultado.erro);
         definirTentativa((anterior) => anterior + 1);
@@ -564,9 +644,9 @@ function Escrever({
             evento.continuePropagation();
           }}
         />
-        {recusaDeAgora && <Recusa texto={recusaDeAgora} />}
+        {recusaDeAgora && <Recusa ref={recusaDoComandoNaTela} texto={recusaDeAgora} />}
         {cartao && (
-          <div className={estilos.cartao}>
+          <div ref={cartaoNaTela} className={estilos.cartao}>
             <CartaoDoAtivoNaMensagem
               cartao={cartao}
               agora={agora}
@@ -588,11 +668,12 @@ function Escrever({
                 )
               }
             />
-            {erroDoCartao && <Recusa texto={erroDoCartao} />}
+            {erroDoCartao && <Recusa ref={erroDoCartaoNaTela} texto={erroDoCartao} />}
           </div>
         )}
         {!nota && opcoes !== null && (
           <EditorDasOpcoes
+            ref={opcoesNaTela}
             opcoes={opcoes}
             editavel={!enviando}
             erro={erroDasOpcoes}
@@ -606,6 +687,7 @@ function Escrever({
           />
         )}
         <ListaDeAnexos
+          ref={listaNaTela}
           ids={ids}
           anexos={anexos}
           fila={fila}
@@ -626,10 +708,14 @@ function Escrever({
             });
           }}
         />
-        {recusas.map(({ chave, texto: recusa }) => (
-          <Recusa key={chave} texto={recusa} />
+        {recusas.map(({ chave, texto: recusa }, posicao) => (
+          <Recusa
+            key={chave}
+            ref={posicao === recusas.length - 1 ? ultimaRecusaNaTela : undefined}
+            texto={recusa}
+          />
         ))}
-        {erroDosAnexos && <Recusa texto={erroDosAnexos} />}
+        {erroDosAnexos && <Recusa ref={erroDosAnexosNaTela} texto={erroDosAnexos} />}
       </div>
       <div className={estilos.linha}>
         {respostas.length > 0 && (
@@ -706,20 +792,22 @@ function Escrever({
               Pedir uma escolha
             </Botao>
           )}
-          <TeclaDeAtalho teclas={['mod', 'Enter']} />
-          <Botao
-            nivel="primario"
-            icone={Send}
-            carregando={enviando}
-            rotuloCarregando={envio.carregando}
-            isDisabled={fila.length > 0 || texto.trim() === ''}
-            onPress={() => void enviar()}
-          >
-            {envio.rotulo}
-          </Botao>
+          <span className={estilos.envio}>
+            <TeclaDeAtalho teclas={['mod', 'Enter']} />
+            <Botao
+              nivel="primario"
+              icone={Send}
+              carregando={enviando}
+              rotuloCarregando={envio.carregando}
+              isDisabled={fila.length > 0 || texto.trim() === ''}
+              onPress={() => void enviar()}
+            >
+              {envio.rotulo}
+            </Botao>
+          </span>
         </div>
       </div>
-      <MensagemDoPasso texto={falha} chave={tentativa} />
+      <MensagemDoPasso ref={falhaNaTela} texto={falha} chave={tentativa} />
     </div>
   );
 }

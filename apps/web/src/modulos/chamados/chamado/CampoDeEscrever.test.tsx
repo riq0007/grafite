@@ -1,7 +1,7 @@
 // O campo de escrever do chamado aberto (spec modulo-chamados, "Campo de escrever"; change
 // chat-com-chamados, design, decisão 15, "O lado da TI na tela", tarefa 4.13 e os pontos da
 // revisão dela): o "/ativo" lido na pausa e no envio, com a recusa, a falha e a leitura ainda no
-// ar, e o foco depois da nota, das opções e do envio.
+// ar, o foco depois da nota, das opções e do envio, e o que entra no meio do campo, que vem à vista.
 import { HORARIO_DA_TI_PADRAO, TIPOS_DE_CHAMADO_DE_FABRICA } from '@grafite/domain';
 import { filaDeAvisos } from '@grafite/ui';
 import { createMemoryHistory } from '@tanstack/react-router';
@@ -279,5 +279,133 @@ describe('o foco no campo de escrever', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tirar a opção 2' }));
     fireEvent.click(screen.getByRole('button', { name: 'Tirar a opção 1' }));
     await waitFor(async () => expect(document.activeElement).toBe(await caixa()));
+  });
+});
+
+/** Os elementos que rolaram para perto, na ordem: o meio do campo rola por dentro na janela baixa. */
+function rolagens() {
+  const rolar = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
+  return {
+    vistos: () => rolar.mock.contexts as Element[],
+    esquecer: () => rolar.mockClear(),
+  };
+}
+
+/** A recusa do envio, com a frase no campo que a teve. */
+const RECUSADO = (campos: Record<string, string>) => () =>
+  Response.json(
+    {
+      type: 'urn:grafite:problema:dados-invalidos',
+      title: 'Dados inválidos',
+      status: 400,
+      detail: 'Confira os campos indicados.',
+      codigoDeRastreio: 'ABCD-1234',
+      campos,
+    },
+    { status: 400 },
+  );
+
+const tirarOCartao = () =>
+  screen.findByRole('button', { name: 'Tirar o cartão de Impressora 137' }, PAUSA);
+
+function anexar(...arquivos: File[]) {
+  const entrada = document.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!entrada) throw new Error('O campo não anexa.');
+  fireEvent.change(entrada, { target: { files: arquivos } });
+}
+
+describe('o que entra no meio do campo vem à vista', () => {
+  it('a recusa do "/ativo", ao aparecer e de novo no envio que para nela', async () => {
+    const rolou = rolagens();
+    const { servidor, enviados } = servidorDoCampo(NAO_ENCONTRADO);
+    abrirOChamado(servidor);
+    await escrever('Olá\n/ativo PAT-0137');
+    const recusa = await screen.findByText('O ativo PAT-0137 não foi encontrado.', {}, PAUSA);
+    await waitFor(() => expect(rolou.vistos()).toContain(recusa));
+    rolou.esquecer();
+
+    enviar();
+    await esperar(100);
+    expect(enviados).toEqual([]);
+    expect(rolou.vistos()).toContain(recusa);
+  });
+
+  it('o cartão que o "/ativo" põe no campo', async () => {
+    const rolou = rolagens();
+    const { servidor } = servidorDoCampo(() => Response.json(CARTAO));
+    abrirOChamado(servidor);
+    await escrever('Olá\n/ativo PAT-00137');
+    const tirar = await tirarOCartao();
+    await waitFor(() => expect(rolou.vistos().some((visto) => visto.contains(tirar))).toBe(true));
+  });
+
+  it.each([
+    ['texto', 'A mensagem passa de 4.000 caracteres.'],
+    ['opcoes', 'As opções precisam ser diferentes.'],
+    ['anexos', 'Um dos anexos não foi encontrado.'],
+    ['cartao', 'O ativo do cartão não foi encontrado.'],
+  ])('a recusa do envio no campo %s, também quando ela se repete', async (campo, frase) => {
+    const rolou = rolagens();
+    const { servidor } = servidorDoCampo(() => Response.json(CARTAO));
+    abrirOChamado({
+      ...servidor,
+      'POST /api/chamados/1042/mensagem': RECUSADO({ [campo]: frase }),
+    });
+    // O cartão e as opções, para as recusas deles terem onde ficar.
+    await escrever('Olá\n/ativo PAT-00137');
+    await tirarOCartao();
+    fireEvent.click(screen.getByRole('button', { name: 'Pedir uma escolha' }));
+    await screen.findByRole('textbox', { name: 'Opção 1' });
+
+    enviar();
+    const recusa = await screen.findByText(frase);
+    await waitFor(() => expect(rolou.vistos()).toContain(recusa));
+    rolou.esquecer();
+
+    enviar();
+    await waitFor(() => expect(rolou.vistos()).toContain(screen.getByText(frase)));
+  });
+
+  it('a falha do envio, no pé, que a tela estreita rola', async () => {
+    const rolou = rolagens();
+    const { servidor } = servidorDoCampo(NAO_ENCONTRADO);
+    abrirOChamado({ ...servidor, 'POST /api/chamados/1042/mensagem': SEM_CONEXAO });
+    await escrever('A impressora voltou?');
+    enviar();
+    const falha = await screen.findByText('Sem conexão com o servidor. Tente de novo.');
+    await waitFor(() => expect(rolou.vistos().some((visto) => visto.contains(falha))).toBe(true));
+    rolou.esquecer();
+
+    enviar();
+    await waitFor(() => {
+      const deNovo = screen.getByText('Sem conexão com o servidor. Tente de novo.');
+      expect(rolou.vistos().some((visto) => visto.contains(deNovo))).toBe(true);
+    });
+  });
+
+  it('o arquivo que entra na lista e as recusas dos arquivos, a do servidor e a de antes do envio', async () => {
+    const rolou = rolagens();
+    const { servidor } = servidorDoCampo(NAO_ENCONTRADO);
+    abrirOChamado({
+      ...servidor,
+      // O servidor recusa o formato do programa; a foto fica no ar, na lista, com o progresso.
+      'POST /api/chamados/anexos': (pedido) =>
+        new URL(pedido.url).searchParams.get('nome') === 'programa.exe'
+          ? RECUSADO({ arquivo: 'O formato do arquivo não é aceito.' })()
+          : new Promise<Response>(() => {}),
+    });
+    await caixa();
+    anexar(new File([new Uint8Array(5)], 'programa.exe'));
+    const doServidor = await screen.findByText('programa.exe: Confira os campos indicados.');
+    await waitFor(() => expect(rolou.vistos()).toContain(doServidor));
+
+    anexar(new File([new Uint8Array(5)], 'foto.png', { type: 'image/png' }));
+    const nome = await screen.findByText('foto.png');
+    await waitFor(() => expect(rolou.vistos().some((visto) => visto.contains(nome))).toBe(true));
+    rolou.esquecer();
+
+    anexar(new File([], 'vazio.txt'));
+    const antesDoEnvio = await screen.findByText('vazio.txt: O arquivo está vazio.');
+    await waitFor(() => expect(rolou.vistos()).toContain(antesDoEnvio));
   });
 });
