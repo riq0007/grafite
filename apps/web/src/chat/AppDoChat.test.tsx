@@ -523,8 +523,8 @@ describe('a trilha e a lista do Chat', () => {
     expect(chamados.getAttribute('aria-expanded')).toBe('false');
     expect(within(lista).queryByText('Trocar o mouse')).toBeNull();
     expect(lista.querySelector('a[href^="/chat/chamados/"]')).toBeNull();
-    // Recolhido, a resposta nova do #1041 fica no contador azul do título e no nome dele.
-    expect(chamados.getAttribute('aria-label')).toBe('Chamados · 3, 1 resposta nova');
+    // Recolhido, o #1041, com resposta nova, conta no contador azul do título e no nome dele.
+    expect(chamados.getAttribute('aria-label')).toBe('Chamados · 3, 1 com resposta nova');
     expect(contadorDe(chamados)).toEqual(['1', 'chamado']);
 
     // Na volta à lista, a escolha guardada no navegador: recolhido, com as outras seções embaixo.
@@ -534,7 +534,7 @@ describe('a trilha e a lista do Chat', () => {
     fireEvent.click(within(lugar).getByRole('link', { name: 'Chat' }));
     const deNovo = await listaDoChat();
     const recolhido = await within(deNovo).findByRole('button', {
-      name: 'Chamados · 3, 1 resposta nova',
+      name: 'Chamados · 3, 1 com resposta nova',
     });
     expect(recolhido.getAttribute('aria-expanded')).toBe('false');
     await within(deNovo).findByRole('heading', { level: 2, name: 'Recentes' });
@@ -574,6 +574,29 @@ describe('a trilha e a lista do Chat', () => {
     // Aberta, a seção vazia diz que não há chamado.
     fireEvent.click(chamados);
     expect(within(lista).getByText('Nenhum chamado aberto.')).toBeTruthy();
+  });
+
+  it('CHAMADOS recolhido conta os chamados com resposta nova, como a trilha, e não as respostas', async () => {
+    localStorage.setItem('grafite.chat.chamadosRecolhidos', 'sim');
+    abrir(
+      '/chat',
+      comOChat({
+        'GET /api/chat/chamados': () =>
+          Response.json({
+            ...CHAMADOS_DA_ANA,
+            abertos: CHAMADOS_DA_ANA.abertos.map((chamado) =>
+              chamado.numero === 1044 ? { ...chamado, respostaNova: 2 } : chamado,
+            ),
+          }),
+      }),
+    );
+    const lista = await listaDoChat();
+    // O 1041, com 1 resposta nova, e o 1044, com 2: dois chamados.
+    const chamados = await within(lista).findByRole('button', {
+      name: 'Chamados · 3, 2 com resposta nova',
+    });
+    expect(chamados.getAttribute('aria-expanded')).toBe('false');
+    expect(contadorDe(chamados)).toEqual(['2', 'chamado']);
   });
 
   it.each([

@@ -160,26 +160,26 @@ const naSecao = (chamados: readonly ChamadoNaLista[], numero: number | null) =>
 
 /**
  * O título que abre e fecha a seção: o botão com a seta que gira, e a boia no de CHAMADOS. Recolhida,
- * a soma das respostas novas fica no contador azul ao lado do título e no nome dele, como
- * "Chamados · 3, 1 resposta nova".
+ * quantos chamados dela têm resposta nova fica no contador azul ao lado do título e no nome dele,
+ * como o item Chamados da trilha: "Chamados · 3, 1 com resposta nova".
  */
 function TituloQueRecolhe({
   aberta,
   itens,
   alternar,
   chamado = false,
-  respostasNovas = 0,
+  comRespostaNova = 0,
   children,
 }: {
   aberta: boolean;
   itens: string;
   alternar: () => void;
   chamado?: boolean;
-  respostasNovas?: number;
+  comRespostaNova?: number;
   children: string;
 }) {
-  const novas = aberta ? 0 : respostasNovas;
-  const contagem = contagemEmTexto(novas, 'resposta nova', 'respostas novas');
+  const novas = aberta ? 0 : comRespostaNova;
+  const contagem = contagemEmTexto(novas, 'com resposta nova', 'com resposta nova');
   return (
     <h2 className={estilos.tituloDaSecao} data-tom={chamado ? 'chamado' : undefined}>
       <button
@@ -248,7 +248,7 @@ function SecaoDosChamados({
         itens={idDosItens}
         alternar={alternar}
         chamado
-        respostasNovas={chamados.reduce((soma, chamado) => soma + chamado.respostaNova, 0)}
+        comRespostaNova={chamados.filter(({ respostaNova }) => respostaNova > 0).length}
       >
         {`Chamados · ${chamados.length}`}
       </TituloQueRecolhe>
