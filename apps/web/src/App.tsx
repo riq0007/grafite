@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { criarClienteDeConsultas } from './api/consultas.ts';
 import { ProvedorDaApi } from './api/useApi.tsx';
 import { PrimeiraCarga } from './casca/primeiraTela.ts';
+import { paraAJanelaDoChat } from './chat/enderecos.ts';
+import { ProvedorDosRascunhos } from './chat/rascunhos.tsx';
 import { type CanalDeEventos, criarCanalDeEventos } from './eventos/canal.ts';
 import { ligarEventosDosModulos } from './eventos/modulos.ts';
 import { ProvedorDoCanal } from './eventos/useCanal.tsx';
@@ -40,10 +42,12 @@ export function App({
     () => ligarEventosDosModulos({ registro: REGISTRO, canal, consultas }),
     [canal, consultas],
   );
-  // Os destinos das notificações são endereços do app, conferidos por quem notifica.
+  // Os destinos das notificações são endereços do app, conferidos por quem notifica. O do app do
+  // chat abre o mesmo lugar na janela do Chat, com a busca, como o `?m=` da mensagem (change
+  // chat-com-chamados, design, decisão 12).
   const navegar = useCallback(
     (destino: string) => {
-      void roteador.navigate({ to: destino });
+      void roteador.navigate({ href: paraAJanelaDoChat(destino) });
     },
     [roteador],
   );
@@ -56,7 +60,10 @@ export function App({
               <ProvedorDeNotificacoes navegar={navegar}>
                 <Porta>
                   <PrimeiraCarga roteador={roteador}>
-                    <RouterProvider router={roteador} />
+                    {/* Os rascunhos da janela do Chat duram enquanto a casca está aberta. */}
+                    <ProvedorDosRascunhos>
+                      <RouterProvider router={roteador} />
+                    </ProvedorDosRascunhos>
                   </PrimeiraCarga>
                 </Porta>
               </ProvedorDeNotificacoes>

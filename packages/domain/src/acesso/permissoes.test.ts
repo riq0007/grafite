@@ -67,6 +67,9 @@ describe('catálogo de permissões', () => {
       ['chamados.ver', 'local'],
       ['chamados.atender', 'local'],
       ['chamados.configurar', 'organizacao'],
+      ['chamados.pedir', 'organizacao'],
+      ['chat.usar', 'organizacao'],
+      ['chat.configurar', 'organizacao'],
     ]);
   });
 
@@ -163,6 +166,33 @@ describe('catálogo de permissões', () => {
         area: 'Chamados',
         descricao:
           'Configurar os tipos de chamado, o formulário, as respostas prontas e o horário da TI',
+        escopo: 'organizacao',
+        inclui: [],
+      },
+      // O pedido pelo chat (change chat-com-chamados, design, decisão 14).
+      {
+        chave: 'chamados.pedir',
+        area: 'Chamados',
+        descricao: 'Pedir chamados pelo chat, em nome de si ou de outra pessoa',
+        escopo: 'organizacao',
+        inclui: [],
+      },
+    ]);
+  });
+
+  it('tem as permissões do chat, na área Chat, na organização (change chat-com-chamados)', () => {
+    expect(PERMISSOES.filter((p) => p.area === 'Chat')).toEqual([
+      {
+        chave: 'chat.usar',
+        area: 'Chat',
+        descricao: 'Usar o chat: as conversas diretas, as equipes e os canais',
+        escopo: 'organizacao',
+        inclui: [],
+      },
+      {
+        chave: 'chat.configurar',
+        area: 'Chat',
+        descricao: 'Configurar as equipes e os canais do chat',
         escopo: 'organizacao',
         inclui: [],
       },

@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { comecoDoAno, comecoDoDia, nomeDoFuso, relogioDoFuso } from './fuso.ts';
+import {
+  comecoDoAno,
+  comecoDoDia,
+  comecoDoDiaDoCalendario,
+  nomeDoFuso,
+  relogioDoFuso,
+} from './fuso.ts';
 
 describe('comecoDoAno', () => {
   it('é a meia-noite do 1º de janeiro no relógio do fuso', () => {
@@ -39,6 +45,34 @@ describe('comecoDoDia', () => {
   it('a própria meia-noite começa o dia', () => {
     const meiaNoite = new Date('2026-10-02T03:00:00Z');
     expect(comecoDoDia(meiaNoite, 'America/Sao_Paulo')).toEqual(meiaNoite);
+  });
+
+  it('sem a meia-noite, que o verão pula, o dia começa na hora que ele deixa no lugar dela', () => {
+    // Em America/Santiago, às 04:00 UTC de 06/09/2026, o relógio passa das 23:59:59 (UTC-4) à 01:00
+    // (UTC-3), e a véspera acaba às 23:59:59.
+    expect(comecoDoDia(new Date('2026-09-06T12:00:00Z'), 'America/Santiago')).toEqual(
+      new Date('2026-09-06T04:00:00Z'),
+    );
+    expect(comecoDoDiaDoCalendario(2026, 9, 6, 'America/Santiago')).toEqual(
+      new Date('2026-09-06T04:00:00Z'),
+    );
+  });
+
+  it('a troca do verão no meio do dia não muda a meia-noite', () => {
+    // Em America/New_York, o verão começa às 02:00 de 08/03/2026 e acaba às 02:00 de 01/11/2026.
+    expect(comecoDoDiaDoCalendario(2026, 3, 8, 'America/New_York')).toEqual(
+      new Date('2026-03-08T05:00:00Z'),
+    );
+    expect(comecoDoDiaDoCalendario(2026, 11, 1, 'America/New_York')).toEqual(
+      new Date('2026-11-01T04:00:00Z'),
+    );
+  });
+
+  it('o dia do calendário passa do fim do mês e do ano', () => {
+    expect(comecoDoDiaDoCalendario(2026, 12, 32, 'America/Sao_Paulo')).toEqual(
+      new Date('2027-01-01T03:00:00Z'),
+    );
+    expect(comecoDoDiaDoCalendario(2026, 3, 0, 'UTC')).toEqual(new Date('2026-02-28T00:00:00Z'));
   });
 });
 

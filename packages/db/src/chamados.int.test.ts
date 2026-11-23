@@ -523,7 +523,8 @@ describe('chamados', () => {
     expect(await recusada(chamado(orgA, deA, tipoDeA, { titulo: 'a'.repeat(121) }))).toBe(
       'chamados_titulo_valido',
     );
-    expect(await recusada(chamado(orgA, deA, tipoDeA, { origem: 'chat' }))).toBe(
+    // A origem da aba, que o banco ainda não conhece.
+    expect(await recusada(chamado(orgA, deA, tipoDeA, { origem: 'aba' }))).toBe(
       'chamados_origem_valida',
     );
     expect(await recusada(chamado(orgA, deA, tipoDeA, { situacao: 'pausado' }))).toBe(
@@ -753,9 +754,9 @@ describe('conversa dos chamados', () => {
   it('o conteúdo: o texto da mensagem e da nota, o código e os dados do evento', async () => {
     const daConta = { autor_conta: deA.conta };
     await mensagem(orgA, doA, { especie: 'nota', ...daConta, texto: 'a'.repeat(4000) });
-    expect(await recusada(mensagem(orgA, doA, { especie: 'mensagem', ...daConta }))).toBe(
-      'mensagens_dos_chamados_conteudo_valido',
-    );
+    // Só com os anexos, a mensagem e a nota têm o texto nulo (tarefa 4.18 do chat-com-chamados).
+    await mensagem(orgA, doA, { especie: 'mensagem', ...daConta, texto: null });
+    await mensagem(orgA, doA, { especie: 'nota', ...daConta, texto: null });
     expect(
       await recusada(mensagem(orgA, doA, { especie: 'mensagem', ...daConta, texto: '  ' })),
     ).toBe('mensagens_dos_chamados_conteudo_valido');

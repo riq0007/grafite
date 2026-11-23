@@ -44,7 +44,8 @@ export function Popover({
     <PainelFlutuante
       placement={posicao}
       offset={8}
-      className={[estilos.popover, opaco ? estilos.opaco : null].filter(Boolean).join(' ')}
+      opaco={opaco}
+      className={estilos.popover}
       {...(gatilho ? {} : { triggerRef: ancora, isOpen: aberto, onOpenChange: aoMudarAberto })}
     >
       <Dialog aria-label={ocultarTitulo ? titulo : undefined} className={estilos.dialogo}>

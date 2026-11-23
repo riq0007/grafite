@@ -11,6 +11,7 @@ import {
   prazoEmMinutos,
   type RelogioDoChamado,
   situacaoDoPrazo,
+  TIPOS_DE_CHAMADO_DE_FABRICA,
 } from '@grafite/domain';
 import type { Page } from '@playwright/test';
 import { SESSAO } from './fixtures.ts';
@@ -223,4 +224,100 @@ export async function simularChamados(pagina: Page) {
       chamado.versao += 1;
     },
   };
+}
+
+type Ficha = components['schemas']['FichaDoChamado'];
+
+const daFicha = (n: number) => `0199d3a0-0000-7000-8000-${String(n).padStart(12, '0')}`;
+
+/** O print de 512 × 288 que Paulo mandou, com a miniatura do servidor, do mesmo tamanho. */
+const PRINT = {
+  id: daFicha(701),
+  nome: 'print-da-folha-manchada.png',
+  tipo: 'image/png',
+  bytes: 84_000,
+  miniatura: { largura: 512, altura: 288 },
+};
+
+/**
+ * A ficha do #1046, com Ana Souza, e a miniatura dos anexos dela (change chat-com-chamados, revisão
+ * da tarefa 4.20): o print deitado na mensagem de Paulo e o mesmo print na nota da TI.
+ */
+export async function simularFichaComOPrint(pagina: Page, foto: string) {
+  const [tipo] = TIPOS_DE_CHAMADO_DE_FABRICA;
+  if (!tipo) throw new Error('Sem os tipos de chamado de fábrica.');
+  const ha = (minutos: number) => new Date(Date.now() - minutos * 60_000).toISOString();
+  const paulo = { tipo: 'pessoa' as const, id: daFicha(602), nome: 'Paulo Nunes' };
+  const ficha: Ficha = {
+    numero: 1046,
+    titulo: 'Impressora manchando a folha',
+    situacao: 'em-atendimento',
+    versao: 2,
+    origem: 'ti',
+    origemNoChat: null,
+    abertoEm: ha(120),
+    fechado: false,
+    reabrirAte: null,
+    tipo: { id: TIPO.id, nome: tipo.nome, icone: tipo.icone, podeVirarOs: false },
+    pessoa: {
+      id: paulo.id,
+      nome: paulo.nome,
+      local: null,
+      abrir: false,
+      contatos: null,
+      usaOChat: true,
+    },
+    responsavel: { conta: ANA.conta, nome: ANA.nome, desde: ha(100), naoAtendeMais: false },
+    ativo: null,
+    locais: [],
+    semLocal: true,
+    permite: { atender: true },
+    relogio: null,
+    parouEm: null,
+    horario: { ...HORARIO_DA_TI_PADRAO, dias: [...HORARIO_DA_TI_PADRAO.dias] },
+    os: null,
+    solicitacao: null,
+    formulario: tipo.formulario,
+    respostas: {},
+    citados: { ativos: [], locais: [], pessoas: [] },
+    anexosDosCampos: [],
+    resumo: '',
+    conversa: [
+      {
+        especie: 'mensagem',
+        id: daFicha(611),
+        em: ha(110),
+        autor: paulo,
+        texto: 'A folha sai manchada. Segue o print.',
+        anexos: [PRINT],
+        opcoes: null,
+        escolhida: null,
+        cartao: null,
+      },
+      {
+        especie: 'nota',
+        id: daFicha(612),
+        em: ha(90),
+        autor: { tipo: 'conta', id: ANA.conta, nome: ANA.nome },
+        texto: 'O mesmo borrão do print de ontem.',
+        anexos: [{ ...PRINT, id: daFicha(702) }],
+        opcoes: null,
+        escolhida: null,
+        cartao: null,
+      },
+    ],
+    respostasProntas: [],
+  };
+  await pagina.route(/\/api\/chamados\/1046(\?.*)?$/, (rota) =>
+    rota.request().method() === 'GET' ? rota.fulfill({ json: ficha }) : rota.fallback(),
+  );
+  await pagina.route(/\/api\/chamados\/1046\/anexos\/[0-9a-f-]{36}\/miniatura$/, (rota) =>
+    rota.fulfill({ headers: { 'content-type': 'image/svg+xml' }, body: foto }),
+  );
+  // A ficha lê os locais para o campo do local do chamado: nenhum, como no chamado sem local.
+  await pagina.route(/\/api\/locais(\?.*)?$/, (rota) =>
+    rota.request().method() === 'GET'
+      ? rota.fulfill({ json: { locais: [], permite: { cadastrarNaRaiz: false } } })
+      : rota.fallback(),
+  );
 }

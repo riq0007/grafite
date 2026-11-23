@@ -70,6 +70,14 @@ describe('módulos opcionais', () => {
             'Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.',
           ligado: true,
         },
+        // O módulo da change chat-com-chamados, depois do Chamados.
+        {
+          id: 'chat',
+          nome: 'Chat',
+          descricao:
+            'As conversas das pessoas da organização: as diretas, as equipes, os canais e os chamados de cada uma.',
+          ligado: true,
+        },
         {
           id: 'ativos',
           nome: 'Ativos',

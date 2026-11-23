@@ -3,7 +3,9 @@
 // notificações, o quadro e a busca abrem, e o cabeçalho da página do kit, com a trilha, a seta de
 // voltar (tarefa 5.32), o título e o número, o selo, o tipo, quem pediu e quem atende, o quadro do
 // prazo e as ações de cada situação, e, embaixo, a conversa (tarefa 5.11) e o campo de escrever
-// (tarefa 5.12), com a coluna da direita ao lado (tarefa 5.13, m04).
+// (tarefa 5.12), com a coluna da direita ao lado (tarefa 5.13, m04). O resolvido diz até quando se
+// reabre, "fecha em 18/11", e o fechado tem o selo Fechado, sem as ações (change chat-com-chamados,
+// tarefa 4.13).
 import {
   AreaDeTexto,
   Botao,
@@ -15,6 +17,7 @@ import {
   EstadoVazio,
   Icone,
   ItemDeMenu,
+  LugarDeSoltar,
   MensagemDoPasso,
   Menu,
   useDataHora,
@@ -35,6 +38,9 @@ import {
 import { Fragment, type ReactNode, useState } from 'react';
 import { FalhaDaConsulta } from '../../../api/consultas.ts';
 import { useAgora } from '../../../casca/status/useAgora.ts';
+import { diaDoReabrir } from '../../../chat/chamado.ts';
+import { useJanelaAVista } from '../../../chat/janela.ts';
+import { useChamadoAVista } from '../../../notificacoes/destinosAVista.tsx';
 import { useAcesso } from '../../../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../../../sessao/useSessao.tsx';
 import { useArvoreDosLocais } from '../../administracao/seletores/SeletorDeLocal.tsx';
@@ -137,6 +143,9 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
   const { pode } = useAcesso();
   const operacaoLigada = !(useServidor()?.modulosDesligados ?? []).includes('operacao');
   const doAtivo = acoesDoAtivo(ficha, { operacaoLigada, pode });
+  // As notificações deste chamado, nos dois endereços dele, como a resposta da pessoa, não viram
+  // aviso enquanto ele está à vista.
+  useChamadoAVista(ficha.numero, useJanelaAVista());
   // Cada envio do campo de escrever leva a conversa à última mensagem.
   const [envios, definirEnvios] = useState(0);
   return (
@@ -153,10 +162,15 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         }
         detalhe={<DadosDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
         quadro={<QuadroDoPrazoDoChamado ficha={ficha} agora={agora} dataHora={dataHora} />}
-        acoes={ficha.permite.atender && <AcoesDoChamado ficha={ficha} doAtivo={doAtivo} />}
+        acoes={
+          ficha.permite.atender &&
+          !ficha.fechado && <AcoesDoChamado ficha={ficha} doAtivo={doAtivo} />
+        }
       />
       <div className={estilos.corpo}>
-        <div className={estilos.principal}>
+        {/* A conversa e o campo são o lugar de soltar os anexos do campo; sem ele, como no fechado,
+            ninguém recebe (change chat-com-chamados, tarefa 4.19). */}
+        <LugarDeSoltar className={estilos.principal}>
           <Conversa key={ficha.numero} ficha={ficha} envios={envios} />
           <CampoDeEscrever
             // O rascunho é de um chamado: o outro abre com o campo vazio.
@@ -164,7 +178,7 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
             ficha={ficha}
             aoEnviar={() => definirEnvios((antes) => antes + 1)}
           />
-        </div>
+        </LugarDeSoltar>
         <LadoDoChamado ficha={ficha} acoes={doAtivo} />
       </div>
     </div>
@@ -229,9 +243,12 @@ function desdeDeQuemAtende(desde: Date, agora: Date, dataHora: DataHora): string
     : `atende desde ${momento}`;
 }
 
-/** O selo, o tipo, quem pediu e quem atende; na triagem, ninguém atende, e o selo o diz. */
+/**
+ * O selo, o tipo, quem pediu e quem atende; na triagem, ninguém atende, e o selo o diz. O resolvido
+ * diz, junto do selo, o último dia em que se reabre, e o fechado tem o selo Fechado.
+ */
 function DadosDoChamado({
-  ficha: { situacao, tipo, pessoa, responsavel },
+  ficha: { situacao, tipo, pessoa, responsavel, fechado, reabrirAte },
   agora,
   dataHora,
 }: {
@@ -241,7 +258,14 @@ function DadosDoChamado({
 }) {
   return (
     <div className={estilos.dados}>
-      <Selo selo={situacao} />
+      <span className={estilos.situacao}>
+        <Selo selo={fechado ? 'fechado' : situacao} />
+        {situacao === 'resolvido' && !fechado && reabrirAte !== null && (
+          <span
+            className={estilos.fecha}
+          >{`fecha em ${diaDoReabrir(reabrirAte, agora, dataHora)}`}</span>
+        )}
+      </span>
       <span className={estilos.tipo}>
         <IconeDoTipo icone={tipo.icone} nome={tipo.nome} decorativo />
         {tipo.nome}

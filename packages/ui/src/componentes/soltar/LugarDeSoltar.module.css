@@ -1,0 +1,27 @@
+/* O lugar onde se soltam arquivos: o aviso cobre o lugar inteiro, por cima do que está dentro dele,
+   como o botão de ir ao fim da conversa e a lista do "#". */
+.lugar {
+  position: relative;
+  isolation: isolate;
+}
+
+/* "Solte para anexar", com arquivos sobre o lugar: a borda tracejada do destaque, como a área dos
+   campos de arquivo, sobre a superfície, que esconde o que está embaixo. Não é vidro: o aviso não é
+   uma das camadas sobrepostas do material. O ponteiro passa por ele, e o arrasto segue no lugar. */
+.aviso {
+  position: absolute;
+  inset: var(--esp-2);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  border: 2px dashed var(--cor-destaque);
+  border-radius: var(--raio-janela);
+  background-color: var(--cor-superficie);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  pointer-events: none;
+}

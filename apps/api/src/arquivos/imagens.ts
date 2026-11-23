@@ -2,6 +2,7 @@
 // do conteúdo, e nunca do nome nem do tipo informado: o SVG pelo texto, e o resto pelo sharp. A
 // imagem raster é regravada em WebP: sem os metadados, de pé conforme o EXIF e com no máximo 2048 px
 // no maior lado. O SVG é guardado sanitizado. As miniaturas saem da regravada ou do SVG sanitizado.
+// O anexo de imagem, guardado como chegou, ganha só a de 512 px.
 // Para um servidor pequeno, só dois tratamentos correm ao mesmo tempo, cada um numa linha.
 import sharp, { type Metadata, type OutputInfo } from 'sharp';
 import { ProblemaDaApi } from '../problemas.ts';
@@ -142,6 +143,56 @@ async function tratar(conteudo: Buffer): Promise<ImagemTratada> {
     altura: regravada.info.height,
     variantes,
   };
+}
+
+/** O lado da miniatura do anexo de imagem, o maior das miniaturas. */
+const LADO_DA_MINIATURA = 512;
+
+/**
+ * As dimensões da miniatura do anexo: no quadrado de 512 px, na proporção da imagem e sem ampliar a
+ * menor. A resposta das conversas as tira das dimensões guardadas da imagem, de pé.
+ */
+export function ladosDaMiniatura(largura: number, altura: number) {
+  const maior = Math.max(largura, altura);
+  if (maior <= LADO_DA_MINIATURA) return { largura, altura };
+  const escala = LADO_DA_MINIATURA / maior;
+  return {
+    largura: Math.max(1, Math.round(largura * escala)),
+    altura: Math.max(1, Math.round(altura * escala)),
+  };
+}
+
+export interface MiniaturaDoAnexo {
+  /** As dimensões da imagem enviada, de pé conforme o EXIF. */
+  largura: number;
+  altura: number;
+  /** A miniatura em WebP, de pé e sem os metadados. */
+  conteudo: Buffer;
+}
+
+/**
+ * A miniatura do anexo de imagem (change chat-com-chamados, decisão 15): só a de 512 px, regravada
+ * sem os metadados e de pé, sem o teto de 10 MB, porque o anexo já tem o dele. A imagem que não se
+ * lê e a de mais de 50 megapixels ficam sem ela, e o anexo entra assim mesmo.
+ */
+export function miniaturaDoAnexo(conteudo: Buffer): Promise<MiniaturaDoAnexo | null> {
+  return naVez(async () => {
+    try {
+      const { width, height, orientation = 1 } = await sharp(conteudo).metadata();
+      if (width * height > LIMITE_DE_PIXELS) return null;
+      // Da 5 à 8, a imagem gira de lado: de pé, a largura é a altura guardada.
+      const [largura, altura] = orientation >= 5 ? [height, width] : [width, height];
+      const lados = ladosDaMiniatura(largura, altura);
+      const miniatura = await sharp(conteudo, LEITURA)
+        .autoOrient()
+        .resize({ width: lados.largura, height: lados.altura, fit: 'fill' })
+        .webp()
+        .toBuffer();
+      return { largura, altura, conteudo: miniatura };
+    } catch {
+      return null;
+    }
+  });
 }
 
 /** O SVG sanitizado é a variante completa, e as miniaturas são desenhadas a partir dele. */

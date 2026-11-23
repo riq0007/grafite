@@ -1,0 +1,105 @@
+/* A pergunta com opções (m04 e m10): os chips de 36 px, com a borda à vista, que quebram a linha, e a
+   linha de quem escolheu embaixo. */
+.pergunta {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin-block-start: var(--esp-2);
+}
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opcao {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  max-inline-size: 100%;
+  min-block-size: calc(var(--esp-8) + var(--esp-1));
+  margin: 0;
+  padding: var(--esp-1) var(--esp-4);
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+  line-height: var(--entrelinha-justa);
+  text-align: start;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--dur-deslocamento) var(--curva-padrao),
+    border-color var(--dur-deslocamento) var(--curva-padrao),
+    color var(--dur-deslocamento) var(--curva-padrao);
+}
+
+.opcao > svg {
+  flex: none;
+}
+
+button.opcao:hover {
+  border-color: var(--cor-texto-2);
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+button.opcao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+button.opcao[aria-disabled] {
+  cursor: progress;
+}
+
+/* A que vai, enquanto a escolha não volta: a borda do destaque. */
+button.opcao[data-escolhendo] {
+  border-color: var(--cor-destaque);
+}
+
+/* A escolhida: cheia, na cor do destaque, com o ✓ e o nome em peso forte. */
+.opcao[data-escolhida] {
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-destaque);
+  color: var(--cor-sobre-destaque);
+  font-weight: var(--peso-forte);
+}
+
+/* As outras, apagadas: a borda fina e o texto secundário. */
+.opcao[data-apagada] {
+  border-color: var(--cor-linha);
+  background-color: transparent;
+  color: var(--cor-texto-2);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .opcao {
+  min-block-size: var(--alvo-toque);
+}
+
+.legenda {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.legenda:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

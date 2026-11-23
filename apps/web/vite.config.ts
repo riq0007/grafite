@@ -1,6 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { DO_CHAT } from './src/chat/enderecos.ts';
+import { paginaDoChat } from './src/chat/noVite.ts';
 import { chegadaNoIndex } from './src/chegada/noIndex.ts';
 
 /** Pré-carrega as fontes principais (latin 400/600 e mono 400) no HTML compilado. */
@@ -36,6 +39,10 @@ function preloadDeFontes(): Plugin {
  * do cache: não há cache em tempo de execução, e a navegação para eles não cai no index.html. A
  * versão nova espera o usuário escolher "Atualizar" (registro no main.tsx), e o manifesto é o do
  * pnpm marca:gerar. No pnpm dev, não há service worker.
+ *
+ * O app do chat (change chat-com-chamados, design, decisão 12) abre pela rede, porque sem ela não
+ * há conversa: a navegação para o /chat não cai no index.html da casca, que traz o manifesto do
+ * Grafite, e a página do chat fica fora do cache, para o /chat/, com a barra, também vir da rede.
  */
 function pwa() {
   return VitePWA({
@@ -47,8 +54,9 @@ function pwa() {
     workbox: {
       // As fontes vão só em woff2, que é o que os navegadores-alvo pedem.
       globPatterns: ['**/*.{js,css,html,woff2,svg,png,ico,webmanifest}'],
+      globIgnores: ['**/node_modules/**/*', 'chat/index.html'],
       navigateFallback: 'index.html',
-      navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/health(\/|$)/],
+      navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/health(\/|$)/, DO_CHAT],
       cleanupOutdatedCaches: true,
       // O push e o toque nele (change p3c-email-e-push, design, decisão 7), num arquivo próprio.
       importScripts: ['sw-avisos.js'],
@@ -60,7 +68,16 @@ function pwa() {
 }
 
 export default defineConfig({
-  plugins: [react(), preloadDeFontes(), chegadaNoIndex(), pwa()],
+  plugins: [react(), preloadDeFontes(), chegadaNoIndex(), paginaDoChat(), pwa()],
+  build: {
+    rolldownOptions: {
+      // As duas páginas: a casca e o app do chat, cada uma com a entrada dela.
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        chat: fileURLToPath(new URL('./chat/index.html', import.meta.url)),
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

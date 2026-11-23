@@ -1,6 +1,8 @@
 // Leva a chegada ao index.html (F1c, design, decisão 1): a camada do carregamento, que existe antes
 // do JavaScript, o estilo dela e o roteiro que a mostra se a chegada passar de 500 ms. Roda na
-// compilação e no servidor de desenvolvimento, pelo plugin chegadaNoIndex.
+// compilação e no servidor de desenvolvimento, pelo plugin chegadaNoIndex. A página do app do chat
+// fica sem ela (change chat-com-chamados, design, decisão 12): ficaria no "Carregando o Grafite",
+// que só o `chegar` da casca fecha.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { posix } from 'node:path';
@@ -10,6 +12,7 @@ import {
   marcacaoDoCarregamento,
 } from '@grafite/ui/carregamento';
 import type { Plugin } from 'vite';
+import { PAGINA_DO_CHAT } from '../chat/enderecos.ts';
 import { CARREGANDO_O_GRAFITE } from './etapas.ts';
 
 const exigir = createRequire(import.meta.url);
@@ -72,7 +75,8 @@ export function chegadaNoIndex(): Plugin {
     },
     transformIndexHtml: {
       order: 'post',
-      handler: (html) => comAChegada(html, { desenvolvimento }),
+      handler: (html, { path }) =>
+        path === PAGINA_DO_CHAT ? html : comAChegada(html, { desenvolvimento }),
     },
   };
 }

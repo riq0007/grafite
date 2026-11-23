@@ -56,6 +56,7 @@ function conexao(contaId: string, acesso: Acesso, orgId = 'org-a') {
     contaId,
     sessaoId: `sessao-${sessoes}`,
     acesso,
+    grupos: [],
     recebidos,
     enviar: (evento) => recebidos.push(evento.id),
     reiniciar: () => recebidos.push('reiniciar'),
@@ -84,11 +85,21 @@ function evento(
 function fontes({
   arvore = async () => ARVORE,
   acesso = async () => acessoCom(),
+  grupos = async () => [],
 }: {
   arvore?: (orgId: string) => Promise<ArvoreDeLocais>;
   acesso?: (orgId: string, contaId: string) => Promise<Acesso>;
+  grupos?: (orgId: string, contaId: string) => Promise<string[]>;
 } = {}) {
-  return { lerArvore: vi.fn(arvore), lerAcesso: vi.fn(acesso), avisar: vi.fn() };
+  return {
+    lerArvore: vi.fn(arvore),
+    // O acesso e os grupos da conta, lidos juntos (change chat-com-chamados, design, decisão 4).
+    lerAcesso: vi.fn(async (orgId: string, contaId: string) => ({
+      acesso: await acesso(orgId, contaId),
+      grupos: await grupos(orgId, contaId),
+    })),
+    avisar: vi.fn(),
+  };
 }
 
 describe('criarDistribuidor', () => {
@@ -170,6 +181,55 @@ describe('criarDistribuidor', () => {
     expect(lidas.lerAcesso).toHaveBeenCalledWith('org-a', 'conta-carla');
     expect(noComputador.recebidos).toEqual([mudaram.id, depois.id]);
     expect(noCelular.recebidos).toEqual([mudaram.id, depois.id]);
+  });
+
+  // A entrada de uma conta num grupo, que o login pelo AD grava uma vez por grupo, relê só ela
+  // (pontos da revisão da tarefa 1.3 do chat-com-chamados).
+  it('em acessos.mudaram com o alvo conta, relê só as conexões dessa conta', async () => {
+    const lidas = fontes({ acesso: async () => acessoCom({ 'pessoas.ver': true }) });
+    const distribuidor = criarDistribuidor(lidas);
+    const noComputador = conexao('conta-bruno', acessoCom());
+    const noCelular = conexao('conta-bruno', acessoCom());
+    const carla = conexao('conta-carla', acessoCom());
+    for (const c of [noComputador, noCelular, carla]) distribuidor.entrar(c);
+
+    const entrou: EventoDeSaida = {
+      ...evento('acessos.mudaram', { todas: true }),
+      alvo: { tipo: 'conta', id: 'conta-bruno' },
+    };
+    await distribuidor.distribuir(entrou);
+    const depois = evento('pessoas.mudaram', { permissao: 'pessoas.ver' });
+    await distribuidor.distribuir(depois);
+
+    expect(lidas.lerAcesso).toHaveBeenCalledTimes(1);
+    expect(lidas.lerAcesso).toHaveBeenCalledWith('org-a', 'conta-bruno');
+    expect(noComputador.recebidos).toEqual([entrou.id, depois.id]);
+    expect(noCelular.recebidos).toEqual([entrou.id, depois.id]);
+    expect(carla.recebidos).toEqual([entrou.id]);
+  });
+
+  it('em acessos.mudaram, relê também os grupos da conta (change chat-com-chamados)', async () => {
+    let doGrupo: string[] = [];
+    const lidas = fontes({
+      acesso: async () => acessoCom({ 'pessoas.ver': true }),
+      grupos: async () => doGrupo,
+    });
+    const distribuidor = criarDistribuidor(lidas);
+    const bruno = conexao('conta-bruno', acessoCom({ 'pessoas.ver': true }));
+    distribuidor.entrar(bruno);
+
+    const daEquipe = () =>
+      evento('chat.mudou', { permissao: 'pessoas.ver', grupos: ['grupo-redes'] });
+    await distribuidor.distribuir(daEquipe());
+    // A conta entra no grupo, e a entrada grava o acessos.mudaram.
+    doGrupo = ['grupo-redes'];
+    const mudaram = evento('acessos.mudaram', { todas: true });
+    await distribuidor.distribuir(mudaram);
+    const depois = daEquipe();
+    await distribuidor.distribuir(depois);
+
+    expect(bruno.grupos).toEqual(['grupo-redes']);
+    expect(bruno.recebidos).toEqual([mudaram.id, depois.id]);
   });
 
   it('entrega na ordem em que os eventos chegaram, mesmo esperando a árvore', async () => {

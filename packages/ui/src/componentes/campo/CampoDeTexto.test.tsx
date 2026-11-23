@@ -40,4 +40,32 @@ describe('CampoDeTexto', () => {
     expect(campo.getAttribute('aria-invalid')).toBe('true');
     expect(descricoesDe(campo).join(' ')).toContain('Patrimônio já cadastrado.');
   });
+
+  it('o contador conta pela regra dada, passa à cor crítica acima do máximo, e o leitor ouve o máximo', () => {
+    const contar = (texto: string) => texto.trim().length;
+    const { rerender } = render(
+      <CampoDeTexto
+        rotulo="Título"
+        value="  Impressora manchando "
+        onChange={() => {}}
+        contador={{ maximo: 20, contar }}
+        erro="Use até 20 caracteres."
+      />,
+    );
+    const campo = screen.getByRole('textbox', { name: 'Título' });
+    expect(screen.getByText('20/20').hasAttribute('data-passou')).toBe(false);
+    expect(descricoesDe(campo)).toEqual(
+      expect.arrayContaining(['Até 20 caracteres.', 'Use até 20 caracteres.']),
+    );
+    rerender(
+      <CampoDeTexto
+        rotulo="Título"
+        value="Impressora manchando!"
+        onChange={() => {}}
+        contador={{ maximo: 20, contar }}
+      />,
+    );
+    expect(screen.getByText('21/20').hasAttribute('data-passou')).toBe(true);
+    expect(screen.getByText('21/20').getAttribute('aria-hidden')).toBe('true');
+  });
 });

@@ -1,0 +1,102 @@
+/* O cartão do ativo na mensagem (m04): a superfície com a borda, o nome e o selo em cima, a barra do
+   suprimento no meio e os dados em colunas embaixo. */
+.cartao {
+  display: grid;
+  gap: var(--esp-3);
+  max-inline-size: calc(var(--largura-previa) * 0.6);
+  margin-block-start: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+}
+
+.topo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-3);
+}
+
+.miniatura {
+  flex: none;
+}
+
+.nomes {
+  display: grid;
+  flex: 1;
+  gap: calc(var(--esp-1) / 2);
+  min-inline-size: 0;
+}
+
+.nome {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.sobre,
+.mono {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.sobre {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  overflow-wrap: anywhere;
+}
+
+/* O suprimento: o nome e, ao lado, a barra do nível com o número. */
+.suprimento {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--esp-3);
+  font-size: var(--texto-rotulo);
+}
+
+.nomeDoSuprimento {
+  color: var(--cor-texto-2);
+}
+
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-6);
+  margin: 0;
+}
+
+.dados dt {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+}
+
+.dados dd {
+  margin: 0;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-medio);
+}
+
+.abrir {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--esp-1);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.abrir:hover {
+  text-decoration: underline;
+}
+
+.abrir:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}

@@ -535,7 +535,13 @@ export function clienteDoColetor(api: ApiDeTeste, host: string, token: string, v
   };
 }
 
-/** Os registros de auditoria de uma requisição, pelo código de rastreio da resposta. */
+/**
+ * Os registros de auditoria de uma requisição, pelo código de rastreio da resposta, pelo momento e,
+ * no mesmo momento, pelo id, o uuidv7 que só cresce na conexão. A requisição grava os registros com
+ * o momento da aplicação, o mesmo em todos, e aí a ordem é a da gravação. Sem a ordem, quem decidia
+ * era o plano do banco e o lugar da linha no disco, e o CI chegou a receber o chamado antes da
+ * solicitação, gravada antes dele.
+ */
 export function auditoriaDaRequisicao(
   api: ApiDeTeste,
   orgId: string,
@@ -543,7 +549,11 @@ export function auditoriaDaRequisicao(
 ) {
   const codigo = String(resposta.headers['x-codigo-de-rastreio']);
   return naOrganizacao(api.banco, orgId, (tx) =>
-    tx.select().from(auditoria).where(eq(auditoria.codigoDeRastreio, codigo)),
+    tx
+      .select()
+      .from(auditoria)
+      .where(eq(auditoria.codigoDeRastreio, codigo))
+      .orderBy(auditoria.momento, auditoria.id),
   );
 }
 

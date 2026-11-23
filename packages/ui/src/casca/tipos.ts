@@ -22,10 +22,23 @@ export interface MenuDaBarra {
   itens: readonly ItemDoMenuDaCasca[];
 }
 
+/**
+ * O selo do item do módulo no dock e na barra de abas, como o total do chat: o número à vista é só
+ * desenho, e o leitor de tela ouve a descrição depois do nome, como "Chat, 2 não lidas".
+ */
+export interface SeloDoModulo {
+  /** O que o selo mostra, como "3" ou "99+". */
+  texto: string;
+  /** O que o leitor de tela ouve depois do nome, como "2 não lidas". */
+  descricao: string;
+}
+
 export interface ModuloDaCasca {
   id: string;
   nome: string;
   icone: LucideIcon;
+  /** O selo no canto do item, como o total do chat; sem ele, o item fica sem. */
+  selo?: SeloDoModulo;
   /** Menu em árvore do módulo; sem ele, o item do dock só abre o módulo. */
   menu?: readonly ItemDoMenuDaCasca[];
   /** Menus do módulo na barra superior. */

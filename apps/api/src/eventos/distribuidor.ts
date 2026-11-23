@@ -1,7 +1,8 @@
 // O distribuidor dos eventos (spec eventos-em-tempo-real; design do F2c, decisão 10): as conexões
 // abertas de cada organização, na memória, e a entrega de cada evento a quem `podeReceber`. A
 // árvore de locais de cada organização fica guardada até o próximo `locais.mudaram`, e o acesso de
-// cada conta é relido uma vez em `acessos.mudaram`. Os eventos saem na ordem em que chegam.
+// cada conta, com os grupos dela (change chat-com-chamados, design, decisão 4), é relido uma vez em
+// `acessos.mudaram`. Os eventos saem na ordem em que chegam.
 import {
   type Acesso,
   type ArvoreDeLocais,
@@ -14,6 +15,8 @@ import {
 export interface ConexaoDeEventos extends ConexaoQueRecebe {
   /** O acesso da conta, trocado pelo distribuidor quando os acessos mudam. */
   acesso: Acesso;
+  /** Os grupos da conta, trocados com o acesso. */
+  grupos: readonly string[];
   enviar(evento: EventoDeSaida): void;
   /** Avisa a tela de que eventos podem ter se perdido: ela relê tudo. */
   reiniciar(): void;
@@ -21,7 +24,8 @@ export interface ConexaoDeEventos extends ConexaoQueRecebe {
 
 export interface FontesDoDistribuidor {
   lerArvore(orgId: string): Promise<ArvoreDeLocais>;
-  lerAcesso(orgId: string, contaId: string): Promise<Acesso>;
+  /** O acesso da conta e os grupos dela, lidos juntos. */
+  lerAcesso(orgId: string, contaId: string): Promise<Pick<ConexaoQueRecebe, 'acesso' | 'grupos'>>;
   /** Uma falha que não para a distribuição, para o log. */
   avisar(erro: unknown): void;
 }
@@ -63,7 +67,7 @@ export function criarDistribuidor(fontes: FontesDoDistribuidor): DistribuidorDeE
     return arvore;
   }
 
-  /** Relê o acesso de cada conta conectada uma vez e o põe em todas as conexões dela. */
+  /** Relê o acesso e os grupos de cada conta conectada uma vez e os põe nas conexões dela. */
   async function relerAcessos(orgId: string, conexoes: Iterable<ConexaoDeEventos>) {
     const porConta = new Map<string, ConexaoDeEventos[]>();
     for (const conexao of conexoes) {
@@ -71,8 +75,11 @@ export function criarDistribuidor(fontes: FontesDoDistribuidor): DistribuidorDeE
     }
     await Promise.all(
       [...porConta].map(async ([contaId, daConta]) => {
-        const acesso = await fontes.lerAcesso(orgId, contaId);
-        for (const conexao of daConta) conexao.acesso = acesso;
+        const { acesso, grupos } = await fontes.lerAcesso(orgId, contaId);
+        for (const conexao of daConta) {
+          conexao.acesso = acesso;
+          conexao.grupos = grupos;
+        }
       }),
     );
   }
@@ -82,7 +89,15 @@ export function criarDistribuidor(fontes: FontesDoDistribuidor): DistribuidorDeE
     const conexoes = porOrganizacao.get(evento.orgId);
     if (!conexoes || conexoes.size === 0) return;
     try {
-      if (evento.tipo === 'acessos.mudaram') await relerAcessos(evento.orgId, conexoes);
+      if (evento.tipo === 'acessos.mudaram') {
+        // Com o alvo conta, a mudança é só dela, como a entrada num grupo, que o login pelo AD grava
+        // uma vez por grupo: relê só as conexões dela, e não as da organização inteira.
+        const daConta = evento.alvo?.tipo === 'conta' ? evento.alvo.id : null;
+        const alcancadas = daConta
+          ? [...conexoes].filter((conexao) => conexao.contaId === daConta)
+          : conexoes;
+        await relerAcessos(evento.orgId, alcancadas);
+      }
       const { permissao, locais } = evento.publico;
       const arvore = permissao && locais !== undefined ? await arvoreDa(evento.orgId) : SEM_ARVORE;
       for (const conexao of [...conexoes]) {

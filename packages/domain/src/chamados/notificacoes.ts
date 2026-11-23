@@ -1,9 +1,17 @@
 // As notificações dos chamados (spec chamados, "Notificações dos chamados"; change chamados-da-ti,
 // design, decisão 12): o chamado passado a uma conta e o que cai na triagem, na severidade
 // Informação, com a origem "Chamados" e o endereço do chamado. Quem abre, assume ou reabre não é
-// avisado do próprio ato.
+// avisado do próprio ato. As mensagens (change chat-com-chamados, design, decisão 6): a resposta de
+// quem participa a quem atende, e a mensagem da TI e o resolvido a quem participa, pelo chat.
+import { comecoDoTexto } from '../chat/mensagens.ts';
+import {
+  type ChamadoParaParticipar,
+  type ContaNoChat,
+  participaDoChamado,
+} from '../chat/participacao.ts';
 import type { NovaNotificacao } from '../notificacoes/notificacoes.ts';
-import type { SituacaoDoChamado } from './acoes.ts';
+import type { MudancaDoChamado, SituacaoDoChamado } from './acoes.ts';
+import type { MudancaDeQuemParticipa } from './acoes-de-quem-participa.ts';
 import { type AlcanceDeQuemAtende, atendeOChamado, type LocaisDoChamado } from './atendimento.ts';
 
 /** O módulo que notifica os chamados, como a central o mostra. */
@@ -11,6 +19,15 @@ export const ORIGEM_DOS_CHAMADOS = 'Chamados';
 
 /** O endereço do chamado na web, para o "Abrir" da notificação. */
 export const destinoDoChamado = (numero: number) => `/chamados/${numero}`;
+
+/** O endereço do chamado no app do chat, para quem participa dele. */
+export const destinoDoChamadoNoChat = (numero: number) => `/chat/chamados/${numero}`;
+
+/**
+ * O assunto do chamado nas notificações de mensagem, que a leitura de quem participa marca como
+ * lido, com o id como o banco o devolve.
+ */
+export const assuntoDoChamado = (chamadoId: string) => `chamado:${chamadoId.toLowerCase()}`;
 
 /** O chamado como as notificações o leem. */
 export interface ChamadoQueNotifica {
@@ -40,6 +57,9 @@ const notificacao = (
   origem: ORIGEM_DOS_CHAMADOS,
   destino: destinoDoChamado(numero),
   alertaId: null,
+  mensagem: false,
+  assunto: null,
+  mensagemDoChatId: null,
 });
 
 /** "Chamado #1043 com você: Impressora manchando", para quem recebe o chamado. */
@@ -145,4 +165,110 @@ export function notificacoesDaAcao(
     case 'resolver':
       return [];
   }
+}
+
+/** O chamado nas notificações de mensagem: o id dá o assunto. */
+export interface ChamadoQueNotificaAMensagem {
+  id: string;
+  numero: number;
+  titulo: string;
+}
+
+/** A notificação de mensagem do chamado, na severidade Informação, com o assunto dele. */
+const mensagemDoChamado = (
+  chamado: ChamadoQueNotificaAMensagem,
+  contaId: string,
+  { titulo, texto, destino }: { titulo: string; texto: string; destino: string },
+): NovaNotificacao => ({
+  contaId,
+  severidade: 'info',
+  titulo,
+  descricao: comecoDoTexto(texto),
+  origem: ORIGEM_DOS_CHAMADOS,
+  destino,
+  alertaId: null,
+  mensagem: true,
+  assunto: assuntoDoChamado(chamado.id),
+  mensagemDoChatId: null,
+});
+
+/**
+ * As notificações do que quem participa faz no chamado, à TI, pela mudança que a ação decidiu
+ * (`decidirAcaoDeQuemParticipa`):
+ * - a mensagem e a escolha: "Fernanda Rocha respondeu o #1041", com o começo da mensagem ou a opção
+ *   escolhida, como mensagem, a quem atende o chamado depois dela, fora quem escreveu (a conta da TI
+ *   que é a pessoa do chamado). Na triagem, ninguém: o chamado já está na lista dela;
+ * - a reabertura, pela mensagem ou pelo "Reabrir" do resolvido: só o "Chamado #1045 com você", a
+ *   quem resolveu, ou, sem ele, a triagem, fora quem reabriu. A mensagem que reabre não notifica a
+ *   resposta. Só a reabertura à triagem lê as contas;
+ * - a avaliação e o "Marcar como vista" não notificam.
+ */
+export function notificacoesDeQuemParticipa(
+  chamado: ChamadoQueNotificaAMensagem & Pick<ChamadoQueNotifica, 'locais'>,
+  mudanca: Pick<MudancaDeQuemParticipa, 'responsavel' | 'conversa'>,
+  quem: { contaId: string; nome: string },
+  contas: readonly ContaQueRecebeATriagem[],
+  /** Os nomes dos anexos da mensagem, na ordem do envio: o começo da que vai só com eles. */
+  anexos: readonly string[] = [],
+): NovaNotificacao[] {
+  let resposta: string | null = null;
+  for (const entrada of mudanca.conversa) {
+    if (entrada.especie === 'mensagem') resposta = comecoDoTexto(entrada.texto, anexos);
+    else if (entrada.evento === 'escolheu') resposta = entrada.dados.opcao;
+    else if (entrada.evento === 'reabriu') {
+      const { para } = entrada.dados;
+      return para === null
+        ? notificacoesDaAcao(chamado, { acao: 'reabrir', para, contas }, quem.contaId)
+        : notificacoesDaAcao(chamado, { acao: 'reabrir', para }, quem.contaId);
+    }
+  }
+  const quemAtende = mudanca.responsavel;
+  if (resposta === null || quemAtende === null || quemAtende === quem.contaId) return [];
+  return [
+    mensagemDoChamado(chamado, quemAtende, {
+      titulo: `${quem.nome} respondeu o #${chamado.numero}`,
+      texto: resposta,
+      destino: destinoDoChamado(chamado.numero),
+    }),
+  ];
+}
+
+/**
+ * As notificações do que a TI faz no chamado a quem participa dele pelo chat (a conta da pessoa e a
+ * de quem o abriu pelo chat, quando usam o chat), como mensagem, com o endereço do chamado no app
+ * do chat, pela mudança que a ação decidiu (`decidirAcao`):
+ * - a mensagem para a pessoa, também a da espera: "Ana Souza respondeu o #1041", com o começo dela;
+ * - o resolvido: "#1045 resolvido: Impressora manchando", com o começo do "O que foi feito", e só ele.
+ *
+ * Quem escreveu não é notificado, também a conta da TI que é a pessoa do chamado, e cada conta
+ * recebe uma vez só. As outras ações não notificam quem participa, que as vê na conversa, e a nota
+ * interna não notifica ninguém.
+ */
+export function notificacoesParaQuemParticipa(
+  chamado: ChamadoQueNotificaAMensagem & ChamadoParaParticipar,
+  mudanca: Pick<MudancaDoChamado, 'conversa'>,
+  autor: { contaId: string; nome: string },
+  contas: readonly Pick<ContaNoChat, 'id' | 'pessoaId' | 'usaOChat'>[],
+  /** Os nomes dos anexos da mensagem, na ordem do envio: o começo da que vai só com eles. */
+  anexos: readonly string[] = [],
+): NovaNotificacao[] {
+  let texto: string | null = null;
+  let resolveu = false;
+  for (const entrada of mudanca.conversa) {
+    if (entrada.especie === 'mensagem') texto = comecoDoTexto(entrada.texto, anexos);
+    else if (entrada.especie === 'evento' && entrada.evento === 'resolveu') resolveu = true;
+  }
+  if (texto === null) return [];
+  const titulo = resolveu
+    ? `#${chamado.numero} resolvido: ${chamado.titulo}`
+    : `${autor.nome} respondeu o #${chamado.numero}`;
+  const destino = destinoDoChamadoNoChat(chamado.numero);
+  const recebem = new Set(
+    contas
+      .filter((conta) => conta.id !== autor.contaId && participaDoChamado(conta, chamado))
+      .map(({ id }) => id),
+  );
+  return [...recebem].map((contaId) =>
+    mensagemDoChamado(chamado, contaId, { titulo, texto, destino }),
+  );
 }

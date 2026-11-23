@@ -1,0 +1,423 @@
+/* O chamado no chat (m04, m07 e m10): a coluna do chamado, com o cabeçalho, as etapas, os outros
+   chamados, a conversa e a caixa, e, ao lado, "Neste chamado". A tela é o contêiner da medida: com
+   880 px ou mais, o painel fica ao lado; abaixo disso, ele abre pelo botão do cabeçalho. */
+.tela {
+  container-type: inline-size;
+  display: flex;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.chamado {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* A conversa e a caixa, que são o lugar de soltar os anexos, no resto da altura. */
+.lugarDeSoltar {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.abrindo {
+  margin: 0;
+  padding: var(--esp-4) var(--esp-5);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.estado {
+  margin: auto;
+  padding: var(--esp-6);
+}
+
+/* O chamado que não existe para a conta: o motivo e o caminho de volta, no meio da tela. */
+.naoEncontrado {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: auto;
+  padding: var(--esp-6);
+}
+
+.naoEncontrado p {
+  margin: 0;
+}
+
+.naoEncontrado a {
+  color: var(--cor-destaque-texto);
+}
+
+/* O cabeçalho no fundo do chamado da lista, o azul a 9% sobre a superfície, onde o selo passa do AA
+   em todos os temas (decisão 15, "A lista do Chat"), com o fio azul embaixo. */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-3) var(--esp-5);
+  border-block-end: 2px solid var(--cor-info-borda);
+  background-color: color-mix(in srgb, var(--cor-info) 9%, var(--cor-superficie));
+}
+
+.marca {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: calc(var(--esp-1) / 2) var(--esp-2);
+  border: 1px solid var(--cor-info-borda);
+  border-radius: var(--raio-rotulo);
+  color: var(--cor-info);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.titulo {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  overflow-wrap: anywhere;
+}
+
+.botaoDoPainel {
+  display: inline-flex;
+  flex: none;
+}
+
+/* As etapas, em quatro colunas, cada uma com o fio em cima: no azul a que chegou, no tom do selo a de
+   agora, que ganha o fundo do tom, e na linha a pulada e a que ainda não veio. */
+.etapas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--esp-2);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-5) 0;
+  list-style: none;
+}
+
+.etapa {
+  --tom-da-etapa: var(--cor-linha-forte);
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-block-start: 3px solid var(--tom-da-etapa);
+  color: var(--cor-texto);
+}
+
+.etapa[data-estado="chegou"] {
+  --tom-da-etapa: var(--cor-info);
+}
+
+.etapa[data-tom="neutra"] {
+  --tom-da-etapa: var(--cor-texto-2);
+
+  background-color: var(--cor-superficie-2);
+}
+
+.etapa[data-tom="info"] {
+  --tom-da-etapa: var(--cor-info);
+
+  background-color: var(--cor-info-fundo);
+}
+
+.etapa[data-tom="atencao"] {
+  --tom-da-etapa: var(--cor-atencao);
+
+  background-color: var(--cor-atencao-fundo);
+}
+
+.etapa[data-tom="sucesso"] {
+  --tom-da-etapa: var(--cor-ok);
+
+  background-color: var(--cor-ok-fundo);
+}
+
+.iconeDaEtapa {
+  display: inline-flex;
+  flex: none;
+  color: var(--tom-da-etapa);
+}
+
+.etapa:is([data-estado="pulada"], [data-estado="ainda-nao"]) .iconeDaEtapa {
+  color: var(--cor-texto-2);
+}
+
+.textosDaEtapa {
+  display: grid;
+  gap: calc(var(--esp-1) / 2);
+  min-inline-size: 0;
+}
+
+.nomeDaEtapa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+/* "agora", em texto, na etapa de agora. */
+.linhaDaHora {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+.agora {
+  padding: 0 var(--esp-1);
+  border: 1px solid var(--tom-da-etapa);
+  border-radius: var(--raio-rotulo);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+/* A hora em mono; na etapa de agora, na cor do texto, porque o secundário não chega a 4,5:1 sobre o
+   fundo dos tons. */
+.horaDaEtapa {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.etapa[data-tom] .horaDaEtapa {
+  color: var(--cor-texto);
+}
+
+/* "Seus outros chamados": o rótulo e as pílulas correm em linha, como texto, com o fio embaixo. As
+   pílulas seguem o rótulo e, quando não cabem, descem para o começo da linha de baixo, como no m10.
+   A margem de cima e de baixo das pílulas faz o vão entre as linhas e entra na medida das bordas.
+   Com muitos chamados, a faixa para em duas linhas e meia e rola por dentro, para não tirar a altura
+   da conversa: quem atende participa dos chamados que abre pelo chat e pode ter dezenas abertos. A
+   meia linha diz que há mais, e duas linhas cabem inteiras, sem rolar, com folga para a fonte. */
+.outros {
+  --linha-dos-outros: calc(var(--esp-6) + 3 * var(--esp-1));
+  flex: none;
+  max-block-size: calc(2.5 * var(--linha-dos-outros) + 2 * (var(--esp-3) - var(--esp-1)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--esp-3) - var(--esp-1)) var(--esp-5);
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+.rotuloDosOutros {
+  margin-inline-end: var(--esp-3);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.pilulas {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pilulas > li {
+  display: inline-block;
+  max-inline-size: 100%;
+  margin-block: var(--esp-1);
+  margin-inline-end: var(--esp-2);
+  vertical-align: middle;
+}
+
+.outro {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+  max-inline-size: 100%;
+  padding: var(--esp-1) var(--esp-1) var(--esp-1) var(--esp-3);
+  border: 1.5px solid var(--cor-info-borda);
+  border-radius: var(--raio-capsula);
+  background-color: color-mix(in srgb, var(--cor-info) 9%, var(--cor-superficie));
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  text-decoration: none;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+.outro:hover {
+  border-color: var(--cor-info);
+}
+
+.outro:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.numeroDoOutro {
+  color: var(--cor-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+}
+
+.tituloDoOutro {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* No fechado, a frase fica no lugar da caixa, na forma e na largura dela, de uma borda à outra da
+   coluna, e começa à esquerda, como o texto da caixa. */
+.semCaixa {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-start;
+  min-block-size: var(--esp-12);
+  margin: 0 var(--esp-5) var(--esp-4);
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--esp-6);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+  text-align: start;
+}
+
+/* "Neste chamado", ao lado, só na tela larga; na estreita, pelo botão do cabeçalho. */
+.painel {
+  display: none;
+}
+
+.tituloDoPainel {
+  margin: 0 0 var(--esp-3);
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+}
+
+.noPopover {
+  inline-size: calc(var(--esp-12) * 6);
+  max-inline-size: 100%;
+}
+
+@container (min-width: 880px) {
+  .painel {
+    display: block;
+    flex: none;
+    box-sizing: border-box;
+    inline-size: calc(var(--esp-12) * 6 + var(--esp-8));
+    overflow-y: auto;
+    padding: var(--esp-4);
+    border-inline-start: 1px solid var(--cor-linha);
+    background-color: var(--cor-superficie-afundada);
+  }
+
+  .botaoDoPainel {
+    display: none;
+  }
+}
+
+/* O cabeçalho do celular (m08): a seta de voltar, a marca e o selo no alto, o título, com o botão
+   da folha "Neste chamado", e quem atende, com a previsão da resposta, embaixo, numa coluna. */
+:root[data-postura="celular"] .cabecalho {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--esp-1);
+  padding: var(--esp-1) var(--esp-4) var(--esp-3);
+}
+
+.linhaDoAlto,
+.linhaDoTitulo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+}
+
+.linhaDoAlto > :last-child {
+  margin-inline-start: auto;
+}
+
+.linhaDoTitulo {
+  align-items: flex-start;
+}
+
+.linhaDoTitulo .titulo {
+  padding-block-start: calc(var(--esp-1) * 2.5);
+}
+
+button.botaoDaFolha {
+  flex: none;
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  margin-inline-end: calc(var(--esp-2) * -1);
+  color: var(--cor-texto);
+}
+
+button.botaoDaFolha svg {
+  width: var(--esp-5);
+  height: var(--esp-5);
+}
+
+.quemAtende {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+}
+
+/* As etapas e o painel na folha, uma parte embaixo da outra. */
+.naFolha {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+.etapas[data-empilhadas] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-1);
+  padding: 0;
+}
+
+.etapas[data-empilhadas] .etapa {
+  border-block-start: 0;
+  border-inline-start: 3px solid var(--tom-da-etapa);
+  border-radius: 0 var(--raio-controle) var(--raio-controle) 0;
+}
+
+/* Os outros chamados no celular: o recuo da tela e as pílulas no alvo de toque. */
+:root[data-postura="celular"] .outros {
+  padding-inline: var(--esp-4);
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .outros {
+  --linha-dos-outros: calc(var(--alvo-toque) + 2 * var(--esp-1));
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .outro {
+  min-block-size: var(--alvo-toque);
+}
+
+:root[data-postura="celular"] .semCaixa {
+  margin-inline: var(--esp-4);
+}

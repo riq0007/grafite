@@ -72,6 +72,9 @@ const da = (usuario: UsuarioDosAlertas, dados: Partial<NovaNotificacao> = {}): N
   origem: 'Alertas',
   destino: `/ativos/${impressora}`,
   alertaId: null,
+  mensagem: false,
+  assunto: null,
+  mensagemDoChatId: null,
   ...dados,
 });
 

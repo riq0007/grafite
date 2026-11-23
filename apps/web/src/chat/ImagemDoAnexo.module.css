@@ -1,0 +1,60 @@
+/*
+ * A imagem anexada, na miniatura (change chat-com-chamados, tarefa 4.20): o link na largura dela, e
+ * a legenda com pelo menos 160 px, para o nome da imagem estreita não quebrar a cada palavra.
+ */
+.imagem {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-1);
+  inline-size: max(var(--largura-da-imagem), calc(var(--esp-10) * 4));
+  max-inline-size: 100%;
+  border-radius: var(--raio-menu);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  text-decoration: none;
+  -webkit-user-drag: none;
+}
+
+.imagem:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/*
+ * O tamanho vem dos atributos; na coluna estreita, ela encolhe na proporção. O contorno fica por
+ * dentro, porque a borda tiraria a proporção da imagem.
+ */
+.miniatura {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--raio-menu);
+  outline: 1px solid var(--cor-linha);
+  outline-offset: -1px;
+  background-color: var(--cor-superficie-afundada);
+  -webkit-user-drag: none;
+}
+
+.legenda {
+  display: block;
+  max-inline-size: 100%;
+}
+
+.nome {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.legenda small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.imagem:hover .miniatura {
+  outline-color: var(--cor-linha-forte);
+}
+
+.imagem:hover .nome {
+  text-decoration: underline;
+}

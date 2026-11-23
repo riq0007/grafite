@@ -696,6 +696,11 @@ export const eventos = orgScoped(
     /** Os locais dos registros, com `null` para o registro sem local. */
     locais: uuid('locais').array(),
     /**
+     * Com a `permissao`, só quem também é de um dos grupos, como na equipe do chat (change
+     * chat-com-chamados, design, decisão 4).
+     */
+    grupos: uuid('grupos').array(),
+    /**
      * Quem tem uma das permissões, em algum escopo, sem os locais (change chamados-da-ti, design,
      * decisão 13).
      */
@@ -710,11 +715,13 @@ export const eventos = orgScoped(
       'eventos_publico_valido',
       sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
           or ${t.contas} is not null or ${t.sessoes} is not null)
-        and (${t.locais} is null or ${t.permissao} is not null)`,
+        and (${t.locais} is null or ${t.permissao} is not null)
+        and (${t.grupos} is null or ${t.permissao} is not null)`,
     ),
     check(
       'eventos_publico_curto',
       sql`coalesce(cardinality(${t.locais}), 0) <= 8
+        and coalesce(cardinality(${t.grupos}), 0) <= 8
         and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
         and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
@@ -1904,7 +1911,10 @@ export const silenciosDosAtivos = orgScoped(
  * uma linha por conta, com o que a central e o aviso mostram, o alerta de que trata e a leitura.
  * A manutenção diária apaga as de mais de 90 dias, pelo índice do momento. As marcas do envio
  * (change p3c-email-e-push, design, decisão 3) dizem quando ela foi por e-mail, na hora ou no
- * resumo, e quando a entrega decidiu o push dela.
+ * resumo, e quando a entrega decidiu o push dela. A de uma mensagem do chat ou de um chamado
+ * (change chat-com-chamados, design, decisão 6) diz o assunto, `conversa:<id>` ou `chamado:<id>`,
+ * que a leitura da conversa ou do chamado marca como lido, e, no chat, a mensagem de que trata:
+ * a leitura marca só as notificações até a mensagem lida.
  */
 export const notificacoes = orgScoped(
   'notificacoes',
@@ -1916,6 +1926,10 @@ export const notificacoes = orgScoped(
     origem: text('origem').notNull(),
     destino: text('destino'),
     alertaId: uuid('alerta_id'),
+    /** A notificação de uma mensagem, que vai por push qualquer que seja a severidade. */
+    mensagem: boolean('mensagem').notNull().default(false),
+    assunto: text('assunto'),
+    mensagemDoChatId: uuid('mensagem_do_chat_id'),
     criadaEm: momento('criada_em').notNull().defaultNow(),
     lidaEm: momento('lida_em'),
     emailEm: momento('email_em'),
@@ -1932,8 +1946,15 @@ export const notificacoes = orgScoped(
       columns: [t.orgId, t.alertaId],
       foreignColumns: [alertas.orgId, alertas.id],
     }),
+    foreignKey({
+      name: 'notificacoes_mensagem_do_chat_fk',
+      columns: [t.orgId, t.mensagemDoChatId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id],
+    }),
     index('notificacoes_da_conta_idx').on(t.orgId, t.contaId, t.criadaEm.desc(), t.id.desc()),
-    index('notificacoes_nao_lidas_idx').on(t.orgId, t.contaId).where(sql`${t.lidaEm} is null`),
+    index('notificacoes_nao_lidas_idx')
+      .on(t.orgId, t.contaId, t.assunto)
+      .where(sql`${t.lidaEm} is null`),
     index('notificacoes_antigas_idx').on(t.orgId, t.criadaEm),
     index('notificacoes_para_o_resumo_idx')
       .on(t.orgId, t.contaId)
@@ -1951,6 +1972,18 @@ export const notificacoes = orgScoped(
     check(
       'notificacoes_destino_valido',
       sql`${t.destino} is null or (${t.destino} like '/%' and length(${t.destino}) <= 500)`,
+    ),
+    // O assunto leva o id como o banco o devolve, em minúsculas: a leitura o compara por igualdade.
+    check(
+      'notificacoes_assunto_valido',
+      sql`${t.assunto} is null or (length(${t.assunto}) <= 80 and ${t.assunto} ~ '^[a-z-]+:[0-9a-z-]+$')`,
+    ),
+    // A mensagem tem o assunto; a mensagem do chat, o de uma conversa.
+    check(
+      'notificacoes_mensagem_coerente',
+      sql`(not ${t.mensagem} or ${t.assunto} is not null)
+        and (${t.mensagemDoChatId} is null
+          or (${t.mensagem} and ${t.assunto} is not null and ${t.assunto} like 'conversa:%'))`,
     ),
   ],
 );
@@ -3932,8 +3965,8 @@ export const SITUACOES_DO_CHAMADO_NO_BANCO = [
   'aguardando',
   'resolvido',
 ] as const;
-export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti'] as const;
-export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as const;
+export const ORIGENS_DO_CHAMADO_NO_BANCO = ['ti', 'chat'] as const;
+export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento', 'origem'] as const;
 
 /**
  * O documento JSON com o tipo e o tamanho conferidos; o conteúdo, quem confere é o domínio. O teto
@@ -3942,6 +3975,17 @@ export const ESPECIES_DA_CONVERSA_NO_BANCO = ['mensagem', 'nota', 'evento'] as c
  */
 const documentoAte = (coluna: unknown, limite: number) =>
   sql`jsonb_typeof(${coluna}) = 'object' and octet_length(${coluna}::text) <= ${sql.raw(String(limite))}`;
+
+/**
+ * As opções de resposta de uma pergunta (change chat-com-chamados, design, decisão 10): de 2 a 3,
+ * sem nulo, cada uma de 1 a 40 caracteres sem os espaços das pontas, numa lista simples que começa
+ * em 1, para as três posições bastarem. Que sejam diferentes, quem confere é o domínio.
+ */
+const opcoesValidas = (coluna: unknown) =>
+  sql`array_ndims(${coluna}) = 1 and array_lower(${coluna}, 1) = 1
+    and cardinality(${coluna}) between 2 and 3 and array_position(${coluna}, null) is null
+    and length(trim(${coluna}[1])) between 1 and 40 and length(trim(${coluna}[2])) between 1 and 40
+    and (cardinality(${coluna}) = 2 or length(trim(${coluna}[3])) between 1 and 40)`;
 
 /**
  * O tipo de chamado (spec tipos-de-chamado; change chamados-da-ti, design, decisões 1, 2 e 6): o
@@ -4049,6 +4093,10 @@ export const tiposDeChamado = orgScoped(
  * nas ações que mudam a situação ou quem atende e na troca do ativo. Quem
  * atende e o relógio seguem a tabela da spec, e as checagens são implicações, para a situação
  * desconhecida ficar com a checagem da situação. O papel da aplicação não apaga (migration 0060).
+ *
+ * Pelo chat (change chat-com-chamados, design, decisões 2 e 7; migration 0066): a conversa e a
+ * mensagem de origem, que vira um chamado só; e o `fechado_em`, que faz do resolvido o Fechado, sem
+ * uma situação nova no banco, para a versão anterior ler o fechado como resolvido.
  */
 export const chamados = orgScoped(
   'chamados',
@@ -4059,6 +4107,9 @@ export const chamados = orgScoped(
     tituloNormalizado: text('titulo_normalizado').notNull(),
     pessoaId: uuid('pessoa_id').notNull(),
     origem: text('origem', { enum: ORIGENS_DO_CHAMADO_NO_BANCO }).notNull(),
+    /** A conversa e a mensagem do chat de onde o chamado foi aberto, só na origem `chat`. */
+    origemConversaId: uuid('origem_conversa_id'),
+    origemMensagemId: uuid('origem_mensagem_id'),
     abertoPor: uuid('aberto_por'),
     abertoEm: momento('aberto_em').notNull().defaultNow(),
     formulario: jsonb('formulario').$type<Record<string, unknown>>().notNull(),
@@ -4078,6 +4129,8 @@ export const chamados = orgScoped(
     estouroAvisadoEm: momento('estouro_avisado_em'),
     resolvidoEm: momento('resolvido_em'),
     resolvidoPor: uuid('resolvido_por'),
+    /** O momento em que o resolvido fechou: a meia-noite do fim do sétimo dia depois da resolução. */
+    fechadoEm: momento('fechado_em'),
     osId: uuid('os_id'),
     solicitacaoId: uuid('solicitacao_id'),
     versao: integer('versao').notNull().default(1),
@@ -4128,7 +4181,32 @@ export const chamados = orgScoped(
       columns: [t.orgId, t.solicitacaoId],
       foreignColumns: [solicitacoes.orgId, solicitacoes.id],
     }),
+    foreignKey({
+      name: 'chamados_origem_conversa_fk',
+      columns: [t.orgId, t.origemConversaId],
+      foreignColumns: [conversas.orgId, conversas.id],
+    }),
+    // A mensagem de origem é da conversa de origem (mensagens_do_chat_id_conversa_unico).
+    foreignKey({
+      name: 'chamados_origem_mensagem_fk',
+      columns: [t.orgId, t.origemMensagemId, t.origemConversaId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id, mensagensDoChat.conversaId],
+    }),
     unique('chamados_numero_unico').on(t.orgId, t.numero),
+    // A mensagem vira um chamado só; a violação vira "Esta mensagem já virou o chamado #1045.".
+    unique('chamados_origem_mensagem_unica').on(t.orgId, t.origemMensagemId),
+    // Os chamados de cada conversa, na aba "Chamados da equipe".
+    index('chamados_origem_conversa_idx')
+      .on(t.orgId, t.origemConversaId)
+      .where(sql`${t.origemConversaId} is not null`),
+    // Os chamados que cada conta abriu pelo chat, na lista CHAMADOS de quem os abriu.
+    index('chamados_aberto_pelo_chat_idx')
+      .on(t.orgId, t.abertoPor)
+      .where(sql`${t.origem} = 'chat'`),
+    // Os resolvidos que ainda não fecharam, para a tarefa do fechamento.
+    index('chamados_a_fechar_idx')
+      .on(t.orgId, t.resolvidoEm)
+      .where(sql`${t.situacao} = 'resolvido' and ${t.fechadoEm} is null`),
     // Uma OS sai de um chamado só; uma solicitação junta os chamados que pedem o mesmo toner.
     unique('chamados_os_unica').on(t.orgId, t.osId),
     // Os abertos de cada situação, para o quadro, a triagem e os prazos.
@@ -4160,6 +4238,22 @@ export const chamados = orgScoped(
       'chamados_abertura_coerente',
       sql`${t.origem} <> 'ti' or (${t.abertoPor} is not null and ${t.primeiraRespostaEm} is not null)`,
     ),
+    // Pelo chat, quem abriu e a mensagem de origem, sem a primeira resposta, que a primeira mensagem
+    // da TI grava; a conversa e a mensagem vêm juntas, e só no chat (spec chamados, "Abrir um
+    // chamado pelo chat").
+    check(
+      'chamados_origem_coerente',
+      sql`(${t.origemConversaId} is null) = (${t.origemMensagemId} is null)
+        and (${t.origem} <> 'chat' or (${t.abertoPor} is not null and ${t.origemMensagemId} is not null))
+        and (${t.origem} = 'chat' or ${t.origemMensagemId} is null)`,
+    ),
+    // O Fechado é o resolvido com o `fechado_em`, depois da resolução: reaberto, ele perderia a
+    // resolução e ficaria recusado, e é assim que a versão anterior não reabre o fechado.
+    check(
+      'chamados_fechamento_coerente',
+      sql`${t.fechadoEm} is null or (${t.situacao} = 'resolvido' and ${t.resolvidoEm} is not null
+        and ${t.fechadoEm} > ${t.resolvidoEm})`,
+    ),
     // Ninguém atende na triagem; alguém atende no atendimento e no aguardando, sempre.
     check(
       'chamados_atendimento_coerente',
@@ -4189,9 +4283,16 @@ export const chamados = orgScoped(
 /**
  * A conversa de cada chamado (spec chamados, "Conversa do chamado"; change chamados-da-ti, design,
  * decisões 1 e 8): a mensagem para a pessoa, de uma conta ou da pessoa, pelo chat; a nota interna,
- * de uma conta; e o evento, com o código e os dados, da conta que agiu. Nenhum evento desta change
- * é do sistema: o chat e a aba trazem os autores deles junto com as origens novas. O papel da
- * aplicação só inclui e lê (migration 0060).
+ * de uma conta; e o evento, com o código e os dados, da conta que agiu. O papel da aplicação só
+ * inclui e lê (migration 0060).
+ *
+ * Pelo chat (change chat-com-chamados, design, decisões 2 e 10; migration 0066): a `origem`, a
+ * cópia da mensagem citada, com a conta de quem a escreveu e, nos dados, a conversa, a mensagem e a
+ * hora dela, uma por chamado; as opções da pergunta, só na mensagem da TI; o cartão do ativo, na
+ * mensagem da TI e na nota; e os eventos novos. O `escolheu` leva nos dados a `mensagem` e a opção,
+ * e a primeira escolha de cada pergunta vence; o `avaliou` leva o nível, o comentário e a
+ * `resolucao`, o `resolvido_em` do chamado em ISO, uma avaliação por resolução; e o `fechou`, um
+ * por chamado, é o único evento sem autor.
  */
 export const mensagensDosChamados = orgScoped(
   'mensagens_dos_chamados',
@@ -4203,6 +4304,10 @@ export const mensagensDosChamados = orgScoped(
     texto: text('texto'),
     evento: text('evento'),
     dados: jsonb('dados').$type<Record<string, unknown>>(),
+    /** As opções da pergunta, de 2 a 3, só na mensagem da TI. */
+    opcoes: text('opcoes').array(),
+    /** O retrato do ativo, copiado na hora de mandar, até 4 KiB. */
+    cartao: jsonb('cartao').$type<Record<string, unknown>>(),
     criadaEm: momento('criada_em').notNull().defaultNow(),
   },
   (t) => [
@@ -4224,25 +4329,67 @@ export const mensagensDosChamados = orgScoped(
     index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
     // Para o anexo da mensagem ser do mesmo chamado (anexos_dos_chamados_mensagem_fk).
     unique('mensagens_dos_chamados_id_chamado_unico').on(t.orgId, t.id, t.chamadoId),
+    uniqueIndex('mensagens_dos_chamados_origem_unica')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.especie} = 'origem'`),
+    // A primeira escolha de cada pergunta vence; a violação vira "Esta pergunta já foi respondida.".
+    uniqueIndex('mensagens_dos_chamados_escolha_unica')
+      .on(t.orgId, sql`(${t.dados} ->> 'mensagem')`)
+      .where(sql`${t.evento} = 'escolheu'`),
+    // Uma avaliação por resolução: reaberto e resolvido de novo, o chamado pede outra.
+    uniqueIndex('mensagens_dos_chamados_avaliacao_unica')
+      .on(t.orgId, t.chamadoId, sql`(${t.dados} ->> 'resolucao')`)
+      .where(sql`${t.evento} = 'avaliou'`),
+    uniqueIndex('mensagens_dos_chamados_fechou_unico')
+      .on(t.orgId, t.chamadoId)
+      .where(sql`${t.evento} = 'fechou'`),
     check(
       'mensagens_dos_chamados_especie_valida',
       sql`${t.especie} in (${lista(ESPECIES_DA_CONVERSA_NO_BANCO)})`,
     ),
+    // Os CHECKs só se alargam: o que a versão anterior grava continua aceito (design, Migration
+    // Plan). O evento sem autor é só o `fechou`, que ninguém faz.
     check(
       'mensagens_dos_chamados_autoria_valida',
       sql`(${t.especie} <> 'mensagem' or num_nonnulls(${t.autorConta}, ${t.autorPessoa}) = 1)
         and (${t.especie} <> 'nota' or (${t.autorConta} is not null and ${t.autorPessoa} is null))
-        and (${t.especie} <> 'evento' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
+        and (${t.especie} <> 'evento' or (${t.autorPessoa} is null
+          and (${t.autorConta} is not null or ${t.evento} = 'fechou')))
+        and (${t.especie} <> 'origem' or (${t.autorConta} is not null and ${t.autorPessoa} is null))`,
     ),
+    // A mensagem, a nota e a origem só com os anexos têm o texto nulo (tarefa 4.18): o banco não
+    // confere o "texto ou anexo", porque os anexos estão em outra tabela, e a guarda é do domínio.
     check(
       'mensagens_dos_chamados_conteudo_valido',
-      sql`(${t.especie} not in ('mensagem', 'nota') or (${t.texto} is not null
-          and length(trim(${t.texto})) between 1 and 4000 and ${t.evento} is null and ${t.dados} is null))
+      sql`(${t.especie} not in ('mensagem', 'nota', 'origem') or (${t.evento} is null
+          and (${t.texto} is null or length(trim(${t.texto})) between 1 and 4000)))
+        and (${t.especie} not in ('mensagem', 'nota') or ${t.dados} is null)
+        and (${t.especie} <> 'origem' or ${t.dados} is not null)
         and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null))`,
+    ),
+    // A pergunta com as opções tem o texto, que é a pergunta.
+    check(
+      'mensagens_dos_chamados_opcoes_validas',
+      sql`${t.opcoes} is null or (${t.especie} = 'mensagem' and ${t.autorConta} is not null
+        and ${t.texto} is not null and ${opcoesValidas(t.opcoes)})`,
+    ),
+    check(
+      'mensagens_dos_chamados_cartao_valido',
+      sql`${t.cartao} is null or (${t.especie} in ('mensagem', 'nota') and ${t.autorConta} is not null
+        and ${documentoAte(t.cartao, 4096)})`,
     ),
     check(
       'mensagens_dos_chamados_evento_valido',
       sql`${t.evento} is null or ${t.evento} ~ '^[a-z][a-z-]{0,39}$'`,
+    ),
+    // A chave dos índices da escolha e da avaliação nunca é nula: com ela nula, o índice único não
+    // compararia a linha, e a segunda escolha ou a segunda avaliação entraria sem recusa. A versão
+    // anterior não grava esses eventos.
+    check(
+      'mensagens_dos_chamados_chaves_dos_eventos',
+      sql`${t.evento} is null
+        or ((${t.evento} <> 'escolheu' or (${t.dados} ->> 'mensagem') is not null)
+          and (${t.evento} <> 'avaliou' or (${t.dados} ->> 'resolucao') is not null))`,
     ),
     check(
       'mensagens_dos_chamados_dados_validos',
@@ -4271,6 +4418,8 @@ export const numeracaoDosChamados = orgScoped(
  * design, decisão 1): o rótulo, único sem acento e maiúsculas; o texto, em que `{nome}` vira o
  * primeiro nome da pessoa; a espera da resposta, que põe o chamado em Aguardando; os tipos em que
  * ela aparece, ou todos, com a lista vazia; e a ordem. O limite de 100 por organização é do domínio.
+ * As opções da pergunta, vazias ou de 2 a 3, vêm com o chat (change chat-com-chamados, design,
+ * decisão 2; migration 0066).
  */
 export const respostasProntas = orgScoped(
   'respostas_prontas',
@@ -4280,12 +4429,17 @@ export const respostasProntas = orgScoped(
     texto: text('texto').notNull(),
     esperaAResposta: boolean('espera_a_resposta').notNull().default(false),
     tipos: uuid('tipos').array().notNull().default(sql`'{}'::uuid[]`),
+    opcoes: text('opcoes').array().notNull().default(sql`'{}'::text[]`),
     ordem: integer('ordem').notNull(),
   },
   (t) => [
     unique('respostas_prontas_rotulo_unico').on(t.orgId, t.rotuloNormalizado),
     check('respostas_prontas_rotulo_valido', sql`length(trim(${t.rotulo})) between 1 and 60`),
     check('respostas_prontas_texto_valido', sql`length(trim(${t.texto})) between 1 and 2000`),
+    check(
+      'respostas_prontas_opcoes_validas',
+      sql`cardinality(${t.opcoes}) = 0 or (${opcoesValidas(t.opcoes)})`,
+    ),
   ],
 );
 
@@ -4385,5 +4539,297 @@ export const anexosDosChamados = orgScoped(
       'anexos_dos_chamados_campo_valido',
       sql`${t.campoId} is null or ${t.campoId} ~ '^[A-Za-z0-9_-]{1,40}$'`,
     ),
+  ],
+);
+
+/**
+ * A leitura de um chamado por quem participa (spec chamados, "Resposta nova"; change
+ * chat-com-chamados, design, decisões 2 e 5): a `vista_ate`, a última linha da conversa que a conta
+ * viu, do mesmo chamado, que anda na mensagem, na escolha, no "Reabrir", na avaliação e no "Marcar
+ * como vista", lida com o chamado travado. A resposta nova são as mensagens da TI de outra conta
+ * depois dela, pelo id, e não pela hora: o `uuidv7()` sai na inclusão, depois da trava, e segue a
+ * ordem das gravações no chamado. O papel da aplicação não apaga a leitura (migration 0066).
+ */
+export const leiturasDosChamados = orgScoped(
+  'leituras_dos_chamados',
+  {
+    chamadoId: uuid('chamado_id').notNull(),
+    contaId: uuid('conta_id').notNull(),
+    vistaAte: uuid('vista_ate').notNull(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'leituras_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'leituras_dos_chamados_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'leituras_dos_chamados_vista_ate_fk',
+      columns: [t.orgId, t.vistaAte, t.chamadoId],
+      foreignColumns: [
+        mensagensDosChamados.orgId,
+        mensagensDosChamados.id,
+        mensagensDosChamados.chamadoId,
+      ],
+    }),
+    unique('leituras_dos_chamados_unica').on(t.orgId, t.contaId, t.chamadoId),
+  ],
+);
+
+/** Os tipos de conversa e as espécies das mensagens do chat, os mesmos do domínio. */
+export const TIPOS_DE_CONVERSA_NO_BANCO = ['direta', 'equipe', 'canal'] as const;
+export const ESPECIES_DO_CHAT_NO_BANCO = ['mensagem', 'evento'] as const;
+
+/**
+ * A conversa do chat (spec chat, "Conversas", "Conversa direta" e "Equipes e canais"; change
+ * chat-com-chamados, design, decisões 1 e 3): o tipo, que não muda, a criação e a última mensagem,
+ * que ordena RECENTES. A direta tem as duas contas, a menor primeiro, e o par é único: ela nasce com
+ * a primeira mensagem, na mesma transação, e o par segura a corrida das duas primeiras. A equipe e o
+ * canal têm o cadastro nas próprias colunas: o nome, único sem acento entre os ativos, o grupo cujas
+ * contas participam, só na equipe, o grupo que escreve (nulo, todos que participam), o aviso a cada
+ * mensagem e o arquivamento. Quem participa não é gravado: sai na consulta. O limite de 100 ativos é
+ * do domínio. O papel da aplicação não apaga a conversa (migration 0065).
+ */
+export const conversas = orgScoped(
+  'conversas',
+  {
+    tipo: text('tipo', { enum: TIPOS_DE_CONVERSA_NO_BANCO }).notNull(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+    ultimaMensagemEm: momento('ultima_mensagem_em'),
+    contaA: uuid('conta_a'),
+    contaB: uuid('conta_b'),
+    nome: text('nome'),
+    nomeNormalizado: text('nome_normalizado'),
+    grupoId: uuid('grupo_id'),
+    escreveGrupoId: uuid('escreve_grupo_id'),
+    avisar: boolean('avisar').notNull().default(false),
+    arquivadaEm: momento('arquivada_em'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'conversas_conta_a_fk',
+      columns: [t.orgId, t.contaA],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'conversas_conta_b_fk',
+      columns: [t.orgId, t.contaB],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'conversas_grupo_fk',
+      columns: [t.orgId, t.grupoId],
+      foreignColumns: [grupos.orgId, grupos.id],
+    }),
+    foreignKey({
+      name: 'conversas_escreve_grupo_fk',
+      columns: [t.orgId, t.escreveGrupoId],
+      foreignColumns: [grupos.orgId, grupos.id],
+    }),
+    // Uma conversa direta por par; as de cada conta, pela primeira ou pela segunda do par.
+    uniqueIndex('conversas_direta_unica')
+      .on(t.orgId, t.contaA, t.contaB)
+      .where(sql`${t.tipo} = 'direta'`),
+    index('conversas_direta_conta_b_idx').on(t.orgId, t.contaB).where(sql`${t.tipo} = 'direta'`),
+    // O nome é único entre as equipes e os canais ativos: o arquivado libera o nome.
+    uniqueIndex('conversas_nome_unico')
+      .on(t.orgId, t.nomeNormalizado)
+      .where(sql`${t.tipo} <> 'direta' and ${t.arquivadaEm} is null`),
+    index('conversas_equipe_grupo_idx').on(t.orgId, t.grupoId).where(sql`${t.tipo} = 'equipe'`),
+    check('conversas_tipo_valido', sql`${t.tipo} in (${lista(TIPOS_DE_CONVERSA_NO_BANCO)})`),
+    // As colunas de cada tipo, em implicações, para o tipo desconhecido ficar com a checagem do
+    // tipo: a direta só com o par, em ordem, e a última mensagem; a equipe e o canal só com o
+    // cadastro; o grupo só na equipe, e nela sempre.
+    check(
+      'conversas_colunas_do_tipo',
+      sql`(${t.tipo} <> 'direta' or (${t.contaA} is not null and ${t.contaB} is not null
+          and ${t.contaA} < ${t.contaB} and ${t.ultimaMensagemEm} is not null and not ${t.avisar}
+          and num_nonnulls(${t.nome}, ${t.nomeNormalizado}, ${t.grupoId}, ${t.escreveGrupoId},
+            ${t.arquivadaEm}) = 0))
+        and (${t.tipo} not in ('equipe', 'canal') or (${t.contaA} is null and ${t.contaB} is null
+          and ${t.nome} is not null and ${t.nomeNormalizado} is not null))
+        and (${t.tipo} <> 'equipe' or ${t.grupoId} is not null)
+        and (${t.tipo} <> 'canal' or ${t.grupoId} is null)`,
+    ),
+    check('conversas_nome_valido', textoAte(t.nome, 60)),
+  ],
+);
+
+/**
+ * A mensagem do chat (spec chat, "Mensagem" e "Chamados da conversa"; change chat-com-chamados,
+ * design, decisão 1): a mensagem, de uma conta, com a resposta a outra da mesma conversa; e o evento,
+ * como o `virou-chamado`, com o código e os dados, também da conta que agiu. O id é o `uuidv7()`, que
+ * ordena a conversa, a paginação e a leitura. O papel da aplicação só inclui e lê (migration 0065).
+ */
+export const mensagensDoChat = orgScoped(
+  'mensagens_do_chat',
+  {
+    conversaId: uuid('conversa_id').notNull(),
+    especie: text('especie', { enum: ESPECIES_DO_CHAT_NO_BANCO }).notNull(),
+    autorConta: uuid('autor_conta').notNull(),
+    texto: text('texto'),
+    respondeA: uuid('responde_a'),
+    evento: text('evento'),
+    dados: jsonb('dados').$type<Record<string, unknown>>(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'mensagens_do_chat_conversa_fk',
+      columns: [t.orgId, t.conversaId],
+      foreignColumns: [conversas.orgId, conversas.id],
+    }),
+    foreignKey({
+      name: 'mensagens_do_chat_autor_conta_fk',
+      columns: [t.orgId, t.autorConta],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    // A respondida é da mesma conversa.
+    foreignKey({
+      name: 'mensagens_do_chat_responde_a_fk',
+      columns: [t.orgId, t.respondeA, t.conversaId],
+      foreignColumns: [t.orgId, t.id, t.conversaId],
+    }),
+    // A chave da resposta, dos anexos e da leitura na mesma conversa.
+    unique('mensagens_do_chat_id_conversa_unico').on(t.orgId, t.id, t.conversaId),
+    // A conversa em ordem, para a lista, a paginação e as não lidas.
+    index('mensagens_do_chat_conversa_idx').on(t.orgId, t.conversaId, t.id),
+    check(
+      'mensagens_do_chat_especie_valida',
+      sql`${t.especie} in (${lista(ESPECIES_DO_CHAT_NO_BANCO)})`,
+    ),
+    // A mensagem só com os anexos tem o texto nulo (tarefa 4.18), e a guarda do "texto ou anexo" é
+    // do domínio, porque os anexos estão em outra tabela.
+    check(
+      'mensagens_do_chat_conteudo_valido',
+      sql`(${t.especie} <> 'mensagem' or (${t.evento} is null and ${t.dados} is null
+          and (${t.texto} is null or length(trim(${t.texto})) between 1 and 4000)))
+        and (${t.especie} <> 'evento' or (${t.evento} is not null and ${t.texto} is null
+          and ${t.respondeA} is null))`,
+    ),
+    check(
+      'mensagens_do_chat_evento_valido',
+      sql`${t.evento} is null or ${t.evento} ~ '^[a-z][a-z-]{0,39}$'`,
+    ),
+    check(
+      'mensagens_do_chat_dados_validos',
+      sql`${t.dados} is null or (${documentoAte(t.dados, 16384)})`,
+    ),
+  ],
+);
+
+/**
+ * A reação a uma mensagem do chat (spec chat, "Reações"; change chat-com-chamados, design,
+ * decisão 1): a conta e o texto curto, uma vez cada texto por conta. Reagir de novo apaga a linha, a
+ * única do chat que o papel da aplicação apaga; ele não a altera (migration 0065). O teto de 10
+ * textos por mensagem é do domínio, com a mensagem travada.
+ */
+export const reacoesDasMensagens = orgScoped(
+  'reacoes_das_mensagens',
+  {
+    mensagemId: uuid('mensagem_id').notNull(),
+    contaId: uuid('conta_id').notNull(),
+    texto: text('texto').notNull(),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'reacoes_das_mensagens_mensagem_fk',
+      columns: [t.orgId, t.mensagemId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id],
+    }),
+    foreignKey({
+      name: 'reacoes_das_mensagens_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    // Também a leitura das reações de cada mensagem, texto por texto.
+    unique('reacoes_das_mensagens_unica').on(t.orgId, t.mensagemId, t.texto, t.contaId),
+    check('reacoes_das_mensagens_texto_valido', sql`length(trim(${t.texto})) between 1 and 20`),
+  ],
+);
+
+/**
+ * O anexo de uma mensagem do chat (spec arquivos-e-imagens, "Anexos do chat"; change
+ * chat-com-chamados, design, decisões 1 e 8): o arquivo, que nasce sem dono no envio e passa à
+ * mensagem, com a conversa dela, na gravação. O mesmo arquivo pode ser também de um chamado aberto
+ * pela mensagem, com uma linha em `anexos_dos_chamados`. O papel da aplicação não apaga o anexo
+ * (migration 0065): o sem dono há mais de 24 h ganha o `removido_em` no arquivo.
+ */
+export const anexosDoChat = orgScoped(
+  'anexos_do_chat',
+  {
+    arquivoId: uuid('arquivo_id').notNull(),
+    conversaId: uuid('conversa_id'),
+    mensagemId: uuid('mensagem_id'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'anexos_do_chat_arquivo_fk',
+      columns: [t.orgId, t.arquivoId],
+      foreignColumns: [arquivos.orgId, arquivos.id],
+    }),
+    foreignKey({
+      name: 'anexos_do_chat_conversa_fk',
+      columns: [t.orgId, t.conversaId],
+      foreignColumns: [conversas.orgId, conversas.id],
+    }),
+    // A mensagem é da conversa do anexo.
+    foreignKey({
+      name: 'anexos_do_chat_mensagem_fk',
+      columns: [t.orgId, t.mensagemId, t.conversaId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id, mensagensDoChat.conversaId],
+    }),
+    unique('anexos_do_chat_arquivo_unico').on(t.orgId, t.arquivoId),
+    // Os anexos de cada conversa, para a aba Arquivos, e os de cada mensagem.
+    index('anexos_do_chat_conversa_idx')
+      .on(t.orgId, t.conversaId, t.mensagemId)
+      .where(sql`${t.conversaId} is not null`),
+    index('anexos_do_chat_sem_dono_idx')
+      .on(t.orgId, t.arquivoId)
+      .where(sql`${t.conversaId} is null`),
+    // Sem dono, ou com a mensagem e a conversa dela.
+    check('anexos_do_chat_dono_valido', sql`(${t.conversaId} is null) = (${t.mensagemId} is null)`),
+  ],
+);
+
+/**
+ * A leitura de uma conversa por uma conta (spec chat, "Não lidas" e "Silenciar uma conversa"; change
+ * chat-com-chamados, design, decisões 1 e 5): a última mensagem lida, da mesma conversa, que só anda
+ * para a frente, e o silenciar. A linha nasce na primeira leitura ou no primeiro silenciar, e guarda
+ * o estado da conta, e não quem participa. O papel da aplicação não a apaga (migration 0065).
+ */
+export const leiturasDasConversas = orgScoped(
+  'leituras_das_conversas',
+  {
+    conversaId: uuid('conversa_id').notNull(),
+    contaId: uuid('conta_id').notNull(),
+    lidaAte: uuid('lida_ate'),
+    silenciada: boolean('silenciada').notNull().default(false),
+  },
+  (t) => [
+    foreignKey({
+      name: 'leituras_das_conversas_conversa_fk',
+      columns: [t.orgId, t.conversaId],
+      foreignColumns: [conversas.orgId, conversas.id],
+    }),
+    foreignKey({
+      name: 'leituras_das_conversas_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    // A última lida é da mesma conversa.
+    foreignKey({
+      name: 'leituras_das_conversas_lida_ate_fk',
+      columns: [t.orgId, t.lidaAte, t.conversaId],
+      foreignColumns: [mensagensDoChat.orgId, mensagensDoChat.id, mensagensDoChat.conversaId],
+    }),
+    // Uma linha por conta e conversa; também as leituras de cada conta, para a lista.
+    unique('leituras_das_conversas_unica').on(t.orgId, t.contaId, t.conversaId),
   ],
 );

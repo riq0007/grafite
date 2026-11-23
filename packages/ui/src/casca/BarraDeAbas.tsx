@@ -4,6 +4,7 @@ import { Button } from 'react-aria-components';
 import { Icone } from '../icones/Icone.tsx';
 import estilos from './BarraDeAbas.module.css';
 import { PainelDeBaixo } from './PainelDeBaixo.tsx';
+import { nomeComOSelo } from './selo.ts';
 import type { ModuloDaCasca } from './tipos.ts';
 
 export interface PropsDaBarraDeAbas {
@@ -44,12 +45,19 @@ export function BarraDeAbas({ modulos, atual, aoAbrirModulo }: PropsDaBarraDeAba
       {abas.map((modulo) => (
         <Button
           key={modulo.id}
-          aria-label={modulo.nome}
+          aria-label={nomeComOSelo(modulo)}
           aria-current={modulo.id === atual ? 'page' : undefined}
           className={estilos.aba}
           onPress={() => aoAbrirModulo(modulo.id)}
         >
-          <Icone icone={modulo.icone} tamanho={20} />
+          <span className={estilos.icone}>
+            <Icone icone={modulo.icone} tamanho={20} />
+            {modulo.selo && (
+              <span className={estilos.selo} aria-hidden="true">
+                {modulo.selo.texto}
+              </span>
+            )}
+          </span>
           <span className={estilos.nome} aria-hidden="true">
             {modulo.nome}
           </span>

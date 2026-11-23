@@ -2,7 +2,12 @@
 // p3c-email-e-push, design, decisão 7). O service worker gerado pelo Workbox importa este arquivo:
 // ele mostra o push pelo sistema do aparelho, mesmo com o Grafite fechado, e, ao toque, foca a
 // janela aberta do Grafite e pede que ela abra o endereço, ou abre uma nova nele. Só endereços do
-// próprio Grafite são abertos.
+// próprio Grafite são abertos. A janela é escolhida pelo caminho (change chat-com-chamados, design,
+// decisão 12): o destino do chat vai à janela do app do chat ou, sem ela, à da casca, que o traduz;
+// os outros vão só à da casca, porque o app do chat não tem as telas dela.
+
+/** O endereço em /chat ou abaixo dele, o do app do chat, como o `DO_CHAT` de `chat/enderecos.ts`. */
+const DO_CHAT = /^\/chat(?:[/?#]|$)/;
 
 const SEM_CONTEUDO = {
   titulo: 'Grafite',
@@ -33,6 +38,17 @@ function noGrafite(destino) {
   }
 }
 
+/** O caminho com a busca e o fragmento, como o `?m=` da mensagem do chat. */
+const comABusca = (url) => `${url.pathname}${url.search}${url.hash}`;
+
+/** A janela aberta para o destino: a do app do chat, para o do chat, ou a da casca. */
+function janelaPara(janelas, url) {
+  const doGrafite = janelas.filter((janela) => new URL(janela.url).origin === self.location.origin);
+  const doChat = (janela) => DO_CHAT.test(new URL(janela.url).pathname);
+  const doApp = DO_CHAT.test(url.pathname) ? doGrafite.find(doChat) : undefined;
+  return doApp ?? doGrafite.find((janela) => !doChat(janela));
+}
+
 self.addEventListener('push', (evento) => {
   const conteudo = lerConteudo(evento.data);
   evento.waitUntil(
@@ -40,7 +56,7 @@ self.addEventListener('push', (evento) => {
       body: conteudo.corpo,
       tag: conteudo.etiqueta,
       icon: '/icones/pwa-192.png',
-      data: { destino: noGrafite(conteudo.destino).pathname },
+      data: { destino: comABusca(noGrafite(conteudo.destino)) },
       // O crítico fica até o toque, como o aviso crítico na tela.
       requireInteraction: conteudo.severidade === 'critico',
     }),
@@ -50,11 +66,11 @@ self.addEventListener('push', (evento) => {
 self.addEventListener('notificationclick', (evento) => {
   evento.notification.close();
   const url = noGrafite(evento.notification.data?.destino);
-  const destino = `${url.pathname}${url.search}${url.hash}`;
+  const destino = comABusca(url);
   evento.waitUntil(
     (async () => {
       const janelas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      const aberta = janelas.find((janela) => new URL(janela.url).origin === self.location.origin);
+      const aberta = janelaPara(janelas, url);
       if (aberta) {
         await aberta.focus();
         aberta.postMessage({ tipo: 'grafite:abrir', destino });

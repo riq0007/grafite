@@ -73,6 +73,9 @@ describe('notificacoesDosAlertas', () => {
       origem: 'Alertas',
       destino: '/ativos/impressora',
       alertaId: 'toner',
+      mensagem: false,
+      assunto: null,
+      mensagemDoChatId: null,
     });
   });
 
@@ -115,6 +118,9 @@ describe('notificacoesDosAlertas', () => {
         origem: 'Alertas',
         destino: '/alertas',
         alertaId: null,
+        mensagem: false,
+        assunto: null,
+        mensagemDoChatId: null,
       },
     ]);
     // Carla vê só o de Campinas: o agrupamento é de cada conta.

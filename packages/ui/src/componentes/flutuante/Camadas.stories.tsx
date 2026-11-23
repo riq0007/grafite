@@ -73,6 +73,36 @@ export const BotaoDeIconeComDica: Historia = {
   },
 };
 
+/**
+ * A dica do foco, trocada pela de outro gatilho no mouse, fecha de vez quando o foco sai dela. O React
+ * Aria fecha a trocada sem a animação de saída, e a saída, que ficava presa, a mostrava de novo no
+ * canto de cima da tela, sem a posição, até ela abrir outra vez.
+ */
+export const DicaTrocadaNaoFicaPresa: Historia = {
+  render: () => (
+    <div style={{ display: 'flex', gap: 'var(--esp-2)' }}>
+      <BotaoDeIcone icone={Download} rotulo="Exportar planilha" />
+      <BotaoDeIcone icone={SlidersHorizontal} rotulo="Filtros" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    const textos = () => corpo.queryAllByRole('tooltip').map((dica) => dica.textContent);
+    const filtros = within(canvasElement).getByRole('button', { name: 'Filtros' });
+    await userEvent.tab();
+    await waitFor(() => expect(textos()).toEqual(['Exportar planilha']));
+    // O mouse anda e para no outro gatilho: aquecidas, a dica dele abre na hora e fecha a do foco,
+    // sem a animação de saída.
+    await userEvent.hover(canvasElement);
+    await userEvent.hover(filtros);
+    await waitFor(() => expect(textos()).toEqual(['Filtros']));
+    // O clique leva o foco, e a dica do primeiro gatilho fecha outra vez.
+    await userEvent.click(filtros);
+    await new Promise((resolver) => setTimeout(resolver, 400));
+    await expect(textos()).not.toContain('Exportar planilha');
+  },
+};
+
 function FiltrosDeAtivos() {
   return (
     <Popover

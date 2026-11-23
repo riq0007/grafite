@@ -13,7 +13,8 @@ Um módulo SHALL notificar pela API, que grava a notificação para cada conta q
 - o título e, se houver, a descrição;
 - a origem, que é o módulo;
 - se houver, o endereço do registro, para "Abrir";
-- se houver, o alerta de que ela trata, que dá as ações de reconhecer e de adiar.
+- se houver, o alerta de que ela trata, que dá as ações de reconhecer e de adiar;
+- se ela é uma mensagem, como as do chat e as respostas da TI no chamado (spec chat, "Notificações do chat", e spec chamados, "Notificações dos chamados").
 
 Cada notificação SHALL entrar na central da conta como não lida, com o momento em que foi gravada.
 
@@ -277,14 +278,14 @@ O resumo SHALL valer só para a pessoa com e-mail, num servidor que envia e-mail
 
 ### Requirement: Push por severidade
 
-Cada notificação SHALL ir por push, logo depois de gravada, para cada aparelho inscrito da conta (requisito "Aparelhos do push"), quando a severidade dela está entre as que a conta escolheu para o push (spec preferencias-da-interface). Com o modo Foco ligado, só o Crítico SHALL ir para o push.
+Cada notificação SHALL ir por push, logo depois de gravada, para cada aparelho inscrito da conta (requisito "Aparelhos do push"), quando a severidade dela está entre as que a conta escolheu para o push (spec preferencias-da-interface). A notificação de mensagem SHALL ir por push qualquer que seja a severidade escolhida. Com o modo Foco ligado, só o Crítico SHALL ir para o push, e a mensagem SHALL NOT ir.
 
 O push SHALL mostrar, pelo sistema do aparelho, mesmo com o Grafite fechado:
-- a severidade e o título, como "Crítico: Black Toner Cartridge em 8%";
+- a severidade e o título, como "Crítico: Black Toner Cartridge em 8%", e, na mensagem, só o título, como "Mensagem de Paulo Nunes";
 - a descrição;
 - o ícone do Grafite.
 
-Tocar no push SHALL abrir o Grafite no endereço da notificação, ou na tela inicial quando ela não tem endereço, numa janela do Grafite já aberta quando houver. O conteúdo do push SHALL ir cifrado de ponta a ponta até o aparelho.
+Tocar no push SHALL abrir o Grafite no endereço da notificação, com a busca dele, como a mensagem do endereço do chat, ou na tela inicial quando ela não tem endereço, numa janela do Grafite já aberta quando houver: o endereço do app do chat, numa janela do app do chat ou, sem ela, numa da casca, na janela do Chat; os outros endereços, numa janela da casca (spec pwa, "App do chat instalado"). O conteúdo do push SHALL ir cifrado de ponta a ponta até o aparelho.
 
 A notificação SHALL ir por push uma vez só para cada aparelho, também quando o envio é tentado de novo.
 
@@ -304,9 +305,21 @@ A notificação SHALL ir por push uma vez só para cada aparelho, também quando
 - **WHEN** a conta tem o celular e o computador inscritos, e chega uma notificação crítica
 - **THEN** os dois recebem o push
 
+#### Scenario: Mensagem no celular
+- **WHEN** Paulo Nunes manda uma mensagem direta a Fernanda Rocha, que escolheu só o Crítico para o push e tem o celular inscrito
+- **THEN** o celular mostra "Mensagem de Paulo Nunes", com o começo do texto, e tocar nele abre a conversa no app do chat
+
+#### Scenario: Mensagem no modo Foco
+- **WHEN** Ana Souza ligou o modo Foco, e Fernanda Rocha responde o #1041
+- **THEN** nenhum aparelho de Ana recebe push da resposta, e a notificação entra na central dela
+
+#### Scenario: Push da casca com o app do chat aberto
+- **WHEN** Ana Souza está só com o app do chat aberto e toca no push "Chamado #1043 com você"
+- **THEN** o Grafite abre o #1043 numa janela nova, e o app do chat continua na conversa em que estava
+
 ### Requirement: Aparelhos do push
 
-A conta SHALL poder inscrever o aparelho em que está, pelos Ajustes, depois de o navegador permitir os avisos. A inscrição SHALL guardar o aparelho com um nome, como "Chrome no Android", e o momento. A conta SHALL ver os aparelhos dela, com "Este aparelho" no que está em uso, e SHALL poder tirar qualquer um deles. Uma conta SHALL NOT ver nem tirar os aparelhos de outra.
+A conta SHALL poder inscrever o aparelho em que está, pelos Ajustes ou pelos Avisos do app do chat (spec modulo-chat, "Equipes e Avisos na tela"), depois de o navegador permitir os avisos. A inscrição SHALL guardar o aparelho com um nome, como "Chrome no Android", e o momento. A conta SHALL ver os aparelhos dela, com "Este aparelho" no que está em uso, e SHALL poder tirar qualquer um deles. Uma conta SHALL NOT ver nem tirar os aparelhos de outra.
 
 O aparelho que o serviço de push diz que não existe mais SHALL sair da lista sozinho. A conta inativada SHALL perder os aparelhos dela.
 
@@ -314,12 +327,16 @@ A API SHALL aceitar só a inscrição num serviço de push conhecido dos navegad
 
 O aparelho sem como receber o push SHALL ver o motivo em texto:
 - o navegador sem push;
-- o iPhone e o iPad fora do Grafite instalado na tela de início;
+- o iPhone e o iPad fora do Grafite ou do app do chat instalado na tela de início;
 - os avisos bloqueados no navegador, com a explicação de como liberar.
 
 #### Scenario: Inscrever o celular
 - **WHEN** a conta liga os avisos no celular, e o navegador permite
 - **THEN** o celular aparece na lista como "Este aparelho" e passa a receber o push
+
+#### Scenario: Inscrever pelo app do chat
+- **WHEN** Fernanda Rocha, que só usa o chat, escolhe "Receber neste aparelho" nos Avisos do app do chat instalado no iPhone, e o iPhone permite
+- **THEN** o iPhone entra nos aparelhos dela e passa a receber o push das mensagens
 
 #### Scenario: Avisos bloqueados
 - **WHEN** a conta liga os avisos, e o navegador nega a permissão

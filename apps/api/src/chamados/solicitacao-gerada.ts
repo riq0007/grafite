@@ -207,7 +207,7 @@ export async function gerarSolicitacao(
       registrar(ponto, pedido.gerar, {
         requisicao,
         momento,
-        doChamado: { numero: chamado.numero, tipoDeChamado: chamado.tipo.nome },
+        doChamado: { numero: chamado.numero, tipoDeChamado: chamado.tipo.nome, leitor },
       }),
     );
     return ligar(registrada, 'gerou');

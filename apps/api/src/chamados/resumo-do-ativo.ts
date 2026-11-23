@@ -97,9 +97,10 @@ async function mediaDoContador(tx: Transacao, ativoId: string, agora: Date) {
 
 /**
  * Se o ativo tem um alerta aberto de uma regra do toner na severidade Crítico, a do selo "Toner
- * crítico": o limite é o da regra da organização, com as exceções dela.
+ * crítico": o limite é o da regra da organização, com as exceções dela. O cartão do ativo na
+ * mensagem também o lê (`cartao.ts`).
  */
-async function tonerCriticoDo(tx: Transacao, ativoId: string): Promise<boolean> {
+export async function tonerCriticoDo(tx: Transacao, ativoId: string): Promise<boolean> {
   const [alerta] = await tx
     .select({ id: alertas.id })
     .from(alertas)

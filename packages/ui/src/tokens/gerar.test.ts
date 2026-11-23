@@ -88,6 +88,11 @@ describe('gerarCss', () => {
     expect(reduzido['--dur-menu']).toBeUndefined();
   });
 
+  it('a folha de baixo sobe em 300 ms, e sem deslocamento com movimento reduzido', () => {
+    expect(bloco(css, ':root')['--dur-folha']).toBe('var(--dur-lenta)');
+    expect(bloco(css, '[data-motion="reduzido"]')['--dur-folha']).toBe('0ms');
+  });
+
   it('o dock se esconde em 280 ms, e sem deslocamento com movimento reduzido', () => {
     expect(bloco(css, ':root')['--dur-ocultar-dock']).toBe('280ms');
     expect(bloco(css, '[data-motion="reduzido"]')['--dur-ocultar-dock']).toBe('0ms');

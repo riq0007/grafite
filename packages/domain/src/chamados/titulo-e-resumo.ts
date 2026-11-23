@@ -124,6 +124,15 @@ function camposQueAPessoaVe(formulario: Formulario, respostas: Respostas): Campo
   return formulario.campos.filter((campo) => visiveis.has(campo.id) && !campo.soDaTi);
 }
 
+/** Até quantos caracteres o título do chamado vai, como no contador do transformar em chamado. */
+export const LIMITE_DO_TITULO_DO_CHAMADO = LIMITE_DO_TITULO;
+
+/**
+ * Os caracteres do título como a conferência os conta: numa linha só, sem os espaços das pontas, em
+ * caracteres. O contador do transformar em chamado mostra o mesmo número, como "20/120".
+ */
+export const tamanhoDoTitulo = (texto: string) => [...umaLinha(texto)].length;
+
 /**
  * O título que quem abre ou atende escreve (spec chamados, "Abrir um chamado pela TI"): numa linha
  * só, como o montado, sem os espaços das pontas e de 1 a 120 caracteres, contados em caracteres, e
@@ -134,7 +143,7 @@ export function conferirTituloDoChamado(
 ): { ok: true; titulo: string } | { ok: false; erro: string } {
   const titulo = umaLinha(pedido);
   if (titulo === '') return { ok: false, erro: 'Escreva o título.' };
-  if ([...titulo].length > LIMITE_DO_TITULO) {
+  if (tamanhoDoTitulo(titulo) > LIMITE_DO_TITULO) {
     return { ok: false, erro: `Use até ${LIMITE_DO_TITULO} caracteres.` };
   }
   return { ok: true, titulo };

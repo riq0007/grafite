@@ -1,0 +1,79 @@
+/* A equipe ou o canal escolhido na vista Equipes: o cabeçalho da conversa (TelaDaConversa.module.css),
+   com a linha de baixo e "Abrir a conversa" à direita, e quem participa, em colunas, que rolam. */
+.equipe {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.cabecalho {
+  flex-wrap: wrap;
+  border-block-end: 1px solid var(--cor-linha);
+}
+
+.abrir {
+  margin-inline-start: auto;
+}
+
+.quem {
+  display: grid;
+  align-content: start;
+  gap: var(--esp-2);
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--esp-4) var(--esp-5);
+}
+
+/* O título da parte, como os das seções da lista: a legenda em maiúsculas, no secundário. */
+.tituloDeQuem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  letter-spacing: 0.06em;
+  line-height: var(--entrelinha-justa);
+  text-transform: uppercase;
+}
+
+.aviso {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.pessoas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--esp-10) * 5), 1fr));
+  gap: var(--esp-1) var(--esp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pessoa {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-block-size: calc(var(--esp-8) + var(--esp-1) / 2);
+  min-inline-size: 0;
+}
+
+.nomeDaPessoa {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* No celular, "Abrir a conversa" desce para a linha de baixo, na largura toda, no alvo de toque. */
+:root[data-postura="celular"] .abrir {
+  flex: 1 0 100%;
+  min-block-size: var(--alvo-toque);
+  margin-block-end: var(--esp-2);
+}
+
+:root[data-postura="celular"] .quem {
+  padding: var(--esp-3) var(--esp-4);
+}

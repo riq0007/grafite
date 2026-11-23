@@ -1,0 +1,19 @@
+/* A lista da vista Equipes, com as linhas da lista do Chat (ListaDoChat.module.css) e o que é só
+   dela: quantas pessoas cada uma tem. */
+.itens {
+  margin-block-start: var(--esp-2);
+}
+
+.aviso {
+  margin: var(--esp-3) var(--esp-2) 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.pessoas {
+  flex: none;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

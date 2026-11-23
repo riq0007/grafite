@@ -433,6 +433,7 @@ describe('GET /chamados/:numero', () => {
       local: 'Jundiaí › Recepção',
       abrir: true,
       contatos: { email: 'marina.rocha@empresa.com.br', telefone: '(11) 4521-0139' },
+      usaOChat: false,
     });
     expect(deAna.ativo).toEqual({
       id: id('PAT-00139'),
@@ -455,6 +456,7 @@ describe('GET /chamados/:numero', () => {
       local: 'Jundiaí › Recepção',
       abrir: false,
       contatos: null,
+      usaOChat: false,
     });
     expect(deDiego.ativo).toEqual({
       id: id('PAT-00139'),
@@ -601,7 +603,14 @@ describe('GET /chamados/:numero', () => {
 
     // Também a quem vê as pessoas.
     const f = await lerFicha(1045, 'ana');
-    expect(f.pessoa).toEqual({ id: id('otavio'), nome, local: null, abrir: false, contatos: null });
+    expect(f.pessoa).toEqual({
+      id: id('otavio'),
+      nome,
+      local: null,
+      abrir: false,
+      contatos: null,
+      usaOChat: false,
+    });
     expect(f.titulo).toBe('Otávio Nunes pediu a troca do mouse');
     expect(f.resumo).toBe('Relato: O mouse do Otávio Nunes parou de funcionar.');
     expect(f.conversa.map((item: { texto?: string }) => item.texto ?? null)).toContain(
@@ -679,7 +688,8 @@ describe('GET /chamados/:numero', () => {
         autor: ana,
         evento: 'abertura',
         de: null,
-        para: null,
+        // Quem nasce atendendo, no `para` da abertura (change chat-com-chamados, decisão 15).
+        para: { conta: conta('ana'), nome: 'Ana Souza' },
         desde: null,
         // Só o evento do ativo tem o ativo (tarefa 4.15), e só os da OS e da solicitação, a OS e a
         // solicitação (4.16 e 4.17), e só o da solicitação não gerada, o motivo (4.18).
@@ -687,6 +697,8 @@ describe('GET /chamados/:numero', () => {
         os: null,
         solicitacao: null,
         motivo: null,
+        avaliacao: null,
+        resumo: null,
       },
       {
         especie: 'mensagem',
@@ -694,7 +706,10 @@ describe('GET /chamados/:numero', () => {
         em: iso('07:41'),
         autor: { tipo: 'pessoa', id: id('marina'), nome: 'Marina Rocha' },
         texto: 'As folhas saem com manchas pretas na borda. Já troquei o papel.',
-        anexos: [folha1],
+        anexos: [{ ...folha1, miniatura: null }],
+        opcoes: null,
+        escolhida: null,
+        cartao: null,
       },
       {
         especie: 'nota',
@@ -702,7 +717,10 @@ describe('GET /chamados/:numero', () => {
         em: iso('08:05'),
         autor: { tipo: 'conta', id: conta('diego'), nome: 'Diego Ramos' },
         texto: 'A PAT-00139 já trocou o cilindro em setembro.',
-        anexos: [doCilindro],
+        anexos: [{ ...doCilindro, miniatura: null }],
+        opcoes: null,
+        escolhida: null,
+        cartao: null,
       },
       {
         especie: 'evento',
@@ -717,6 +735,8 @@ describe('GET /chamados/:numero', () => {
         os: null,
         solicitacao: null,
         motivo: null,
+        avaliacao: null,
+        resumo: null,
       },
       {
         especie: 'evento',
@@ -731,6 +751,8 @@ describe('GET /chamados/:numero', () => {
         os: null,
         solicitacao: null,
         motivo: null,
+        avaliacao: null,
+        resumo: null,
       },
     ];
     expect((await lerFicha(1042, 'ana')).conversa).toEqual(esperada);
@@ -992,18 +1014,21 @@ describe('GET /chamados/:numero', () => {
         rotulo: 'Pedir uma foto da folha',
         texto: 'Oi, Marina! Pode mandar uma foto da folha?',
         esperaAResposta: true,
+        opcoes: [],
       },
       {
         id: expect.any(String),
         rotulo: 'Pedir o print do erro',
         texto: 'Oi, Marina! Pode mandar um print do erro?',
         esperaAResposta: true,
+        opcoes: [],
       },
       {
         id: expect.any(String),
         rotulo: 'Avisar da troca do toner',
         texto: 'Marina, o toner foi trocado. Marina, confira.',
         esperaAResposta: false,
+        opcoes: [],
       },
     ]);
     // No chamado de Outro, só a que aparece em todos os tipos.
@@ -1013,6 +1038,7 @@ describe('GET /chamados/:numero', () => {
         rotulo: 'Pedir o print do erro',
         texto: 'Oi, Rita! Pode mandar um print do erro?',
         esperaAResposta: true,
+        opcoes: [],
       },
     ]);
   });

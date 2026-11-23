@@ -2,13 +2,17 @@
 // decisão 17, "A rota da busca (tarefa 4.20)"): pelo número e pelas palavras do título, até 8, o
 // número primeiro e os abertos antes dos resolvidos, só com os chamados que a conta vê, e nada com o
 // módulo desligado. O que cada termo pede (o "#", a faixa do número, o acento) é do domínio
-// (`termoDaBusca`); aqui fica um caso de cada ligação.
+// (`termoDaBusca`); aqui fica um caso de cada ligação. O Fechado vem pelo `estaFechado`, como na
+// lista do chat (change chat-com-chamados, tarefa 4.13).
+import { chamados, naOrganizacao } from '@grafite/db';
+import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { desligarModulos } from '../../test/alertas.ts';
 import { type ChamadosDeTeste, montarChamados } from '../../test/chamados.ts';
 import { type ApiDeTeste, abrirApi, criarConta, criarRelogio } from '../../test/integracao.ts';
 
 const host = 'grafite.chamados-busca.local';
+const DIA = 24 * 60 * 60_000;
 
 let api: ApiDeTeste;
 let c: ChamadosDeTeste;
@@ -66,6 +70,7 @@ describe('a busca dos chamados', () => {
           titulo: 'Impressora manchando na recepção',
           pessoa: 'Marina Rocha',
           situacao: 'em-atendimento',
+          fechado: false,
         },
       ],
     });
@@ -85,6 +90,36 @@ describe('a busca dos chamados', () => {
     // O termo que não pede nem número nem palavra, como o número além do inteiro do banco, não
     // acha nada, sem recusa.
     expect(await numeros('#99999999999')).toEqual([]);
+  });
+
+  it('o resolvido vem Fechado depois do sétimo dia, como na lista do chat', async () => {
+    const lido = async (numero: number) => {
+      const r = await buscar(`#${numero}`);
+      expect(r.statusCode, r.body).toBe(200);
+      return (r.json() as { itens: { numero: number; situacao: string; fechado: boolean }[] })
+        .itens[0];
+    };
+    // A resolução vai para trás, e não o relógio, que venceria a sessão.
+    const resolvidoHa = (dias: number) =>
+      naOrganizacao(api.banco, c.org, (tx) =>
+        tx
+          .update(chamados)
+          .set({ resolvidoEm: new Date(api.relogio.agora().getTime() - dias * DIA) })
+          .where(eq(chamados.numero, n.resolvido)),
+      );
+    expect(await lido(n.resolvido)).toMatchObject({ situacao: 'resolvido', fechado: false });
+    try {
+      // Resolvido em 10/11, ele se reabre até hoje, 17/11, e fecha na meia-noite de 18/11, no fuso
+      // da TI; resolvido em 9/11, já fechou, mesmo sem a tarefa do fechamento.
+      await resolvidoHa(7);
+      expect(await lido(n.resolvido)).toMatchObject({ situacao: 'resolvido', fechado: false });
+      await resolvidoHa(8);
+      expect(await lido(n.resolvido)).toMatchObject({ situacao: 'resolvido', fechado: true });
+      // O aberto não fecha.
+      expect(await lido(n.manchando)).toMatchObject({ situacao: 'em-atendimento', fechado: false });
+    } finally {
+      await resolvidoHa(0);
+    }
   });
 
   it('só os chamados que a conta vê', async () => {

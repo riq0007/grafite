@@ -103,13 +103,41 @@ export function instanteNoFuso(data: string, hora: string, fuso: string): Date {
   return instanteDoRelogio(ano, mes, dia, horas, minutos, fuso);
 }
 
+const MS_POR_HORA = 3_600_000;
+
+/**
+ * O começo de um dia do calendário no relógio do fuso: a meia-noite ou, quando o verão a pula, a
+ * hora que ele deixa no lugar dela, como a 01:00 de 06/09/2026 em America/Santiago. O dia passa do
+ * fim do mês e do ano, como no `Date.UTC`.
+ */
+export function comecoDoDiaDoCalendario(ano: number, mes: number, dia: number, fuso: string): Date {
+  const meiaNoite = Date.UTC(ano, mes - 1, dia);
+  const doDia = new Date(meiaNoite);
+  const ehDoDia = (instante: Date) => {
+    const relogio = relogioDoFuso(instante, fuso);
+    return (
+      relogio.ano === doDia.getUTCFullYear() &&
+      relogio.mes === doDia.getUTCMonth() + 1 &&
+      relogio.dia === doDia.getUTCDate()
+    );
+  };
+  // A meia-noite com o deslocamento de 12 h antes e com o de 12 h depois. Com a troca do verão perto
+  // dela, o de antes leva a meia-noite pulada à hora que o verão deixa, e o de depois cai na véspera;
+  // vale o primeiro instante que já é do dia.
+  const candidatos = [meiaNoite - 12 * MS_POR_HORA, meiaNoite + 12 * MS_POR_HORA]
+    .map((perto) => new Date(meiaNoite - deslocamento(new Date(perto), fuso)))
+    .filter(ehDoDia);
+  if (candidatos.length === 0) return instanteDoRelogio(ano, mes, dia, 0, 0, fuso);
+  return new Date(Math.min(...candidatos.map((instante) => instante.getTime())));
+}
+
 /**
  * O começo do dia do momento no relógio do fuso: a meia-noite, ou a hora que o verão deixa no lugar
  * dela. Os resolvidos hoje do quadro dos chamados contam a partir dele.
  */
 export function comecoDoDia(momento: Date, fuso: string): Date {
   const { ano, mes, dia } = relogioDoFuso(momento, fuso);
-  return instanteDoRelogio(ano, mes, dia, 0, 0, fuso);
+  return comecoDoDiaDoCalendario(ano, mes, dia, fuso);
 }
 
 /**
@@ -117,5 +145,5 @@ export function comecoDoDia(momento: Date, fuso: string): Date {
  * ano do resumo do ativo no chamado contam a partir dele, no fuso do horário da TI.
  */
 export function comecoDoAno(momento: Date, fuso: string): Date {
-  return instanteDoRelogio(relogioDoFuso(momento, fuso).ano, 1, 1, 0, 0, fuso);
+  return comecoDoDiaDoCalendario(relogioDoFuso(momento, fuso).ano, 1, 1, fuso);
 }

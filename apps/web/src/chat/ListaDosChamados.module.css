@@ -1,0 +1,94 @@
+/* A lista da vista Chamados (m10), com as seções e o cartão da lista do Chat (ListaDoChat.module.css)
+   e o que é só dela: a contagem dos abertos ao lado do título e as linhas do cartão. */
+
+/* O alto: o título e, na mesma linha de base, "3 abertos". */
+.cabecalho {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-2) var(--esp-1) var(--esp-4);
+}
+
+.contagem {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+.aviso {
+  margin: var(--esp-3) var(--esp-2) 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A linha de cima: o número em mono, o selo e, à direita, a hora. O número e a hora ficam no azul do
+   chamado e no texto, que passam do AA sobre o fundo do cartão; o secundário ficaria perto do
+   limite. */
+.linhaDeCima {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+}
+
+.numero {
+  color: var(--cor-info);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hora {
+  margin-inline-start: auto;
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* O ícone do tipo e o título inteiro, em peso forte: quebra a linha e não corta. */
+.titulo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+.titulo svg {
+  flex: none;
+  margin-block-start: calc(var(--esp-1) / 4);
+}
+
+.textoDoTitulo {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* O começo da última mensagem, com quem a escreveu, numa linha cortada pela largura, e o contador
+   da resposta nova. */
+.ultima {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-inline-size: 0;
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+}
+
+.comeco {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fimDosFechados {
+  display: grid;
+  justify-items: start;
+  margin-block-start: var(--esp-2);
+}

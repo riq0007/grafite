@@ -4,8 +4,10 @@ import {
   type ContextoDasRespostas,
   camposNaAuditoria,
   conferirTituloDoChamado,
+  LIMITE_DO_TITULO_DO_CHAMADO,
   partesDoResumo,
   resumoDasRespostas,
+  tamanhoDoTitulo,
   tituloDasRespostas,
 } from './titulo-e-resumo.ts';
 
@@ -739,6 +741,13 @@ describe('o título que quem abre escreve', () => {
       ok: true,
       titulo: `${'a'.repeat(60)} ${'b'.repeat(59)}`,
     });
+  });
+
+  it('o contador conta como a conferência: numa linha, sem as pontas, em caracteres', () => {
+    expect(tamanhoDoTitulo('  Impressora   manchando\n')).toBe(20);
+    expect(tamanhoDoTitulo(' \n ')).toBe(0);
+    expect(tamanhoDoTitulo('🖨'.repeat(3))).toBe(3);
+    expect(LIMITE_DO_TITULO_DO_CHAMADO).toBe(120);
   });
 });
 

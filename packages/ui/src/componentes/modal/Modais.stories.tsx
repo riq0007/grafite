@@ -199,6 +199,62 @@ export const DialogoAbertoPorFora: StoryObj<{ aoFechar: () => void }> = {
   },
 };
 
+/** O formulário curto do chat (m09), que no celular ocupa a tela. */
+function FormularioCurto() {
+  const [aberto, definirAberto] = useState(false);
+  return (
+    <>
+      <Botao onPress={() => definirAberto(true)}>Transformar em chamado</Botao>
+      <Dialogo
+        titulo="Transformar em chamado"
+        aberto={aberto}
+        aoMudarAberto={definirAberto}
+        largo
+        telaCheiaNoCelular
+        acoes={(fechar) => (
+          <Botao nivel="primario" onPress={fechar}>
+            Abrir chamado
+          </Botao>
+        )}
+      >
+        <CampoDeTexto rotulo="Título" defaultValue="Impressora manchando" />
+      </Dialogo>
+    </>
+  );
+}
+
+/**
+ * No celular, o diálogo de tela cheia ocupa a tela, com "Cancelar" e o título no alto e a ação no pé;
+ * "Cancelar" fecha, com o foco de volta no gatilho.
+ */
+export const DialogoEmTelaCheiaNoCelular: Historia = {
+  globals: { viewport: { value: 'celular390' } },
+  render: () => <FormularioCurto />,
+  play: async ({ canvasElement }) => {
+    const corpo = corpoDe(canvasElement);
+    const raiz = document.documentElement;
+    const gatilho = within(canvasElement).getByRole('button', { name: 'Transformar em chamado' });
+    await userEvent.click(gatilho);
+    const dialogo = await corpo.findByRole('dialog', { name: 'Transformar em chamado' });
+    const janela = dialogo.parentElement as HTMLElement;
+    await waitFor(() => {
+      const caixa = janela.getBoundingClientRect();
+      expect(Math.round(caixa.top)).toBe(0);
+      expect(Math.round(caixa.width)).toBe(raiz.clientWidth);
+      expect(Math.round(caixa.height)).toBe(raiz.clientHeight);
+    });
+    const acao = within(dialogo).getByRole('button', { name: 'Abrir chamado' });
+    await expect(Math.round(acao.getBoundingClientRect().bottom)).toBeLessThanOrEqual(
+      raiz.clientHeight,
+    );
+    const cancelar = within(dialogo).getByRole('button', { name: 'Cancelar' });
+    await expect(cancelar.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await userEvent.click(cancelar);
+    await waitFor(() => expect(corpo.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(gatilho).toHaveFocus());
+  },
+};
+
 function DetalhesDoAtivo() {
   return (
     <Gaveta titulo="PAT-00412 · HP LaserJet M404dn" gatilho={<Botao>Detalhes</Botao>}>

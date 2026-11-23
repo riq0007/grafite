@@ -1,5 +1,6 @@
 import { temaPersonalizado } from '@grafite/ui';
 import { afterEach, describe, expect, it } from 'vitest';
+import chatHtml from '../../chat/index.html?raw';
 import indexHtml from '../../index.html?raw';
 import { ATRIBUTOS_PERMITIDOS, atributosDaInterface, PADRAO_DE_FABRICA } from './preferencias.ts';
 
@@ -18,6 +19,10 @@ afterEach(() => {
 });
 
 describe('script anti-flash', () => {
+  it('a página do app do chat aplica as preferências com o mesmo script', () => {
+    expect(chatHtml.match(/<script>([\s\S]*?)<\/script>/)?.[1]).toBe(scriptAntiFlash);
+  });
+
   it('aplica, antes do app, cada atributo que o app calcula', () => {
     const atributos = atributosDaInterface({
       ...PADRAO_DE_FABRICA,

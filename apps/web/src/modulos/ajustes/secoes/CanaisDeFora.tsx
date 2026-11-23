@@ -4,7 +4,6 @@
 // pessoa, o crítico na hora, o resumo e o teste; e o grupo "No celular", com as severidades, a
 // inscrição deste aparelho, os aparelhos da conta e o teste. O motivo de um canal não funcionar
 // aparece em texto. Nos padrões da organização, só as escolhas aparecem.
-import type { components } from '@grafite/api-client';
 import type { ResumoPorEmail } from '@grafite/domain';
 import {
   avisar,
@@ -16,47 +15,25 @@ import {
   Segmento,
   useDataHora,
 } from '@grafite/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
-import { consultar } from '../../../api/consultas.ts';
 import { pedir } from '../../../api/pedir.ts';
 import { useApi } from '../../../api/useApi.tsx';
-import { useAmbienteDoPush } from '../../../notificacoes/ambienteDoPush.tsx';
 import {
-  cancelarEsteAparelho,
-  enderecoDesteAparelho,
-  inscreverEsteAparelho,
-  type SuporteAoPush,
-  suporteAoPush,
-} from '../../../notificacoes/push.ts';
+  type CanaisDaConta as Canais,
+  NO_TESTE,
+  useEsteAparelho,
+} from '../../../notificacoes/esteAparelho.ts';
+import { cancelarEsteAparelho } from '../../../notificacoes/push.ts';
 import { useAlvoDasPreferencias, useAlvoEhAConta } from '../../../preferencias/alvo.tsx';
 import estilos from './Secoes.module.css';
 
-type Canais = components['schemas']['CanaisDaConta'];
 type Aparelho = Canais['push']['aparelhos'][number];
-
-export const CHAVE_DOS_CANAIS = ['conta', 'canais'] as const;
-
-const NO_TESTE = 'O ambiente de teste não envia e-mail nem avisos no celular.';
 
 const TEXTOS_DO_EMAIL: Record<Exclude<Canais['email']['situacao'], 'ligado'>, string> = {
   'sem-email':
     'A pessoa da sua conta não tem e-mail. Peça à administração para cadastrar o seu e-mail.',
   'sem-configuracao': 'O envio de e-mail não está configurado neste servidor.',
   'ambiente-de-teste': NO_TESTE,
-};
-
-const TEXTOS_DO_PUSH: Record<Exclude<Canais['push']['situacao'], 'ligado'>, string> = {
-  'sem-configuracao': 'Os avisos no celular não estão configurados neste servidor.',
-  'ambiente-de-teste': NO_TESTE,
-};
-
-const TEXTOS_DO_SUPORTE: Record<Exclude<SuporteAoPush, 'ok'>, string> = {
-  'sem-push': 'Este navegador não recebe avisos fora da aplicação.',
-  'iphone-fora-do-app':
-    'No iPhone e no iPad, os avisos chegam com o Grafite instalado na tela de início.',
-  bloqueado:
-    'Os avisos estão bloqueados neste navegador. Libere as notificações do Grafite nas configurações do site.',
 };
 
 /** O grupo de um canal, nomeado pelo título dele. */
@@ -148,32 +125,13 @@ export function CanaisDeFora() {
 /** Os canais da conta da sessão: o que cada um tem, os aparelhos e os testes. */
 function CanaisDaConta() {
   const api = useApi();
-  const consultas = useQueryClient();
-  const ambiente = useAmbienteDoPush();
   const { formatarData } = useDataHora();
-  const canais = useQuery({
-    queryKey: CHAVE_DOS_CANAIS,
-    queryFn: ({ signal }) =>
-      consultar(() => api.GET('/conta/canais', { signal }), 'carregar o e-mail e os avisos'),
-  });
-  const [suporte, definirSuporte] = useState(() => suporteAoPush(ambiente));
+  const esteAparelho = useEsteAparelho();
+  const { ambiente, canais, pushLigado, aparelhos, deste, podeReceber, reler } = esteAparelho;
   const [ocupado, definirOcupado] = useState<string | null>(null);
-  // O endereço da inscrição deste aparelho, que marca "Este aparelho", lido de novo a cada leitura
-  // dos canais.
-  const deste =
-    useQuery({
-      queryKey: [...CHAVE_DOS_CANAIS, 'deste-aparelho', canais.dataUpdatedAt],
-      queryFn: () => enderecoDesteAparelho(ambiente),
-    }).data ?? null;
-
-  const reler = () => consultas.invalidateQueries({ queryKey: CHAVE_DOS_CANAIS });
 
   const email = canais.data?.email;
-  const push = canais.data?.push;
   const emailLigado = email?.situacao === 'ligado';
-  const pushLigado = push?.situacao === 'ligado';
-  const aparelhos = pushLigado ? (push?.aparelhos ?? []) : [];
-  const esteInscrito = deste !== null && aparelhos.some(({ endpoint }) => endpoint === deste);
 
   async function fazer(chave: string, acao: () => Promise<void>) {
     definirOcupado(chave);
@@ -186,19 +144,7 @@ function CanaisDaConta() {
     }
   }
 
-  const receber = () =>
-    fazer('receber', async () => {
-      if (!push?.chavePublica) return;
-      const resultado = await inscreverEsteAparelho(ambiente, push.chavePublica, async (corpo) => {
-        const gravado = await pedir(
-          () => api.POST('/conta/push', { body: corpo }),
-          'inscrever o aparelho',
-        );
-        if ('erro' in gravado) throw new Error(gravado.erro);
-      });
-      definirSuporte(suporteAoPush(ambiente));
-      if (resultado === 'inscrito') await reler();
-    });
+  const receber = () => fazer('receber', esteAparelho.receber);
 
   const tirar = (aparelho: Aparelho) =>
     fazer(aparelho.id, async () => {
@@ -249,17 +195,7 @@ function CanaisDaConta() {
     (email?.situacao === 'ligado'
       ? `As notificações vão para ${email.endereco}.`
       : TEXTOS_DO_EMAIL[email?.situacao ?? 'sem-configuracao']);
-  const textoDoPush =
-    situacaoDaLeitura ??
-    (push?.situacao !== 'ligado'
-      ? TEXTOS_DO_PUSH[
-          push?.situacao === 'ambiente-de-teste' ? 'ambiente-de-teste' : 'sem-configuracao'
-        ]
-      : suporte !== 'ok'
-        ? TEXTOS_DO_SUPORTE[suporte]
-        : esteInscrito
-          ? 'Este aparelho recebe os avisos.'
-          : 'Este aparelho ainda não recebe os avisos.');
+  const textoDoPush = situacaoDaLeitura ?? esteAparelho.textoDoPush;
 
   return (
     <>
@@ -287,7 +223,9 @@ function CanaisDaConta() {
       </GrupoDoCanal>
 
       <GrupoDoCanal titulo="No celular">
-        <p className={estilos.informacao}>{textoDoPush}</p>
+        <p ref={esteAparelho.frase} tabIndex={-1} className={estilos.informacao}>
+          {textoDoPush}
+        </p>
         <EscolhasDoPush desligadas={!pushLigado} />
         {aparelhos.length > 0 && (
           <ul aria-label="Aparelhos que recebem os avisos" className={estilos.sessoes}>
@@ -318,7 +256,7 @@ function CanaisDaConta() {
         )}
         {pushLigado && (
           <div className={estilos.acoesDaParte}>
-            {suporte === 'ok' && !esteInscrito && (
+            {podeReceber && (
               <Botao
                 carregando={ocupado === 'receber'}
                 rotuloCarregando="Inscrevendo"

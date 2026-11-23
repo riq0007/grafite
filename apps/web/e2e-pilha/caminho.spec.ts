@@ -83,7 +83,11 @@ import { ENDERECO_DA_PILHA } from './subir.ts';
 // inventario-pelo-agente-glpi e distribuicao-de-software), o teste faz o papel do agente do GLPI de um
 // computador: o CONTACT no endereço que a administradora gera e, depois que ela liga o agente à
 // PAT-00412 e distribui um pacote de 9 MB, o Deploy, com as partes conferidas pelo SHA-512; a ficha
-// da distribuição mostra a máquina concluída, com o log.
+// da distribuição mostra a máquina concluída, com o log. Com os chamados (change chamados-da-ti), ela
+// abre um chamado em nome de Carla Dias, o assume, responde com o laudo em PDF e o resolve. Com o
+// chat (change chat-com-chamados), a conta de Carla, só com o chat e o pedido pelo chat, entra no app
+// do chat, fora da casca, e transforma a mensagem que escreve na equipe dela num chamado; a resposta
+// da administradora no chamado chega à tela aberta de Carla, noutro navegador, sem recarregar.
 
 declare global {
   interface Window {
@@ -132,7 +136,10 @@ const doEndereco = (final: number) => ({
 /**
  * O mesmo navegador passa a chegar por outro endereço. Os trechos longos da administradora, com
  * uma recarga da página atrás da outra, passam das 600 por minuto num endereço só desde os módulos
- * de 28/10, que pesam mais na abertura da casca: ela troca de endereço no começo deles.
+ * de 28/10, que pesam mais na abertura da casca: ela troca de endereço no começo deles. Com o
+ * resumo do chat, que a casca também pede a cada abertura (change chat-com-chamados), o endereço
+ * dela do passo 1 ao 31 chegou a 609 num minuto no CI e a 588 na máquina: ela também troca nos
+ * passos 16, 23, 27, 29 e 30.
  */
 const trocarDeEndereco = (pagina: Page, final: number) =>
   pagina.setExtraHTTPHeaders({ 'X-Forwarded-For': `198.51.100.${final}` });
@@ -141,6 +148,7 @@ test.use(doEndereco(1));
 
 const SENHA_NOVA = 'cavalo bateria grampo correto';
 const SENHA_DO_BRUNO = 'girassol trilho manga azulejo';
+const SENHA_DA_CARLA = 'farol caderno pimenta veleiro';
 
 /** A senha temporária como a tela a mostra: 16 caracteres em grupos de 4. */
 const FORMATO_DA_SENHA_TEMPORARIA = /^[0-9A-Z]{4}(-[0-9A-Z]{4}){3}$/;
@@ -693,6 +701,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     await page.goto('/ativos/novo');
     await expect(etapa(page, 'Tipo')).toContainText('Falta escolher');
 
+    await trocarDeEndereco(page, 12);
     // 16. A administradora desliga o Ativos na seção Módulos. Ele some do dock da conta nova, e a
     // lista aberta passa a dizer que o módulo está desligado. Ligado de novo, ele volta com o ativo.
     await page.goto('/administracao/modulos');
@@ -891,6 +900,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     );
     expect(await doBruno.evaluate(() => window.__mesmaPagina)).toBe(true);
 
+    await trocarDeEndereco(page, 13);
     // 23. A administradora cadastra o campo de arquivo "PDF da nota fiscal", o inclui na impressora
     // e envia a nota da PAT-00412. A conta nova, na ficha aberta, baixa o PDF com o nome original.
     await page.goto('/gestao/catalogo/campos/novo');
@@ -1030,6 +1040,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       await semSessao.close();
     }
 
+    await trocarDeEndereco(page, 14);
     // 27. A administradora cadastra o campo IP, liga a disponibilidade e os suprimentos na
     // impressora pelo campo, com a comunidade public, e põe a PAT-00412 em 127.0.0.1 e a PAT-00600
     // em 192.0.2.1. A conta nova põe a coluna Disponibilidade na tabela aberta, que mostra as duas
@@ -1177,6 +1188,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       rmSync(filaDoColetor, { recursive: true, force: true });
     }
 
+    await trocarDeEndereco(page, 15);
     // 29. Os alertas (change p3a-regras-e-alertas) e as notificações deles (change
     // p3b-notificacoes-no-servidor): o toner da PAT-00412 que a coleta gravou, em 8%, fica acima do
     // limite de 5% da regra do toner. A administradora sobe o limite para 15%, e a mudança pede a
@@ -1331,6 +1343,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     ).toBeVisible();
     await expect(doTonerNosIndicadores.getByText('Sem dado', { exact: true })).toBeVisible();
 
+    await trocarDeEndereco(page, 16);
     // 30. O cofre: a administradora cadastra a senha do switch, ligada à PAT-00412, libera o cofre
     // com o código do app, revela e copia. A auditoria mostra a revelação pelo nome do segredo, sem
     // o valor, e a ficha da PAT-00412 mostra o segredo, com o caminho até o Cofre.
@@ -1795,6 +1808,7 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await escolherLocal(page, 'Local de trabalho', 'Campinas');
   await page.getByRole('button', { name: 'Cadastrar', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: /Carla Dias/ })).toBeVisible();
+  const fichaDaCarla = new URL(page.url()).pathname;
   await page.goto(perfilDeConsulta);
   await page
     .getByText('Cadastrar, renomear, mover, inativar e reativar locais', { exact: true })
@@ -2077,9 +2091,10 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     mimeType: 'application/pdf',
     buffer: PDF,
   });
-  // O envio espera o anexo subir: o "Tirar" aparece com o anexo na lista, e o "Enviar" volta.
+  // O envio espera o anexo subir: o "Tirar" aparece com o anexo na lista, e o "Enviar para Carla"
+  // volta.
   await expect(escrever.getByRole('button', { name: 'Tirar laudo-do-monitor.pdf' })).toBeVisible();
-  const enviar = escrever.getByRole('button', { name: 'Enviar', exact: true });
+  const enviar = escrever.getByRole('button', { name: 'Enviar para Carla', exact: true });
   await expect(enviar).toBeEnabled();
   await enviar.click();
   const conversa = page.getByRole('region', { name: 'Conversa' });
@@ -2102,5 +2117,155 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     'chamado.aberto',
     'chamado.assumido',
     'chamado.resolvido',
+  ]);
+
+  // 39. O chat com os chamados (change chat-com-chamados): a administradora cria o perfil do
+  // colaborador, só com o chat e o pedido pelo chat, e a conta de Carla Dias; cadastra o grupo da
+  // recepção de Campinas, com Carla e com o perfil na organização inteira, e a equipe do grupo. A
+  // conta de Carla entra noutro navegador, troca a senha e vai ao app do chat, fora da casca, porque
+  // o Chat é o único módulo dela. Ela escreve na equipe e, pelo menu da mensagem, a transforma num
+  // chamado no nome dela; a conversa mostra o evento, e ela abre o chamado por ele. A administradora
+  // o assume e responde: a situação nova e a resposta chegam à tela aberta de Carla, sem recarregar.
+  await trocarDeEndereco(page, 11);
+  await page.goto('/administracao/perfis');
+  await page.getByRole('button', { name: 'Novo perfil' }).click();
+  await page.getByRole('textbox', { name: 'Nome' }).fill('Colaborador');
+  await page
+    .getByText('Usar o chat: as conversas diretas, as equipes e os canais', { exact: true })
+    .click();
+  await page
+    .getByText('Pedir chamados pelo chat, em nome de si ou de outra pessoa', { exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Cadastrar', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Colaborador/ })).toBeVisible();
+
+  await page.goto(fichaDaCarla);
+  await page.getByRole('tab', { name: 'Acesso' }).click();
+  await page.getByRole('button', { name: 'Criar conta' }).click();
+  const criarADaCarla = page.getByRole('dialog', { name: 'Criar a conta de Carla Dias' });
+  await criarADaCarla.getByRole('textbox', { name: 'Usuário' }).fill('carla.dias');
+  await criarADaCarla.getByRole('button', { name: 'Criar conta' }).click();
+  const criadaADaCarla = page.getByRole('dialog', { name: 'Conta criada' });
+  const senhaDaCarla =
+    (await criadaADaCarla.getByText(FORMATO_DA_SENHA_TEMPORARIA).textContent()) ?? '';
+  await criadaADaCarla.getByRole('button', { name: 'Concluir' }).click();
+
+  await secoes(page).getByRole('link', { name: 'Grupos' }).click();
+  await page.getByRole('button', { name: 'Novo grupo' }).first().click();
+  await page.getByRole('textbox', { name: 'Nome' }).fill('Recepção de Campinas');
+  await page.getByRole('button', { name: 'Cadastrar', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Recepção de Campinas/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Incluir conta' }).click();
+  const inclusao = page.getByRole('dialog', {
+    name: 'Incluir uma conta no grupo Recepção de Campinas',
+  });
+  await escolherSugestao(page, 'Conta', 'Carla', 'Carla Dias (carla.dias)');
+  await inclusao.getByRole('button', { name: 'Incluir', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Membros do grupo' })).toContainText('Carla Dias');
+  await page.getByRole('button', { name: 'Atribuir perfil' }).click();
+  const aoGrupo = await preencherAtribuicao(
+    page,
+    'Atribuir um perfil ao grupo Recepção de Campinas',
+    'Colaborador',
+  );
+  await aoGrupo.getByRole('button', { name: 'Atribuir perfil' }).click();
+  await expect(page.getByRole('list', { name: 'Perfis do grupo' })).toContainText('Colaborador');
+
+  await page.goto('/conversas/equipes-e-canais');
+  await page.getByRole('button', { name: 'Nova equipe' }).click();
+  const novaEquipe = page.getByRole('dialog', { name: 'Nova equipe' });
+  await novaEquipe.getByRole('textbox', { name: 'Nome' }).fill('Recepção');
+  await selecionar(page, 'Grupo da equipe', 'Recepção de Campinas');
+  await novaEquipe.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(page.getByText('Recepção criada.')).toBeVisible();
+
+  const doChat = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    serviceWorkers: 'block',
+    ...doEndereco(10),
+  });
+  try {
+    const daCarla = await doChat.newPage();
+    await daCarla.goto('/');
+    await entrarCom(daCarla, 'carla.dias', senhaDaCarla);
+    await trocarASenha(daCarla, SENHA_DA_CARLA);
+    await expect(daCarla).toHaveURL(/\/chat$/);
+    await daCarla
+      .getByRole('region', { name: 'Chat', exact: true })
+      .getByRole('link', { name: /^Recepção/ })
+      .click();
+
+    const enviada = daCarla.waitForResponse(
+      (resposta) =>
+        /\/api\/chat\/conversas\/[^/]+\/mensagens$/.test(resposta.url()) &&
+        resposta.request().method() === 'POST',
+    );
+    await daCarla
+      .getByRole('textbox', { name: 'Escrever uma mensagem em Recepção' })
+      .fill('A internet da recepção caiu agora há pouco.');
+    await daCarla.getByRole('button', { name: 'Enviar', exact: true }).click();
+    expect((await enviada).ok()).toBe(true);
+    const mensagens = daCarla.getByRole('region', { name: 'Mensagens' });
+    const mensagem = mensagens
+      .getByRole('listitem')
+      .filter({ hasText: 'A internet da recepção caiu agora há pouco.' });
+    // A barra da mensagem aparece com o ponteiro em cima dela.
+    await mensagem.hover();
+    await mensagem.getByRole('button', { name: 'Mais' }).click();
+    await daCarla.getByRole('menuitem', { name: 'Transformar em chamado' }).click();
+
+    const transformar = daCarla.getByRole('dialog', { name: 'Transformar em chamado' });
+    await expect(transformar).toContainText('A internet da recepção caiu agora há pouco.');
+    await expect(transformar.getByRole('group', { name: 'No nome de' })).toContainText(
+      'Carla Dias',
+    );
+    await escolher(daCarla, 'Tipo', 'Rede e internet');
+    await transformar.getByRole('textbox', { name: 'Título' }).fill('A internet da recepção caiu');
+    await transformar.getByRole('button', { name: 'Abrir chamado' }).click();
+    await expect(transformar).toHaveCount(0);
+    await expect(daCarla.getByText('Chamado #2 aberto.')).toBeVisible();
+    const evento = mensagens
+      .getByRole('listitem')
+      .filter({ hasText: /transformou esta mensagem no chamado #2/ });
+    await evento.getByRole('link', { name: 'Abrir chamado' }).click();
+    await expect(daCarla).toHaveURL(/\/chat\/chamados\/2$/);
+    // A etapa de agora, nas palavras de quem pediu: o chamado na triagem é o Aberto.
+    const etapaDeAgora = daCarla
+      .getByRole('list', { name: 'Etapas do chamado' })
+      .locator('[aria-current="step"]');
+    await expect(etapaDeAgora).toContainText('Aberto');
+    await daCarla.evaluate(() => {
+      window.__mesmaPagina = true;
+    });
+
+    await page.goto('/chamados/2');
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'A internet da recepção caiu #2' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Assumir', exact: true }).click();
+    await expect(page.getByText(/^· atende desde /)).toBeVisible();
+    const responder = page.getByRole('region', { name: 'Escrever no chamado' });
+    await responder
+      .getByRole('textbox', { name: 'Mensagem para Carla' })
+      .fill('Reiniciei o roteador da recepção. Voltou aí?');
+    await responder.getByRole('button', { name: 'Enviar para Carla', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Conversa', exact: true })).toContainText(
+      'Reiniciei o roteador da recepção. Voltou aí?',
+    );
+
+    await expect(etapaDeAgora).toContainText('Em andamento');
+    await expect(daCarla.getByRole('region', { name: 'Conversa do chamado' })).toContainText(
+      'Reiniciei o roteador da recepção. Voltou aí?',
+    );
+    expect(await daCarla.evaluate(() => window.__mesmaPagina)).toBe(true);
+  } finally {
+    await doChat.close();
+  }
+  expect((await acoesDaAuditoria()).filter((acao) => acao.startsWith('chamado.'))).toEqual([
+    'chamado.aberto',
+    'chamado.assumido',
+    'chamado.resolvido',
+    'chamado.aberto',
+    'chamado.assumido',
   ]);
 });

@@ -117,7 +117,10 @@ export function sessaoDesconhecida(
   });
 }
 
-/** O servidor dos testes: os pedidos que o teste preparou, a conta, as notificações e os canais. */
+/**
+ * O servidor dos testes: os pedidos que o teste preparou, a conta, as notificações, os canais e o
+ * resumo do chat, que o selo do Chat no dock da casca lê para quem usa o chat.
+ */
 function buscarNoServidorDeTeste(servidor: ServidorDeTeste) {
   return async (pedido: Request): Promise<Response> => {
     const caminho = `${pedido.method} ${new URL(pedido.url).pathname}`;
@@ -133,6 +136,9 @@ function buscarNoServidorDeTeste(servidor: ServidorDeTeste) {
         email: { situacao: 'sem-configuracao', endereco: null },
         push: { situacao: 'sem-configuracao', chavePublica: null, aparelhos: [] },
       });
+    }
+    if (caminho === 'GET /api/chat/resumo') {
+      return Response.json({ naoLidas: 0, chamadosComRespostaNova: 0 });
     }
     throw new Error(`O teste não preparou o servidor para ${caminho}.`);
   };

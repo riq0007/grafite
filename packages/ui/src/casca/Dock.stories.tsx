@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, MessageCircle } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { Botao } from '../componentes/botao/Botao.tsx';
 import { corDoToken } from '../teste/corDoToken.ts';
@@ -746,5 +746,40 @@ export const MaisDosTiradosContaNoEspaco: Historia = {
     await expect(itensDoMenu(menu)).toEqual(['Ajustes', 'Painéis']);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(document.body).queryAllByRole('menu')).toHaveLength(0));
+  },
+};
+
+/** Um módulo com o selo, como o Chat com o total das conversas e os chamados com resposta nova. */
+const COM_SELO: readonly ModuloDaCasca[] = [
+  ...MODULOS_DE_EXEMPLO.slice(0, 1),
+  {
+    id: 'chat',
+    nome: 'Chat',
+    icone: MessageCircle,
+    prioridadeNoCelular: 1,
+    selo: { texto: '3', descricao: '2 não lidas, 1 chamado com resposta nova' },
+  },
+  ...MODULOS_DE_EXEMPLO.slice(1),
+];
+
+/**
+ * O selo no canto do item: o número à vista é só desenho, e o leitor de tela ouve a contagem em
+ * texto no nome do item.
+ */
+export const ComSelo: Historia = {
+  args: { modulos: COM_SELO },
+  play: async ({ canvasElement }) => {
+    const chat = within(canvasElement).getByRole('button', {
+      name: 'Chat, 2 não lidas, 1 chamado com resposta nova',
+    });
+    const selo = chat.querySelector<HTMLElement>('[data-parte="selo"]');
+    await expect(selo).toHaveTextContent('3');
+    await expect(selo).toHaveAttribute('aria-hidden', 'true');
+    await expect(selo).toBeVisible();
+    await expect(
+      within(canvasElement)
+        .getByRole('button', { name: 'Ativos' })
+        .querySelector('[data-parte="selo"]'),
+    ).toBeNull();
   },
 };

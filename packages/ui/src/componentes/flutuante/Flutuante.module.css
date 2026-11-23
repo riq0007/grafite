@@ -125,6 +125,21 @@
   animation: aparecer var(--dur-opacidade) var(--curva-saida) reverse;
 }
 
+/* Menus: na largura do conteúdo, até a janela menos os 12 px de cada lado que o posicionamento do
+   React Aria deixa. Junto da borda, o painel posicionado se estreitaria pelo espaço até ela, o texto
+   quebraria, a altura mudaria e o ResizeObserver do React Aria o reposicionaria, num laço. */
+.painel.deMenu {
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--esp-3));
+}
+
+/* O submenu por cima do menu, embaixo do item ou em cima dele, na postura celular: ao menos na
+   largura do menu, que é a do item mais o respiro e a borda de cada lado, para cobrir o menu de borda
+   a borda. */
+.painel.deMenu.porCimaDoMenu {
+  min-width: calc(var(--trigger-width) + 2 * (var(--esp-1) + 1px));
+}
+
 /* Menus: abrem com leve escala a partir do item (Apêndice B); a escala some com movimento reduzido. */
 .painel.deMenu[data-entering] {
   transform-origin: var(--trigger-anchor-point);

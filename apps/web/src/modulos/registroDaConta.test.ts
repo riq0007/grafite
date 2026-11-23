@@ -185,6 +185,50 @@ describe('registroDaConta', () => {
     expect(comVer?.primeiraTela).toBe(entrada.primeiraTela);
   });
 
+  it('o app próprio e o selo ficam só para quem tem a permissão deles', () => {
+    const comApp = definirModulo({
+      id: 'com-app',
+      nome: 'Com app',
+      icone: Box,
+      endereco: '/livre',
+      prioridadeNoCelular: 1,
+      rotas: rotasDoLivre,
+      permissoes: ['chat.usar', 'chat.configurar'],
+      appProprio: { endereco: '/app', permissoes: ['chat.usar'] },
+      selo: { permissoes: ['chat.usar'], consultas: () => [], montar: () => null },
+    });
+    const [soConfigura] = registroDaConta([comApp], comAs('chat.configurar'));
+    expect(soConfigura?.appProprio).toBeUndefined();
+    expect(soConfigura?.selo).toBeUndefined();
+    const [usa] = registroDaConta([comApp], comAs('chat.usar'));
+    expect(usa?.appProprio).toBe(comApp.appProprio);
+    expect(usa?.selo).toBe(comApp.selo);
+  });
+
+  it('o item de menu que leva a outro módulo some com ele desligado', () => {
+    const comOutro = definirModulo({
+      id: 'com-outro',
+      nome: 'Com outro',
+      icone: Box,
+      endereco: '/livre',
+      prioridadeNoCelular: 1,
+      rotas: rotasDoLivre,
+      menu: [
+        { rotulo: 'Conversas', destino: '/livre' },
+        { rotulo: 'Chamados', destino: '/livre', comOModulo: 'chamados' },
+        {
+          rotulo: 'Mais',
+          filhos: [{ rotulo: 'Prazos', destino: '/livre', comOModulo: 'chamados' }],
+        },
+      ],
+    });
+    const todas = () => true;
+    const [ligado] = registroDaConta([comOutro], todas, []);
+    expect(rotulosDe(ligado?.menu)).toEqual(['Conversas', 'Chamados', 'Mais']);
+    const [desligado] = registroDaConta([comOutro], todas, ['chamados']);
+    expect(rotulosDe(desligado?.menu)).toEqual(['Conversas']);
+  });
+
   it('o cadastro que abre numa aba fica só para quem tem a permissão dele', () => {
     const [, semEditar] = registroDaConta(REGISTRO, comAs('pessoas.ver'));
     expect(semEditar?.cadastros).toEqual([]);

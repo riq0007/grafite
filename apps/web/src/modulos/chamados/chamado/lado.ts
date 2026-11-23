@@ -3,14 +3,16 @@
 // ativo de quem atende, os contatos da pessoa, as OS do ativo no ano e a nota do estoque. A ficha
 // já vem só com o que a conta vê: o que não vem fica de fora.
 import {
+  caminhoDaSituacao,
   type Permissao,
   ROTULOS_DAS_SITUACOES_DA_SOLICITACAO,
+  SITUACAO_FECHADA,
   type SituacaoDoChamado,
 } from '@grafite/domain';
 import type { DataHora } from '@grafite/ui';
 import type { FichaDoChamado } from '../consultas.ts';
 import { ROTULO_DA_SITUACAO } from '../situacoes.ts';
-import { type ItemDaConversa, momentoNaConversa } from './conversa.ts';
+import { type EventoDaConversa, type ItemDaConversa, momentoNaConversa } from './conversa.ts';
 
 type Ativo = NonNullable<FichaDoChamado['ativo']>;
 type Resumo = NonNullable<Ativo['resumo']>;
@@ -164,100 +166,86 @@ export interface PassoDaLinha {
 const juntarPartes = (...partes: (string | null)[]) =>
   partes.filter((parte): parte is string => parte !== null).join(' · ');
 
+/** O que houve e quem fez, em cada passo; o relógio entra quando para ou volta a contar. */
+function partesDoPasso(
+  item: EventoDaConversa,
+  estava: SituacaoDoChamado,
+  pessoa: string,
+): (string | null)[] {
+  // Só o `fechou` vem sem autor, e ele não é um passo (chat-com-chamados, tarefa 3.11).
+  const quem = item.autor?.nome ?? '';
+  switch (item.evento) {
+    case 'abertura':
+      // Quem nasce atendendo, fora quem abriu com o "Fica comigo" (chat-com-chamados, decisão 15).
+      return [
+        item.autor?.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
+        item.para && item.para.conta !== item.autor?.id ? `com ${item.para.nome}` : null,
+      ];
+    case 'assumiu':
+      return [`assumido por ${quem}`];
+    case 'passou':
+      return [item.para ? `passado para ${item.para.nome} por ${quem}` : `passado por ${quem}`];
+    case 'devolveu':
+      return [`devolvido por ${quem}`];
+    case 'aguardando':
+      return ['o relógio parou'];
+    case 'retomou':
+      return [`retomado por ${quem}`, 'o relógio voltou a contar'];
+    case 'resolveu':
+      // No aguardando, o relógio já estava parado.
+      return [`resolvido por ${quem}`, estava === 'aguardando' ? null : 'o relógio parou'];
+    case 'reabriu': {
+      const para = item.para && item.para.conta !== item.autor?.id ? ` para ${item.para.nome}` : '';
+      return [`reaberto por ${quem}${para}`, 'o relógio voltou a contar'];
+    }
+    default:
+      return [];
+  }
+}
+
 /**
  * A linha do tempo (change chamados-da-ti, design, "A linha do tempo, os campos do tipo e as seções
  * guardadas"): o caminho do chamado pelas situações, montado dos eventos da conversa, na ordem
- * dela. A situação de cada passo sai da matriz das ações (spec chamados, "Ações do atendimento"): o
- * assumir e o passar no aguardando continuam nele, e a reabertura sem ninguém volta à triagem. O
- * desfazer tira o passo do assumir que ele desfaz. O relógio entra quando para ou volta a contar.
+ * dela, pela regra do domínio (`caminhoDaSituacao`), a mesma das etapas de quem participa: a
+ * abertura com quem atende nasce Em atendimento, o assumir e o passar no aguardando continuam nele,
+ * a reabertura sem ninguém volta à triagem, e o desfazer tira o passo do assumir que ele desfaz.
  */
 export function linhaDoTempo(
   conversa: readonly ItemDaConversa[],
-  { pessoa, agora, dataHora }: { pessoa: string; agora: Date; dataHora: DataHora },
+  {
+    pessoa,
+    agora,
+    dataHora,
+    fechado = null,
+  }: {
+    pessoa: string;
+    agora: Date;
+    dataHora: DataHora;
+    /**
+     * O dia do "Fechado · 18/11", o último em que o chamado se reabria, no que fechou: o passo dele
+     * vem depois do resolvido, com o evento da tarefa do fechamento ou sem ele, no vencido que ela
+     * ainda não fechou (chat-com-chamados, tarefa 4.13). Nulo, no que não fechou.
+     */
+    fechado?: string | null;
+  },
 ): PassoDaLinha[] {
-  const passos: (PassoDaLinha & { situacao: SituacaoDoChamado; doAssumir: boolean })[] = [];
-  let situacao: SituacaoDoChamado = 'triagem';
-  for (const item of conversa) {
-    if (item.especie !== 'evento') continue;
-    const quando = momentoNaConversa(new Date(item.em), agora, dataHora);
-    const quem = item.autor.nome;
-    const estava = situacao;
-    const comAlguem = estava === 'aguardando' ? 'aguardando' : 'em-atendimento';
-    const passo = (nova: SituacaoDoChamado, ...partes: (string | null)[]) => {
-      situacao = nova;
-      passos.push({
-        id: item.id,
-        situacao: nova,
-        titulo: ROTULO_DA_SITUACAO[nova],
-        texto: juntarPartes(quando, ...partes),
-        agora: false,
-        doAssumir: item.evento === 'assumiu',
-      });
-    };
-    switch (item.evento) {
-      case 'abertura':
-        passo(
-          'triagem',
-          item.autor.tipo === 'pessoa' ? `aberto por ${quem}` : `aberto por ${quem} para ${pessoa}`,
-        );
-        break;
-      case 'assumiu':
-        passo(comAlguem, `assumido por ${quem}`);
-        break;
-      case 'passou':
-        passo(
-          comAlguem,
-          item.para ? `passado para ${item.para.nome} por ${quem}` : `passado por ${quem}`,
-        );
-        break;
-      case 'devolveu':
-        passo('triagem', `devolvido por ${quem}`);
-        break;
-      case 'desfez':
-        // O desfazer vem logo depois do assumir que ele desfaz (decidirDesfazer, no domínio).
-        if (passos.at(-1)?.doAssumir) {
-          passos.pop();
-          situacao = passos.at(-1)?.situacao ?? 'triagem';
-        }
-        break;
-      case 'aguardando':
-        passo('aguardando', 'o relógio parou');
-        break;
-      case 'retomou':
-        passo('em-atendimento', `retomado por ${quem}`, 'o relógio voltou a contar');
-        break;
-      case 'resolveu':
-        // No aguardando, o relógio já estava parado.
-        passo(
-          'resolvido',
-          `resolvido por ${quem}`,
-          estava === 'aguardando' ? null : 'o relógio parou',
-        );
-        break;
-      case 'reabriu': {
-        const para =
-          item.para && item.para.conta !== item.autor.id ? ` para ${item.para.nome}` : '';
-        passo(
-          item.para ? 'em-atendimento' : 'triagem',
-          `reaberto por ${quem}${para}`,
-          'o relógio voltou a contar',
-        );
-        break;
-      }
-      case 'ativo':
-      case 'os':
-      case 'solicitacao':
-      case 'solicitacao-nao-gerada':
-        // A troca do ativo, a OS e a solicitação ficam só na conversa.
-        break;
-    }
-  }
-  return passos.map(({ id, titulo, texto }, indice) => ({
-    id,
-    titulo,
-    texto,
-    agora: indice === passos.length - 1,
+  const eventos = conversa.filter((item): item is EventoDaConversa => item.especie === 'evento');
+  const passos = caminhoDaSituacao(eventos);
+  const linha = passos.map(({ evento, estava, situacao }, indice) => ({
+    id: evento.id,
+    titulo: ROTULO_DA_SITUACAO[situacao],
+    texto: juntarPartes(
+      momentoNaConversa(new Date(evento.em), agora, dataHora),
+      ...partesDoPasso(evento, estava, pessoa),
+    ),
+    agora: fechado === null && indice === passos.length - 1,
   }));
+  if (fechado === null) return linha;
+  const fechou = eventos.findLast((evento) => evento.evento === 'fechou');
+  return [
+    ...linha,
+    { id: fechou?.id ?? 'fechado', titulo: SITUACAO_FECHADA, texto: fechado, agora: true },
+  ];
 }
 
 /** As seções da coluna da direita, abertas ou fechadas. */

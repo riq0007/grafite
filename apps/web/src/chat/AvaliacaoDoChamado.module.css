@@ -1,0 +1,109 @@
+/* O quadro da avaliação (m04 e m07): no tom do resolvido, no meio da conversa, com os quatro níveis em
+   cartões lado a lado, a frase e, embaixo, o comentário com "Enviar avaliação". */
+.quadro {
+  display: grid;
+  gap: var(--esp-3);
+  align-self: center;
+  box-sizing: border-box;
+  inline-size: min(100%, calc(var(--largura-previa) * 0.75));
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-ok-borda);
+  border-radius: var(--raio-aviso);
+  background-color: var(--cor-ok-fundo);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  text-align: center;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/* Os níveis: quatro cartões numa linha, que descem em duas quando a conversa estreita. */
+.niveis,
+.grupo [data-parte="opcoes"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--esp-12) * 2), 1fr));
+  /* O grupo do kit põe as opções no começo da linha; aqui, cada cartão ocupa a coluna dele. */
+  justify-items: stretch;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nivel,
+.grupo .nivel {
+  box-sizing: border-box;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: calc(var(--esp-1) / 2);
+  padding: var(--esp-3) var(--esp-2);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  text-align: center;
+  transition: border-color var(--dur-rapida) var(--curva-padrao);
+}
+
+/* A bolinha do rádio do kit sai: a escolha é o cartão com a borda do resolvido. */
+.grupo .nivel > [data-parte="bolinha"] {
+  display: none;
+}
+
+.grupo .nivel[data-hovered] {
+  border-color: var(--cor-texto-2);
+}
+
+.grupo .nivel[data-selected],
+.nivel[data-marcado] {
+  border-color: var(--cor-ok);
+  box-shadow: inset 0 0 0 1px var(--cor-ok);
+}
+
+.grupo .nivel[data-focus-visible] {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.nomeDoNivel {
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+.descricaoDoNivel {
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  line-height: var(--entrelinha-justa);
+}
+
+.frase {
+  margin: 0;
+  font-size: var(--texto-dado);
+  text-align: center;
+}
+
+.frase:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.comentario {
+  flex: 1 1 calc(var(--esp-12) * 5);
+  min-inline-size: 0;
+}

@@ -1,0 +1,92 @@
+/*
+ * As equipes e os canais (change chat-com-chamados, design, decisão 15): a página da casca, com o
+ * cabeçalho e a tabela, e a gaveta, como a das respostas prontas.
+ */
+.tela {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.nota {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+/* O teto de 100, ao lado dos botões desligados, que diz por que eles não abrem. */
+.teto {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto-2);
+}
+
+/* A gaveta: o tipo e a situação, os campos e, no fim, o pé com "Arquivar" ou "Reativar" e "Salvar". */
+.gaveta {
+  display: grid;
+  gap: var(--esp-5);
+}
+
+.resumo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-texto-2);
+}
+
+.informacao {
+  margin: 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.5;
+}
+
+/* "Avisar a cada mensagem", com a explicação e "Ligado" ou "Desligado" escrito. */
+.chave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+.textoDaChave {
+  display: grid;
+  gap: 1px;
+  font-size: var(--texto-corpo);
+}
+
+.textoDaChave small {
+  font-size: var(--texto-rotulo);
+  color: var(--cor-texto);
+}
+
+.interruptor {
+  flex: none;
+  min-width: 104px;
+  font-size: var(--texto-dado);
+}
+
+.pe {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  padding-top: var(--esp-4);
+  border-top: 1px solid var(--cor-linha);
+}
+
+.pe > :first-child:not(:last-child) {
+  margin-right: auto;
+}
+
+/* Os grupos que não carregam, no lugar da escolha: a falha, a recusa do grupo e "Tentar de novo". */
+.semOsGrupos {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+}
+
+.recusaDoGrupo {
+  margin: 0;
+  font-size: var(--texto-dado);
+  color: var(--cor-critico);
+}

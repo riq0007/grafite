@@ -1,0 +1,47 @@
+/* As opções de resposta: a legenda, os campos lado a lado, que quebram em linhas na tela estreita,
+   cada um com o "Tirar" à direita, e o "Acrescentar opção" embaixo. */
+.opcoes {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* A legenda como o rótulo dos campos do kit (Campo.module.css), para o grupo não ficar abaixo deles. */
+.legenda {
+  padding: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+}
+
+.descricao {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--esp-2) var(--esp-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opcao {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.campo {
+  flex: 1;
+  min-width: 0;
+}

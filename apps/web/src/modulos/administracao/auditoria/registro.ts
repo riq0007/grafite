@@ -32,6 +32,7 @@ import { type CampoDaPrevia, descreverFuso, fusoReconhecido } from '@grafite/ui'
 import { diasNaFrase, horaDoMinuto } from '../../chamados/ajustes/horario.ts';
 import { NOMES_DOS_ICONES_DOS_TIPOS } from '../../chamados/icones.ts';
 import { ROTULO_DA_SITUACAO } from '../../chamados/situacoes.ts';
+import { avisarEmTexto } from '../../chat/equipesECanais.ts';
 
 export type Registro = components['schemas']['RegistroDeAuditoria'];
 
@@ -58,7 +59,13 @@ const TIPOS_DO_ALVO: Record<string, string> = {
   'resposta-pronta': 'Resposta pronta',
   'respostas-prontas': 'Ordem das respostas prontas',
   'horario-da-ti': 'Horário da TI',
+  // As equipes e os canais do chat (change chat-com-chamados), que saem pelo tipo da ação.
+  conversa: 'Conversa',
 };
+
+/** O tipo da conversa do alvo pela ação: as `equipe.*` e as `canal.*`. */
+const tipoDaConversa = (acao: string) =>
+  acao.startsWith('equipe.') ? 'Equipe' : acao.startsWith('canal.') ? 'Canal' : null;
 
 /** Os nomes dos campos do antes → depois e dos dados, como a tela os mostra. */
 const CAMPOS: Record<string, string> = {
@@ -181,6 +188,7 @@ const CAMPOS_DOS_CHAMADOS: Record<string, string> = {
   rotulo: 'Rótulo',
   texto: 'Texto',
   esperaAResposta: 'Espera a resposta',
+  opcoes: 'Opções da pergunta',
   tipos: 'Tipos',
   dias: 'Dias',
   inicio: 'Início',
@@ -188,6 +196,17 @@ const CAMPOS_DOS_CHAMADOS: Record<string, string> = {
   fuso: 'Fuso horário',
   cargaCheia: 'Carga cheia',
   relogiosFechados: 'Chamados que contavam no horário da TI',
+  // De onde o chamado veio: a TI ou o chat (change chat-com-chamados, decisão 8).
+  origem: 'Origem',
+};
+
+/**
+ * Os nomes dos campos das equipes e dos canais que não são os de todos, como a lista deles os
+ * mostra (change chat-com-chamados).
+ */
+const CAMPOS_DO_CHAT: Record<string, string> = {
+  escreve: 'Quem escreve',
+  avisar: 'Avisar a cada mensagem',
 };
 
 /** As listas ordenadas, em que a `ordem` é a lista inteira. */
@@ -197,12 +216,13 @@ const LISTAS_DOS_CHAMADOS = new Set(['tipos-de-chamado', 'respostas-prontas']);
  * As chaves na ordem das telas, pelo alvo: o banco guarda o JSON com as chaves curtas primeiro, e o
  * tipo sairia com o "Duplicado de" no meio. As que não estão aqui vão depois, como vieram.
  */
-const ORDEM_NOS_CHAMADOS: Readonly<Record<string, readonly string[]>> = {
+const ORDEM_NAS_TELAS: Readonly<Record<string, readonly string[]>> = {
   chamado: [
     'numero',
     'tipo',
     'titulo',
     'pessoa',
+    'origem',
     'situacao',
     'responsavel',
     'ativo',
@@ -227,13 +247,15 @@ const ORDEM_NOS_CHAMADOS: Readonly<Record<string, readonly string[]>> = {
     'soATiAbre',
     'duplicadoDe',
   ],
-  'resposta-pronta': ['rotulo', 'texto', 'esperaAResposta', 'tipos'],
+  'resposta-pronta': ['rotulo', 'texto', 'esperaAResposta', 'opcoes', 'tipos'],
   'horario-da-ti': ['dias', 'inicio', 'fim', 'fuso', 'cargaCheia'],
+  // As colunas da lista das equipes e dos canais.
+  conversa: ['nome', 'tipo', 'grupo', 'escreve', 'avisar', 'situacao'],
 };
 
-/** As chaves do registro dos chamados na ordem da tela do alvo. */
+/** As chaves do registro na ordem da tela do alvo; o alvo sem ordem fica como veio. */
 function naOrdemDaTela(alvo: string, chaves: readonly string[]): string[] {
-  const ordem = ORDEM_NOS_CHAMADOS[alvo] ?? [];
+  const ordem = ORDEM_NAS_TELAS[alvo] ?? [];
   const posicao = (chave: string) => {
     const indice = ordem.indexOf(chave);
     return indice === -1 ? ordem.length : indice;
@@ -257,6 +279,12 @@ const GERA_SOLICITACAO: Readonly<Record<SolicitacaoDoTipoDeChamado, string>> = {
   nao: 'Não',
   toner: 'Toner',
   equipamento: 'Equipamento',
+};
+
+/** De onde o chamado veio. */
+const ORIGENS_DO_CHAMADO: Readonly<Record<string, string>> = {
+  ti: 'TI',
+  chat: 'Chat',
 };
 
 /** Como o "Pedir toner" ligou o chamado à solicitação. */
@@ -321,8 +349,12 @@ function textoNosChamados(alvo: string, campo: string, valor: unknown): string |
         : null;
     case 'como':
       return typeof valor === 'string' ? (PEDIDOS_DO_TONER[valor] ?? null) : null;
+    case 'origem':
+      return typeof valor === 'string' ? (ORIGENS_DO_CHAMADO[valor] ?? null) : null;
     case 'tipos':
       return Array.isArray(valor) && valor.length === 0 ? 'Todos os tipos' : null;
+    case 'opcoes':
+      return Array.isArray(valor) && valor.length === 0 ? 'Sem pergunta' : null;
     case 'dias':
       return ehDias(valor) ? (diasNaFrase(valor) ?? '—') : null;
     case 'inicio':
@@ -336,6 +368,20 @@ function textoNosChamados(alvo: string, campo: string, valor: unknown): string |
   // Os textos dos chamados, como o nome do tipo, vão como foram escritos, sem os rótulos dos
   // outros módulos.
   return typeof valor === 'string' && valor !== '' ? valor : null;
+}
+
+/**
+ * Um valor de um registro das equipes e dos canais em texto, nos termos da lista deles; `null`
+ * deixa o valor para o texto comum, como o nome, quem escreve e a situação, que a API já grava em
+ * texto.
+ */
+function textoNoChat(campo: string, valor: unknown, noCanal: boolean): string | null {
+  if (campo === 'avisar' && typeof valor === 'boolean') return avisarEmTexto(valor);
+  // O canal não tem grupo: participam todos que usam o chat, como a lista diz.
+  if (campo === 'grupo' && (valor === null || valor === undefined) && noCanal) {
+    return 'Todos que usam o chat';
+  }
+  return null;
 }
 
 /** As partes de uma frase juntas por vírgula e, a última, por "e". */
@@ -486,9 +532,15 @@ export function textoDoAtor(ator: Registro['ator']): string {
   return 'Sem sessão';
 }
 
-/** O tipo do alvo e, quando ele tem, o nome atual, como "Conta: Ana Souza (ana.souza)". */
-export function textoDoAlvo(alvo: Registro['alvo']): string {
-  const tipo = TIPOS_DO_ALVO[alvo.tipo] ?? alvo.tipo;
+/**
+ * O tipo do alvo e, quando ele tem, o nome atual, como "Conta: Ana Souza (ana.souza)". A conversa do
+ * chat sai pelo tipo da ação, como "Canal: Avisos da TI".
+ */
+export function textoDoAlvo(alvo: Registro['alvo'], acao = ''): string {
+  const tipo =
+    (alvo.tipo === 'conversa' ? tipoDaConversa(acao) : null) ??
+    TIPOS_DO_ALVO[alvo.tipo] ??
+    alvo.tipo;
   if (!alvo.nome) return tipo;
   return `${tipo}: ${alvo.usuario ? `${alvo.nome} (${alvo.usuario})` : alvo.nome}`;
 }
@@ -568,7 +620,7 @@ export function camposDoDetalhe(
 ): CampoDaPrevia[] {
   const campos: CampoDaPrevia[] = [
     { rotulo: 'Quem fez', valor: textoDoAtor(registro.ator) },
-    { rotulo: 'Alvo', valor: textoDoAlvo(registro.alvo) },
+    { rotulo: 'Alvo', valor: textoDoAlvo(registro.alvo, registro.acao) },
     { rotulo: 'Endereço IP', valor: registro.ip ?? '—', mono: true },
     { rotulo: 'Código de rastreio', valor: registro.codigoDeRastreio ?? '—', mono: true },
   ];
@@ -576,13 +628,17 @@ export function camposDoDetalhe(
   const depois = registro.depois ?? {};
   const alvo = registro.alvo.tipo;
   const dosChamados = ALVOS_DOS_CHAMADOS.has(alvo);
+  const doChat = alvo === 'conversa';
+  const noCanal = doChat && tipoDaConversa(registro.acao) === 'Canal';
   const nome = (campo: string) => {
+    if (doChat) return CAMPOS_DO_CHAT[campo] ?? nomeDoCampo(campo);
     if (!dosChamados) return nomeDoCampo(campo);
     if (campo === 'ordem' && LISTAS_DOS_CHAMADOS.has(alvo)) return 'Ordem';
     return CAMPOS_DOS_CHAMADOS[campo] ?? nomeDoCampo(campo);
   };
   const texto = (campo: string, valor: unknown) =>
     (dosChamados ? textoNosChamados(alvo, campo, valor) : null) ??
+    (doChat ? textoNoChat(campo, valor, noCanal) : null) ??
     textoDoValor(campo, valor, formatarData);
   const mudanca = (rotulo: string, valorAntes: string, valorDepois: string): CampoDaPrevia => ({
     rotulo,
@@ -596,7 +652,7 @@ export function camposDoDetalhe(
   const chaves = [...new Set([...Object.keys(antes), ...Object.keys(depois)])].filter(
     (campo) => !ehId(campo) && !SO_PARA_O_HISTORICO.has(campo),
   );
-  for (const campo of dosChamados ? naOrdemDaTela(alvo, chaves) : chaves) {
+  for (const campo of naOrdemDaTela(alvo, chaves)) {
     if (campo === 'campos') {
       // Os campos de um ativo, um a um: só os que mudaram, pelo valor mostrado.
       const de = camposDaVisao(antes.campos);

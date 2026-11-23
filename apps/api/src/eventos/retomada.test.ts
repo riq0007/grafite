@@ -10,6 +10,7 @@ const ALVO = '019a8000-0000-7000-8000-0000000000b1';
 const LOCAL = '019a8000-0000-7000-8000-0000000000c1';
 const CONTA = '019a8000-0000-7000-8000-0000000000d1';
 const SESSAO = '019a8000-0000-7000-8000-0000000000e1';
+const GRUPO = '019a8000-0000-7000-8000-0000000000f1';
 
 const linha = (publico: Partial<typeof eventos.$inferSelect>): typeof eventos.$inferSelect => ({
   id: '019a8000-0000-7000-8000-000000000001',
@@ -22,6 +23,7 @@ const linha = (publico: Partial<typeof eventos.$inferSelect>): typeof eventos.$i
   permissao: null,
   permissoes: null,
   locais: null,
+  grupos: null,
   contas: null,
   sessoes: null,
   ...publico,
@@ -61,6 +63,20 @@ describe('eventoDaLinha', () => {
     expect(eventoDaLinha(linha({ alvoTipo: null, alvoId: null, todas: true }))).toMatchObject({
       alvo: null,
       publico: { todas: true },
+    });
+  });
+
+  // Os grupos da equipe do chat (change chat-com-chamados, design, decisão 4). A lista vazia volta
+  // vazia: sem ela, o evento iria a todos com a permissão.
+  it('o público volta com os grupos, também com a lista vazia', () => {
+    const daEquipe = { tipo: 'chat.mudou', permissao: 'chat.usar' };
+    expect(eventoDaLinha(linha({ ...daEquipe, grupos: [GRUPO] })).publico).toEqual({
+      permissao: 'chat.usar',
+      grupos: [GRUPO],
+    });
+    expect(eventoDaLinha(linha({ ...daEquipe, grupos: [] })).publico).toEqual({
+      permissao: 'chat.usar',
+      grupos: [],
     });
   });
 });

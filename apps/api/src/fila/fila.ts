@@ -164,7 +164,7 @@ export function criarFila({
 
     rodando: () => boss !== null,
 
-    async enviar(nome, dados, { chaveUnica, unicaPor, tx } = {}) {
+    async enviar(nome, dados, { chaveUnica, unicaPor, tx, depoisDe } = {}) {
       const tarefa = porNome.get(nome);
       if (!tarefa) throw new Error(`A tarefa ${nome} não está no catálogo.`);
       const conferidos = tarefa.dados.parse(dados) as object;
@@ -172,6 +172,7 @@ export function criarFila({
       return boss.send(nome, conferidos, {
         ...(chaveUnica ? { singletonKey: chaveUnica } : {}),
         ...(unicaPor ? { singletonSeconds: unicaPor } : {}),
+        ...(depoisDe ? { startAfter: depoisDe } : {}),
         ...(tx ? { db: fromDrizzle(tx, sql) } : {}),
       });
     },

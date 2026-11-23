@@ -5,7 +5,13 @@ import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { heicDeTeste, imagemDeTeste, pngQueDeclara, temLocalizacao } from '../../test/imagens.ts';
 import type { ProblemaDaApi } from '../problemas.ts';
-import { limitarA, tratarImagem } from './imagens.ts';
+import {
+  LIMITE_DO_ENVIO,
+  ladosDaMiniatura,
+  limitarA,
+  miniaturaDoAnexo,
+  tratarImagem,
+} from './imagens.ts';
 
 const dimensoes = async (imagem: Buffer) => {
   const { width, height, format } = await sharp(imagem).metadata();
@@ -156,6 +162,89 @@ describe('tratarImagem', () => {
       expect(await dimensoes(variantes[lado])).toMatchObject({ largura: 100, altura: 100 });
     }
     expect(await dimensoes(variantes['64'])).toMatchObject({ largura: 64, altura: 64 });
+  });
+});
+
+// A miniatura do anexo de imagem (spec arquivos-e-imagens, "Miniatura do anexo de imagem"; change
+// chat-com-chamados, design, decisão 15, tarefa 4.20): só a de 512 px, sem ampliar a menor, de pé
+// e sem os metadados; a que não se lê e a de mais de 50 megapixels ficam sem ela, sem recusa.
+describe('miniaturaDoAnexo', () => {
+  it('cabe em 512 px, na proporção, sem ampliar a menor', () => {
+    expect(ladosDaMiniatura(1920, 1080)).toEqual({ largura: 512, altura: 288 });
+    expect(ladosDaMiniatura(1080, 1920)).toEqual({ largura: 288, altura: 512 });
+    expect(ladosDaMiniatura(512, 512)).toEqual({ largura: 512, altura: 512 });
+    expect(ladosDaMiniatura(300, 100)).toEqual({ largura: 300, altura: 100 });
+    expect(ladosDaMiniatura(6000, 2)).toEqual({ largura: 512, altura: 1 });
+  });
+
+  it('o print de 1920 × 1080 ganha a de 512 × 288 em WebP, com as dimensões dele', async () => {
+    const miniatura = await miniaturaDoAnexo(await imagemDeTeste(1920, 1080).png().toBuffer());
+    expect(miniatura).toMatchObject({ largura: 1920, altura: 1080 });
+    expect(await dimensoes(miniatura?.conteudo ?? Buffer.alloc(0))).toEqual({
+      formato: 'webp',
+      largura: 512,
+      altura: 288,
+    });
+  });
+
+  it.each([
+    ['o JPG', () => imagemDeTeste(40, 30).jpeg().toBuffer()],
+    ['o WebP', () => imagemDeTeste(40, 30).webp().toBuffer()],
+    ['o AVIF', () => imagemDeTeste(40, 30).avif().toBuffer()],
+  ])('aceita %s, sem ampliar', async (_nome, gerar) => {
+    const miniatura = await miniaturaDoAnexo(await gerar());
+    expect(miniatura).toMatchObject({ largura: 40, altura: 30 });
+    expect(await dimensoes(miniatura?.conteudo ?? Buffer.alloc(0))).toEqual({
+      formato: 'webp',
+      largura: 40,
+      altura: 30,
+    });
+  });
+
+  it('a foto de lado com a localização sai de pé e sem metadados, com as dimensões de pé', async () => {
+    const foto = await imagemDeTeste(300, 100)
+      .jpeg()
+      .withExif({
+        IFD0: { Make: 'Celular', Model: 'X1', Artist: 'Paulo Nunes' },
+        IFD3: {
+          GPSLatitudeRef: 'S',
+          GPSLatitude: '23/1 33/1 0/1',
+          GPSLongitudeRef: 'W',
+          GPSLongitude: '46/1 38/1 0/1',
+        },
+      })
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
+    const miniatura = await miniaturaDoAnexo(foto);
+    expect(miniatura).toMatchObject({ largura: 100, altura: 300 });
+    const conteudo = miniatura?.conteudo ?? Buffer.alloc(0);
+    const metadados = await sharp(conteudo).metadata();
+    expect(metadados).toMatchObject({ width: 100, height: 300 });
+    expect(metadados.exif).toBeUndefined();
+    expect(metadados.xmp).toBeUndefined();
+    expect(metadados.icc).toBeUndefined();
+    expect(metadados.orientation).toBeUndefined();
+    expect(await brilhoDaFaixa(conteudo, 50)).toBeGreaterThan(
+      (await brilhoDaFaixa(conteudo, 0)) + 100,
+    );
+  });
+
+  it('passa dos 10 MB das imagens dos registros', async () => {
+    const pesada = await imagemDeTeste(1900, 1900).png({ compressionLevel: 0 }).toBuffer();
+    expect(pesada.length).toBeGreaterThan(LIMITE_DO_ENVIO);
+    expect(await miniaturaDoAnexo(pesada)).toMatchObject({ largura: 1900, altura: 1900 });
+  });
+
+  it('a imagem que não se lê e a de mais de 50 megapixels ficam sem ela, sem recusa', async () => {
+    const png = await imagemDeTeste(300, 200).png().toBuffer();
+    for (const conteudo of [
+      png.subarray(0, 40),
+      png.subarray(0, Math.floor(png.length / 2)),
+      await pngQueDeclara(10_000, 5_001),
+      await pngQueDeclara(300, 300),
+    ]) {
+      expect(await miniaturaDoAnexo(conteudo)).toBeNull();
+    }
   });
 });
 

@@ -5,7 +5,7 @@
 // chamados pelo número ou pelo título, até 8, cada um levando ao chamado aberto.
 
 import type { components } from '@grafite/api-client';
-import { destinoDoChamado } from '@grafite/domain';
+import { destinoDoChamado, SITUACAO_FECHADA } from '@grafite/domain';
 import { LifeBuoy } from 'lucide-react';
 import type { ContextoDaAcao } from '../../busca/tipos.ts';
 import type { ProvedorDeBusca, ResultadoDoProvedor } from '../tipos.ts';
@@ -29,16 +29,20 @@ export const MINIMO_DA_BUSCA_DOS_CHAMADOS = 2;
 
 export type ChamadoNaBusca = components['schemas']['ChamadosNaBusca']['itens'][number];
 
-/** "#1042 Impressora manchando", com "Marina Lopes · Em atendimento" no caminho. */
+/**
+ * "#1042 Impressora manchando", com "Marina Lopes · Em atendimento" no caminho; o resolvido que
+ * fechou diz "Fechado", como o selo dele (chat-com-chamados, tarefa 4.13).
+ */
 export const resultadoDoChamado = ({
   numero,
   titulo,
   pessoa,
   situacao,
+  fechado,
 }: ChamadoNaBusca): ResultadoDoProvedor => ({
   id: `chamado-${numero}`,
   rotulo: `#${numero} ${titulo}`,
-  caminho: `${pessoa} · ${ROTULO_DA_SITUACAO[situacao]}`,
+  caminho: `${pessoa} · ${fechado ? SITUACAO_FECHADA : ROTULO_DA_SITUACAO[situacao]}`,
   destino: destinoDoChamado(numero),
 });
 

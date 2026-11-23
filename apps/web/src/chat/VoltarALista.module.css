@@ -1,0 +1,30 @@
+/* A seta de voltar, com o alvo de toque de 44 px, encostada na borda da tela. O botão do kit tem a
+   classe dele, de mesmo peso, e a ordem das folhas não é garantida: daí o `button`. */
+button.voltar {
+  flex: none;
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  margin-inline-start: calc(var(--esp-2) * -1);
+  color: var(--cor-texto);
+}
+
+button.voltar svg {
+  width: var(--esp-6);
+  height: var(--esp-6);
+}
+
+/* O estado da tela no celular: a seta no alto e o estado embaixo, na coluna da tela. */
+.estado {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.alto {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: var(--esp-1) var(--esp-4);
+}

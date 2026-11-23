@@ -265,6 +265,15 @@ export const ACOES_DA_AUDITORIA = {
   'chamado.campos-trocados': 'Campos da TI do chamado trocados',
   'chamado.virou-os': 'Chamado virou OS',
   'chamado.pediu-toner': 'Chamado pediu toner',
+  // As equipes e os canais do chat (change chat-com-chamados)
+  'equipe.criada': 'Equipe criada',
+  'equipe.alterada': 'Equipe alterada',
+  'equipe.arquivada': 'Equipe arquivada',
+  'equipe.reativada': 'Equipe reativada',
+  'canal.criado': 'Canal criado',
+  'canal.alterado': 'Canal alterado',
+  'canal.arquivado': 'Canal arquivado',
+  'canal.reativado': 'Canal reativado',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

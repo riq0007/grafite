@@ -3,9 +3,10 @@
 // o ícone dela; o prazo em texto, curto no quadrado e inteiro na linha, que anda a cada minuto pelo
 // contador do prazo.ts, e o selo dele; o ícone do tipo e a sigla de quem atende, nas cores das
 // séries. Só componentes e tipos, para a atualização a quente do Vite.
-import type { GrupoDoPrazo, SituacaoDoPrazo } from '@grafite/domain';
+import { type GrupoDoPrazo, SITUACAO_FECHADA, type SituacaoDoPrazo } from '@grafite/domain';
 import { Icone, iniciais, RotuloDeSituacao, type Situacao } from '@grafite/ui';
 import {
+  Archive,
   Circle,
   CircleAlert,
   CircleCheck,
@@ -48,6 +49,9 @@ const SELOS = {
   },
   aguardando: { rotulo: ROTULO_DA_SITUACAO.aguardando, situacao: 'info', icone: Hourglass },
   resolvido: { rotulo: ROTULO_DA_SITUACAO.resolvido, situacao: 'sucesso', icone: CircleCheck },
+  // O resolvido que fechou, com a marca neutra e a caixa de arquivo, como no chat (chat-com-chamados,
+  // tarefa 4.13).
+  fechado: { rotulo: SITUACAO_FECHADA, situacao: 'neutra', icone: Archive },
   'em-uso': { rotulo: 'Em uso', situacao: 'sucesso', icone: CircleCheck },
   inativo: { rotulo: 'Inativo', situacao: 'neutra', icone: Circle },
   'so-a-ti-abre': { rotulo: 'Só a TI abre', situacao: 'info', icone: Lock },

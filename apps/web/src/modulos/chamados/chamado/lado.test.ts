@@ -315,17 +315,22 @@ function evento(
     os: null,
     solicitacao: null,
     motivo: null,
+    avaliacao: null,
+    resumo: null,
     ...dados,
   };
 }
 
-const mensagem = (em: string, autor: Evento['autor']): Item => ({
+const mensagem = (em: string, autor: NonNullable<Evento['autor']>): Item => ({
   especie: 'mensagem',
   id: proximoId(),
   em,
   autor,
   texto: 'Pode testar agora?',
   anexos: [],
+  opcoes: null,
+  escolhida: null,
+  cartao: null,
 });
 
 // Hoje é 18/11, ao meio-dia de São Paulo.
@@ -381,6 +386,32 @@ describe('a linha do tempo (spec modulo-chamados, "Chamado aberto")', () => {
   it('a abertura pela TI diz para quem', () => {
     expect(linha([evento('abertura', '2026-11-18T10:40:00Z', ANA)], 'Marina Rocha')).toMatchObject([
       { titulo: 'Na triagem', texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha' },
+    ]);
+  });
+
+  it('a abertura com quem atende nasce Em atendimento, com quem atende quando não é quem abriu', () => {
+    // O "Fica comigo": quem abriu é quem atende.
+    expect(
+      linha(
+        [evento('abertura', '2026-11-18T10:40:00Z', ANA, { para: contaDe(ANA) })],
+        'Marina Rocha',
+      ),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Ana Souza para Marina Rocha',
+        agora: true,
+      },
+    ]);
+    // Quem atende o tipo por padrão.
+    expect(
+      linha([evento('abertura', '2026-11-18T10:40:00Z', FERNANDA, { para: contaDe(BRUNO) })]),
+    ).toMatchObject([
+      {
+        titulo: 'Em atendimento',
+        texto: 'hoje, 07:40 · aberto por Fernanda Rocha · com Bruno Lima',
+        agora: true,
+      },
     ]);
   });
 
@@ -470,6 +501,39 @@ describe('a linha do tempo (spec modulo-chamados, "Chamado aberto")', () => {
     expect(
       linha([...abertoEEsperando, evento('resolveu', '2026-11-18T14:00:00Z', ANA)]).at(-1),
     ).toMatchObject({ titulo: 'Resolvido', texto: 'hoje, 11:00 · resolvido por Ana Souza' });
+  });
+
+  it('o fechado ganha "Fechado · 17/11" depois do resolvido, como o passo de agora', () => {
+    // Resolvido em 10/11, ele se reabriu até 17/11 e fechou na meia-noite de 18/11.
+    const resolvido = [
+      evento('abertura', '2026-11-09T13:00:00Z', FERNANDA),
+      evento('assumiu', '2026-11-09T13:10:00Z', ANA),
+      evento('resolveu', '2026-11-10T14:00:00Z', ANA),
+    ];
+    const fechou = evento('fechou', '2026-11-18T03:00:00Z', null);
+    // Com o evento da tarefa do fechamento e sem ele, no vencido que ela ainda não fechou.
+    for (const conversa of [resolvido, [...resolvido, fechou]]) {
+      const passos = linhaDoTempo(conversa, {
+        pessoa: 'Fernanda Rocha',
+        agora: AGORA,
+        dataHora,
+        fechado: '17/11',
+      });
+      expect(passos.slice(2)).toMatchObject([
+        { titulo: 'Resolvido', agora: false },
+        { titulo: 'Fechado', texto: '17/11', agora: true },
+      ]);
+    }
+    expect(
+      linhaDoTempo([...resolvido, fechou], {
+        pessoa: 'Fernanda Rocha',
+        agora: AGORA,
+        dataHora,
+        fechado: '17/11',
+      }).at(-1)?.id,
+    ).toBe(fechou.id);
+    // Sem fechar, o resolvido é o de agora.
+    expect(linha(resolvido).at(-1)).toMatchObject({ titulo: 'Resolvido', agora: true });
   });
 });
 

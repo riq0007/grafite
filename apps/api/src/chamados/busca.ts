@@ -2,17 +2,20 @@
 // decisão 17, "A rota da busca (tarefa 4.20)"): o número e as palavras que o termo pede são do
 // domínio (`termoDaBusca`); aqui, o chamado do número vem primeiro e cada palavra é um `strpos` do
 // título normalizado. Os abertos vêm antes dos resolvidos, o mais novo primeiro, só com os chamados
-// que a conta vê.
+// que a conta vê. O Fechado vem pelo `estaFechado`, no fuso do horário da TI, como na lista do chat
+// (change chat-com-chamados, tarefa 4.13).
 import { chamados, pessoas, type Transacao } from '@grafite/db';
 import {
   type Acesso,
   type ArvoreDeLocais,
   alcance,
+  estaFechado,
   type SituacaoDoChamado,
   termoDaBusca,
 } from '@grafite/domain';
 import { and, desc, eq, type SQL, sql } from 'drizzle-orm';
 import { ondeAContaVe } from './alcance.ts';
+import { lerHorarioDaTi } from './horario.ts';
 
 /** Quantos chamados a busca traz. */
 export const NA_BUSCA = 8;
@@ -23,13 +26,15 @@ export interface ChamadoNaBusca {
   /** O nome de agora de quem pediu. */
   pessoa: string;
   situacao: SituacaoDoChamado;
+  /** O resolvido que fechou, pela tarefa ou pelo sétimo dia já passado. */
+  fechado: boolean;
 }
 
 /** Os chamados que a conta vê pelo termo, até 8, na ordem da busca. */
 export async function buscarChamados(
   tx: Transacao,
   termo: string,
-  { acesso, arvore }: { acesso: Acesso; arvore: ArvoreDeLocais },
+  { acesso, arvore, agora }: { acesso: Acesso; arvore: ArvoreDeLocais; agora: Date },
 ): Promise<{ itens: ChamadoNaBusca[] }> {
   const { numero, palavras } = termoDaBusca(termo);
   const peloNumero = numero === null ? undefined : eq(chamados.numero, numero);
@@ -45,12 +50,14 @@ export async function buscarChamados(
       ? sql`(${peloNumero} or ${pelasPalavras})`
       : (peloNumero ?? pelasPalavras);
 
-  const itens = await tx
+  const lidos = await tx
     .select({
       numero: chamados.numero,
       titulo: chamados.titulo,
       pessoa: pessoas.nome,
       situacao: chamados.situacao,
+      resolvidoEm: chamados.resolvidoEm,
+      fechadoEm: chamados.fechadoEm,
     })
     .from(chamados)
     .innerJoin(pessoas, eq(pessoas.id, chamados.pessoaId))
@@ -61,5 +68,11 @@ export async function buscarChamados(
       desc(chamados.numero),
     )
     .limit(NA_BUSCA);
-  return { itens };
+  const { fuso } = await lerHorarioDaTi(tx);
+  return {
+    itens: lidos.map(({ resolvidoEm, fechadoEm, ...chamado }) => ({
+      ...chamado,
+      fechado: estaFechado({ situacao: chamado.situacao, resolvidoEm, fechadoEm }, agora, fuso),
+    })),
+  };
 }

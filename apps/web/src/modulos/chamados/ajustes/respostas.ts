@@ -1,7 +1,8 @@
 // O que a tela das respostas prontas decide sem a API (spec modulo-chamados, "Respostas prontas e
 // horário da TI na tela"; change chamados-da-ti, design, "As respostas prontas (tarefa 5.25)"): a
 // linha da tabela, a contagem e o limite, a gaveta da resposta, o que mudou nela, os tipos que ela
-// oferece e as recusas que valem.
+// oferece e as recusas que valem. As opções da pergunta, contadas na linha e recusadas no campo
+// delas (change chat-com-chamados, tarefa 4.13).
 import type { components } from '@grafite/api-client';
 import { MAXIMO_DE_RESPOSTAS_PRONTAS, MENSAGENS_DA_RESPOSTA_PRONTA } from '@grafite/domain';
 import type { TipoDeChamado } from '../tipos/edicao.ts';
@@ -11,11 +12,12 @@ export type RespostaPronta = components['schemas']['RespostaPronta'];
 /** A resposta como a gaveta a escreve e a gravação a pede, com os tipos pelo id. */
 export type EdicaoDaResposta = components['schemas']['PedidoDaRespostaPronta'];
 
-/** A resposta nova: vazia, sem esperar a resposta e em todos os tipos. */
+/** A resposta nova: vazia, sem esperar a resposta, sem pergunta e em todos os tipos. */
 export const RESPOSTA_NOVA: EdicaoDaResposta = {
   rotulo: '',
   texto: '',
   esperaAResposta: false,
+  opcoes: [],
   tipos: [],
 };
 
@@ -38,6 +40,10 @@ export function tiposNaLista(tipos: readonly { nome: string }[]): string {
   return resto > 0 ? `${nomes} e mais ${resto}` : nomes;
 }
 
+/** As opções contadas na linha da resposta, "3 opções"; a resposta sem pergunta fica sem nada. */
+export const opcoesNaLista = (opcoes: readonly string[]): string | null =>
+  opcoes.length === 0 ? null : `${opcoes.length} ${opcoes.length === 1 ? 'opção' : 'opções'}`;
+
 export const contagemDasRespostas = (quantas: number) =>
   `${quantas} ${quantas === 1 ? 'resposta' : 'respostas'}`;
 
@@ -47,11 +53,12 @@ export const limiteDasRespostas = (quantas: number): string | null =>
 
 /** O que a gaveta mostra: a resposta gravada, com os tipos pelo id, ou a nova, vazia. */
 export function edicaoDaResposta(resposta: RespostaPronta | null): EdicaoDaResposta {
-  if (!resposta) return { ...RESPOSTA_NOVA, tipos: [] };
+  if (!resposta) return { ...RESPOSTA_NOVA, opcoes: [], tipos: [] };
   return {
     rotulo: resposta.rotulo,
     texto: resposta.texto,
     esperaAResposta: resposta.esperaAResposta,
+    opcoes: resposta.opcoes,
     tipos: resposta.tipos.map(({ id }) => id),
   };
 }
@@ -62,6 +69,10 @@ function mesmosTipos(uns: readonly string[], outros: readonly string[]): boolean
   return conjunto.size === new Set(outros).size && outros.every((id) => conjunto.has(id));
 }
 
+/** As mesmas opções, na mesma ordem: a ordem é a dos botões no chat. */
+const mesmasOpcoes = (umas: readonly string[], outras: readonly string[]) =>
+  umas.length === outras.length && umas.every((opcao, i) => opcao === outras[i]);
+
 /** Se o que está na gaveta difere do gravado, ou, na nova, se algo foi escrito ou marcado. */
 export function mudouAResposta(edicao: EdicaoDaResposta, resposta: RespostaPronta | null): boolean {
   const gravada = edicaoDaResposta(resposta);
@@ -69,6 +80,7 @@ export function mudouAResposta(edicao: EdicaoDaResposta, resposta: RespostaPront
     edicao.rotulo !== gravada.rotulo ||
     edicao.texto !== gravada.texto ||
     edicao.esperaAResposta !== gravada.esperaAResposta ||
+    !mesmasOpcoes(edicao.opcoes, gravada.opcoes) ||
     !mesmosTipos(edicao.tipos, gravada.tipos)
   );
 }
@@ -89,10 +101,10 @@ export function tiposParaEscolher(
     .map(({ id, nome, situacao }) => ({ id, nome, inativo: situacao === 'inativo' }));
 }
 
-export type CampoDaGaveta = 'rotulo' | 'texto' | 'tipos';
+export type CampoDaGaveta = 'rotulo' | 'texto' | 'opcoes' | 'tipos';
 export type ErrosDaResposta = Partial<Record<CampoDaGaveta, string>>;
 
-const CAMPOS_DA_GAVETA: readonly CampoDaGaveta[] = ['rotulo', 'texto', 'tipos'];
+const CAMPOS_DA_GAVETA: readonly CampoDaGaveta[] = ['rotulo', 'texto', 'opcoes', 'tipos'];
 
 /** As recusas da API nos campos da gaveta; o resto a tela mostra no pé, pela frase do pedido. */
 export function errosDaResposta(campos: Readonly<Record<string, string>>): ErrosDaResposta {
@@ -114,5 +126,6 @@ export function recusasQueValem(
   if (erros.rotulo && naRecusa.rotulo === agora.rotulo) valem.rotulo = erros.rotulo;
   if (erros.texto && naRecusa.texto === agora.texto) valem.texto = erros.texto;
   if (erros.tipos && mesmosTipos(naRecusa.tipos, agora.tipos)) valem.tipos = erros.tipos;
+  if (erros.opcoes && mesmasOpcoes(naRecusa.opcoes, agora.opcoes)) valem.opcoes = erros.opcoes;
   return valem;
 }

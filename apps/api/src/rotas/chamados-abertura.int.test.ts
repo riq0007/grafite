@@ -391,7 +391,8 @@ describe('a abertura pela TI', () => {
         autorConta: conta('ana'),
         autorPessoa: null,
         texto: null,
-        dados: {},
+        // Quem nasce atendendo (change chat-com-chamados, decisão 15).
+        dados: { para: conta('ana') },
         criadaEm: AGORA,
       }),
     ]);

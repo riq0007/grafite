@@ -39,6 +39,11 @@ export async function notificar(
           origem: nova.origem.slice(0, LIMITES_DA_NOTIFICACAO.origem),
           destino: nova.destino,
           alertaId: nova.alertaId,
+          // A mensagem do chat ou do chamado, com o assunto que a leitura marca (change
+          // chat-com-chamados, design, decisão 6).
+          mensagem: nova.mensagem,
+          assunto: nova.assunto,
+          mensagemDoChatId: nova.mensagemDoChatId,
           criadaEm: momento,
         })),
       )

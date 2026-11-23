@@ -1,10 +1,13 @@
 // A conexão de eventos (spec eventos-em-tempo-real; design do F2c, decisão 11): o GET /api/eventos,
 // só com a sessão que vale, que entrega em até 2 s depois do commit o que a conta pode receber,
-// manda o sinal de vida, não conta como uso da sessão e termina com ela.
+// manda o sinal de vida, não conta como uso da sessão e termina com ela. Os grupos da conta, que a
+// equipe do chat pede (change chat-com-chamados), são lidos na abertura.
+import http from 'node:http';
+import { setTimeout as esperar } from 'node:timers/promises';
 import { contas, naOrganizacao, sessoes } from '@grafite/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { abrirEventos, type FluxoDeEventos } from '../../test/eventos.ts';
+import { abrirEventos, type FluxoDeEventos, portaDa } from '../../test/eventos.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -12,13 +15,16 @@ import {
   atribuir,
   clienteDaApi,
   criarConta,
+  criarGrupo,
   criarLocal,
   criarOrganizacao,
   criarPerfil,
   criarPessoa,
   type Entrada,
+  incluirNoGrupo,
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
+import { registrarEvento } from '../eventos/saida.ts';
 
 const host = 'grafite.eventos.local';
 const MINUTO = 60_000;
@@ -44,6 +50,7 @@ beforeAll(async () => {
   const daAna = await criarConta(api, org, { usuario: 'ana', nome: 'Ana Souza' });
   await atribuir(api, org, { perfilId: administrador, contaId: daAna.id });
   const doBruno = await criarConta(api, org, { usuario: 'bruno', nome: 'Bruno Costa' });
+  ids.bruno = doBruno.id;
   await atribuir(api, org, { perfilId: leitura, contaId: doBruno.id, localId: ids.jundiai });
   ana = await cliente.entrar('ana');
   bruno = await cliente.entrar('bruno');
@@ -138,6 +145,29 @@ describe('GET /eventos', () => {
     expect(alvos).toEqual([joao]);
   });
 
+  // A permissão do chat chega na tarefa das permissões; aqui vale a das pessoas.
+  it('o evento com os grupos vai só a quem tem a permissão e é de um deles', async () => {
+    const suporte = await criarGrupo(api, org, { nome: 'Suporte' });
+    await incluirNoGrupo(api, org, { grupoId: suporte, contaId: ids.bruno ?? '' });
+    const doBruno = await eventosDe(bruno);
+    const daAna = await eventosDe(ana);
+    const gravar = (evento: Parameters<typeof registrarEvento>[1]) =>
+      naOrganizacao(api.banco, org, (tx) => registrarEvento(tx, evento));
+    await gravar({
+      tipo: 'chat.mudou',
+      alvo: { tipo: 'conversa', id: suporte },
+      publico: { permissao: 'pessoas.ver', grupos: [suporte] },
+    });
+    // Os eventos saem na ordem: quando o seguinte chega, o da equipe já teria chegado.
+    await gravar({ tipo: 'padroes.mudaram', alvo: null, publico: { todas: true } });
+    for (const fluxo of [doBruno, daAna]) {
+      await vi.waitFor(() => expect(tipos(fluxo)).toContain('padroes.mudaram'), { timeout: 2000 });
+    }
+    expect(tipos(doBruno)).toContain('chat.mudou');
+    // A administradora tem a permissão, mas não é do grupo.
+    expect(tipos(daAna)).not.toContain('chat.mudou');
+  });
+
   it('manda o sinal de vida', async () => {
     const fluxo = await eventosDe(ana);
     await vi.waitFor(() => expect(fluxo.mensagens.some((m) => m.comentario === 'vivo')).toBe(true));
@@ -195,6 +225,44 @@ describe('GET /eventos', () => {
     // Fechada uma, outra pode abrir.
     fluxos[0]?.fechar();
     await vi.waitFor(async () => expect((await eventosDe(entrada)).status).toBe(200));
+  });
+
+  // O fim da resposta chega uma vez só: o cliente que sai enquanto a abertura lê o banco não a
+  // deixa contada nem no distribuidor (pontos da revisão da tarefa 1.3 do chat-com-chamados).
+  it('o cliente que sai durante a abertura não fica contado na sessão', async () => {
+    await criarConta(api, org, { usuario: 'gilda', nome: 'Gilda Prado' });
+    const entrada = await cliente.entrar('gilda');
+    const porta = await portaDa(api);
+    // Com os grupos travados, a abertura espera pelo banco.
+    const trava = await api.dono.connect();
+    try {
+      await trava.query('begin');
+      await trava.query('lock table membros_do_grupo in access exclusive mode');
+      const pedido = http.get({
+        host: '127.0.0.1',
+        port: porta,
+        path: '/eventos',
+        headers: { host, cookie: entrada.cookie },
+      });
+      pedido.on('error', () => {});
+      await vi.waitFor(async () => {
+        const { rows } = await api.dono.query<{ esperando: number }>(
+          `select count(*)::int as esperando from pg_locks l join pg_class c on c.oid = l.relation
+            where c.relname = 'membros_do_grupo' and not l.granted
+              and l.database = (select oid from pg_database where datname = current_database())`,
+        );
+        expect(rows[0]?.esperando).toBeGreaterThan(0);
+      });
+      pedido.destroy();
+      // O servidor vê o fim antes de a leitura seguir.
+      await esperar(200);
+      await trava.query('commit');
+    } finally {
+      trava.release();
+    }
+    await esperar(300);
+    const fluxos = await Promise.all(Array.from({ length: 20 }, () => eventosDe(entrada)));
+    expect(fluxos.map((fluxo) => fluxo.status)).toEqual(Array(20).fill(200));
   });
 });
 

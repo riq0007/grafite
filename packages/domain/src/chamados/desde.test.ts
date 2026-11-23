@@ -175,6 +175,32 @@ describe('desdeDeQuemAtende', () => {
       ),
     ).toEqual(AGORA);
   });
+
+  it('na mudança de quem participa: a retomada segue o de antes, e a reabertura é agora', () => {
+    // Fernanda responde o #1041, que aguardava ela com Renato: ele segue com o chamado desde ontem.
+    const daPessoa = { especie: 'mensagem', texto: 'Segundo andar.' } as const;
+    expect(
+      desdeDeQuemAtende(
+        COM_RENATO,
+        {
+          responsavel: RENATO,
+          conversa: [daPessoa, { especie: 'evento', evento: 'retomou', dados: {} }],
+        },
+        AGORA,
+      ),
+    ).toEqual(COM_RENATO.desde);
+    // E escreve no #1045, que Renato resolveu: ele o recebe de volta agora.
+    expect(
+      desdeDeQuemAtende(
+        COM_RENATO,
+        {
+          responsavel: RENATO,
+          conversa: [daPessoa, { especie: 'evento', evento: 'reabriu', dados: { para: RENATO } }],
+        },
+        AGORA,
+      ),
+    ).toEqual(AGORA);
+  });
 });
 
 describe('antesDoAssumir', () => {

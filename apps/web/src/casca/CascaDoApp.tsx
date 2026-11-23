@@ -6,7 +6,6 @@ import {
   Casca,
   CentralDeNotificacoes,
   CursorSuavizado,
-  type NotificacaoDaCentral,
   RegiaoDeAvisos,
   SinoDeNotificacoes,
   useDataHora,
@@ -27,13 +26,15 @@ import { ContextoDaAberturaDaBusca } from '../busca/abrirBusca.tsx';
 import { ContextoDasAcoesDaTela, criarRegistroDasAcoesDaTela } from '../busca/acoesDaTela.tsx';
 import type { EntradaDeBusca } from '../busca/tipos.ts';
 import { useBusca } from '../busca/useBusca.ts';
+import { paraAJanelaDoChat } from '../chat/enderecos.ts';
+import { esquecerAChegada } from '../chat/focoNaChegada.ts';
 import { useChegada } from '../chegada/avisos.tsx';
 import { interruptorDe, registroDaConta } from '../modulos/registroDaConta.ts';
+import type { ModuloRegistrado } from '../modulos/tipos.ts';
 import { ouvirAberturaPeloPush } from '../notificacoes/aberturaPeloPush.ts';
+import { paraACentral } from '../notificacoes/naCentral.ts';
 import {
   type Notificacao,
-  ROTULO_DO_ADIAR,
-  temAcoesDoAlerta,
   useNotificacoes,
   useNotificacoesDaCentral,
 } from '../notificacoes/useNotificacoes.tsx';
@@ -50,6 +51,7 @@ import { useMenusDinamicos } from './menusDinamicos.ts';
 import { moduloAtual, modulosDaCasca } from './modulosDaCasca.ts';
 import { ContextoDosModulosDaConta } from './modulosDaConta.tsx';
 import { useMarcaDaAba } from './primeiraTela.ts';
+import { comOsSelos, useSelosDoDock } from './selosDoDock.ts';
 import { ItemDeRede } from './status/ItemDeRede.tsx';
 import { Relogio } from './status/Relogio.tsx';
 
@@ -114,10 +116,16 @@ export function CascaDoApp() {
   // a conta: a dela, a dos padrões da organização ou a do registro.
   const doDock = useMenusDinamicos(registro, pode);
   const escolha = preferencias.dock.modulos;
-  const { modulos, modulosNoMais, modulosDoFim } = useMemo(
-    () => modulosDaCasca(doDock, escolha),
-    [doDock, escolha],
-  );
+  // O selo de cada módulo que tem um, como o total do Chat, no dock e na barra de abas.
+  const selos = useSelosDoDock(registro);
+  const { modulos, modulosNoMais, modulosDoFim } = useMemo(() => {
+    const daCasca = modulosDaCasca(doDock, escolha);
+    return {
+      modulos: comOsSelos(daCasca.modulos, selos),
+      modulosNoMais: comOsSelos(daCasca.modulosNoMais, selos),
+      modulosDoFim: comOsSelos(daCasca.modulosDoFim, selos),
+    };
+  }, [doDock, escolha, selos]);
   // O módulo do endereço sai do registro inteiro: a barra diz onde se está, mesmo sem permissão.
   const atual = moduloAtual(todos, idsDasRotas);
   // O módulo que liga e desliga o atual: ele mesmo ou, para o que é parte de outro, o dono, cujo
@@ -127,7 +135,7 @@ export function CascaDoApp() {
   const menusDaBarra = [...modulos, ...modulosNoMais, ...modulosDoFim].find(
     (modulo) => modulo.id === atual?.id,
   )?.menusDaBarra;
-  useFocoNoTituloAoNavegar();
+  useFocoNoTituloAoNavegar(todos);
   const abas = useAbasDoApp();
 
   // O id de um item que navega é o próprio destino, conferido contra as rotas no registro. O
@@ -141,12 +149,13 @@ export function CascaDoApp() {
       : navegar({ to: destino, ...(foco ? { search: { foco } } : {}) });
   };
 
-  // O toque no push com o Grafite aberto: o service worker pede o endereço, e a casca o abre.
+  // O toque no push com o Grafite aberto: o service worker pede o endereço, e a casca o abre. O do
+  // app do chat abre o mesmo lugar na janela do Chat.
   useEffect(
     () =>
       ouvirAberturaPeloPush(
         typeof navigator === 'undefined' ? undefined : navigator.serviceWorker,
-        (destino) => void navegar({ href: destino }),
+        (destino) => void navegar({ href: paraAJanelaDoChat(destino) }),
       ),
     [navegar],
   );
@@ -316,52 +325,38 @@ export function CascaDoApp() {
   );
 }
 
-/** Como está o alerta da notificação, em texto, depois de tratado ou resolvido. */
-function situacaoDoAlerta(
-  alerta: Notificacao['alerta'],
-  formatarHora: (momento: Date) => string,
-): string | undefined {
-  if (!alerta) return undefined;
-  if (alerta.situacao === 'resolvido') return 'Resolvido';
-  if (alerta.reconhecido) return `Reconhecido por ${alerta.reconhecido.nome}`;
-  if (alerta.adiado) return `Adiado até ${formatarHora(new Date(alerta.adiado.ate))}`;
-  return undefined;
-}
-
-/** Uma notificação do servidor como a central a mostra, com as ações do alerta que pede ação. */
-const paraACentral = (
-  notificacao: Notificacao,
-  formatarHora: (momento: Date) => string,
-): NotificacaoDaCentral => ({
-  id: notificacao.id,
-  severidade: notificacao.severidade,
-  titulo: notificacao.titulo,
-  descricao: notificacao.descricao,
-  origem: notificacao.origem,
-  momento: notificacao.momento,
-  lida: notificacao.lida,
-  temDestino: notificacao.destino !== undefined,
-  podeReconhecer: temAcoesDoAlerta(notificacao),
-  podeAdiar: temAcoesDoAlerta(notificacao),
-  rotuloDoAdiar: ROTULO_DO_ADIAR,
-  situacaoDoAlerta: situacaoDoAlerta(notificacao.alerta, formatarHora),
-});
-
 /**
  * Depois de cada navegação que troca o endereço, o foco vai ao título do novo conteúdo, e o leitor
  * de tela anuncia aonde o usuário chegou. Na abertura da página (sem endereço anterior) o foco
  * fica onde está, para o primeiro Tab ir a "Ir para o conteúdo". Com `foco` no endereço, até na
- * abertura, o foco vai ao elemento marcado (design do F1b, decisão 4).
+ * abertura, o foco vai ao elemento marcado (design do F1b, decisão 4). A janela sem o título da
+ * janela, como a do Chat, recebe o foco no título de chegada só quando a conta chega de outro
+ * módulo (change chat-com-chamados, design, decisão 15).
  */
-function useFocoNoTituloAoNavegar() {
+function useFocoNoTituloAoNavegar(registro: readonly ModuloRegistrado[]) {
   const roteador = useRouter();
-  useEffect(
-    () =>
-      roteador.subscribe('onRendered', ({ fromLocation, pathChanged, toLocation }) => {
+  useEffect(() => {
+    const moduloDoEndereco = () =>
+      moduloAtual(
+        registro,
+        roteador.state.matches.map(({ routeId }) => routeId),
+      )?.id;
+    let anterior = moduloDoEndereco();
+    const pararAntes = roteador.subscribe('onBeforeNavigate', esquecerAChegada);
+    const pararDepois = roteador.subscribe(
+      'onRendered',
+      ({ fromLocation, pathChanged, toLocation }) => {
+        const atual = moduloDoEndereco();
+        const chegada = atual !== anterior;
+        anterior = atual;
         const { foco } = toLocation.search as BuscaDaRaiz;
         if (!foco && (!fromLocation || !pathChanged)) return;
-        focarDestino(foco);
-      }),
-    [roteador],
-  );
+        focarDestino(foco, { chegada });
+      },
+    );
+    return () => {
+      pararAntes();
+      pararDepois();
+    };
+  }, [roteador, registro]);
 }

@@ -146,6 +146,51 @@ describe('registrarEvento', () => {
     ]);
   });
 
+  // As linhas de 20, o teto do CHECK (change chat-com-chamados, design, decisão 4): o notificar de
+  // um canal com muitas contas não é recusado.
+  it('divide as contas e as sessões em linhas de 20, com o resto do público na primeira', async () => {
+    const ids = (meio: string, quantos: number) =>
+      Array.from(
+        { length: quantos },
+        (_, i) => `0199a3f0-0000-7000-${meio}-${String(i).padStart(12, '0')}`,
+      );
+    const contas = ids('8000', 45);
+    const sessoes = ids('9000', 21);
+    const grupo = '0199a3f0-0000-7000-a000-000000000001';
+    await naOrganizacao(api.banco, org, (tx) =>
+      registrarEvento(tx, {
+        tipo: 'chat.mudou',
+        alvo: { tipo: 'conversa', id: ALVO },
+        publico: { permissao: 'pessoas.ver', grupos: [grupo], contas, sessoes },
+      }),
+    );
+    const linhas = (await gravados()).sort((a, b) => a.id.localeCompare(b.id));
+    const comum = { tipo: 'chat.mudou', alvoTipo: 'conversa', alvoId: ALVO, todas: false };
+    const semOResto = { ...comum, permissao: null, grupos: null, locais: null, permissoes: null };
+    expect(linhas).toMatchObject([
+      {
+        ...comum,
+        permissao: 'pessoas.ver',
+        grupos: [grupo],
+        contas: contas.slice(0, 20),
+        sessoes: sessoes.slice(0, 20),
+      },
+      { ...semOResto, contas: contas.slice(20, 40), sessoes: sessoes.slice(20) },
+      { ...semOResto, contas: contas.slice(40), sessoes: null },
+    ]);
+  });
+
+  it('grava os grupos vazios como lista vazia, que não alcança ninguém pela permissão', async () => {
+    await naOrganizacao(api.banco, org, (tx) =>
+      registrarEvento(tx, {
+        tipo: 'chat.mudou',
+        alvo: { tipo: 'conversa', id: ALVO },
+        publico: { permissao: 'pessoas.ver', grupos: [] },
+      }),
+    );
+    expect(await gravados()).toMatchObject([{ permissao: 'pessoas.ver', grupos: [] }]);
+  });
+
   it('recusa o evento sem público, também com as permissões vazias', async () => {
     await expect(
       naOrganizacao(api.banco, org, (tx) =>

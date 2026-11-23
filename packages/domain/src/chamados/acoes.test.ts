@@ -66,6 +66,7 @@ const NA_TRIAGEM: ChamadoParaAcao = {
   semLocal: false,
   versao: 1,
   primeiraRespostaEm: null,
+  fechado: false,
 };
 /** O #1033, estourado, em atendimento com Renato desde ontem às 15:05. */
 const COM_RENATO: ChamadoParaAcao = {
@@ -99,6 +100,8 @@ const RESOLVIDO: ChamadoParaAcao = {
   versao: 6,
   primeiraRespostaEm: RESPONDIDO,
 };
+/** O #1030, resolvido por Ana há mais de 7 dias: fechado (`estaFechado`, change chat-com-chamados). */
+const FECHADO: ChamadoParaAcao = { ...RESOLVIDO, numero: 1030, fechado: true };
 /** O #1038, o Wi-Fi da Sala Atlântico, com Diego desde 08:05: o local de Jundiaí da pessoa e o do ativo. */
 const WIFI: ChamadoParaAcao = {
   ...NA_TRIAGEM,
@@ -1026,6 +1029,53 @@ describe('reabrir', () => {
   });
 });
 
+describe('o fechado (change chat-com-chamados, tarefa 3.11)', () => {
+  const ANA_QUE_RESOLVEU: ContaQueRecebe = {
+    id: ANA.id,
+    nome: 'Ana Souza',
+    ativa: true,
+    alcance: 'organizacao',
+  };
+  const SEM_CAMPOS: Formulario = { titulo: { comecaPeloTipo: true, campoId: null }, campos: [] };
+  const PEDIDOS: PedidoDeAcao[] = [
+    { acao: 'assumir' },
+    { acao: 'passar', para: ANA_QUE_RESOLVEU },
+    { acao: 'devolver' },
+    { acao: 'mensagem', texto: 'Funcionou?', anexos: 0 },
+    { acao: 'esperar', texto: 'Funcionou?', anexos: 0 },
+    { acao: 'nota', texto: 'Só da TI.', anexos: 0 },
+    { acao: 'retomar' },
+    { acao: 'resolver', feito: 'Troquei.', formulario: SEM_CAMPOS, respostas: {} },
+    { acao: 'reabrir', quemResolveu: ANA_QUE_RESOLVEU },
+  ];
+
+  it('recusa as ações do atendimento, a mensagem e a nota, também o reabrir', () => {
+    for (const pedido of PEDIDOS) {
+      expect(decidirAcao(FECHADO, ANA, pedido), pedido.acao).toEqual(recusa({ motivo: 'fechado' }));
+    }
+    // O resolvido que ainda não fechou continua reabrindo.
+    expect(
+      decidirAcao(RESOLVIDO, ANA, { acao: 'reabrir', quemResolveu: ANA_QUE_RESOLVEU }),
+    ).toMatchObject({ aceita: true, situacao: 'em-atendimento' });
+  });
+
+  it('a versão de antes e quem não atende os locais recusam antes, como no resolvido', () => {
+    expect(decidirAcao(FECHADO, ANA, { acao: 'reabrir', quemResolveu: null, versao: 5 })).toEqual(
+      recusa({ motivo: 'versao', acao: 'reabrir' }),
+    );
+    const deCampinas: QuemAge = { id: RENATO.id, alcance: RAMO_DE_CAMPINAS };
+    expect(decidirAcao(FECHADO, deCampinas, { acao: 'reabrir', quemResolveu: null })).toEqual(
+      recusa({ motivo: 'voce-nao-atende', local: 'Jundiaí' }),
+    );
+  });
+
+  it('a frase é a da spec', () => {
+    expect(mensagemDaRecusaDaAcao(1030, { motivo: 'fechado' })).toBe(
+      'O chamado #1030 está fechado.',
+    );
+  });
+});
+
 describe('os textos da conversa', () => {
   it('perdem os espaços das pontas e são contados em caracteres, e não em unidades do UTF-16', () => {
     expect(
@@ -1041,11 +1091,11 @@ describe('os textos da conversa', () => {
     ).toEqual(recusa({ motivo: 'texto-longo', texto: 'mensagem' }));
   });
 
-  it('pedem o texto na mensagem, na espera e na nota, de até 4.000 caracteres', () => {
+  it('pedem o texto ou um anexo na mensagem, na espera e na nota, de até 4.000 caracteres', () => {
     expect(decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: ' \n ', anexos: 0 })).toEqual(
       recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
     );
-    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 2 })).toEqual(
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 0 })).toEqual(
       recusa({ motivo: 'sem-texto', texto: 'mensagem' }),
     );
     expect(decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: '', anexos: 0 })).toEqual(
@@ -1054,6 +1104,32 @@ describe('os textos da conversa', () => {
     expect(
       decidirAcao(COM_RENATO, ANA, { acao: 'nota', texto: 'a'.repeat(4001), anexos: 0 }),
     ).toEqual(recusa({ motivo: 'texto-longo', texto: 'nota' }));
+  });
+
+  it('vão só com os anexos, com o texto nulo, fora a pergunta, que pede o texto (tarefa 4.18)', () => {
+    const conversa = (pedido: Parameters<typeof decidirAcao>[2]) => {
+      const decisao = decidirAcao(COM_RENATO, ANA, pedido);
+      return decisao.aceita ? decisao.conversa : decisao;
+    };
+    expect(conversa({ acao: 'mensagem', texto: ' \n ', anexos: 1 })).toEqual([
+      { especie: 'mensagem', texto: null },
+    ]);
+    expect(conversa({ acao: 'nota', texto: '', anexos: 2 })).toEqual([
+      { especie: 'nota', texto: null },
+    ]);
+    expect(conversa({ acao: 'esperar', texto: '', anexos: 1 })).toEqual([
+      { especie: 'mensagem', texto: null },
+      { especie: 'evento', evento: 'aguardando', dados: {} },
+    ]);
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: '', anexos: 1, pergunta: true }),
+    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    expect(
+      decidirAcao(COM_RENATO, ANA, { acao: 'esperar', texto: '', anexos: 1, pergunta: true }),
+    ).toEqual(recusa({ motivo: 'sem-texto', texto: 'mensagem' }));
+    expect(decidirAcao(COM_RENATO, ANA, { acao: 'mensagem', texto: '', anexos: 6 })).toEqual(
+      recusa({ motivo: 'anexos-demais' }),
+    );
   });
 
   it('aceitam até 5 anexos', () => {

@@ -70,13 +70,14 @@ test.describe('celular em 390×844', () => {
     await alvosDeToque(abas.getByRole('button'));
     await alvosDeToque(page.getByRole('banner').getByRole('button'));
 
-    // Cabem quatro abas e o "Mais": os Chamados, o Início, os Ativos e os Alertas, pela prioridade
-    // do celular, e os Ajustes no "Mais", que fica marcado com eles abertos (change chamados-da-ti).
+    // Cabem quatro abas e o "Mais": os Chamados, o Chat, o Início e os Ativos, pela prioridade do
+    // celular, e os Ajustes no "Mais", que fica marcado com eles abertos (changes chamados-da-ti e
+    // chat-com-chamados).
     await expect(abas.getByRole('button')).toHaveText([
       'Chamados',
+      'Chat',
       'Início',
       'Ativos',
-      'Alertas',
       'Mais',
     ]);
     await abas.getByRole('button', { name: 'Mais' }).tap();

@@ -1,15 +1,22 @@
 /*
  * O campo de escrever do chamado aberto (m03): a faixa afundada no pé da tela, de ponta a ponta,
  * com o que se escreve na coluna da conversa, de até 720 px no meio e na largura da área nos cantos.
+ * Na janela baixa, ele encolhe até a altura que a tela lhe dá, e só o meio rola.
  */
 .campo {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: var(--esp-3) var(--respiro, var(--esp-6)) var(--esp-4);
   border-top: 1px solid var(--cor-linha);
   background: var(--cor-superficie-afundada);
 }
 
 .coluna {
+  display: flex;
+  flex-direction: column;
   width: min(720px, 100%);
+  min-height: 0;
   margin: 0 auto;
 }
 
@@ -21,6 +28,21 @@
   display: flex;
   flex-direction: column;
   gap: var(--esp-2);
+  min-height: 0;
+}
+
+/*
+ * O meio: a caixa, as recusas, o cartão, as opções e os anexos, que rolam por dentro quando falta
+ * altura. A folga em volta guarda o anel do foco dos campos, que a rolagem cortaria.
+ */
+.meio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-height: 0;
+  margin: calc(-1 * var(--esp-1));
+  padding: var(--esp-1);
+  overflow-y: auto;
 }
 
 /* A chave com o "Esperar a resposta", e as respostas prontas com o fim: o clipe, o atalho e "Enviar". */
@@ -35,11 +57,21 @@
   gap: var(--esp-2);
 }
 
+/* O fim, à direita; na área estreita, ele desce de linha, com o "Enviar" no canto, sem sair dela. */
 .fim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--esp-2) var(--esp-3);
+  margin-left: auto;
+}
+
+/* O atalho e o "Enviar", que descem juntos. */
+.envio {
   display: flex;
   align-items: center;
   gap: var(--esp-3);
-  margin-left: auto;
 }
 
 /* A caixa, sobre a superfície, que cresce com o texto até a metade da janela e, dali, rola. */
@@ -74,4 +106,24 @@
 .reabrir p {
   margin: 0;
   color: var(--cor-texto-2);
+}
+
+/* A ajuda do chat, ao lado da chave: onde a pessoa lê a mensagem. */
+.ajuda {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+/* O cartão do ativo no campo, entre a caixa e os anexos, com o "Tirar" no canto. */
+.cartao {
+  display: grid;
+  gap: var(--esp-1);
+  justify-items: start;
+}
+
+/* O diálogo do "Cartão do ativo". */
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
 }

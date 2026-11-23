@@ -14,6 +14,8 @@ export interface NotificacaoParaMensagem {
   origem: string;
   destino: string | null;
   criadaEm: Date;
+  /** A mensagem do chat ou do chamado, cujo push leva só o título (change chat-com-chamados). */
+  mensagem?: boolean;
 }
 
 /** De onde o e-mail vem: o nome da organização e a origem dos endereços dela. */
@@ -109,10 +111,12 @@ export function emailDeTeste({ organizacao }: OrigemDaMensagem): MensagemDeEmail
   };
 }
 
-/** O conteúdo do push de uma notificação. */
+/** O conteúdo do push de uma notificação; o da mensagem, sem a severidade no título. */
 export function conteudoDoPush(notificacao: NotificacaoParaMensagem): ConteudoDoPush {
   return {
-    titulo: `${ROTULOS_DAS_SEVERIDADES[notificacao.severidade]}: ${notificacao.titulo}`,
+    titulo: notificacao.mensagem
+      ? notificacao.titulo
+      : `${ROTULOS_DAS_SEVERIDADES[notificacao.severidade]}: ${notificacao.titulo}`,
     corpo: notificacao.descricao ?? notificacao.origem,
     destino: notificacao.destino ?? '/',
     severidade: notificacao.severidade,

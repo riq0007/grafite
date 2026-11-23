@@ -4,6 +4,7 @@
 // progresso ou "Na fila".
 import { BarraDeProgresso, Botao, formatarTamanho, Icone } from '@grafite/ui';
 import { FileText } from 'lucide-react';
+import type { Ref } from 'react';
 import { enderecoDoAnexo } from './anexos.ts';
 import type { AnexoCitado } from './estado.ts';
 import estilos from './Formulario.module.css';
@@ -21,6 +22,8 @@ export interface PropsDaListaDeAnexos {
   aoTirar: (id: string) => void;
   /** O nome da lista, quando nenhum grupo em volta o dá. */
   rotulo?: string;
+  /** A lista, para quem leva à vista o arquivo que entra, como o campo de escrever do chamado. */
+  ref?: Ref<HTMLUListElement>;
 }
 
 /** A lista, que não aparece sem arquivos. */
@@ -33,10 +36,11 @@ export function ListaDeAnexos({
   editavel,
   aoTirar,
   rotulo,
+  ref,
 }: PropsDaListaDeAnexos) {
   if (ids.length === 0 && fila.length === 0) return null;
   return (
-    <ul className={estilos.arquivos} aria-label={rotulo}>
+    <ul ref={ref} className={estilos.arquivos} aria-label={rotulo}>
       {ids.map((anexoId) => {
         const anexo = anexos.get(anexoId);
         const nome = anexo?.nome ?? 'Arquivo';

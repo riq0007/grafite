@@ -28,6 +28,7 @@ describe('as permissões na ficha do perfil', () => {
       'Salas',
       'Painéis',
       'Chamados',
+      'Chat',
     ]);
     expect(AREAS[0]?.permissoes.map(({ chave }) => chave)).toEqual([
       'pessoas.ver',
@@ -35,6 +36,18 @@ describe('as permissões na ficha do perfil', () => {
       'pessoas.anonimizar',
       'contas.administrar',
     ]);
+  });
+
+  it('o pedir pelo chat fica no fim dos Chamados, e o Chat, no fim (change chat-com-chamados)', () => {
+    const daArea = (nome: string) =>
+      AREAS.find(({ area }) => area === nome)?.permissoes.map(({ chave }) => chave);
+    expect(daArea('Chamados')).toEqual([
+      'chamados.ver',
+      'chamados.atender',
+      'chamados.configurar',
+      'chamados.pedir',
+    ]);
+    expect(daArea('Chat')).toEqual(['chat.usar', 'chat.configurar']);
   });
 
   it('valem as escolhidas e as que elas incluem; no perfil com todas, todas', () => {

@@ -1,0 +1,11 @@
+/* O cartão tem largura própria, não a do botão, e o conteúdo da tela tem o respiro dele. */
+.painel {
+  min-width: 0;
+  padding: 0;
+}
+
+/* O cartão que recebe o foco pelo teclado, com a seta, o Enter ou o espaço no botão. */
+.painel:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}

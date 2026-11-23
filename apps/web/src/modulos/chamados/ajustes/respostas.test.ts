@@ -8,6 +8,7 @@ import {
   errosDaResposta,
   limiteDasRespostas,
   mudouAResposta,
+  opcoesNaLista,
   RESPOSTA_NOVA,
   type RespostaPronta,
   recusasQueValem,
@@ -27,6 +28,7 @@ function resposta(mudar: Partial<RespostaPronta> = {}): RespostaPronta {
     rotulo: 'Pedir o print do erro',
     texto: 'Oi, {nome}! Pode mandar um print da tela com o erro?',
     esperaAResposta: true,
+    opcoes: [],
     tipos: [ACESSO, IMPRESSORA],
     ...mudar,
   };
@@ -73,21 +75,23 @@ describe('limiteDasRespostas', () => {
 });
 
 describe('edicaoDaResposta', () => {
-  it('a nova começa vazia, sem esperar a resposta e em todos os tipos', () => {
+  it('a nova começa vazia, sem esperar a resposta, sem pergunta e em todos os tipos', () => {
     expect(edicaoDaResposta(null)).toEqual({
       rotulo: '',
       texto: '',
       esperaAResposta: false,
+      opcoes: [],
       tipos: [],
     });
     expect(edicaoDaResposta(null)).toEqual(RESPOSTA_NOVA);
   });
 
-  it('a gravada, com os tipos pelo id, como a gravação os pede', () => {
-    expect(edicaoDaResposta(resposta())).toEqual({
+  it('a gravada, com as opções e os tipos pelo id, como a gravação os pede', () => {
+    expect(edicaoDaResposta(resposta({ opcoes: ['Sim', 'Não'] }))).toEqual({
       rotulo: 'Pedir o print do erro',
       texto: 'Oi, {nome}! Pode mandar um print da tela com o erro?',
       esperaAResposta: true,
+      opcoes: ['Sim', 'Não'],
       tipos: [ACESSO.id, IMPRESSORA.id],
     });
   });
@@ -99,12 +103,14 @@ describe('mudouAResposta', () => {
     expect(mudouAResposta(edicaoDaResposta(resposta()), resposta())).toBe(false);
   });
 
-  it('o rótulo, o texto, a espera ou os tipos mudados mudam a resposta', () => {
-    const gravada = resposta();
+  it('o rótulo, o texto, a espera, as opções ou os tipos mudados mudam a resposta', () => {
+    const gravada = resposta({ opcoes: ['Sim', 'Não'] });
     const edicao = edicaoDaResposta(gravada);
     expect(mudouAResposta({ ...edicao, rotulo: 'Pedir o print' }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, texto: 'Pode mandar o print?' }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, esperaAResposta: false }, gravada)).toBe(true);
+    expect(mudouAResposta({ ...edicao, opcoes: ['Não', 'Sim'] }, gravada)).toBe(true);
+    expect(mudouAResposta({ ...edicao, opcoes: ['Sim', 'Não', 'Talvez'] }, gravada)).toBe(true);
     expect(mudouAResposta({ ...edicao, tipos: [ACESSO.id] }, gravada)).toBe(true);
     expect(mudouAResposta({ ...RESPOSTA_NOVA, rotulo: 'P' }, null)).toBe(true);
   });
@@ -142,11 +148,13 @@ describe('errosDaResposta', () => {
       errosDaResposta({
         rotulo: 'Já existe uma resposta pronta com esse rótulo.',
         tipos: 'Escolha os tipos da lista.',
+        opcoes: 'As opções precisam ser diferentes.',
         ids: 'A ordem precisa ter todas as respostas prontas, uma vez cada.',
       }),
     ).toEqual({
       rotulo: 'Já existe uma resposta pronta com esse rótulo.',
       tipos: 'Escolha os tipos da lista.',
+      opcoes: 'As opções precisam ser diferentes.',
     });
   });
 });
@@ -176,5 +184,27 @@ describe('recusasQueValem', () => {
       recusasQueValem(dosTipos, comTipos, { ...comTipos, tipos: [IMPRESSORA.id, ACESSO.id] }),
     ).toEqual(dosTipos);
     expect(recusasQueValem(dosTipos, comTipos, { ...comTipos, tipos: [ACESSO.id] })).toEqual({});
+  });
+});
+
+describe('recusasQueValem: as opções', () => {
+  it('a recusa das opções vale enquanto elas não mudam', () => {
+    const comOpcoes = { ...RESPOSTA_NOVA, opcoes: ['Sim', 'Sim'] };
+    const dasOpcoes = { opcoes: 'As opções precisam ser diferentes.' };
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes })).toEqual(dasOpcoes);
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes, opcoes: ['Sim', 'Não'] })).toEqual(
+      {},
+    );
+    expect(recusasQueValem(dasOpcoes, comOpcoes, { ...comOpcoes, opcoes: ['Sim'] })).toEqual({});
+  });
+});
+
+describe('opcoesNaLista', () => {
+  it('as opções contadas na linha da resposta, e nada na resposta sem pergunta', () => {
+    expect(opcoesNaLista([])).toBeNull();
+    expect(opcoesNaLista(['Sim', 'Não'])).toBe('2 opções');
+    expect(opcoesNaLista(['Pode ser', 'Daqui a meia hora, por favor', 'Estou em reunião'])).toBe(
+      '3 opções',
+    );
   });
 });

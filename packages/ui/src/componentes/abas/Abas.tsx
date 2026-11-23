@@ -23,6 +23,11 @@ export interface PropsDasAbas {
    * com o formulário: o que foi digitado fica.
    */
   manterMontadas?: readonly string[];
+  /**
+   * As abas ocupam a altura que têm, e o painel escolhido, o resto dela, encostado na faixa: para a
+   * tela que rola por dentro, como uma conversa. O recuo da faixa vem do `--recuo-das-abas`.
+   */
+  preencher?: boolean;
   className?: string;
 }
 
@@ -34,6 +39,7 @@ export function Abas({
   padrao,
   aoMudar,
   manterMontadas = [],
+  preencher = false,
   className,
 }: PropsDasAbas) {
   return (
@@ -42,7 +48,9 @@ export function Abas({
       defaultSelectedKey={padrao}
       onSelectionChange={aoMudar ? (id) => aoMudar(String(id)) : undefined}
       disabledKeys={abas.filter((aba) => aba.desabilitada).map((aba) => aba.id)}
-      className={[estilos.abas, className].filter(Boolean).join(' ')}
+      className={[estilos.abas, preencher && estilos.preencher, className]
+        .filter(Boolean)
+        .join(' ')}
     >
       <div className={estilos.faixa}>
         <TabList aria-label={rotulo} items={abas} className={estilos.lista}>

@@ -1,0 +1,552 @@
+/* As mensagens da conversa (m01 e m03): a área que rola, com o aviso das novas por cima, no pé. As
+   mensagens ficam numa coluna de até 720 px, como a conversa do chamado da TI, sem balão, e o que
+   fica no meio da conversa, como o dia e os eventos, fica no meio dela, e não no da área que rola,
+   que vai de uma borda à outra com a caixa (tarefas 4.15 e 4.21). A margem da área que rola fica
+   numa variável, porque o aviso das novas, fora dela, a conta para achar o meio das mensagens. */
+.fluxo {
+  --margem-da-conversa: var(--esp-5);
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-block-size: 0;
+}
+
+/* A área que rola é a base dos textos só para o leitor de tela: eles rolam com ela e ficam dentro
+   dela, sem deixar o documento mais alto que a janela. */
+.rolagem {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--esp-4) var(--margem-da-conversa);
+  outline: none;
+}
+
+.rolagem:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A coluna das mensagens, na largura de leitura, à esquerda, com a caixa. */
+.itens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  max-inline-size: var(--largura-previa);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carregando {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}
+
+/* A mensagem do link que não está na conversa: o motivo e o caminho para a conversa. */
+.semAMensagem {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+}
+
+.semAMensagem p {
+  margin: 0;
+}
+
+.semAMensagem a {
+  color: var(--cor-destaque-texto);
+}
+
+/* "Mensagens anteriores" e "Mensagens seguintes", no meio da coluna das mensagens. */
+.ponta {
+  display: grid;
+  justify-items: center;
+  max-inline-size: var(--largura-previa);
+  padding-block: var(--esp-2);
+}
+
+/* O dia, no meio da conversa, numa cápsula. */
+.dia {
+  align-self: center;
+}
+
+.dia h3 {
+  margin: 0;
+  padding: calc(var(--esp-1) / 2) var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+/* "Mensagens novas", entre dois fios do destaque, antes da primeira não lida. */
+.novas {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.novas::before,
+.novas::after {
+  content: "";
+  flex: 1;
+  block-size: 1px;
+  background-color: var(--cor-destaque);
+}
+
+/* A mensagem: a foto de 32 px e, ao lado, o nome com a hora, o texto e o resto. Ela é a base da
+   barra, no canto de cima. */
+.mensagem {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--esp-8) minmax(0, 1fr);
+  column-gap: var(--esp-3);
+  max-inline-size: var(--largura-previa);
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio-menu);
+}
+
+/* No mouse, no foco do teclado e com um menu da barra aberto (m01): o fundo diz de qual mensagem é
+   o menu. O clique que dá o foco à mensagem, como ao selecionar o texto, não a prende. O destino do
+   salto pela respondida fica com o fundo até o próximo clique ou a próxima tecla. O mouse só vale
+   onde há mouse: no toque, o navegador deixaria o fundo e a barra presos na mensagem tocada. */
+.mensagem:is(:focus-visible, :has(:focus-visible), :has(> .barra[data-presa]), [data-saltada]) {
+  background-color: var(--cor-hover);
+}
+
+@media (hover: hover) {
+  .mensagem:hover {
+    background-color: var(--cor-hover);
+  }
+}
+
+.mensagem:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: -2px;
+}
+
+/* A barra da mensagem (m01): "Reagir", "Responder" e "Mais", no canto de cima, por cima da
+   anterior, com o mouse ou o foco na mensagem, e presa enquanto um menu dela está aberto. Escondida,
+   ela fica montada na mensagem da vez do teclado, e o foco volta aos botões dela. */
+.barra {
+  position: absolute;
+  inset-block-start: calc(var(--esp-3) * -1 - 2px);
+  inset-inline-end: var(--esp-3);
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-elevada);
+  box-shadow: var(--sombra-elevada);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mensagem:is(:focus-visible, :has(:focus-visible)) > .barra,
+.barra[data-presa] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .mensagem:hover > .barra {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.barra .botaoDaBarra {
+  width: calc(var(--esp-6) + var(--esp-1));
+  height: calc(var(--esp-6) + var(--esp-1));
+}
+
+:root:is([data-postura="tablet"], [data-postura="celular"]) .barra .botaoDaBarra {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+}
+
+/* A reação escrita, no popover: o campo e, embaixo, "Cancelar" e "Reagir". */
+.reacaoEscrita {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+}
+
+.acoesDaReacao {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+/* A seguida da mesma pessoa encosta na anterior. */
+.mensagem[data-seguida] {
+  margin-block-start: calc(var(--esp-3) * -1);
+  padding-block-start: 0;
+}
+
+/* A do link, marcada, com o fio do destaque e "Mensagem do link" em texto. */
+.mensagem[data-do-link] {
+  background-color: var(--cor-hover);
+  box-shadow: inset 2px 0 0 var(--cor-destaque);
+}
+
+/* A que virou chamado, no fundo marcado, com o fio do azul do chamado e "Virou o chamado #1045" em
+   texto (m03). */
+.mensagem[data-virada] {
+  background-color: var(--cor-hover);
+  box-shadow: inset 3px 0 0 var(--cor-info);
+}
+
+.mensagem .foto[data-tamanho] {
+  --lado-do-avatar: var(--esp-8);
+}
+
+/* A hora da seguida, ao lado, no mouse e no foco. */
+.horaAoLado {
+  justify-self: end;
+  padding-block-start: calc(var(--esp-1) / 2);
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--dur-rapida) var(--curva-padrao);
+}
+
+.mensagem:is(:focus-visible, :has(:focus-visible), :has(> .barra[data-presa])) .horaAoLado {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .mensagem:hover .horaAoLado {
+    opacity: 1;
+  }
+}
+
+/* No toque, sem o mouse para mostrar a hora da seguida, ela fica sempre à vista; e a mensagem não
+   seleciona o texto nem abre o menu do navegador no toque longo, que abre a folha, com "Copiar o
+   texto". */
+@media (hover: none) {
+  .horaAoLado {
+    opacity: 1;
+  }
+
+  .itens[data-toque-longo] .mensagem {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+.corpo {
+  min-inline-size: 0;
+}
+
+.quem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-dado);
+}
+
+.nome {
+  font-weight: var(--peso-forte);
+}
+
+.quem time,
+.horaDoEvento {
+  color: var(--cor-texto-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.doLink {
+  color: var(--cor-destaque-texto);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+.texto {
+  margin: var(--esp-1) 0 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mensagem[data-seguida] .texto {
+  margin-block-start: 0;
+}
+
+/* A mensagem respondida, numa linha, que leva a ela. */
+.respondida {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  max-inline-size: 100%;
+  margin-block-start: var(--esp-1);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  text-decoration: none;
+}
+
+.respondida:hover {
+  color: var(--cor-texto);
+}
+
+.respondida:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+  border-radius: var(--raio-rotulo);
+}
+
+.autorDaRespondida {
+  flex: none;
+  font-weight: var(--peso-forte);
+}
+
+.comecoDaRespondida {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Os anexos, cada um com o ícone, o nome e o tamanho, que baixam o arquivo. */
+/*
+ * A coluna e cada anexo na largura da mensagem: a miniatura da imagem encolhe nela, sem passar
+ * (tarefa 4.20).
+ */
+.anexos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: var(--esp-2);
+  margin: var(--esp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anexos > li {
+  max-inline-size: 100%;
+}
+
+.anexo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-1) var(--esp-3) var(--esp-1) var(--esp-1);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-menu);
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  text-decoration: none;
+}
+
+.anexo:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.anexo:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.miniDoAnexo {
+  display: grid;
+  place-items: center;
+  inline-size: var(--esp-10);
+  block-size: var(--esp-8);
+  border: 1px solid var(--cor-linha);
+  border-radius: var(--raio-miniatura);
+  background-color: var(--cor-superficie-afundada);
+  color: var(--cor-texto-2);
+}
+
+.nomeDoAnexo {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.anexo small {
+  display: block;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+/* O chamado em que a mensagem virou. */
+.virou {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: var(--esp-1) 0 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
+.iconeDoChamado,
+.iconeDoEvento {
+  display: inline-flex;
+  flex: none;
+  color: var(--cor-info);
+}
+
+.virou a {
+  color: var(--cor-destaque-texto);
+}
+
+.numero {
+  font-family: var(--fonte-mono);
+  font-weight: var(--peso-forte);
+}
+
+/* As reações, em cápsulas, que dão e tiram a reação da conta; a dela em peso forte, com a borda do
+   destaque. */
+.reacoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: var(--esp-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reacao {
+  display: inline-block;
+  margin: 0;
+  padding: 0 var(--esp-2);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-capsula);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-normal);
+  line-height: var(--entrelinha-normal);
+}
+
+button.reacao:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+button.reacao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.reacao:is([data-minha], [aria-pressed="true"]) {
+  border-color: var(--cor-destaque);
+  font-weight: var(--peso-forte);
+}
+
+/* O evento no quadro do azul do chamado, no meio da conversa, com "Abrir chamado" ao lado (m03). */
+.evento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: center;
+  gap: var(--esp-3);
+  max-inline-size: 100%;
+  padding: var(--esp-3) var(--esp-4);
+  border: 2px solid var(--cor-info-borda);
+  border-radius: var(--raio-aviso);
+  background-color: var(--cor-info-fundo);
+  font-size: var(--texto-dado);
+}
+
+.evento p {
+  margin: 0;
+}
+
+.evento strong {
+  font-weight: var(--peso-forte);
+}
+
+/* A hora na cor do texto, como no m03: o secundário não chega a 4,5:1 sobre o azul do evento no
+   tema meia-noite. */
+.evento .horaDoEvento {
+  color: var(--cor-texto);
+}
+
+/* O número no azul do chamado, como no m03 (o rótulo de informação sobre o fundo tingido). */
+.evento .numero {
+  color: var(--cor-info);
+}
+
+.evento p a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.abrirChamado {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--altura-controle);
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-linha-forte);
+  border-radius: var(--raio-controle);
+  background-color: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.abrirChamado:hover {
+  background-image: linear-gradient(var(--cor-hover), var(--cor-hover));
+}
+
+.abrirChamado:focus-visible,
+.virou a:focus-visible,
+.evento p a:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* "Mensagens novas · 2" e "Ir para as mais novas", por cima da conversa, no pé, no meio da coluna das
+   mensagens: a margem da área que rola e metade da largura de leitura, ou da área, se for menor. */
+.aviso {
+  position: absolute;
+  inset-block-end: var(--esp-3);
+  inset-inline-start: calc(
+    var(--margem-da-conversa) +
+    min(100% - 2 * var(--margem-da-conversa), var(--largura-previa)) /
+    2
+  );
+  transform: translateX(-50%);
+  border-radius: var(--raio-controle);
+  box-shadow: var(--sombra-elevada);
+}
+
+.paraOLeitor {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* No celular, a conversa no recuo da tela, e as mensagens até a borda dele. */
+:root[data-postura="celular"] .fluxo {
+  --margem-da-conversa: var(--esp-2);
+}
+
+:root[data-postura="celular"] .rolagem {
+  padding-block: var(--esp-3);
+}

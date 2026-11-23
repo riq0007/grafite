@@ -14,7 +14,14 @@ export type Trava =
   | 'respostas-prontas'
   | 'horario-da-ti'
   | `pacote:${string}`
-  | `toner:${string}`;
+  | `toner:${string}`
+  /** O teto de 100 equipes e canais ativos do chat (change chat-com-chamados). */
+  | 'equipes-e-canais'
+  /**
+   * As reações de uma mensagem do chat, com o teto de 10 textos, e a abertura do chamado por ela,
+   * que vira um chamado só (change chat-com-chamados).
+   */
+  | `mensagem:${string}`;
 
 /** Espera a trava na organização da transação. Toda leitura que decide vem depois dela. */
 export async function travar(tx: Transacao, trava: Trava) {

@@ -15,6 +15,7 @@ import {
   ativos,
   chamados,
   contas,
+  conversas,
   mensagensDosChamados,
   modelos,
   ordensDeServico,
@@ -35,40 +36,69 @@ import {
   COMO_O_CHAMADO_TEM_A_SOLICITACAO,
   type ComoOChamadoTemASolicitacao,
   type DiaDaSemana,
+  type DiaDoCalendario,
   type EventoDaAcao,
+  type EventoDeQuemParticipa,
+  type EventoDoFechamento,
+  estaFechado,
   type Formulario,
   type HorarioDaTi,
   lerPrazoDoChamado,
   momentoLido,
   motivoDoEventoNaoGerado,
+  type NivelDaAvaliacao,
+  nivelDaAvaliacao,
   type OrigemDoChamado,
   type PrazoDoChamado,
+  participacao,
+  pode,
   podeEm,
   resumoDasRespostas,
+  resumoDosTempos,
   rotuloDoAtivo,
   type SeveridadeDoAlerta,
   type SituacaoDaOrdem,
   type SituacaoDaSolicitacao,
   type SituacaoDoChamado,
   textoDaRespostaPronta,
+  ultimoDiaParaReabrir,
   veASolicitacao,
   veOChamado,
 } from '@grafite/domain';
 import { and, asc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { carregarGrupos } from '../acesso/acesso.ts';
+import {
+  type ArquivoComMiniatura,
+  type MiniaturaDoAnexo,
+  miniaturaDe,
+} from '../arquivos/anexos-sem-dono.ts';
+import { conversasParaParticipar } from '../chat/conversa.ts';
 import { CAPACIDADE_DOS_CONSUMIVEIS } from '../consumiveis/compativeis.ts';
 import { chamadoNaoEncontrado } from './alcance.ts';
+import { type CartaoDoAtivo, cartaoLido } from './cartao.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { lerContaQueAtende } from './quem-atende.ts';
+import { contasQueParticipam } from './quem-participa.ts';
 import { type ResumoDoAtivo, resumoDoAtivo } from './resumo-do-ativo.ts';
 
-/** Os códigos que esta versão grava na conversa: a abertura e os eventos das ações do domínio. */
-type EventoGravado = 'abertura' | EventoDaAcao['evento'];
+/**
+ * Os códigos que esta versão grava na conversa: a abertura, os eventos das ações do domínio, os de
+ * quem participa pelo chat (chat-com-chamados, tarefa 3.10) e o do fechamento (3.11).
+ */
+type EventoGravado =
+  | 'abertura'
+  | EventoDaAcao['evento']
+  | EventoDeQuemParticipa['evento']
+  | EventoDoFechamento['evento'];
+
+/** A escolha, que a ficha lê na própria pergunta, e não como um evento da conversa. */
+const EVENTOS_NA_PERGUNTA = ['escolheu'] as const;
 
 /**
  * Os eventos que a ficha lê (decisão 8): a abertura, as ações do atendimento, a troca do ativo, o
  * Virar OS (4.16) e a solicitação, pelo "Pedir toner" (4.17) e pelo tipo na abertura, gerada ou não
- * (4.18).
+ * (4.18); a avaliação de quem participa (chat-com-chamados, 3.10); e o fechamento, sem autor (3.11).
  */
 export const EVENTOS_DA_FICHA = [
   'abertura',
@@ -84,6 +114,8 @@ export const EVENTOS_DA_FICHA = [
   'os',
   'solicitacao',
   'solicitacao-nao-gerada',
+  'avaliou',
+  'fechou',
 ] as const satisfies readonly EventoGravado[];
 export type EventoDaFicha = (typeof EVENTOS_DA_FICHA)[number];
 
@@ -94,7 +126,78 @@ type SemNenhum<Sobra extends never> = Sobra;
  * O guarda dos eventos: o código que o domínio grava e a ficha não lê reprova o typecheck aqui, em
  * vez de sumir da conversa em silêncio, como o código desconhecido de uma versão mais nova.
  */
-export type EventosForaDaFicha = SemNenhum<Exclude<EventoGravado, EventoDaFicha>>;
+export type EventosForaDaFicha = SemNenhum<
+  Exclude<EventoGravado, EventoDaFicha | (typeof EVENTOS_NA_PERGUNTA)[number]>
+>;
+
+/** O dia como "2026-11-18", para o "Reabrir até" e o "O chamado fechou em". */
+export const textoDoDia = ({ ano, mes, dia }: DiaDoCalendario) =>
+  `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+
+/** Um texto dos dados da linha da conversa; o que não é texto vem nulo. */
+export const dadoDeTexto = (dados: Record<string, unknown> | null, chave: string) => {
+  const valor = dados?.[chave];
+  return typeof valor === 'string' ? valor : null;
+};
+
+/** O resumo dos tempos de uma resolução, em ISO 8601, como a ficha e o chat o mostram. */
+export interface ResumoDaResolucao {
+  abertoEm: string;
+  primeiraResposta: { em: string; tempo: string } | null;
+  resolvido: { em: string; tempo: string };
+  atendeu: string;
+}
+
+/**
+ * O resumo dos tempos de uma resolução (design, decisão 15, "O resumo dos tempos"): a primeira
+ * resposta é a primeira mensagem da TI na conversa, também o "O que foi feito", e cada resolvido tem
+ * o seu, com a hora e quem atendeu do próprio evento.
+ */
+export function resumoDaResolucao(
+  abertoEm: Date,
+  linhas: readonly { especie: string; autorConta: string | null; criadaEm: Date }[],
+  resolveu: { criadaEm: Date; atendeu: string },
+): ResumoDaResolucao {
+  const primeira = linhas.find(
+    ({ especie, autorConta }) => especie === 'mensagem' && autorConta !== null,
+  );
+  const tempos = resumoDosTempos({
+    abertoEm,
+    primeiraRespostaEm: primeira?.criadaEm ?? null,
+    resolvidoEm: resolveu.criadaEm,
+    atendeu: resolveu.atendeu,
+  });
+  return {
+    abertoEm: tempos.abertoEm.toISOString(),
+    primeiraResposta: tempos.primeiraResposta && {
+      em: tempos.primeiraResposta.em.toISOString(),
+      tempo: tempos.primeiraResposta.tempo,
+    },
+    resolvido: { em: tempos.resolvido.em.toISOString(), tempo: tempos.resolvido.tempo },
+    atendeu: tempos.atendeu,
+  };
+}
+
+/**
+ * As escolhas de cada pergunta, pelo id da mensagem em minúsculas, como o banco o devolve: a
+ * primeira vence (o índice único do `escolheu`).
+ */
+export function escolhasDasPerguntas<
+  Linha extends {
+    evento: string | null;
+    dados: Record<string, unknown> | null;
+  },
+>(linhas: readonly Linha[]): Map<string, { opcao: string; linha: Linha }> {
+  const escolhas = new Map<string, { opcao: string; linha: Linha }>();
+  for (const linha of linhas) {
+    if (linha.evento !== 'escolheu') continue;
+    const mensagem = dadoDeTexto(linha.dados, 'mensagem')?.toLowerCase() ?? null;
+    const opcao = dadoDeTexto(linha.dados, 'opcao');
+    if (mensagem === null || opcao === null || escolhas.has(mensagem)) continue;
+    escolhas.set(mensagem, { opcao, linha });
+  }
+  return escolhas;
+}
 
 /** O número da OS do evento `os`; o ilegível vem nulo, como a conta sem o nome. */
 const osDoEvento = (dados: Record<string, unknown> | null) =>
@@ -124,6 +227,8 @@ export interface AnexoNaFicha {
   nome: string;
   tipo: string;
   bytes: number;
+  /** As dimensões da miniatura da imagem; nula no anexo sem ela (change chat-com-chamados, 4.20). */
+  miniatura: MiniaturaDoAnexo | null;
 }
 
 /** Quem escreveu ou agiu: uma conta, ou a pessoa que pediu, com o nome de agora. */
@@ -152,14 +257,22 @@ export type ItemDaConversa =
       id: string;
       em: string;
       autor: AutorNaFicha;
-      texto: string;
+      /** O texto, nulo na mensagem e na nota só com os anexos. */
+      texto: string | null;
       anexos: AnexoNaFicha[];
+      /** As opções da pergunta da TI; nulas na mensagem sem pergunta e na nota. */
+      opcoes: string[] | null;
+      /** A opção escolhida, com quem a escolheu e quando; nula sem resposta. */
+      escolhida: { opcao: string; por: string; em: string } | null;
+      /** O retrato do ativo, como foi mandado, com o "Abrir a ficha" a quem vê o ativo agora. */
+      cartao: (CartaoDoAtivo & { abrir: boolean }) | null;
     }
   | {
       especie: 'evento';
       id: string;
       em: string;
-      autor: AutorNaFicha;
+      /** Quem agiu; nulo no `fechou`, que ninguém faz. */
+      autor: AutorNaFicha | null;
       evento: EventoDaFicha;
       de: ContaNaFicha | null;
       para: ContaNaFicha | null;
@@ -173,6 +286,10 @@ export type ItemDaConversa =
       solicitacao: { numero: number; como: ComoOChamadoTemASolicitacao } | null;
       /** No `solicitacao-nao-gerada`, o motivo escrito na abertura; nulo nos outros. */
       motivo: string | null;
+      /** No `avaliou`, o nível e o comentário; nulo nos outros. */
+      avaliacao: { nivel: NivelDaAvaliacao; comentario: string | null } | null;
+      /** No `resolveu`, o resumo dos tempos dessa resolução; nulo nos outros. */
+      resumo: ResumoDaResolucao | null;
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
@@ -182,7 +299,24 @@ export interface FichaDoChamado {
   situacao: SituacaoDoChamado;
   versao: number;
   origem: OrigemDoChamado;
+  /**
+   * Na origem `chat`, a conversa de onde o chamado foi aberto, pelo nome de agora, e a mensagem
+   * citada, como ficou na abertura; o "Abrir a conversa" só a quem participa dela agora.
+   */
+  origemNoChat: {
+    conversa: { tipo: 'direta' | 'equipe' | 'canal'; nome: string };
+    autor: string;
+    /** O texto, nulo na mensagem citada só com os anexos. */
+    texto: string | null;
+    em: string;
+    anexos: AnexoNaFicha[];
+    abrir: { conversa: string; mensagem: string } | null;
+  } | null;
   abertoEm: string;
+  /** O resolvido que não se reabre mais: o que a tarefa fechou e o vencido que ela não fechou. */
+  fechado: boolean;
+  /** No resolvido, o último dia em que ele se reabre, como "2026-11-18", no fuso da TI. */
+  reabrirAte: string | null;
   /** O tipo, com o `podeVirarOs`, que a tela pede para mostrar o "Virar OS" (revisão da 5.31). */
   tipo: { id: string; nome: string; icone: string; podeVirarOs: boolean };
   pessoa: {
@@ -191,6 +325,8 @@ export interface FichaDoChamado {
     local: string | null;
     abrir: boolean;
     contatos: { email: string | null; telefone: string | null } | null;
+    /** A conta da pessoa usa o chat, com o módulo ligado: a mensagem chega a ela. */
+    usaOChat: boolean;
   };
   responsavel: { conta: string; nome: string; desde: string; naoAtendeMais: boolean } | null;
   ativo: {
@@ -235,14 +371,23 @@ export interface FichaDoChamado {
   anexosDosCampos: (AnexoNaFicha & { campo: string })[];
   resumo: string;
   conversa: ItemDaConversa[];
-  respostasProntas: { id: string; rotulo: string; texto: string; esperaAResposta: boolean }[];
+  respostasProntas: {
+    id: string;
+    rotulo: string;
+    texto: string;
+    esperaAResposta: boolean;
+    opcoes: string[];
+  }[];
 }
 
 const caminhoDo = (arvore: ArvoreDeLocais, localId: string | null) =>
   localId === null ? null : arvore.caminho(localId);
 
-/** Os ids que as respostas citam, de todos os campos, na ordem do formulário: a TI vê os só dela. */
-function citadosPelasRespostas(
+/**
+ * Os ids que as respostas citam, dos campos dados, na ordem do formulário: a TI vê os só dela, e a
+ * leitura de quem participa passa o formulário sem eles (`chat/chamados-de-quem-participa.ts`).
+ */
+export function citadosPelasRespostas(
   formulario: Formulario,
   respostas: Readonly<Record<string, unknown>>,
 ) {
@@ -348,23 +493,89 @@ async function tipoDoLigado(tx: Transacao, ativoId: string) {
 }
 
 /** O anexo como a ficha o mostra; o do chamado sempre tem o nome, que o envio dá. */
-const anexoNaFicha = (arquivo: {
-  id: string;
-  nome: string | null;
-  tipo: string;
-  bytes: number;
-}): AnexoNaFicha => ({
+export const anexoNaFicha = (
+  arquivo: { id: string; nome: string | null; tipo: string; bytes: number } & ArquivoComMiniatura,
+): AnexoNaFicha => ({
   id: arquivo.id,
   nome: arquivo.nome ?? 'arquivo',
   tipo: arquivo.tipo,
   bytes: arquivo.bytes,
+  miniatura: miniaturaDe(arquivo),
 });
+
+/**
+ * A origem pelo chat (spec modulo-chamados, "Conversa com a pessoa no chamado aberto"): a conversa,
+ * pelo nome de agora, ou, na direta, quem escreveu e com quem; a mensagem citada, como a abertura a
+ * copiou; e o "Abrir a conversa", só a quem usa o chat e participa dela agora.
+ */
+async function origemNaFicha(
+  tx: Transacao,
+  chamado: { origemConversaId: string | null; origemMensagemId: string | null },
+  linha:
+    | {
+        autorConta: string | null;
+        texto: string | null;
+        dados: Record<string, unknown> | null;
+        criadaEm: Date;
+      }
+    | undefined,
+  {
+    contaId,
+    acesso,
+    ligado,
+    anexos,
+    nomeDaConta,
+  }: {
+    contaId: string;
+    acesso: Acesso;
+    ligado: (modulo: string) => boolean;
+    anexos: AnexoNaFicha[];
+    nomeDaConta: ReadonlyMap<string, string>;
+  },
+): Promise<FichaDoChamado['origemNoChat']> {
+  if (!linha || chamado.origemConversaId === null) return null;
+  const [lida] = await tx
+    .select()
+    .from(conversas)
+    .where(eq(conversas.id, chamado.origemConversaId));
+  const montada = lida ? (await conversasParaParticipar(tx, [lida])).get(lida.id) : undefined;
+  const autor = nomeDaConta.get(linha.autorConta ?? '') ?? '';
+  let nome = lida?.nome ?? '';
+  if (lida?.tipo === 'direta') {
+    const outra = lida.contaA === linha.autorConta ? lida.contaB : lida.contaA;
+    nome = `${autor} com ${montada?.contas.get(outra ?? '')?.nome ?? ''}`;
+  }
+  const participa =
+    montada !== undefined &&
+    ligado('chat') &&
+    pode(acesso, 'chat.usar') &&
+    participacao(
+      { id: contaId, usaOChat: true, grupos: await carregarGrupos(tx, contaId) },
+      montada.conversa,
+    ).participa;
+  return {
+    conversa: { tipo: lida?.tipo ?? 'equipe', nome },
+    autor,
+    texto: linha.texto,
+    em: dadoDeTexto(linha.dados, 'em') ?? linha.criadaEm.toISOString(),
+    anexos,
+    abrir:
+      participa && chamado.origemMensagemId !== null
+        ? { conversa: chamado.origemConversaId, mensagem: chamado.origemMensagemId }
+        : null,
+  };
+}
 
 /** A ficha do chamado pelo número, a quem o vê; o que a conta não vê responde como o que não existe. */
 export async function fichaDoChamado(
   tx: Transacao,
   numero: number,
-  { acesso, arvore, agora }: { acesso: Acesso; arvore: ArvoreDeLocais; agora: Date },
+  {
+    acesso,
+    arvore,
+    agora,
+    contaId,
+  }: { acesso: Acesso; arvore: ArvoreDeLocais; agora: Date; contaId: string },
 ): Promise<FichaDoChamado> {
   const [lida] = await tx
     .select({
@@ -411,11 +622,19 @@ export async function fichaDoChamado(
       texto: mensagensDosChamados.texto,
       evento: mensagensDosChamados.evento,
       dados: mensagensDosChamados.dados,
+      opcoes: mensagensDosChamados.opcoes,
+      cartao: mensagensDosChamados.cartao,
       criadaEm: mensagensDosChamados.criadaEm,
     })
     .from(mensagensDosChamados)
     .where(eq(mensagensDosChamados.chamadoId, chamado.id))
     .orderBy(asc(mensagensDosChamados.criadaEm), asc(mensagensDosChamados.id));
+  const cartaoDa = new Map(
+    conversaLida.flatMap((linha) => {
+      const cartao = cartaoLido(linha.cartao);
+      return cartao ? [[linha.id, cartao] as const] : [];
+    }),
+  );
   /** O id dos dados do evento: a conta do `de` e do `para`, ou o ativo do `antes` e do `depois`. */
   const doEvento = (
     dados: Record<string, unknown> | null,
@@ -430,8 +649,10 @@ export async function fichaDoChamado(
   const idsDasPessoas = new Set(citados.pessoa);
   const idsDosAtivos = new Set(chamado.ativoId === null ? [] : [chamado.ativoId]);
   for (const id of citados.ativo) idsDosAtivos.add(id);
+  for (const { ativo } of cartaoDa.values()) idsDosAtivos.add(ativo);
   for (const linha of conversaLida) {
-    if (linha.especie === 'evento' && !eventoLido(linha.evento)) continue;
+    const naPergunta = linha.evento === 'escolheu';
+    if (linha.especie === 'evento' && !eventoLido(linha.evento) && !naPergunta) continue;
     if (linha.autorConta !== null) idsDasContas.add(linha.autorConta);
     if (linha.autorPessoa !== null) idsDasPessoas.add(linha.autorPessoa);
     for (const chave of ['de', 'para'] as const) {
@@ -473,6 +694,9 @@ export async function fichaDoChamado(
       nome: arquivos.nome,
       tipo: arquivos.tipo,
       bytes: arquivos.bytes,
+      variantes: arquivos.variantes,
+      largura: arquivos.largura,
+      altura: arquivos.altura,
       mensagemId: anexosDosChamados.mensagemId,
     })
     .from(anexosDosChamados)
@@ -502,18 +726,31 @@ export async function fichaDoChamado(
     }
   }
 
+  const escolhas = escolhasDasPerguntas(conversaLida);
+  const veOAtivo = (id: string) =>
+    ligado('ativos') && podeEm(acesso, 'ativos.ver', ativoDe.get(id)?.localId ?? null, arvore);
+  /** O cartão como foi mandado, com o "Abrir a ficha" a quem vê o ativo agora. */
+  const cartaoNaFicha = (id: string) => {
+    const cartao = cartaoDa.get(id);
+    return cartao
+      ? { ...cartao, abrir: ativoDe.has(cartao.ativo) && veOAtivo(cartao.ativo) }
+      : null;
+  };
+
+  let origemDaLinha: (typeof conversaLida)[number] | undefined;
   const conversa: { item: ItemDaConversa; momento: Date }[] = [];
   for (const linha of conversaLida) {
     const em = linha.criadaEm.toISOString();
     if (linha.especie === 'evento') {
       if (!eventoLido(linha.evento)) continue;
+      const nivel = linha.evento === 'avaliou' ? nivelDaAvaliacao(linha.dados?.nivel) : null;
       conversa.push({
         momento: linha.criadaEm,
         item: {
           especie: 'evento',
           id: linha.id,
           em,
-          autor: autor(linha),
+          autor: linha.autorConta === null && linha.autorPessoa === null ? null : autor(linha),
           evento: linha.evento,
           de: contaNoEvento(doEvento(linha.dados, 'de')),
           para: contaNoEvento(doEvento(linha.dados, 'para')),
@@ -531,10 +768,24 @@ export async function fichaDoChamado(
             linha.evento === 'solicitacao-nao-gerada'
               ? motivoDoEventoNaoGerado(linha.dados, pessoa.nome)
               : null,
+          avaliacao: nivel && { nivel, comentario: dadoDeTexto(linha.dados, 'comentario') },
+          resumo:
+            linha.evento === 'resolveu'
+              ? resumoDaResolucao(chamado.abertoEm, conversaLida, {
+                  criadaEm: linha.criadaEm,
+                  atendeu: autor(linha).nome,
+                })
+              : null,
         },
       });
       continue;
     }
+    // A cópia da mensagem de origem do chat vem à parte, no `origemNoChat`.
+    if (linha.especie === 'origem') {
+      origemDaLinha = linha;
+      continue;
+    }
+    const escolha = escolhas.get(linha.id.toLowerCase());
     conversa.push({
       momento: linha.criadaEm,
       item: {
@@ -542,8 +793,17 @@ export async function fichaDoChamado(
         id: linha.id,
         em,
         autor: autor(linha),
-        texto: linha.texto ?? '',
+        texto: linha.texto,
         anexos: anexosDaMensagem.get(linha.id) ?? [],
+        opcoes: linha.opcoes,
+        escolhida: escolha
+          ? {
+              opcao: escolha.opcao,
+              por: nomeDaConta.get(escolha.linha.autorConta ?? '') ?? '',
+              em: escolha.linha.criadaEm.toISOString(),
+            }
+          : null,
+        cartao: cartaoNaFicha(linha.id),
       },
     });
   }
@@ -655,6 +915,7 @@ export async function fichaDoChamado(
       rotulo: respostasProntas.rotulo,
       texto: respostasProntas.texto,
       esperaAResposta: respostasProntas.esperaAResposta,
+      opcoes: respostasProntas.opcoes,
     })
     .from(respostasProntas)
     .where(
@@ -679,13 +940,30 @@ export async function fichaDoChamado(
   const anonimizada = pessoa.situacao === 'anonimizada';
   const vePessoa = !anonimizada && podeEm(acesso, 'pessoas.ver', pessoa.localId, arvore);
   const caminhos = new Map([...citados.local].map((id) => [id, arvore.caminho(id)]));
+  const origemNoChat = await origemNaFicha(tx, chamado, origemDaLinha, {
+    contaId,
+    acesso,
+    ligado,
+    anexos: origemDaLinha ? (anexosDaMensagem.get(origemDaLinha.id) ?? []) : [],
+    nomeDaConta,
+  });
+  // A pessoa usa o chat pela conta dela, como quem participa do chamado da origem 'ti'.
+  const usaOChat =
+    (await contasQueParticipam(tx, { pessoaId: pessoa.id, origem: 'ti', abertoPor: null })).length >
+    0;
   return {
     numero: chamado.numero,
     titulo: chamado.titulo,
     situacao: chamado.situacao,
     versao: chamado.versao,
     origem: chamado.origem,
+    origemNoChat,
     abertoEm: chamado.abertoEm.toISOString(),
+    fechado: estaFechado(chamado, agora, horario.fuso),
+    reabrirAte:
+      chamado.situacao === 'resolvido' && chamado.resolvidoEm !== null
+        ? textoDoDia(ultimoDiaParaReabrir(chamado.resolvidoEm, horario.fuso))
+        : null,
     tipo,
     pessoa: {
       id: pessoa.id,
@@ -693,6 +971,7 @@ export async function fichaDoChamado(
       local: caminhoDo(arvore, pessoa.localId),
       abrir: vePessoa,
       contatos: vePessoa ? { email: pessoa.email, telefone: pessoa.telefone } : null,
+      usaOChat,
     },
     responsavel,
     ativo: ligadoAoChamado

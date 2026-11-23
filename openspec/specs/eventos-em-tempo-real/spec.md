@@ -45,10 +45,11 @@ Os tipos de evento SHALL ser:
 | `solicitacoes.mudaram` | uma solicitação foi registrada, alterada, pedida ao fornecedor, entregue, concluída, cancelada ou mudou de situação | quem vê as solicitações no escopo dos locais dela, os de antes e os de depois da mudança |
 | `ordens.mudaram` | uma ordem de serviço foi aberta, teve o problema corrigido, mudou de situação, ganhou uma peça, foi resolvida, reaberta ou encerrada | quem vê as OS no escopo do local dela |
 | `metas.mudaram` | a meta de um indicador mudou, dos alertas (spec indicadores) ou da operação (spec indicadores-da-operacao) | quem vê aquele indicador: quem vê alertas, nos dos alertas; quem vê as OS, no tempo de resolução e nas OS repetidas; quem vê o estoque, nas páginas por toner |
-| `chamados.mudaram` | um chamado abriu, mudou ou ganhou uma mensagem (spec chamados) | quem vê os chamados no escopo dos locais dele, os de antes e os de depois da mudança |
+| `chamados.mudaram` | um chamado abriu, mudou, ganhou uma mensagem, uma escolha ou uma avaliação, ou fechou (spec chamados) | quem vê os chamados no escopo dos locais dele, os de antes e os de depois da mudança, e as sessões da pessoa do chamado e de quem o abriu pelo chat |
 | `ajustes-dos-chamados.mudaram` | um tipo de chamado, o formulário dele, uma resposta pronta ou o horário da TI mudou (spec chamados) | quem tem uma das permissões dos chamados, em qualquer escopo |
+| `chat.mudou` | uma conversa ganhou uma mensagem ou uma reação, uma equipe ou um canal mudou, um chamado aberto de uma mensagem dela mudou de situação ou de quem atende, ou uma conta leu ou silenciou uma conversa (spec chat) | as sessões de quem participa da conversa, antes e depois da mudança; na leitura e no silenciar, só as sessões da conta |
 
-Uma leitura que só confirma a situação de antes SHALL NOT gravar evento: a idade do dado avança sozinha na tela (spec leituras-e-estado). O último contato de um coletor também SHALL NOT gravar evento. A liberação do cofre, a revelação e a cópia de um segredo SHALL NOT gravar evento, e o evento do cofre SHALL NOT levar o valor de nenhum segredo. A avaliação dos alertas que não muda nada que a tela mostra SHALL NOT gravar evento, e o evento dos alertas SHALL NOT levar o texto do alerta. O evento das notificações SHALL NOT levar o título nem a descrição delas.
+Uma leitura que só confirma a situação de antes SHALL NOT gravar evento: a idade do dado avança sozinha na tela (spec leituras-e-estado). O último contato de um coletor também SHALL NOT gravar evento. A liberação do cofre, a revelação e a cópia de um segredo SHALL NOT gravar evento, e o evento do cofre SHALL NOT levar o valor de nenhum segredo. A avaliação dos alertas que não muda nada que a tela mostra SHALL NOT gravar evento, e o evento dos alertas SHALL NOT levar o texto do alerta. O evento das notificações SHALL NOT levar o título nem a descrição delas. O evento do chat SHALL NOT levar o texto das mensagens, as reações, os nomes nem o nome da conversa.
 
 Um tipo novo SHALL entrar nessa tabela, com quem o recebe, antes de ser gravado.
 
@@ -139,6 +140,18 @@ Um tipo novo SHALL entrar nessa tabela, com quem o recebe, antes de ser gravado.
 #### Scenario: Tipo de chamado mudado com os ajustes abertos
 - **WHEN** Ana muda o prazo do tipo Toner
 - **THEN** quem tem `chamados.ver`, em qualquer local, `chamados.atender` ou `chamados.configurar` recebe o evento `ajustes-dos-chamados.mudaram`, e quem não tem nenhuma delas não recebe
+
+#### Scenario: Mensagem na equipe
+- **WHEN** Paulo Nunes manda uma mensagem na Equipe Financeiro
+- **THEN** as sessões de quem participa da equipe recebem o evento `chat.mudou`, com o identificador da conversa, sem o texto, e as de quem não participa não recebem
+
+#### Scenario: Leitura no celular
+- **WHEN** Fernanda Rocha lê a Equipe Financeiro no celular
+- **THEN** só as sessões de Fernanda recebem o evento `chat.mudou`, e o contador some no computador dela
+
+#### Scenario: Mensagem da TI à pessoa
+- **WHEN** Ana manda uma mensagem no #1041, de Fernanda Rocha
+- **THEN** quem vê os chamados nos locais do #1041 e as sessões de Fernanda recebem o evento `chamados.mudaram`, sem o texto
 
 ### Requirement: Aviso depois do commit
 
