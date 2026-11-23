@@ -16,7 +16,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 2. Domínio
 
-- [ ] 2.1 Quem atende pelo chat (decisões 1 e 2): o `participaPelaTi` e as `acoesDoAndamento`, pela `MATRIZ_DAS_ACOES`, com:
+- [x] 2.1 Quem atende pelo chat (decisões 1 e 2): o `participaPelaTi` e as `acoesDoAndamento`, pela `MATRIZ_DAS_ACOES`, com:
   - o assumir fora do chamado que está com a conta;
   - o aguardar só na triagem e em atendimento, e nunca à pessoa;
   - o reabrir só a quem participa pela TI;

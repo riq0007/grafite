@@ -553,6 +553,15 @@ export {
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
 export {
+  ACOES_DO_ANDAMENTO,
+  type AcaoDoAndamento,
+  acoesDoAndamento,
+  atendePeloChat,
+  type ChamadoParaAtenderPeloChat,
+  type ContaQueAtendePeloChat,
+  participaPelaTi,
+} from './chat/andamento.ts';
+export {
   type CampoDaEquipeOuCanal,
   type ConferenciaDaEquipeOuCanal,
   type ContextoDaEquipeOuCanal,
