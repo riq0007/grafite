@@ -212,6 +212,29 @@ describe('Transformar em chamado', () => {
     );
   });
 
+  it('com CHAMADOS recolhido, o chamado aberto abre a seção, com ele no alto', async () => {
+    localStorage.setItem('grafite.chat.chamadosRecolhidos', 'sim');
+    const { servidor } = servidorDoTransformar();
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
+    const lista = await screen.findByRole('region', { name: 'Chat' });
+    const recolhida = await within(lista).findByRole('button', { name: 'Chamados · 2' });
+    expect(recolhida.getAttribute('aria-expanded')).toBe('false');
+    const dialogo = await abrirODialogo();
+    fireEvent.click(within(dialogo).getByRole('radio', { name: 'Impressora' }));
+    escreverOTitulo(dialogo, 'Impressora manchando');
+    await within(dialogo).findByRole('group', { name: 'Ativo sugerido' });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Abrir chamado' }));
+
+    const aberta = await within(lista).findByRole('button', {
+      name: 'Chamados · 3',
+      expanded: true,
+    });
+    const chamados = aberta.closest('h2')?.parentElement as HTMLElement;
+    expect(chamados.querySelector('a[href="/chat/chamados/1045"]')?.hasAttribute('data-novo')).toBe(
+      true,
+    );
+  });
+
   it('o tipo que não pede o ativo não mostra o ativo sugerido nem o manda', async () => {
     const { servidor, pedidos, sugestoes } = servidorDoTransformar();
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));

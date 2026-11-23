@@ -1,8 +1,9 @@
 // A lista da vista Chat (spec modulo-chat, "Lista do Chat" e "Selos e movimento do chat"; change
 // chat-com-chamados, design, decisões 5 e 15; m01 e m03): o título, com "Nova conversa", e as
 // seções: os chamados abertos da conta em CHAMADOS, no azul do chamado, com o que ela acaba de abrir
-// no alto; os resolvidos que ainda se reabrem em FECHADOS, recolhido; as equipes e os canais; e as
-// conversas diretas, em RECENTES. A conversa e o chamado do endereço ficam marcados.
+// no alto, aberto até quem o recolhe pela seta; os resolvidos que ainda se reabrem em FECHADOS,
+// recolhido; as equipes e os canais; e as conversas diretas, em RECENTES. A conversa e o chamado do
+// endereço ficam marcados.
 import { secoesDoChat } from '@grafite/domain';
 import { Avatar, Icone } from '@grafite/ui';
 import { useRouterState } from '@tanstack/react-router';
@@ -131,7 +132,71 @@ export function ListaDoChat() {
   );
 }
 
-/** CHAMADOS · N, com os abertos em cartões, ou "Nenhum chamado aberto.". */
+const CHAVE_DOS_CHAMADOS = 'grafite.chat.chamadosRecolhidos';
+
+/** CHAMADOS recolhido por quem o recolheu neste navegador; o que não se lê fica aberto. */
+function chamadosRecolhidos(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_DOS_CHAMADOS) === 'sim';
+  } catch {
+    // O armazenamento bloqueado: a seção aberta, como começa.
+    return false;
+  }
+}
+
+/** Guarda a escolha; com o armazenamento bloqueado, ela vale até a lista sair da tela. */
+function guardarChamadosRecolhidos(recolhidos: boolean): void {
+  try {
+    if (recolhidos) localStorage.setItem(CHAVE_DOS_CHAMADOS, 'sim');
+    else localStorage.removeItem(CHAVE_DOS_CHAMADOS);
+  } catch {
+    // Navegação privada ou armazenamento bloqueado: a escolha fica só na lista aberta.
+  }
+}
+
+/** O número, quando ele é um dos chamados da seção. */
+const naSecao = (chamados: readonly ChamadoNaLista[], numero: number | null) =>
+  numero !== null && chamados.some((chamado) => chamado.numero === numero) ? numero : null;
+
+/** O título que abre e fecha a seção: o botão com a seta que gira, e a boia no de CHAMADOS. */
+function TituloQueRecolhe({
+  aberta,
+  itens,
+  alternar,
+  chamado = false,
+  children,
+}: {
+  aberta: boolean;
+  itens: string;
+  alternar: () => void;
+  chamado?: boolean;
+  children: string;
+}) {
+  return (
+    <h2 className={estilos.tituloDaSecao} data-tom={chamado ? 'chamado' : undefined}>
+      <button
+        type="button"
+        className={estilos.recolher}
+        aria-expanded={aberta}
+        aria-controls={aberta ? itens : undefined}
+        onClick={alternar}
+      >
+        <span className={estilos.seta}>
+          <Icone icone={ChevronRight} tamanho={14} />
+        </span>
+        {chamado && <Icone icone={LifeBuoy} tamanho={14} />}
+        {children}
+      </button>
+    </h2>
+  );
+}
+
+/**
+ * CHAMADOS · N, com os abertos em cartões, ou "Nenhum chamado aberto.". A seção começa aberta e se
+ * recolhe pela seta, com a escolha guardada no navegador. Ela abre sozinha quando o chamado do
+ * endereço ou o que a conta acaba de abrir é um dos dela, e quem a recolhe depois a recolhe, até
+ * outro chegar.
+ */
 function SecaoDosChamados({
   chamados,
   novo,
@@ -141,26 +206,54 @@ function SecaoDosChamados({
   novo: number | null;
   escolhido: number | null;
 }) {
+  const idDosItens = useId();
+  const doEscolhido = naSecao(chamados, escolhido);
+  const doNovo = naSecao(chamados, novo);
+  const [aberta, definirAberta] = useState(
+    () => doEscolhido !== null || doNovo !== null || !chamadosRecolhidos(),
+  );
+  const [vistos, definirVistos] = useState({ escolhido: doEscolhido, novo: doNovo });
+  // A seção que abre depois de a lista estar na tela entra como as que abrem; a que já começa aberta,
+  // não.
+  const [mudou, definirMudou] = useState(false);
+  if (doEscolhido !== vistos.escolhido || doNovo !== vistos.novo) {
+    const chegou =
+      (doEscolhido !== null && doEscolhido !== vistos.escolhido) ||
+      (doNovo !== null && doNovo !== vistos.novo);
+    definirVistos({ escolhido: doEscolhido, novo: doNovo });
+    if (chegou && !aberta) {
+      definirAberta(true);
+      definirMudou(true);
+    }
+  }
+  const alternar = () => {
+    guardarChamadosRecolhidos(aberta);
+    definirAberta(!aberta);
+    definirMudou(true);
+  };
+  const entrada = mudou ? ` ${estilos.abrindo}` : '';
   return (
     <div className={estilos.secao}>
-      <h2 className={estilos.tituloDaSecao} data-tom="chamado">
-        <Icone icone={LifeBuoy} tamanho={14} />
+      <TituloQueRecolhe aberta={aberta} itens={idDosItens} alternar={alternar} chamado>
         {`Chamados · ${chamados.length}`}
-      </h2>
-      {chamados.length === 0 ? (
-        <p className={estilos.nenhum}>Nenhum chamado aberto.</p>
-      ) : (
-        <ul className={estilos.itens}>
-          {chamados.map((chamado) => (
-            <CartaoDoChamado
-              key={chamado.numero}
-              chamado={chamado}
-              novo={chamado.numero === novo}
-              escolhido={chamado.numero === escolhido}
-            />
-          ))}
-        </ul>
-      )}
+      </TituloQueRecolhe>
+      {aberta &&
+        (chamados.length === 0 ? (
+          <p id={idDosItens} className={`${estilos.nenhum}${entrada}`}>
+            Nenhum chamado aberto.
+          </p>
+        ) : (
+          <ul id={idDosItens} className={`${estilos.itens}${entrada}`}>
+            {chamados.map((chamado) => (
+              <CartaoDoChamado
+                key={chamado.numero}
+                chamado={chamado}
+                novo={chamado.numero === novo}
+                escolhido={chamado.numero === escolhido}
+              />
+            ))}
+          </ul>
+        ))}
     </div>
   );
 }
@@ -178,8 +271,7 @@ function SecaoDosFechados({
 }) {
   const idDosItens = useId();
   const [aberta, definirAberta] = useState(false);
-  const doEscolhido =
-    escolhido !== null && chamados.some(({ numero }) => numero === escolhido) ? escolhido : null;
+  const doEscolhido = naSecao(chamados, escolhido);
   const [abertaPor, definirAbertaPor] = useState<number | null>(null);
   if (doEscolhido !== abertaPor) {
     definirAbertaPor(doEscolhido);
@@ -187,18 +279,9 @@ function SecaoDosFechados({
   }
   return (
     <div className={estilos.secao}>
-      <h2 className={estilos.tituloDaSecao}>
-        <button
-          type="button"
-          className={estilos.recolher}
-          aria-expanded={aberta}
-          aria-controls={aberta ? idDosItens : undefined}
-          onClick={() => definirAberta(!aberta)}
-        >
-          <Icone icone={ChevronRight} tamanho={14} />
-          {`Fechados · ${chamados.length}`}
-        </button>
-      </h2>
+      <TituloQueRecolhe aberta={aberta} itens={idDosItens} alternar={() => definirAberta(!aberta)}>
+        {`Fechados · ${chamados.length}`}
+      </TituloQueRecolhe>
       {aberta && (
         <ul id={idDosItens} className={`${estilos.itens} ${estilos.abrindo}`}>
           {chamados.map((chamado) => (

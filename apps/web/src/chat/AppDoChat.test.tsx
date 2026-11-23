@@ -513,6 +513,47 @@ describe('a trilha e a lista do Chat', () => {
     expect(within(lista).queryByText('Instalar o Excel')).toBeNull();
   });
 
+  it('CHAMADOS se recolhe pela seta, continua recolhido na volta e abre sozinho com o chamado escolhido', async () => {
+    const roteador = abrir('/chat', comOChat(DA_ANA));
+    const lista = await listaDoChat();
+    const chamados = await within(lista).findByRole('button', { name: 'Chamados · 3' });
+    expect(chamados.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(chamados);
+    expect(chamados.getAttribute('aria-expanded')).toBe('false');
+    expect(within(lista).queryByText('Trocar o mouse')).toBeNull();
+    expect(lista.querySelector('a[href^="/chat/chamados/"]')).toBeNull();
+
+    // Na volta à lista, a escolha guardada no navegador: recolhido, com as outras seções embaixo.
+    const lugar = await trilha();
+    fireEvent.click(within(lugar).getByRole('link', { name: 'Equipes' }));
+    await screen.findByRole('heading', { level: 1, name: 'Equipes' });
+    fireEvent.click(within(lugar).getByRole('link', { name: 'Chat' }));
+    const deNovo = await listaDoChat();
+    const recolhido = await within(deNovo).findByRole('button', { name: 'Chamados · 3' });
+    expect(recolhido.getAttribute('aria-expanded')).toBe('false');
+    await within(deNovo).findByRole('heading', { level: 2, name: 'Recentes' });
+    expect(titulosDasSecoes(deNovo)).toEqual([
+      'Chamados · 3',
+      'Fechados · 1',
+      'Equipes e canais',
+      'Recentes',
+    ]);
+
+    // O #1041 escolhido, como pelo evento de uma conversa, abre a seção, com ele marcado.
+    await act(() => roteador.navigate({ href: '/chat/chamados/1041' }));
+    await waitFor(() => expect(recolhido.getAttribute('aria-expanded')).toBe('true'));
+    expect(cartaoDoChamado(secao(deNovo, 'Chamados · 3'), 1041).getAttribute('aria-current')).toBe(
+      'page',
+    );
+    // Quem a recolhe de novo a recolhe, e abri-la tira a escolha do navegador.
+    fireEvent.click(recolhido);
+    expect(recolhido.getAttribute('aria-expanded')).toBe('false');
+    expect(localStorage.getItem('grafite.chat.chamadosRecolhidos')).toBe('sim');
+    fireEvent.click(recolhido);
+    expect(recolhido.getAttribute('aria-expanded')).toBe('true');
+    expect(localStorage.getItem('grafite.chat.chamadosRecolhidos')).toBeNull();
+  });
+
   it.each([
     ['a conversa', `/chat/c/${CONVERSA_DA_BRUNA}`, `/chat/c/${CONVERSA_DA_BRUNA}`],
     [

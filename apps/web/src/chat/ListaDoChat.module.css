@@ -52,7 +52,7 @@
   color: var(--cor-info);
 }
 
-/* FECHADOS: o título é o botão que abre e fecha a seção, com a seta que gira. */
+/* CHAMADOS e FECHADOS: o título é o botão que abre e fecha a seção, com a seta que gira. */
 .recolher {
   display: inline-flex;
   align-items: center;
@@ -79,11 +79,13 @@
   outline: 2px solid var(--cor-foco);
 }
 
-.recolher svg {
+/* Só a seta gira; a boia de CHAMADOS fica parada. */
+.seta {
+  display: inline-flex;
   transition: rotate var(--dur-deslocamento) var(--curva-padrao);
 }
 
-.recolher[aria-expanded="true"] svg {
+.recolher[aria-expanded="true"] .seta {
   rotate: 90deg;
 }
 
@@ -227,8 +229,8 @@
   color: var(--cor-texto-2);
 }
 
-/* No toque, as linhas, os chamados, "Fechados" e "Nova conversa" no alvo de 44 px (spec
-   modulo-chat, "Chat no celular"). */
+/* No toque, as linhas, os chamados, os títulos de CHAMADOS e FECHADOS e "Nova conversa" no alvo de
+   44 px (spec modulo-chat, "Chat no celular"). */
 :root:is([data-postura="tablet"], [data-postura="celular"]) .conversa,
 :root:is([data-postura="tablet"], [data-postura="celular"]) .chamado,
 :root:is([data-postura="tablet"], [data-postura="celular"]) .recolher {
