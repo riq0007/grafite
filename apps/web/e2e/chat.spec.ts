@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { EQUIPE, simularChat, simularSessaoDaColaboradora } from './api-do-chat.ts';
+import { CANAL, EQUIPE, simularChat, simularSessaoDaColaboradora } from './api-do-chat.ts';
 import { expect, test } from './fixtures.ts';
 
 // Specs modulo-chat e componentes-base, com a web compilada e a API do chat simulada (change
@@ -46,14 +46,16 @@ async function botaoDireito(pagina: Page, alvo: Locator) {
 
 /**
  * Anota, a cada `contextmenu` que chega à janela, se o navegador abriria o menu dele: o evento que
- * ninguém preveniu. O ouvinte da janela, na bolha, vem depois dos da tela.
+ * ninguém preveniu. A anotação vai depois do despacho inteiro, porque o kit também ouve na bolha da
+ * janela e só liga o ouvinte dele quando o primeiro painel abre, depois deste. Lida com o
+ * `expect.poll`.
  */
 async function ouvirOMenuDoNavegador(pagina: Page) {
   await pagina.evaluate(() => {
     const janela = window as Window & { menusDoNavegador?: boolean[] };
     janela.menusDoNavegador = [];
     window.addEventListener('contextmenu', (evento) => {
-      janela.menusDoNavegador?.push(!evento.defaultPrevented);
+      setTimeout(() => janela.menusDoNavegador?.push(!evento.defaultPrevented));
     });
   });
   return () =>
@@ -68,6 +70,50 @@ async function abriuNoPonto(menu: Locator, ponto: { x: number; y: number }) {
   expect(caixaDoMenu).not.toBeNull();
   expect(Math.abs((caixaDoMenu?.x ?? 0) - ponto.x)).toBeLessThan(16);
   expect(Math.abs((caixaDoMenu?.y ?? 0) - ponto.y)).toBeLessThan(16);
+}
+
+/**
+ * Um passo do arrasto de um arquivo do computador sobre o elemento, como o do navegador: com a
+ * entrada dele no sistema de arquivos, que o React Aria lê para separar os arquivos das pastas, e
+ * permitindo copiar. Devolve se o evento foi prevenido e o efeito que a página escolheu.
+ */
+function arrastarArquivo(alvo: Locator, tipo: 'dragenter' | 'dragover' | 'drop') {
+  return alvo.evaluate((elemento, tipoDoEvento) => {
+    const arquivo = new File(['%PDF-1.7'], 'fechamento-de-outubro.pdf', {
+      type: 'application/pdf',
+    });
+    const dados = new DataTransfer();
+    dados.items.add(arquivo);
+    Object.defineProperty(dados, 'items', {
+      value: [
+        {
+          kind: 'file',
+          type: arquivo.type,
+          getAsFile: () => arquivo,
+          webkitGetAsEntry: () => ({ isFile: true, isDirectory: false }),
+        },
+      ],
+    });
+    Object.defineProperty(dados, 'effectAllowed', { value: 'all' });
+    // Fora de um arrasto de verdade, o Chromium ignora o efeito que a página escreve: guardado aqui.
+    let efeito = 'none';
+    Object.defineProperty(dados, 'dropEffect', {
+      get: () => efeito,
+      set: (valor: string) => {
+        efeito = valor;
+      },
+    });
+    const { left, top, width, height } = elemento.getBoundingClientRect();
+    const evento = new DragEvent(tipoDoEvento, {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: dados,
+      clientX: left + width / 2,
+      clientY: top + height / 2,
+    });
+    elemento.dispatchEvent(evento);
+    return { prevenido: evento.defaultPrevented, efeito };
+  }, tipo);
 }
 
 test.describe('a entrada da colaboradora', () => {
@@ -138,14 +184,19 @@ test.describe('na conversa aberta', () => {
   // O app do chat não tem a chegada da casca: a espera dela ficaria para sempre.
   test.use({ esperarAChegada: false });
 
+  let faltam: string[] = [];
   test.beforeEach(async ({ page }) => {
+    faltam = naoSimulados(page);
     await simularSessaoDaColaboradora(page);
+  });
+  // Nenhum pedido caiu no 501 da fixture, em nenhum teste daqui.
+  test.afterEach(() => {
+    expect(faltam).toEqual([]);
   });
 
   test('o botão direito abre o menu da mensagem no ponteiro, e em outra mensagem, o dela', async ({
     page,
   }) => {
-    const faltam = naoSimulados(page);
     await simularChat(page);
     await page.goto(`/chat/c/${EQUIPE}`);
     const paulo = mensagem(page, 'manchando todas as folhas');
@@ -171,11 +222,10 @@ test.describe('na conversa aberta', () => {
     await expect(tatiana.locator('[data-presa]')).toHaveCount(1);
     await expect(paulo.locator('[data-presa]')).toHaveCount(0);
     // Nenhum dos dois cliques abriu o menu do navegador.
-    expect(await menusDoNavegador()).toEqual([false, false]);
+    await expect.poll(menusDoNavegador).toEqual([false, false]);
 
     await page.keyboard.press('Escape');
     await expect(daTatiana).toHaveCount(0);
-    expect(faltam).toEqual([]);
   });
 
   test('"Responder" no menu do botão direito deixa o foco na caixa, com a mensagem respondida', async ({
@@ -210,14 +260,13 @@ test.describe('na conversa aberta', () => {
     const menusDoNavegador = await ouvirOMenuDoNavegador(page);
 
     await botaoDireito(page, pdf);
-    expect(await menusDoNavegador()).toEqual([true]);
+    await expect.poll(menusDoNavegador).toEqual([true]);
     await expect(page.getByRole('menu')).toHaveCount(0);
   });
 
   test('o print colado entra com o nome da colagem e vai na mensagem, com a miniatura', async ({
     page,
   }) => {
-    const faltam = naoSimulados(page);
     const chat = await simularChat(page);
     await page.goto(`/chat/c/${EQUIPE}`);
     await caixa(page).click();
@@ -257,7 +306,6 @@ test.describe('na conversa aberta', () => {
     const lados = await miniatura.boundingBox();
     expect(Math.round(lados?.width ?? 0)).toBe(320);
     expect(Math.round(lados?.height ?? 0)).toBe(180);
-    expect(faltam).toEqual([]);
   });
 
   test('o arquivo solto na conversa entra como anexo, com o aviso durante o arrasto', async ({
@@ -267,42 +315,11 @@ test.describe('na conversa aberta', () => {
     await page.goto(`/chat/c/${EQUIPE}`);
     const alvo = mensagem(page, 'Bom dia!');
     await expect(alvo).toBeVisible();
-    // O arrasto de um arquivo do computador, como o do navegador: com a entrada dele no sistema de
-    // arquivos, que o React Aria lê para separar os arquivos das pastas, e permitindo copiar.
-    const arrastar = (tipo: 'dragenter' | 'dragover' | 'drop') =>
-      alvo.evaluate((elemento, tipoDoEvento) => {
-        const arquivo = new File(['%PDF-1.7'], 'fechamento-de-outubro.pdf', {
-          type: 'application/pdf',
-        });
-        const dados = new DataTransfer();
-        dados.items.add(arquivo);
-        Object.defineProperty(dados, 'items', {
-          value: [
-            {
-              kind: 'file',
-              type: arquivo.type,
-              getAsFile: () => arquivo,
-              webkitGetAsEntry: () => ({ isFile: true, isDirectory: false }),
-            },
-          ],
-        });
-        Object.defineProperty(dados, 'effectAllowed', { value: 'all' });
-        const { left, top, width, height } = elemento.getBoundingClientRect();
-        const evento = new DragEvent(tipoDoEvento, {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: dados,
-          clientX: left + width / 2,
-          clientY: top + height / 2,
-        });
-        elemento.dispatchEvent(evento);
-        return evento.defaultPrevented;
-      }, tipo);
 
-    expect(await arrastar('dragenter')).toBe(true);
-    expect(await arrastar('dragover')).toBe(true);
+    expect(await arrastarArquivo(alvo, 'dragenter')).toEqual({ prevenido: true, efeito: 'copy' });
+    expect(await arrastarArquivo(alvo, 'dragover')).toEqual({ prevenido: true, efeito: 'copy' });
     await expect(page.getByText('Solte para anexar')).toBeVisible();
-    expect(await arrastar('drop')).toBe(true);
+    expect((await arrastarArquivo(alvo, 'drop')).prevenido).toBe(true);
     await expect(anexosDaCaixa(page).getByRole('listitem')).toHaveText([
       /^fechamento-de-outubro\.pdf/,
     ]);
@@ -317,5 +334,25 @@ test.describe('na conversa aberta', () => {
       mensagens(page).getByRole('link', { name: /fechamento-de-outubro\.pdf/ }),
     ).toBeVisible();
     expect(chat.pedidos.at(-1)?.corpo.anexos).toHaveLength(1);
+  });
+
+  test('no canal em que ela não escreve, a frase fica no lugar da caixa, e o arquivo solto é recusado', async ({
+    page,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto(`/chat/c/${CANAL}`);
+    const aviso = mensagem(page, 'A rede do 2º andar para às 18h');
+    await expect(aviso).toBeVisible();
+    await expect(page.getByText('Só TI escreve neste canal.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: /^Escrever uma mensagem/ })).toHaveCount(0);
+
+    // Sem a caixa, ninguém recebe: o lugar de soltar recusa o arquivo, sem o aviso.
+    expect(await arrastarArquivo(aviso, 'dragenter')).toEqual({ prevenido: true, efeito: 'none' });
+    expect(await arrastarArquivo(aviso, 'dragover')).toEqual({ prevenido: true, efeito: 'none' });
+    await expect(page.getByText('Solte para anexar')).toHaveCount(0);
+    await arrastarArquivo(aviso, 'drop');
+    await expect(anexosDaCaixa(page)).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`/chat/c/${CANAL}$`));
+    expect(chat.pedidos).toEqual([]);
   });
 });
