@@ -247,7 +247,7 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 
   Verificar: os testes do envio e da entrega dos anexos, com uma foto com a localização, o `contrato:verificar`, o lint, o typecheck, as pontas a ponta e as referências visuais que mudarem e as telas no `pnpm dev`, com uma conversa de 5 fotos, aberta com a rede lenta, que fica na última mensagem.
 
-- [ ] 4.21 O dia e os eventos na largura de leitura (resposta do usuário de 22/11, "Sim, nesta change"): na conversa do chat e no chamado do chat, os separadores do dia ("Hoje", "Ontem", "12/11") e os eventos ficam no meio da largura de leitura, alinhados com as mensagens, e não no meio da coluna. Verificar: o lint, as telas no `pnpm dev`, a 2560 e a 1440 px, no app e na casca, e as referências visuais que mudarem.
+- [x] 4.21 O dia e os eventos na largura de leitura (resposta do usuário de 22/11, "Sim, nesta change"): na conversa do chat e no chamado do chat, os separadores do dia ("Hoje", "Ontem", "12/11") e os eventos ficam no meio da largura de leitura, alinhados com as mensagens, e não no meio da coluna. Verificar: o lint, as telas no `pnpm dev`, a 2560 e a 1440 px, no app e na casca, e as referências visuais que mudarem.
 
 ## 5. Fechamento
 

@@ -1,5 +1,7 @@
 /* As mensagens da conversa (m01 e m03): a área que rola, com o aviso das novas por cima, no pé. As
-   mensagens ficam numa coluna de até 720 px, como a conversa do chamado da TI, sem balão. */
+   mensagens ficam numa coluna de até 720 px, como a conversa do chamado da TI, sem balão, e o que
+   fica no meio da conversa, como o dia e os eventos, fica no meio dela, e não no da área que rola,
+   que vai de uma borda à outra com a caixa (tarefas 4.15 e 4.21). */
 .fluxo {
   position: relative;
   display: flex;
@@ -24,10 +26,12 @@
   outline-offset: -2px;
 }
 
+/* A coluna das mensagens, na largura de leitura, à esquerda, com a caixa. */
 .itens {
   display: flex;
   flex-direction: column;
   gap: var(--esp-3);
+  max-inline-size: var(--largura-previa);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -54,10 +58,11 @@
   color: var(--cor-destaque-texto);
 }
 
-/* "Mensagens anteriores" e "Mensagens seguintes", no meio da coluna. */
+/* "Mensagens anteriores" e "Mensagens seguintes", no meio da coluna das mensagens. */
 .ponta {
   display: grid;
   justify-items: center;
+  max-inline-size: var(--largura-previa);
   padding-block: var(--esp-2);
 }
 
@@ -511,11 +516,12 @@ button.reacao:focus-visible {
   outline-offset: 2px;
 }
 
-/* "Mensagens novas · 2" e "Ir para as mais novas", por cima da conversa, no meio do pé. */
+/* "Mensagens novas · 2" e "Ir para as mais novas", por cima da conversa, no pé, no meio da coluna das
+   mensagens: a margem da área que rola e metade da largura de leitura, ou da área, se for menor. */
 .aviso {
   position: absolute;
   inset-block-end: var(--esp-3);
-  inset-inline-start: 50%;
+  inset-inline-start: calc(var(--esp-5) + min(100% - 2 * var(--esp-5), var(--largura-previa)) / 2);
   transform: translateX(-50%);
   border-radius: var(--raio-controle);
   box-shadow: var(--sombra-elevada);

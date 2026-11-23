@@ -104,7 +104,7 @@ A conversa SHALL abrir na primeira não lida, com o separador "Mensagens novas",
 
 A caixa SHALL ser arredondada, com a borda à vista, o texto de ajuda, como "Escrever uma mensagem em Equipe Financeiro…", e, dentro dela, o clipe e o envio. Enter SHALL mandar, e Shift+Enter SHALL quebrar a linha. O envio SHALL ficar sem ação enquanto a caixa está vazia e sem anexo: com um anexo, a mensagem vai sem o texto (spec chat, "Mensagem").
 
-A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa, e o dia e os eventos, no meio dela.
+A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a frase que fica no lugar dela também. As mensagens SHALL ficar na largura de leitura, alinhadas à esquerda com a caixa, e o dia, os eventos, o resumo dos tempos e a avaliação, no meio dela.
 
 A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo dela e "Tirar", e embaixo os anexos, cada um com o nome, o tamanho e "Tirar".
 

@@ -1,6 +1,7 @@
 /* A conversa do chamado (m04, m07 e m10): as mensagens sem balão, como as do chat, e, no meio da
-   coluna, as pílulas dos eventos, a resposta nova, o resumo dos tempos e a avaliação. A área que
-   rola, os dias, os textos e os anexos são os da conversa do chat. */
+   coluna delas, na largura de leitura, as pílulas dos eventos, o resumo dos tempos e a avaliação, e
+   a resposta nova de uma ponta à outra dela (tarefa 4.21). A área que rola, a coluna, os dias, os
+   textos e os anexos são os da conversa do chat. */
 .mensagem {
   display: grid;
   grid-template-columns: var(--esp-8) minmax(0, 1fr);
