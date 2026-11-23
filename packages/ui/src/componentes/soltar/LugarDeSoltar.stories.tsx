@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { expect, waitFor, within } from 'storybook/test';
 import { LugarDeSoltar, useArquivosSoltos } from './LugarDeSoltar.tsx';
 
@@ -28,9 +29,25 @@ interface PropsDaConversa {
   comCaixa: boolean;
   /** A caixa ocupada, como durante o envio. */
   ocupada: boolean;
+  /** O diálogo aberto de dentro da conversa, que vai para o `body`, como o "Cartão do ativo". */
+  comDialogo?: boolean;
+  /** O botão que tira a caixa e a põe de volta, como o chamado resolvido e reaberto. */
+  comResolver?: boolean;
 }
 
-function Conversa({ comCaixa, ocupada }: PropsDaConversa) {
+/** O diálogo aberto de dentro da conversa, no `body`, como os do kit. */
+function DialogoDeDentro() {
+  return createPortal(
+    <div role="dialog" aria-label="Cartão do ativo" style={{ padding: 16 }}>
+      <p style={{ margin: 0 }}>Escolha o ativo do cartão.</p>
+    </div>,
+    document.body,
+  );
+}
+
+function Conversa({ comCaixa, ocupada, comDialogo = false, comResolver = false }: PropsDaConversa) {
+  const [resolvido, definirResolvido] = useState(false);
+  const caixa = comCaixa && !resolvido;
   return (
     <LugarDeSoltar>
       <section
@@ -46,7 +63,13 @@ function Conversa({ comCaixa, ocupada }: PropsDaConversa) {
         <p style={{ margin: 0 }}>
           Paulo Nunes: A impressora do 2º andar está manchando a folha. Mandei a foto.
         </p>
-        {comCaixa ? <CaixaQueRecebe ocupada={ocupada} /> : <p>Só TI escreve neste canal.</p>}
+        {comResolver && (
+          <button type="button" onClick={() => definirResolvido((antes) => !antes)}>
+            {resolvido ? 'Reabrir' : 'Resolver'}
+          </button>
+        )}
+        {caixa ? <CaixaQueRecebe ocupada={ocupada} /> : <p>Só TI escreve neste canal.</p>}
+        {comDialogo && <DialogoDeDentro />}
       </section>
     </LugarDeSoltar>
   );
@@ -103,6 +126,27 @@ function arrastar(alvo: Element, tipo: Arrasto, conteudo: File[] | string) {
   });
   alvo.dispatchEvent(evento);
   return evento.defaultPrevented;
+}
+
+/**
+ * O arrasto que o lugar recusa, com o cursor de que não se solta: tratado, para nada mais o
+ * receber, e com o efeito "none".
+ */
+function recusado(alvo: Element, tipo: Arrasto, conteudo: File[]) {
+  const dados = new DataTransfer();
+  for (const arquivo of conteudo) dados.items.add(arquivo);
+  Object.defineProperty(dados, 'effectAllowed', { value: 'all' });
+  // Começa em "copy", para o "none" ser o do lugar, e não o do `DataTransfer` criado aqui.
+  dados.dropEffect = 'copy';
+  const evento = new DragEvent(tipo, { bubbles: true, cancelable: true, dataTransfer: dados });
+  alvo.dispatchEvent(evento);
+  const efeito: DataTransfer['dropEffect'] = evento.dataTransfer?.dropEffect ?? 'copy';
+  return evento.defaultPrevented && efeito === 'none';
+}
+
+/** O arrasto que nasce na página, como o da foto de quem escreveu, e o fim dele. */
+function arrastoDaPagina(origem: Element, tipo: 'dragstart' | 'dragend') {
+  origem.dispatchEvent(new DragEvent(tipo, { bubbles: true, cancelable: true }));
 }
 
 const relatorio = () => new File(['%PDF-1.7'], 'relatorio.pdf', { type: 'application/pdf' });
@@ -166,16 +210,16 @@ export const TextoArrastado: Historia = {
 };
 
 /**
- * Sem a caixa, como no canal em que a conta não escreve, o lugar não recebe: o arquivo fica para a
- * guarda da casca, que o segura com o cursor de que não se solta.
+ * Sem a caixa, como no canal em que a conta não escreve, o lugar recusa o arquivo, com o cursor de
+ * que não se solta, sem o aviso.
  */
 export const SemACaixa: Historia = {
   args: { comCaixa: false },
   play: async ({ canvasElement }) => {
     const tela = within(canvasElement);
     const frase = tela.getByText('Só TI escreve neste canal.');
-    await expect(arrastar(frase, 'dragenter', [relatorio()])).toBe(false);
-    await expect(arrastar(frase, 'dragover', [relatorio()])).toBe(false);
+    await expect(recusado(frase, 'dragenter', [relatorio()])).toBe(true);
+    await expect(recusado(frase, 'dragover', [relatorio()])).toBe(true);
     await expect(tela.queryByText('Solte para anexar')).toBeNull();
   },
 };
@@ -186,9 +230,72 @@ export const DuranteOEnvio: Historia = {
   play: async ({ canvasElement }) => {
     const tela = within(canvasElement);
     const caixa = tela.getByRole('textbox', { name: 'Escrever uma mensagem em Equipe Financeiro' });
-    await expect(arrastar(caixa, 'dragover', [relatorio()])).toBe(false);
+    await expect(recusado(caixa, 'dragenter', [relatorio()])).toBe(true);
+    await expect(recusado(caixa, 'dragover', [relatorio()])).toBe(true);
     await expect(tela.queryByText('Solte para anexar')).toBeNull();
     arrastar(caixa, 'drop', [relatorio()]);
     await expect(tela.queryAllByRole('listitem')).toHaveLength(0);
+  },
+};
+
+/**
+ * O diálogo aberto de dentro da conversa fica no `body`, fora dela: o arquivo sobre ele não mostra o
+ * aviso nem entra na caixa de trás, e fica para a guarda da casca.
+ */
+export const DialogoAbertoDeDentro: Historia = {
+  args: { comDialogo: true },
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const dialogo = within(document.body).getByRole('dialog', { name: 'Cartão do ativo' });
+    const frase = within(dialogo).getByText('Escolha o ativo do cartão.');
+    await expect(arrastar(frase, 'dragenter', [relatorio()])).toBe(false);
+    await expect(arrastar(frase, 'dragover', [relatorio()])).toBe(false);
+    await expect(tela.queryByText('Solte para anexar')).toBeNull();
+    await expect(arrastar(frase, 'drop', [relatorio()])).toBe(false);
+    await expect(tela.queryAllByRole('listitem')).toHaveLength(0);
+  },
+};
+
+/**
+ * O arrasto que nasce na página, como o da foto de quem escreveu, não é o de um arquivo do
+ * computador, mesmo com "Files": o lugar o deixa para a guarda. Acabado ele, o arquivo do
+ * computador volta a entrar.
+ */
+export const ArrastoDaPagina: Historia = {
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const texto = tela.getByText(/Paulo Nunes/);
+    arrastoDaPagina(texto, 'dragstart');
+    await expect(arrastar(texto, 'dragenter', [foto()])).toBe(false);
+    await expect(arrastar(texto, 'dragover', [foto()])).toBe(false);
+    await expect(tela.queryByText('Solte para anexar')).toBeNull();
+    await expect(arrastar(texto, 'drop', [foto()])).toBe(false);
+    arrastoDaPagina(texto, 'dragend');
+    await expect(tela.queryAllByRole('listitem')).toHaveLength(0);
+
+    await expect(arrastar(texto, 'dragenter', [relatorio()])).toBe(true);
+    await expect(await tela.findByText('Solte para anexar')).toBeVisible();
+    await expect(arrastar(texto, 'drop', [relatorio()])).toBe(true);
+    await waitFor(() => expect(tela.getAllByRole('listitem')).toHaveLength(1));
+  },
+};
+
+/**
+ * A caixa que sai no meio do arrasto, como no chamado resolvido por outra pessoa, tira o aviso; o
+ * arrasto que sai da conversa acaba, e a caixa que volta depois não traz o aviso de volta.
+ */
+export const CaixaQueSaiNoArrasto: Historia = {
+  args: { comResolver: true },
+  play: async ({ canvasElement }) => {
+    const tela = within(canvasElement);
+    const texto = tela.getByText(/Paulo Nunes/);
+    arrastar(texto, 'dragenter', [relatorio()]);
+    await expect(await tela.findByText('Solte para anexar')).toBeVisible();
+    tela.getByRole('button', { name: 'Resolver' }).click();
+    await waitFor(() => expect(tela.queryByText('Solte para anexar')).toBeNull());
+    arrastar(texto, 'dragleave', [relatorio()]);
+    tela.getByRole('button', { name: 'Reabrir' }).click();
+    await tela.findByRole('textbox', { name: 'Escrever uma mensagem em Equipe Financeiro' });
+    await expect(tela.queryByText('Solte para anexar')).toBeNull();
   },
 };

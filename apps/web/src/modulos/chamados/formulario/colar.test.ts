@@ -76,6 +76,20 @@ describe('o que a colagem anexa', () => {
     expect(colados).toEqual([relatorio, foto]);
   });
 
+  it('o arquivo copiado de uma pasta, com o nome dele como texto, entra como anexo', () => {
+    // O Finder e os gerenciadores de arquivos do Linux põem o nome, ou o caminho, como texto.
+    const relatorio = new File(['%PDF'], 'relatorio.pdf', { type: 'application/pdf' });
+    const doFinder = colado([relatorio], { 'text/plain': 'relatorio.pdf' });
+    expect(arquivosColados(doFinder, AS_14_05_33, 'America/Sao_Paulo')).toEqual([relatorio]);
+    const foto = new File(['x'], 'foto-da-impressora.jpg', { type: 'image/jpeg' });
+    const comAImagem = colado([print(), foto], {
+      'text/plain': '/home/ana/foto-da-impressora.jpg',
+    });
+    expect(
+      arquivosColados(comAImagem, AS_14_05_33, 'America/Sao_Paulo')?.map(({ name }) => name),
+    ).toEqual(['Imagem colada 22-11-2026 14.05.33.png', 'foto-da-impressora.jpg']);
+  });
+
   it('só a imagem que o navegador nomeia ganha o nome novo, com a extensão dela', () => {
     const jpg = new File(['x'], 'image.jpg', { type: 'image/jpeg' });
     const pdf = new File(['%PDF'], 'image.pdf', { type: 'application/pdf' });

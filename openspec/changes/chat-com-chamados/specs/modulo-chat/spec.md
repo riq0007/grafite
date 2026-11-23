@@ -109,7 +109,7 @@ A caixa SHALL ocupar a largura inteira da coluna, na conversa e no chamado, e a 
 A caixa SHALL ter, em cima, a mensagem respondida, com quem escreveu, o começo dela e "Tirar", e embaixo os anexos, cada um com o nome, o tamanho e "Tirar".
 
 Além do clipe, os anexos SHALL entrar na caixa, com as mesmas regras e recusas:
-- **colados:** colar arquivos, ou uma imagem sem o texto, como um print, SHALL anexá-los. A imagem colada SHALL ganhar o nome "Imagem colada 22-11-2026 14.05.33.png", com a data e a hora em que foi colada, no fuso da conta. Colar o que traz o texto SHALL colar o texto, também quando traz a imagem junto, como uma célula de planilha;
+- **colados:** colar arquivos, ou uma imagem sem o texto, como um print, SHALL anexá-los. A imagem colada SHALL ganhar o nome "Imagem colada 22-11-2026 14.05.33.png", com a data e a hora em que foi colada, no fuso da conta. Colar o texto com a imagem que vai junto, como uma célula de planilha, SHALL colar o texto, e o arquivo copiado de uma pasta SHALL entrar também quando traz o nome dele como texto;
 - **soltos:** arrastar arquivos sobre a conversa SHALL mostrar "Solte para anexar" sobre ela, e soltá-los SHALL anexá-los. Na conversa sem a caixa e durante o envio, o arquivo solto SHALL NOT entrar.
 
 No app do chat, como na casca (spec estrutura-da-casca, "Arquivo solto fora de um lugar de soltar"), o arquivo solto fora da conversa, como na lista das conversas, SHALL NOT trocar o Grafite pelo arquivo.

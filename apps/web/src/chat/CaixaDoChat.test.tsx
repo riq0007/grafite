@@ -382,9 +382,11 @@ describe('os anexos colados e soltos (tarefa 4.19 do chat-com-chamados)', () => 
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
     await screen.findByText('Só TI escreve neste canal.');
     const area = await areaDasMensagens();
-    // Ninguém trata o arrasto: a guarda da casca o segura, com o cursor de que não se solta.
-    expect(fireEvent.dragEnter(area, arrasto(orcamento()))).toBe(true);
-    expect(fireEvent.dragOver(area, arrasto(orcamento()))).toBe(true);
+    // A conversa recusa o arrasto, com o cursor de que não se solta (a história "Sem a caixa" do
+    // lugar de soltar confere o "none", que o jsdom não devolve).
+    const sobre = arrasto(orcamento());
+    expect(fireEvent.dragEnter(area, sobre)).toBe(false);
+    expect(fireEvent.dragOver(area, sobre)).toBe(false);
     expect(screen.queryByText('Solte para anexar')).toBeNull();
   });
 
@@ -408,8 +410,11 @@ describe('os anexos colados e soltos (tarefa 4.19 do chat-com-chamados)', () => 
     await waitFor(() => expect(caixa.hasAttribute('readonly')).toBe(true));
     expect(colar(caixa, [print()])).toBe(true);
     const area = await areaDasMensagens();
-    expect(fireEvent.dragOver(area, arrasto(orcamento()))).toBe(true);
+    const sobre = arrasto(orcamento());
+    expect(fireEvent.dragEnter(area, sobre)).toBe(false);
+    expect(fireEvent.dragOver(area, sobre)).toBe(false);
     expect(screen.queryByText('Solte para anexar')).toBeNull();
+    fireEvent.drop(area, arrasto(orcamento()));
     act(() =>
       responder(Response.json(mensagem(4, { autor: ANA, texto: 'Olha a folha' }), { status: 201 })),
     );
