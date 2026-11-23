@@ -51,7 +51,8 @@ export function situacaoParaQuemParticipa(
  * A situação no chat, no chip da citação e em "Chamados da equipe": nas palavras do colaborador, com
  * a espera como "Aguardando o colaborador", a palavra da TI, a quem ela não espera (change
  * chat-com-chamados, design, decisão 15): quem não participa do chamado, como quem é da equipe ou o
- * vê com `chamados.ver`, e quem participa dele pela TI. Os chamadores passam `participa && !pelaTi`.
+ * vê com `chamados.ver`, e quem participa dele pela TI. O `esperaAConta` é o `participa && !pelaTi`
+ * da conta que lê.
  */
 export function situacaoNoChat(
   situacao: SituacaoDoChamado,

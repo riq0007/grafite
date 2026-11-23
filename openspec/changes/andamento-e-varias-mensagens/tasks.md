@@ -41,12 +41,13 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 - [ ] 3.1 A leitura do chamado do chat (decisões 2 e 4):
   - o `andamento`, com a versão, as ações e a pessoa, com o nome e se ela usa o chat, a quem atende pelo chat;
-  - o `pelaTi`;
-  - a espera, a abertura, a resposta nova, a avaliação e as opções de quem participa pela TI, também na lista, no chip e em "Chamados da equipe";
+  - o `pelaTi`, também nos itens da lista, e obrigatório no `ChamadoNaLista` do domínio, para o typecheck acusar o item que a API monta à mão para o `secoesDoChat`;
+  - a espera, a abertura, a resposta nova, a avaliação e as opções de quem participa pela TI, também na lista, no chip e em "Chamados da equipe": os `false` e o `null` que a 2.2 deixou na API e o `participa` do `situacaoNoChat`, que passa a `participa && !pelaTi`;
   - a resposta nova no resumo do chat (`chamadosComResposta`, o "Chamados" da trilha e o selo do dock).
 
   Começa pelos testes de integração:
   - de quem recebe o `andamento`: quem participa e atende, quem só participa, a pessoa que atende e quem atende sem participar, que não lê o chamado pelo chat;
+  - do lado de Ana, que abriu o #1050 no nome de Paulo e o atende, em cada leitura, porque os `false` e o `null` de hoje passam no typecheck: a lista (a situação em texto, a ordem dos abertos e a resposta nova 0), a leitura do chamado (a situação, a abertura, o evento do aguardar, a resposta nova 0 e o `desde` nulo), o chip da citação e "Chamados da equipe";
   - do resumo: Diego escreve a Paulo no #1050, que Ana abriu no nome dele e atende, e o resumo de Ana dá 0, e o de Paulo, 1.
 
   Verificar: esses testes, o `contrato:verificar`, o lint e o typecheck.
@@ -104,7 +105,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 4.3 O chamado de quem participa pela TI (decisão 4; spec modulo-chat, "Chamado no chat"):
   - a caixa com "Escrever para Fernanda no #1045…", pela rota da TI, com os anexos e, à pessoa que não usa o chat, a frase do Chamados;
   - no resolvido, o cadeado, "O #1045 está resolvido." e "Reabrir";
-  - a espera "Aguardando o colaborador" nas etapas, e o selo dela na informação, também no chip de quem não participa (spec modulo-chat, "Selos e movimento do chat");
+  - a espera "Aguardando o colaborador" nas etapas, pelo `nomeDaEtapa`, que também dá a marca da etapa de agora, e o selo dela na informação, também no chip de quem não participa (spec modulo-chat, "Selos e movimento do chat");
   - as opções sem ação;
   - sem a avaliação e sem a resposta nova;
   - as listas.
