@@ -92,6 +92,10 @@ O menu SHALL:
 
 Os tempos exatos SHALL ser os do Apêndice B da spec mestre.
 
+O painel do menu SHALL ter a largura do conteúdo, até a largura da janela menos as margens, também junto da borda da janela, onde SHALL NOT se estreitar nem crescer depois de aberto.
+
+Na postura celular, o submenu SHALL abrir embaixo do item que o abre ou, sem espaço embaixo, em cima dele, por cima do menu e com o item à vista, inteiro dentro da janela e com o mesmo teclado. O toque no item com o submenu aberto SHALL fechá-lo, com o menu aberto. Nas outras posturas, ele SHALL abrir ao lado do menu, do lado com mais espaço.
+
 #### Scenario: Movimento diagonal até o submenu
 - **WHEN** o usuário move o ponteiro na diagonal do item "Rede" até o submenu, passando sobre o item seguinte
 - **THEN** o submenu de "Rede" permanece aberto até o ponteiro chegar a ele
@@ -99,6 +103,22 @@ Os tempos exatos SHALL ser os do Apêndice B da spec mestre.
 #### Scenario: Navegação por teclado no menu
 - **WHEN** o menu está aberto e o usuário pressiona seta para a direita sobre um item com submenu
 - **THEN** o submenu abre com o foco no primeiro item, e Esc volta ao item de origem
+
+#### Scenario: Menu junto da borda da janela estreita
+- **WHEN** o usuário abre, numa janela de 390 px, o "Mais" de uma mensagem, junto da borda direita
+- **THEN** o menu abre na largura do conteúdo, inteiro dentro da janela, e não muda de largura depois
+
+#### Scenario: Submenu na janela estreita
+- **WHEN** o usuário, numa janela de 390 px, abre o submenu "Passar para…" do menu de um cartão no alto do quadro, que não cabe ao lado do menu
+- **THEN** o submenu abre embaixo do item "Passar para…", por cima do menu, inteiro dentro da janela
+
+#### Scenario: Submenu sem espaço embaixo do item
+- **WHEN** o usuário, numa janela de 390 px, abre o submenu "Tema" do menu da conta, que abre da barra de baixo
+- **THEN** o submenu abre em cima do item "Tema", que fica à vista, por cima do menu, inteiro dentro da janela e sem rolar
+
+#### Scenario: Toque no item com o submenu aberto
+- **WHEN** o usuário, num celular, toca no item "Passar para…" com o submenu dele aberto, que cobre os itens de baixo do menu
+- **THEN** o submenu fecha, o menu fica aberto e os itens de baixo voltam à vista
 
 ### Requirement: Camadas com foco controlado
 
@@ -783,3 +803,38 @@ As faixas esmaecidas da janela (spec estrutura-da-casca, "Janela de conteúdo") 
 #### Scenario: Área sem barra de propósito
 - **WHEN** a barra das abas da janela tem mais abas do que cabem
 - **THEN** ela rola sem barra, como antes
+
+### Requirement: Botão direito com um menu, uma lista ou um popover aberto
+
+Com um menu do kit aberto, de botão, de contexto, do dock ou submenu, com a lista de uma seleção, de uma busca com sugestões ou da escolha em árvore aberta, ou com um popover aberto, como o editor de um filtro e o cartão de uma referência, o botão direito fora dele SHALL fechá-lo e valer onde cai, como se ele não estivesse aberto:
+- onde a tela abre o próprio menu, como em outra linha, outro cartão ou outra mensagem, esse menu SHALL abrir, com o foco nele;
+- num campo em que se digita, num link e no texto selecionado, o menu do navegador SHALL abrir no mesmo clique, como sem nada aberto, para colar, abrir e copiar. No campo, o foco e o cursor do texto SHALL ir para o ponto do clique, ou a seleção dele SHALL ficar, quando o clique cai nela;
+- em outro lugar, o clique SHALL só fechar o menu, a lista ou o popover, sem o menu do navegador, e o foco SHALL voltar a quem o abriu. O clique seguinte SHALL abrir o menu do navegador.
+
+No macOS, o Ctrl+clique SHALL valer como o botão direito.
+
+O menu do navegador SHALL NOT abrir por cima de um menu, de uma lista ou de um popover do kit aberto: o botão direito dentro dele, como num item ou no submenu, e o que o navegador manda ao soltar a tecla de menu, no item que já tem o foco, SHALL ficar com o app. O botão direito no campo em que se digita, no link e no texto selecionado dentro dele, como no filtro da escolha em árvore e no link do cartão de uma referência, SHALL abrir o menu do navegador, como fora dele.
+
+#### Scenario: Outra linha com o menu aberto
+- **WHEN** o menu de contexto de uma linha da tabela está aberto, e o usuário clica com o botão direito em outra linha
+- **THEN** o menu da primeira fecha, e o da outra abre onde o ponteiro está, sem o menu do navegador
+
+#### Scenario: Fora de um menu de botão
+- **WHEN** o menu "Mais" de uma mensagem está aberto, e o usuário clica com o botão direito na caixa de escrever
+- **THEN** o menu fecha, e o menu do navegador abre na caixa, com o foco nela e o cursor do texto no ponto do clique, para colar ali
+
+#### Scenario: No campo da busca com a lista aberta
+- **WHEN** a lista de sugestões de uma busca está aberta, e o usuário clica com o botão direito no campo dela
+- **THEN** a lista fecha, e o menu do navegador abre no campo no mesmo clique
+
+#### Scenario: Fora da lista de uma escolha
+- **WHEN** a lista do fuso horário está aberta em Ajustes, e o usuário clica com o botão direito no texto da tela
+- **THEN** a lista fecha, sem o menu do navegador, e o fuso escolhido continua o mesmo
+
+#### Scenario: Fora do editor de um filtro
+- **WHEN** o editor de um filtro da tabela do Ativos está aberto, e o usuário clica com o botão direito numa linha da tabela
+- **THEN** o editor fecha, e o menu da linha abre onde o ponteiro está, sem o menu do navegador
+
+#### Scenario: Tecla de menu sem o menu do navegador
+- **WHEN** o usuário, com o foco numa linha da tabela, abre o menu de contexto pela tecla de menu
+- **THEN** o menu abre junto da linha, e o menu do navegador não abre por cima dele

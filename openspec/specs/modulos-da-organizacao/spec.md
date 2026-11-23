@@ -9,6 +9,7 @@ Deixar cada organização ligar e desligar os módulos opcionais, para usar só 
 
 Os módulos opcionais SHALL ser definidos pelo sistema, cada um com o nome e uma descrição em pt-BR. Neste momento, os módulos opcionais SHALL ser:
 - o Chamados, descrito como "Os chamados da TI: a triagem, quem está com o quê, os prazos, a conversa, os tipos e o formulário de cada um.";
+- o Chat, descrito como "As conversas das pessoas da organização: as diretas, as equipes, os canais e os chamados de cada uma.";
 - o Ativos, descrito como "O catálogo, o cadastro e a lista dos ativos.";
 - o Cofre, descrito como "Os segredos da organização, com o acesso por segredo.";
 - o Alertas, descrito como "As regras de alerta e os alertas dos ativos e dos coletores.";
@@ -45,6 +46,10 @@ O Início, a Administração e os Ajustes SHALL NOT ser opcionais. Um módulo op
 #### Scenario: Chamados numa organização que já existia
 - **WHEN** a versão com os chamados é instalada numa organização que já existia
 - **THEN** o módulo Chamados começa ligado, com os 9 tipos de fábrica, e quem tem `chamados.ver`, `chamados.atender` ou `chamados.configurar` o vê no dock
+
+#### Scenario: Chat numa organização que já existia
+- **WHEN** a versão com o chat é instalada numa organização que já existia
+- **THEN** o módulo Chat começa ligado, sem nenhuma equipe nem canal, e quem tem `chat.usar` o vê no dock
 
 ### Requirement: Ligar e desligar um módulo
 
