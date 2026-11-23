@@ -245,6 +245,7 @@ async function chamadosComResposta(tx: Transacao, contaId: string): Promise<numb
         linhas: linhas.filter(({ chamadoId }) => chamadoId === chamado.id),
         contaId,
         vistaAte: chamado.vistaAte,
+        pelaTi: false,
       }),
     })),
   );

@@ -432,6 +432,7 @@ export {
   ESPERA_DE_OUTRO,
   type EventoParaQuemParticipa,
   fraseDoEventoParaQuemParticipa,
+  nomeDaEtapa,
   previsaoDaResposta,
   SITUACAO_FECHADA,
   SITUACOES_PARA_QUEM_PARTICIPA,

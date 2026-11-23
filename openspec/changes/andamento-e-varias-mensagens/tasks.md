@@ -23,7 +23,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - nada no fechado.
 
   Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
-- [ ] 2.2 As palavras e as listas de quem participa pela TI (decisão 4):
+- [x] 2.2 As palavras e as listas de quem participa pela TI (decisão 4):
   - a espera "Aguardando o colaborador" na situação, no nome da etapa e na frase do `aguardando`;
   - a abertura "Você abriu este chamado para Paulo Nunes", no `fraseDoEventoParaQuemParticipa`;
   - o `secoesDoChat` e o `gruposDaVistaChamados` com o `pelaTi`: o aguardando não sobe e fica em EM ANDAMENTO;

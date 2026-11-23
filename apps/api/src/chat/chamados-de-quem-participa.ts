@@ -426,7 +426,7 @@ export async function chamadosDeQuemParticipa(
       tipo,
       situacao: chamado.situacao,
       fechado,
-      situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado),
+      situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado, false),
       abertoEm: chamado.abertoEm.toISOString(),
       resolvidoEm: chamado.resolvidoEm?.toISOString() ?? null,
       atende: chamado.responsavelId === null ? null : nome.conta(chamado.responsavelId),
@@ -435,6 +435,7 @@ export async function chamadosDeQuemParticipa(
         linhas: daTi.filter(({ chamadoId }) => chamadoId === chamado.id),
         contaId: conta.id,
         vistaAte: vistaAte.get(chamado.id) ?? null,
+        pelaTi: false,
       }),
       ultimaMensagem: ultima
         ? {
@@ -649,6 +650,7 @@ export async function conversaDeQuemParticipa(
         nivel: linha.dados?.nivel,
       },
       conta.id,
+      null,
     );
     if (frase === null) continue;
     const resumo =
@@ -684,6 +686,7 @@ export async function conversaDeQuemParticipa(
     situacao: chamado.situacao,
     contaId: conta.id,
     vistaAte: leitura?.vistaAte ?? null,
+    pelaTi: false,
   };
   const quantas = respostaNova({ ...pedidoDaNova, linhas });
   const desde =
@@ -715,7 +718,7 @@ export async function conversaDeQuemParticipa(
     tipo,
     situacao: chamado.situacao,
     fechado,
-    situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado),
+    situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado, false),
     abertoEm: chamado.abertoEm.toISOString(),
     atende:
       chamado.responsavelId !== null && chamado.responsavelDesde !== null

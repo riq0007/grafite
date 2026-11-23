@@ -51,6 +51,16 @@ describe('as seções da lista do Chat', () => {
     expect(numeros(secoesDoChat(lista).chamados)).toEqual([1041, 1045, 1044]);
   });
 
+  it('quem participa pela TI: o que aguarda a pessoa fica com os outros, pelo aberto mais novo', () => {
+    const { chamados } = secoesDoChat([
+      chamado(1041, 'aguardando', '08:00'),
+      chamado(1050, 'aguardando', '09:40', { pelaTi: true }),
+      chamado(1044, 'em-atendimento', '09:10'),
+      chamado(1045, 'triagem', '10:32'),
+    ]);
+    expect(numeros(chamados)).toEqual([1041, 1045, 1050, 1044]);
+  });
+
   it('a mesma hora de abertura desempata pelo número mais alto', () => {
     const { chamados } = secoesDoChat([
       chamado(1050, 'triagem', '10:00'),
@@ -95,6 +105,20 @@ describe('os grupos da vista Chamados', () => {
     expect(grupos.map(({ grupo, chamados }) => [grupo, numeros(chamados)])).toEqual([
       ['abertos', [1046]],
       ['fechados', [1020, 1030]],
+    ]);
+  });
+
+  it('quem participa pela TI: o que aguarda a pessoa fica em EM ANDAMENTO', () => {
+    const grupos = gruposDaVistaChamados([
+      chamado(1041, 'aguardando', '08:00'),
+      chamado(1050, 'aguardando', '09:40', { pelaTi: true }),
+      chamado(1044, 'em-atendimento', '09:10'),
+      chamado(1046, 'triagem', '10:40', { pelaTi: true }),
+    ]);
+    expect(grupos.map(({ grupo, chamados }) => [grupo, numeros(chamados)])).toEqual([
+      ['aguardando-voce', [1041]],
+      ['em-andamento', [1050, 1044]],
+      ['abertos', [1046]],
     ]);
   });
 
@@ -181,13 +205,14 @@ describe('a resposta nova', () => {
   const nova = (
     linhas: LinhaParaARespostaNova[],
     vistaAte: string | null,
-    extra: { situacao?: ChamadoNaLista['situacao']; contaId?: string } = {},
+    extra: { situacao?: ChamadoNaLista['situacao']; contaId?: string; pelaTi?: boolean } = {},
   ) =>
     respostaNova({
       situacao: extra.situacao ?? 'em-atendimento',
       linhas,
       contaId: extra.contaId ?? FERNANDA,
       vistaAte,
+      pelaTi: extra.pelaTi ?? false,
     });
 
   it('Resposta que fica: as mensagens da TI depois da vista_ate contam, e abrir não muda nada', () => {
@@ -219,6 +244,14 @@ describe('a resposta nova', () => {
   it('A própria mensagem: a da conta da TI que é a pessoa do chamado não conta para ela', () => {
     expect(nova([daTi(2, ANA)], id(1), { contaId: ANA })).toBe(0);
     expect(nova([daTi(2, ANA), daTi(3, BRUNO)], id(1), { contaId: ANA })).toBe(1);
+  });
+
+  it('Quem participa pela TI: nenhuma resposta nova, também com as mensagens de outra conta da TI', () => {
+    expect(nova([daPessoa(1), daTi(2, BRUNO), daTi(3, BRUNO)], id(1), { pelaTi: true })).toBe(0);
+    expect(nova([daTi(1, BRUNO)], null, { contaId: ANA, pelaTi: true })).toBe(0);
+    for (const situacao of ['triagem', 'em-atendimento', 'aguardando'] as const) {
+      expect(nova([daTi(2)], id(1), { situacao, pelaTi: true })).toBe(0);
+    }
   });
 
   it('Resolvido sem resposta nova: o resolvido e o fechado não têm resposta nova', () => {

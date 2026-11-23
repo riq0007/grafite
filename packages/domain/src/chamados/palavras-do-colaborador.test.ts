@@ -3,6 +3,7 @@ import type { EtapaDoChamado } from './caminho.ts';
 import {
   type EventoParaQuemParticipa,
   fraseDoEventoParaQuemParticipa,
+  nomeDaEtapa,
   previsaoDaResposta,
   situacaoNoChat,
   situacaoParaQuemParticipa,
@@ -52,14 +53,20 @@ describe('a previsão da resposta', () => {
 
 describe('a situação nas palavras do colaborador', () => {
   it('a tabela da spec: Aberto, Em andamento, Aguardando você, Resolvido e Fechado', () => {
-    expect(situacaoParaQuemParticipa('triagem', false)).toBe('Aberto');
-    expect(situacaoParaQuemParticipa('em-atendimento', false)).toBe('Em andamento');
-    expect(situacaoParaQuemParticipa('aguardando', false)).toBe('Aguardando você');
-    expect(situacaoParaQuemParticipa('resolvido', false)).toBe('Resolvido');
-    expect(situacaoParaQuemParticipa('resolvido', true)).toBe('Fechado');
+    expect(situacaoParaQuemParticipa('triagem', false, false)).toBe('Aberto');
+    expect(situacaoParaQuemParticipa('em-atendimento', false, false)).toBe('Em andamento');
+    expect(situacaoParaQuemParticipa('aguardando', false, false)).toBe('Aguardando você');
+    expect(situacaoParaQuemParticipa('resolvido', false, false)).toBe('Resolvido');
+    expect(situacaoParaQuemParticipa('resolvido', true, false)).toBe('Fechado');
   });
 
-  it('no chat, a espera é "Aguardando você" só a quem participa do chamado', () => {
+  it('Espera de quem participa pela TI: "Aguardando o colaborador", e o resto como a pessoa lê', () => {
+    expect(situacaoParaQuemParticipa('aguardando', false, true)).toBe('Aguardando o colaborador');
+    expect(situacaoParaQuemParticipa('em-atendimento', false, true)).toBe('Em andamento');
+    expect(situacaoParaQuemParticipa('resolvido', true, true)).toBe('Fechado');
+  });
+
+  it('no chat, a espera é "Aguardando você" só a quem ela espera', () => {
     expect(situacaoNoChat('aguardando', false, true)).toBe('Aguardando você');
     expect(situacaoNoChat('aguardando', false, false)).toBe('Aguardando o colaborador');
     expect(situacaoNoChat('em-atendimento', false, false)).toBe('Em andamento');
@@ -74,26 +81,60 @@ describe('as etapas em texto', () => {
 
   it('a hora da chegada, a pulada só com o nome e "ainda não" depois da de agora', () => {
     expect(
-      textoDaEtapa(etapa({ estado: 'chegou', em: new Date('2026-11-18T17:05:00Z') }), hora),
+      textoDaEtapa(etapa({ estado: 'chegou', em: new Date('2026-11-18T17:05:00Z') }), hora, false),
     ).toBe('Aberto · ontem 17:05');
-    expect(textoDaEtapa(etapa({ situacao: 'aguardando', estado: 'pulada' }), hora)).toBe(
+    expect(textoDaEtapa(etapa({ situacao: 'aguardando', estado: 'pulada' }), hora, false)).toBe(
       'Aguardando você',
     );
-    expect(textoDaEtapa(etapa({ situacao: 'resolvido', estado: 'ainda-nao' }), hora)).toBe(
+    expect(textoDaEtapa(etapa({ situacao: 'resolvido', estado: 'ainda-nao' }), hora, false)).toBe(
       'Resolvido · ainda não',
     );
+  });
+
+  it('Espera de quem participa pela TI: a etapa do aguardando é "Aguardando o colaborador"', () => {
+    const aguardando = etapa({
+      situacao: 'aguardando',
+      estado: 'chegou',
+      em: new Date('2026-11-19T09:21:00Z'),
+    });
+    expect(textoDaEtapa(aguardando, hora, true)).toBe('Aguardando o colaborador · ontem 09:21');
+    expect(nomeDaEtapa('aguardando', true)).toBe('Aguardando o colaborador');
+    expect(nomeDaEtapa('aguardando', false)).toBe('Aguardando você');
+    expect(nomeDaEtapa('triagem', true)).toBe('Aberto');
   });
 });
 
 describe('os eventos nas palavras do colaborador', () => {
   const frase = (evento: EventoParaQuemParticipa, quemLe = FERNANDA.conta) =>
-    fraseDoEventoParaQuemParticipa(evento, quemLe);
+    fraseDoEventoParaQuemParticipa(evento, quemLe, null);
+  /** Ana, que abriu o #1050 no nome de Paulo Nunes e o atende pelo chat. */
+  const fraseDeAna = (evento: EventoParaQuemParticipa) =>
+    fraseDoEventoParaQuemParticipa(evento, ANA.conta, 'Paulo Nunes');
 
   it('a abertura pela própria conta e pela TI ou por outra pessoa', () => {
     expect(frase({ evento: 'abertura', autor: FERNANDA })).toBe('Recebemos o seu chamado');
     expect(frase({ evento: 'abertura', autor: ANA })).toBe(
       'Ana Souza abriu este chamado para você',
     );
+  });
+
+  it('Abertura para quem participa pela TI: "Você abriu este chamado para Paulo Nunes"', () => {
+    expect(fraseDeAna({ evento: 'abertura', autor: ANA })).toBe(
+      'Você abriu este chamado para Paulo Nunes',
+    );
+    expect(frase({ evento: 'abertura', autor: ANA }, 'conta-paulo')).toBe(
+      'Ana Souza abriu este chamado para você',
+    );
+  });
+
+  it('Espera de quem participa pela TI: o evento do aguardar é "Aguardando o colaborador"', () => {
+    expect(fraseDeAna({ evento: 'aguardando', autor: ANA })).toBe('Aguardando o colaborador');
+    expect(fraseDeAna({ evento: 'aguardando', autor: BRUNO })).toBe('Aguardando o colaborador');
+    // O resto, como a pessoa lê, com o "Você" a quem lê.
+    expect(fraseDeAna({ evento: 'assumiu', autor: ANA })).toBe('Você está atendendo o chamado');
+    expect(
+      fraseDeAna({ evento: 'reabriu', autor: { conta: 'conta-paulo', nome: 'Paulo Nunes' } }),
+    ).toBe('Paulo Nunes reabriu o chamado');
   });
 
   it('o assumir e o passar dizem quem atende agora, com o "Você" a quem atende', () => {
