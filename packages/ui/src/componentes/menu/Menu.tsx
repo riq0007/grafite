@@ -106,7 +106,9 @@ export interface PropsDoMenuNaFolha {
 
 /**
  * O menu solto numa folha de baixo, como o da mensagem do chat no celular (m09): os itens de 52 px,
- * no texto maior, com o ícone de 24 px. As setas andam pelos itens, como no menu que abre.
+ * no texto maior, com o ícone de 24 px. As setas andam pelos itens, como no menu que abre. Não põe
+ * o estado do menu de origem, que o `Menu` e o `MenuDeContexto` põem antes do menu: um `Submenu`
+ * aqui ficaria com o toque do React Aria, e o toque no item com ele aberto não o fecharia.
  */
 export function MenuNaFolha({ rotulo, children }: PropsDoMenuNaFolha) {
   return (

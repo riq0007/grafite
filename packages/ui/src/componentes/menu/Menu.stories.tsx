@@ -197,7 +197,8 @@ export const SubmenuNaJanelaEstreita: Historia = {
  * Cenário da spec "Toque no item com o submenu aberto": na postura celular, o submenu cobre os itens
  * de baixo, e o toque no item com ele aberto o fecha, com o menu aberto e os itens de baixo à vista
  * de novo, no nome do item e fora dele, no respiro (pontos da revisão da tarefa 4.17c). O toque
- * seguinte o abre de novo.
+ * seguinte o abre de novo. O clique do mouse no item, como na janela estreita do computador, o deixa
+ * aberto, como fora do celular.
  */
 export const SubmenuFechadoPeloToque: Historia = {
   globals: { viewport: { value: 'celular390', isRotated: false } },
@@ -245,6 +246,14 @@ export const SubmenuFechadoPeloToque: Historia = {
     await abrirRede();
     await tocar(within(rede).getByText('Rede'));
     await fechouComOMenuAberto('O toque no nome');
+    // O clique do mouse não fecha: só o toque.
+    await abrirRede();
+    await userEvent.click(rede);
+    await new Promise((pronto) => setTimeout(pronto, 300));
+    await expect(
+      corpo.queryByRole('menu', { name: 'Rede' }),
+      'O clique do mouse deixa o submenu aberto',
+    ).not.toBeNull();
   },
 };
 
