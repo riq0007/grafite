@@ -158,20 +158,28 @@ function guardarChamadosRecolhidos(recolhidos: boolean): void {
 const naSecao = (chamados: readonly ChamadoNaLista[], numero: number | null) =>
   numero !== null && chamados.some((chamado) => chamado.numero === numero) ? numero : null;
 
-/** O título que abre e fecha a seção: o botão com a seta que gira, e a boia no de CHAMADOS. */
+/**
+ * O título que abre e fecha a seção: o botão com a seta que gira, e a boia no de CHAMADOS. Recolhida,
+ * a soma das respostas novas fica no contador azul ao lado do título e no nome dele, como
+ * "Chamados · 3, 1 resposta nova".
+ */
 function TituloQueRecolhe({
   aberta,
   itens,
   alternar,
   chamado = false,
+  respostasNovas = 0,
   children,
 }: {
   aberta: boolean;
   itens: string;
   alternar: () => void;
   chamado?: boolean;
+  respostasNovas?: number;
   children: string;
 }) {
+  const novas = aberta ? 0 : respostasNovas;
+  const contagem = contagemEmTexto(novas, 'resposta nova', 'respostas novas');
   return (
     <h2 className={estilos.tituloDaSecao} data-tom={chamado ? 'chamado' : undefined}>
       <button
@@ -179,6 +187,7 @@ function TituloQueRecolhe({
         className={estilos.recolher}
         aria-expanded={aberta}
         aria-controls={aberta ? itens : undefined}
+        aria-label={contagem === null ? undefined : nomeParaOLeitor(children, contagem)}
         onClick={alternar}
       >
         <span className={estilos.seta}>
@@ -186,6 +195,7 @@ function TituloQueRecolhe({
         </span>
         {chamado && <Icone icone={LifeBuoy} tamanho={14} />}
         {children}
+        <Contador quantos={novas} tom="chamado" className={estilos.contadorDoTitulo} />
       </button>
     </h2>
   );
@@ -231,29 +241,36 @@ function SecaoDosChamados({
     definirAberta(!aberta);
     definirMudou(true);
   };
-  const entrada = mudou ? ` ${estilos.abrindo}` : '';
   return (
     <div className={estilos.secao}>
-      <TituloQueRecolhe aberta={aberta} itens={idDosItens} alternar={alternar} chamado>
+      <TituloQueRecolhe
+        aberta={aberta}
+        itens={idDosItens}
+        alternar={alternar}
+        chamado
+        respostasNovas={chamados.reduce((soma, chamado) => soma + chamado.respostaNova, 0)}
+      >
         {`Chamados · ${chamados.length}`}
       </TituloQueRecolhe>
-      {aberta &&
-        (chamados.length === 0 ? (
-          <p id={idDosItens} className={`${estilos.nenhum}${entrada}`}>
-            Nenhum chamado aberto.
-          </p>
-        ) : (
-          <ul id={idDosItens} className={`${estilos.itens}${entrada}`}>
-            {chamados.map((chamado) => (
-              <CartaoDoChamado
-                key={chamado.numero}
-                chamado={chamado}
-                novo={chamado.numero === novo}
-                escolhido={chamado.numero === escolhido}
-              />
-            ))}
-          </ul>
-        ))}
+      {/* A entrada fica no que embrulha: trocar "Nenhum chamado aberto." pela lista não a toca. */}
+      {aberta && (
+        <div id={idDosItens} className={mudou ? estilos.abrindo : undefined}>
+          {chamados.length === 0 ? (
+            <p className={estilos.nenhum}>Nenhum chamado aberto.</p>
+          ) : (
+            <ul className={estilos.itens}>
+              {chamados.map((chamado) => (
+                <CartaoDoChamado
+                  key={chamado.numero}
+                  chamado={chamado}
+                  novo={chamado.numero === novo}
+                  escolhido={chamado.numero === escolhido}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

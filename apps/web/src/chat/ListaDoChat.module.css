@@ -89,6 +89,11 @@
   rotate: 90deg;
 }
 
+/* O contador de CHAMADOS recolhido, sem o espaçamento das letras do título. */
+.contadorDoTitulo {
+  letter-spacing: normal;
+}
+
 .itens {
   display: grid;
   gap: calc(var(--esp-1) / 2);

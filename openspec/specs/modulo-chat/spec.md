@@ -58,7 +58,7 @@ O item escolhido SHALL ficar marcado com a barra e o nome dele dito como a pági
 ### Requirement: Lista do Chat
 
 A lista da vista Chat SHALL ter o título "Chat", com "Nova conversa", e as seções:
-- **CHAMADOS · N,** no azul do chamado, com os chamados abertos da conta (Aberto, Em andamento e Aguardando você): os que aguardam a conta primeiro e depois os outros, o aberto mais novo primeiro. O chamado que a conta acaba de abrir SHALL entrar no alto, com o contorno forte, até a lista se carregar de novo. Cada chamado SHALL ficar num cartão com o contorno azul, com o título em peso forte, que quebra a linha e não corta, a situação no selo, o contador da resposta nova, em azul, e o número em mono. A seção SHALL começar aberta e se recolher pela seta do título, como FECHADOS. A escolha de quem a recolhe SHALL ficar guardada no navegador. A seção SHALL abrir sozinha quando a conversa escolhida é a de um dos chamados dela, ou quando a conta acaba de abrir um chamado;
+- **CHAMADOS · N,** no azul do chamado, com os chamados abertos da conta (Aberto, Em andamento e Aguardando você): os que aguardam a conta primeiro e depois os outros, o aberto mais novo primeiro. O chamado que a conta acaba de abrir SHALL entrar no alto, com o contorno forte, até a lista se carregar de novo. Cada chamado SHALL ficar num cartão com o contorno azul, com o título em peso forte, que quebra a linha e não corta, a situação no selo, o contador da resposta nova, em azul, e o número em mono. A seção SHALL começar aberta e se recolher pela seta do título, como FECHADOS. A escolha de quem a recolhe SHALL ficar guardada no navegador. Recolhida, a seção SHALL mostrar ao lado do título o contador azul com a soma das respostas novas dos chamados dela, e o título SHALL dizer a soma ao leitor de tela, como "Chamados · 3, 1 resposta nova". A seção SHALL abrir sozinha quando a conversa escolhida é a de um dos chamados dela, ou quando a conta acaba de abrir um chamado;
 - **FECHADOS · N,** recolhido, com os chamados resolvidos da conta que ainda se reabrem, cada um com o selo dele. O título SHALL abrir e fechar a seção pela seta. A seção SHALL abrir sozinha quando a conversa escolhida é a de um deles;
 - **EQUIPES E CANAIS,** em ordem de nome, a equipe com as iniciais dela e o canal com o "#", cada um com o contador, neutro;
 - **RECENTES,** as conversas diretas, a da mensagem mais nova primeiro, com a foto ou as iniciais e o contador.
@@ -75,7 +75,7 @@ A lista da vista Chat SHALL ter o título "Chat", com "Nova conversa", e as seç
 
 #### Scenario: Chamados recolhidos pela seta
 - **WHEN** Fernanda Rocha recolhe CHAMADOS pela seta e abre o chat de novo no dia seguinte
-- **THEN** a lista mostra "Chamados · 3" recolhido, com as equipes logo abaixo, e escolher o #1041 pelo evento de uma conversa abre a seção com ele marcado
+- **THEN** a lista mostra "Chamados · 3" recolhido, com o contador "1" da resposta nova do #1041 ao lado do título e as equipes logo abaixo, e escolher o #1041 pelo evento de uma conversa abre a seção com ele marcado
 
 ### Requirement: Conversa na tela
 

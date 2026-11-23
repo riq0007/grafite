@@ -518,10 +518,14 @@ describe('a trilha e a lista do Chat', () => {
     const lista = await listaDoChat();
     const chamados = await within(lista).findByRole('button', { name: 'Chamados · 3' });
     expect(chamados.getAttribute('aria-expanded')).toBe('true');
+    expect(contadorDe(chamados)).toBeNull();
     fireEvent.click(chamados);
     expect(chamados.getAttribute('aria-expanded')).toBe('false');
     expect(within(lista).queryByText('Trocar o mouse')).toBeNull();
     expect(lista.querySelector('a[href^="/chat/chamados/"]')).toBeNull();
+    // Recolhido, a resposta nova do #1041 fica no contador azul do título e no nome dele.
+    expect(chamados.getAttribute('aria-label')).toBe('Chamados · 3, 1 resposta nova');
+    expect(contadorDe(chamados)).toEqual(['1', 'chamado']);
 
     // Na volta à lista, a escolha guardada no navegador: recolhido, com as outras seções embaixo.
     const lugar = await trilha();
@@ -529,22 +533,26 @@ describe('a trilha e a lista do Chat', () => {
     await screen.findByRole('heading', { level: 1, name: 'Equipes' });
     fireEvent.click(within(lugar).getByRole('link', { name: 'Chat' }));
     const deNovo = await listaDoChat();
-    const recolhido = await within(deNovo).findByRole('button', { name: 'Chamados · 3' });
+    const recolhido = await within(deNovo).findByRole('button', {
+      name: 'Chamados · 3, 1 resposta nova',
+    });
     expect(recolhido.getAttribute('aria-expanded')).toBe('false');
     await within(deNovo).findByRole('heading', { level: 2, name: 'Recentes' });
-    expect(titulosDasSecoes(deNovo)).toEqual([
-      'Chamados · 3',
+    expect(titulosDasSecoes(deNovo).slice(1)).toEqual([
       'Fechados · 1',
       'Equipes e canais',
       'Recentes',
     ]);
 
-    // O #1041 escolhido, como pelo evento de uma conversa, abre a seção, com ele marcado.
+    // O #1041 escolhido, como pelo evento de uma conversa, abre a seção, com ele marcado, e o
+    // contador sai do título.
     await act(() => roteador.navigate({ href: '/chat/chamados/1041' }));
     await waitFor(() => expect(recolhido.getAttribute('aria-expanded')).toBe('true'));
     expect(cartaoDoChamado(secao(deNovo, 'Chamados · 3'), 1041).getAttribute('aria-current')).toBe(
       'page',
     );
+    expect(recolhido.hasAttribute('aria-label')).toBe(false);
+    expect(contadorDe(recolhido)).toBeNull();
     // Quem a recolhe de novo a recolhe, e abri-la tira a escolha do navegador.
     fireEvent.click(recolhido);
     expect(recolhido.getAttribute('aria-expanded')).toBe('false');
@@ -552,6 +560,20 @@ describe('a trilha e a lista do Chat', () => {
     fireEvent.click(recolhido);
     expect(recolhido.getAttribute('aria-expanded')).toBe('true');
     expect(localStorage.getItem('grafite.chat.chamadosRecolhidos')).toBeNull();
+  });
+
+  it('CHAMADOS recolhido sem resposta nova fica sem o contador', async () => {
+    localStorage.setItem('grafite.chat.chamadosRecolhidos', 'sim');
+    abrir('/chat', comOChat());
+    const lista = await listaDoChat();
+    const chamados = await within(lista).findByRole('button', { name: 'Chamados · 0' });
+    expect(chamados.getAttribute('aria-expanded')).toBe('false');
+    expect(chamados.hasAttribute('aria-label')).toBe(false);
+    expect(contadorDe(chamados)).toBeNull();
+    expect(within(lista).queryByText('Nenhum chamado aberto.')).toBeNull();
+    // Aberta, a seção vazia diz que não há chamado.
+    fireEvent.click(chamados);
+    expect(within(lista).getByText('Nenhum chamado aberto.')).toBeTruthy();
   });
 
   it.each([
