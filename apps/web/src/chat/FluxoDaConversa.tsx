@@ -53,6 +53,7 @@ import { type ItemNaTela, itensDaConversa, type MensagemDoChat, novasDesde } fro
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import estilos from './FluxoDaConversa.module.css';
 import { FolhaDaMensagem } from './FolhaDaMensagem.tsx';
+import { ImagemDoAnexo } from './ImagemDoAnexo.tsx';
 import { useAgoraNoChat, useJanelaAVista } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { MenuDaMensagem } from './MenuDaMensagem.tsx';
@@ -902,24 +903,32 @@ function MensagemNaConversa({
         )}
         {mensagem.anexos.length > 0 && (
           <ul className={estilos.anexos} aria-label="Anexos">
-            {mensagem.anexos.map((anexo) => (
+            {mensagem.anexos.map(({ miniatura, ...anexo }) => (
               <li key={anexo.id}>
-                <a
-                  className={estilos.anexo}
-                  href={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
-                  download={anexo.nome}
-                >
-                  <span className={estilos.miniDoAnexo}>
-                    <Icone
-                      icone={anexo.tipo.startsWith('image/') ? Image : FileText}
-                      tamanho={20}
-                    />
-                  </span>
-                  <span>
-                    <span className={estilos.nomeDoAnexo}>{anexo.nome}</span>
-                    <small>{formatarTamanho(anexo.bytes)}</small>
-                  </span>
-                </a>
+                {miniatura ? (
+                  <ImagemDoAnexo
+                    anexo={{ ...anexo, miniatura }}
+                    endereco={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
+                  />
+                ) : (
+                  <a
+                    className={estilos.anexo}
+                    href={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
+                    download={anexo.nome}
+                    draggable={false}
+                  >
+                    <span className={estilos.miniDoAnexo}>
+                      <Icone
+                        icone={anexo.tipo.startsWith('image/') ? Image : FileText}
+                        tamanho={20}
+                      />
+                    </span>
+                    <span>
+                      <span className={estilos.nomeDoAnexo}>{anexo.nome}</span>
+                      <small>{formatarTamanho(anexo.bytes)}</small>
+                    </span>
+                  </a>
+                )}
               </li>
             ))}
           </ul>

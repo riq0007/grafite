@@ -98,7 +98,14 @@ describe('o estado que a ficha dá', () => {
         pessoas: [{ id: PESSOA, nome: 'Marina Rocha' }],
       },
       anexosDosCampos: [
-        { id: FOTO, nome: 'mancha.jpg', tipo: 'image/jpeg', bytes: 182_000, campo: 'foto' },
+        {
+          id: FOTO,
+          nome: 'mancha.jpg',
+          tipo: 'image/jpeg',
+          bytes: 182_000,
+          miniatura: null,
+          campo: 'foto',
+        },
       ],
     } satisfies Pick<FichaDoChamado, 'respostas' | 'citados' | 'anexosDosCampos'>;
     expect(estadoDaFicha(ficha)).toEqual({

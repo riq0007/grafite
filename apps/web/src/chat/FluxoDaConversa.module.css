@@ -318,13 +318,22 @@
 }
 
 /* Os anexos, cada um com o ícone, o nome e o tamanho, que baixam o arquivo. */
+/*
+ * A coluna e cada anexo na largura da mensagem: a miniatura da imagem encolhe nela, sem passar
+ * (tarefa 4.20).
+ */
 .anexos {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: var(--esp-2);
   margin: var(--esp-2) 0 0;
   padding: 0;
   list-style: none;
+}
+
+.anexos > li {
+  max-inline-size: 100%;
 }
 
 .anexo {

@@ -31,6 +31,7 @@ import {
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
+import { MiniaturaDoAnexo, miniaturaDe } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { registrarEvento } from '../eventos/saida.ts';
@@ -60,6 +61,8 @@ const AnexoDaMensagem = z
     nome: z.string(),
     tipo: z.string(),
     bytes: z.int(),
+    /** A miniatura da imagem, que `/miniatura` entrega; nula no anexo sem ela (tarefa 4.20). */
+    miniatura: MiniaturaDoAnexo.nullable(),
   })
   .meta({ id: 'AnexoDaMensagem' });
 
@@ -410,6 +413,9 @@ export async function mensagensParaAConta(
       nome: arquivos.nome,
       tipo: arquivos.tipo,
       bytes: arquivos.bytes,
+      variantes: arquivos.variantes,
+      largura: arquivos.largura,
+      altura: arquivos.altura,
     })
     .from(anexosDoChat)
     .innerJoin(
@@ -486,7 +492,13 @@ export async function mensagensParaAConta(
       })),
       anexos: anexos
         .filter(({ mensagemId }) => mensagemId === linha.id)
-        .map(({ id, nome, tipo, bytes }) => ({ id, nome: nome ?? '', tipo, bytes })),
+        .map(({ id, nome, tipo, bytes, ...arquivo }) => ({
+          id,
+          nome: nome ?? '',
+          tipo,
+          bytes,
+          miniatura: miniaturaDe(arquivo),
+        })),
       citacoes: (citacoesDe.get(linha.id) ?? []).flatMap((citacao) => {
         const resolvida = resolvidas.get(citacao.numero);
         return resolvida ? [{ ...citacao, ...resolvida }] : [];

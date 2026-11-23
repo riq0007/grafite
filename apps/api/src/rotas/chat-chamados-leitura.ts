@@ -1,17 +1,20 @@
 // A leitura de quem participa do chamado, pelo chat (spec chamados, "Leitura do chamado pela
 // pessoa"; spec chat, "Chamado citado numa mensagem"; spec modulo-chat, "Lista do Chat", "Chamado no
 // chat" e "Vista Chamados"; change chat-com-chamados, design, decisões 5, 9 e 15; tarefa 3.8): os
-// chamados da conta, a conversa de um deles, o anexo e o resumo do chip. As rotas ficam no escopo do
-// Chat, que confere o módulo ligado; elas pedem o `chat.usar` e o módulo Chamados ligado, e nenhuma
-// permissão dos chamados: o próprio chamado se lê sem ela.
+// chamados da conta, a conversa de um deles, o anexo, com a miniatura da imagem (tarefa 4.20), e o
+// resumo do chip. As rotas ficam no escopo do Chat, que confere o módulo ligado; elas pedem o
+// `chat.usar` e o módulo Chamados ligado, e nenhuma permissão dos chamados: o próprio chamado se lê
+// sem ela.
 import { naOrganizacao, type Transacao } from '@grafite/db';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { exigirLigadoNaTransacao } from '../acesso/modulos.ts';
 import {
+  ENTREGA_DA_MINIATURA,
   ENTREGA_DO_ANEXO,
   entregarAnexo,
+  entregarMiniatura,
   ParametrosDoAnexoSemDono,
 } from '../arquivos/anexos-sem-dono.ts';
 import type { DependenciasDasImagens } from '../arquivos/imagem-do-registro.ts';
@@ -116,6 +119,25 @@ export const rotasDaLeituraDosChamadosDoChat: FastifyPluginAsyncZod<
         anexoDeQuemParticipa(tx, conta, numero, arquivo),
       );
       return entregarAnexo(armazenamento, requisicao, resposta, arquivo, lido);
+    },
+  );
+
+  app.get(
+    '/chat/chamados/:numero/anexos/:arquivo/miniatura',
+    {
+      config: { permissao: 'chat.usar' },
+      schema: {
+        summary: 'A miniatura de um anexo de imagem do chamado, a quem participa dele',
+        params: ParametrosDoAnexo,
+        response: ENTREGA_DA_MINIATURA,
+      },
+    },
+    async (requisicao, resposta) => {
+      const { numero, arquivo } = requisicao.params;
+      const lido = await deQuemLe(requisicao, (tx, conta) =>
+        anexoDeQuemParticipa(tx, conta, numero, arquivo),
+      );
+      return entregarMiniatura(armazenamento, requisicao, resposta, arquivo, lido);
     },
   );
 };

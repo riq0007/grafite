@@ -54,6 +54,7 @@ import type { AcoesDoChamado } from './consultas.ts';
 import daConversa from './FluxoDaConversa.module.css';
 import { estaNoFim, topoNaRolagem } from './FluxoDaConversa.tsx';
 import estilos from './FluxoDoChamado.module.css';
+import { ImagemDoAnexo, type MiniaturaDoAnexo } from './ImagemDoAnexo.tsx';
 import { useAgoraNoChat } from './janela.ts';
 import { type EscolherAOpcao, PerguntaDoChamado } from './PerguntaDoChamado.tsx';
 import { ResumoDosTempos } from './ResumoDosTempos.tsx';
@@ -290,32 +291,49 @@ function PilulaDoEvento({ evento, dataHora }: { evento: EventoDoChamado; dataHor
   );
 }
 
-/** Os anexos de uma mensagem ou da abertura, que baixam o arquivo pelo chamado. */
+/**
+ * Os anexos de uma mensagem ou da abertura, que baixam o arquivo pelo chamado; a imagem, na
+ * miniatura (tarefa 4.20).
+ */
 function AnexosNoChamado({
   anexos,
   numero,
 }: {
-  anexos: readonly { id: string; nome: string; tipo: string; bytes: number }[];
+  anexos: readonly {
+    id: string;
+    nome: string;
+    tipo: string;
+    bytes: number;
+    miniatura: MiniaturaDoAnexo | null;
+  }[];
   numero: number;
 }) {
   if (anexos.length === 0) return null;
   return (
     <ul className={daConversa.anexos} aria-label="Anexos">
-      {anexos.map((anexo) => (
+      {anexos.map(({ miniatura, ...anexo }) => (
         <li key={anexo.id}>
-          <a
-            className={daConversa.anexo}
-            href={`/api/chat/chamados/${numero}/anexos/${anexo.id}`}
-            download={anexo.nome}
-          >
-            <span className={daConversa.miniDoAnexo}>
-              <Icone icone={anexo.tipo.startsWith('image/') ? Image : FileText} tamanho={20} />
-            </span>
-            <span>
-              <span className={daConversa.nomeDoAnexo}>{anexo.nome}</span>
-              <small>{formatarTamanho(anexo.bytes)}</small>
-            </span>
-          </a>
+          {miniatura ? (
+            <ImagemDoAnexo
+              anexo={{ ...anexo, miniatura }}
+              endereco={`/api/chat/chamados/${numero}/anexos/${anexo.id}`}
+            />
+          ) : (
+            <a
+              className={daConversa.anexo}
+              href={`/api/chat/chamados/${numero}/anexos/${anexo.id}`}
+              download={anexo.nome}
+              draggable={false}
+            >
+              <span className={daConversa.miniDoAnexo}>
+                <Icone icone={anexo.tipo.startsWith('image/') ? Image : FileText} tamanho={20} />
+              </span>
+              <span>
+                <span className={daConversa.nomeDoAnexo}>{anexo.nome}</span>
+                <small>{formatarTamanho(anexo.bytes)}</small>
+              </span>
+            </a>
+          )}
         </li>
       ))}
     </ul>

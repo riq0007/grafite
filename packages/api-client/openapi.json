@@ -9968,6 +9968,52 @@
           "aparelhos"
         ]
       },
+      "AnexoEnviadoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ]
+      },
+      "MiniaturaDoAnexoInput": {
+        "type": "object",
+        "properties": {
+          "largura": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "altura": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "largura",
+          "altura"
+        ]
+      },
       "FormularioDeChamadoInput": {
         "type": "object",
         "properties": {
@@ -10560,33 +10606,6 @@
           "formulario"
         ]
       },
-      "AnexoEnviadoInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "tipo": {
-            "type": "string"
-          },
-          "bytes": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "tipo",
-          "bytes"
-        ]
-      },
       "AnexoDoChamadoNoChatInput": {
         "type": "object",
         "properties": {
@@ -10605,13 +10624,24 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "miniatura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "nome",
           "tipo",
-          "bytes"
+          "bytes",
+          "miniatura"
         ]
       },
       "ChamadoDeQuemParticipaInput": {
@@ -11159,6 +11189,16 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "miniatura": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "campo": {
                   "type": "string"
                 }
@@ -11168,6 +11208,7 @@
                 "nome",
                 "tipo",
                 "bytes",
+                "miniatura",
                 "campo"
               ]
             }
@@ -14812,13 +14853,24 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "miniatura": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
                         "id",
                         "nome",
                         "tipo",
-                        "bytes"
+                        "bytes",
+                        "miniatura"
                       ]
                     }
                   },
@@ -15431,6 +15483,16 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "miniatura": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "campo": {
                   "type": "string"
                 }
@@ -15440,6 +15502,7 @@
                 "nome",
                 "tipo",
                 "bytes",
+                "miniatura",
                 "campo"
               ]
             }
@@ -15515,13 +15578,24 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "miniatura": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "nome",
                           "tipo",
-                          "bytes"
+                          "bytes",
+                          "miniatura"
                         ]
                       }
                     },
@@ -15657,13 +15731,24 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "miniatura": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "nome",
                           "tipo",
-                          "bytes"
+                          "bytes",
+                          "miniatura"
                         ]
                       }
                     },
@@ -17181,13 +17266,24 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "miniatura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "nome",
           "tipo",
-          "bytes"
+          "bytes",
+          "miniatura"
         ]
       },
       "ReacaoDaMensagemInput": {
@@ -39534,6 +39630,54 @@
         ],
         "additionalProperties": false
       },
+      "AnexoEnviado": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "tipo",
+          "bytes"
+        ],
+        "additionalProperties": false
+      },
+      "MiniaturaDoAnexo": {
+        "type": "object",
+        "properties": {
+          "largura": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "altura": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "largura",
+          "altura"
+        ],
+        "additionalProperties": false
+      },
       "FormularioDeChamado": {
         "type": "object",
         "properties": {
@@ -40143,34 +40287,6 @@
         ],
         "additionalProperties": false
       },
-      "AnexoEnviado": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "tipo": {
-            "type": "string"
-          },
-          "bytes": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "id",
-          "nome",
-          "tipo",
-          "bytes"
-        ],
-        "additionalProperties": false
-      },
       "AnexoDoChamadoNoChat": {
         "type": "object",
         "properties": {
@@ -40189,13 +40305,24 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "miniatura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniaturaDoAnexo"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "nome",
           "tipo",
-          "bytes"
+          "bytes",
+          "miniatura"
         ],
         "additionalProperties": false
       },
@@ -40759,6 +40886,16 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "miniatura": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "campo": {
                   "type": "string"
                 }
@@ -40768,6 +40905,7 @@
                 "nome",
                 "tipo",
                 "bytes",
+                "miniatura",
                 "campo"
               ],
               "additionalProperties": false
@@ -44535,13 +44673,24 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "miniatura": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
                         "id",
                         "nome",
                         "tipo",
-                        "bytes"
+                        "bytes",
+                        "miniatura"
                       ],
                       "additionalProperties": false
                     }
@@ -45175,6 +45324,16 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "miniatura": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "campo": {
                   "type": "string"
                 }
@@ -45184,6 +45343,7 @@
                 "nome",
                 "tipo",
                 "bytes",
+                "miniatura",
                 "campo"
               ],
               "additionalProperties": false
@@ -45261,13 +45421,24 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "miniatura": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "nome",
                           "tipo",
-                          "bytes"
+                          "bytes",
+                          "miniatura"
                         ],
                         "additionalProperties": false
                       }
@@ -45407,13 +45578,24 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "miniatura": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "nome",
                           "tipo",
-                          "bytes"
+                          "bytes",
+                          "miniatura"
                         ],
                         "additionalProperties": false
                       }
@@ -47001,13 +47183,24 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "miniatura": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniaturaDoAnexo"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "id",
           "nome",
           "tipo",
-          "bytes"
+          "bytes",
+          "miniatura"
         ],
         "additionalProperties": false
       },
@@ -87816,6 +88009,96 @@
         }
       }
     },
+    "/chamados/{numero}/anexos/{arquivo}/miniatura": {
+      "get": {
+        "summary": "A miniatura de um anexo de imagem do chamado, a quem vê o chamado",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "arquivo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/chamados": {
       "post": {
         "summary": "Abrir um chamado em nome de uma pessoa, com o tipo e as respostas",
@@ -91581,6 +91864,96 @@
         }
       }
     },
+    "/chat/chamados/{numero}/anexos/{arquivo}/miniatura": {
+      "get": {
+        "summary": "A miniatura de um anexo de imagem do chamado, a quem participa dele",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "arquivo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/chat/chamados/{numero}/mensagens": {
       "post": {
         "summary": "A mensagem de quem participa no chamado, que retoma o aguardando e reabre o resolvido",
@@ -92591,6 +92964,96 @@
             "description": "O anexo, para baixar, no tipo conferido e com o nome original",
             "content": {
               "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/conversas/{id}/anexos/{arquivo}/miniatura": {
+      "get": {
+        "summary": "A miniatura de um anexo de imagem da conversa, a quem participa dela agora",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "arquivo",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página",
+            "content": {
+              "image/webp": {
                 "schema": {
                   "type": "string",
                   "format": "binary"

@@ -280,6 +280,7 @@
  */
 .arquivos {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--esp-1);
   margin: var(--esp-1) 0 0;
   padding: 0;
@@ -298,6 +299,15 @@
 
 .arquivo > svg {
   flex: none;
+}
+
+/* A imagem anexada: a miniatura e, embaixo, o nome, o tamanho e "Baixar" (tarefa 4.20). */
+.imagemAnexada {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-1);
+  min-width: 0;
+  max-inline-size: 100%;
 }
 
 .nome {

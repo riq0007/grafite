@@ -8,7 +8,8 @@
 // - a entrega do anexo sem dono, só a quem o enviou;
 // - a entrega pelo chamado dono, a quem vê o chamado. O da nota e o de um campo só da TI vão só a
 //   quem vê o chamado com `chamados.ver`, que nesta change é o único jeito de ver um chamado: a
-//   leitura que o chat e a aba darão à pessoa recusará os dois.
+//   leitura que o chat e a aba darão à pessoa recusará os dois. A miniatura da imagem vai à mesma
+//   gente (change chat-com-chamados, tarefa 4.20).
 // O envio e a entrega são os de `arquivos/anexos-sem-dono.ts`, também do chat. Num plugin só deles,
 // porque o corpo do envio é o arquivo, até 25 MiB, e não JSON.
 import { anexosDosChamados, arquivos, naOrganizacao, type Transacao } from '@grafite/db';
@@ -21,8 +22,10 @@ import { moduloDesligado, modulosDesligados } from '../acesso/modulos.ts';
 import {
   AnexoEnviado,
   arquivoNaoEncontrado,
+  ENTREGA_DA_MINIATURA,
   ENTREGA_DO_ANEXO,
   entregarAnexo,
+  entregarMiniatura,
   ParametrosDoAnexoSemDono,
   PROBLEMAS_DO_ENVIO,
   receberAnexo,
@@ -38,7 +41,7 @@ const ParametrosDoAnexo = ParametrosDoAnexoSemDono.extend({ numero: NumeroDoCham
 /** O arquivo do anexo que a condição acha, não removido, com o que a entrega informa. */
 async function arquivoDoAnexo(tx: Transacao, arquivoId: string, dono: SQL | undefined) {
   const [lido] = await tx
-    .select({ nome: arquivos.nome, tipo: arquivos.tipo })
+    .select({ nome: arquivos.nome, tipo: arquivos.tipo, variantes: arquivos.variantes })
     .from(anexosDosChamados)
     .innerJoin(arquivos, eq(arquivos.id, anexosDosChamados.arquivoId))
     .where(and(eq(anexosDosChamados.arquivoId, arquivoId), isNull(arquivos.removidoEm), dono));
@@ -117,6 +120,13 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
     },
   );
 
+  /** O anexo do chamado que a conta vê. */
+  const anexoDoChamado = (requisicao: FastifyRequest, numero: number, arquivoId: string) =>
+    naOrganizacao(banco, orgDa(requisicao), async (tx) => {
+      const chamado = await chamadoQueAContaVe(tx, requisicao, numero);
+      return arquivoDoAnexo(tx, arquivoId, eq(anexosDosChamados.chamadoId, chamado.id));
+    });
+
   app.get(
     '/chamados/:numero/anexos/:arquivo',
     {
@@ -129,11 +139,25 @@ export const rotasDosAnexosDosChamados: FastifyPluginAsyncZod<DependenciasDasIma
     },
     async (requisicao, resposta) => {
       const { numero, arquivo } = requisicao.params;
-      const lido = await naOrganizacao(banco, orgDa(requisicao), async (tx) => {
-        const chamado = await chamadoQueAContaVe(tx, requisicao, numero);
-        return arquivoDoAnexo(tx, arquivo, eq(anexosDosChamados.chamadoId, chamado.id));
-      });
+      const lido = await anexoDoChamado(requisicao, numero, arquivo);
       return entregarAnexo(armazenamento, requisicao, resposta, arquivo, lido);
+    },
+  );
+
+  app.get(
+    '/chamados/:numero/anexos/:arquivo/miniatura',
+    {
+      config: { permissao: 'chamados.ver' },
+      schema: {
+        summary: 'A miniatura de um anexo de imagem do chamado, a quem vê o chamado',
+        params: ParametrosDoAnexo,
+        response: ENTREGA_DA_MINIATURA,
+      },
+    },
+    async (requisicao, resposta) => {
+      const { numero, arquivo } = requisicao.params;
+      const lido = await anexoDoChamado(requisicao, numero, arquivo);
+      return entregarMiniatura(armazenamento, requisicao, resposta, arquivo, lido);
     },
   );
 };

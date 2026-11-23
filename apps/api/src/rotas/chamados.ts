@@ -30,6 +30,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { sessaoDa } from '../acesso/escopo.ts';
+import { MiniaturaDoAnexo } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { DisponibilidadeDoAtivo, SuprimentosDoAtivo } from '../ativos/esquemas.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
@@ -308,6 +309,8 @@ const AnexoDaFicha = z.object({
   nome: z.string(),
   tipo: z.string(),
   bytes: z.int(),
+  /** A miniatura da imagem, que `/miniatura` entrega; nula no anexo sem ela (tarefa 4.20). */
+  miniatura: MiniaturaDoAnexo.nullable(),
 });
 
 /** Quem escreveu ou agiu: uma conta, ou a pessoa que pediu, com o nome de agora. */

@@ -220,6 +220,7 @@ describe('anexosDoChamado', () => {
       nome: `arquivo-${n}.png`,
       tipo: 'image/png',
       bytes: 1000,
+      miniatura: null,
     });
     const comAnexo = (n: number, em: string, autor = BRUNO): MensagemDoChamado => ({
       ...mensagem(n, em, autor),

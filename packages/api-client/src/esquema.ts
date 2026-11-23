@@ -27328,6 +27328,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/anexos/{arquivo}/miniatura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A miniatura de um anexo de imagem do chamado, a quem vê o chamado */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados": {
         parameters: {
             query?: never;
@@ -31018,6 +31102,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/chamados/{numero}/anexos/{arquivo}/miniatura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A miniatura de um anexo de imagem do chamado, a quem participa dele */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/chamados/{numero}/mensagens": {
         parameters: {
             query?: never;
@@ -31998,6 +32166,90 @@ export interface paths {
                     };
                     content: {
                         "application/octet-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/anexos/{arquivo}/miniatura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A miniatura de um anexo de imagem da conversa, a quem participa dela agora */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    arquivo: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A miniatura de 512 px do anexo de imagem, em WebP, para exibir na página */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
                     };
                 };
                 /** @description Default Response */
@@ -40130,6 +40382,17 @@ export interface components {
         AvisoDeTesteInput: {
             aparelhos: number;
         };
+        AnexoEnviadoInput: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        MiniaturaDoAnexoInput: {
+            largura: number;
+            altura: number;
+        };
         FormularioDeChamadoInput: {
             titulo: {
                 comecaPeloTipo: boolean;
@@ -40245,19 +40508,13 @@ export interface components {
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamadoInput"];
         };
-        AnexoEnviadoInput: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         AnexoDoChamadoNoChatInput: {
             /** Format: uuid */
             id: string;
             nome: string;
             tipo: string;
             bytes: number;
+            miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
         };
         ChamadoDeQuemParticipaInput: {
             numero: number;
@@ -40368,6 +40625,7 @@ export interface components {
                 nome: string;
                 tipo: string;
                 bytes: number;
+                miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 campo: string;
             }[];
             origem: {
@@ -41051,6 +41309,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 }[];
                 abrir: {
                     /** Format: uuid */
@@ -41180,6 +41439,7 @@ export interface components {
                 nome: string;
                 tipo: string;
                 bytes: number;
+                miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 campo: string;
             }[];
             resumo: string;
@@ -41202,6 +41462,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 }[];
                 opcoes: string[] | null;
                 escolhida: {
@@ -41232,6 +41493,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 }[];
                 opcoes: string[] | null;
                 escolhida: {
@@ -41540,6 +41802,7 @@ export interface components {
             nome: string;
             tipo: string;
             bytes: number;
+            miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
         };
         ReacaoDaMensagemInput: {
             texto: string;
@@ -46004,6 +46267,17 @@ export interface components {
         AvisoDeTeste: {
             aparelhos: number;
         };
+        AnexoEnviado: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            tipo: string;
+            bytes: number;
+        };
+        MiniaturaDoAnexo: {
+            largura: number;
+            altura: number;
+        };
         FormularioDeChamado: {
             titulo: {
                 comecaPeloTipo: boolean;
@@ -46119,19 +46393,13 @@ export interface components {
             frase: string | null;
             formulario: components["schemas"]["FormularioDeChamado"];
         };
-        AnexoEnviado: {
-            /** Format: uuid */
-            id: string;
-            nome: string;
-            tipo: string;
-            bytes: number;
-        };
         AnexoDoChamadoNoChat: {
             /** Format: uuid */
             id: string;
             nome: string;
             tipo: string;
             bytes: number;
+            miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
         };
         ChamadoDeQuemParticipa: {
             numero: number;
@@ -46242,6 +46510,7 @@ export interface components {
                 nome: string;
                 tipo: string;
                 bytes: number;
+                miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 campo: string;
             }[];
             origem: {
@@ -46925,6 +47194,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 }[];
                 abrir: {
                     /** Format: uuid */
@@ -47054,6 +47324,7 @@ export interface components {
                 nome: string;
                 tipo: string;
                 bytes: number;
+                miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 campo: string;
             }[];
             resumo: string;
@@ -47076,6 +47347,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 }[];
                 opcoes: string[] | null;
                 escolhida: {
@@ -47106,6 +47378,7 @@ export interface components {
                     nome: string;
                     tipo: string;
                     bytes: number;
+                    miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 }[];
                 opcoes: string[] | null;
                 escolhida: {
@@ -47414,6 +47687,7 @@ export interface components {
             nome: string;
             tipo: string;
             bytes: number;
+            miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
         };
         ReacaoDaMensagem: {
             texto: string;

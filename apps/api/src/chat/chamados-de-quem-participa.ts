@@ -42,7 +42,7 @@ import {
 } from '@grafite/domain';
 import { and, asc, desc, eq, inArray, ne, or, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { arquivoNaoEncontrado } from '../arquivos/anexos-sem-dono.ts';
+import { arquivoNaoEncontrado, MiniaturaDoAnexo } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
 import { nomesDosAnexosDasMensagens } from '../chamados/anexos.ts';
@@ -73,7 +73,14 @@ const ULTIMAS_DO_RESUMO = 2;
 const TipoNaLeitura = z.object({ nome: z.string(), icone: z.enum(ICONES_DO_TIPO_DE_CHAMADO) });
 
 const AnexoNaLeitura = z
-  .object({ id: z.uuid(), nome: z.string(), tipo: z.string(), bytes: z.int() })
+  .object({
+    id: z.uuid(),
+    nome: z.string(),
+    tipo: z.string(),
+    bytes: z.int(),
+    /** A miniatura da imagem, que `/miniatura` entrega; nula no anexo sem ela (tarefa 4.20). */
+    miniatura: MiniaturaDoAnexo.nullable(),
+  })
   .meta({ id: 'AnexoDoChamadoNoChat' });
 
 const AtivoNaLeitura = z.object({ nome: z.string(), patrimonio: z.string().nullable() });
@@ -548,6 +555,9 @@ export async function conversaDeQuemParticipa(
       nome: arquivos.nome,
       tipo: arquivos.tipo,
       bytes: arquivos.bytes,
+      variantes: arquivos.variantes,
+      largura: arquivos.largura,
+      altura: arquivos.altura,
       mensagemId: anexosDosChamados.mensagemId,
     })
     .from(anexosDosChamados)
@@ -741,12 +751,13 @@ export async function anexoDeQuemParticipa(
   conta: ContaQueLeAsMensagens,
   numero: number,
   arquivoId: string,
-): Promise<{ nome: string | null; tipo: string }> {
+): Promise<{ nome: string | null; tipo: string; variantes: string[] }> {
   const { chamado } = await chamadoDeQuemParticipa(tx, conta, numero);
   const [lido] = await tx
     .select({
       nome: arquivos.nome,
       tipo: arquivos.tipo,
+      variantes: arquivos.variantes,
       mensagemId: anexosDosChamados.mensagemId,
       especie: mensagensDosChamados.especie,
     })
@@ -769,7 +780,7 @@ export async function anexoDeQuemParticipa(
       chamado.respostas,
     ).has(arquivoId);
   if (!daLinha && !doCampo) throw arquivoNaoEncontrado();
-  return { nome: lido.nome, tipo: lido.tipo };
+  return { nome: lido.nome, tipo: lido.tipo, variantes: lido.variantes };
 }
 
 /** A conta participa agora da conversa do chat de onde o chamado foi aberto. */

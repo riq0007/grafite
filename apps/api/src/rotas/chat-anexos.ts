@@ -3,17 +3,21 @@
 // - o envio, um arquivo por vez, com `chat.usar` e as regras de "Arquivos aceitos", que deixa o
 //   anexo sem dono até a mensagem que o toma (`tomarAnexosDoChat`);
 // - a entrega do anexo sem dono, só a quem o enviou;
-// - a entrega pela conversa dona, a quem participa dela agora. A conversa de que a conta não
-//   participa, e o anexo de outra conversa, respondem que o arquivo não existe.
+// - a entrega pela conversa dona, a quem participa dela agora, com a da miniatura da imagem
+//   (tarefa 4.20). A conversa de que a conta não participa, e o anexo de outra conversa, respondem
+//   que o arquivo não existe.
 // Num plugin só deles, porque o corpo do envio é o arquivo, até 25 MiB, e não JSON.
 import { anexosDoChat, arquivos, naOrganizacao, type Transacao } from '@grafite/db';
 import { and, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import {
   AnexoEnviado,
   arquivoNaoEncontrado,
+  ENTREGA_DA_MINIATURA,
   ENTREGA_DO_ANEXO,
   entregarAnexo,
+  entregarMiniatura,
   ParametrosDoAnexoSemDono,
   PROBLEMAS_DO_ENVIO,
   receberAnexo,
@@ -33,7 +37,7 @@ const ParametrosDoAnexoDaConversa = ParametrosDoAnexoSemDono.extend({
 /** O arquivo do anexo do chat que a condição acha, não removido, com o que a entrega informa. */
 async function arquivoDoAnexo(tx: Transacao, arquivoId: string, dono: SQL | undefined) {
   const [lido] = await tx
-    .select({ nome: arquivos.nome, tipo: arquivos.tipo })
+    .select({ nome: arquivos.nome, tipo: arquivos.tipo, variantes: arquivos.variantes })
     .from(anexosDoChat)
     .innerJoin(arquivos, eq(arquivos.id, anexosDoChat.arquivoId))
     .where(and(eq(anexosDoChat.arquivoId, arquivoId), isNull(arquivos.removidoEm), dono));
@@ -96,6 +100,18 @@ export const rotasDosAnexosDoChat: FastifyPluginAsyncZod<DependenciasDasImagens>
     },
   );
 
+  /** O anexo da conversa, de quem participa dela agora: quem saiu da equipe não acha o arquivo. */
+  const anexoDaConversa = (requisicao: FastifyRequest, conversaId: string, arquivoId: string) =>
+    naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
+      const conta = await contaDaSessao(tx, requisicao);
+      const { linha } = await lerConversaDaConta(tx, conta, conversaId).catch((erro: unknown) => {
+        throw erro instanceof ProblemaDaApi && erro.dados.status === 404
+          ? arquivoNaoEncontrado()
+          : erro;
+      });
+      return arquivoDoAnexo(tx, arquivoId, eq(anexosDoChat.conversaId, linha.id));
+    });
+
   app.get(
     '/chat/conversas/:id/anexos/:arquivo',
     {
@@ -108,17 +124,25 @@ export const rotasDosAnexosDoChat: FastifyPluginAsyncZod<DependenciasDasImagens>
     },
     async (requisicao, resposta) => {
       const { id, arquivo } = requisicao.params;
-      const lido = await naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
-        const conta = await contaDaSessao(tx, requisicao);
-        // Quem não participa da conversa agora, como quem saiu da equipe, não acha o arquivo.
-        const { linha } = await lerConversaDaConta(tx, conta, id).catch((erro: unknown) => {
-          throw erro instanceof ProblemaDaApi && erro.dados.status === 404
-            ? arquivoNaoEncontrado()
-            : erro;
-        });
-        return arquivoDoAnexo(tx, arquivo, eq(anexosDoChat.conversaId, linha.id));
-      });
+      const lido = await anexoDaConversa(requisicao, id, arquivo);
       return entregarAnexo(armazenamento, requisicao, resposta, arquivo, lido);
+    },
+  );
+
+  app.get(
+    '/chat/conversas/:id/anexos/:arquivo/miniatura',
+    {
+      config: { permissao: 'chat.usar' },
+      schema: {
+        summary: 'A miniatura de um anexo de imagem da conversa, a quem participa dela agora',
+        params: ParametrosDoAnexoDaConversa,
+        response: ENTREGA_DA_MINIATURA,
+      },
+    },
+    async (requisicao, resposta) => {
+      const { id, arquivo } = requisicao.params;
+      const lido = await anexoDaConversa(requisicao, id, arquivo);
+      return entregarMiniatura(armazenamento, requisicao, resposta, arquivo, lido);
     },
   );
 };

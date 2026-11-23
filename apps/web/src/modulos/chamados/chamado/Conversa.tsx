@@ -24,6 +24,7 @@ import {
 import { useAgora } from '../../../casca/status/useAgora.ts';
 import { ProvedorDaJanelaDoChat } from '../../../chat/base.tsx';
 import { CartaoDoAtivoNaMensagem } from '../../../chat/CartaoDoAtivoNaMensagem.tsx';
+import { ImagemDoAnexo } from '../../../chat/ImagemDoAnexo.tsx';
 import { LinkDoChat } from '../../../chat/LinkDoChat.tsx';
 import { PerguntaDoChamado } from '../../../chat/PerguntaDoChamado.tsx';
 import { ResumoDosTempos } from '../../../chat/ResumoDosTempos.tsx';
@@ -362,15 +363,18 @@ function OrigemNoChat({
   );
 }
 
-/** Os anexos, como a lista do formulário: o ícone, o nome, o tamanho e "Baixar". */
+/**
+ * Os anexos, como a lista do formulário: o ícone, o nome, o tamanho e "Baixar". A imagem vai na
+ * miniatura, que baixa o arquivo, com o nome, o tamanho e "Baixar" embaixo (tarefa 4.20).
+ */
 function Anexos({ anexos, numero }: { anexos: Escrito['anexos']; numero: number }) {
   return (
     <ul className={estilos.arquivos} aria-label="Anexos">
-      {anexos.map(({ id, nome, bytes }) => {
+      {anexos.map(({ id, nome, bytes, miniatura }) => {
         const endereco = enderecoDoAnexo(id, { nome, bytes, onde: 'no-chamado' }, numero);
-        return (
-          <li key={id} className={estilos.arquivo}>
-            <Icone icone={FileText} />
+        const linha = (
+          <>
+            {!miniatura && <Icone icone={FileText} />}
             <span className={estilos.nome} title={nome}>
               {nome}
             </span>
@@ -381,10 +385,24 @@ function Anexos({ anexos, numero }: { anexos: Escrito['anexos']; numero: number 
                 download={nome}
                 aria-label={`Baixar ${nome}`}
                 className={estilos.baixar}
+                draggable={false}
               >
                 Baixar
               </a>
             )}
+          </>
+        );
+        if (!miniatura || !endereco) {
+          return (
+            <li key={id} className={estilos.arquivo}>
+              {linha}
+            </li>
+          );
+        }
+        return (
+          <li key={id} className={estilos.imagemAnexada}>
+            <ImagemDoAnexo anexo={{ nome, bytes, miniatura }} endereco={endereco} semLegenda />
+            <span className={estilos.arquivo}>{linha}</span>
           </li>
         );
       })}

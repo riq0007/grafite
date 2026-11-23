@@ -67,6 +67,11 @@ import {
 } from '@grafite/domain';
 import { and, asc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { carregarGrupos } from '../acesso/acesso.ts';
+import {
+  type ArquivoComMiniatura,
+  type MiniaturaDoAnexo,
+  miniaturaDe,
+} from '../arquivos/anexos-sem-dono.ts';
 import { conversasParaParticipar } from '../chat/conversa.ts';
 import { CAPACIDADE_DOS_CONSUMIVEIS } from '../consumiveis/compativeis.ts';
 import { chamadoNaoEncontrado } from './alcance.ts';
@@ -222,6 +227,8 @@ export interface AnexoNaFicha {
   nome: string;
   tipo: string;
   bytes: number;
+  /** As dimensões da miniatura da imagem; nula no anexo sem ela (change chat-com-chamados, 4.20). */
+  miniatura: MiniaturaDoAnexo | null;
 }
 
 /** Quem escreveu ou agiu: uma conta, ou a pessoa que pediu, com o nome de agora. */
@@ -486,16 +493,14 @@ async function tipoDoLigado(tx: Transacao, ativoId: string) {
 }
 
 /** O anexo como a ficha o mostra; o do chamado sempre tem o nome, que o envio dá. */
-export const anexoNaFicha = (arquivo: {
-  id: string;
-  nome: string | null;
-  tipo: string;
-  bytes: number;
-}): AnexoNaFicha => ({
+export const anexoNaFicha = (
+  arquivo: { id: string; nome: string | null; tipo: string; bytes: number } & ArquivoComMiniatura,
+): AnexoNaFicha => ({
   id: arquivo.id,
   nome: arquivo.nome ?? 'arquivo',
   tipo: arquivo.tipo,
   bytes: arquivo.bytes,
+  miniatura: miniaturaDe(arquivo),
 });
 
 /**
@@ -689,6 +694,9 @@ export async function fichaDoChamado(
       nome: arquivos.nome,
       tipo: arquivos.tipo,
       bytes: arquivos.bytes,
+      variantes: arquivos.variantes,
+      largura: arquivos.largura,
+      altura: arquivos.altura,
       mensagemId: anexosDosChamados.mensagemId,
     })
     .from(anexosDosChamados)
