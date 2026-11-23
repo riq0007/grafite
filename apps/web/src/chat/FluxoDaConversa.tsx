@@ -903,34 +903,41 @@ function MensagemNaConversa({
         )}
         {mensagem.anexos.length > 0 && (
           <ul className={estilos.anexos} aria-label="Anexos">
-            {mensagem.anexos.map(({ miniatura, ...anexo }) => (
-              <li key={anexo.id}>
-                {miniatura ? (
-                  <ImagemDoAnexo
-                    anexo={{ ...anexo, miniatura }}
-                    endereco={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
-                  />
-                ) : (
-                  <a
-                    className={estilos.anexo}
-                    href={`/api/chat/conversas/${conversa}/anexos/${anexo.id}`}
-                    download={anexo.nome}
-                    draggable={false}
-                  >
-                    <span className={estilos.miniDoAnexo}>
-                      <Icone
-                        icone={anexo.tipo.startsWith('image/') ? Image : FileText}
-                        tamanho={20}
-                      />
-                    </span>
-                    <span>
-                      <span className={estilos.nomeDoAnexo}>{anexo.nome}</span>
-                      <small>{formatarTamanho(anexo.bytes)}</small>
-                    </span>
-                  </a>
-                )}
-              </li>
-            ))}
+            {mensagem.anexos.map(({ miniatura, ...anexo }) => {
+              const endereco = `/api/chat/conversas/${conversa}/anexos/${anexo.id}`;
+              const linha = (
+                <a
+                  className={estilos.anexo}
+                  href={endereco}
+                  download={anexo.nome}
+                  draggable={false}
+                >
+                  <span className={estilos.miniDoAnexo}>
+                    <Icone
+                      icone={anexo.tipo.startsWith('image/') ? Image : FileText}
+                      tamanho={20}
+                    />
+                  </span>
+                  <span>
+                    <span className={estilos.nomeDoAnexo}>{anexo.nome}</span>
+                    <small>{formatarTamanho(anexo.bytes)}</small>
+                  </span>
+                </a>
+              );
+              return (
+                <li key={anexo.id}>
+                  {miniatura ? (
+                    <ImagemDoAnexo
+                      anexo={{ ...anexo, miniatura }}
+                      endereco={endereco}
+                      reserva={linha}
+                    />
+                  ) : (
+                    linha
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
         {mensagem.chamado && (

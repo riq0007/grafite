@@ -301,9 +301,13 @@
   flex: none;
 }
 
-/* A imagem anexada: a miniatura e, embaixo, o nome, o tamanho e "Baixar" (tarefa 4.20). */
+/*
+ * A imagem anexada: a miniatura e, embaixo, o nome, o tamanho e "Baixar" (tarefa 4.20). A coluna
+ * na largura do item, e não na da miniatura, para a deitada encolher na conversa estreita.
+ */
 .imagemAnexada {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: var(--esp-1);
   min-width: 0;

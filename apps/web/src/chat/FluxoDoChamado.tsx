@@ -311,31 +311,29 @@ function AnexosNoChamado({
   if (anexos.length === 0) return null;
   return (
     <ul className={daConversa.anexos} aria-label="Anexos">
-      {anexos.map(({ miniatura, ...anexo }) => (
-        <li key={anexo.id}>
-          {miniatura ? (
-            <ImagemDoAnexo
-              anexo={{ ...anexo, miniatura }}
-              endereco={`/api/chat/chamados/${numero}/anexos/${anexo.id}`}
-            />
-          ) : (
-            <a
-              className={daConversa.anexo}
-              href={`/api/chat/chamados/${numero}/anexos/${anexo.id}`}
-              download={anexo.nome}
-              draggable={false}
-            >
-              <span className={daConversa.miniDoAnexo}>
-                <Icone icone={anexo.tipo.startsWith('image/') ? Image : FileText} tamanho={20} />
-              </span>
-              <span>
-                <span className={daConversa.nomeDoAnexo}>{anexo.nome}</span>
-                <small>{formatarTamanho(anexo.bytes)}</small>
-              </span>
-            </a>
-          )}
-        </li>
-      ))}
+      {anexos.map(({ miniatura, ...anexo }) => {
+        const endereco = `/api/chat/chamados/${numero}/anexos/${anexo.id}`;
+        const linha = (
+          <a className={daConversa.anexo} href={endereco} download={anexo.nome} draggable={false}>
+            <span className={daConversa.miniDoAnexo}>
+              <Icone icone={anexo.tipo.startsWith('image/') ? Image : FileText} tamanho={20} />
+            </span>
+            <span>
+              <span className={daConversa.nomeDoAnexo}>{anexo.nome}</span>
+              <small>{formatarTamanho(anexo.bytes)}</small>
+            </span>
+          </a>
+        );
+        return (
+          <li key={anexo.id}>
+            {miniatura ? (
+              <ImagemDoAnexo anexo={{ ...anexo, miniatura }} endereco={endereco} reserva={linha} />
+            ) : (
+              linha
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

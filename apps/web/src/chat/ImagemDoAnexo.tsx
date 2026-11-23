@@ -1,5 +1,5 @@
 import { formatarTamanho } from '@grafite/ui';
-import type { CSSProperties } from 'react';
+import { type CSSProperties, type MouseEvent, type ReactNode, useState } from 'react';
 import estilos from './ImagemDoAnexo.module.css';
 
 /** O maior lado da miniatura na conversa, em px: a de 512 px do servidor, reduzida. */
@@ -30,6 +30,8 @@ export interface PropsDaImagemDoAnexo {
    * e o "Baixar", o link do teclado e do leitor de tela.
    */
   semLegenda?: boolean;
+  /** O que fica no lugar da miniatura que não carrega, como a linha do anexo, com o nome e o tamanho. */
+  reserva?: ReactNode;
 }
 
 /**
@@ -37,10 +39,17 @@ export interface PropsDaImagemDoAnexo {
  * chat-com-chamados, tarefa 4.20): escolher a miniatura baixa o arquivo, e o nome e o tamanho vão
  * embaixo, no mesmo link. A largura e a altura reservam o lugar antes de ela chegar, para a
  * conversa, que abre no fim, não sair dele, e ela não se arrasta, para não ser anexada de novo sem
- * querer.
+ * querer. A que não carrega, como com a rede que caiu, dá lugar à reserva.
  */
-export function ImagemDoAnexo({ anexo, endereco, semLegenda = false }: PropsDaImagemDoAnexo) {
+export function ImagemDoAnexo({
+  anexo,
+  endereco,
+  semLegenda = false,
+  reserva = null,
+}: PropsDaImagemDoAnexo) {
   const { largura, altura } = ladosNaConversa(anexo.miniatura);
+  const [falhou, definirFalhou] = useState(false);
+  if (falhou) return reserva;
   return (
     <a
       className={estilos.imagem}
@@ -48,7 +57,12 @@ export function ImagemDoAnexo({ anexo, endereco, semLegenda = false }: PropsDaIm
       download={anexo.nome}
       draggable={false}
       style={{ '--largura-da-imagem': `${largura}px` } as CSSProperties}
-      {...(semLegenda && { tabIndex: -1, 'aria-hidden': true })}
+      {...(semLegenda && {
+        tabIndex: -1,
+        'aria-hidden': true,
+        // O clique baixa sem pôr o foco no link escondido do leitor de tela.
+        onMouseDown: (evento: MouseEvent) => evento.preventDefault(),
+      })}
     >
       <img
         className={estilos.miniatura}
@@ -59,6 +73,7 @@ export function ImagemDoAnexo({ anexo, endereco, semLegenda = false }: PropsDaIm
         draggable={false}
         loading="lazy"
         decoding="async"
+        onError={() => definirFalhou(true)}
       />
       {!semLegenda && (
         <span className={estilos.legenda}>
