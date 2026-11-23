@@ -4,7 +4,7 @@
 // nascer, e a tela passa a ser a dela. A pessoa vem com a navegação; aberta sem ela, a tela pede a
 // escolha de novo. Com a conversa já nascida, a tela vai a ela.
 import { nomeNoChat } from '@grafite/domain';
-import { Avatar } from '@grafite/ui';
+import { Avatar, LugarDeSoltar } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
@@ -89,27 +89,30 @@ export function TelaDaDireta({ conta, pessoa }: { conta: string; pessoa: PessoaD
           </h2>
         </div>
       </header>
-      <p className={estilos.semMensagens}>Nenhuma mensagem ainda.</p>
-      <CaixaDoChat
-        rascunho={rascunhoDaDireta(conta)}
-        ajuda={ajudaDaCaixa({ tipo: 'direta', nome })}
-        citar={!desligados.includes('chamados')}
-        mandar={({ texto, anexos }) =>
-          pedir(
-            () =>
-              api.POST('/chat/diretas/{conta}/mensagens', {
-                params: { path: { conta } },
-                body: { texto, anexos },
-              }),
-            'mandar a mensagem',
-          )
-        }
-        aoEnviar={({ conversa }) => {
-          void consultas.invalidateQueries({ queryKey: CHAVE_DAS_CONVERSAS });
-          void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
-          irNoChat(`/chat/c/${conversa.toLowerCase()}`, { replace: true });
-        }}
-      />
+      {/* A conversa que ainda não nasceu também é o lugar de soltar os anexos (tarefa 4.19). */}
+      <LugarDeSoltar className={estilos.lugarDeSoltar}>
+        <p className={estilos.semMensagens}>Nenhuma mensagem ainda.</p>
+        <CaixaDoChat
+          rascunho={rascunhoDaDireta(conta)}
+          ajuda={ajudaDaCaixa({ tipo: 'direta', nome })}
+          citar={!desligados.includes('chamados')}
+          mandar={({ texto, anexos }) =>
+            pedir(
+              () =>
+                api.POST('/chat/diretas/{conta}/mensagens', {
+                  params: { path: { conta } },
+                  body: { texto, anexos },
+                }),
+              'mandar a mensagem',
+            )
+          }
+          aoEnviar={({ conversa }) => {
+            void consultas.invalidateQueries({ queryKey: CHAVE_DAS_CONVERSAS });
+            void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+            irNoChat(`/chat/c/${conversa.toLowerCase()}`, { replace: true });
+          }}
+        />
+      </LugarDeSoltar>
     </section>
   );
 }

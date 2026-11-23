@@ -409,3 +409,75 @@ describe('o que entra no meio do campo vem à vista', () => {
     await waitFor(() => expect(rolou.vistos()).toContain(antesDoEnvio));
   });
 });
+
+describe('os anexos colados e soltos no campo (tarefa 4.19 do chat-com-chamados)', () => {
+  /** O chamado 1042 que guarda os nomes dos arquivos enviados e as notas. */
+  function servidorDosAnexos() {
+    const nomes: (string | null)[] = [];
+    const notas: unknown[] = [];
+    const { servidor } = servidorDoCampo(NAO_ENCONTRADO);
+    abrirOChamado({
+      ...servidor,
+      'POST /api/chamados/anexos': (pedido) => {
+        const nome = new URL(pedido.url).searchParams.get('nome');
+        nomes.push(nome);
+        return Response.json(
+          { id: `a-${nomes.length}`, nome, tipo: 'image/png', bytes: 2048 },
+          { status: 201 },
+        );
+      },
+      'POST /api/chamados/1042/nota': async (pedido) => {
+        notas.push(await pedido.json());
+        return Response.json({
+          numero: 1042,
+          versao: 4,
+          situacao: 'em-atendimento',
+          responsavel: { id: ANA.conta, nome: ANA.nome },
+        });
+      },
+    });
+    return { nomes, notas };
+  }
+
+  it('o print colado na nota, sem escrever, vai só com ele pelo Ctrl+Enter', async () => {
+    const { nomes, notas } = servidorDosAnexos();
+    await caixa();
+    fireEvent.click(screen.getByRole('radio', { name: 'Nota interna' }));
+    const nota = await screen.findByRole('textbox', { name: 'Nota interna' });
+    const print = new File([new Uint8Array(2048)], 'image.png', { type: 'image/png' });
+    const colou = fireEvent.paste(nota, {
+      clipboardData: { files: [print], getData: () => '' },
+    });
+    expect(colou).toBe(false);
+    // As 09:40 de São Paulo, o fuso da conta.
+    expect(await screen.findByText('Imagem colada 11-11-2026 09.40.00.png')).toBeTruthy();
+    expect(nomes).toEqual(['Imagem colada 11-11-2026 09.40.00.png']);
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Salvar a nota' }).hasAttribute('disabled')).toBe(
+        false,
+      ),
+    );
+    fireEvent.keyDown(nota, { key: 'Enter', ctrlKey: true });
+    await waitFor(() => expect(notas).toEqual([{ texto: '', anexos: ['a-1'] }]));
+  });
+
+  it('o arquivo solto sobre a conversa do chamado entra no campo', async () => {
+    const { nomes } = servidorDosAnexos();
+    await caixa();
+    const conversa = screen.getByRole('region', { name: 'Conversa' });
+    const pdf = new File(['%PDF-1.7'], 'orcamento.pdf', { type: 'application/pdf' });
+    const arrasto = {
+      dataTransfer: {
+        types: ['Files'],
+        items: [{ kind: 'file', type: pdf.type, getAsFile: () => pdf }],
+        effectAllowed: 'all',
+      },
+    };
+    expect(fireEvent.dragEnter(conversa, arrasto)).toBe(false);
+    expect(fireEvent.dragOver(conversa, arrasto)).toBe(false);
+    expect(await screen.findByText('Solte para anexar')).toBeTruthy();
+    expect(fireEvent.drop(conversa, arrasto)).toBe(false);
+    expect(await screen.findByText('orcamento.pdf')).toBeTruthy();
+    expect(nomes).toEqual(['orcamento.pdf']);
+  });
+});

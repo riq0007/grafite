@@ -15,6 +15,7 @@ import {
   type DataHora,
   Folha,
   Icone,
+  LugarDeSoltar,
   Popover,
   useDataHora,
   usePostura,
@@ -228,39 +229,42 @@ function ChamadoNaTela({
         )}
         {!celular && <EtapasDoChamado etapas={chamado.etapas} agora={agora} dataHora={dataHora} />}
         {outros.length > 0 && <OutrosChamados chamados={outros} vista={vista} />}
-        <FluxoDoChamado ref={controle} chamado={chamado} acoes={acoes} />
-        {chamado.fechado ? (
-          <p className={estilos.semCaixa}>
-            {reabrirAte === null
-              ? 'O chamado fechou. Para o mesmo problema, abra outro chamado.'
-              : `O chamado fechou em ${reabrirAte}. Para o mesmo problema, abra outro chamado.`}
-          </p>
-        ) : (
-          <CaixaDoChat
-            caixa={caixa}
-            rascunho={rascunhoDoChamado(numero)}
-            ajuda={resolvido ? 'Escrever aqui reabre o chamado' : `Responder no #${numero}…`}
-            // No resolvido, o lugar da dica é do "Reabrir até", como no m04 e no m07.
-            dica={resolvido ? undefined : '# cita um chamado'}
-            citar
-            anexosEm="/chamados/anexos"
-            inicio={resolvido ? <Icone icone={Lock} tamanho={16} /> : undefined}
-            semTexto={
-              resolvido && reabrirAte !== null ? (
-                <Botao
-                  icone={RotateCcw}
-                  carregando={reabrindo}
-                  rotuloCarregando="Reabrindo o chamado"
-                  onPress={() => void reabrir()}
-                >
-                  {`Reabrir até ${reabrirAte}`}
-                </Botao>
-              ) : undefined
-            }
-            mandar={({ texto, anexos }) => acoes.responder({ texto, anexos })}
-            aoEnviar={() => controle.current?.irAoFim()}
-          />
-        )}
+        {/* A conversa e a caixa são o lugar de soltar os anexos; fechado, ninguém recebe (tarefa 4.19). */}
+        <LugarDeSoltar className={estilos.lugarDeSoltar}>
+          <FluxoDoChamado ref={controle} chamado={chamado} acoes={acoes} />
+          {chamado.fechado ? (
+            <p className={estilos.semCaixa}>
+              {reabrirAte === null
+                ? 'O chamado fechou. Para o mesmo problema, abra outro chamado.'
+                : `O chamado fechou em ${reabrirAte}. Para o mesmo problema, abra outro chamado.`}
+            </p>
+          ) : (
+            <CaixaDoChat
+              caixa={caixa}
+              rascunho={rascunhoDoChamado(numero)}
+              ajuda={resolvido ? 'Escrever aqui reabre o chamado' : `Responder no #${numero}…`}
+              // No resolvido, o lugar da dica é do "Reabrir até", como no m04 e no m07.
+              dica={resolvido ? undefined : '# cita um chamado'}
+              citar
+              anexosEm="/chamados/anexos"
+              inicio={resolvido ? <Icone icone={Lock} tamanho={16} /> : undefined}
+              semTexto={
+                resolvido && reabrirAte !== null ? (
+                  <Botao
+                    icone={RotateCcw}
+                    carregando={reabrindo}
+                    rotuloCarregando="Reabrindo o chamado"
+                    onPress={() => void reabrir()}
+                  >
+                    {`Reabrir até ${reabrirAte}`}
+                  </Botao>
+                ) : undefined
+              }
+              mandar={({ texto, anexos }) => acoes.responder({ texto, anexos })}
+              aoEnviar={() => controle.current?.irAoFim()}
+            />
+          )}
+        </LugarDeSoltar>
       </section>
       <aside className={estilos.painel} aria-labelledby={idDoPainel}>
         <h2 id={idDoPainel} className={estilos.tituloDoPainel}>

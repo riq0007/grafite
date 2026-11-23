@@ -17,6 +17,15 @@
   min-block-size: 0;
 }
 
+/* A conversa e a caixa, que são o lugar de soltar os anexos, no resto da altura. */
+.lugarDeSoltar {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
 .abrindo {
   margin: 0;
   padding: var(--esp-4) var(--esp-5);

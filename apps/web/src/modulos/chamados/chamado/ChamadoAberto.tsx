@@ -17,6 +17,7 @@ import {
   EstadoVazio,
   Icone,
   ItemDeMenu,
+  LugarDeSoltar,
   MensagemDoPasso,
   Menu,
   useDataHora,
@@ -167,7 +168,9 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
         }
       />
       <div className={estilos.corpo}>
-        <div className={estilos.principal}>
+        {/* A conversa e o campo são o lugar de soltar os anexos do campo; sem ele, como no fechado,
+            ninguém recebe (change chat-com-chamados, tarefa 4.19). */}
+        <LugarDeSoltar className={estilos.principal}>
           <Conversa key={ficha.numero} ficha={ficha} envios={envios} />
           <CampoDeEscrever
             // O rascunho é de um chamado: o outro abre com o campo vazio.
@@ -175,7 +178,7 @@ function Chamado({ ficha }: { ficha: FichaDoChamado }) {
             ficha={ficha}
             aoEnviar={() => definirEnvios((antes) => antes + 1)}
           />
-        </div>
+        </LugarDeSoltar>
         <LadoDoChamado ficha={ficha} acoes={doAtivo} />
       </div>
     </div>

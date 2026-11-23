@@ -2,7 +2,7 @@ import '@grafite/ui/fontes.css';
 import '@grafite/ui/tokens.css';
 import '@grafite/ui/base.css';
 import { registerSW } from 'virtual:pwa-register';
-import { ligarBarraDeRolagem } from '@grafite/ui';
+import { ligarBarraDeRolagem, ligarGuardaDoSoltar } from '@grafite/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
@@ -20,6 +20,9 @@ import { criarLojaDaSessao } from './sessao/loja.ts';
 // A barra de rolagem própria (spec componentes-base): antes de a casca aparecer, mede a barra do
 // sistema, para valer a dele onde ela é sobreposta, e passa a acompanhar a rolagem.
 ligarBarraDeRolagem(document);
+// O arquivo solto fora de um lugar de soltar não troca o Grafite pelo arquivo (spec
+// estrutura-da-casca, "Arquivo solto fora de um lugar de soltar").
+ligarGuardaDoSoltar(window);
 
 const raiz = document.getElementById('raiz');
 if (raiz) {

@@ -43,6 +43,7 @@ export {
 } from './casca/CentralDeNotificacoes.tsx';
 export { CursorSuavizado, type PropsDoCursorSuavizado } from './casca/CursorSuavizado.tsx';
 export { Dock, type PropsDoDock } from './casca/Dock.tsx';
+export { ligarGuardaDoSoltar } from './casca/guardaDoSoltar.ts';
 export {
   AvisoDoAmbienteDeTeste,
   BotaoDeBusca,
@@ -341,6 +342,12 @@ export {
   RotuloDeSituacao,
   type Situacao,
 } from './componentes/situacao/RotuloDeSituacao.tsx';
+export {
+  LugarDeSoltar,
+  type PropsDoLugarDeSoltar,
+  type ReceberOsSoltos,
+  useArquivosSoltos,
+} from './componentes/soltar/LugarDeSoltar.tsx';
 export {
   type AcaoEmLote,
   BarraDaTabela,

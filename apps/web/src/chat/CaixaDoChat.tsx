@@ -3,7 +3,8 @@
 // arredondada, com o texto de ajuda, o clipe e o envio dentro dela, a mensagem respondida em cima e
 // os anexos embaixo. Enter manda e Shift+Enter quebra a linha; o envio fica sem ação com a caixa
 // vazia. O "#" abre a lista dos chamados da conta, para citar. O que se escreve fica no rascunho da
-// conversa, e a recusa fica embaixo da caixa, com a frase dela.
+// conversa, e a recusa fica embaixo da caixa, com a frase dela. Os anexos entram pelo clipe, colados
+// e soltos na conversa em volta, que é o lugar de soltar (tarefa 4.19).
 import { conferirMensagem, MAXIMO_DE_ANEXOS } from '@grafite/domain';
 import {
   BarraDeProgresso,
@@ -12,6 +13,8 @@ import {
   FORMATOS_DE_ARQUIVO,
   formatarTamanho,
   Icone,
+  useArquivosSoltos,
+  useDataHora,
 } from '@grafite/ui';
 import { ArrowUp, CornerUpLeft, FileText, Paperclip } from 'lucide-react';
 import {
@@ -24,6 +27,7 @@ import {
   useState,
 } from 'react';
 import type { FalhaDoPedido } from '../api/pedir.ts';
+import { arquivosColados } from '../modulos/chamados/formulario/colar.ts';
 import { Recusa } from '../modulos/chamados/formulario/Recusa.tsx';
 import { useFilaDeAnexos } from '../modulos/chamados/formulario/useFilaDeAnexos.ts';
 import estilos from './CaixaDoChat.module.css';
@@ -96,6 +100,15 @@ export function CaixaDoChat<T>({
   const vazia = texto.trim() === '';
   const cabeMais = anexos.length + fila.length < MAXIMO_DE_ANEXOS;
   const semNada = vazia && anexos.length === 0 && fila.length === 0;
+  const { fuso } = useDataHora();
+
+  /** Os arquivos do clipe, os colados e os soltos, com as mesmas regras e recusas. */
+  const anexar = (arquivos: File[]) => {
+    definirRecusa(null);
+    receber(arquivos);
+  };
+  // Durante o envio, a caixa só se lê, e nada entra, como o texto.
+  useArquivosSoltos(enviando ? null : anexar);
 
   // A caixa cresce com o texto, até o limite do CSS; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto.
@@ -252,6 +265,14 @@ export function CaixaDoChat<T>({
             onSelect={(evento) => definirCursor(evento.currentTarget.selectionStart)}
             onBlur={() => definirCursor(null)}
             onKeyDown={aoTeclar}
+            onPaste={(evento) => {
+              if (enviando) return;
+              // O que traz o texto segue para a caixa, como o navegador cola.
+              const colados = arquivosColados(evento.clipboardData, new Date(), fuso);
+              if (colados === null) return;
+              evento.preventDefault();
+              anexar(colados);
+            }}
           />
           {dica && (
             // Escondida com o que se escreve, a dica segue como a descrição da caixa.
@@ -268,8 +289,7 @@ export function CaixaDoChat<T>({
                 hidden
                 accept={FORMATOS_DE_ARQUIVO.join(',')}
                 onChange={(evento) => {
-                  definirRecusa(null);
-                  receber([...(evento.target.files ?? [])]);
+                  anexar([...(evento.target.files ?? [])]);
                   // O mesmo arquivo pode ser escolhido de novo, depois de tirado.
                   evento.target.value = '';
                 }}

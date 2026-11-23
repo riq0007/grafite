@@ -7,7 +7,8 @@
 // "Enviar para Fernanda", que o Ctrl+Enter também chama. O rascunho fica no componente de fora,
 // que a tela monta pelo número do chamado: a releitura da conversa não o apaga, e o chamado
 // resolvido no meio da escrita o guarda até o "Reabrir". O fechado não se reabre, e o campo dá
-// lugar à frase.
+// lugar à frase. Os anexos entram pelo clipe, colados e soltos na conversa do chamado, que é o
+// lugar de soltar (change chat-com-chamados, tarefa 4.19).
 import type { components } from '@grafite/api-client';
 import { type ComandoDoAtivo, comandoDoAtivo, MAXIMO_DE_ANEXOS, nomeCurto } from '@grafite/domain';
 import {
@@ -24,6 +25,7 @@ import {
   Menu,
   Segmento,
   TeclaDeAtalho,
+  useArquivosSoltos,
   useDataHora,
 } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -58,6 +60,7 @@ import type { ContaDoSeletor } from '../../administracao/seletores/SeletorDeCont
 import { useAcoesDoAtendimento } from '../acoes.ts';
 import { CHAVE_DOS_CHAMADOS, type FichaDoChamado } from '../consultas.ts';
 import { EditorDasOpcoes } from '../EditorDasOpcoes.tsx';
+import { arquivosColados } from '../formulario/colar.ts';
 import { type AnexoCitado, rotuloDoAtivoCitado } from '../formulario/estado.ts';
 import { ListaDeAnexos } from '../formulario/ListaDeAnexos.tsx';
 import { Recusa } from '../formulario/Recusa.tsx';
@@ -275,6 +278,14 @@ function Escrever({
       }));
     },
   });
+
+  /** Os arquivos do clipe, os colados e os soltos, com as mesmas regras e recusas. */
+  const anexar = (arquivos: File[]) => {
+    definirErroDosAnexos(null);
+    receber(arquivos);
+  };
+  // Durante o envio, a caixa só se lê, e nada entra, como o texto.
+  useArquivosSoltos(enviando ? null : anexar);
 
   const { texto, modo, esperar, ids, anexos, cartao, opcoes } = rascunho;
   const pessoa = nomeCurto(ficha.pessoa.nome);
@@ -637,6 +648,14 @@ function Escrever({
           isReadOnly={enviando}
           erro={erroDoTexto ?? undefined}
           className={estilos.caixa}
+          onPaste={(evento) => {
+            if (enviando) return;
+            // O que traz o texto segue para a caixa, como o navegador cola.
+            const colados = arquivosColados(evento.clipboardData, new Date(), dataHora.fuso);
+            if (colados === null) return;
+            evento.preventDefault();
+            anexar(colados);
+          }}
           onKeyDown={(evento) => {
             if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
               evento.preventDefault();
@@ -767,8 +786,7 @@ function Escrever({
                 hidden
                 accept={FORMATOS_DE_ARQUIVO.join(',')}
                 onChange={(evento) => {
-                  definirErroDosAnexos(null);
-                  receber([...(evento.target.files ?? [])]);
+                  anexar([...(evento.target.files ?? [])]);
                   // O mesmo arquivo pode ser escolhido de novo, depois de tirado.
                   evento.target.value = '';
                 }}

@@ -6,7 +6,7 @@ import '@grafite/ui/fontes.css';
 import '@grafite/ui/tokens.css';
 import '@grafite/ui/base.css';
 import { registerSW } from 'virtual:pwa-register';
-import { ligarBarraDeRolagem } from '@grafite/ui';
+import { ligarBarraDeRolagem, ligarGuardaDoSoltar } from '@grafite/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { criarClienteDeConsultas } from '../api/consultas.ts';
@@ -18,6 +18,9 @@ import { AppDoChat } from './AppDoChat.tsx';
 import { criarRoteadorDoChat } from './rotas.tsx';
 
 ligarBarraDeRolagem(document);
+// Como na casca, o arquivo solto fora da conversa, como na lista das conversas, não troca o chat
+// pelo arquivo (spec modulo-chat, "Caixa de escrever do chat").
+ligarGuardaDoSoltar(window);
 
 const raiz = document.getElementById('raiz');
 if (raiz) {

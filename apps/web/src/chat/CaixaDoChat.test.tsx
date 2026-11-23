@@ -280,6 +280,144 @@ describe('a caixa de escrever', () => {
   });
 });
 
+/** O print colado: a imagem que o navegador nomeia "image.png", sem o texto. */
+const print = () => new File([new Uint8Array(2048)], 'image.png', { type: 'image/png' });
+
+/**
+ * Cola na caixa o que a área de transferência traz: os arquivos e o texto, por tipo. Devolve se a
+ * colagem seguiu como a do navegador, que põe o texto na caixa.
+ */
+const colar = (caixa: HTMLElement, arquivos: File[], textos: Record<string, string> = {}) =>
+  fireEvent.paste(caixa, {
+    clipboardData: { files: arquivos, getData: (tipo: string) => textos[tipo] ?? '' },
+  });
+
+/** O arrasto dos arquivos do computador, como o navegador o entrega ao `useDrop` do React Aria. */
+const arrasto = (...arquivos: File[]) => ({
+  dataTransfer: {
+    types: ['Files'],
+    items: arquivos.map((arquivo) => ({
+      kind: 'file',
+      type: arquivo.type,
+      getAsFile: () => arquivo,
+    })),
+    effectAllowed: 'all',
+  },
+});
+
+const orcamento = () => new File(['%PDF-1.7'], 'orcamento.pdf', { type: 'application/pdf' });
+
+/** O envio dos anexos, que guarda o nome de cada arquivo e responde com ele. */
+function anexosQueGuardam(nomes: (string | null)[]) {
+  return {
+    'POST /api/chat/anexos': (pedido: Request) => {
+      const nome = new URL(pedido.url).searchParams.get('nome');
+      nomes.push(nome);
+      return Response.json(
+        { id: `a-${nomes.length}`, nome, tipo: 'image/png', bytes: 2048 },
+        { status: 201 },
+      );
+    },
+  };
+}
+
+describe('os anexos colados e soltos (tarefa 4.19 do chat-com-chamados)', () => {
+  it('o print colado entra nos anexos com o nome de quando foi colado, e vai sem o texto', async () => {
+    const nomes: (string | null)[] = [];
+    const { servidor, pedidos } = servidorQueRecebe({ outros: anexosQueGuardam(nomes) });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    expect(colar(caixa, [print()])).toBe(false);
+    // As 13:40 de UTC são 10:40 em São Paulo, o fuso da conta.
+    const anexos = await screen.findByRole('list', { name: 'Anexos da mensagem' });
+    expect(await within(anexos).findByText('Imagem colada 20-11-2026 10.40.00.png')).toBeTruthy();
+    expect(nomes).toEqual(['Imagem colada 20-11-2026 10.40.00.png']);
+    const enviar = screen.getByRole('button', { name: 'Enviar' });
+    await waitFor(() => expect(enviar.hasAttribute('disabled')).toBe(false));
+    fireEvent.keyDown(caixa, { key: 'Enter' });
+    await waitFor(() => expect(pedidos).toEqual([{ texto: '', anexos: ['a-1'], respondeA: null }]));
+  });
+
+  it('a célula da planilha, que vem com a imagem dela, cola o texto, sem anexo', async () => {
+    const nomes: (string | null)[] = [];
+    const { servidor } = servidorQueRecebe({ outros: anexosQueGuardam(nomes) });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    const celula = { 'text/plain': 'R$ 1.234,56', 'text/html': '<td>R$ 1.234,56</td>' };
+    expect(colar(caixa, [print()], celula)).toBe(true);
+    await act(async () => {});
+    expect(nomes).toEqual([]);
+    expect(screen.queryByRole('list', { name: 'Anexos da mensagem' })).toBeNull();
+  });
+
+  it('o arquivo solto sobre a conversa mostra "Solte para anexar" e entra nos anexos da caixa', async () => {
+    const nomes: (string | null)[] = [];
+    const { servidor } = servidorQueRecebe({ outros: anexosQueGuardam(nomes) });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    await caixaDaEquipe();
+    // Sobre as mensagens, e não só sobre a caixa.
+    const area = await areaDasMensagens();
+    expect(fireEvent.dragEnter(area, arrasto(orcamento()))).toBe(false);
+    expect(fireEvent.dragOver(area, arrasto(orcamento()))).toBe(false);
+    expect(await screen.findByText('Solte para anexar')).toBeTruthy();
+    expect(fireEvent.drop(area, arrasto(orcamento()))).toBe(false);
+    const anexos = await screen.findByRole('list', { name: 'Anexos da mensagem' });
+    expect(await within(anexos).findByText('orcamento.pdf')).toBeTruthy();
+    expect(nomes).toEqual(['orcamento.pdf']);
+    expect(screen.queryByText('Solte para anexar')).toBeNull();
+  });
+
+  it('no canal em que a conta não escreve, a conversa não recebe o arquivo solto', async () => {
+    const { servidor } = servidorDaConversa({
+      cabecalho: {
+        tipo: 'canal',
+        nome: 'Avisos da TI',
+        pessoas: null,
+        escreveGrupo: 'TI',
+        escreve: false,
+        recusa: 'Só TI escreve neste canal.',
+      },
+      mensagens: varias(1, 2),
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    await screen.findByText('Só TI escreve neste canal.');
+    const area = await areaDasMensagens();
+    // Ninguém trata o arrasto: a guarda da casca o segura, com o cursor de que não se solta.
+    expect(fireEvent.dragEnter(area, arrasto(orcamento()))).toBe(true);
+    expect(fireEvent.dragOver(area, arrasto(orcamento()))).toBe(true);
+    expect(screen.queryByText('Solte para anexar')).toBeNull();
+  });
+
+  it('durante o envio, nada colado nem solto entra', async () => {
+    const nomes: (string | null)[] = [];
+    let responder: (resposta: Response) => void = () => {};
+    const { servidor } = servidorDaConversa({
+      mensagens: varias(1, 3),
+      outros: {
+        ...anexosQueGuardam(nomes),
+        [`POST ${CAMINHO}/mensagens`]: () =>
+          new Promise<Response>((resolver) => {
+            responder = resolver;
+          }),
+      },
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const caixa = await caixaDaEquipe();
+    escrever(caixa, 'Olha a folha');
+    fireEvent.keyDown(caixa, { key: 'Enter' });
+    await waitFor(() => expect(caixa.hasAttribute('readonly')).toBe(true));
+    expect(colar(caixa, [print()])).toBe(true);
+    const area = await areaDasMensagens();
+    expect(fireEvent.dragOver(area, arrasto(orcamento()))).toBe(true);
+    expect(screen.queryByText('Solte para anexar')).toBeNull();
+    act(() =>
+      responder(Response.json(mensagem(4, { autor: ANA, texto: 'Olha a folha' }), { status: 201 })),
+    );
+    await waitFor(() => expect((caixa as HTMLTextAreaElement).value).toBe(''));
+    expect(nomes).toEqual([]);
+  });
+});
+
 describe('o "#" da caixa', () => {
   it('abre a lista dos chamados da conta, que a busca estreita, e cita o escolhido', async () => {
     const { servidor } = servidorQueRecebe({ outros: CHAMADOS });

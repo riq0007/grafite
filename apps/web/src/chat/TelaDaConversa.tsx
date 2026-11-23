@@ -7,7 +7,16 @@
 // mensagem"). A aba Conversa continua montada nas outras, com o ponto da rolagem; sem o módulo
 // Chamados, a aba dos chamados sai.
 import { comecoDoTexto, nomeNoChat } from '@grafite/domain';
-import { Abas, Avatar, avisar, Botao, formatarTamanho, Icone, useDataHora } from '@grafite/ui';
+import {
+  Abas,
+  Avatar,
+  avisar,
+  Botao,
+  formatarTamanho,
+  Icone,
+  LugarDeSoltar,
+  useDataHora,
+} from '@grafite/ui';
 import { type UseInfiniteQueryResult, useQueryClient } from '@tanstack/react-query';
 import { FileText, Hash, Image } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
@@ -180,8 +189,10 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     silenciar: (silenciada) => void silenciar(silenciada),
   };
 
+  // A conversa inteira é o lugar de soltar os anexos da caixa, e não só a caixa: o arquivo que cai um
+  // pouco fora também entra. Sem a caixa, ela não recebe (tarefa 4.19).
   const fluxo = (visivel: boolean) => (
-    <>
+    <LugarDeSoltar className={estilos.lugarDeSoltar}>
       <FluxoDaConversa
         key={alvo ?? ''}
         ref={controle}
@@ -215,7 +226,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
       ) : (
         aberta.recusa !== null && <p className={estilos.semCaixa}>{aberta.recusa}</p>
       )}
-    </>
+    </LugarDeSoltar>
   );
   const sobre = sobreAConversa(aberta);
   const outrasAbas = [

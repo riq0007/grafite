@@ -84,6 +84,16 @@
   font-size: var(--texto-dado);
 }
 
+/* A conversa e a caixa, que são o lugar de soltar os anexos, no resto da altura; também na direta
+   que ainda não nasceu. */
+.lugarDeSoltar {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
 /* As abas ocupam o resto da altura, com a faixa no recuo do cabeçalho. */
 .abas {
   --recuo-das-abas: var(--esp-5);
