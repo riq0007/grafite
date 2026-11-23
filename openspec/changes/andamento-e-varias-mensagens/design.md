@@ -161,7 +161,8 @@ Não há mockup do andamento nem da seleção: as lacunas são decididas aqui (d
 - **A caixa de quem participa pela TI:**
   - diz "Escrever para Fernanda no #1045…", com a dica "# cita um chamado", e, quando Fernanda não usa o chat, "Fernanda ainda não usa o chat: a mensagem fica no chamado." (`ajudaDoCampo` do Chamados);
   - no resolvido, tem o cadeado, "O #1045 está resolvido." e "Reabrir";
-  - a mensagem dela aparece como a da própria conta.
+  - a mensagem dela aparece como a da própria conta;
+  - é a mesma caixa de quem pediu, que troca só o envio e o texto de dentro. O `pelaTi` muda com a aba aberta, quando a conta passa a atender o local: a caixa antiga é recusada com "Responda pela TI", o 409 relê o chamado, e o texto e os anexos na fila ficam para o envio pela TI.
 - **A seleção:**
   - a mensagem marcada ganha o fundo de seleção dos tokens;
   - a caixa de marcar é a do kit;
