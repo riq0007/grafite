@@ -353,6 +353,7 @@ export async function agirComoQuemParticipa(
     resolvidoEm: lido.resolvidoEm,
     locais: lido.locais.map((id) => ({ id, nome: arvore.caminho(id) })),
     semLocal: lido.semLocal,
+    pelaTi: false,
   };
   const decisao = decidirAcaoDeQuemParticipa(
     chamado,

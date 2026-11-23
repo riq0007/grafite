@@ -30,7 +30,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a resposta nova zero, com o `pelaTi` obrigatório na `respostaNova`, para o typecheck acusar os três chamadores da API. Eles passam o `false` de hoje neste commit, e a 3.1 dá o valor.
 
   Começa pelos testes unitários das ordens. Verificar: esses testes, o lint e o typecheck.
-- [ ] 2.3 As recusas a quem participa pela TI (decisão 4), no `decidirAcaoDeQuemParticipa`:
+- [x] 2.3 As recusas a quem participa pela TI (decisão 4), no `decidirAcaoDeQuemParticipa`:
   - a mensagem, a escolha e o "Reabrir", com "Você atende o chamado #1045. Responda pela TI.";
   - a avaliação, com "Quem atende o chamado #1045 não o avalia.";
   - o "Marcar como vista", que segue valendo.

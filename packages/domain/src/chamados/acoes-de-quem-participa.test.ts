@@ -36,6 +36,7 @@ const NA_TRIAGEM: ChamadoParaQuemParticipa = {
   locais: [JUNDIAI],
   semLocal: false,
   resolvidoEm: null,
+  pelaTi: false,
 };
 /** O #1044, em atendimento com Bruno. */
 const EM_ATENDIMENTO: ChamadoParaQuemParticipa = {
@@ -468,6 +469,60 @@ describe('a avaliação', () => {
   });
 });
 
+describe('quem participa pela TI', () => {
+  const TODOS = [NA_TRIAGEM, EM_ATENDIMENTO, AGUARDANDO, RESOLVIDO, FECHADO];
+  /** O chamado que a conta abriu pelo chat no nome de outra pessoa e atende. */
+  const pelaTi = (chamado: ChamadoParaQuemParticipa) => ({ ...chamado, pelaTi: true });
+
+  it('Quem participa pela TI pela rota de quem participa: a mensagem, a escolha e o "Reabrir" são recusados', () => {
+    for (const chamado of TODOS) {
+      for (const pedido of [responder(), escolher(), reabrir()]) {
+        expect(
+          decidirAcaoDeQuemParticipa(pelaTi(chamado), pedido),
+          `${pedido.acao} em #${chamado.numero}`,
+        ).toEqual(recusa({ motivo: 'responda-pela-ti' }));
+      }
+    }
+  });
+
+  it('a avaliação é recusada, também no resolvido', () => {
+    for (const chamado of TODOS) {
+      expect(decidirAcaoDeQuemParticipa(pelaTi(chamado), avaliar()), `#${chamado.numero}`).toEqual(
+        recusa({ motivo: 'quem-atende-nao-avalia' }),
+      );
+    }
+  });
+
+  it('a recusa vem antes da do texto, da pergunta e da avaliação já feita', () => {
+    const vazia: PedidoDeQuemParticipa = {
+      acao: 'responder',
+      texto: ' ',
+      anexos: 0,
+      quemResolveu: null,
+    };
+    expect(decidirAcaoDeQuemParticipa(pelaTi(EM_ATENDIMENTO), vazia)).toEqual(
+      recusa({ motivo: 'responda-pela-ti' }),
+    );
+    expect(
+      decidirAcaoDeQuemParticipa(
+        pelaTi(NA_TRIAGEM),
+        escolher('Talvez', { ...PERGUNTA, respondida: true }),
+      ),
+    ).toEqual(recusa({ motivo: 'responda-pela-ti' }));
+    expect(decidirAcaoDeQuemParticipa(pelaTi(RESOLVIDO), avaliar(null, null, true))).toEqual(
+      recusa({ motivo: 'quem-atende-nao-avalia' }),
+    );
+  });
+
+  it('"Marcar como vista" segue valendo: nada muda no chamado', () => {
+    for (const chamado of TODOS) {
+      expect(decidirAcaoDeQuemParticipa(pelaTi(chamado), VISTA), `#${chamado.numero}`).toEqual(
+        semMudar(chamado),
+      );
+    }
+  });
+});
+
 describe('a matriz de quem participa', () => {
   it('tem uma célula para cada ação em cada situação, com o fechado', () => {
     expect(ACOES_DE_QUEM_PARTICIPA).toEqual([
@@ -521,6 +576,8 @@ describe('mensagemDaRecusaDeQuemParticipa', () => {
       [{ motivo: 'sem-texto', texto: 'mensagem' }, 'Escreva a mensagem.'],
       [{ motivo: 'texto-longo', texto: 'mensagem' }, 'Use até 4.000 caracteres.'],
       [{ motivo: 'anexos-demais' }, 'Anexe até 5 arquivos.'],
+      [{ motivo: 'responda-pela-ti' }, 'Você atende o chamado #1045. Responda pela TI.'],
+      [{ motivo: 'quem-atende-nao-avalia' }, 'Quem atende o chamado #1045 não o avalia.'],
     ];
     for (const [motivo, frase] of frases) {
       expect(mensagemDaRecusaDeQuemParticipa(1045, motivo)).toBe(frase);
