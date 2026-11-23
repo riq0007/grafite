@@ -157,7 +157,7 @@ Não há mockup do andamento nem da seleção: as lacunas são decididas aqui (d
   - "Aguardar Fernanda no #1045", com "Mensagem para Fernanda" (até 4.000 caracteres), "Cancelar" e "Enviar e aguardar";
   - "Resolver o #1045", com "O que foi feito" (até 2.000), "Cancelar" e "Resolver".
 
-  A recusa do campo fica nele, e a do chamado vai no alto do diálogo, que fica aberto. No resolver, ela é a de versão ("O chamado #1045 mudou. Confira antes de resolver."), porque o `PedidoDoResolver` leva a versão. No aguardar, é a da situação, como a do resolvido, porque a mensagem da TI não leva a versão (`PedidoDaMensagemDoChamado`). À pessoa que não usa o chat, o diálogo do aguardar diz a frase do Chamados, como a caixa.
+  A recusa do campo fica nele, e toda outra vai no alto do diálogo, que fica aberto com o texto escrito. No resolver, elas são a de versão ("O chamado #1045 mudou. Confira antes de resolver."), porque o `PedidoDoResolver` leva a versão, e a do campo só da TI obrigatório e vazio ("Preencha Contador de páginas antes de resolver.", o conflito do `problemaDaRecusa`), que leva também "Abrir no Chamados", porque o campo se preenche na ficha do chamado. No aguardar, é a da situação, como a do resolvido, porque a mensagem da TI não leva a versão (`PedidoDaMensagemDoChamado`). À pessoa que não usa o chat, o diálogo do aguardar diz a frase do Chamados, como a caixa.
 - **A caixa de quem participa pela TI:**
   - diz "Escrever para Fernanda no #1045…", com a dica "# cita um chamado", e, quando Fernanda não usa o chat, "Fernanda ainda não usa o chat: a mensagem fica no chamado." (`ajudaDoCampo` do Chamados);
   - no resolvido, tem o cadeado, "O #1045 está resolvido." e "Reabrir";

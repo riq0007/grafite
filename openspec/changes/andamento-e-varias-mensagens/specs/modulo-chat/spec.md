@@ -26,7 +26,7 @@ Cada ação SHALL dar o retorno no aviso, com as frases do Chamados:
 - "Você resolveu o #1045.";
 - "Você reabriu o #1045.".
 
-A recusa SHALL ir no aviso crítico, com a frase dela, como no Chamados. Nos diálogos, a recusa do campo SHALL ficar no campo, a do chamado, como a do chamado que mudou, no alto, e o diálogo SHALL ficar aberto. O chamado na tela e as listas SHALL mostrar como o chamado ficou logo depois da ação, aceita ou recusada, e do "Desfazer", sem esperar o evento.
+A recusa SHALL ir no aviso crítico, com a frase dela, como no Chamados. Nos diálogos, a recusa do campo SHALL ficar no campo, e toda outra recusa, como a do chamado que mudou, no alto, com o diálogo aberto e o texto escrito. No resolver, a do campo só da TI vazio, como "Preencha Contador de páginas antes de resolver.", SHALL levar também "Abrir no Chamados", onde o campo se preenche. O chamado na tela e as listas SHALL mostrar como o chamado ficou logo depois da ação, aceita ou recusada, e do "Desfazer", sem esperar o evento.
 
 Quem não atende pelo chat SHALL NOT ver o menu.
 
@@ -47,6 +47,10 @@ Na lista do Chat e na vista Chamados, o chamado que aguarda a pessoa, a quem par
 #### Scenario: Resolver sem o que foi feito
 - **WHEN** Ana Souza escolhe "Resolver" no diálogo do #1050 sem escrever
 - **THEN** o campo diz "Escreva o que foi feito.", e o diálogo fica aberto
+
+#### Scenario: Resolver com o campo da TI vazio
+- **WHEN** Ana Souza escreve o que foi feito e escolhe "Resolver" no diálogo de um chamado de Impressora que ela abriu pelo chat no nome de Paulo Nunes, com o campo só da TI obrigatório "Contador de páginas" vazio
+- **THEN** o alto do diálogo diz "Preencha Contador de páginas antes de resolver.", com "Abrir no Chamados", e o diálogo fica aberto com o texto
 
 #### Scenario: Chamado que mudou
 - **WHEN** Diego assume o #1050 pelo Chamados, e Ana Souza, com o #1050 aberto no chat antes disso, escolhe "Assumir"

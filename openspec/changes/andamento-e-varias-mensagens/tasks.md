@@ -97,7 +97,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 4.2 Os diálogos do aguardar e do resolver e o reabrir:
   - "Aguardar Fernanda no #1045", com "Mensagem para Fernanda" e, à pessoa que não usa o chat, "Fernanda ainda não usa o chat: a mensagem fica no chamado.";
   - "Resolver o #1045", com "O que foi feito";
-  - nos dois, a recusa do campo nele e a do chamado no alto: no resolver, a de versão; no aguardar, que não leva a versão, a da situação;
+  - nos dois, a recusa do campo nele e toda outra no alto, com o diálogo aberto e o texto escrito: no resolver, a de versão e a do campo só da TI vazio, com "Abrir no Chamados"; no aguardar, que não leva a versão, a da situação;
   - o "Reabrir" no menu.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
