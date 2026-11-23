@@ -491,6 +491,13 @@
       "when": 1795384954949,
       "tag": "0069_mensagem_so_com_os_anexos",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1795467802777,
+      "tag": "0070_origem_de_varias_mensagens",
+      "breakpoints": true
     }
   ]
 }

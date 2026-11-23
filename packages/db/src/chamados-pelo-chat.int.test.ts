@@ -331,32 +331,51 @@ describe('Fechado', () => {
 });
 
 describe('Conversa do chamado', () => {
-  it('a origem copia a mensagem com o autor, o texto e os dados, uma por chamado', async () => {
-    const citada = await mensagemDoChat(orgA, deA.conversa, deA.quemAbre);
-    const chamado = await peloChat(orgA, deA, { origem_mensagem_id: citada });
-    const origem = {
-      especie: 'origem',
-      autor_conta: deA.quemAbre,
-      texto: 'A impressora do Financeiro está manchando.',
-      dados: { conversa: deA.conversa, mensagem: citada, em: '2026-11-11T13:19:00.000Z' },
-    };
-    await linha(orgA, chamado, origem);
-    expect(await recusada(linha(orgA, chamado, origem))).toBe(
-      'mensagens_dos_chamados_origem_unica',
-    );
-    const outro = await peloChat(orgA, deA);
-    expect(await recusada(linha(orgA, outro, { ...origem, dados: null }))).toBe(
-      'mensagens_dos_chamados_conteudo_valido',
-    );
+  /** A cópia de uma mensagem do chat na conversa do chamado, como a abertura pelo chat a grava. */
+  const origemDe = (mensagem: string) => ({
+    especie: 'origem',
+    autor_conta: deA.quemAbre,
+    texto: 'A impressora do Financeiro está manchando.',
+    dados: { conversa: deA.conversa, mensagem, em: '2026-11-11T13:19:00.000Z' },
+  });
+  const novaMensagem = () => mensagemDoChat(orgA, deA.conversa, deA.quemAbre);
+
+  it('a origem copia a mensagem com o autor, o texto e os dados', async () => {
+    const chamado = await peloChat(orgA, deA);
+    expect(
+      await recusada(linha(orgA, chamado, { ...origemDe(await novaMensagem()), dados: null })),
+    ).toBe('mensagens_dos_chamados_conteudo_valido');
     // A citada só com os anexos dá a origem com o texto nulo (tarefa 4.18).
-    await linha(orgA, outro, { ...origem, texto: null });
+    await linha(orgA, chamado, { ...origemDe(await novaMensagem()), texto: null });
     // A resposta da pessoa só com os anexos também.
-    await linha(orgA, outro, { especie: 'mensagem', autor_pessoa: deA.pessoa, texto: null });
+    await linha(orgA, chamado, { especie: 'mensagem', autor_pessoa: deA.pessoa, texto: null });
     expect(
       await recusada(
-        linha(orgA, outro, { ...origem, autor_conta: null, autor_pessoa: deA.pessoa }),
+        linha(orgA, chamado, {
+          ...origemDe(await novaMensagem()),
+          autor_conta: null,
+          autor_pessoa: deA.pessoa,
+        }),
       ),
     ).toBe('mensagens_dos_chamados_autoria_valida');
+  });
+
+  it('o chamado cita várias mensagens, e cada mensagem vira um chamado só', async () => {
+    // Change andamento-e-varias-mensagens, decisão 5: uma linha `origem` por mensagem citada.
+    const primeira = await novaMensagem();
+    const segunda = await novaMensagem();
+    const chamado = await peloChat(orgA, deA, { origem_mensagem_id: primeira });
+    // A primeira é a linha que a versão anterior grava, uma por chamado, e o banco novo a aceita na
+    // volta do runbook (Migration Plan).
+    await linha(orgA, chamado, origemDe(primeira));
+    await linha(orgA, chamado, origemDe(segunda));
+    expect(await recusada(linha(orgA, chamado, origemDe(segunda)))).toBe(
+      'mensagens_dos_chamados_origem_da_mensagem',
+    );
+    const outro = await peloChat(orgA, deA);
+    expect(await recusada(linha(orgA, outro, origemDe(primeira)))).toBe(
+      'mensagens_dos_chamados_origem_da_mensagem',
+    );
   });
 
   it('as opções: de 2 a 3, de 1 a 40 caracteres, só na mensagem da TI', async () => {

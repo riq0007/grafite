@@ -7,7 +7,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 1. Banco
 
-- [ ] 1.1 A origem de várias mensagens (design, decisão 5):
+- [x] 1.1 A origem de várias mensagens (design, decisão 5):
   - a migration 0070, que tira o `mensagens_dos_chamados_origem_unica` e cria o `mensagens_dos_chamados_origem_da_mensagem`, único em `(org_id, (dados->>'mensagem'))` na espécie `origem`;
   - o `schema.ts`;
   - os testes de que duas linhas `origem` no mesmo chamado entram, de que a mesma mensagem em dois chamados é recusada e de que a gravação da versão anterior, uma linha por chamado, continua aceita.
