@@ -263,10 +263,12 @@ Cada tela é conferida no `pnpm dev` contra o mockup, com a conta de revisão. O
 - [x] 5.2 O ponta a ponta da pilha (`e2e-pilha/caminho.spec.ts`): uma conta de colaborador transforma uma mensagem da equipe em chamado, a TI responde no chamado, e a resposta chega à pessoa no outro navegador. Verificar: `pnpm test:e2e:pilha`.
 
   Feito: o passo 39, pela tela: o perfil Colaborador vem do grupo da recepção de Campinas, que também é o da equipe, e a conta de Carla Dias, só com ele, cai no app do chat ao entrar; a etapa de agora e a resposta mudam na tela aberta dela, sem recarregar.
-- [ ] 5.3 O ponta a ponta da web e o visual que faltarem: o app do chat na web simulada e as referências da regressão visual dos componentes novos do kit que as tarefas não gravaram. Na web simulada:
+- [x] 5.3 O ponta a ponta da web e o visual que faltarem: o app do chat na web simulada e as referências da regressão visual dos componentes novos do kit que as tarefas não gravaram. Na web simulada:
   - a entrada, a lista, a conversa e o chamado;
   - o botão direito: o menu abre na mensagem e não no link, o "Responder" deixa o foco na caixa e, com o menu aberto, o botão direito em outra mensagem abre o dela, com o foco num item dele, também na imagem do Linux do CI, onde o `contextmenu` vem no aperto. Esse clique vai pelo `page.mouse`, no ponto da mensagem, porque o `locator.click` espera o elemento receber o ponteiro, e a tela fica inerte com o menu aberto;
   - com a lista de uma seleção aberta no editor de um filtro da tabela, o botão direito numa linha fecha os dois, e o menu da linha abre, com o foco nele;
   - o print colado, o arquivo solto e a miniatura na conversa.
 
   Verificar: `pnpm test:e2e` e `pnpm test:visual`.
+
+  Feito: `e2e/chat.spec.ts`, com a API do chat simulada na página e a sessão de uma colaboradora; no Ativos, a lista é a da escolha em árvore do filtro Local, porque o editor de filtro dele não tem seleção; a ficha do Chamados a 390 px com o print deitado na mensagem e na nota; e a história "Aviso de soltar", com a tag "captura", cujas referências eram as únicas que faltavam.

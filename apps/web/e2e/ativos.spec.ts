@@ -499,6 +499,50 @@ test.describe('quem trabalha na tabela dos ativos', () => {
     expect(await copiado(page)).toBe('PAT-10004');
   });
 
+  test('com a lista do local aberta no editor de um filtro, o botão direito numa linha fecha os dois e abre o menu dela', async ({
+    page,
+  }) => {
+    // Spec componentes-base, "Botão direito com um menu, uma lista ou um popover aberto" (change
+    // chat-com-chamados, tarefa 5.3).
+    await simularAtivos(page);
+    await page.goto('/ativos');
+    await expect(page.getByText('2 ativos')).toBeVisible();
+    const editor = await filtrar(page, 'Local');
+    await campoDeLocal(editor, 'Local').click();
+    const listaDoLocal = page.getByRole('dialog', { name: 'Local', exact: true });
+    await expect(listaDoLocal.getByRole('searchbox', { name: 'Filtrar' })).toBeVisible();
+    // A janela anota, depois da tela, se o navegador abriria o menu dele no clique.
+    await page.evaluate(() => {
+      const janela = window as Window & { menusDoNavegador?: boolean[] };
+      janela.menusDoNavegador = [];
+      window.addEventListener('contextmenu', (evento) => {
+        janela.menusDoNavegador?.push(!evento.defaultPrevented);
+      });
+    });
+
+    // O clique vai pelo `page.mouse`, no ponto da linha: com a lista aberta, a tabela fica inerte,
+    // e o `locator.click` esperaria a linha receber o ponteiro.
+    const celula = await linha(page, 'PAT-00999').getByText('PAT-00999').boundingBox();
+    if (!celula) throw new Error('A linha do PAT-00999 não está na tela.');
+    const ponto = { x: celula.x + celula.width / 2, y: celula.y + celula.height / 2 };
+    await page.mouse.click(ponto.x, ponto.y, { button: 'right' });
+    await expect(listaDoLocal).toHaveCount(0);
+    await expect(editor).toHaveCount(0);
+    const menu = page.getByRole('menu', { name: 'Ações das linhas' });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Abrir' })).toBeFocused();
+    await expect(page.getByText('1 selecionado')).toBeVisible();
+    // Onde o ponteiro está, e sem o menu do navegador.
+    const caixaDoMenu = await menu.boundingBox();
+    expect(Math.abs((caixaDoMenu?.x ?? 0) - ponto.x)).toBeLessThan(16);
+    expect(Math.abs((caixaDoMenu?.y ?? 0) - ponto.y)).toBeLessThan(16);
+    expect(
+      await page.evaluate(
+        () => (window as Window & { menusDoNavegador?: boolean[] }).menusDoNavegador,
+      ),
+    ).toEqual([false]);
+  });
+
   test('a prévia passa pelas setas até a página seguinte da lista', async ({ page }) => {
     const api = await simularAtivos(page, { numeradas: 43, porPagina: 40 });
     await page.goto('/ativos');

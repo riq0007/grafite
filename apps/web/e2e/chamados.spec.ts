@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
-import { RENATO, simularChamados } from './api-dos-chamados.ts';
+import { FOTO_DEITADA } from './api-do-chat.ts';
+import { RENATO, simularChamados, simularFichaComOPrint } from './api-dos-chamados.ts';
 import { expect, test } from './fixtures.ts';
 
 // Specs chamados e modulo-chamados (change chamados-da-ti, tarefa 5.8, e revisão da 4.12): o
@@ -59,4 +60,46 @@ test('Assumir pela tela de antes: a recusa avisa e relê, e o assumir pela tela 
   ).toBeVisible();
   expect(chamados.pedidos.at(-1)).toEqual({ acao: 'assumir', numero: 1038, corpo: { versao: 2 } });
   await expect(quadradoNa(page, 'Ana Souza', 1038)).toBeVisible();
+});
+
+test.describe('a ficha no celular', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test('o print deitado cabe na mensagem e na nota, sem a conversa rolar de lado', async ({
+    page,
+  }) => {
+    // Revisão da tarefa 4.20 do chat-com-chamados, N2, na tarefa 5.3.
+    const faltam: string[] = [];
+    page.on('response', (resposta) => {
+      if (resposta.status() === 501) faltam.push(new URL(resposta.url()).pathname);
+    });
+    await simularChamados(page);
+    await simularFichaComOPrint(page, FOTO_DEITADA);
+    await page.goto('/chamados/1046');
+    const conversa = page.getByRole('region', { name: 'Conversa', exact: true });
+    const itens = {
+      mensagem: conversa.locator('ol > li').filter({ hasText: 'A folha sai manchada.' }),
+      nota: conversa.locator('ol > li').filter({ hasText: 'O mesmo borrão do print de ontem.' }),
+    };
+    for (const [qual, item] of Object.entries(itens)) {
+      const miniatura = item.locator('img[src$="/miniatura"]');
+      await expect(miniatura, qual).toBeVisible();
+      await expect
+        .poll(() => miniatura.evaluate((img: HTMLImageElement) => img.naturalWidth))
+        .toBe(512);
+      const imagem = await miniatura.boundingBox();
+      const doItem = await item.boundingBox();
+      if (!imagem || !doItem) throw new Error(`A ${qual} não está na tela.`);
+      // Dentro do item, na proporção de 512 × 288.
+      expect(imagem.x, qual).toBeGreaterThanOrEqual(doItem.x);
+      expect(imagem.x + imagem.width, qual).toBeLessThanOrEqual(doItem.x + doItem.width + 0.5);
+      expect(Math.abs(imagem.height - (imagem.width * 288) / 512), qual).toBeLessThan(1);
+    }
+    const rolagem = await conversa.evaluate((secao) => ({
+      larga: secao.scrollWidth,
+      visivel: secao.clientWidth,
+    }));
+    expect(rolagem.larga).toBeLessThanOrEqual(rolagem.visivel);
+    expect(faltam).toEqual([]);
+  });
 });

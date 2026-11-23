@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { expect, waitFor, within } from 'storybook/test';
 import { LugarDeSoltar, useArquivosSoltos } from './LugarDeSoltar.tsx';
@@ -178,6 +178,41 @@ export const SoltarNaConversa: Historia = {
       ).toEqual(['relatorio.pdf', 'folha-manchada.jpg']),
     );
     await expect(tela.queryByText('Solte para anexar')).toBeNull();
+  },
+};
+
+/**
+ * O arquivo do computador que chega sobre o texto da conversa ao abrir e fica parado ali. O arrasto
+ * vai depois de a caixa se registrar no lugar, para ele ser aceito.
+ */
+function ArrastoParado({ children }: { children: ReactNode }) {
+  const lugar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const vez = setTimeout(() => {
+      const texto = lugar.current?.querySelector('p');
+      if (!texto) return;
+      arrastar(texto, 'dragenter', [relatorio()]);
+      arrastar(texto, 'dragover', [relatorio()]);
+    });
+    return () => clearTimeout(vez);
+  }, []);
+  return <div ref={lugar}>{children}</div>;
+}
+
+/**
+ * "Solte para anexar" cobre a conversa, com o arquivo do computador parado sobre ela desde a
+ * abertura (change chat-com-chamados, tarefa 5.3). A função só confere o aviso como abriu: a
+ * captura o mostra assim.
+ */
+export const AvisoDeSoltar: Historia = {
+  tags: ['captura'],
+  render: (args) => (
+    <ArrastoParado>
+      <Conversa {...args} />
+    </ArrastoParado>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByText('Solte para anexar')).toBeVisible();
   },
 };
 
