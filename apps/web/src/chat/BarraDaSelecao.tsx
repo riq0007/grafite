@@ -26,7 +26,7 @@ export function BarraDaSelecao({
   cancelar: () => void;
 }) {
   return (
-    <div className={estilos.barra}>
+    <div className={estilos.barra} data-barra-da-selecao="">
       <p className={estilos.quantas} role="status">
         {textoDaSelecao(quantas)}
       </p>

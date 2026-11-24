@@ -81,9 +81,16 @@ export function ComOResumoDoChamado({
 }
 
 /** O chip do chamado citado no texto: "#1045 · EM ANDAMENTO · Bruno Lima". */
-export function ChipDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
-  return (
-    <ComOResumoDoChamado chamado={chamado} className={estilos.chip}>
+export function ChipDoChamado({
+  chamado,
+  semCartao = false,
+}: {
+  chamado: ChamadoNoChip;
+  /** Na seleção das mensagens, o chip sem o cartão do resumo, que não abre nem recebe o foco. */
+  semCartao?: boolean;
+}) {
+  const dentro = (
+    <>
       <span className={estilos.paraOLeitor}>Chamado </span>
       <span className={estilos.numero}>#{chamado.numero}</span>
       <span className={estilos.paraOLeitor}>, </span>
@@ -95,6 +102,13 @@ export function ChipDoChamado({ chamado }: { chamado: ChamadoNoChip }) {
           {chamado.atende}
         </span>
       )}
+    </>
+  );
+  return semCartao ? (
+    <span className={estilos.chip}>{dentro}</span>
+  ) : (
+    <ComOResumoDoChamado chamado={chamado} className={estilos.chip}>
+      {dentro}
     </ComOResumoDoChamado>
   );
 }

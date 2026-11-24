@@ -98,10 +98,13 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   const [transformando, definirTransformando] = useState<MensagemATransformar | null>(null);
   const sessao = useSessao();
   const conta = (sessao.tipo === 'ativa' && sessao.conta.id) || '';
-  // A seleção vale na conversa em que começou: sair dela a desfaz.
-  const [selecionadas, definirSelecionadas] = useState<{ conversa: string; ids: string[] } | null>(
-    null,
-  );
+  // A seleção vale na conversa em que começou: sair dela a desfaz. A origem é a mensagem em que ela
+  // começou, que recebe o foco.
+  const [selecionadas, definirSelecionadas] = useState<{
+    conversa: string;
+    ids: string[];
+    origem: string;
+  } | null>(null);
   const doTrecho = mensagens.trecho.data?.itens;
   // As marcadas que valem, na ordem da conversa: a que vira chamado, aqui ou por outra conta, sai, a
   // cada leitura da conversa. A marcada fora do trecho fica, no fim.
@@ -130,6 +133,8 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   useEffect(() => {
     teclasDaSelecao.current = (evento) => {
       if (evento.defaultPrevented) return;
+      // Só com a barra à vista: com outra aba da conversa aberta, as teclas são dela.
+      if (!document.querySelector('[data-barra-da-selecao]')?.checkVisibility()) return;
       if (document.activeElement?.closest('[role="dialog"], [role="alertdialog"], [role="menu"]')) {
         return;
       }
@@ -149,6 +154,28 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     const ouvir = (evento: KeyboardEvent) => teclasDaSelecao.current(evento);
     window.addEventListener('keydown', ouvir);
     return () => window.removeEventListener('keydown', ouvir);
+  }, [selecionando]);
+  // O foco segue a seleção: ao entrar, na caixa de marcar da mensagem de origem, ou nela, se ela já
+  // virou chamado; ao sair, na caixa de escrever, que volta, ou na mensagem, onde a conta não escreve.
+  // O que tinha o foco, o "Mais", o "Cancelar" ou a caixa de marcar, sai da tela.
+  const origem = useRef<string | null>(null);
+  origem.current = selecionadas?.origem ?? origem.current;
+  const selecionouAntes = useRef(false);
+  useEffect(() => {
+    if (selecionando === selecionouAntes.current) return;
+    selecionouAntes.current = selecionando;
+    const mensagem = origem.current
+      ? document.querySelector<HTMLElement>(`[data-mensagem="${origem.current}"]`)
+      : null;
+    if (selecionando) {
+      const marcar = mensagem?.querySelector<HTMLElement>(
+        '[data-caixa-da-selecao] input:not(:disabled)',
+      );
+      (marcar ?? mensagem)?.focus({ preventScroll: true });
+      return;
+    }
+    if (caixa.current) caixa.current.focus();
+    else mensagem?.focus({ preventScroll: true });
   }, [selecionando]);
   const aberta = cabecalho.data;
 
@@ -251,7 +278,11 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     selecionar:
       pode('chamados.pedir') && !desligados.includes('chamados')
         ? (mensagem) =>
-            definirSelecionadas({ conversa, ids: mensagem.chamado ? [] : [mensagem.id] })
+            definirSelecionadas({
+              conversa,
+              ids: mensagem.chamado ? [] : [mensagem.id],
+              origem: mensagem.id,
+            })
         : null,
     silenciada: aberta.silenciada,
     silenciar: (silenciada) => void silenciar(silenciada),
@@ -267,10 +298,10 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
             definirSelecionadas((antes) => {
               if (antes?.conversa !== conversa) return antes;
               if (antes.ids.includes(id)) {
-                return { conversa, ids: antes.ids.filter((marcada) => marcada !== id) };
+                return { ...antes, ids: antes.ids.filter((marcada) => marcada !== id) };
               }
               if (marcadas.length >= MAXIMO_DE_MENSAGENS_NUM_CHAMADO) return antes;
-              return { conversa, ids: [...antes.ids, id] };
+              return { ...antes, ids: [...antes.ids, id] };
             }),
         };
 
@@ -300,6 +331,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         <div className={estilos.lugarDaCaixa} hidden={selecao !== null}>
           <CaixaDoChat
             caixa={caixa}
+            parada={selecao !== null}
             rascunho={rascunhoDaConversa(conversa)}
             ajuda={ajudaDaCaixa(aberta)}
             citar={!desligados.includes('chamados')}

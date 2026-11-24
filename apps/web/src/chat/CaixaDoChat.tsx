@@ -71,6 +71,8 @@ export interface PropsDaCaixaDoChat<T> {
    * no chamado.", que o leitor de tela também ouve como a descrição da caixa.
    */
   nota?: string;
+  /** A caixa escondida, como na seleção das mensagens: o arquivo solto não entra. */
+  parada?: boolean;
 }
 
 export function CaixaDoChat<T>({
@@ -85,6 +87,7 @@ export function CaixaDoChat<T>({
   inicio,
   semTexto,
   nota,
+  parada = false,
 }: PropsDaCaixaDoChat<T>) {
   const [rascunho, mudarRascunho] = useRascunho(chave);
   const { texto, respondida, anexos } = rascunho;
@@ -114,8 +117,8 @@ export function CaixaDoChat<T>({
     definirRecusa(null);
     receber(arquivos);
   };
-  // Durante o envio, a caixa só se lê, e nada entra, como o texto.
-  useArquivosSoltos(enviando ? null : anexar);
+  // Durante o envio, a caixa só se lê, e nada entra, como o texto; a parada não recebe.
+  useArquivosSoltos(enviando || parada ? null : anexar);
 
   // A caixa cresce com o texto, até o limite do CSS; dali em diante, rola.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada texto.

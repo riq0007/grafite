@@ -29,13 +29,12 @@
   color: var(--cor-sobre-info);
 }
 
-.barra .transformar[data-nivel="primario"][data-hovered] {
+.barra .transformar[data-nivel="primario"]:is([data-hovered], [data-pressed]) {
   background-color: var(--cor-info-forte);
 }
 
 .atalho {
   margin-inline-start: var(--esp-2);
-  opacity: 0.8;
 }
 
 :root[data-postura="celular"] .barra {

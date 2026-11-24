@@ -589,6 +589,14 @@ export function FluxoDaConversa({
       abrirOMenu(daMensagem, juntoDoMais(daMensagem, rolagem.current));
       return;
     }
+    // Na seleção, o Espaço na mensagem com o foco a marca ou desmarca, como a caixa de marcar dela.
+    if (selecao && evento.key === ' ' && daMensagem && alvo === daMensagem) {
+      evento.preventDefault();
+      const id = daMensagem.dataset.mensagem;
+      const semAcao = daMensagem.querySelector('[data-caixa-da-selecao] [data-disabled]');
+      if (id && !semAcao) selecao.alternar(id);
+      return;
+    }
     andarPelasMensagens(evento);
   };
 
@@ -818,9 +826,11 @@ function ItemDaConversa({
 function TextoDaMensagem({
   texto,
   citacoes,
+  semCartao,
 }: {
   texto: string;
   citacoes: readonly CitacaoNaMensagem[];
+  semCartao: boolean;
 }) {
   let ate = 0;
   return partesDoTexto(texto, citacoes).map((parte) => {
@@ -829,7 +839,7 @@ function TextoDaMensagem({
     return parte.tipo === 'texto' ? (
       <Fragment key={onde}>{parte.texto}</Fragment>
     ) : (
-      <ChipDoChamado key={onde} chamado={parte.citacao} />
+      <ChipDoChamado key={onde} chamado={parte.citacao} semCartao={semCartao} />
     );
   });
 }
@@ -883,6 +893,8 @@ function MensagemNaConversa({
       onClickCapture={
         selecao
           ? (evento) => {
+              // O que vem de um portal, como um cartão, é filho do `li` só na árvore do React.
+              if (!evento.currentTarget.contains(evento.target as Node)) return;
               if ((evento.target as Element).closest('[data-caixa-da-selecao]')) return;
               evento.preventDefault();
               evento.stopPropagation();
@@ -905,7 +917,9 @@ function MensagemNaConversa({
             onChange={() => selecao.alternar(mensagem.id)}
           >
             <span className={estilos.paraOLeitor}>
-              {`Selecionar a mensagem de ${nome} das ${hora}`}
+              {nome === 'Você'
+                ? `Selecionar a sua mensagem das ${hora}`
+                : `Selecionar a mensagem de ${nome} das ${hora}`}
               {mensagem.chamado ? ` · Já virou o #${mensagem.chamado.numero}` : ''}
             </span>
           </Checkbox>
@@ -951,7 +965,11 @@ function MensagemNaConversa({
         )}
         {mensagem.texto && (
           <p className={estilos.texto}>
-            <TextoDaMensagem texto={mensagem.texto} citacoes={mensagem.citacoes} />
+            <TextoDaMensagem
+              texto={mensagem.texto}
+              citacoes={mensagem.citacoes}
+              semCartao={selecao !== null}
+            />
           </p>
         )}
         {mensagem.anexos.length > 0 && (
