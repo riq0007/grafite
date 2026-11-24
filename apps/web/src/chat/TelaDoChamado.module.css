@@ -99,6 +99,12 @@
 }
 
 /* O "Andamento", a quem atende pelo chat, antes de "Neste chamado", que some com o painel ao lado. */
+.andamento,
+.botaoDoPainel {
+  display: inline-flex;
+  flex: none;
+}
+
 /* No cabeçalho do computador, o título tem base: os botões descem à linha de baixo, à direita, antes
    de espremê-lo. No do celular, a linha do título não quebra. */
 .cabecalho > .titulo {
@@ -107,12 +113,6 @@
 
 .cabecalho > .andamento {
   margin-inline-start: auto;
-}
-
-.andamento,
-.botaoDoPainel {
-  display: inline-flex;
-  flex: none;
 }
 
 /* As etapas, em quatro colunas, cada uma com o fio em cima: no azul a que chegou, no tom do selo a de
