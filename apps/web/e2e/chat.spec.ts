@@ -439,7 +439,10 @@ test.describe('na conversa aberta', () => {
     // Antes do "Abrir chamado", a de Paulo vira o #1045 por outra conta.
     chat.virouChamado(EQUIPE, 'manchando todas as folhas', 1045);
     await dialogo.getByRole('button', { name: 'Abrir chamado' }).click();
-    await expect(dialogo.getByText('Uma das mensagens já virou o chamado #1045.')).toBeVisible();
+    // No alto do formulário, sobre as citadas, e não acima das ações, como as outras falhas.
+    await expect(dialogo.locator('form > :first-child')).toContainText(
+      'Uma das mensagens já virou o chamado #1045.',
+    );
     // A conversa se relê: a de Paulo sai das citadas e da seleção, com a marca.
     await expect(dialogo.getByRole('heading', { name: '2 mensagens' })).toHaveCount(0);
     await expect(dialogo.locator('blockquote')).toHaveText([/Quem vai fechar o relatório/]);
