@@ -114,7 +114,7 @@ A conferência (`diretorio/aba.ts`) recusa, antes do `contaPeloDiretorio`:
 - o SID fora do diretório e o usuário que não passa no `validarUsuario`;
 - a conta local com o mesmo usuário, conferida aqui de novo, porque o `contaPeloDiretorio` não olha a origem;
 - a conta ou a pessoa inativa no Grafite;
-- a falta de grupo mapeado e a conta desativada no AD;
+- a falta de grupo mapeado e a conta desativada no AD, com a frase de quem não tem acesso;
 - o diretório desligado ou fora do ar.
 
 Cada recusa tem a sua frase e o seu teste de integração.

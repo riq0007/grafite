@@ -25,7 +25,12 @@ import { gerarHashDaSenha } from '../acesso/senhas.ts';
 import { type Ator, registrarNaAuditoria, visaoDaConta, visaoDaPessoa } from '../auditoria.ts';
 import { type ChavesDoCofre, SegredoQueNaoAbre } from '../cofre/cifra.ts';
 import { saidaDaPessoa } from '../eventos/pessoas.ts';
-import { type ConectarDiretorio, FalhaDoDiretorio, type UsuarioDoDiretorio } from './cliente.ts';
+import {
+  type AcessoAoDiretorio,
+  type ConectarDiretorio,
+  FalhaDoDiretorio,
+  type UsuarioDoDiretorio,
+} from './cliente.ts';
 import { abrirContaDeServico, acessoAoDiretorio, lerDiretorio } from './diretorio.ts';
 
 /** O que o AD disse da entrada. */
@@ -43,6 +48,58 @@ export type ConferenciaNoDiretorio =
     };
 
 const DO_DIRETORIO: Ator = { tipo: 'sistema', descricao: 'Diretório' };
+
+export interface PreparoDoDiretorio {
+  /** O acesso com a conta de serviço aberta, ou `null` quando o cofre não a abre. */
+  acesso: AcessoAoDiretorio | null;
+  mapeamentos: { grupoDn: string; grupoId: string }[];
+}
+
+/**
+ * Na transação de leitura: o diretório ligado, com os mapeamentos e a conta de serviço aberta do
+ * Cofre, ou `null` com o diretório desligado. A entrada pelo diretório e a da aba partem daqui.
+ */
+export async function prepararODiretorio(
+  tx: Transacao,
+  {
+    orgId,
+    chaves,
+    avisar,
+  }: { orgId: string; chaves: ChavesDoCofre; avisar: (dados: object, mensagem: string) => void },
+): Promise<PreparoDoDiretorio | null> {
+  const lido = await lerDiretorio(tx);
+  if (!lido?.diretorio.ligado) return null;
+  const mapeamentos = await tx
+    .select({ grupoDn: mapeamentosDoDiretorio.grupoDn, grupoId: mapeamentosDoDiretorio.grupoId })
+    .from(mapeamentosDoDiretorio);
+  try {
+    const servico = await abrirContaDeServico(tx, {
+      orgId,
+      segredoId: lido.diretorio.segredoId,
+      chaves,
+    });
+    return { acesso: servico ? acessoAoDiretorio(lido.diretorio, servico) : null, mapeamentos };
+  } catch (erro) {
+    if (!(erro instanceof SegredoQueNaoAbre)) throw erro;
+    avisar({ motivo: erro.motivo }, 'conta de serviço do diretório que o cofre não abre');
+    return { acesso: null, mapeamentos };
+  }
+}
+
+/** A conferência aceita com os grupos do Grafite que os grupos do AD dão, ou `null` sem nenhum. */
+export function aceitaComOsGrupos(
+  usuario: UsuarioDoDiretorio,
+  mapeamentos: PreparoDoDiretorio['mapeamentos'],
+): Extract<ConferenciaNoDiretorio, { tipo: 'aceita' }> | null {
+  const devidos = gruposDoGrafite(usuario.grupos, mapeamentos);
+  if (devidos.length === 0) return null;
+  return {
+    tipo: 'aceita',
+    usuario,
+    grupos: devidos,
+    alvos: [...new Set(mapeamentos.map((mapeamento) => mapeamento.grupoId))],
+  };
+}
 
 /**
  * Confere a entrada no AD, antes da transação: `null` quando a entrada é a local (o diretório
@@ -68,28 +125,12 @@ export async function conferirNoDiretorio(
 ): Promise<ConferenciaNoDiretorio | null> {
   if (validarUsuario(usuario) !== null) return null;
   const preparo = await naOrganizacao(banco, orgId, async (tx) => {
-    const lido = await lerDiretorio(tx);
-    if (!lido?.diretorio.ligado) return null;
     const [conta] = await tx
       .select({ origem: contas.origem })
       .from(contas)
       .where(eq(contas.usuario, usuario));
     if (conta?.origem === 'local') return null;
-    const mapeamentos = await tx
-      .select({ grupoDn: mapeamentosDoDiretorio.grupoDn, grupoId: mapeamentosDoDiretorio.grupoId })
-      .from(mapeamentosDoDiretorio);
-    try {
-      const servico = await abrirContaDeServico(tx, {
-        orgId,
-        segredoId: lido.diretorio.segredoId,
-        chaves,
-      });
-      return { acesso: servico ? acessoAoDiretorio(lido.diretorio, servico) : null, mapeamentos };
-    } catch (erro) {
-      if (!(erro instanceof SegredoQueNaoAbre)) throw erro;
-      avisar({ motivo: erro.motivo }, 'conta de serviço do diretório que o cofre não abre');
-      return { acesso: null, mapeamentos };
-    }
+    return prepararODiretorio(tx, { orgId, chaves, avisar });
   });
   if (!preparo) return null;
   if (!preparo.acesso) return { tipo: 'fora-do-ar' };
@@ -102,14 +143,7 @@ export async function conferirNoDiretorio(
     return { tipo: 'fora-do-ar' };
   }
   if (!achado?.ativa) return { tipo: 'recusada' };
-  const devidos = gruposDoGrafite(achado.grupos, preparo.mapeamentos);
-  if (devidos.length === 0) return { tipo: 'sem-acesso' };
-  return {
-    tipo: 'aceita',
-    usuario: achado,
-    grupos: devidos,
-    alvos: [...new Set(preparo.mapeamentos.map((mapeamento) => mapeamento.grupoId))],
-  };
+  return aceitaComOsGrupos(achado, preparo.mapeamentos) ?? { tipo: 'sem-acesso' };
 }
 
 /**

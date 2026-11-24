@@ -41,6 +41,11 @@ export interface ClienteDoDiretorio {
   contarUsuarios(limite: number): Promise<number>;
   /** O usuário com a senha conferida no AD, ou `null` sem o usuário ou com a senha errada. */
   autenticar(usuario: string, senha: string): Promise<UsuarioDoDiretorio | null>;
+  /**
+   * O usuário com o `objectSid` dado, em texto (`S-1-5-…`), dentro da base e do filtro das pessoas,
+   * ou `null` sem ele (change aba-dos-colaboradores, design, decisão 4).
+   */
+  buscarPeloSid(sid: string): Promise<UsuarioDoDiretorio | null>;
   buscarUsuarios(termo: string, limite: number): Promise<UsuarioDoDiretorio[]>;
   usuario(dn: string): Promise<UsuarioDoDiretorio | null>;
   buscarGrupos(termo: string, limite: number): Promise<GrupoDoDiretorio[]>;

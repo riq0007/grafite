@@ -60,7 +60,7 @@ vi.mock('ldapts', async (original) => {
   return { ...real, Client };
 });
 
-const { conectarPeloLdap } = await import('./ldap.ts');
+const { conectarPeloLdap, textoDoSid } = await import('./ldap.ts');
 
 const ACESSO = {
   orgId: '019a8000-0000-7000-8000-0000000000a1',
@@ -153,6 +153,59 @@ describe('a entrada pelo AD', () => {
     });
     await expect(conectarPeloLdap(ACESSO).contarUsuarios(1000)).rejects.toThrow(
       new FalhaDoDiretorio('certificado'),
+    );
+  });
+});
+
+// S-1-5-21-1-2-3-500: a revisão 1, 5 subautoridades, a autoridade 5 e as partes little-endian.
+const SID_EM_BYTES = Buffer.from('010500000000000515000000010000000200000003000000f4010000', 'hex');
+
+describe('a pessoa pelo SID', () => {
+  it('o objectSid binário vira o texto S-1-5-…', () => {
+    expect(textoDoSid(SID_EM_BYTES)).toBe('S-1-5-21-1-2-3-500');
+    expect(
+      textoDoSid(Buffer.from('010500000000000515000000ffffffff0000000000000000e8030000', 'hex')),
+    ).toBe('S-1-5-21-4294967295-0-0-1000');
+    // Sem bytes para as subautoridades que diz ter, ou de outra revisão, não é um SID.
+    expect(textoDoSid(SID_EM_BYTES.subarray(0, 20))).toBeNull();
+    expect(textoDoSid(Buffer.from('020100000000000512000000', 'hex'))).toBeNull();
+  });
+
+  it('busca pelo SID dentro da base e do filtro das pessoas, com o objectSid em bytes', async () => {
+    estado.entradas = [{ ...MARIANA, objectSid: SID_EM_BYTES }];
+    const usuario = await conectarPeloLdap(ACESSO).buscarPeloSid('S-1-5-21-1-2-3-500');
+    expect(usuario).toMatchObject({ dn: MARIANA.dn, usuario: 'mariana.alves', ativa: true });
+    expect(chamadas('bind')).toEqual([['svc_grafite@empresa.local', 'senha-do-servico']]);
+    expect(chamadas('search')[0]).toEqual([
+      'DC=empresa,DC=local',
+      expect.objectContaining({
+        scope: 'sub',
+        filter: '(&(&(objectCategory=person)(objectClass=user))(objectSid=S-1-5-21-1-2-3-500))',
+        attributes: expect.arrayContaining(['sAMAccountName', 'objectSid']),
+        explicitBufferAttributes: ['objectSid'],
+      }),
+    ]);
+  });
+
+  it('o achado com outro SID, os dois achados e o SID fora da forma dão null', async () => {
+    const cliente = conectarPeloLdap(ACESSO);
+    estado.entradas = [{ ...MARIANA, objectSid: SID_EM_BYTES }];
+    expect(await cliente.buscarPeloSid('S-1-5-21-1-2-3-501')).toBeNull();
+    estado.entradas = [
+      { ...MARIANA, objectSid: SID_EM_BYTES },
+      { ...MARIANA, dn: 'CN=Outra,DC=empresa,DC=local', objectSid: SID_EM_BYTES },
+    ];
+    expect(await cliente.buscarPeloSid('S-1-5-21-1-2-3-500')).toBeNull();
+    estado.chamadas = [];
+    expect(await cliente.buscarPeloSid('S-1-5-21-1)(objectClass=*')).toBeNull();
+    expect(await cliente.buscarPeloSid('S-1-1-0')).toBeNull();
+    expect(chamadas('search')).toEqual([]);
+  });
+
+  it('o AD fora do ar vira a falha com o motivo', async () => {
+    estado.erroDaConexao = Object.assign(new Error('recusada'), { code: 'ECONNREFUSED' });
+    await expect(conectarPeloLdap(ACESSO).buscarPeloSid('S-1-5-21-1-2-3-500')).rejects.toEqual(
+      new FalhaDoDiretorio('nao-respondeu'),
     );
   });
 });

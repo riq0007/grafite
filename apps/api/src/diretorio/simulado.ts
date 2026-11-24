@@ -111,6 +111,11 @@ export function criarDiretorioSimulado() {
         if (!achado || achado.senha !== senha || !contaAtivaNoAd(achado.controle)) return null;
         return visao(achado);
       },
+      async buscarPeloSid(sid) {
+        await servico();
+        const achado = [...usuarios.values()].find((usuario) => usuario.sid === sid);
+        return achado ? visao(achado) : null;
+      },
       async buscarUsuarios(termo, limite) {
         await servico();
         return [...usuarios.values()]

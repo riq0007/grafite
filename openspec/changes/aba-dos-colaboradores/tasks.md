@@ -58,7 +58,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o limite por token.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato, o lint e o typecheck.
-- [ ] 3.4 A pessoa pelo SID (decisão 4):
+- [x] 3.4 A pessoa pelo SID (decisão 4):
   - o `objectSid` binário no `ldap.ts`, com o texto `S-1-5-…`;
   - o `buscarPeloSid` e o AD falso com ele;
   - a conferência do `diretorio/aba.ts`, com as seis recusas e as frases.
