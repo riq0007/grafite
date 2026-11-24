@@ -46,7 +46,7 @@ const PedidoDeRegistro = z
     /** O `MachineGuid` do Windows. */
     identificadorDaMaquina: z.string().trim().min(1).max(64),
     /** O nome do computador. */
-    nome: z.string().trim().refine(nomeDoComputadorValido),
+    nome: z.string().trim().min(1).max(63).refine(nomeDoComputadorValido),
     /** A versão da aba. */
     versao: z
       .string()

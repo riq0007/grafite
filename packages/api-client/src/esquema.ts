@@ -39492,29 +39492,6 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        PedidoDeRegistroDaAbaInput: {
-            chave: string;
-            identificadorDaMaquina: string;
-            nome: string;
-            versao?: string;
-            /** @enum {string} */
-            entradaSugerida?: "windows" | "senha";
-        };
-        RegistroDaAbaInput: {
-            token: string;
-            /** @enum {string} */
-            entrada: "windows" | "senha";
-            identificadorCurto: string;
-        };
-        ConfiguracaoDaAbaInput: {
-            /** @enum {string} */
-            forma: "pilula" | "entalhe";
-            contato: string | null;
-            /** @enum {string} */
-            entrada: "windows" | "senha";
-            versao: number;
-            proximaEm: number;
-        };
         AcessoDaSessaoInput: {
             permissoes: {
                 /** @enum {string} */
@@ -39552,6 +39529,29 @@ export interface components {
         PedidoDeEntradaInput: {
             usuario: string;
             senha: string;
+        };
+        PedidoDeRegistroDaAbaInput: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAbaInput: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAbaInput: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         AdministradoresDoAcessoInput: {
             administradores: string[];
@@ -45441,29 +45441,6 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        PedidoDeRegistroDaAba: {
-            chave: string;
-            identificadorDaMaquina: string;
-            nome: string;
-            versao?: string;
-            /** @enum {string} */
-            entradaSugerida?: "windows" | "senha";
-        };
-        RegistroDaAba: {
-            token: string;
-            /** @enum {string} */
-            entrada: "windows" | "senha";
-            identificadorCurto: string;
-        };
-        ConfiguracaoDaAba: {
-            /** @enum {string} */
-            forma: "pilula" | "entalhe";
-            contato: string | null;
-            /** @enum {string} */
-            entrada: "windows" | "senha";
-            versao: number;
-            proximaEm: number;
-        };
         AcessoDaSessao: {
             permissoes: {
                 /** @enum {string} */
@@ -45501,6 +45478,29 @@ export interface components {
         PedidoDeEntrada: {
             usuario: string;
             senha: string;
+        };
+        PedidoDeRegistroDaAba: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAba: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAba: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         AdministradoresDoAcesso: {
             administradores: string[];
