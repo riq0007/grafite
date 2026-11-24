@@ -30,7 +30,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o sem conexão, com o motivo.
 
   Verificar: os testes unitários, o lint e o typecheck.
-- [ ] 2.2 A resposta por ver (decisão 5) e o público dos eventos com as sessões da aba e o aparelho (decisão 6), no `packages/domain`.
+- [x] 2.2 A resposta por ver (decisão 5) e o público dos eventos com as sessões da aba e o aparelho (decisão 6), no `packages/domain`.
 
   Começa pelos testes unitários. Verificar: esses testes, o lint e o typecheck.
 

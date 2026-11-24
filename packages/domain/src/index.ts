@@ -604,6 +604,7 @@ export {
   ordemDasEquipesECanais,
   ordemDasRecentes,
   respostaNova,
+  respostaPorVer,
   secoesDoChat,
   totalDoChat,
 } from './chat/listas.ts';

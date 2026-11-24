@@ -55,7 +55,9 @@ export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
  *   grupo dela (change chat-com-chamados, design, decisão 4); com os `locais`, valem os dois;
  * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
  *   design, decisão 13);
- * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
+ * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão;
+ * - `sessoesDaAba`, `aparelhos` e `abas`: a aba dos colaboradores e o chat dentro dela, pela
+ *   sessão da aba, pelo aparelho ou em todos os aparelhos (change aba-dos-colaboradores).
  */
 export interface PublicoDoEvento {
   todas?: boolean;
@@ -65,6 +67,9 @@ export interface PublicoDoEvento {
   permissoes?: readonly Permissao[];
   contas?: readonly string[];
   sessoes?: readonly string[];
+  sessoesDaAba?: readonly string[];
+  aparelhos?: readonly string[];
+  abas?: boolean;
 }
 
 export interface AlvoDoEvento {
@@ -458,6 +463,9 @@ export interface ConexaoQueRecebe {
   acesso: Acesso;
   /** Os grupos ativos de que a conta é agora, lidos com o acesso (change chat-com-chamados). */
   grupos: readonly string[];
+  /** Na aba e no chat da aba: a sessão da aba e o aparelho dela. */
+  sessaoDaAbaId?: string;
+  aparelhoId?: string;
 }
 
 /** Se a conexão pode receber o evento: a mesma organização e uma das partes do público. */
@@ -470,6 +478,13 @@ export function podeReceber(
   const { todas, permissao, locais, grupos, permissoes, contas, sessoes } = evento.publico;
   if (todas) return true;
   if (sessoes?.includes(conexao.sessaoId)) return true;
+  const { sessoesDaAba, aparelhos, abas } = evento.publico;
+  if (conexao.sessaoDaAbaId !== undefined && sessoesDaAba?.includes(conexao.sessaoDaAbaId)) {
+    return true;
+  }
+  if (conexao.aparelhoId !== undefined) {
+    if (abas || aparelhos?.includes(conexao.aparelhoId)) return true;
+  }
   if (contas?.includes(conexao.contaId)) return true;
   if (permissoes?.some((chave) => pode(conexao.acesso, chave))) return true;
   if (!permissao) return false;

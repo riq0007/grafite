@@ -186,6 +186,27 @@ export function respostaNova(pedido: {
   ).length;
 }
 
+/**
+ * A resposta por ver (change aba-dos-colaboradores, spec chamados, "Resposta por ver"): as
+ * mensagens da resposta nova escritas depois da última abertura da conversa pela pessoa. Sem
+ * abertura, é a resposta nova inteira; tudo o que tira a resposta nova tira também esta.
+ */
+export function respostaPorVer(pedido: {
+  situacao: SituacaoDoChamado;
+  linhas: readonly (LinhaParaARespostaNova & { criadaEm: Date })[];
+  contaId: string;
+  vistaAte: string | null;
+  pelaTi: boolean;
+  abertaEm: Date | null;
+}): number {
+  const { abertaEm, ...daRespostaNova } = pedido;
+  if (abertaEm === null) return respostaNova(daRespostaNova);
+  return respostaNova({
+    ...daRespostaNova,
+    linhas: pedido.linhas.filter(({ criadaEm }) => criadaEm.getTime() > abertaEm.getTime()),
+  });
+}
+
 /** Os chamados com resposta nova, para a trilha: conta os chamados, e não as mensagens. */
 export function chamadosComRespostaNova(chamados: readonly { respostaNova: number }[]): number {
   return chamados.filter(({ respostaNova: novas }) => novas > 0).length;
