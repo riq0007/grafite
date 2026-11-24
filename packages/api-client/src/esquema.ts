@@ -38565,6 +38565,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aba/aparelho": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registrar o computador na aba, com a chave da organização */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeRegistroDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RegistroDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/configuracao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A configuração da aba deste computador: a forma, o contato e a entrada */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConfiguracaoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -39361,6 +39491,29 @@ export interface components {
             definicao: {
                 [key: string]: unknown;
             };
+        };
+        PedidoDeRegistroDaAbaInput: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAbaInput: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAbaInput: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         AcessoDaSessaoInput: {
             permissoes: {
@@ -45287,6 +45440,29 @@ export interface components {
             definicao: {
                 [key: string]: unknown;
             };
+        };
+        PedidoDeRegistroDaAba: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAba: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAba: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         AcessoDaSessao: {
             permissoes: {

@@ -16,6 +16,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { z } from 'zod';
+import { instalarAba } from './aba/escopo.ts';
 import { carregarAcesso, carregarGrupos } from './acesso/acesso.ts';
 import { instalarAcesso } from './acesso/escopo.ts';
 import { exigirModuloLigado } from './acesso/modulos.ts';
@@ -47,6 +48,7 @@ import {
 import { criarPonteDosPaineis } from './paineis/ponte.ts';
 import { gerarCodigoDeRastreio, registrarProblemas } from './problemas.ts';
 import { registrarLimiteDeRequisicoes } from './protecao.ts';
+import { rotasDaAba } from './rotas/aba.ts';
 import { rotasDoAcesso } from './rotas/acesso.ts';
 import { rotasDoAcessoRemoto } from './rotas/acesso-remoto.ts';
 import { rotasDosAgentes } from './rotas/agentes.ts';
@@ -504,6 +506,12 @@ export async function criarApp({
   await app.register(async (escopo) => {
     instalarColeta(escopo, { banco, agora, resolver, organizacaoOperadora });
     await escopo.register(rotasDaColeta, { banco, agora, chavesDoCofre, armazenamento });
+  });
+  // As rotas do serviço da aba (change aba-dos-colaboradores, design, decisão 3): a organização pelo
+  // endereço e o aparelho pelo token, fora da sessão e da proteção contra outros sites.
+  await app.register(async (escopo) => {
+    instalarAba(escopo, { banco, agora, resolver, organizacaoOperadora });
+    await escopo.register(rotasDaAba, { banco, agora });
   });
   // O agente do GLPI (change inventario-pelo-agente-glpi): o protocolo dele, pelo token do caminho.
   await instalarAgentesDoGlpi(app, { banco, agora, resolver, armazenamento, organizacaoOperadora });

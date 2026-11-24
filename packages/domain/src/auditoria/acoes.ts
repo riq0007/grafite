@@ -282,6 +282,11 @@ export const ACOES_DA_AUDITORIA = {
   'teto-do-aparelho.trocado': 'Teto de contas do computador trocado',
   'aparelho-da-aba.bloqueado': 'Computador bloqueado na aba',
   'aparelho-da-aba.desbloqueado': 'Computador desbloqueado na aba',
+  'aparelho-da-aba.registrado': 'Computador registrado na aba',
+  'aparelho-da-aba.registrado-com-outro-nome':
+    'Computador registrado de novo com outro nome em menos de 1 hora',
+  'chave-da-aba.recusada': 'Chave da aba recusada',
+  'token-da-aba.recusado': 'Token do computador na aba recusado',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

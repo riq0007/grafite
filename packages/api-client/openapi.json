@@ -3937,6 +3937,107 @@
           "definicao"
         ]
       },
+      "PedidoDeRegistroDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "chave": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "identificadorDaMaquina": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "versao": {
+            "type": "string",
+            "pattern": "^[\\x21-\\x7e]{1,40}$"
+          },
+          "entradaSugerida": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          }
+        },
+        "required": [
+          "chave",
+          "identificadorDaMaquina",
+          "nome"
+        ]
+      },
+      "RegistroDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "identificadorCurto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "entrada",
+          "identificadorCurto"
+        ]
+      },
+      "ConfiguracaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "forma": {
+            "type": "string",
+            "enum": [
+              "pilula",
+              "entalhe"
+            ]
+          },
+          "contato": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "versao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximaEm": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "forma",
+          "contato",
+          "entrada",
+          "versao",
+          "proximaEm"
+        ]
+      },
       "AcessoDaSessaoInput": {
         "type": "object",
         "properties": {
@@ -33645,6 +33746,110 @@
           "tabela",
           "visao",
           "definicao"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeRegistroDaAba": {
+        "type": "object",
+        "properties": {
+          "chave": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "identificadorDaMaquina": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "versao": {
+            "type": "string",
+            "pattern": "^[\\x21-\\x7e]{1,40}$"
+          },
+          "entradaSugerida": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          }
+        },
+        "required": [
+          "chave",
+          "identificadorDaMaquina",
+          "nome"
+        ],
+        "additionalProperties": false
+      },
+      "RegistroDaAba": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "identificadorCurto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "entrada",
+          "identificadorCurto"
+        ],
+        "additionalProperties": false
+      },
+      "ConfiguracaoDaAba": {
+        "type": "object",
+        "properties": {
+          "forma": {
+            "type": "string",
+            "enum": [
+              "pilula",
+              "entalhe"
+            ]
+          },
+          "contato": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "versao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximaEm": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "forma",
+          "contato",
+          "entrada",
+          "versao",
+          "proximaEm"
         ],
         "additionalProperties": false
       },
@@ -99741,6 +99946,110 @@
             }
           },
           "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/aparelho": {
+      "post": {
+        "summary": "Registrar o computador na aba, com a chave da organização",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeRegistroDaAbaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroDaAba"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/configuracao": {
+      "get": {
+        "summary": "A configuração da aba deste computador: a forma, o contato e a entrada",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracaoDaAba"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
             "description": "Default Response",
             "content": {
               "application/json": {

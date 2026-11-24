@@ -49,7 +49,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o repasse no `grafite.ps1` e no lançador do Linux.
 
   Verificar: os testes do comando com o PostgreSQL, o lint e o typecheck.
-- [ ] 3.3 O registro e a configuração do aparelho (`POST /api/aba/aparelho` e `GET /api/aba/configuracao`):
+- [x] 3.3 O registro e a configuração do aparelho (`POST /api/aba/aparelho` e `GET /api/aba/configuracao`):
   - a chave, o token e o re-registro, com a entrada e o bloqueio mantidos;
   - o bloqueio no registro e no contato;
   - a entrada do aparelho, que recusa o pedido pela outra entrada;
