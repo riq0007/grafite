@@ -42,7 +42,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `dev.ts`, com o SID e o usuário de quem roda, o grupo mapeado, a senha `aba123` e a chave da aba de desenvolvimento no `.env`.
 
   Começa pelos testes da recusa. Verificar: esses testes e o `pnpm dev`, com a organização ligada ao diretório simulado.
-- [ ] 3.2 O comando `grafite aba` (decisão 11):
+- [x] 3.2 O comando `grafite aba` (decisão 11):
   - `chave criar|trocar`, com o exemplo das propriedades;
   - `configurar`, `entrada`, `teto`, `aparelhos`, `bloquear` e `desbloquear`, pelo nome ou pelo identificador curto;
   - a auditoria do comando;

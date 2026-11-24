@@ -718,6 +718,29 @@ describe('os comandos', () => {
     expect(saida.join('\n')).toContain('Senha temporária: TEMP-1234');
   });
 
+  it('aba vai ao comando da API da versão do ambiente, com o computador e a entrada', async () => {
+    const instalacao = await instalacaoDeExemplo(pasta);
+    const { ambiente } = ambienteDe(instalacao);
+    await expect(
+      executarComando(
+        [
+          'aba',
+          'entrada',
+          'PC-PROD-03',
+          'senha',
+          '--ambiente',
+          'producao',
+          '--endereco',
+          'grafite.empresa.com.br',
+        ],
+        ambiente,
+      ),
+    ).resolves.toBe(0);
+    expect(instalacao.servidor.eventos).toEqual([
+      'api grafite aba entrada PC-PROD-03 senha --endereco grafite.empresa.com.br',
+    ]);
+  });
+
   it('a ajuda do comando da API não pede o ambiente', async () => {
     const instalacao = await instalacaoDeExemplo(pasta);
     const { ambiente } = ambienteDe(instalacao);

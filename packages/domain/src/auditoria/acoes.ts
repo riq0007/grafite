@@ -274,6 +274,14 @@ export const ACOES_DA_AUDITORIA = {
   'canal.alterado': 'Canal alterado',
   'canal.arquivado': 'Canal arquivado',
   'canal.reativado': 'Canal reativado',
+  // A aba dos colaboradores (change aba-dos-colaboradores)
+  'chave-da-aba.criada': 'Chave da aba criada',
+  'chave-da-aba.trocada': 'Chave da aba trocada',
+  'aba.configurada': 'Aba configurada',
+  'entrada-do-aparelho.trocada': 'Entrada do computador na aba trocada',
+  'teto-do-aparelho.trocado': 'Teto de contas do computador trocado',
+  'aparelho-da-aba.bloqueado': 'Computador bloqueado na aba',
+  'aparelho-da-aba.desbloqueado': 'Computador desbloqueado na aba',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

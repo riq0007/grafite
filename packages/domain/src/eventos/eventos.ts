@@ -360,6 +360,14 @@ export const EVENTO_DA_ACAO = {
   'canal.alterado': 'chat.mudou',
   'canal.arquivado': 'chat.mudou',
   'canal.reativado': 'chat.mudou',
+  // A aba: os eventos às abas entram na tarefa 3.8 do aba-dos-colaboradores.
+  'chave-da-aba.criada': null,
+  'chave-da-aba.trocada': null,
+  'aba.configurada': null,
+  'entrada-do-aparelho.trocada': null,
+  'teto-do-aparelho.trocado': null,
+  'aparelho-da-aba.bloqueado': null,
+  'aparelho-da-aba.desbloqueado': null,
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

@@ -1,7 +1,7 @@
 // O comando de operação no servidor (design do F2d, decisão 4): `grafite.ps1 <comando>`, que confere
 // a elevação e chama o Node com este comando. Ele lê os argumentos, monta as peças de cada comando a
 // partir do ambiente e devolve o código de saída: 0 deu certo, 1 foi recusado ou falhou e 2 é uso
-// errado. Os comandos `organizacao` e `conta` são repassados ao comando da API da versão do
+// errado. Os comandos `organizacao`, `conta` e `aba` são repassados ao comando da API da versão do
 // ambiente, com o config.env dele.
 import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -170,10 +170,13 @@ E-mail:
   email testar --para <e-mail>   Manda o e-mail de teste pela configuração da produção e diz o que o
                                  servidor de e-mail respondeu.
 
-Organizações e contas, pelo comando da API, com a configuração do ambiente:
+Organizações, contas e a aba dos colaboradores, pelo comando da API, com a configuração do
+ambiente:
   organizacao criar --ambiente teste|producao ...
   conta criar --ambiente teste|producao ...
   conta redefinir --ambiente teste|producao ...
+  aba chave criar|trocar --ambiente teste|producao ...
+  aba configurar|aparelhos|entrada|teto|bloquear|desbloquear --ambiente teste|producao ...
                                  As outras opções são as do comando da API: grafite conta --ajuda.
 
 Opções:
@@ -272,7 +275,7 @@ export async function executarComando(
 ): Promise<number> {
   try {
     const [primeiro] = argumentos;
-    if (primeiro === 'organizacao' || primeiro === 'conta') {
+    if (primeiro === 'organizacao' || primeiro === 'conta' || primeiro === 'aba') {
       return await repassarAoComandoDaApi(argumentos, ambiente);
     }
     const { values: opcoes, positionals } = lerArgumentos(argumentos);
@@ -666,7 +669,7 @@ function tirarOpcao(argumentos: string[], nome: string): [string | undefined, st
   return [valor, resto];
 }
 
-/** `organizacao` e `conta` vão ao comando da API da versão do ambiente, com o config.env dele. */
+/** `organizacao`, `conta` e `aba` vão ao comando da API da versão do ambiente, com o config.env dele. */
 async function repassarAoComandoDaApi(
   argumentos: string[],
   ambiente: AmbienteDoComando,

@@ -1,4 +1,10 @@
 export {
+  ALFABETO_DO_CROCKFORD,
+  identificadorCurto,
+  lerIdentificadorCurto,
+  TAMANHO_DO_IDENTIFICADOR_CURTO,
+} from './aba/crockford.ts';
+export {
   type AvisoDaAba,
   avisoDaAba,
   chegouAs,
