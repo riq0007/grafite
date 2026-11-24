@@ -20,6 +20,7 @@ import {
   type Entrada,
   novoIp,
 } from '../../test/integracao.ts';
+import { encerrarSessoesDaConta } from '../acesso/encerramento.ts';
 import { criarSessao, hashDoToken, NOME_DO_COOKIE } from '../acesso/sessoes.ts';
 import { executarComando } from '../comando/executar.ts';
 import { criarDiretorioSimulado } from '../diretorio/simulado.ts';
@@ -311,5 +312,56 @@ describe('GET /aba/eventos', () => {
     await vi.waitFor(() => expect(doChat.terminou()).toBe(true), { timeout: 2000 });
     expect(tipos(doChat)).toContain('sessao.encerrada');
     expect(outra.terminou()).toBe(false);
+  });
+
+  it('Conta inativada: a mudança da conta termina a conexão da aba', async () => {
+    const fluxo = await eventosDaAba(await abrirAba(pcFin09));
+    await naOrg((tx) =>
+      encerrarSessoesDaConta(tx, {
+        contaId: contaDaFernanda,
+        motivo: 'conta-inativada',
+        momento: api.relogio.agora(),
+        ator: { tipo: 'sistema', descricao: 'teste' },
+      }),
+    );
+    await vi.waitFor(() => expect(fluxo.terminou()).toBe(true), { timeout: 2000 });
+    expect(tipos(fluxo)).toContain('sessao');
+  });
+
+  it('a conferência termina a conexão da sessão que venceu sem ninguém gravar o fim', async () => {
+    const token = await abrirAba(pcFin09);
+    const fluxo = await eventosDaAba(token);
+    await naOrg((tx) =>
+      tx
+        .update(sessoesDaAba)
+        .set({ expiraEm: api.relogio.agora() })
+        .where(eq(sessoesDaAba.tokenHash, hashDoToken(token))),
+    );
+    await vi.waitFor(() => expect(fluxo.terminou()).toBe(true), { timeout: 2000 });
+    expect(tipos(fluxo)).toContain('sessao');
+  });
+
+  it('a quarta conexão da mesma sessão entra, e a mais antiga termina', async () => {
+    const token = await abrirAba(pcFin10);
+    const primeira = await eventosDaAba(token);
+    const segunda = await eventosDaAba(token);
+    const terceira = await eventosDaAba(token);
+    const quarta = await eventosDaAba(token);
+    expect(quarta.status).toBe(200);
+    await vi.waitFor(() => expect(primeira.terminou()).toBe(true), { timeout: 2000 });
+    expect(segunda.terminou()).toBe(false);
+    expect(terceira.terminou()).toBe(false);
+  });
+
+  it('o módulo desligado chega à aba, que relê o estado sem as contagens dele', async () => {
+    const token = await abrirAba(pcFin09);
+    const fluxo = await eventosDaAba(token);
+    await naOrg((tx) =>
+      registrarEvento(tx, { tipo: 'modulos.mudaram', alvo: null, publico: { todas: true } }),
+    );
+    await vi.waitFor(() => expect(tipos(fluxo)).toContain('modulos.mudaram'), { timeout: 2000 });
+    expect(fluxo.mensagens.find((m) => m.evento === 'modulos.mudaram')?.dados).toMatchObject({
+      deMuitos: true,
+    });
   });
 });

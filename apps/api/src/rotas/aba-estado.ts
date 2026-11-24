@@ -25,7 +25,7 @@ import {
 import { carregarAcesso, carregarGrupos } from '../acesso/acesso.ts';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import type { ConexaoDeEventos, DistribuidorDeEventos } from '../eventos/distribuidor.ts';
-import { ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
+import { RespostaDeProblema } from '../problemas.ts';
 import { chamadosComResposta, conversasDaConta } from './chat.ts';
 
 export interface IntervalosDosEventosDaAba {
@@ -37,11 +37,19 @@ export interface IntervalosDosEventosDaAba {
 
 const INTERVALOS: IntervalosDosEventosDaAba = { sinalDeVida: 10_000, conferencia: 60_000 };
 
-/** Quantas conexões de eventos uma sessão da aba abre de uma vez. */
+/**
+ * Quantas conexões de eventos uma sessão da aba mantém de uma vez. A nova fecha a mais antiga: a
+ * sessão tem uma aba só, e a conexão que ficou para trás na troca de rede, como do cabo para o
+ * Wi-Fi, só termina no servidor quando o TCP desiste.
+ */
 export const CONEXOES_POR_SESSAO_DA_ABA = 3;
 
-/** Os tipos que mudam o estado da aba; o `sessao.encerrada` só vai com a sessão da aba dela. */
+/**
+ * Os tipos que mudam o estado da aba; o `sessao.encerrada` só vai com a sessão da aba dela. O
+ * `modulos.mudaram` vai porque o chat e os chamados desligados tiram as contagens do estado.
+ */
 const TIPOS_DA_ABA: ReadonlySet<TipoDeEvento> = new Set<TipoDeEvento>([
+  'modulos.mudaram',
   'chat.mudou',
   'chamados.mudaram',
   'configuracao-da-aba.mudou',
@@ -65,17 +73,12 @@ const PROBLEMAS = {
   429: RespostaDeProblema,
 };
 
-const conexoesDemais = () =>
-  new ProblemaDaApi({
-    codigo: 'conexoes-demais',
-    status: 429,
-    titulo: 'Conexões demais',
-    detalhe: `Esta sessão da aba já tem ${CONEXOES_POR_SESSAO_DA_ABA} conexões de eventos abertas.`,
-  });
-
-/** Uma mensagem no formato text/event-stream. */
-function mensagem({ id, evento, dados }: { id?: string; evento: string; dados: unknown }) {
-  return `${id ? `id: ${id}\n` : ''}event: ${evento}\ndata: ${JSON.stringify(dados)}\n\n`;
+/**
+ * Uma mensagem no formato text/event-stream, sem o `id:`: a conexão da aba não retoma pelo
+ * Last-Event-ID, e a aba relê o estado depois de cada conexão aberta.
+ */
+function mensagem({ evento, dados }: { evento: string; dados: unknown }) {
+  return `event: ${evento}\ndata: ${JSON.stringify(dados)}\n\n`;
 }
 
 export interface DependenciasDoEstadoDaAba {
@@ -91,7 +94,8 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
 ) => {
   const { sinalDeVida, conferencia } = { ...INTERVALOS, ...intervalos };
   const abertas = new Set<() => void>();
-  const porSessao = new Map<string, number>();
+  /** As conexões abertas de cada sessão da aba, da mais antiga à mais nova, por como fechá-las. */
+  const porSessao = new Map<string, (() => void)[]>();
 
   app.addHook('preClose', async () => {
     for (const fechar of [...abertas]) fechar();
@@ -150,9 +154,9 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
         acesso: await carregarAcesso(tx, sessao.contaId),
         grupos: await carregarGrupos(tx, sessao.contaId),
       }));
-      const daSessao = porSessao.get(sessao.id) ?? 0;
-      if (daSessao >= CONEXOES_POR_SESSAO_DA_ABA) throw conexoesDemais();
-      porSessao.set(sessao.id, daSessao + 1);
+      const daSessao = porSessao.get(sessao.id) ?? [];
+      porSessao.set(sessao.id, daSessao);
+      while (daSessao.length >= CONEXOES_POR_SESSAO_DA_ABA) daSessao[0]?.();
 
       resposta.hijack();
       const saida = resposta.raw;
@@ -190,13 +194,13 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
           const { id, tipo, momento, alvo } = evento;
           escrever(
             mensagem({
-              id,
               evento: tipo,
               dados: { id, tipo, momento, alvo, deMuitos: eventoDeMuitos(evento.publico, conexao) },
             }),
           );
         },
-        reiniciar: () => escrever(mensagem({ evento: 'reiniciar', dados: {} })),
+        // O `reiniciar` vai a todas as abas de uma vez: a releitura espera o atraso sorteado.
+        reiniciar: () => escrever(mensagem({ evento: 'reiniciar', dados: { deMuitos: true } })),
       };
       const sair = distribuidor.entrar(conexao);
       const vivo = setInterval(() => escrever(': vivo\n\n'), sinalDeVida);
@@ -218,12 +222,15 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
         clearInterval(conferir);
         sair();
         abertas.delete(fechar);
-        const restantes = (porSessao.get(sessao?.id ?? '') ?? 1) - 1;
-        if (restantes > 0) porSessao.set(sessao?.id ?? '', restantes);
-        else porSessao.delete(sessao?.id ?? '');
+        const lugar = daSessao.indexOf(fechar);
+        if (lugar >= 0) daSessao.splice(lugar, 1);
+        if (daSessao.length === 0 && porSessao.get(sessao?.id ?? '') === daSessao) {
+          porSessao.delete(sessao?.id ?? '');
+        }
         saida.end();
       }
       abertas.add(fechar);
+      daSessao.push(fechar);
       saida.on('close', fechar);
       if (saida.destroyed) fechar();
     },
