@@ -148,7 +148,7 @@ Com o menu da mensagem aberto, o botão direito fora dele SHALL fechá-lo e vale
 ### Requirement: Transformar em chamado na tela
 
 "Transformar em chamado" SHALL abrir o diálogo, em camada opaca sobre o véu, com:
-- a mensagem citada como ela é, com quem escreveu e a hora, como "Paulo Nunes · 10:19", ou, com várias, as mensagens citadas, na ordem da conversa, cada uma com quem escreveu e a hora, com o título "3 mensagens" em cima e a lista que rola dentro do diálogo;
+- a mensagem citada como ela é, com quem escreveu e a hora, como "Paulo Nunes · 10:19", ou, com várias, as mensagens citadas, na ordem da conversa, cada uma com quem escreveu e a hora, com o título "3 mensagens" em cima e a lista que rola dentro do diálogo. Sem nenhuma, como quando a recusa tira a última, "Nenhuma mensagem selecionada.", com "Abrir chamado" sem ação;
 - os tipos, em chips com o ícone, que quebram em linhas e nenhum se corta;
 - o título, com o contador, como "20/120";
 - no tipo que pede o ativo, o ativo sugerido, com o nome e o patrimônio, e "Trocar", que lista os sugeridos;

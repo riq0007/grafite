@@ -106,7 +106,8 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     unica: MensagemATransformar | null;
   } | null>(null);
   const vezDoTransformar = useRef(0);
-  const transformarUma = (unica: MensagemATransformar | null) => {
+  /** Abre o transformar: o da mensagem do menu, ou, sem ela, o das marcadas. */
+  const abrirOTransformar = (unica: MensagemATransformar | null) => {
     vezDoTransformar.current += 1;
     definirTransformando({ vez: vezDoTransformar.current, unica });
   };
@@ -121,7 +122,8 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   } | null>(null);
   const doTrecho = mensagens.trecho.data?.itens;
   // As mensagens já lidas da conversa, cada uma na última leitura: a marcada que sai do trecho, como
-  // pelas "mais novas", segue com o texto, para o transformar citá-la.
+  // pelas "mais novas", segue com o texto, para o transformar citá-la. O memo das marcadas preenche o
+  // mapa; escrevê-lo de novo, num render a mais ou descartado, dá o mesmo mapa.
   const conhecidas = useRef(new Map<string, MensagemDoChat>());
   // As marcadas que valem, na ordem da conversa, que é a dos ids: a que vira chamado, aqui ou por
   // outra conta, sai, a cada leitura da conversa.
@@ -134,7 +136,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   /** Transforma as marcadas, que o diálogo cita na ordem, e que seguem a seleção enquanto ele abre. */
   const transformarAsMarcadas = () => {
     if (!marcadas || marcadas.length === 0) return;
-    transformarUma(null);
+    abrirOTransformar(null);
   };
   const alvoDoTransformar = useMemo<ATransformar | null>(() => {
     if (!transformando) return null;
@@ -299,7 +301,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         },
     transformar:
       pode('chamados.pedir') && !desligados.includes('chamados')
-        ? (mensagem, autor) => transformarUma({ mensagem, autor })
+        ? (mensagem, autor) => abrirOTransformar({ mensagem, autor })
         : null,
     selecionar:
       pode('chamados.pedir') && !desligados.includes('chamados')

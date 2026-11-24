@@ -156,6 +156,16 @@ function FormularioDoChamado({
   const [falha, definirFalha] = useState<string | null>(null);
   /** A recusa das mensagens, como a da que já virou chamado, no alto do diálogo. */
   const [falhaDasMensagens, definirFalhaDasMensagens] = useState<string | null>(null);
+  const [pedidoDoAlto, definirPedidoDoAlto] = useState(0);
+  const alto = useRef<HTMLDivElement>(null);
+  // A recusa do alto fica à vista, também com o formulário rolado.
+  useEffect(() => {
+    if (pedidoDoAlto > 0) alto.current?.scrollIntoView({ block: 'nearest' });
+  }, [pedidoDoAlto]);
+  // As citadas do pedido, paradas enquanto ele vai e depois de aceito: a marca que chega antes da
+  // resposta não as esvazia com o diálogo ainda na tela.
+  const [fixas, definirFixas] = useState<readonly MensagemATransformar[] | null>(null);
+  const mostradas = fixas ?? citadas;
   const [enviando, definirEnviando] = useState(false);
   const [pedidoDeFoco, definirPedidoDeFoco] = useState(0);
   const formulario = useRef<HTMLFormElement>(null);
@@ -213,6 +223,7 @@ function FormularioDoChamado({
     definirEnviando(true);
     definirFalha(null);
     definirFalhaDasMensagens(null);
+    definirFixas(citadas);
     try {
       const resultado = await pedir(
         () =>
@@ -243,6 +254,7 @@ function FormularioDoChamado({
           definirRecusas(Object.fromEntries(nosCampos) as Recusas);
           definirFalha(foraDeles.length > 0 ? foraDeles.map(([, texto]) => texto).join(' ') : null);
           if (nosCampos.length > 0) definirPedidoDeFoco((antes) => antes + 1);
+          definirFixas(null);
           return;
         }
         // A mensagem que já virou chamado mostra a marca na conversa, que se relê: ela sai das
@@ -251,8 +263,18 @@ function FormularioDoChamado({
           void consultas.invalidateQueries({ queryKey: chaveDaConversa(conversa) });
         }
         definirRecusas({});
-        definirFalha(null);
-        definirFalhaDasMensagens(resultado.erro);
+        // A recusa das mensagens, a que já virou chamado e a não encontrada, fica no alto, sobre as
+        // citadas; as outras, como a falta de conexão, acima das ações, junto de "Abrir chamado".
+        const status = resultado.problema?.status;
+        if (status === 409 || status === 404) {
+          definirFalha(null);
+          definirFalhaDasMensagens(resultado.erro);
+          definirPedidoDoAlto((antes) => antes + 1);
+        } else {
+          definirFalhaDasMensagens(null);
+          definirFalha(resultado.erro);
+        }
+        definirFixas(null);
         return;
       }
       // O chamado entra no alto de CHAMADOS, com o contorno forte, até a lista ser montada de novo.
@@ -275,8 +297,10 @@ function FormularioDoChamado({
 
   return (
     <form ref={formulario} className={estilos.formulario} noValidate onSubmit={abrir}>
-      {falhaDasMensagens && <Recusa texto={falhaDasMensagens} />}
-      <MensagensCitadas citadas={citadas} />
+      <div ref={alto} className={estilos.alto}>
+        {falhaDasMensagens && <Recusa texto={falhaDasMensagens} />}
+      </div>
+      <MensagensCitadas citadas={mostradas} />
       <TiposDoChamado
         consulta={tipos}
         valor={tipo?.id ?? null}
@@ -328,15 +352,16 @@ function FormularioDoChamado({
 }
 
 /**
- * As citadas: uma, como ela é; várias, com o título "3 mensagens" em cima e a lista, na ordem da
+ * As citadas: nenhuma, a frase; uma, como ela é; várias, com o título "3 mensagens" em cima e a lista, na ordem da
  * conversa, que rola dentro do diálogo.
  */
 function MensagensCitadas({ citadas }: { citadas: readonly MensagemATransformar[] }) {
   const id = useId();
   const [unica] = citadas;
-  if (citadas.length === 1 && unica) return <MensagemCitada citada={unica} />;
+  if (!unica) return <p className={estilos.nenhuma}>Nenhuma mensagem selecionada.</p>;
+  if (citadas.length === 1) return <MensagemCitada citada={unica} />;
   return (
-    <section className={estilos.varias} aria-labelledby={id}>
+    <div className={estilos.varias}>
       <h3 id={id} className={estilos.quantas}>
         {`${citadas.length} mensagens`}
       </h3>
@@ -348,7 +373,7 @@ function MensagensCitadas({ citadas }: { citadas: readonly MensagemATransformar[
           </li>
         ))}
       </ol>
-    </section>
+    </div>
   );
 }
 
