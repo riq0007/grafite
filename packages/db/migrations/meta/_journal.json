@@ -498,6 +498,13 @@
       "when": 1795467802777,
       "tag": "0070_origem_de_varias_mensagens",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1795552525020,
+      "tag": "0071_aba_dos_colaboradores",
+      "breakpoints": true
     }
   ]
 }

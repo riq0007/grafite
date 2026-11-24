@@ -121,7 +121,7 @@ O teto do aparelho: com a entrada pelo Windows, um aparelho que já abriu sessõ
 
 ### 5. A resposta por ver
 
-As `leituras_dos_chamados` ganham `aberta_ate`, o momento da última abertura da conversa. A resposta por ver é a resposta nova com mensagens depois do `aberta_ate`. O chat grava a abertura por `POST /api/chat/chamados/:numero/aberta`:
+A tabela `aberturas_dos_chamados` guarda, por conta e chamado, o momento da última abertura da conversa (as `leituras_dos_chamados` só existem depois do primeiro "Marcar como vista"). A resposta por ver é a resposta nova com mensagens depois dessa abertura. O chat grava a abertura por `POST /api/chat/chamados/:numero/aberta`:
 - quando a conversa aparece na tela;
 - quando chega uma mensagem com ela à vista: `document.visibilityState` visível e `document.hasFocus()`.
 
@@ -317,7 +317,7 @@ O MSI, o serviço e o webview do chat são conferidos à mão neste computador, 
 
 ## Migration Plan
 
-- As migrations criam as tabelas da aba e as colunas `aberta_ate` (`leituras_dos_chamados`) e `alcance` e `sessao_da_aba_id` (`sessoes`), com os valores de hoje como padrão. Nada mais muda nas que existem.
+- As migrations criam as tabelas da aba e a tabela `aberturas_dos_chamados` e as colunas `alcance` e `sessao_da_aba_id` (`sessoes`), com os valores de hoje como padrão. Nada mais muda nas que existem.
 - A aba só aparece onde o Intune a instala, e sem a chave criada nenhuma aba conecta.
 - **Depois de restaurar um backup do servidor,** os aparelhos registrados depois dele ficam com "Este computador precisa ser registrado de novo." A TI repõe a chave pelo script do Intune do runbook.
 - **Mudar o endereço do servidor** é reinstalar o MSI com o `GRAFITE_SERVIDOR` novo.

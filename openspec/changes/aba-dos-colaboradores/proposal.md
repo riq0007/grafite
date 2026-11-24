@@ -93,7 +93,7 @@ Fica fora:
 
 - **Banco** (`packages/db`):
   - as tabelas da aba, com `orgScoped()` e RLS: a chave, a configuração, os aparelhos, as sessões e os bilhetes;
-  - o `aberta_ate` nas `leituras_dos_chamados`;
+  - as `aberturas_dos_chamados`;
   - o alcance nas `sessoes`.
 - **Domínio** (`packages/domain`):
   - o estado que a aba mostra: a forma, o aviso, as não lidas e as respostas;

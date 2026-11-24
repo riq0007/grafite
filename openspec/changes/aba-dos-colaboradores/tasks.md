@@ -12,9 +12,9 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 1. Banco
 
-- [ ] 1.1 As tabelas da aba (design, decisão 3):
+- [x] 1.1 As tabelas da aba (design, decisão 3):
   - a migration, com `chaves_da_aba`, `configuracoes_da_aba`, `aparelhos_da_aba`, `sessoes_da_aba` e `bilhetes_da_aba`, todas com `orgScoped()`, RLS forçado e os hashes únicos;
-  - o `aberta_ate` nas `leituras_dos_chamados`, e o `alcance` e o `sessao_da_aba_id` nas `sessoes`, com o padrão de hoje;
+  - a tabela `aberturas_dos_chamados`, e o `alcance` e o `sessao_da_aba_id` nas `sessoes`, com o padrão de hoje;
   - o teto de contas por dia nos `aparelhos_da_aba`;
   - o `schema.ts`;
   - os testes de que uma organização não vê o aparelho da outra, de que a organização tem só uma chave ativa e de que o identificador da máquina não se repete na organização.
