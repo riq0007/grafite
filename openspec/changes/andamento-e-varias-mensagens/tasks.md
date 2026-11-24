@@ -39,7 +39,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 3. API
 
-- [ ] 3.1 A leitura do chamado do chat (decisões 2 e 4):
+- [x] 3.1 A leitura do chamado do chat (decisões 2 e 4):
   - o `andamento`, com a versão, as ações e a pessoa, com o nome e se ela usa o chat, a quem atende pelo chat;
   - o `pelaTi`, também nos itens da lista, e obrigatório no `ChamadoNaLista` do domínio, para o typecheck acusar o item que a API monta à mão para o `secoesDoChat`;
   - a espera, a abertura, a resposta nova, a avaliação e as opções de quem participa pela TI, também na lista, no chip e em "Chamados da equipe": os `false` e o `null` que a 2.2 deixou na API e o `participa` do `situacaoNoChat`, que passa a `participa && !pelaTi`;

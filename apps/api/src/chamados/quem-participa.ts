@@ -65,6 +65,14 @@ export async function contasQueParticipam(
   return (await contasQueParticipamDos(tx, [chamado])).get(chamado) ?? [];
 }
 
+/**
+ * A pessoa usa o chat pela conta dela, com o módulo ligado: a mensagem da TI chega a ela. É quem
+ * participaria do chamado da origem `ti` (a ficha e o andamento do chat).
+ */
+export async function pessoaUsaOChat(tx: Transacao, pessoaId: string): Promise<boolean> {
+  return (await contasQueParticipam(tx, { pessoaId, origem: 'ti', abertoPor: null })).length > 0;
+}
+
 /** O público com as contas de quem participa somadas, que leem o chamado sem as permissões dele. */
 export const comQuemParticipa = (
   publico: PublicoDoEvento,

@@ -79,7 +79,7 @@ import { type CartaoDoAtivo, cartaoLido } from './cartao.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { lerContaQueAtende } from './quem-atende.ts';
-import { contasQueParticipam } from './quem-participa.ts';
+import { pessoaUsaOChat } from './quem-participa.ts';
 import { type ResumoDoAtivo, resumoDoAtivo } from './resumo-do-ativo.ts';
 
 /**
@@ -947,10 +947,7 @@ export async function fichaDoChamado(
     anexos: origemDaLinha ? (anexosDaMensagem.get(origemDaLinha.id) ?? []) : [],
     nomeDaConta,
   });
-  // A pessoa usa o chat pela conta dela, como quem participa do chamado da origem 'ti'.
-  const usaOChat =
-    (await contasQueParticipam(tx, { pessoaId: pessoa.id, origem: 'ti', abertoPor: null })).length >
-    0;
+  const usaOChat = await pessoaUsaOChat(tx, pessoa.id);
   return {
     numero: chamado.numero,
     titulo: chamado.titulo,

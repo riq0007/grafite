@@ -25,6 +25,7 @@ const chamado = (
   fechado: false,
   abertoEm: as(abertoEm),
   resolvidoEm: situacao === 'resolvido' ? as('18:00') : null,
+  pelaTi: false,
   ...extra,
 });
 

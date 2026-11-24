@@ -40531,6 +40531,7 @@ export interface components {
             abertoEm: string;
             resolvidoEm: string | null;
             atende: string | null;
+            pelaTi: boolean;
             respostaNova: number;
             ultimaMensagem: {
                 autor: string;
@@ -40635,6 +40636,15 @@ export interface components {
                 anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
             } | null;
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
+            pelaTi: boolean;
+            andamento: {
+                versao: number;
+                acoes: ("assumir" | "passar" | "devolver" | "esperar" | "retomar" | "resolver" | "reabrir")[];
+                pessoa: {
+                    nome: string;
+                    usaOChat: boolean;
+                };
+            } | null;
             respostaNova: {
                 quantas: number;
                 desde: string | null;
@@ -46416,6 +46426,7 @@ export interface components {
             abertoEm: string;
             resolvidoEm: string | null;
             atende: string | null;
+            pelaTi: boolean;
             respostaNova: number;
             ultimaMensagem: {
                 autor: string;
@@ -46520,6 +46531,15 @@ export interface components {
                 anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
             } | null;
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
+            pelaTi: boolean;
+            andamento: {
+                versao: number;
+                acoes: ("assumir" | "passar" | "devolver" | "esperar" | "retomar" | "resolver" | "reabrir")[];
+                pessoa: {
+                    nome: string;
+                    usaOChat: boolean;
+                };
+            } | null;
             respostaNova: {
                 quantas: number;
                 desde: string | null;

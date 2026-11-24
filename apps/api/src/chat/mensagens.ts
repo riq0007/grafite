@@ -38,6 +38,7 @@ import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
 import { tomarAnexosDoChat } from './anexos.ts';
+import { comOAlcanceDeAtender, esperaAConta } from './chamados-de-quem-participa.ts';
 import { ContaDoChat, type ContaLida, contaDoChat, lerContas } from './contas.ts';
 import {
   type ContaQueLe,
@@ -283,7 +284,8 @@ async function resolverCitacoes(
         .participa
     );
   };
-  const doVer = alcance(conta.acesso, 'chamados.ver', await lerArvore(tx));
+  const arvore = await lerArvore(tx);
+  const doVer = alcance(conta.acesso, 'chamados.ver', arvore);
   const vistos = citados.filter(
     (chamado) =>
       participaDoChamado({ id: conta.id, pessoaId: conta.pessoaId, usaOChat: true }, chamado) ||
@@ -297,12 +299,13 @@ async function resolverCitacoes(
     tx,
     vistos.flatMap(({ responsavelId }) => (responsavelId ? [responsavelId] : [])),
   );
+  const quemAtende = comOAlcanceDeAtender(conta, arvore);
   for (const chamado of vistos) {
     resolvidas.set(chamado.numero, {
       situacao: situacaoNoChat(
         chamado.situacao,
         estaFechado(chamado, agora, fuso),
-        participaDoChamado({ id: conta.id, pessoaId: conta.pessoaId, usaOChat: true }, chamado),
+        esperaAConta(quemAtende, chamado),
       ),
       atende: chamado.responsavelId
         ? (responsaveis.get(chamado.responsavelId)?.nome ?? null)

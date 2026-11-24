@@ -15,7 +15,7 @@ export interface ChamadoNaLista {
    * A conta participa dele pela TI (spec chamados, "Quem atende pelo chat"): a espera é da pessoa
    * do chamado, e não dela, e o aguardando fica com os outros abertos.
    */
-  pelaTi?: boolean;
+  pelaTi: boolean;
 }
 
 /** O chamado que espera a conta: o aguardando, fora o de quem participa pela TI. */

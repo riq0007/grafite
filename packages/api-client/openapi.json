@@ -10718,6 +10718,9 @@
               "null"
             ]
           },
+          "pelaTi": {
+            "type": "boolean"
+          },
           "respostaNova": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -10764,6 +10767,7 @@
           "abertoEm",
           "resolvidoEm",
           "atende",
+          "pelaTi",
           "respostaNova",
           "ultimaMensagem"
         ]
@@ -11255,6 +11259,61 @@
               "$ref": "#/components/schemas/ItemDaConversaDeQuemParticipaInput"
             }
           },
+          "pelaTi": {
+            "type": "boolean"
+          },
+          "andamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "versao": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "acoes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "assumir",
+                        "passar",
+                        "devolver",
+                        "esperar",
+                        "retomar",
+                        "resolver",
+                        "reabrir"
+                      ]
+                    }
+                  },
+                  "pessoa": {
+                    "type": "object",
+                    "properties": {
+                      "nome": {
+                        "type": "string"
+                      },
+                      "usaOChat": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "nome",
+                      "usaOChat"
+                    ]
+                  }
+                },
+                "required": [
+                  "versao",
+                  "acoes",
+                  "pessoa"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "respostaNova": {
             "type": "object",
             "properties": {
@@ -11327,6 +11386,8 @@
           "anexosDosCampos",
           "origem",
           "conversa",
+          "pelaTi",
+          "andamento",
           "respostaNova",
           "avaliacao"
         ]
@@ -40401,6 +40462,9 @@
               "null"
             ]
           },
+          "pelaTi": {
+            "type": "boolean"
+          },
           "respostaNova": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -40448,6 +40512,7 @@
           "abertoEm",
           "resolvidoEm",
           "atende",
+          "pelaTi",
           "respostaNova",
           "ultimaMensagem"
         ],
@@ -40954,6 +41019,63 @@
               "$ref": "#/components/schemas/ItemDaConversaDeQuemParticipa"
             }
           },
+          "pelaTi": {
+            "type": "boolean"
+          },
+          "andamento": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "versao": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "acoes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "assumir",
+                        "passar",
+                        "devolver",
+                        "esperar",
+                        "retomar",
+                        "resolver",
+                        "reabrir"
+                      ]
+                    }
+                  },
+                  "pessoa": {
+                    "type": "object",
+                    "properties": {
+                      "nome": {
+                        "type": "string"
+                      },
+                      "usaOChat": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "nome",
+                      "usaOChat"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "versao",
+                  "acoes",
+                  "pessoa"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "respostaNova": {
             "type": "object",
             "properties": {
@@ -41028,6 +41150,8 @@
           "anexosDosCampos",
           "origem",
           "conversa",
+          "pelaTi",
+          "andamento",
           "respostaNova",
           "avaliacao"
         ],
