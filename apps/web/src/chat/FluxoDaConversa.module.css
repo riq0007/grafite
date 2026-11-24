@@ -138,14 +138,19 @@
 .itens[data-selecao] .mensagem {
   grid-template-columns: var(--esp-6) var(--esp-8) minmax(0, 1fr);
   cursor: pointer;
+  /* O clique, que marca, não pinta o texto. */
+  user-select: none;
 }
 
 .itens[data-selecao] .mensagem:has(.caixaDaSelecao [data-disabled]) {
   cursor: default;
 }
 
+/* A coluna da caixa estica até a altura da mensagem: o vazio dela deixa o toque cair na mensagem, e
+   só a caixa de marcar recebe o ponteiro. */
 .caixaDaSelecao {
   display: flex;
+  pointer-events: none;
   align-items: flex-start;
   padding-block-start: var(--esp-1);
 }
@@ -153,6 +158,10 @@
 /* No toque, a caixa de marcar com 44 px de alvo, na coluna dela. */
 :root[data-postura="celular"] .itens[data-selecao] .mensagem {
   grid-template-columns: var(--alvo-toque) var(--esp-8) minmax(0, 1fr);
+}
+
+.caixaDaSelecao > * {
+  pointer-events: auto;
 }
 
 :root[data-postura="celular"] .caixaDaSelecao > * {
@@ -274,7 +283,7 @@
     opacity: 1;
   }
 
-  .itens[data-toque-longo] .mensagem {
+  .itens:is([data-toque-longo], [data-selecao]) .mensagem {
     -webkit-touch-callout: none;
     user-select: none;
   }

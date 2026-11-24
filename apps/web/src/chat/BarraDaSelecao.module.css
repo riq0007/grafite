@@ -41,6 +41,10 @@
   margin: 0 var(--esp-3) max(var(--esp-3), env(safe-area-inset-bottom));
 }
 
+:root[data-postura="celular"] .barra .transformar {
+  flex: 1 1 100%;
+}
+
 :root[data-postura="celular"] .atalho {
   display: none;
 }

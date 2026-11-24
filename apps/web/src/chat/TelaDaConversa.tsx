@@ -134,7 +134,8 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     teclasDaSelecao.current = (evento) => {
       if (evento.defaultPrevented) return;
       // Só com a barra à vista: com outra aba da conversa aberta, as teclas são dela.
-      if (!document.querySelector('[data-barra-da-selecao]')?.checkVisibility()) return;
+      const barra = document.querySelector('[data-barra-da-selecao]');
+      if (!barra || barra.checkVisibility?.() === false) return;
       if (document.activeElement?.closest('[role="dialog"], [role="alertdialog"], [role="menu"]')) {
         return;
       }
@@ -156,7 +157,8 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     return () => window.removeEventListener('keydown', ouvir);
   }, [selecionando]);
   // O foco segue a seleção: ao entrar, na caixa de marcar da mensagem de origem, ou nela, se ela já
-  // virou chamado; ao sair, na caixa de escrever, que volta, ou na mensagem, onde a conta não escreve.
+  // virou chamado; ao sair, na caixa de escrever, que volta, ou na mensagem, onde a conta não escreve
+  // e no toque.
   // O que tinha o foco, o "Mais", o "Cancelar" ou a caixa de marcar, sai da tela.
   const origem = useRef<string | null>(null);
   origem.current = selecionadas?.origem ?? origem.current;
@@ -172,9 +174,13 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         '[data-caixa-da-selecao] input:not(:disabled)',
       );
       (marcar ?? mensagem)?.focus({ preventScroll: true });
+      // A conversa cresce com a coluna da caixa de marcar: a origem fica à vista.
+      mensagem?.scrollIntoView({ block: 'nearest' });
       return;
     }
-    if (caixa.current) caixa.current.focus();
+    // No toque, o foco na caixa de escrever abriria o teclado do celular: ele fica na mensagem.
+    const toque = window.matchMedia('(hover: none)').matches;
+    if (caixa.current && !toque) caixa.current.focus();
     else mensagem?.focus({ preventScroll: true });
   }, [selecionando]);
   const aberta = cabecalho.data;
