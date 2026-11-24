@@ -22,6 +22,7 @@ import {
   auditarRecusa,
   chaveRecusada,
   LIMITE_POR_TOKEN_DA_ABA,
+  nomeDoComputadorValido,
   tokenDaAbaRecusado,
 } from '../aba/escopo.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
@@ -29,6 +30,7 @@ import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouUnicidade } from '../banco.ts';
 import { RespostaDeProblema } from '../problemas.ts';
 import { LIMITE_DA_ENTRADA } from '../protecao.ts';
+import { origemDa } from './sessao.ts';
 
 /** Em quantos segundos o serviço relê a configuração. */
 const PROXIMA_CONFIGURACAO = 60;
@@ -44,7 +46,7 @@ const PedidoDeRegistro = z
     /** O `MachineGuid` do Windows. */
     identificadorDaMaquina: z.string().trim().min(1).max(64),
     /** O nome do computador. */
-    nome: z.string().trim().min(1).max(63),
+    nome: z.string().trim().refine(nomeDoComputadorValido),
     /** A versão da aba. */
     versao: z
       .string()
@@ -90,7 +92,7 @@ const novoToken = () => randomBytes(32).toString('base64url');
 async function registrar(
   tx: Transacao,
   pedido: z.infer<typeof PedidoDeRegistro>,
-  { momento, ip }: { momento: Date; ip: string },
+  { momento, origem }: { momento: Date; origem: { ip: string; codigoDeRastreio: string } },
 ): Promise<ResultadoDoRegistro> {
   const [chave] = await tx
     .select({ id: chavesDaAba.id })
@@ -99,7 +101,7 @@ async function registrar(
   if (!chave) {
     await auditarRecusa(tx, {
       acao: 'chave-da-aba.recusada',
-      ip,
+      origem,
       momento,
       dados: { computador: pedido.nome },
     });
@@ -129,7 +131,7 @@ async function registrar(
       ator: { tipo: 'anonimo' },
       alvo: { tipo: 'aparelho-da-aba', id: existente.id },
       dados: { ...dados, primeiro: false },
-      origem: { ip },
+      origem,
       momento,
     });
     const outroNome = existente.nome !== pedido.nome;
@@ -141,7 +143,7 @@ async function registrar(
         antes: { nome: existente.nome },
         depois: { nome: pedido.nome },
         dados,
-        origem: { ip },
+        origem,
         momento,
       });
     }
@@ -180,7 +182,7 @@ async function registrar(
         ator: { tipo: 'anonimo' },
         alvo: { tipo: 'aparelho-da-aba', id: criado.id },
         dados: { computador: pedido.nome, identificador: curto, primeiro: true, entrada },
-        origem: { ip },
+        origem,
         momento,
       });
       return { tipo: 'registrado', token, entrada, curto };
@@ -211,7 +213,9 @@ export const rotasDaAba: FastifyPluginAsyncZod<{ banco: Banco; agora: () => Date
       const momento = agora();
       const pedido = requisicao.body;
       const registro = async () =>
-        naOrganizacao(banco, orgId, (tx) => registrar(tx, pedido, { momento, ip: requisicao.ip }));
+        naOrganizacao(banco, orgId, (tx) =>
+          registrar(tx, pedido, { momento, origem: origemDa(requisicao) }),
+        );
       let resultado: ResultadoDoRegistro;
       try {
         resultado = await registro();

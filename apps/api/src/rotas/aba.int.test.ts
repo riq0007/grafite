@@ -110,6 +110,7 @@ describe('o registro', () => {
         atorTipo: 'anonimo',
         alvoId: aparelho?.id,
         dados: { computador: 'PC-FIN-09', primeiro: true, entrada: 'windows' },
+        codigoDeRastreio: expect.any(String),
       },
     ]);
   });
@@ -220,6 +221,12 @@ describe('o registro', () => {
     const r = await registrar({ chave, nome: '' });
     expect(r.statusCode).toBe(400);
   });
+
+  it('o nome com caractere de controle é dado inválido, como no cabeçalho', async () => {
+    const r = await registrar({ chave, identificadorDaMaquina: 'guid-esc', nome: 'PC\u001b[2J' });
+    expect(r.statusCode).toBe(400);
+    expect(await aparelhoDa('guid-esc')).toBeUndefined();
+  });
 });
 
 describe('a configuração', () => {
@@ -291,6 +298,21 @@ describe('a configuração', () => {
     });
     expect(sem.statusCode).toBe(401);
     expect((await acoes('token-da-aba.recusado')).filter((r) => r.ip === ip)).toHaveLength(1);
+  });
+
+  it('o token que não vale é contado por endereço, e passado o limite é recusado antes do banco', async () => {
+    const ip = novoIp();
+    const respostas = [];
+    for (let i = 0; i < 21; i++)
+      respostas.push((await configuracao(`sorteado-${i}`, { ip })).statusCode);
+    expect(respostas.slice(0, 20).every((status) => status === 401)).toBe(true);
+    expect(respostas[20]).toBe(429);
+    // O token que vale, do mesmo endereço, também espera: o endereço passou do limite.
+    expect((await configuracao(tokenDoFin, { ip })).statusCode).toBe(429);
+    // Outro endereço segue, e o mesmo volta depois da janela.
+    expect((await configuracao(tokenDoFin)).statusCode).toBe(200);
+    api.relogio.avancar(MINUTO);
+    expect((await configuracao(tokenDoFin, { ip })).statusCode).toBe(200);
   });
 
   it('o limite de requisições é por token', async () => {

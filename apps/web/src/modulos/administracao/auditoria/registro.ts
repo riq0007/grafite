@@ -90,6 +90,7 @@ const CAMPOS: Record<string, string> = {
   tetoDeContas: 'Contas por dia',
   forma: 'Forma',
   computador: 'Computador',
+  primeiro: 'Primeiro registro',
   senhaTemporaria: 'Senha temporária',
   exigeDoisPassos: 'Exige verificação em dois passos',
   descricao: 'Descrição',

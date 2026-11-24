@@ -3,6 +3,8 @@
 // `Authorization: Bearer`, sem cookie, sem sessão e sem a proteção contra outros sites, que são das
 // telas. O registro, que leva a chave e não o token, declara `config.semTokenDaAba`. O último
 // contato é gravado no máximo uma vez por minuto, com o nome do computador e a versão quando mudam.
+// O limite por token das rotas entra depois deste gancho: o token que não vale é contado aqui, por
+// endereço, e passado o limite é recusado antes do banco.
 import { createHash } from 'node:crypto';
 import {
   aparelhosDaAba,
@@ -12,13 +14,14 @@ import {
   naOrganizacao,
   type Transacao,
 } from '@grafite/db';
-import { INTERVALO_DA_RECUSA_DA_PESSOA } from '@grafite/domain';
 import { and, desc, eq, gt } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { ProblemaDaApi } from '../problemas.ts';
+import { LIMITE_DA_ENTRADA } from '../protecao.ts';
+import { origemDa } from '../rotas/sessao.ts';
 
 export type EntradaDaAba = (typeof ENTRADAS_DA_ABA)[number];
 
@@ -48,6 +51,10 @@ export const CABECALHO_DO_COMPUTADOR = 'x-grafite-computador';
 /** De quanto em quanto tempo, no máximo, o último contato é gravado. */
 const CONTATO_GRAVADO_A_CADA = 60_000;
 const MINUTO = 60_000;
+/** A mesma recusa do mesmo endereço vai à auditoria uma vez neste intervalo. */
+export const INTERVALO_DA_RECUSA_NA_AUDITORIA = 10 * MINUTO;
+/** Quantos endereços o contador das recusas guarda antes de recomeçar. */
+const ENDERECOS_CONTADOS = 10_000;
 
 /** O limite das rotas da aba com o token, por token: o serviço relê a configuração a cada 60 s. */
 export const LIMITE_POR_TOKEN_DA_ABA = {
@@ -119,11 +126,19 @@ export function versaoDoCabecalho(cabecalho: string | string[] | undefined): str
   return /^[\x21-\x7e]{1,40}$/.test(versao) ? versao : null;
 }
 
-/** O nome do computador informado, quando ele cabe no registro: de 1 a 63 caracteres. */
+/**
+ * O nome do computador que cabe no registro: de 1 a 63 caracteres, sem os de controle, que sairiam
+ * no terminal de quem roda o `grafite aba aparelhos`.
+ */
+export function nomeDoComputadorValido(nome: string): boolean {
+  const visivel = [...nome].every((caractere) => caractere >= ' ' && caractere !== '\u007f');
+  return nome.length >= 1 && nome.length <= 63 && visivel;
+}
+
+/** O nome do computador informado no cabeçalho, quando ele cabe no registro. */
 export function computadorDoCabecalho(cabecalho: string | string[] | undefined): string | null {
   const nome = primeiro(cabecalho);
-  const visivel = [...nome].every((caractere) => caractere >= ' ');
-  return nome.length >= 1 && nome.length <= 63 && visivel ? nome : null;
+  return nomeDoComputadorValido(nome) ? nome : null;
 }
 
 /**
@@ -135,17 +150,18 @@ export async function auditarRecusa(
   tx: Transacao,
   {
     acao,
-    ip,
+    origem,
     momento,
     dados,
   }: {
     acao: 'chave-da-aba.recusada' | 'token-da-aba.recusado';
-    ip: string;
+    origem: { ip: string; codigoDeRastreio: string };
     momento: Date;
     dados?: Record<string, unknown>;
   },
 ) {
-  const desde = new Date(momento.getTime() - INTERVALO_DA_RECUSA_DA_PESSOA);
+  const { ip } = origem;
+  const desde = new Date(momento.getTime() - INTERVALO_DA_RECUSA_NA_AUDITORIA);
   const [recente] = await tx
     .select({ id: auditoria.id })
     .from(auditoria)
@@ -158,7 +174,7 @@ export async function auditarRecusa(
     ator: { tipo: 'anonimo' },
     alvo: { tipo: acao === 'chave-da-aba.recusada' ? 'chave-da-aba' : 'aparelho-da-aba' },
     ...(dados ? { dados } : {}),
-    origem: { ip, codigoDeRastreio: null },
+    origem,
     momento,
   });
 }
@@ -179,12 +195,15 @@ export function instalarAba(
 ) {
   exigirOrganizacao(escopo, resolver, organizacaoOperadora);
   escopo.decorateRequest('aparelhoDaAba', null);
+  const recusas = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
   escopo.addHook('onRequest', async (requisicao) => {
     if (requisicao.routeOptions.config?.semTokenDaAba) return;
     const token = tokenDoCabecalho(requisicao.headers.authorization);
     const orgId = requisicao.organizacao?.id;
     if (!orgId) throw tokenDaAbaRecusado();
     const momento = agora();
+    const espera = recusas.espera(requisicao.ip, momento.getTime());
+    if (espera !== null) throw muitasRecusas(espera);
     const achado = await naOrganizacao(banco, orgId, async (tx) => {
       const [linha] = token
         ? await tx
@@ -193,7 +212,11 @@ export function instalarAba(
             .where(eq(aparelhosDaAba.tokenHash, hashDoToken(token)))
         : [];
       if (!linha) {
-        await auditarRecusa(tx, { acao: 'token-da-aba.recusado', ip: requisicao.ip, momento });
+        await auditarRecusa(tx, {
+          acao: 'token-da-aba.recusado',
+          origem: origemDa(requisicao),
+          momento,
+        });
         return 'recusado' as const;
       }
       if (linha.bloqueadoEm !== null) return 'bloqueado' as const;
@@ -222,8 +245,57 @@ export function instalarAba(
         tetoDeContas: linha.tetoDeContas,
       };
     });
-    if (achado === 'recusado') throw tokenDaAbaRecusado();
+    if (achado === 'recusado') {
+      recusas.contar(requisicao.ip, momento.getTime());
+      throw tokenDaAbaRecusado();
+    }
     if (achado === 'bloqueado') throw aparelhoBloqueado();
     requisicao.aparelhoDaAba = achado;
   });
+}
+
+const muitasRecusas = (esperaMs: number) =>
+  new ProblemaDaApi({
+    codigo: 'muitas-requisicoes',
+    status: 429,
+    titulo: 'Muitas requisições',
+    detalhe: `Muitas requisições. Tente de novo em ${Math.max(1, Math.ceil(esperaMs / 1000))} s.`,
+  });
+
+/**
+ * As recusas do token por endereço, numa janela fixa: o limite por token não conta o token que não
+ * vale, e a rota com o próprio limite fica sem o geral.
+ */
+export class ContadorDeRecusas {
+  readonly #porEndereco = new Map<string, { inicio: number; quantas: number }>();
+
+  readonly maximo: number;
+  readonly janela: number;
+
+  constructor(maximo: number, janela: number) {
+    this.maximo = maximo;
+    this.janela = janela;
+  }
+
+  /** Quanto falta para o endereço tentar de novo, ou `null` quando ele ainda pode. */
+  espera(endereco: string, agora: number): number | null {
+    const conta = this.#porEndereco.get(endereco);
+    if (!conta) return null;
+    const fim = conta.inicio + this.janela;
+    if (agora >= fim) {
+      this.#porEndereco.delete(endereco);
+      return null;
+    }
+    return conta.quantas >= this.maximo ? fim - agora : null;
+  }
+
+  contar(endereco: string, agora: number) {
+    const conta = this.#porEndereco.get(endereco);
+    if (conta && agora < conta.inicio + this.janela) {
+      conta.quantas++;
+      return;
+    }
+    if (this.#porEndereco.size >= ENDERECOS_CONTADOS) this.#porEndereco.clear();
+    this.#porEndereco.set(endereco, { inicio: agora, quantas: 1 });
+  }
 }

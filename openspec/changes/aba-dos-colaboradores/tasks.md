@@ -235,7 +235,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
     - o MSI pelo Intune, as propriedades e a entrada por computador;
     - o comando `grafite aba`, o bloqueio e a troca da chave depois de cada onda de instalação, com onde o Intune guarda a linha de comando, e o `aba` no `COM_ACAO` e na lista dos comandos da ajuda do `apps/operacao/src/runbook.test.ts`, com o `aba chave` de três palavras;
     - o script do Intune que repõe a chave depois de restaurar um backup;
-    - o sysprep das imagens, o proxy sem PAC, os logs e a mudança do endereço;
+    - o sysprep das imagens, com a imagem tirada antes de a aba registrar, porque a clonada depois leva o mesmo token, o proxy sem PAC, os logs e a mudança do endereço;
     - o teto por aparelho e os downloads que ficam no perfil genérico;
     - o primeiro dia da resposta por ver, com as respostas já lidas pela web que aparecem na aba;
   - o `docs/mapa.md`, com a capacidade, a change e os termos novos;
