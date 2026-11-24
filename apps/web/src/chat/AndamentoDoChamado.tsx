@@ -3,11 +3,12 @@
 // ações que o chamado aceita agora, na ordem do domínio, e, separado no fim, "Abrir no Chamados". O
 // assumir, o passar, o devolver e o reabrir vão pelo `useAcoesDoAtendimento` do Chamados, com o
 // "Desfazer" do assumir; o aguardar, o retomar e o resolver, pelas rotas da TI, no gancho do chat, e
-// o aguardar e o resolver pedem num diálogo, que fica aberto, com o texto escrito, na recusa. Depois
+// o aguardar e o resolver pedem num diálogo, que fica aberto, com o texto escrito, na recusa. O
+// diálogo é da tela, fora dos dois cabeçalhos, para seguir aberto quando a postura muda. Depois
 // de cada ação, aceita ou recusada, a tela relê o chamado do chat e as listas. No computador, o botão
 // "Andamento" do cabeçalho; no celular, o de ícone "Andamento do #1045", com o submenu embaixo do
 // item, como o kit faz.
-import { type AcaoDoAndamento, LIMITES_DA_CONVERSA, nomeCurto } from '@grafite/domain';
+import { type AcaoDoAndamento, nomeCurto } from '@grafite/domain';
 import {
   AreaDeTexto,
   Botao,
@@ -46,14 +47,20 @@ import {
 
 type Andamento = NonNullable<ConversaDoChamado['andamento']>;
 
+/** O diálogo do andamento que a tela abre: o do aguardar ou o do resolver. */
+export type DialogoDoAndamentoAberto = 'esperar' | 'resolver';
+
 export function AndamentoDoChamado({
   numero,
   andamento,
   celular,
+  aoPedir,
 }: {
   numero: number;
   andamento: Andamento;
   celular: boolean;
+  /** O "Aguardar…" e o "Resolver…" pedem à tela o diálogo deles. */
+  aoPedir: (dialogo: DialogoDoAndamentoAberto) => void;
 }) {
   const reler = useRelerOsChamadosDoChat();
   const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
@@ -61,7 +68,6 @@ export function AndamentoDoChamado({
   const irNoChat = useIrNoChat();
   const noApp = useOndeEstaOChat() === 'app';
   const [aberto, definirAberto] = useState(false);
-  const [dialogo, definirDialogo] = useState<'esperar' | 'resolver' | null>(null);
   const { versao, acoes, pessoa } = andamento;
   const primeiroNome = nomeCurto(pessoa.nome);
   const abrirNoChamados = () => irNoChat(`/chamados/${numero}`);
@@ -97,12 +103,7 @@ export function AndamentoDoChamado({
       </ItemDeMenu>
     ),
     esperar: () => (
-      <ItemDeMenu
-        key="esperar"
-        id="esperar"
-        icone={Hourglass}
-        onAction={() => definirDialogo('esperar')}
-      >
+      <ItemDeMenu key="esperar" id="esperar" icone={Hourglass} onAction={() => aoPedir('esperar')}>
         {`Aguardar ${primeiroNome}…`}
       </ItemDeMenu>
     ),
@@ -121,7 +122,7 @@ export function AndamentoDoChamado({
         key="resolver"
         id="resolver"
         icone={CircleCheck}
-        onAction={() => definirDialogo('resolver')}
+        onAction={() => aoPedir('resolver')}
       >
         Resolver…
       </ItemDeMenu>
@@ -140,40 +141,63 @@ export function AndamentoDoChamado({
 
   const rotulo = `Andamento do #${numero}`;
   return (
-    <>
-      <Menu
-        rotulo={rotulo}
-        opaco
-        nomePeloRotulo
-        posicao="bottom end"
-        aoMudarAberto={definirAberto}
-        gatilho={
-          celular ? (
-            <BotaoDeIcone icone={ListChecks} rotulo={rotulo} comDica={false} />
-          ) : (
-            <Botao icone={ListChecks}>Andamento</Botao>
-          )
-        }
+    <Menu
+      rotulo={rotulo}
+      opaco
+      nomePeloRotulo
+      posicao="bottom end"
+      aoMudarAberto={definirAberto}
+      gatilho={
+        celular ? (
+          <BotaoDeIcone icone={ListChecks} rotulo={rotulo} comDica={false} />
+        ) : (
+          <Botao icone={ListChecks}>Andamento</Botao>
+        )
+      }
+    >
+      {acoes.map((acao) => itens[acao]())}
+      {acoes.length > 0 && <Separador />}
+      <ItemDeMenu
+        id="abrir-no-chamados"
+        icone={SquareArrowOutUpRight}
+        // No app, o Grafite abre numa janela nova; na casca, no módulo.
+        descricao={noApp ? 'No Grafite, numa janela nova' : undefined}
+        onAction={abrirNoChamados}
       >
-        {acoes.map((acao) => itens[acao]())}
-        {acoes.length > 0 && <Separador />}
-        <ItemDeMenu
-          id="abrir-no-chamados"
-          icone={SquareArrowOutUpRight}
-          // No app, o Grafite abre numa janela nova; na casca, no módulo.
-          descricao={noApp ? 'No Grafite, numa janela nova' : undefined}
-          onAction={abrirNoChamados}
-        >
-          Abrir no Chamados
-        </ItemDeMenu>
-      </Menu>
+        Abrir no Chamados
+      </ItemDeMenu>
+    </Menu>
+  );
+}
+
+/**
+ * Os diálogos do aguardar e do resolver, na tela do chamado, fora dos cabeçalhos: o aberto segue
+ * aberto, com o texto, quando a postura troca o cabeçalho.
+ */
+export function DialogosDoAndamento({
+  numero,
+  andamento,
+  aberto: dialogo,
+  aoFechar,
+}: {
+  numero: number;
+  andamento: Andamento;
+  aberto: DialogoDoAndamentoAberto | null;
+  aoFechar: () => void;
+}) {
+  const doChat = useAndamentoNoChat(numero);
+  const irNoChat = useIrNoChat();
+  const { versao, pessoa } = andamento;
+  const primeiroNome = nomeCurto(pessoa.nome);
+  const abrirNoChamados = () => irNoChat(`/chamados/${numero}`);
+  return (
+    <>
       <DialogoDoAndamento
         aberto={dialogo === 'esperar'}
-        aoFechar={() => definirDialogo(null)}
+        aoFechar={aoFechar}
         titulo={`Aguardar ${primeiroNome} no #${numero}`}
         campo={{
           rotulo: `Mensagem para ${primeiroNome}`,
-          maximo: LIMITES_DA_CONVERSA.mensagem,
           // À pessoa que não usa o chat, a frase do Chamados.
           descricao: pessoa.usaOChat ? undefined : ajudaDoCampo(primeiroNome, false),
         }}
@@ -183,9 +207,9 @@ export function AndamentoDoChamado({
       />
       <DialogoDoAndamento
         aberto={dialogo === 'resolver'}
-        aoFechar={() => definirDialogo(null)}
+        aoFechar={aoFechar}
         titulo={`Resolver o #${numero}`}
-        campo={{ rotulo: 'O que foi feito', maximo: LIMITES_DA_CONVERSA.feito }}
+        campo={{ rotulo: 'O que foi feito' }}
         confirmar={{ rotulo: 'Resolver', carregando: 'Resolvendo' }}
         aoConfirmar={(feito) => doChat.resolver(versao, feito)}
         abrirNoChamados={abrirNoChamados}
@@ -211,7 +235,7 @@ function DialogoDoAndamento({
   aberto: boolean;
   aoFechar: () => void;
   titulo: string;
-  campo: { rotulo: string; maximo: number; descricao?: string | undefined };
+  campo: { rotulo: string; descricao?: string | undefined };
   confirmar: { rotulo: string; carregando: string };
   aoConfirmar: (texto: string) => Promise<RecusaNoAndamento | null>;
   abrirNoChamados: () => void;
@@ -294,7 +318,6 @@ function DialogoDoAndamento({
             definirErro(null);
           }}
           erro={erro ?? undefined}
-          contador={{ maximo: campo.maximo }}
           autoFocus
         />
       </div>

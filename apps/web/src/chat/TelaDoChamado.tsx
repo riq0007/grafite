@@ -37,7 +37,11 @@ import { useAcoesDoAtendimento } from '../modulos/chamados/acoes.ts';
 import { ajudaDoCampo } from '../modulos/chamados/chamado/escrever.ts';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
-import { AndamentoDoChamado } from './AndamentoDoChamado.tsx';
+import {
+  AndamentoDoChamado,
+  type DialogoDoAndamentoAberto,
+  DialogosDoAndamento,
+} from './AndamentoDoChamado.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
   type ConversaDoChamado,
@@ -149,6 +153,7 @@ function ChamadoNaTela({
   const caixa = useRef<HTMLTextAreaElement>(null);
   const [reabrindo, definirReabrindo] = useState(false);
   const [painelNaFolha, definirPainelNaFolha] = useState(false);
+  const [dialogo, definirDialogo] = useState<DialogoDoAndamentoAberto | null>(null);
   const celular = usePostura() === 'celular';
   // As notificações deste chamado, nos dois endereços dele, como a resposta da TI, não viram aviso
   // enquanto ele está à vista.
@@ -200,7 +205,12 @@ function ChamadoNaTela({
               </h2>
               <span className={estilos.botoesDoTitulo}>
                 {chamado.andamento && (
-                  <AndamentoDoChamado numero={numero} andamento={chamado.andamento} celular />
+                  <AndamentoDoChamado
+                    numero={numero}
+                    andamento={chamado.andamento}
+                    celular
+                    aoPedir={definirDialogo}
+                  />
                 )}
                 <BotaoDeIcone
                   icone={PanelBottom}
@@ -233,7 +243,12 @@ function ChamadoNaTela({
             <SeloDoChamado texto={chamado.situacaoEmTexto} />
             {chamado.andamento && (
               <span className={estilos.andamento}>
-                <AndamentoDoChamado numero={numero} andamento={chamado.andamento} celular={false} />
+                <AndamentoDoChamado
+                  numero={numero}
+                  andamento={chamado.andamento}
+                  celular={false}
+                  aoPedir={definirDialogo}
+                />
               </span>
             )}
             <span className={estilos.botaoDoPainel}>
@@ -308,6 +323,14 @@ function ChamadoNaTela({
         </h2>
         {neste}
       </aside>
+      {chamado.andamento && (
+        <DialogosDoAndamento
+          numero={numero}
+          andamento={chamado.andamento}
+          aberto={dialogo}
+          aoFechar={() => definirDialogo(null)}
+        />
+      )}
       {celular && (
         <Folha aberta={painelNaFolha} aoMudarAberta={definirPainelNaFolha} titulo="Neste chamado">
           <div className={estilos.naFolha}>
