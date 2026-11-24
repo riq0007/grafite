@@ -64,7 +64,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a conferência do `diretorio/aba.ts`, com as seis recusas e as frases.
 
   Começa pelos testes de integração e pelo `ldap.test.ts`. Verificar: esses testes, o lint e o typecheck.
-- [ ] 3.5 A sessão da aba pelo Windows (`POST /api/aba/sessao` e o escopo da aba):
+- [x] 3.5 A sessão da aba pelo Windows (`POST /api/aba/sessao` e o escopo da aba):
   - o token de 1 h;
   - o `renovar`, que estende a mesma sessão e confere a pessoa de novo;
   - o teto do aparelho;

@@ -2,20 +2,12 @@
 // decisão 4), com o AD em memória: a pessoa do grupo mapeado é aceita com o usuário do atributo; o
 // SID fora do diretório, o usuário que não serve, a conta local, a conta e a pessoa inativas, a falta
 // de grupo, a conta desativada no AD e o diretório desligado ou fora do ar são recusados, sem conta.
-import {
-  atribuicoes,
-  contas,
-  diretorios,
-  grupos,
-  mapeamentosDoDiretorio,
-  naOrganizacao,
-  pessoas,
-  segredos,
-} from '@grafite/db';
-import { FRASES_SEM_CONEXAO, normalizarDn, normalizarTexto } from '@grafite/domain';
-import { eq, sql } from 'drizzle-orm';
+import { atribuicoes, contas, diretorios, grupos, naOrganizacao, pessoas } from '@grafite/db';
+import { FRASES_SEM_CONEXAO } from '@grafite/domain';
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
+import { ligarDiretorioSimulado } from '../../test/diretorio.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -23,10 +15,9 @@ import {
   criarOrganizacao,
   criarPerfil,
 } from '../../test/integracao.ts';
-import { cifrarSegredo } from '../cofre/cifra.ts';
 import { conferirPessoaPeloSid } from './aba.ts';
 import { contaPeloDiretorio } from './entrada.ts';
-import { CONTA_DE_SERVICO_SIMULADA, criarDiretorioSimulado } from './simulado.ts';
+import { criarDiretorioSimulado } from './simulado.ts';
 
 const host = 'grafite.aba-sid.local';
 const ad = criarDiretorioSimulado();
@@ -111,37 +102,8 @@ beforeAll(async () => {
       .returning({ id: grupos.id });
     grupoId = grupo?.id ?? '';
     await tx.insert(atribuicoes).values({ orgId: org, perfilId: perfil, grupoId });
-    const { rows } = await tx.execute<{ id: string }>(sql`select uuidv7() as id`);
-    const segredoId = rows[0]?.id ?? '';
-    await tx.insert(segredos).values({
-      id: segredoId,
-      orgId: org,
-      nome: 'Conta do Grafite no AD',
-      nomeNormalizado: normalizarTexto('Conta do Grafite no AD'),
-      tipo: 'conta-administrativa',
-      classificacao: 'equipamento',
-      identificador: CONTA_DE_SERVICO_SIMULADA.usuario,
-      ...cifrarSegredo({ valor: CONTA_DE_SERVICO_SIMULADA.senha }, CHAVES_DO_COFRE_DE_TESTE, {
-        orgId: org,
-        segredoId,
-      }),
-    });
-    await tx.insert(diretorios).values({
-      orgId: org,
-      servidor: 'ldaps://dc01.empresa.local',
-      baseDn: 'DC=empresa,DC=local',
-      segredoId,
-      atributoDoUsuario: 'sAMAccountName',
-      filtroDasPessoas: '(&(objectCategory=person)(objectClass=user))',
-      ligado: true,
-    });
-    await tx.insert(mapeamentosDoDiretorio).values({
-      orgId: org,
-      grupoDn: dnDoGrupo,
-      grupoDnNormalizado: normalizarDn(dnDoGrupo),
-      grupoId,
-    });
   });
+  await ligarDiretorioSimulado(api, org, [[dnDoGrupo, grupoId]]);
 });
 
 afterAll(async () => {

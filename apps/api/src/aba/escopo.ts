@@ -12,9 +12,10 @@ import {
   type Banco,
   type ENTRADAS_DA_ABA,
   naOrganizacao,
+  sessoesDaAba,
   type Transacao,
 } from '@grafite/db';
-import { and, desc, eq, gt } from 'drizzle-orm';
+import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
@@ -29,10 +30,14 @@ declare module 'fastify' {
   interface FastifyRequest {
     /** O aparelho do token, nas rotas da aba que pedem o token. */
     aparelhoDaAba: AparelhoDaRequisicao | null;
+    /** A sessão da pessoa, nas rotas da sessão da aba, que levam o token dela no lugar do aparelho. */
+    sessaoDaAba: SessaoDaRequisicao | null;
   }
   interface FastifyContextConfig {
     /** A rota da aba que não leva o token do aparelho, como o registro, que leva a chave. */
     semTokenDaAba?: true;
+    /** A rota da sessão da aba, com o token da sessão da pessoa no lugar do token do aparelho. */
+    daSessaoDaAba?: true;
   }
 }
 
@@ -42,6 +47,13 @@ export interface AparelhoDaRequisicao {
   identificadorCurto: string;
   entrada: EntradaDaAba;
   tetoDeContas: number;
+}
+
+export interface SessaoDaRequisicao {
+  id: string;
+  contaId: string;
+  entrada: EntradaDaAba;
+  expiraEm: Date;
 }
 
 /** O cabeçalho com a versão da aba e o com o nome do computador, que cada contato manda. */
@@ -82,6 +94,14 @@ export const tokenDaAbaRecusado = () =>
     status: 401,
     titulo: 'Computador sem registro',
     detalhe: 'Este computador precisa ser registrado de novo. Fale com a TI.',
+  });
+
+export const sessaoDaAbaRecusada = () =>
+  new ProblemaDaApi({
+    codigo: 'sessao-da-aba-recusada',
+    status: 401,
+    titulo: 'Sessão da aba terminada',
+    detalhe: 'A sessão da aba terminou.',
   });
 
 export const aparelhoBloqueado = () =>
@@ -197,6 +217,7 @@ export function instalarAba(
 ) {
   exigirOrganizacao(escopo, resolver, organizacaoOperadora);
   escopo.decorateRequest('aparelhoDaAba', null);
+  escopo.decorateRequest('sessaoDaAba', null);
   const recusas = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
   escopo.addHook('onRequest', async (requisicao) => {
     if (requisicao.routeOptions.config?.semTokenDaAba) return;
@@ -204,6 +225,15 @@ export function instalarAba(
     const orgId = requisicao.organizacao?.id;
     if (!orgId) throw tokenDaAbaRecusado();
     const momento = agora();
+    if (requisicao.routeOptions.config?.daSessaoDaAba) {
+      // A sessão vencida é rotina, e a recusa dela fica fora do contador e da auditoria.
+      const daSessao = token ? await sessaoDoToken(banco, orgId, token, momento) : null;
+      if (!daSessao) throw sessaoDaAbaRecusada();
+      if (daSessao === 'bloqueado') throw aparelhoBloqueado();
+      requisicao.sessaoDaAba = daSessao.sessao;
+      requisicao.aparelhoDaAba = daSessao.aparelho;
+      return;
+    }
     const hash = token ? hashDoToken(token) : null;
     const espera = recusas.espera(requisicao.ip, momento.getTime());
     // O token que valeu há pouco passa: o computador registrado de novo não espera atrás das
@@ -322,4 +352,54 @@ export class ContadorDeRecusas {
     if (this.#porEndereco.size >= ENDERECOS_CONTADOS) this.#porEndereco.clear();
     this.#porEndereco.set(endereco, { inicio: agora, quantas: 1 });
   }
+}
+
+/**
+ * A sessão aberta e dentro da validade do token, com o aparelho dela, ou `'bloqueado'` com o
+ * aparelho bloqueado, ou `null`.
+ */
+async function sessaoDoToken(
+  banco: Banco,
+  orgId: string,
+  token: string,
+  momento: Date,
+): Promise<{ sessao: SessaoDaRequisicao; aparelho: AparelhoDaRequisicao } | 'bloqueado' | null> {
+  const [linha] = await naOrganizacao(banco, orgId, (tx) =>
+    tx
+      .select({ sessao: sessoesDaAba, aparelho: aparelhosDaAba })
+      .from(sessoesDaAba)
+      .innerJoin(
+        aparelhosDaAba,
+        and(
+          eq(aparelhosDaAba.orgId, sessoesDaAba.orgId),
+          eq(aparelhosDaAba.id, sessoesDaAba.aparelhoId),
+        ),
+      )
+      .where(
+        and(
+          eq(sessoesDaAba.tokenHash, hashDoToken(token)),
+          isNull(sessoesDaAba.encerradaEm),
+          isNotNull(sessoesDaAba.ativadaEm),
+          gt(sessoesDaAba.expiraEm, momento),
+        ),
+      ),
+  );
+  if (!linha) return null;
+  if (linha.aparelho.bloqueadoEm !== null) return 'bloqueado';
+  const { sessao, aparelho } = linha;
+  return {
+    sessao: {
+      id: sessao.id,
+      contaId: sessao.contaId,
+      entrada: sessao.entrada,
+      expiraEm: sessao.expiraEm,
+    },
+    aparelho: {
+      id: aparelho.id,
+      nome: aparelho.nome,
+      identificadorCurto: aparelho.identificadorCurto,
+      entrada: aparelho.entrada,
+      tetoDeContas: aparelho.tetoDeContas,
+    },
+  };
 }

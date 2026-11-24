@@ -49,6 +49,7 @@ import { criarPonteDosPaineis } from './paineis/ponte.ts';
 import { gerarCodigoDeRastreio, registrarProblemas } from './problemas.ts';
 import { registrarLimiteDeRequisicoes } from './protecao.ts';
 import { rotasDaAba } from './rotas/aba.ts';
+import { rotasDaSessaoDaAba } from './rotas/aba-sessao.ts';
 import { rotasDoAcesso } from './rotas/acesso.ts';
 import { rotasDoAcessoRemoto } from './rotas/acesso-remoto.ts';
 import { rotasDosAgentes } from './rotas/agentes.ts';
@@ -512,6 +513,11 @@ export async function criarApp({
   await app.register(async (escopo) => {
     instalarAba(escopo, { banco, agora, resolver, organizacaoOperadora });
     await escopo.register(rotasDaAba, { banco, agora });
+    await escopo.register(rotasDaSessaoDaAba, {
+      banco,
+      agora,
+      diretorio: { chavesDoCofre, conectar: conectarDiretorio },
+    });
   });
   // O agente do GLPI (change inventario-pelo-agente-glpi): o protocolo dele, pelo token do caminho.
   await instalarAgentesDoGlpi(app, { banco, agora, resolver, armazenamento, organizacaoOperadora });

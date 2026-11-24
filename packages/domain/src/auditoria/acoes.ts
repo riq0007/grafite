@@ -287,6 +287,9 @@ export const ACOES_DA_AUDITORIA = {
     'Computador registrado de novo com outro nome em menos de 1 hora',
   'chave-da-aba.recusada': 'Chave da aba recusada',
   'token-da-aba.recusado': 'Token do computador na aba recusado',
+  'sessao-da-aba.aberta': 'Sessão da aba aberta',
+  'sessao-da-aba.recusada': 'Pessoa recusada na aba',
+  'sessao-da-aba.encerrada': 'Sessão da aba encerrada',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

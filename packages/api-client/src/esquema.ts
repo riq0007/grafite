@@ -38695,6 +38695,158 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aba/sessao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir a sessão da aba para a pessoa do Windows, com o token do aparelho */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaSessaoDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/sessao/renovar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Renovar a sessão da aba, conferindo a pessoa de novo */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeRenovacaoDaSessaoDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RenovacaoDaSessaoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -39552,6 +39704,27 @@ export interface components {
             entrada: "windows" | "senha";
             versao: number;
             proximaEm: number;
+        };
+        PedidoDaSessaoDaAbaInput: {
+            /** @constant */
+            entrada: "windows";
+            sid: string;
+            usuarioDoWindows?: string;
+        };
+        SessaoDaAbaInput: {
+            token: string;
+            /** Format: date-time */
+            expiraEm: string;
+            pessoa: {
+                nome: string;
+            };
+        };
+        PedidoDeRenovacaoDaSessaoDaAbaInput: {
+            sid: string;
+        };
+        RenovacaoDaSessaoDaAbaInput: {
+            /** Format: date-time */
+            expiraEm: string;
         };
         AdministradoresDoAcessoInput: {
             administradores: string[];
@@ -45501,6 +45674,27 @@ export interface components {
             entrada: "windows" | "senha";
             versao: number;
             proximaEm: number;
+        };
+        PedidoDaSessaoDaAba: {
+            /** @constant */
+            entrada: "windows";
+            sid: string;
+            usuarioDoWindows?: string;
+        };
+        SessaoDaAba: {
+            token: string;
+            /** Format: date-time */
+            expiraEm: string;
+            pessoa: {
+                nome: string;
+            };
+        };
+        PedidoDeRenovacaoDaSessaoDaAba: {
+            sid: string;
+        };
+        RenovacaoDaSessaoDaAba: {
+            /** Format: date-time */
+            expiraEm: string;
         };
         AdministradoresDoAcesso: {
             administradores: string[];
