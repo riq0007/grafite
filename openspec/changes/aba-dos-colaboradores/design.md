@@ -248,7 +248,7 @@ O serviço lê a chave sempre que ela aparece no registro e ele não tem token, 
 
 O WebView2 vai pelo bootstrapper embutido.
 
-O MSI que o job guarda como artefato e que a release leva se chama `Grafite-Aba.msi`, sem a versão nem a arquitetura do nome de fábrica do Tauri, porque é o nome do exemplo que o `grafite aba chave` mostra e o do runbook.
+O MSI que o job guarda como artefato se chama `Grafite-Aba.msi`, sem a versão nem a arquitetura do nome de fábrica do Tauri, porque é o nome do exemplo que o `grafite aba chave` mostra e o do runbook. A release o leva com esse nome quando ele entrar nela.
 
 O job `aba` do `ci.yml`, no `windows-2022`:
 - `cargo fmt --check`, `cargo clippy -D warnings` e `cargo test`;

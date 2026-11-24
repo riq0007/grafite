@@ -121,6 +121,8 @@ describe('o registro de um segredo na auditoria', () => {
     expect(textoDoAlvo(registro.alvo)).toBe('Computador com a aba: PC-PROD-03 (D4E5F6)');
     const rotulos = camposDoDetalhe(registro, formatar).map((campo) => campo.rotulo);
     expect(rotulos).toEqual(expect.arrayContaining(['Entrada', 'Contas por dia', 'Computador']));
+    const entrada = camposDoDetalhe(registro, formatar).find((campo) => campo.rotulo === 'Entrada');
+    expect(entrada?.valor).toBe('Pelo Windows → Pela senha');
   });
 
   it('os dados do segredo pelo rótulo, com o tipo e a classificação em texto', () => {

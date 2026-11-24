@@ -67,6 +67,10 @@ const TIPOS_DO_ALVO: Record<string, string> = {
   'aparelho-da-aba': 'Computador com a aba',
 };
 
+/** A entrada e a forma da aba como o comando no servidor as escreve. */
+const ENTRADAS_DA_ABA: Record<string, string> = { windows: 'Pelo Windows', senha: 'Pela senha' };
+const FORMAS_DA_ABA: Record<string, string> = { pilula: 'Pílula', entalhe: 'Entalhe' };
+
 /** O tipo da conversa do alvo pela ação: as `equipe.*` e as `canal.*`. */
 const tipoDaConversa = (acao: string) =>
   acao.startsWith('equipe.') ? 'Equipe' : acao.startsWith('canal.') ? 'Canal' : null;
@@ -595,6 +599,8 @@ function textoDoValor(campo: string, valor: unknown, formatarData: (data: Date) 
       ];
     }
     if (campo === 'motivo' && valor in MOTIVOS) return MOTIVOS[valor] ?? valor;
+    if (campo === 'entrada' && valor in ENTRADAS_DA_ABA) return ENTRADAS_DA_ABA[valor] ?? valor;
+    if (campo === 'forma' && valor in FORMAS_DA_ABA) return FORMAS_DA_ABA[valor] ?? valor;
     if (/Em$|Ate$/.test(campo) && !Number.isNaN(Date.parse(valor))) {
       return formatarData(new Date(valor));
     }

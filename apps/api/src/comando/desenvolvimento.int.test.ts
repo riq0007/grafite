@@ -15,7 +15,7 @@ import {
   perfis,
   tentativasDeEntrada,
 } from '@grafite/db';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
 import { type ApiDeTeste, abrirApi, clienteDaApi, novoIp } from '../../test/integracao.ts';
@@ -337,6 +337,15 @@ describe('o diretório de desenvolvimento', () => {
     expect((await oQueTem()).diretorios).toMatchObject([
       { servidor: SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO, ligado: true },
     ]);
+    const [religado] = await naOrganizacao(api.banco, orgId, (tx) =>
+      tx
+        .select({ antes: auditoria.antes, depois: auditoria.depois })
+        .from(auditoria)
+        .where(eq(auditoria.acao, 'diretorio.configurado'))
+        .orderBy(desc(auditoria.momento), desc(auditoria.id))
+        .limit(1),
+    );
+    expect(religado).toEqual({ antes: { ligado: false }, depois: { ligado: true } });
   });
 
   it('o perfil gravado só com o chat ganha o pedido de chamados', async () => {
