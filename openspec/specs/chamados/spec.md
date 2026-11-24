@@ -7,7 +7,7 @@ Registrar os pedidos das pessoas à TI como chamados: quem pediu, sobre o quê, 
 
 ### Requirement: Chamado
 
-O chamado SHALL ser o pedido de uma pessoa à TI. A TI o abre em nome da pessoa (requisito "Abrir um chamado pela TI"), e quem tem `chamados.pedir` o abre pelo chat, a partir de uma mensagem (requisito "Abrir um chamado pelo chat"). A aba dos colaboradores vem nas changes do S8.
+O chamado SHALL ser o pedido de uma pessoa à TI. A TI o abre em nome da pessoa (requisito "Abrir um chamado pela TI"), e quem tem `chamados.pedir` o abre pelo chat, a partir de uma mensagem ou de até 20 mensagens da mesma conversa (requisito "Abrir um chamado pelo chat"). A aba dos colaboradores vem nas changes do S8.
 
 Cada chamado SHALL ter:
 - o número, sequencial na organização e separado do das solicitações e do das OS, mostrado como "#1042", que SHALL NOT se repetir nem mudar;
@@ -19,7 +19,7 @@ Cada chamado SHALL ter:
 - os locais (requisito "Quem vê e quem atende os chamados");
 - a situação e quem atende (requisito "Situação e quem atende");
 - o prazo do tipo como ele estava na abertura (requisito "Prazo do chamado");
-- a origem: a TI, ou o chat, com a conversa e a mensagem de onde ele foi aberto;
+- a origem: a TI, ou o chat, com a conversa e as mensagens de onde ele foi aberto;
 - quem abriu e quando: a conta da TI, ou, pelo chat, a conta e a pessoa dela.
 
 Um chamado SHALL NOT ser apagado, nem pela API nem pelo banco com o papel da aplicação: o que não vai ser atendido é resolvido, com o que foi feito.
@@ -35,6 +35,10 @@ Um chamado SHALL NOT ser apagado, nem pela API nem pelo banco com o papel da apl
 #### Scenario: Aberto pelo chat
 - **WHEN** Fernanda Rocha transforma a mensagem das 10:19 de Paulo Nunes, na Equipe Financeiro, no #1045
 - **THEN** o #1045 tem a origem no chat, com a Equipe Financeiro e a mensagem das 10:19, e Fernanda como quem abriu
+
+#### Scenario: Aberto por várias mensagens
+- **WHEN** Fernanda Rocha transforma no #1046 as mensagens das 10:19 e das 10:20 de Paulo Nunes, na Equipe Financeiro
+- **THEN** o #1046 tem a origem no chat, com a Equipe Financeiro e as duas mensagens, e Fernanda como quem abriu
 
 ### Requirement: Abrir um chamado pela TI
 
@@ -614,7 +618,7 @@ Os chamados SHALL notificar pela notificação da plataforma (spec notificacoes)
 - **o prazo estourado** (requisito "Prazo estourado"), na severidade Atenção;
 - **a resposta da pessoa,** a mensagem ou a escolha de quem participa do chamado (requisito "Resposta da pessoa"), a quem atende o chamado, na severidade Informação: "Fernanda Rocha respondeu o #1041", com o começo da mensagem ou a opção escolhida. O chamado na triagem SHALL NOT notificar a resposta: ele já está na lista da triagem.
 
-No chat (spec chat), os chamados SHALL notificar como mensagem, na severidade Informação, com a origem "Chamados" e o endereço do chamado no app do chat, a conta da pessoa e a de quem abriu o chamado pelo chat, quando usam o chat:
+No chat (spec chat), os chamados SHALL notificar como mensagem, na severidade Informação, com a origem "Chamados" e o endereço do chamado no app do chat, a conta da pessoa e a de quem abriu o chamado pelo chat, quando usam o chat, fora quem participa pela TI (requisito "Quem atende pelo chat"), que recebe só as da TI:
 - **a mensagem da TI para a pessoa:** "Ana Souza respondeu o #1041", com o começo da mensagem;
 - **o resolvido:** "#1045 resolvido: Impressora manchando", com o começo do "O que foi feito".
 
@@ -642,6 +646,10 @@ Quem assume, reabre ou abre o chamado com "Fica comigo" SHALL NOT ser notificado
 - **WHEN** Fernanda Rocha escolhe "Pode ser" na pergunta de Bruno no #1045, que está com ele
 - **THEN** Bruno recebe "Fernanda Rocha respondeu o #1045", com "Pode ser"
 
+#### Scenario: Quem participa pela TI não é avisada como quem pediu
+- **WHEN** Ana Souza passa a Diego o #1050, que ela abriu no nome de Paulo Nunes, e Diego escreve a Paulo e depois o resolve
+- **THEN** Paulo recebe "Diego Martins respondeu o #1050" e "#1050 resolvido: Sala sem rede", e Ana não recebe nenhuma das duas
+
 ### Requirement: Permissões, auditoria e eventos dos chamados
 
 O catálogo SHALL ter, na área "Chamados":
@@ -652,12 +660,12 @@ O catálogo SHALL ter, na área "Chamados":
 
 O perfil Administrador SHALL ter as quatro.
 
-A pessoa do chamado e quem o abriu pelo chat SHALL ler, responder, reabrir e avaliar o próprio chamado sem nenhuma dessas permissões, enquanto usam o chat (requisito "Leitura do chamado pela pessoa").
+A pessoa do chamado e quem o abriu pelo chat SHALL ler, responder, reabrir e avaliar o próprio chamado sem nenhuma dessas permissões, enquanto usam o chat (requisito "Leitura do chamado pela pessoa"). Quem participa pela TI SHALL ler o chamado pelo chat e responder, reabrir e agir nele como a TI, com `chamados.atender` (requisito "Quem atende pelo chat").
 
 A auditoria SHALL registrar:
 - **nos chamados:**
-  - a abertura, pela TI e pelo chat;
-  - assumir, desfazer, passar, devolver à triagem, aguardar, retomar, resolver e reabrir, também o retomar e o reabrir pela pessoa;
+  - a abertura, pela TI e pelo chat, com quantas mensagens a abertura pelo chat cita;
+  - assumir, desfazer, passar, devolver à triagem, aguardar, retomar, resolver e reabrir, também pelo chat, e o retomar e o reabrir pela pessoa;
   - a troca do título, dos campos da TI e do ativo;
   - a OS e a solicitação;
 - **nos ajustes:**
@@ -698,9 +706,15 @@ Os eventos SHALL NOT levar o título, o texto nem o nome da pessoa.
 - **WHEN** Ana manda uma mensagem no #1041 de Fernanda Rocha
 - **THEN** as sessões de Fernanda recebem `chamados.mudaram`, sem o texto, e o chat dela relê o #1041
 
+#### Scenario: Assumir pelo chat na auditoria
+- **WHEN** Ana Souza assume pelo chat o #1050, que ela abriu no nome de Paulo Nunes
+- **THEN** a auditoria registra o assumir do "#1050 · Sala sem rede", com Ana, a situação e quem atende antes e depois, como pelo Chamados
+
 ### Requirement: Abrir um chamado pelo chat
 
-Quem tem `chamados.pedir` e usa o chat, com os módulos Chat e Chamados ligados, SHALL abrir um chamado a partir de uma mensagem de uma conversa direta, de uma equipe ou de um canal de que participa, de quem quer que a tenha escrito, também a própria. A mensagem que já virou chamado SHALL NOT virar outro (spec chat, "Chamados da conversa").
+Quem tem `chamados.pedir` e usa o chat, com os módulos Chat e Chamados ligados, SHALL abrir um chamado a partir de uma mensagem, ou de até 20 mensagens da mesma conversa, de uma conversa direta, de uma equipe ou de um canal de que participa, de quem quer que as tenha escrito, também a própria. A mensagem que já virou chamado SHALL NOT virar outro, nem junto com outras mensagens (spec chat, "Chamados da conversa").
+
+O chamado SHALL guardar a cópia de cada mensagem citada, na ordem da conversa, com quem a escreveu, a hora, o texto e os anexos, como estavam na abertura.
 
 A abertura SHALL pedir:
 - **o tipo,** entre os Em uso com "Aparece para o colaborador" e sem "Só a TI abre" (spec tipos-de-chamado, "Quem vê o tipo"), na ordem dos tipos;
@@ -710,7 +724,7 @@ A abertura SHALL pedir:
 
 Para a escolha, quem abre SHALL ler só o identificador, o nome e o patrimônio dos ativos sugeridos, sem `ativos.ver`.
 
-O formulário do tipo SHALL NOT ser pedido: a mensagem citada descreve o pedido. As respostas SHALL ficar vazias, fora a do primeiro campo Ativo, que é o ativo escolhido, e os campos obrigatórios SHALL NOT barrar a abertura.
+O formulário do tipo SHALL NOT ser pedido: as mensagens citadas descrevem o pedido. As respostas SHALL ficar vazias, fora a do primeiro campo Ativo, que é o ativo escolhido, e os campos obrigatórios SHALL NOT barrar a abertura.
 
 O chamado SHALL nascer como na abertura pela TI, sem o "Fica comigo": com o número, os locais, a situação e quem atende pelo tipo, o prazo e a solicitação do tipo que gera uma. A pessoa escolhida em "No nome de" é a pessoa do chamado, e a conta que abre é quem abriu.
 
@@ -719,8 +733,9 @@ As recusas SHALL ser:
 - "Escreva o título." e "Use até 120 caracteres.", no título;
 - "Escolha o ativo.", "Escolha um ativo da lista." e, sem nenhum sugerido, "Nenhum ativo desse tipo está com <pessoa> ou no local dela. Escolha outro tipo ou escreva à TI.", no ativo;
 - "Escolha a pessoa.", em "No nome de";
-- "Esta mensagem já virou o chamado #1045.";
-- "A mensagem não foi encontrada.", na mensagem de uma conversa de que a conta não participa.
+- "Escolha as mensagens.", sem nenhuma mensagem, e "Escolha até 20 mensagens.", com mais de 20;
+- "Esta mensagem já virou o chamado #1045." e, com várias mensagens, "Uma das mensagens já virou o chamado #1045.";
+- "A mensagem não foi encontrada.", na mensagem de uma conversa de que a conta não participa e na de outra conversa.
 
 #### Scenario: Transformar a mensagem do Paulo
 - **WHEN** Fernanda Rocha transforma a mensagem das 10:19 de Paulo Nunes, escolhe Impressora, escreve "Impressora manchando" e fica com a PAT-00137 sugerida, no nome dela
@@ -737,6 +752,22 @@ As recusas SHALL ser:
 #### Scenario: Tipo só da TI
 - **WHEN** Fernanda Rocha pede pela API um chamado de Troca de equipamento, que só a TI abre
 - **THEN** a abertura é recusada com "Esse tipo não está disponível para abrir pelo chat.", e nada é gravado
+
+#### Scenario: Três mensagens num chamado
+- **WHEN** Fernanda Rocha transforma no #1046 a mensagem dela das 10:21 e as de Paulo Nunes das 10:19 e das 10:20, da Equipe Financeiro, marcadas nessa ordem
+- **THEN** o #1046 cita as três na ordem da conversa, 10:19, 10:20 e 10:21, cada uma com quem escreveu, a hora, o texto e os anexos
+
+#### Scenario: Mais de 20 mensagens
+- **WHEN** Fernanda Rocha pede pela API um chamado com 21 mensagens da Equipe Financeiro
+- **THEN** a abertura é recusada com "Escolha até 20 mensagens.", e nada é gravado
+
+#### Scenario: Uma das mensagens já virou chamado
+- **WHEN** Tatiana Ramos pede pela API um chamado com a mensagem das 10:19, que já virou o #1045, e outras duas
+- **THEN** a abertura é recusada com "Uma das mensagens já virou o chamado #1045.", e nada é gravado
+
+#### Scenario: Mensagem de outra conversa
+- **WHEN** Fernanda Rocha pede pela API um chamado da Equipe Financeiro com uma mensagem da conversa direta dela com Paulo Nunes
+- **THEN** a abertura é recusada com "A mensagem não foi encontrada.", e nada é gravado
 
 ### Requirement: Leitura do chamado pela pessoa
 
@@ -756,6 +787,7 @@ Elas SHALL ler:
 
 - as etapas, nesta ordem: Aberto, Em andamento, Aguardando você e Resolvido, com a de agora marcada. Cada etapa até a de agora SHALL ter a hora da última vez em que o chamado chegou a ela, como "ontem 17:05", e a que o chamado pulou SHALL ficar sem hora; as depois da de agora SHALL dizer "ainda não". As horas saem dos eventos, também dos que a pessoa não lê, como o desfazer;
 - a previsão da resposta, pelo prazo de resposta do tipo, como "responde em ~1 h";
+- as mensagens do chat de onde o chamado foi aberto, na ordem, cada uma com quem a escreveu, a hora, o texto e os anexos;
 - as mensagens da TI para a pessoa e as de quem participa, com as opções, as escolhas, os cartões dos ativos e os anexos;
 - o resumo das respostas que a pessoa vê e os anexos dos campos que ela vê;
 - o ativo ligado, pelo nome e pelo patrimônio;
@@ -776,6 +808,8 @@ Elas SHALL ler:
 
 Elas SHALL NOT ler as notas internas, os campos só da TI e os anexos dos dois, os alertas do ativo, o prazo da resolução, o desfazer, a OS, a solicitação, a troca do ativo e a dos campos.
 
+A quem participa pela TI (requisito "Quem atende pelo chat"), a espera SHALL ser "Aguardando o colaborador", na situação, no nome da etapa e no evento do aguardar, porque a resposta não é dela, e a abertura SHALL ser "Você abriu este chamado para Paulo Nunes", com o nome da pessoa. A quem atende pelo chat, a leitura SHALL ter também as ações que o chamado aceita agora.
+
 #### Scenario: A pessoa lê sem as notas
 - **WHEN** Fernanda Rocha abre o #1041 no chat
 - **THEN** ela vê "Aguardando você", as mensagens dela e as de Ana, e não vê as notas das 17:24 e das 09:25
@@ -788,9 +822,17 @@ Elas SHALL NOT ler as notas internas, os campos só da TI e os anexos dos dois, 
 - **WHEN** Paulo Nunes pede o #1041, de Fernanda Rocha, pela API do chat
 - **THEN** a API responde que o chamado não existe
 
+#### Scenario: Espera de quem participa pela TI
+- **WHEN** Ana Souza abre no chat o #1050, que ela abriu no nome de Paulo Nunes e que aguarda Paulo desde as 09:21
+- **THEN** ela lê "Aguardando o colaborador" na situação, na etapa e no evento das 09:21, e Paulo lê "Aguardando você"
+
+#### Scenario: Abertura para quem participa pela TI
+- **WHEN** Ana Souza abre no chat o #1050, que ela abriu no nome de Paulo Nunes e atende
+- **THEN** a conversa começa com "Você abriu este chamado para Paulo Nunes", e Paulo lê "Ana Souza abriu este chamado para você"
+
 ### Requirement: Resposta nova
 
-Cada participante SHALL ter, em cada chamado aberto (Na triagem, Em atendimento e Aguardando o colaborador), a resposta nova: as mensagens da TI para a pessoa escritas por outra conta depois da última mensagem, escolha, reabertura ou avaliação dele, ou do último "Marcar como vista" dele. A resposta nova SHALL ficar até ele responder, escolher uma opção ou marcar como vista. Abrir a conversa SHALL NOT tirá-la. O chamado resolvido e o fechado SHALL NOT ter resposta nova: o "O que foi feito" do resolver entra na conversa como mensagem da TI, e a pessoa o recebe pela notificação do resolvido.
+Cada participante, fora quem participa pela TI (requisito "Quem atende pelo chat"), SHALL ter, em cada chamado aberto (Na triagem, Em atendimento e Aguardando o colaborador), a resposta nova: as mensagens da TI para a pessoa escritas por outra conta depois da última mensagem, escolha, reabertura ou avaliação dele, ou do último "Marcar como vista" dele. A resposta nova SHALL ficar até ele responder, escolher uma opção ou marcar como vista. Abrir a conversa SHALL NOT tirá-la. O chamado resolvido e o fechado SHALL NOT ter resposta nova: o "O que foi feito" do resolver entra na conversa como mensagem da TI, e a pessoa o recebe pela notificação do resolvido.
 
 Responder, escolher, reabrir, avaliar e marcar como vista SHALL marcar como lidas as notificações desse chamado na conta.
 
@@ -810,6 +852,10 @@ Responder, escolher, reabrir, avaliar e marcar como vista SHALL marcar como lida
 - **WHEN** Ana Souza, que atende os chamados, responde pelo módulo Chamados o #1050, aberto para ela mesma
 - **THEN** o #1050 não ganha resposta nova para Ana, e ela não é notificada da própria mensagem
 
+#### Scenario: Quem participa pela TI
+- **WHEN** Diego manda uma mensagem a Paulo Nunes no #1050, que Ana Souza abriu no nome de Paulo e atende pelo chat
+- **THEN** o #1050 ganha a resposta nova para Paulo, e não para Ana, que também não o conta nos chamados com resposta nova
+
 ### Requirement: Resposta da pessoa
 
 Quem participa SHALL mandar mensagens no chamado, com o texto, de 1 a 4.000 caracteres, ou só os anexos, até 5, e escolher as opções das perguntas (requisito "Pergunta com opções"). A mensagem e a escolha SHALL ter, pela situação:
@@ -818,9 +864,12 @@ Quem participa SHALL mandar mensagens no chamado, com o texto, de 1 a 4.000 cara
 - **Resolvido:** a mensagem SHALL reabrir o chamado, como o "Reabrir" (requisito "Ações do atendimento"), e "Reabrir", sem escrever, faz o mesmo. A escolha SHALL ser recusada;
 - **Fechado:** a mensagem e a escolha SHALL ser recusadas.
 
+Quem participa pela TI (requisito "Quem atende pelo chat") SHALL NOT mandar a mensagem, escolher nem reabrir como quem participa: a mensagem dela é a da TI, a escolha é da pessoa, e ela reabre pela ação da TI.
+
 As recusas SHALL ser as das mensagens (requisito "Conversa do chamado") e:
 - "O chamado #1045 está resolvido. Escreva para reabrir.", na escolha do resolvido;
-- "O chamado #1045 está fechado. Para o mesmo problema, abra outro chamado.", no fechado.
+- "O chamado #1045 está fechado. Para o mesmo problema, abra outro chamado.", no fechado;
+- "Você atende o chamado #1045. Responda pela TI.", na mensagem, na escolha e no "Reabrir" de quem participa pela TI.
 
 #### Scenario: Resposta que retoma
 - **WHEN** Fernanda Rocha responde "A pasta se chama Financeiro-2026" no #1041, que aguarda ela desde as 09:21
@@ -830,11 +879,15 @@ As recusas SHALL ser as das mensagens (requisito "Conversa do chamado") e:
 - **WHEN** Fernanda Rocha escreve "Voltou a manchar" no #1045, resolvido por Bruno
 - **THEN** o #1045 é reaberto, Em atendimento com Bruno, que recebe "Chamado #1045 com você", e a conversa mostra "Você reabriu o chamado" a ela
 
+#### Scenario: Quem participa pela TI pela rota de quem participa
+- **WHEN** Ana Souza manda pela rota de quem participa uma mensagem no #1050, que ela abriu no nome de Paulo Nunes e atende
+- **THEN** a mensagem é recusada com "Você atende o chamado #1050. Responda pela TI.", e nada é gravado
+
 ### Requirement: Pergunta com opções
 
 A mensagem da TI para a pessoa SHALL poder levar de 2 a 3 opções de resposta, cada uma de 1 a 40 caracteres, sem os espaços das pontas e única na mensagem.
 
-Quem participa SHALL escolher uma das opções. A escolha SHALL guardar quem escolheu e quando, SHALL NOT virar uma mensagem e SHALL NOT mudar depois. Cada pergunta SHALL ter uma escolha só, de quem escolher primeiro. A escolha conta como a resposta da pessoa (requisito "Resposta da pessoa").
+Quem participa, fora quem participa pela TI (requisito "Resposta da pessoa"), SHALL escolher uma das opções. A escolha SHALL guardar quem escolheu e quando, SHALL NOT virar uma mensagem e SHALL NOT mudar depois. Cada pergunta SHALL ter uma escolha só, de quem escolher primeiro. A escolha conta como a resposta da pessoa (requisito "Resposta da pessoa").
 
 A conversa SHALL mostrar a pergunta com as opções, e a respondida com a escolhida marcada, com o ✓ e quem escolheu, e as outras sem ação.
 
@@ -868,13 +921,13 @@ As recusas SHALL ser "O ativo não foi encontrado." e "A mensagem leva um cartã
 
 ### Requirement: Avaliação do atendimento
 
-No chamado resolvido, quem participa SHALL avaliar o atendimento uma vez por resolução, com:
+No chamado resolvido, quem participa, fora quem participa pela TI (requisito "Quem atende pelo chat"), SHALL avaliar o atendimento uma vez por resolução, com:
 - o nível, entre "Ruim · Não resolveu", "Regular · Resolveu em parte", "Bom · Resolveu" e "Ótimo · Resolveu muito bem";
 - o comentário, opcional, de até 500 caracteres.
 
 A avaliação SHALL NOT mudar depois. Reaberto e resolvido de novo, o chamado SHALL pedir outra avaliação, e a de antes fica na conversa. A TI SHALL ver a avaliação na conversa, como "Fernanda Rocha avaliou: Ótimo · Resolveu muito bem", com o comentário.
 
-As recusas SHALL ser "Escolha um nível.", "Use até 500 caracteres.", "O atendimento já foi avaliado." e "O chamado não está resolvido.".
+As recusas SHALL ser "Escolha um nível.", "Use até 500 caracteres.", "O atendimento já foi avaliado.", "O chamado não está resolvido." e, a quem participa pela TI, "Quem atende o chamado #1045 não o avalia.".
 
 #### Scenario: Avaliar
 - **WHEN** Fernanda Rocha marca "Ótimo · Resolveu muito bem" no #1045 e envia
@@ -883,6 +936,10 @@ As recusas SHALL ser "Escolha um nível.", "Use até 500 caracteres.", "O atendi
 #### Scenario: Avaliar de novo
 - **WHEN** Fernanda Rocha tenta avaliar outra vez o #1045 na mesma resolução
 - **THEN** a avaliação é recusada com "O atendimento já foi avaliado."
+
+#### Scenario: Quem atende não avalia
+- **WHEN** Ana Souza tenta avaliar pela API o #1050 resolvido, que ela abriu no nome de Paulo Nunes e atende
+- **THEN** a avaliação é recusada com "Quem atende o chamado #1050 não o avalia.", e Paulo segue podendo avaliar
 
 ### Requirement: Resumo dos tempos
 
@@ -911,3 +968,54 @@ Os chamados resolvidos antes desta versão SHALL fechar pela data da resolução
 #### Scenario: Reabrir o fechado
 - **WHEN** Ana tenta reabrir o #1030, fechado
 - **THEN** o pedido é recusado com "O chamado #1030 está fechado.", e nada muda
+
+### Requirement: Quem atende pelo chat
+
+Quem participa do chamado (requisito "Leitura do chamado pela pessoa") e atende todos os locais dele, com `chamados.atender`, SHALL agir nele pelo chat com as ações do atendimento (requisito "Ações do atendimento"), com as mesmas regras, a versão do chamado e as mesmas recusas. A leitura do chamado pelo chat SHALL dizer a ela as ações que o chamado aceita agora, nesta ordem:
+- Assumir, fora no chamado que já está com ela;
+- Passar para;
+- Devolver à triagem, em atendimento;
+- Enviar e esperar a resposta, na triagem e em atendimento, fora à pessoa do chamado;
+- Retomar, no aguardando;
+- Resolver, no chamado aberto;
+- Reabrir, no resolvido, só a quem participa pela TI.
+
+No fechado, a leitura SHALL NOT ter nenhuma ação. Quem participa sem atender os locais SHALL NOT ter nenhuma ação, e quem atende sem participar SHALL agir pelo módulo Chamados (spec modulo-chamados).
+
+**Quem participa pela TI** SHALL ser quem abriu o chamado pelo chat no nome de outra pessoa e atende todos os locais dele. Ela SHALL falar e ler o chamado como a TI:
+- a mensagem dela pelo chat SHALL ser a mensagem da TI para a pessoa (requisito "Conversa do chamado"): ela cumpre a primeira resposta, avisa a pessoa e, no aguardando, deixa o chamado esperando;
+- a espera SHALL ser, para ela, "Aguardando o colaborador", e não "Aguardando você" (requisito "Leitura do chamado pela pessoa");
+- ela SHALL NOT ter a resposta nova (requisito "Resposta nova");
+- ela SHALL NOT responder, escolher, reabrir nem avaliar como quem pediu (requisitos "Resposta da pessoa", "Pergunta com opções" e "Avaliação do atendimento"). O "Marcar como vista" SHALL seguir valendo;
+- ela SHALL NOT receber as notificações de quem participa, a mensagem da TI e o resolvido: recebe as da TI, como quem atende (requisito "Notificações dos chamados");
+- a leitura SHALL dizer a ela se a pessoa do chamado usa o chat, porque a mensagem a quem não o usa fica só no chamado.
+
+A pessoa do chamado SHALL participar sempre como quem pediu, também quando atende os locais dele, como quem é da TI e pede um chamado para si. Ela escreve como a pessoa e tem as ações, fora o "Enviar e esperar a resposta" e o "Reabrir": este ela faz como quem pediu.
+
+Quem participa pela TI SHALL ser decidido em cada mensagem e em cada leitura: quem deixa de atender os locais volta a participar como quem pediu, e as mensagens de antes ficam como foram gravadas.
+
+A lista de quem recebe o chamado, para o "Passar para", SHALL pedir `chamados.atender` nos locais do chamado. Ela SHALL ter as contas ativas que atendem todos os locais dele, fora quem está com ele, pelo nome, cada uma com quantos chamados abertos tem nos locais que quem pede vê com `chamados.ver`, como a coluna dela no quadro.
+
+#### Scenario: A TI assume pelo chat
+- **WHEN** Ana Souza, que atende Jundiaí, transforma no #1050 a mensagem de Paulo Nunes, no nome dele, e escolhe "Assumir" no #1050 aberto no chat
+- **THEN** o #1050 fica Em atendimento com Ana, e a conversa ganha "Ana assumiu", como pelo Chamados
+
+#### Scenario: Quem só pediu
+- **WHEN** Fernanda Rocha, sem `chamados.atender`, abre no chat o #1045, que ela pediu
+- **THEN** a leitura não traz nenhuma ação do atendimento, e assumir o #1045 pela API responde 403
+
+#### Scenario: Mensagem pela TI
+- **WHEN** Ana Souza escreve no chat "Passo aí às 14h" no #1050, aberto por ela no nome de Paulo Nunes
+- **THEN** a mensagem entra como a da TI para Paulo, que recebe a notificação dela, e o #1050 ganha a primeira resposta
+
+#### Scenario: Mensagem pela TI no aguardando
+- **WHEN** Ana Souza põe o #1050 aguardando Paulo Nunes e escreve a ele outra mensagem pelo chat
+- **THEN** o #1050 continua Aguardando o colaborador, e o relógio segue parado
+
+#### Scenario: A pessoa da TI
+- **WHEN** Ana Souza, que atende os chamados, transforma a própria mensagem no #1051, no nome dela, e responde nele pelo chat
+- **THEN** a mensagem entra como a da pessoa, e as ações do #1051 no chat não têm "Enviar e esperar a resposta" nem "Reabrir"
+
+#### Scenario: Quem recebe o chamado
+- **WHEN** Ana Souza pede quem recebe o #1050, de Jundiaí, que está com ela
+- **THEN** a lista tem Diego e Renato, que atendem Jundiaí, com os abertos de cada um, e não tem Ana nem Bruno, que atende só Campinas
