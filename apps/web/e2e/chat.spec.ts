@@ -4,7 +4,9 @@ import { expect, test } from './fixtures.ts';
 
 // Specs modulo-chat e componentes-base, com a web compilada e a API do chat simulada (change
 // chat-com-chamados, tarefa 5.3): a entrada da colaboradora no app do chat, a lista, a conversa e
-// o chamado; o botão direito na mensagem; o print colado, o arquivo solto e a miniatura.
+// o chamado; o botão direito na mensagem; o print colado, o arquivo solto e a miniatura. E, da
+// change andamento-e-varias-mensagens (tarefa 5.3), a seleção das mensagens, também no canal em que
+// a conta não escreve, o transformar com várias e o menu "Andamento" do chamado.
 
 const lista = (pagina: Page) => pagina.getByRole('region', { name: 'Chat' });
 const mensagens = (pagina: Page) => pagina.getByRole('region', { name: 'Mensagens' });
@@ -16,6 +18,9 @@ const mensagem = (pagina: Page, trecho: string) =>
   mensagens(pagina).locator('li[data-escrita]').filter({ hasText: trecho });
 const menuDaMensagem = (pagina: Page, autor: string) =>
   pagina.getByRole('menu', { name: `Ações da mensagem de ${autor}` });
+/** Quantas mensagens a barra da seleção diz que estão marcadas. */
+const selecionadas = (pagina: Page) =>
+  pagina.locator('[data-barra-da-selecao]').getByRole('status');
 
 /** Os pedidos à API que nem a fixture nem a simulação do chat respondem, para o fim do teste. */
 function naoSimulados(pagina: Page) {
@@ -354,5 +359,114 @@ test.describe('na conversa aberta', () => {
     await expect(anexosDaCaixa(page)).toHaveCount(0);
     await expect(page).toHaveURL(new RegExp(`/chat/c/${CANAL}$`));
     expect(chat.pedidos).toEqual([]);
+  });
+
+  test('"Selecionar" marca as mensagens, e o transformar abre um chamado com elas, na ordem da conversa', async ({
+    page,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto(`/chat/c/${EQUIPE}`);
+    const paulo = mensagem(page, 'manchando todas as folhas');
+    const tatiana = mensagem(page, 'Quem vai fechar o relatório');
+    await expect(paulo).toBeVisible();
+
+    // A seleção começa pela de Paulo, e a de Tatiana, de antes, vem marcada depois.
+    await botaoDireito(page, paulo.getByText(/manchando todas as folhas/));
+    await menuDaMensagem(page, 'Paulo Nunes').getByRole('menuitem', { name: 'Selecionar' }).click();
+    await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
+    await expect(caixa(page)).toHaveCount(0);
+    await tatiana.click();
+    await expect(selecionadas(page)).toHaveText('2 mensagens selecionadas');
+    await expect(
+      page.getByRole('checkbox', { name: /^Selecionar a mensagem de Tatiana Ramos/ }),
+    ).toBeChecked();
+
+    await page.getByRole('button', { name: /^Transformar em chamado/ }).click();
+    const dialogo = page.getByRole('dialog', { name: 'Transformar em chamado' });
+    await expect(dialogo.getByRole('heading', { name: '2 mensagens' })).toBeVisible();
+    await expect(
+      dialogo.getByRole('list', { name: '2 mensagens' }).locator('blockquote'),
+    ).toHaveText([/Quem vai fechar o relatório/, /manchando todas as folhas/]);
+    await dialogo
+      .getByRole('radiogroup', { name: 'Tipo' })
+      .locator('label')
+      .filter({ has: page.getByRole('radio', { name: 'Outro', exact: true }) })
+      .click();
+    await dialogo.getByRole('textbox', { name: 'Título' }).fill('Impressora do Financeiro mancha');
+    await dialogo.getByRole('button', { name: 'Abrir chamado' }).click();
+
+    await expect(dialogo).toHaveCount(0);
+    await expect(page.getByText('Chamado #1050 aberto.')).toBeVisible();
+    await expect(selecionadas(page)).toHaveCount(0);
+    await expect(caixa(page)).toBeVisible();
+    // A rota recebe as duas na ordem da conversa, e não na de marcar; cada uma ganha a marca.
+    const [primeira, segunda] = chat.mensagensDe(EQUIPE);
+    expect(chat.aberturas).toEqual([
+      {
+        conversa: EQUIPE,
+        corpo: expect.objectContaining({
+          titulo: 'Impressora do Financeiro mancha',
+          mensagens: [primeira?.id, segunda?.id],
+        }),
+      },
+    ]);
+    await expect(tatiana).toContainText('Virou o chamado #1050');
+    await expect(paulo).toContainText('Virou o chamado #1050');
+  });
+
+  test('no canal em que ela não escreve, a barra da seleção fica no lugar da frase, e o Esc a desfaz', async ({
+    page,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto(`/chat/c/${CANAL}`);
+    const aviso = mensagem(page, 'A rede do 2º andar para às 18h');
+    const frase = page.getByText('Só TI escreve neste canal.', { exact: true });
+    await expect(frase).toBeVisible();
+
+    await botaoDireito(page, aviso.getByText(/A rede do 2º andar/));
+    await menuDaMensagem(page, 'Bruno Lima').getByRole('menuitem', { name: 'Selecionar' }).click();
+    await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
+    await expect(frase).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Transformar em chamado/ })).toBeEnabled();
+
+    await page.keyboard.press('Escape');
+    await expect(selecionadas(page)).toHaveCount(0);
+    await expect(frase).toBeVisible();
+    expect(chat.aberturas).toEqual([]);
+  });
+
+  test('no chamado em que ela participa pela TI, o "Andamento" assume, e a etapa muda', async ({
+    page,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto('/chat/chamados/1047');
+    const etapa = page
+      .getByRole('list', { name: 'Etapas do chamado' })
+      .locator('[aria-current="step"]');
+    await expect(etapa).toContainText('Aberto');
+    await expect(
+      page.getByRole('textbox', { name: /^Escrever para Paulo no #1047/ }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Andamento' }).click();
+    const menu = page.getByRole('menu', { name: 'Andamento do #1047' });
+    await expect(menu.getByRole('menuitem')).toHaveText([
+      'Assumir',
+      'Aguardar Paulo…',
+      'Resolver…',
+      /^Abrir no Chamados/,
+    ]);
+    await menu.getByRole('menuitem', { name: 'Assumir' }).click();
+
+    await expect(page.getByText('Você assumiu o #1047.')).toBeVisible();
+    await expect(etapa).toContainText('Em andamento');
+    expect(chat.andamentos).toEqual([{ acao: 'assumir', numero: 1047, versao: 3 }]);
+    await page.getByRole('button', { name: 'Andamento' }).click();
+    await expect(menu.getByRole('menuitem')).toHaveText([
+      'Aguardar Paulo…',
+      'Resolver…',
+      /^Abrir no Chamados/,
+    ]);
+    await page.keyboard.press('Escape');
   });
 });

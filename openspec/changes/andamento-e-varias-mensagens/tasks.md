@@ -146,7 +146,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
   Verificar: o teste do mapa e o lint.
 - [x] 5.2 O ponta a ponta da pilha (`e2e-pilha/caminho.spec.ts`): uma conta da TI marca duas mensagens de uma equipe e as transforma num chamado no nome de outra pessoa. Ela assume pelo "Andamento" e responde no chat, e a resposta chega à pessoa como a da TI, no outro navegador. Verificar: `pnpm test:e2e:pilha`.
-- [ ] 5.3 O ponta a ponta da web e o visual que faltarem:
+- [x] 5.3 O ponta a ponta da web e o visual que faltarem:
   - na web simulada, o menu "Andamento", a seleção, também no canal em que a conta não escreve, e o transformar com várias mensagens;
   - as referências da regressão visual que as tarefas não gravaram.
 
