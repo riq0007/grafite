@@ -196,7 +196,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - os dados do chat limpos ao terminar e ao abrir;
   - a decisão pelo `type` do problema, como na 5.11: a senha errada de alguém não põe o computador em "registrar de novo";
   - a sessão recusada como `usuario-de-fora` (o usuário apagado ou renomeado no AD) volta ao formulário, sem a frase do Windows;
-  - a dica no formulário: só o usuário, sem o domínio nem o e-mail.
+  - a dica no formulário: só o usuário, sem o domínio nem o e-mail;
+  - os dois 429 com a espera: o `entrada-bloqueada`, do usuário, com o `retry-after`, e o `muitas-requisicoes`, do computador, com a espera no `detail`.
 
   Verificar: os testes do Rust e, com a entrada trocada pelo comando, a aba no `tauri dev` com a senha `aba123`: o "Sair" encerra a sessão no servidor.
 - [ ] 5.14 A rede e o estado (decisão 10):
