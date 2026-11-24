@@ -56,7 +56,7 @@ const NA_ABA = {
   ultimoUsoEm: '2026-10-01T09:00:00.000Z',
   atual: false,
   aviso:
-    'Pelo Windows, a aba abre outra sessão na hora. Para parar este computador, peça à TI para bloqueá-lo.',
+    'Este computador entra na aba pelo Windows: encerrada a sessão, a aba abre outra na hora. Só o bloqueio do computador, feito pela TI, o para.',
 };
 
 /** Os aparelhos confiáveis de Ana: o computador, deste navegador, e o notebook. */

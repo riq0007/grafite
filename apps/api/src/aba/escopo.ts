@@ -19,12 +19,11 @@ import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { encerrarChatsDaAba } from '../acesso/encerramento.ts';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
-import { hashDoToken } from '../acesso/sessoes.ts';
+import { hashDoToken, SEM_USO_DA_ABA_PELA_SENHA } from '../acesso/sessoes.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import { ProblemaDaApi } from '../problemas.ts';
 import { LIMITE_DA_ENTRADA } from '../protecao.ts';
 import { origemDa } from '../rotas/sessao.ts';
-import { SEM_USO_DA_SENHA } from './sessao.ts';
 
 export type EntradaDaAba = (typeof ENTRADAS_DA_ABA)[number];
 
@@ -411,7 +410,7 @@ async function sessaoDoToken(
   // computador desligado também a tem vencida (decisão 2).
   if (
     linha.sessao.entrada === 'senha' &&
-    linha.sessao.ultimoUsoEm.getTime() + SEM_USO_DA_SENHA <= momento.getTime()
+    linha.sessao.ultimoUsoEm.getTime() + SEM_USO_DA_ABA_PELA_SENHA <= momento.getTime()
   ) {
     await naOrganizacao(banco, orgId, async (tx) => {
       await tx

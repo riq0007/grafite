@@ -195,14 +195,77 @@ describe('a lista das sessões', () => {
     const recusada = await renovar(aba.token);
     expect(recusada.statusCode).toBe(401);
     expect(recusada.json()).toMatchObject({ motivoDoFim: 'encerrada-pelo-usuario' });
-    const [registro] = await naOrg((tx) =>
-      tx
-        .select()
-        .from(auditoria)
-        .where(eq(auditoria.acao, 'sessao-da-aba.encerrada'))
-        .orderBy(auditoria.momento),
+    const registros = await naOrg((tx) =>
+      tx.select().from(auditoria).where(eq(auditoria.acao, 'sessao-da-aba.encerrada')),
     );
-    expect(registro).toBeDefined();
+    const registro = registros.find(
+      (linha) => (linha.dados as { motivo?: string } | null)?.motivo === 'encerrada-pelo-usuario',
+    );
+    expect(registro).toMatchObject({
+      atorTipo: 'conta',
+      atorContaId: aba.contaId,
+      alvoTipo: 'aparelho-da-aba',
+      dados: expect.objectContaining({ computador: 'PC-FIN-09', usuario: 'fernanda.lima' }),
+    });
+  });
+
+  it('o id da sessão da aba de outra conta dá 404, e a sessão continua', async () => {
+    const aba = await abrirAba(fin.token);
+    const daAna = await cliente.entrar('ana');
+    const r = await cliente.enviar('DELETE', `/conta/sessoes/${aba.id}`, daAna);
+    expect(r.statusCode).toBe(404);
+    expect(await fimDaAba(aba.id)).toBeNull();
+  });
+
+  it('a da senha parada há 30 minutos e a pendente ficam fora da lista', async () => {
+    const parada = await abrirAba(fin.token);
+    await naOrg((tx) =>
+      tx
+        .update(sessoesDaAba)
+        .set({
+          entrada: 'senha',
+          ultimoUsoEm: new Date(api.relogio.agora().getTime() - 30 * 60_000),
+        })
+        .where(eq(sessoesDaAba.id, parada.id)),
+    );
+    const pc = await registrar('guid-fin-12', 'PC-FIN-12');
+    const pendente = await abrirAba(pc.token);
+    await naOrg((tx) =>
+      tx.update(sessoesDaAba).set({ ativadaEm: null }).where(eq(sessoesDaAba.id, pendente.id)),
+    );
+    const lista: { id: string }[] = (await cliente.consultar('/conta/sessoes', navegador)).json();
+    expect(lista.map((sessao) => sessao.id)).not.toContain(parada.id);
+    expect(lista.map((sessao) => sessao.id)).not.toContain(pendente.id);
+  });
+
+  it('o chat na aba sai da lista com a sessão da aba vencida', async () => {
+    const aba = await abrirAba(fin.token);
+    const chat = await abrirChatNaAba(aba);
+    await naOrg((tx) =>
+      tx
+        .update(sessoesDaAba)
+        .set({ expiraEm: api.relogio.agora() })
+        .where(eq(sessoesDaAba.id, aba.id)),
+    );
+    const lista: { id: string }[] = (await cliente.consultar('/conta/sessoes', navegador)).json();
+    expect(lista.map((sessao) => sessao.id)).not.toContain(chat);
+  });
+
+  it('a renovação pelo Windows conta como uso na lista', async () => {
+    const aba = await abrirAba(fin.token);
+    api.relogio.avancar(50 * 60_000);
+    expect((await renovar(aba.token)).statusCode).toBe(200);
+    api.relogio.avancar(50 * 60_000);
+    expect((await renovar(aba.token)).statusCode).toBe(200);
+    const lista: { id: string; criadaEm: string; ultimoUsoEm: string }[] = (
+      await cliente.consultar(
+        '/conta/sessoes',
+        await cliente.entrar('fernanda.lima', 'senha-da-fernanda'),
+      )
+    ).json();
+    const daAba = lista.find((sessao) => sessao.id === aba.id);
+    expect(new Date(daAba?.ultimoUsoEm ?? 0).getTime()).toBe(api.relogio.agora().getTime());
+    expect(daAba?.ultimoUsoEm).not.toBe(daAba?.criadaEm);
   });
 
   it('Encerrar todas as outras: a sessão da aba e a do chat terminam, e a atual continua', async () => {
@@ -242,6 +305,25 @@ describe('as mudanças da conta e do aparelho', () => {
     expect(await fimDaAba(aba.id)).toBe('aparelho-bloqueado');
     expect(await fimDoChat(chat)).toBe('sessao-da-aba-encerrada');
     expect((await renovar(aba.token)).statusCode).toBe(401);
+  });
+
+  it('a da senha parada há 30 minutos termina no pedido seguinte, com o chat na aba dela', async () => {
+    const aba = await abrirAba(fin.token);
+    const chat = await abrirChatNaAba(aba);
+    await naOrg((tx) =>
+      tx
+        .update(sessoesDaAba)
+        .set({
+          entrada: 'senha',
+          ultimoUsoEm: new Date(api.relogio.agora().getTime() - 30 * 60_000),
+        })
+        .where(eq(sessoesDaAba.id, aba.id)),
+    );
+    const r = await renovar(aba.token);
+    expect(r.statusCode).toBe(401);
+    expect(r.json()).toMatchObject({ motivoDoFim: 'sem-uso' });
+    expect(await fimDaAba(aba.id)).toBe('sem-uso');
+    expect(await fimDoChat(chat)).toBe('sessao-da-aba-encerrada');
   });
 
   it('a troca da entrada do aparelho encerra as sessões da aba dele', async () => {

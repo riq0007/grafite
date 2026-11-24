@@ -110,6 +110,15 @@ const MOTIVOS_DA_ABA: Record<string, string> = {
   saida: 'Saída pela pessoa',
   'tentativas-esgotadas': 'Códigos errados demais',
   teto: 'Teto de contas do computador',
+  'aparelho-bloqueado': 'Computador bloqueado',
+  'encerrada-pela-administracao': 'Encerrada pela administração',
+  'encerrada-pelo-usuario': 'Encerrada pela pessoa',
+  'outras-encerradas': 'Outras sessões encerradas',
+  'senha-trocada': 'Senha trocada',
+  'dois-passos-ativados': 'Verificação em dois passos ativada',
+  redefinicao: 'Acesso redefinido',
+  'conta-inativada': 'Conta inativada',
+  'dois-passos-removidos': 'Verificação em dois passos removida',
 };
 
 /** O tipo da conversa do alvo pela ação: as `equipe.*` e as `canal.*`. */

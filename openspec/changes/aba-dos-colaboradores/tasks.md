@@ -82,7 +82,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - os seis encerramentos da conta, o "Encerrar as outras", o bloqueio e a troca da entrada do aparelho pelo `grafite aba`, no `encerramento.ts`, com o fim em até 30 s;
   - a sessão da aba na lista das sessões do usuário, como "Aba · PC-FIN-09", com a frase do bloqueio;
   - a tela das sessões na web;
-  - os quatro lugares que encerram a sessão da aba (a entrada, a renovação, o `DELETE` e o `sem-uso` do escopo) passam pelo fim da sessão do chat e pelo evento; a lista lê o `semValer`, porque a parada e a vencida ficam abertas no banco até o pedido seguinte.
+  - os quatro lugares que encerram a sessão da aba (a entrada, a renovação, o `DELETE` e o `sem-uso` do escopo) passam pelo fim da sessão do chat, e o evento do fim entra na 3.8; a lista lê o complemento do `semValer`, porque a parada e a vencida ficam abertas no banco até o pedido seguinte.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato e a tela das sessões no `pnpm dev`.
 - [ ] 3.8 O estado e os eventos (decisão 6):

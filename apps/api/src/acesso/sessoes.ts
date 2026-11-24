@@ -214,7 +214,19 @@ export async function ativarSessao(tx: Transacao, sessaoId: string, momento: Dat
 }
 
 /** Quanto a sessão da aba pela senha fica sem uso antes de terminar (change aba-dos-colaboradores). */
-const SEM_USO_DA_ABA_PELA_SENHA = 30 * 60_000;
+export const SEM_USO_DA_ABA_PELA_SENHA = 30 * 60_000;
+
+/** A sessão da aba aberta, ativada e valendo: o complemento do `semValer` do `aba/sessao.ts`. */
+const abaValendo = (momento: Date) =>
+  and(
+    isNull(sessoesDaAba.encerradaEm),
+    isNotNull(sessoesDaAba.ativadaEm),
+    gt(sessoesDaAba.expiraEm, momento),
+    or(
+      ne(sessoesDaAba.entrada, 'senha'),
+      gt(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_ABA_PELA_SENHA)),
+    ),
+  );
 
 /** Uma sessão aberta da conta, nas duas listas: a do navegador, a da aba ou a do chat na aba. */
 export interface SessaoAberta {
@@ -267,6 +279,8 @@ export async function lerSessoesAbertas(
         isNotNull(sessoes.ativadaEm),
         gt(sessoes.expiraEm, momento),
         gt(sessoes.ultimoUsoEm, new Date(momento.getTime() - TEMPOS_DA_SESSAO.inatividade)),
+        // O chat na aba sai com a sessão da aba dele, que vence sem ninguém gravar o fim.
+        or(isNull(sessoes.sessaoDaAbaId), abaValendo(momento)),
       ),
     );
   // As da aba: a vencida e a da senha parada há 30 minutos ficam abertas no banco até o pedido
@@ -288,18 +302,7 @@ export async function lerSessoesAbertas(
         eq(aparelhosDaAba.id, sessoesDaAba.aparelhoId),
       ),
     )
-    .where(
-      and(
-        eq(sessoesDaAba.contaId, contaId),
-        isNull(sessoesDaAba.encerradaEm),
-        isNotNull(sessoesDaAba.ativadaEm),
-        gt(sessoesDaAba.expiraEm, momento),
-        or(
-          ne(sessoesDaAba.entrada, 'senha'),
-          gt(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_ABA_PELA_SENHA)),
-        ),
-      ),
-    );
+    .where(and(eq(sessoesDaAba.contaId, contaId), abaValendo(momento)));
   return [
     ...doNavegador.map(({ computador, ...linha }) => ({
       ...linha,
@@ -317,7 +320,7 @@ export async function lerSessoesAbertas(
 
 /** A frase da sessão da aba pelo Windows na lista: encerrá-la vale só até a aba abrir outra. */
 export const AVISO_DA_ABA_PELO_WINDOWS =
-  'Pelo Windows, a aba abre outra sessão na hora. Para parar este computador, peça à TI para bloqueá-lo.';
+  'Este computador entra na aba pelo Windows: encerrada a sessão, a aba abre outra na hora. Só o bloqueio do computador, feito pela TI, o para.';
 
 /** Como a lista mostra a sessão: o navegador e o sistema, ou o computador da aba. */
 export function descreverSessao(

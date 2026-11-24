@@ -153,6 +153,19 @@ describe('o registro de um segredo na auditoria', () => {
     });
   });
 
+  it('o fim da sessão da aba pelo bloqueio, com o motivo em texto', () => {
+    const registro = doAtivo({
+      acao: 'sessao-da-aba.encerrada',
+      rotulo: 'Sessão da aba encerrada',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-FIN-09 (D4E5F6)', usuario: null },
+      antes: null,
+      depois: null,
+      dados: { computador: 'PC-FIN-09', usuario: 'fernanda.lima', motivo: 'aparelho-bloqueado' },
+    });
+    const motivo = camposDoDetalhe(registro, formatar).find((campo) => campo.rotulo === 'Motivo');
+    expect(motivo?.valor).toBe('Computador bloqueado');
+  });
+
   it('os dados do segredo pelo rótulo, com o tipo e a classificação em texto', () => {
     const registro = doSegredo({
       antes: { tipo: 'usuario-e-senha', classificacao: 'pessoal', identificador: 'adm' },

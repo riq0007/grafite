@@ -13,7 +13,7 @@ import {
 import type { MotivoSemConexao } from '@grafite/domain';
 import { and, desc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
 import { encerrarChatsDaAba } from '../acesso/encerramento.ts';
-import { hashDoToken } from '../acesso/sessoes.ts';
+import { hashDoToken, SEM_USO_DA_ABA_PELA_SENHA as SEM_USO_DA_SENHA } from '../acesso/sessoes.ts';
 import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
 import {
   type AparelhoDaRequisicao,
@@ -25,8 +25,6 @@ import {
 export const VALIDADE_DA_SESSAO_DA_ABA = 60 * 60_000;
 /** A validade da sessão pendente da entrada pela senha, à espera do código do app. */
 export const VALIDADE_DA_PENDENTE_DA_ABA = 5 * 60_000;
-/** Quanto a sessão da entrada pela senha fica sem uso antes de terminar, contado no servidor. */
-export const SEM_USO_DA_SENHA = 30 * 60_000;
 /** Quantos códigos errados a sessão pendente aceita, como a pendente da web. */
 export const TENTATIVAS_DO_CODIGO_DA_ABA = 5;
 
@@ -334,7 +332,11 @@ export async function registrarUsoDaAba(
     .where(and(eq(sessoesDaAba.id, sessaoId), isNull(sessoesDaAba.encerradaEm)));
 }
 
-/** A renovação: a mesma sessão, com a validade contada de agora, sem a auditoria. */
+/**
+ * A renovação: a mesma sessão, com a validade contada de agora, sem a auditoria. Na entrada pelo
+ * Windows ela é o uso da lista das sessões, renovada de hora em hora; na da senha, não, porque o uso
+ * dela conta os 30 minutos.
+ */
 export async function estenderSessaoDaAba(
   tx: Transacao,
   { sessaoId, momento }: { sessaoId: string; momento: Date },
@@ -342,7 +344,11 @@ export async function estenderSessaoDaAba(
   const expiraEm = new Date(momento.getTime() + VALIDADE_DA_SESSAO_DA_ABA);
   await tx
     .update(sessoesDaAba)
-    .set({ expiraEm })
+    .set({
+      expiraEm,
+      ultimoUsoEm: sql`case when ${sessoesDaAba.entrada} = 'windows' then ${momento}::timestamptz
+        else ${sessoesDaAba.ultimoUsoEm} end`,
+    })
     .where(and(eq(sessoesDaAba.id, sessaoId), isNull(sessoesDaAba.encerradaEm)));
   return expiraEm;
 }
