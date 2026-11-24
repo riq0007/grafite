@@ -212,10 +212,14 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
   // O AD fora do ar, por organização: as abas da empresa tentam de novo como na rede caída, e cada
   // tentativa seguraria o pedido pelo prazo da conexão e gravaria um aviso.
   const adForaDoArAte = new Map<string, number>();
-  // As recusas das credenciais pela senha, por computador, com o limite da entrada: o token de um
-  // computador não testa uma senha comum em muitos usuários por minuto, abaixo do bloqueio por
-  // usuário. O pedido pelo Windows segue no limite do token.
-  const recusasDaSenha = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
+  // Os pedidos pela senha, com o código ou sem ele, por computador, com o limite da entrada, contados
+  // na chegada, como o da web, para os pedidos em paralelo não passarem juntos: o token de um
+  // computador não testa uma senha comum em muitos usuários, nem códigos, por minuto, abaixo do
+  // bloqueio por usuário. O pedido pelo Windows segue no limite do token.
+  const pedidosPelaSenha = new ContadorDeRecusas(
+    LIMITE_DA_ENTRADA.max,
+    LIMITE_DA_ENTRADA.timeWindow,
+  );
   const conferir = async (
     orgId: string,
     busca: { sid: string } | { usuario: string },
@@ -258,6 +262,12 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
       const corpo = requisicao.body;
       exigirEntrada(aparelho, corpo.entrada);
       const avisar = (dados: object, msg: string) => requisicao.log.warn(dados, msg);
+      if (corpo.entrada === 'senha') {
+        const chegada = agora().getTime();
+        const espera = pedidosPelaSenha.espera(aparelho.id, chegada);
+        if (espera !== null) throw muitasRecusas(espera);
+        pedidosPelaSenha.contar(aparelho.id, chegada);
+      }
 
       if ('codigo' in corpo) {
         // A segunda chamada da entrada pela senha: o código e a pendente.
@@ -376,8 +386,6 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
 
       if ('senha' in corpo) {
         // A entrada pela senha: a mesma conferência da entrada da web, só pelo diretório.
-        const espera = recusasDaSenha.espera(aparelho.id, agora().getTime());
-        if (espera !== null) throw muitasRecusas(espera);
         const usuario = normalizarUsuario(corpo.usuario);
         const ligado = await naOrganizacao(banco, orgId, async (tx) => {
           const lido = await lerDiretorio(tx);
@@ -436,10 +444,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
         }
         if (resultado.tipo === 'fora-do-ar') throw pessoaRecusada('ti-fora-do-alcance');
         if (resultado.tipo === 'sem-acesso') throw pessoaRecusada('sem-grupo');
-        if (resultado.tipo === 'recusada') {
-          recusasDaSenha.contar(aparelho.id, momento.getTime());
-          throw credenciaisInvalidas();
-        }
+        if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
         if (resultado.tipo === 'sem-o-codigo') throw pessoaRecusada('cadastrar-o-codigo');
         if (resultado.tipo === 'pendente') {
           return {

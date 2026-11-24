@@ -114,7 +114,7 @@ Nas outras recusas a pessoa não tem o que fazer na aba. A aba SHALL tentar de n
 
 ### Requirement: Pessoa pela senha do AD
 
-No aparelho com a entrada pela senha, a aba SHALL pedir o usuário e a senha do AD, que vão ao serviço e dele à API, com o token do aparelho. A API SHALL conferir pela mesma conferência da entrada pelo diretório, com as mesmas recusas e o bloqueio por tentativas. A conta local do Grafite SHALL NOT entrar pela aba: ela SHALL receber a mesma recusa do usuário ou da senha errados, para a aba não dizer quem tem conta local, e a auditoria guarda o motivo. As recusas das credenciais SHALL ter, por computador, o mesmo limite por minuto da entrada.
+No aparelho com a entrada pela senha, a aba SHALL pedir o usuário e a senha do AD, que vão ao serviço e dele à API, com o token do aparelho. A API SHALL conferir pela mesma conferência da entrada pelo diretório, com as mesmas recusas e o bloqueio por tentativas. A conta local do Grafite SHALL NOT entrar pela aba: ela SHALL receber a mesma recusa do usuário ou da senha errados, para a aba não dizer quem tem conta local, e a auditoria guarda o motivo. Os pedidos pela senha, com o código ou sem ele, SHALL ter, por computador, o mesmo limite por minuto da entrada, contados na chegada.
 
 O código do app:
 - a conta que tem os dois passos cadastrados recebe a resposta de que falta o código, e a aba o pede. A segunda chamada leva o código, que conta nas tentativas do código, como na entrada;

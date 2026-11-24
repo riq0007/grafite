@@ -374,8 +374,8 @@ export class ContadorDeRecusas {
 /**
  * A sessão aberta e dentro da validade do token, com o aparelho dela; `{ encerrada }` com o motivo
  * do fim, `null` na vencida ou `'sem-uso'` na da senha parada há 30 minutos, que este encerra,
- * antes de olhar o bloqueio, porque o pedido seguinte, com o token do aparelho, já dá o 403; `'bloqueado'` com a sessão válida no aparelho bloqueado; ou `null` com o
- * token desconhecido.
+ * antes de olhar o bloqueio, porque o pedido seguinte, com o token do aparelho, já dá o 403;
+ * `'bloqueado'` com a sessão válida no aparelho bloqueado; ou `null` com o token desconhecido.
  */
 async function sessaoDoToken(
   banco: Banco,

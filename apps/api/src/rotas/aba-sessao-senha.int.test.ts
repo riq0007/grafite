@@ -151,6 +151,8 @@ afterAll(async () => {
 
 beforeEach(() => {
   ad.estado.foraDoAr = false;
+  // O limite dos pedidos pela senha é por minuto: cada teste começa num minuto novo.
+  api.relogio.avancar(MINUTO);
 });
 
 describe('a entrada pela senha', () => {
@@ -270,13 +272,16 @@ describe('os limites da entrada pela senha', () => {
     expect(r.statusCode).toBe(400);
   });
 
-  it('as recusas das credenciais têm, por computador, o limite da entrada', async () => {
+  it('os pedidos pela senha têm, por computador, o limite da entrada, também em paralelo', async () => {
     const sala = await registrar('guid-treino-01', 'PC-TREINO-01', 'senha');
-    for (let i = 0; i < 20; i++) {
-      expect((await entrar(`sorteado.${i}`, 'senha-comum', sala.token)).statusCode).toBe(401);
-    }
-    const passou = await entrar('carla.dias', 'senha-da-carla', sala.token);
-    expect(passou.statusCode).toBe(429);
+    const juntos = await Promise.all(
+      Array.from({ length: 40 }, (_, i) => entrar(`sorteado.${i}`, 'senha-comum', sala.token)),
+    );
+    const situacoes = juntos.map((r) => r.statusCode);
+    expect(situacoes.filter((s) => s === 401)).toHaveLength(20);
+    expect(situacoes.filter((s) => s === 429)).toHaveLength(20);
+    // O código também conta.
+    expect((await comCodigo('qualquer', '000000', sala.token)).statusCode).toBe(429);
     // O outro computador não espera, e este volta depois do minuto.
     expect((await entrar('carla.dias', 'senha-da-carla')).statusCode).toBe(200);
     api.relogio.avancar(MINUTO);
