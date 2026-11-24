@@ -426,11 +426,11 @@ A versão que traz o chat tem a mesma exceção: ela só volta à anterior enqua
 
 A versão que traz o andamento pelo chat e as várias mensagens num chamado volta à anterior sem restaurar o backup, com estas diferenças na anterior:
 
-- o chamado aberto de várias mensagens aparece só com a última delas citada na origem, na ficha e no chat da pessoa;
-- nas conversas, só a primeira das mensagens desse chamado tem a marca. Transformar uma das outras falha com o erro e o código de rastreio, em vez de "Esta mensagem já virou o chamado", e nenhum chamado é aberto;
-- a mensagem de quem atendeu o chamado de outra pessoa pelo chat aparece como uma mensagem da TI comum.
+- o chamado que nasceu de várias mensagens aparece só com a última delas citada na origem, na ficha e no chat da pessoa;
+- nas conversas, só a primeira das mensagens desse chamado tem a marca, e o evento dele diz "transformou esta mensagem" e leva à primeira. Transformar uma das outras falha com o erro e o código de rastreio, em vez de "Esta mensagem já virou o chamado", e nenhum chamado é aberto;
+- o menu "Andamento" do chat não existe, e quem abriu o chamado pelo chat no nome de outra pessoa e atende todos os locais dele volta a escrever no chamado como quem pediu. As mensagens que ela já mandou pela TI seguem como mensagens da TI.
 
-Depois da volta, e depois de ir de novo à versão nova, recarregue as abas do Grafite e do app do chat que estavam abertas: a tela de uma versão lê o que só a API da mesma versão manda.
+Depois da volta, e depois de ir de novo à versão nova, recarregue as abas do Grafite, e feche e abra de novo o app do chat: a tela de uma versão lê o que só a API da mesma versão manda. De volta à versão nova, as mensagens citadas, as marcas e o evento de "várias mensagens" voltam todos.
 
 O atalho "Grafite" segue a produção: a volta devolve o `Grafite.cmd` da versão de antes. Voltar a uma versão sem o painel, como a v0.1.1, faz o atalho abrir o menu dela, e ir de novo à versão nova devolve o painel. A v0.1.0 não tem nem o menu: a volta da produção para ela diz que o atalho não foi trocado, e ele mostra "Comando desconhecido" e a ajuda, sem mudar nada. Nesse caso, apague o atalho da área de trabalho de todos os usuários (`C:\Users\Public\Desktop\Grafite.lnk`) e opere pelos comandos.
 

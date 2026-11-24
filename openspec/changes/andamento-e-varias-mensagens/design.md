@@ -192,7 +192,7 @@ Não há mockup do andamento nem da seleção: as lacunas são decididas aqui (d
 - **A volta à versão anterior** (o `voltar` do runbook) roda a versão de antes no banco novo:
   - ela grava uma linha `origem` por chamado, e o índice novo a aceita;
   - o chamado de várias mensagens aparece nela só com a última mensagem citada na origem, porque a leitura de antes percorre as linhas `origem` e fica com a última (`ficha.ts` e `chamados-de-quem-participa.ts`);
-  - nas conversas, só a primeira mensagem tem a marca, porque ela marca pela `origem_mensagem_id`. Transformar uma das outras dá erro, pelo índice único, em vez da recusa "Esta mensagem já virou o chamado", e a transação inteira volta, sem gastar o número;
+  - nas conversas, só a primeira mensagem tem a marca, porque ela marca pela `origem_mensagem_id`, e o evento diz "transformou esta mensagem" e leva à primeira, porque ela não lê as `mensagens` da `origemNoChat`. Transformar uma das outras dá erro, pelo índice único, em vez da recusa "Esta mensagem já virou o chamado", e a transação inteira volta, sem gastar o número;
   - a mensagem de quem participa pela TI é uma mensagem da TI comum, e a versão anterior a lê.
 
   O runbook ganha essas exceções. A volta segue possível, sem restaurar o backup.
