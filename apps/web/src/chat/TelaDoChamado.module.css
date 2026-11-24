@@ -298,8 +298,6 @@
   overflow-wrap: anywhere;
 }
 
-/* No fechado, a frase fica no lugar da caixa, na forma e na largura dela, de uma borda à outra da
-   coluna, e começa à esquerda, como o texto da caixa. */
 /* A quem participa pela TI, no resolvido, no lugar da caixa e na forma dela: o cadeado, a frase e o
    "Reabrir", à direita. */
 .resolvidoDaTi {
@@ -322,6 +320,8 @@
   margin: 0;
 }
 
+/* No fechado, a frase fica no lugar da caixa, na forma e na largura dela, de uma borda à outra da
+   coluna, e começa à esquerda, como o texto da caixa. */
 .semCaixa {
   display: flex;
   flex: none;

@@ -63,19 +63,20 @@ import { ResumoDosTempos } from './ResumoDosTempos.tsx';
 const ACIMA_DA_NOVA = 16;
 
 /** O ícone e o tom de cada evento, na pílula dele; o de um código que esta versão não conhece, a boia. */
-const MARCAS_DOS_EVENTOS: Readonly<Record<string, { icone: LucideIcon; tom?: 'atencao' | 'ok' }>> =
-  {
-    abertura: { icone: Ticket },
-    assumiu: { icone: Wrench },
-    passou: { icone: Wrench },
-    devolveu: { icone: Undo2 },
-    aguardando: { icone: Hourglass, tom: 'atencao' },
-    retomou: { icone: Play },
-    resolveu: { icone: CircleCheck, tom: 'ok' },
-    reabriu: { icone: RotateCcw },
-    avaliou: { icone: Smile },
-    fechou: { icone: Archive },
-  };
+const MARCAS_DOS_EVENTOS: Readonly<
+  Record<string, { icone: LucideIcon; tom?: 'atencao' | 'ok' | 'info' }>
+> = {
+  abertura: { icone: Ticket },
+  assumiu: { icone: Wrench },
+  passou: { icone: Wrench },
+  devolveu: { icone: Undo2 },
+  aguardando: { icone: Hourglass, tom: 'atencao' },
+  retomou: { icone: Play },
+  resolveu: { icone: CircleCheck, tom: 'ok' },
+  reabriu: { icone: RotateCcw },
+  avaliou: { icone: Smile },
+  fechou: { icone: Archive },
+};
 
 /** O que a tela do chamado pede à conversa. */
 export interface ControleDaConversaDoChamado {
@@ -258,7 +259,7 @@ function ItemDaConversaDoChamado({
     case 'evento':
       return (
         <li className={estilos.evento}>
-          <PilulaDoEvento evento={item.evento} dataHora={dataHora} />
+          <PilulaDoEvento evento={item.evento} pelaTi={chamado.pelaTi} dataHora={dataHora} />
           {item.evento.resumo && (
             <ResumoDosTempos resumo={item.evento.resumo} agora={agora} dataHora={dataHora} />
           )}
@@ -274,8 +275,19 @@ function ItemDaConversaDoChamado({
 }
 
 /** O evento numa pílula, no meio da conversa: o ícone, a frase e a hora, no tom da espera ou do resolvido. */
-function PilulaDoEvento({ evento, dataHora }: { evento: EventoDoChamado; dataHora: DataHora }) {
-  const marca = MARCAS_DOS_EVENTOS[evento.evento] ?? { icone: LifeBuoy };
+function PilulaDoEvento({
+  evento,
+  pelaTi,
+  dataHora,
+}: {
+  evento: EventoDoChamado;
+  /** A quem participa pela TI, a espera é de outra pessoa: na informação, como o selo dela. */
+  pelaTi: boolean;
+  dataHora: DataHora;
+}) {
+  const daTabela = MARCAS_DOS_EVENTOS[evento.evento] ?? { icone: LifeBuoy };
+  const marca =
+    pelaTi && evento.evento === 'aguardando' ? { ...daTabela, tom: 'info' as const } : daTabela;
   return (
     <p className={estilos.pilula} data-tom={marca.tom}>
       <span className={estilos.iconeDoEvento}>
@@ -358,7 +370,7 @@ function Abertura({
   const { origens } = chamado;
   return (
     <li className={estilos.abertura}>
-      {evento && <PilulaDoEvento evento={evento} dataHora={dataHora} />}
+      {evento && <PilulaDoEvento evento={evento} pelaTi={chamado.pelaTi} dataHora={dataHora} />}
       {origens.length > 0
         ? origens.map((origem) => (
             <figure key={`${origem.autor} ${origem.em}`} className={estilos.origem}>

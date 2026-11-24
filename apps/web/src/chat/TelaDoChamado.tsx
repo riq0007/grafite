@@ -32,7 +32,7 @@ import {
   PanelRight,
   RotateCcw,
 } from 'lucide-react';
-import { type RefObject, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useAcoesDoAtendimento } from '../modulos/chamados/acoes.ts';
 import { ajudaDoCampo } from '../modulos/chamados/chamado/escrever.ts';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
@@ -165,6 +165,25 @@ function ChamadoNaTela({
     (daConta.data?.abertos ?? []).filter((outro) => outro.numero !== numero).map(comAsDatas),
   ).chamados;
   const resolvido = chamado.situacao === 'resolvido';
+  // A quem participa pela TI, a caixa escreve pela rota da TI; o tipo gerado não liga o `pelaTi` ao
+  // `andamento`, que vem a ela.
+  const daTi = chamado.pelaTi ? chamado.andamento : null;
+  const doChat = useAndamentoNoChat(numero);
+  const reler = useRelerOsChamadosDoChat();
+  const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
+  // O "Reabrir" da TI: a caixa volta com a releitura, e o foco vai a ela quando ela chega.
+  const focarNaCaixa = useRef(false);
+  useEffect(() => {
+    if (!focarNaCaixa.current || chamado.situacao === 'resolvido') return;
+    focarNaCaixa.current = false;
+    caixa.current?.focus();
+  }, [chamado.situacao]);
+  const reabrirPelaTi = async (versao: number) => {
+    definirReabrindo(true);
+    const resultado = await atendimento.reabrir(numero, versao);
+    definirReabrindo(false);
+    if (resultado) focarNaCaixa.current = true;
+  };
   const reabrirAte =
     chamado.reabrirAte === null ? null : diaDoReabrir(chamado.reabrirAte, agora, dataHora);
 
@@ -281,23 +300,46 @@ function ChamadoNaTela({
                 ? 'O chamado fechou. Para o mesmo problema, abra outro chamado.'
                 : `O chamado fechou em ${reabrirAte}. Para o mesmo problema, abra outro chamado.`}
             </p>
-          ) : chamado.pelaTi && chamado.andamento ? (
-            // O tipo gerado não liga o `pelaTi` ao `andamento`, que vem a quem participa pela TI.
-            <CaixaDaTi
-              chamado={chamado}
-              andamento={chamado.andamento}
-              caixa={caixa}
-              aoEnviar={() => controle.current?.irAoFim()}
-            />
+          ) : daTi && resolvido ? (
+            // A quem participa pela TI, no resolvido, no lugar da caixa: o cadeado, a frase e o
+            // "Reabrir", pela rota da TI.
+            <div className={estilos.resolvidoDaTi}>
+              <Icone icone={Lock} tamanho={16} />
+              <p>{`O #${numero} está resolvido.`}</p>
+              {daTi.acoes.includes('reabrir') && (
+                <Botao
+                  icone={RotateCcw}
+                  carregando={reabrindo}
+                  rotuloCarregando="Reabrindo o chamado"
+                  onPress={() => void reabrirPelaTi(daTi.versao)}
+                >
+                  Reabrir
+                </Botao>
+              )}
+            </div>
           ) : (
-            <CaixaDoChat
+            // A mesma caixa nos dois lados, que troca só o envio e o texto de dentro: na troca, como
+            // na recusa "Responda pela TI", a frase, o foco e a fila ficam.
+            <CaixaDoChat<unknown>
               caixa={caixa}
               rascunho={rascunhoDoChamado(numero)}
-              ajuda={resolvido ? 'Escrever aqui reabre o chamado' : `Responder no #${numero}…`}
+              ajuda={
+                daTi
+                  ? `Escrever para ${nomeCurto(daTi.pessoa.nome)} no #${numero}…`
+                  : resolvido
+                    ? 'Escrever aqui reabre o chamado'
+                    : `Responder no #${numero}…`
+              }
               // No resolvido, o lugar da dica é do "Reabrir até", como no m04 e no m07.
               dica={resolvido ? undefined : '# cita um chamado'}
               citar
               anexosEm="/chamados/anexos"
+              // À pessoa que não usa o chat, a frase do Chamados.
+              nota={
+                daTi && !daTi.pessoa.usaOChat
+                  ? ajudaDoCampo(nomeCurto(daTi.pessoa.nome), false)
+                  : undefined
+              }
               inicio={resolvido ? <Icone icone={Lock} tamanho={16} /> : undefined}
               semTexto={
                 resolvido && reabrirAte !== null ? (
@@ -311,7 +353,9 @@ function ChamadoNaTela({
                   </Botao>
                 ) : undefined
               }
-              mandar={({ texto, anexos }) => acoes.responder({ texto, anexos })}
+              mandar={({ texto, anexos }) =>
+                daTi ? doChat.escrever({ texto, anexos }) : acoes.responder({ texto, anexos })
+              }
               aoEnviar={() => controle.current?.irAoFim()}
             />
           )}
@@ -346,68 +390,6 @@ function ChamadoNaTela({
         </Folha>
       )}
     </div>
-  );
-}
-
-/**
- * A caixa de quem participa pela TI: a mesma de quem pediu, com o mesmo rascunho, que troca só o envio,
- * pela rota da TI, e o texto de dentro. À pessoa que não usa o chat, a frase do Chamados. No
- * resolvido, no lugar dela, o cadeado, "O #1045 está resolvido." e "Reabrir", pela rota da TI.
- */
-function CaixaDaTi({
-  chamado,
-  andamento,
-  caixa,
-  aoEnviar,
-}: {
-  chamado: ConversaDoChamado;
-  andamento: NonNullable<ConversaDoChamado['andamento']>;
-  caixa: RefObject<HTMLTextAreaElement | null>;
-  aoEnviar: () => void;
-}) {
-  const { numero } = chamado;
-  const doChat = useAndamentoNoChat(numero);
-  const reler = useRelerOsChamadosDoChat();
-  const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
-  const [reabrindo, definirReabrindo] = useState(false);
-  const primeiroNome = nomeCurto(andamento.pessoa.nome);
-
-  if (chamado.situacao === 'resolvido') {
-    const reabrir = async () => {
-      definirReabrindo(true);
-      const resultado = await atendimento.reabrir(numero, andamento.versao);
-      definirReabrindo(false);
-      if (resultado) caixa.current?.focus();
-    };
-    return (
-      <div className={estilos.resolvidoDaTi}>
-        <Icone icone={Lock} tamanho={16} />
-        <p>{`O #${numero} está resolvido.`}</p>
-        {andamento.acoes.includes('reabrir') && (
-          <Botao
-            icone={RotateCcw}
-            carregando={reabrindo}
-            rotuloCarregando="Reabrindo o chamado"
-            onPress={() => void reabrir()}
-          >
-            Reabrir
-          </Botao>
-        )}
-      </div>
-    );
-  }
-  return (
-    <CaixaDoChat
-      caixa={caixa}
-      rascunho={rascunhoDoChamado(numero)}
-      ajuda={`Escrever para ${primeiroNome} no #${numero}…`}
-      dica="# cita um chamado"
-      citar
-      anexosEm="/chamados/anexos"
-      nota={andamento.pessoa.usaOChat ? undefined : ajudaDoCampo(primeiroNome, false)}
-      mandar={doChat.escrever}
-      aoEnviar={aoEnviar}
-    />
   );
 }
 

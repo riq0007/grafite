@@ -65,6 +65,11 @@
   background-color: var(--cor-ok-fundo);
 }
 
+.pilula[data-tom="info"] {
+  border-color: var(--cor-info-borda);
+  background-color: var(--cor-info-fundo);
+}
+
 .iconeDoEvento {
   display: inline-flex;
   flex: none;
@@ -77,6 +82,10 @@
 
 .pilula[data-tom="ok"] .iconeDoEvento {
   color: var(--cor-ok);
+}
+
+.pilula[data-tom="info"] .iconeDoEvento {
+  color: var(--cor-info);
 }
 
 .frase {
