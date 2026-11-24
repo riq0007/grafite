@@ -75,7 +75,8 @@ function horaEMinuto(momento: Date, fuso: string): string {
 /**
  * Depois da apresentação, por 1 minuto, o que chegou durante ela: "1 resposta nova · chegou às
  * 09:21", ou "3 respostas novas · a última às 09:30". `null` sem nada que chegou, antes do fim ou
- * depois do minuto.
+ * depois do minuto. As `chegadas` são uma por chamado, a última de cada um, e só as que chegaram
+ * durante a apresentação e seguem por ver, como o aviso conta.
  */
 export function chegouAs(pedido: {
   chegadas: readonly Date[];

@@ -148,7 +148,9 @@ O `/api/aba/eventos` reusa o distribuidor com o público da conta, e manda à ab
 
 O `PublicoDoEvento` (`packages/domain`) ganha as sessões da aba, os aparelhos e todas as abas. O `todas` e as `contas` seguem chegando à conexão da aba, e é a rota que corta pelo tipo: o chat da aba usa a mesma função e precisa dos tipos que o chat lê. A conexão da aba, sem linha nas `sessoes`, leva no `sessaoId` um valor que nunca casa, e não o id da sessão da aba. A configuração, a entrada e o bloqueio ganham tipos próprios no `TIPOS_DE_EVENTO`; o fim da sessão da aba vai pelo `registrarEvento` com o público dado (`sessoesDaAba`), porque o público deduzido do `sessao.encerrada` é o da sessão comum. O aviso do banco (`app.avisar_evento()`) leva as três partes novas, como a linha. O sinal de vida dessa conexão é de 10 s. Nos eventos de muita gente (a configuração e a mensagem num canal), a aba relê o estado com um atraso sorteado de até 3 s, para 500 abas não lerem no mesmo instante. Na resposta a uma pessoa, relê na hora.
 
-Sem nenhuma sessão no computador, como na tela de pedir a senha ou na pessoa recusada, não há conexão de eventos. O serviço confere o `GET /api/aba/configuracao` a cada 60 s.
+Sem nenhuma sessão no computador, como na tela de pedir a senha ou na pessoa recusada, não há conexão de eventos.
+
+A recusa da pessoa na entrada pelo Windows volta a ser tentada a cada 10 minutos. Para não repetir a auditoria, a API lê a última linha da auditoria do aparelho com aquele SID: se ela é uma recusa com o mesmo motivo, não grava outra. Nenhum sinal da aba decide isso, porque quem controla o computador esconderia as recusas. A tentativa a cada 10 minutos é só da entrada pelo Windows. Na entrada pela senha a aba não guarda a senha, e a conta inativa, a conta local e o sem grupo voltam ao formulário. A última resposta do estado da aba é a mais recente entre os chamados, pela hora, e a consulta da 3.9 ordena as linhas pela conversa antes do `linhasPorVer`. O serviço confere o `GET /api/aba/configuracao` a cada 60 s.
 
 ### 7. A janela, o clique que passa e o foco
 

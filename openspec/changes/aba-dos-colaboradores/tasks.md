@@ -237,6 +237,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
     - o script do Intune que repõe a chave depois de restaurar um backup;
     - o sysprep das imagens, o proxy sem PAC, os logs e a mudança do endereço;
     - o teto por aparelho e os downloads que ficam no perfil genérico;
+    - o primeiro dia da resposta por ver, com as respostas já lidas pela web que aparecem na aba;
   - o `docs/mapa.md`, com a capacidade, a change e os termos novos;
   - os comandos no `CLAUDE.md`.
 
