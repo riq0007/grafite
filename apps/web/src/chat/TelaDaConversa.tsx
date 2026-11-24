@@ -41,7 +41,7 @@ import {
   useConversaAberta,
   useMensagensDaConversa,
 } from './consultas.ts';
-import { quandoNoChat } from './conversa.ts';
+import { type MensagemDoChat, quandoNoChat } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import {
   type ControleDoFluxo,
@@ -55,8 +55,13 @@ import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
 import { rascunhoDaConversa, useRascunho } from './rascunhos.tsx';
 import { SeloDoChamado } from './SeloDoChamado.tsx';
+import { marcadasNaOrdem } from './selecao.ts';
 import estilos from './TelaDaConversa.module.css';
-import { type MensagemATransformar, TransformarEmChamado } from './TransformarEmChamado.tsx';
+import {
+  type ATransformar,
+  type MensagemATransformar,
+  TransformarEmChamado,
+} from './TransformarEmChamado.tsx';
 import { EstadoComAVolta, VoltarALista } from './VoltarALista.tsx';
 
 const NENHUM_DESLIGADO: readonly string[] = [];
@@ -95,7 +100,16 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   const controle = useRef<ControleDoFluxo>(null);
   const caixa = useRef<HTMLTextAreaElement>(null);
   const [, mudarRascunho] = useRascunho(rascunhoDaConversa(conversa));
-  const [transformando, definirTransformando] = useState<MensagemATransformar | null>(null);
+  // O transformar aberto: o de uma mensagem, pelo menu, ou o das marcadas, que seguem a seleção.
+  const [transformando, definirTransformando] = useState<{
+    vez: number;
+    unica: MensagemATransformar | null;
+  } | null>(null);
+  const vezDoTransformar = useRef(0);
+  const transformarUma = (unica: MensagemATransformar | null) => {
+    vezDoTransformar.current += 1;
+    definirTransformando({ vez: vezDoTransformar.current, unica });
+  };
   const sessao = useSessao();
   const conta = (sessao.tipo === 'ativa' && sessao.conta.id) || '';
   // A seleção vale na conversa em que começou: sair dela a desfaz. A origem é a mensagem em que ela
@@ -106,27 +120,33 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     origem: string;
   } | null>(null);
   const doTrecho = mensagens.trecho.data?.itens;
-  // As marcadas que valem, na ordem da conversa: a que vira chamado, aqui ou por outra conta, sai, a
-  // cada leitura da conversa. A marcada fora do trecho fica, no fim.
+  // As mensagens já lidas da conversa, cada uma na última leitura: a marcada que sai do trecho, como
+  // pelas "mais novas", segue com o texto, para o transformar citá-la.
+  const conhecidas = useRef(new Map<string, MensagemDoChat>());
+  // As marcadas que valem, na ordem da conversa, que é a dos ids: a que vira chamado, aqui ou por
+  // outra conta, sai, a cada leitura da conversa.
   const marcadas = useMemo(() => {
+    for (const item of doTrecho ?? []) conhecidas.current.set(item.id, item);
     if (selecionadas?.conversa !== conversa) return null;
-    const ordem = new Map((doTrecho ?? []).map((item, posicao) => [item.id, { item, posicao }]));
-    return selecionadas.ids
-      .filter((id) => !ordem.get(id)?.item.chamado)
-      .sort(
-        (a, b) =>
-          (ordem.get(a)?.posicao ?? Number.POSITIVE_INFINITY) -
-          (ordem.get(b)?.posicao ?? Number.POSITIVE_INFINITY),
-      );
+    return marcadasNaOrdem(selecionadas.ids, conhecidas.current);
   }, [selecionadas, conversa, doTrecho]);
   const cancelarASelecao = () => definirSelecionadas(null);
-  /** Transforma as marcadas: o diálogo cita a primeira, até ele receber a lista. */
+  /** Transforma as marcadas, que o diálogo cita na ordem, e que seguem a seleção enquanto ele abre. */
   const transformarAsMarcadas = () => {
-    const primeira = marcadas?.[0];
-    const mensagem = primeira && doTrecho?.find(({ id }) => id === primeira);
-    if (!mensagem) return;
-    definirTransformando({ mensagem, autor: nomeDoAutor(mensagem.autor, conta) });
+    if (!marcadas || marcadas.length === 0) return;
+    transformarUma(null);
   };
+  const alvoDoTransformar = useMemo<ATransformar | null>(() => {
+    if (!transformando) return null;
+    const { vez, unica } = transformando;
+    const citadas = unica
+      ? [unica]
+      : (marcadas ?? []).map((mensagem) => ({
+          mensagem,
+          autor: nomeDoAutor(mensagem.autor, conta),
+        }));
+    return { vez, citadas };
+  }, [transformando, marcadas, conta]);
   // Na seleção, o Esc a desfaz, e o Ctrl+Shift+T transforma as marcadas; o diálogo e o menu abertos
   // ficam com as teclas.
   const teclasDaSelecao = useRef<(evento: KeyboardEvent) => void>(() => {});
@@ -279,7 +299,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         },
     transformar:
       pode('chamados.pedir') && !desligados.includes('chamados')
-        ? (mensagem, autor) => definirTransformando({ mensagem, autor })
+        ? (mensagem, autor) => transformarUma({ mensagem, autor })
         : null,
     selecionar:
       pode('chamados.pedir') && !desligados.includes('chamados')
@@ -298,7 +318,7 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
     marcadas === null
       ? null
       : {
-          marcadas: new Set(marcadas),
+          marcadas: new Set(marcadas.map(({ id }) => id)),
           cheia: marcadas.length >= MAXIMO_DE_MENSAGENS_NUM_CHAMADO,
           alternar: (id) =>
             definirSelecionadas((antes) => {
@@ -434,9 +454,11 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         />
       )}
       <TransformarEmChamado
-        alvo={transformando}
+        alvo={alvoDoTransformar}
         conversa={conversa}
         aoFechar={() => definirTransformando(null)}
+        // Aberto o chamado das marcadas, a seleção sai.
+        aoAbrir={transformando?.unica ? undefined : cancelarASelecao}
       />
     </section>
   );

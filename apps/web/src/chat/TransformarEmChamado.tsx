@@ -1,6 +1,7 @@
 // "Transformar em chamado" (spec modulo-chat, "Transformar em chamado na tela"; spec chamados, "Abrir
 // um chamado pelo chat"; mockups m02 e m03): o diálogo que o menu da mensagem e o Ctrl+Shift+T abrem,
-// com a mensagem citada como ela é, com quem escreveu e a hora; os tipos em chips com o ícone; o
+// com a mensagem citada como ela é, com quem escreveu e a hora, ou as marcadas na seleção, na ordem,
+// com o título "3 mensagens" e a lista que rola (change andamento-e-varias-mensagens, decisão 8); os tipos em chips com o ícone; o
 // título, com o contador; no tipo que pede o ativo, o ativo sugerido, o primeiro escolhido, e
 // "Trocar", que lista os sugeridos; e "No nome de", a pessoa da conta, com "Trocar", que busca a
 // pessoa pelo nome. Aberto o chamado, o diálogo fecha, e a lista e a conversa se releem: o chamado
@@ -76,19 +77,29 @@ type Recusas = Partial<Record<'tipo' | 'titulo' | 'ativo' | 'pessoa', string>>;
 const RECUSADO =
   '[role="radiogroup"][aria-invalid="true"] input, input[aria-invalid="true"], [data-recusado]';
 
+/** O que o diálogo transforma: as mensagens citadas, na ordem da conversa, e a vez da abertura. */
+export interface ATransformar {
+  /** Muda a cada abertura: o formulário recomeça. As citadas mudam sem ele recomeçar. */
+  vez: number;
+  citadas: readonly MensagemATransformar[];
+}
+
 export function TransformarEmChamado({
   alvo,
   conversa,
   aoFechar,
+  aoAbrir,
 }: {
-  alvo: MensagemATransformar | null;
+  alvo: ATransformar | null;
   conversa: string;
   aoFechar: () => void;
+  /** Aberto o chamado, antes de o diálogo fechar: a seleção sai. */
+  aoAbrir?: () => void;
 }) {
-  // A citada continua no diálogo enquanto ele sai da tela.
+  // As citadas continuam no diálogo enquanto ele sai da tela.
   const [mostrada, definirMostrada] = useState(alvo);
   if (alvo !== null && alvo !== mostrada) definirMostrada(alvo);
-  const citada = alvo ?? mostrada;
+  const aberto = alvo ?? mostrada;
   return (
     <Dialogo
       titulo="Transformar em chamado"
@@ -100,12 +111,13 @@ export function TransformarEmChamado({
       telaCheiaNoCelular
     >
       {(fechar) =>
-        citada && (
+        aberto && (
           <FormularioDoChamado
-            key={citada.mensagem.id}
-            citada={citada}
+            key={aberto.vez}
+            citadas={aberto.citadas}
             conversa={conversa}
             fechar={fechar}
+            aoAbrir={aoAbrir}
           />
         )
       }
@@ -114,13 +126,15 @@ export function TransformarEmChamado({
 }
 
 function FormularioDoChamado({
-  citada,
+  citadas,
   conversa,
   fechar,
+  aoAbrir,
 }: {
-  citada: MensagemATransformar;
+  citadas: readonly MensagemATransformar[];
   conversa: string;
   fechar: () => void;
+  aoAbrir: (() => void) | undefined;
 }) {
   const api = useApi();
   const consultas = useQueryClient();
@@ -140,6 +154,8 @@ function FormularioDoChamado({
   const [ativoEscolhido, definirAtivoEscolhido] = useState<string | null>(null);
   const [recusas, definirRecusas] = useState<Recusas>({});
   const [falha, definirFalha] = useState<string | null>(null);
+  /** A recusa das mensagens, como a da que já virou chamado, no alto do diálogo. */
+  const [falhaDasMensagens, definirFalhaDasMensagens] = useState<string | null>(null);
   const [enviando, definirEnviando] = useState(false);
   const [pedidoDeFoco, definirPedidoDeFoco] = useState(0);
   const formulario = useRef<HTMLFormElement>(null);
@@ -159,7 +175,8 @@ function FormularioDoChamado({
   const comOsTipos = tipos.isSuccess && tipos.data.itens.length > 0;
   const comOAtivo = Boolean(tipo?.pedeOAtivo) && pessoa !== null;
   const comOsSugeridos = comOAtivo && sugeridos.isSuccess;
-  const semAcao = !comOsTipos || (comOAtivo && !sugeridos.isSuccess);
+  // Sem nenhuma citada, como quando a recusa tira a última que já virou chamado, também.
+  const semAcao = citadas.length === 0 || !comOsTipos || (comOAtivo && !sugeridos.isSuccess);
 
   // O foco vai ao primeiro campo recusado, depois de a tela mostrar as recusas. Sem nenhum sugerido,
   // o ativo não tem o que escolher, e a recusa manda trocar o tipo: o foco vai ao tipo escolhido.
@@ -195,12 +212,14 @@ function FormularioDoChamado({
     if (enviando || semAcao) return;
     definirEnviando(true);
     definirFalha(null);
+    definirFalhaDasMensagens(null);
     try {
       const resultado = await pedir(
         () =>
-          api.POST('/chat/mensagens/{id}/chamado', {
-            params: { path: { id: citada.mensagem.id } },
+          api.POST('/chat/conversas/{id}/chamado', {
+            params: { path: { id: conversa } },
             body: {
+              mensagens: citadas.map(({ mensagem }) => mensagem.id),
               tipo: tipo?.id ?? null,
               titulo,
               pessoa: pessoa?.id ?? null,
@@ -226,17 +245,20 @@ function FormularioDoChamado({
           if (nosCampos.length > 0) definirPedidoDeFoco((antes) => antes + 1);
           return;
         }
-        // A mensagem que já virou chamado mostra a marca na conversa, que se relê.
+        // A mensagem que já virou chamado mostra a marca na conversa, que se relê: ela sai das
+        // citadas e da seleção, e a recusa fica no alto.
         if (resultado.problema?.status === 409) {
           void consultas.invalidateQueries({ queryKey: chaveDaConversa(conversa) });
         }
         definirRecusas({});
-        definirFalha(resultado.erro);
+        definirFalha(null);
+        definirFalhaDasMensagens(resultado.erro);
         return;
       }
       // O chamado entra no alto de CHAMADOS, com o contorno forte, até a lista ser montada de novo.
       const { numero } = resultado.dados;
       chamadoNovo.marcar(numero);
+      aoAbrir?.();
       void consultas.invalidateQueries({ queryKey: chaveDaConversa(conversa) });
       void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT });
       void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
@@ -253,7 +275,8 @@ function FormularioDoChamado({
 
   return (
     <form ref={formulario} className={estilos.formulario} noValidate onSubmit={abrir}>
-      <MensagemCitada citada={citada} />
+      {falhaDasMensagens && <Recusa texto={falhaDasMensagens} />}
+      <MensagensCitadas citadas={citadas} />
       <TiposDoChamado
         consulta={tipos}
         valor={tipo?.id ?? null}
@@ -301,6 +324,31 @@ function FormularioDoChamado({
         </Botao>
       </div>
     </form>
+  );
+}
+
+/**
+ * As citadas: uma, como ela é; várias, com o título "3 mensagens" em cima e a lista, na ordem da
+ * conversa, que rola dentro do diálogo.
+ */
+function MensagensCitadas({ citadas }: { citadas: readonly MensagemATransformar[] }) {
+  const id = useId();
+  const [unica] = citadas;
+  if (citadas.length === 1 && unica) return <MensagemCitada citada={unica} />;
+  return (
+    <section className={estilos.varias} aria-labelledby={id}>
+      <h3 id={id} className={estilos.quantas}>
+        {`${citadas.length} mensagens`}
+      </h3>
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: a lista que rola recebe o foco para rolar pelo teclado. */}
+      <ol className={estilos.listaDasCitadas} tabIndex={0} aria-labelledby={id}>
+        {citadas.map((citada) => (
+          <li key={citada.mensagem.id}>
+            <MensagemCitada citada={citada} />
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

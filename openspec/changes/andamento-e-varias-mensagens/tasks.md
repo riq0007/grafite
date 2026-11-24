@@ -128,7 +128,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a barra embaixo, com os alvos de 44 px.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev` a 390 px.
-- [ ] 4.6 O transformar com várias mensagens (spec modulo-chat, "Transformar em chamado na tela"):
+- [x] 4.6 O transformar com várias mensagens (spec modulo-chat, "Transformar em chamado na tela"):
   - o diálogo com as mensagens citadas, na ordem, com o título "3 mensagens" e a lista que rola;
   - "Cancelar" e o Esc, que fecham só o diálogo, com a seleção como estava;
   - a rota nova, com a recusa das mensagens no alto do diálogo, que tira das citadas e da seleção a que já virou chamado;
