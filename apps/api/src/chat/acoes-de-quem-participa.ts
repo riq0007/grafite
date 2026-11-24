@@ -47,14 +47,13 @@ import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
 import { nomesDosAnexosDasMensagens, tomarAnexos } from '../chamados/anexos.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from '../chamados/quem-atende.ts';
-import { publicoComQuemParticipa } from '../chamados/quem-participa.ts';
+import { daConta, publicoComQuemParticipa } from '../chamados/quem-participa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { marcarLidasDoAssunto } from '../notificacoes/leitura.ts';
 import { notificar } from '../notificacoes/notificar.ts';
 import { conflito, dadosInvalidos } from '../problemas.ts';
 import { origemDa } from '../rotas/sessao.ts';
-import { daConta } from './chamados-de-quem-participa.ts';
 import { avisarAsConversasDeOrigem } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
 

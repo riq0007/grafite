@@ -20,6 +20,7 @@ import {
   citacoesDeChamados,
   comecoDoTexto,
   conferirMensagem,
+  esperaAConta,
   estaFechado,
   mensagemDaRecusaDaEscrita,
   nomeNoChat,
@@ -34,11 +35,11 @@ import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { MiniaturaDoAnexo, miniaturaDe } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
 import { tomarAnexosDoChat } from './anexos.ts';
-import { comOAlcanceDeAtender, esperaAConta } from './chamados-de-quem-participa.ts';
 import { ContaDoChat, type ContaLida, contaDoChat, lerContas } from './contas.ts';
 import {
   type ContaQueLe,

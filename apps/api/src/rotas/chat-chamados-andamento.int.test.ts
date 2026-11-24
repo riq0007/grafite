@@ -118,6 +118,9 @@ describe('o andamento', () => {
       acoes: ['passar', 'devolver', 'resolver'],
       pessoa: { nome: 'Ana Souza', usaOChat: true },
     });
+    // Devolvido à triagem, sem ninguém com ele: o assumir.
+    expect((await daTi('ana', 'devolver', proprio)).statusCode).toBe(200);
+    expect((await ler('ana', proprio)).andamento?.acoes).toEqual(['assumir', 'passar', 'resolver']);
 
     // Quem atende sem participar não lê o chamado pelo chat: segue pelo Chamados.
     const daFernanda = await c.abrirChamado('fernanda');

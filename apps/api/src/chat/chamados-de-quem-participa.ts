@@ -20,14 +20,12 @@ import {
 } from '@grafite/db';
 import {
   ACOES_DO_ANDAMENTO,
-  type ArvoreDeLocais,
   acoesDoAndamento,
   alcance,
   atendePeloChat,
-  type ChamadoParaAtenderPeloChat,
-  type ContaQueAtendePeloChat,
   comecoDoTexto,
   type EtapaDoChamado,
+  esperaAConta,
   estaFechado,
   etapasDoChamado,
   type Formulario,
@@ -69,7 +67,7 @@ import {
 } from '../chamados/ficha.ts';
 import { formularioDa } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
-import { pessoaUsaOChat } from '../chamados/quem-participa.ts';
+import { comOAlcanceDeAtender, daConta, pessoaUsaOChat } from '../chamados/quem-participa.ts';
 import { lerContas } from './contas.ts';
 import { conversasParaParticipar } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
@@ -303,32 +301,6 @@ export const ResumoDoChamadoNoChat = z
 type ResumoDoChamadoNoChat = z.infer<typeof ResumoDoChamadoNoChat>;
 
 type LinhaDoChamado = typeof chamados.$inferSelect;
-
-/** A conta como a participação no chamado a lê: quem lê pelo chat usa o chat. */
-export const daConta = (conta: Pick<ContaQueLeAsMensagens, 'id' | 'pessoaId'>) => ({
-  id: conta.id,
-  pessoaId: conta.pessoaId,
-  usaOChat: true,
-});
-
-/**
- * A conta com o alcance de `chamados.atender` dela, lido uma vez por leitura, para saber em que
- * chamados ela atende pelo chat e participa pela TI.
- */
-export const comOAlcanceDeAtender = (
-  conta: Pick<ContaQueLeAsMensagens, 'id' | 'pessoaId' | 'acesso'>,
-  arvore: ArvoreDeLocais,
-): ContaQueAtendePeloChat => ({
-  ...daConta(conta),
-  alcance: alcance(conta.acesso, 'chamados.atender', arvore),
-});
-
-/**
- * A espera do chamado é da conta: ela participa dele, e não pela TI. É o `esperaAConta` do
- * `situacaoNoChat`, no chip e em "Chamados da equipe".
- */
-export const esperaAConta = (conta: ContaQueAtendePeloChat, chamado: ChamadoParaAtenderPeloChat) =>
-  participaDoChamado(conta, chamado) && !participaPelaTi(conta, chamado);
 
 /** Os chamados de que a conta participa: os da pessoa dela e os que ela abriu pelo chat. */
 const deQuemParticipa = (conta: ContaQueLeAsMensagens): SQL | undefined =>

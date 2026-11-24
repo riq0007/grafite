@@ -4,7 +4,11 @@
 // da TI, o "usa o chat" da ficha e o público do `chamados.mudaram` as leem.
 import { contas, type Transacao } from '@grafite/db';
 import {
+  type Acesso,
+  type ArvoreDeLocais,
+  alcance,
   type ChamadoParaParticipar,
+  type ContaQueAtendePeloChat,
   type LocaisDoChamado,
   type PublicoDoEvento,
   participaDoChamado,
@@ -19,6 +23,25 @@ export interface ContaQueParticipa {
   pessoaId: string;
   usaOChat: boolean;
 }
+
+/** A conta da sessão como a participação no chamado a lê: quem lê pelo chat usa o chat. */
+export const daConta = (conta: { id: string; pessoaId: string }): ContaQueParticipa => ({
+  id: conta.id,
+  pessoaId: conta.pessoaId,
+  usaOChat: true,
+});
+
+/**
+ * A conta da sessão com o alcance de `chamados.atender` dela, lido uma vez por pedido, para saber em
+ * que chamados ela atende pelo chat e participa pela TI.
+ */
+export const comOAlcanceDeAtender = (
+  conta: { id: string; pessoaId: string; acesso: Acesso },
+  arvore: ArvoreDeLocais,
+): ContaQueAtendePeloChat => ({
+  ...daConta(conta),
+  alcance: alcance(conta.acesso, 'chamados.atender', arvore),
+});
 
 /**
  * As contas que participam de cada chamado da lista agora, numa consulta só; nenhuma com o Chat

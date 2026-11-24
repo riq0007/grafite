@@ -45,7 +45,7 @@ import {
 } from '../arquivos/imagem-do-registro.ts';
 import { lerArvore } from '../arvore.ts';
 import { contendo } from '../busca.ts';
-import { comOAlcanceDeAtender } from '../chat/chamados-de-quem-participa.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { ContaDoChat, colunasDaConta, contaDoChat, lerContas } from '../chat/contas.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { RespostaDeProblema } from '../problemas.ts';

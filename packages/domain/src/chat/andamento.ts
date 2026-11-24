@@ -46,6 +46,17 @@ export function participaPelaTi(
   return conta.pessoaId !== chamado.pessoaId && atendePeloChat(conta, chamado);
 }
 
+/**
+ * A espera do chamado é da conta: ela participa dele, e não pela TI. É o `esperaAConta` do
+ * `situacaoNoChat`, no chip, no resumo do chat e em "Chamados da equipe".
+ */
+export function esperaAConta(
+  conta: ContaQueAtendePeloChat,
+  chamado: ChamadoParaAtenderPeloChat,
+): boolean {
+  return participaDoChamado(conta, chamado) && !participaPelaTi(conta, chamado);
+}
+
 /** As ações do menu "Andamento", na ordem do menu, que é a das ações na spec. */
 export const ACOES_DO_ANDAMENTO = [
   'assumir',

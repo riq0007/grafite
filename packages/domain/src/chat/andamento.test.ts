@@ -6,6 +6,7 @@ import {
   atendePeloChat,
   type ChamadoParaAtenderPeloChat,
   type ContaQueAtendePeloChat,
+  esperaAConta,
   participaPelaTi,
 } from './andamento.ts';
 
@@ -86,6 +87,20 @@ describe('Quem atende pelo chat', () => {
   it('quem não usa o chat não atende pelo chat', () => {
     expect(atendePeloChat(conta({ usaOChat: false }), chamado())).toBe(false);
     expect(participaPelaTi(conta({ usaOChat: false }), chamado())).toBe(false);
+  });
+});
+
+describe('A espera do chamado é da conta', () => {
+  it('de quem participa e não pela TI', () => {
+    // A pessoa do chamado.
+    expect(esperaAConta(PAULO, chamado())).toBe(true);
+    // Quem o abriu pelo chat e atende: a espera é da pessoa.
+    expect(esperaAConta(conta(), chamado())).toBe(false);
+    // Quem o abriu pelo chat e não atende os locais participa como quem pediu.
+    expect(esperaAConta(conta({ alcance: new Set([CAMPINAS]) }), chamado())).toBe(true);
+    // Quem não participa.
+    const bruno = conta({ id: 'conta-bruno', pessoaId: 'pessoa-bruno', alcance: 'organizacao' });
+    expect(esperaAConta(bruno, chamado())).toBe(false);
   });
 });
 

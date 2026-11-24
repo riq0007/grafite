@@ -560,6 +560,7 @@ export {
   atendePeloChat,
   type ChamadoParaAtenderPeloChat,
   type ContaQueAtendePeloChat,
+  esperaAConta,
   participaPelaTi,
 } from './chat/andamento.ts';
 export {

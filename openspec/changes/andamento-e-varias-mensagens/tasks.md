@@ -107,7 +107,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - no resolvido, o cadeado, "O #1045 está resolvido." e "Reabrir";
   - a espera "Aguardando o colaborador" nas etapas, pelo `nomeDaEtapa`, que também dá a marca da etapa de agora, e o selo dela na informação, também no chip de quem não participa (spec modulo-chat, "Selos e movimento do chat");
   - as opções sem ação;
-  - sem a avaliação e sem a resposta nova;
+  - sem a avaliação e sem a resposta nova; o `reabrirAte`, a `avaliacao` e as `opcoes` seguem chegando, e a tela os esconde;
+  - a caixa da TI pelo `pelaTi && andamento`, que o tipo gerado não liga, e, no fechado, o `andamento` com as `acoes: []`;
   - as listas.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.

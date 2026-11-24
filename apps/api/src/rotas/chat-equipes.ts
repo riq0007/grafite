@@ -16,14 +16,14 @@ import {
   mensagensDoChat,
   naOrganizacao,
 } from '@grafite/db';
-import { estaFechado, ordemDasEquipesECanais, situacaoNoChat } from '@grafite/domain';
+import { esperaAConta, estaFechado, ordemDasEquipesECanais, situacaoNoChat } from '@grafite/domain';
 import { and, count, countDistinct, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
-import { comOAlcanceDeAtender, esperaAConta } from '../chat/chamados-de-quem-participa.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { ContaDoChat, contaDoChat, lerContas } from '../chat/contas.ts';
 import { idsDeQuemParticipa, lerConversaDaConta } from '../chat/conversa.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
