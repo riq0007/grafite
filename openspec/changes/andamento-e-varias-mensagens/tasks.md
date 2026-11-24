@@ -56,7 +56,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - Ela devolve as contas ativas que atendem todos os locais, fora quem está com o chamado, pelo nome, com os abertos contados nos locais que quem pede vê com `chamados.ver`, como no quadro.
 
   Começa pelos testes de integração da permissão e de quem entra na lista. Verificar: esses testes, o `contrato:verificar`, o lint e o typecheck.
-- [ ] 3.3 Quem participa pela TI não age nem é avisada como quem pediu (decisão 4):
+- [x] 3.3 Quem participa pela TI não age nem é avisada como quem pediu (decisão 4):
   - as rotas de quem participa recusam responder, escolher, reabrir e avaliar, com o `pelaTi` lido com o chamado travado;
   - o "Marcar como vista" segue;
   - as notificações de quem participa (a mensagem da TI e o resolvido) não vão a ela, pelo `pelaTi` de quem abriu, com os acessos dela.

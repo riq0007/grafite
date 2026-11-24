@@ -7,13 +7,16 @@ import {
   type Acesso,
   type ArvoreDeLocais,
   alcance,
+  type ChamadoParaAtenderPeloChat,
   type ChamadoParaParticipar,
   type ContaQueAtendePeloChat,
+  esperaAConta,
   type LocaisDoChamado,
   type PublicoDoEvento,
   participaDoChamado,
 } from '@grafite/domain';
 import { inArray, or, sql } from 'drizzle-orm';
+import { carregarAcesso } from '../acesso/acesso.ts';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { publicoDoChamado } from './alcance.ts';
@@ -42,6 +45,34 @@ export const comOAlcanceDeAtender = (
   ...daConta(conta),
   alcance: alcance(conta.acesso, 'chamados.atender', arvore),
 });
+
+/**
+ * As contas que participam do chamado e esperam a TI, fora quem participa pela TI (design, decisão
+ * 4): quem o abriu pelo chat no nome de outra pessoa e atende os locais dele recebe as notificações
+ * da TI, como quem atende, e não as de quem participa. O lado sai dos acessos dela, e não dos de
+ * quem age; a pessoa do chamado sempre espera, sem ler os acessos.
+ */
+export async function semQuemParticipaPelaTi(
+  tx: Transacao,
+  chamado: ChamadoParaAtenderPeloChat,
+  participam: readonly ContaQueParticipa[],
+  arvore: ArvoreDeLocais,
+): Promise<ContaQueParticipa[]> {
+  const esperam: ContaQueParticipa[] = [];
+  for (const conta of participam) {
+    const espera =
+      conta.pessoaId === chamado.pessoaId ||
+      esperaAConta(
+        {
+          ...conta,
+          alcance: alcance(await carregarAcesso(tx, conta.id), 'chamados.atender', arvore),
+        },
+        chamado,
+      );
+    if (espera) esperam.push(conta);
+  }
+  return esperam;
+}
 
 /**
  * As contas que participam de cada chamado da lista agora, numa consulta só; nenhuma com o Chat

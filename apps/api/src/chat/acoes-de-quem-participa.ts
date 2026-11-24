@@ -9,7 +9,8 @@
 //   e no "Reabrir" do resolvido; a pergunta e se ela já tem a escolha; e se a resolução de agora já
 //   foi avaliada. A chave da escolha e a da avaliação vêm do que o banco devolve, e nunca do pedido;
 // - a decisão do domínio (`decidirAcaoDeQuemParticipa`), com as recusas do conteúdo no campo e as
-//   outras como o conflito, como as da TI;
+//   outras como o conflito, como as da TI; quem participa pela TI, pelo chamado travado e pelo
+//   acesso da sessão, só marca como vista (change andamento-e-varias-mensagens, tarefa 3.3);
 // - na retomada e na reabertura, o chamado, com o relógio, quem atende desde quando e a versão, e a
 //   auditoria pela conta de quem participa, com o `chat.mudou` da conversa de origem; nas outras, só
 //   o `chamados.mudaram`, também às contas de quem participa (tarefa 3.12), e na marcação como vista
@@ -35,6 +36,7 @@ import {
   notificacoesDeQuemParticipa,
   type PedidoDeQuemParticipa,
   participaDoChamado,
+  participaPelaTi,
   type RecusaDeQuemParticipa,
   relogioDepois,
   type SituacaoDoChamado,
@@ -47,7 +49,11 @@ import { chamadoNaoEncontrado } from '../chamados/alcance.ts';
 import { nomesDosAnexosDasMensagens, tomarAnexos } from '../chamados/anexos.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from '../chamados/quem-atende.ts';
-import { daConta, publicoComQuemParticipa } from '../chamados/quem-participa.ts';
+import {
+  comOAlcanceDeAtender,
+  daConta,
+  publicoComQuemParticipa,
+} from '../chamados/quem-participa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { marcarLidasDoAssunto } from '../notificacoes/leitura.ts';
@@ -352,7 +358,8 @@ export async function agirComoQuemParticipa(
     resolvidoEm: lido.resolvidoEm,
     locais: lido.locais.map((id) => ({ id, nome: arvore.caminho(id) })),
     semLocal: lido.semLocal,
-    pelaTi: false,
+    // O lado sai do chamado travado e do acesso da sessão, sem outra leitura.
+    pelaTi: participaPelaTi(comOAlcanceDeAtender(conta, arvore), lido),
   };
   const decisao = decidirAcaoDeQuemParticipa(
     chamado,
