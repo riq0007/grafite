@@ -27,6 +27,7 @@ import {
   Link,
   PenLine,
   SmilePlus,
+  SquareCheck,
 } from 'lucide-react';
 import { type FormEvent, type RefObject, useRef, useState } from 'react';
 import type { MensagemDoChat } from './conversa.ts';
@@ -49,6 +50,11 @@ export interface AcoesDaMensagem {
    * não pode abrir um chamado pelo chat.
    */
   transformar: ((mensagem: MensagemDoChat, autor: string) => void) | null;
+  /**
+   * Começa a seleção das mensagens com esta marcada, ou sem nenhuma na que já virou chamado; só a
+   * quem pode abrir um chamado pelo chat.
+   */
+  selecionar?: ((mensagem: MensagemDoChat) => void) | null;
   silenciada: boolean;
   /** Silencia a conversa, ou volta a ouvi-la. */
   silenciar: (silenciada: boolean) => void;
@@ -143,7 +149,7 @@ function reacoesNoMenu(
  */
 export function itensDaMensagem(props: PropsDosItens) {
   const { mensagem, autor, conversa, acoes, agirDepois } = props;
-  const { responder, reagir, transformar } = acoes;
+  const { responder, reagir, transformar, selecionar } = acoes;
   return (
     <>
       {responder && (
@@ -171,6 +177,15 @@ export function itensDaMensagem(props: PropsDosItens) {
         Copiar link da mensagem
       </ItemDeMenu>
       <Separador />
+      {selecionar && (
+        <ItemDeMenu
+          id="selecionar"
+          icone={SquareCheck}
+          onAction={() => agirDepois(() => selecionar(mensagem))}
+        >
+          Selecionar
+        </ItemDeMenu>
+      )}
       {transformar && (
         <ItemDeMenu
           id="transformar"

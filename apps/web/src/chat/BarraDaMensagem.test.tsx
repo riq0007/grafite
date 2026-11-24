@@ -142,10 +142,11 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
         'Responder',
         'Reagir',
         'Copiar link da mensagem',
+        'Selecionar',
         'Transformar em chamado',
         'Silenciar a conversa',
       ]),
-    ).toEqual([0, 1, 2, 3, 4]);
+    ).toEqual([0, 1, 2, 3, 4, 5]);
     const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
     expect(transformar.dataset.informativo).toBe('true');
     expect(descricao(transformar)).toContain('Shift');
@@ -507,10 +508,11 @@ describe('o botão direito e a tecla de menu', () => {
         'Responder',
         'Reagir',
         'Copiar link da mensagem',
+        'Selecionar',
         'Transformar em chamado',
         'Silenciar a conversa',
       ]),
-    ).toEqual([0, 1, 2, 3, 4]);
+    ).toEqual([0, 1, 2, 3, 4, 5]);
     // Os mesmos itens do "Mais": o azul do chamado e o atalho.
     const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
     expect(transformar.dataset.informativo).toBe('true');

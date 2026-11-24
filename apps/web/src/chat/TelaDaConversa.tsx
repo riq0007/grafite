@@ -5,8 +5,10 @@
 // (ou "do canal"); e as mensagens, com a caixa de escrever embaixo e, na barra de cada uma, o
 // responder, as reações, o silenciar e o transformar em chamado (spec modulo-chat, "Menu da
 // mensagem"). A aba Conversa continua montada nas outras, com o ponto da rolagem; sem o módulo
-// Chamados, a aba dos chamados sai.
-import { comecoDoTexto, nomeNoChat } from '@grafite/domain';
+// Chamados, a aba dos chamados sai. A seleção das mensagens (change andamento-e-varias-mensagens,
+// decisão 8) põe a barra dela no lugar da caixa, que fica montada e escondida, com o texto, a
+// respondida e os anexos na fila; sair da conversa, "Cancelar" e o Esc a desfazem.
+import { comecoDoTexto, MAXIMO_DE_MENSAGENS_NUM_CHAMADO, nomeNoChat } from '@grafite/domain';
 import {
   Abas,
   Avatar,
@@ -19,13 +21,14 @@ import {
 } from '@grafite/ui';
 import { type UseInfiniteQueryResult, useQueryClient } from '@tanstack/react-query';
 import { FileText, Hash, Image } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import { pedir } from '../api/pedir.ts';
 import { useApi } from '../api/useApi.tsx';
 import { useAcesso } from '../sessao/useAcesso.ts';
 import { useServidor, useSessao } from '../sessao/useSessao.tsx';
 import type { AcoesDaMensagem } from './BarraDaMensagem.tsx';
+import { BarraDaSelecao } from './BarraDaSelecao.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import { ComOResumoDoChamado } from './ChamadoCitado.tsx';
 import {
@@ -40,7 +43,13 @@ import {
 } from './consultas.ts';
 import { quandoNoChat } from './conversa.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
-import { type ControleDoFluxo, FluxoDaConversa, naoEncontrada } from './FluxoDaConversa.tsx';
+import {
+  type ControleDoFluxo,
+  FluxoDaConversa,
+  naoEncontrada,
+  nomeDoAutor,
+  type SelecaoNaConversa,
+} from './FluxoDaConversa.tsx';
 import { focarAoChegar } from './focoNaChegada.ts';
 import { useAgoraNoChat } from './janela.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
@@ -87,6 +96,60 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
   const caixa = useRef<HTMLTextAreaElement>(null);
   const [, mudarRascunho] = useRascunho(rascunhoDaConversa(conversa));
   const [transformando, definirTransformando] = useState<MensagemATransformar | null>(null);
+  const sessao = useSessao();
+  const conta = (sessao.tipo === 'ativa' && sessao.conta.id) || '';
+  // A seleção vale na conversa em que começou: sair dela a desfaz.
+  const [selecionadas, definirSelecionadas] = useState<{ conversa: string; ids: string[] } | null>(
+    null,
+  );
+  const doTrecho = mensagens.trecho.data?.itens;
+  // As marcadas que valem, na ordem da conversa: a que vira chamado, aqui ou por outra conta, sai, a
+  // cada leitura da conversa. A marcada fora do trecho fica, no fim.
+  const marcadas = useMemo(() => {
+    if (selecionadas?.conversa !== conversa) return null;
+    const ordem = new Map((doTrecho ?? []).map((item, posicao) => [item.id, { item, posicao }]));
+    return selecionadas.ids
+      .filter((id) => !ordem.get(id)?.item.chamado)
+      .sort(
+        (a, b) =>
+          (ordem.get(a)?.posicao ?? Number.POSITIVE_INFINITY) -
+          (ordem.get(b)?.posicao ?? Number.POSITIVE_INFINITY),
+      );
+  }, [selecionadas, conversa, doTrecho]);
+  const cancelarASelecao = () => definirSelecionadas(null);
+  /** Transforma as marcadas: o diálogo cita a primeira, até ele receber a lista. */
+  const transformarAsMarcadas = () => {
+    const primeira = marcadas?.[0];
+    const mensagem = primeira && doTrecho?.find(({ id }) => id === primeira);
+    if (!mensagem) return;
+    definirTransformando({ mensagem, autor: nomeDoAutor(mensagem.autor, conta) });
+  };
+  // Na seleção, o Esc a desfaz, e o Ctrl+Shift+T transforma as marcadas; o diálogo e o menu abertos
+  // ficam com as teclas.
+  const teclasDaSelecao = useRef<(evento: KeyboardEvent) => void>(() => {});
+  useEffect(() => {
+    teclasDaSelecao.current = (evento) => {
+      if (evento.defaultPrevented) return;
+      if (document.activeElement?.closest('[role="dialog"], [role="alertdialog"], [role="menu"]')) {
+        return;
+      }
+      const { ctrlKey, shiftKey, altKey, metaKey, key } = evento;
+      if (key === 'Escape' && !ctrlKey && !shiftKey && !altKey && !metaKey) {
+        evento.preventDefault();
+        cancelarASelecao();
+      } else if (ctrlKey && shiftKey && !altKey && !metaKey && key.toLowerCase() === 't') {
+        evento.preventDefault();
+        transformarAsMarcadas();
+      }
+    };
+  });
+  const selecionando = marcadas !== null;
+  useEffect(() => {
+    if (!selecionando) return;
+    const ouvir = (evento: KeyboardEvent) => teclasDaSelecao.current(evento);
+    window.addEventListener('keydown', ouvir);
+    return () => window.removeEventListener('keydown', ouvir);
+  }, [selecionando]);
   const aberta = cabecalho.data;
 
   if (!aberta) {
@@ -185,9 +248,31 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
       pode('chamados.pedir') && !desligados.includes('chamados')
         ? (mensagem, autor) => definirTransformando({ mensagem, autor })
         : null,
+    selecionar:
+      pode('chamados.pedir') && !desligados.includes('chamados')
+        ? (mensagem) =>
+            definirSelecionadas({ conversa, ids: mensagem.chamado ? [] : [mensagem.id] })
+        : null,
     silenciada: aberta.silenciada,
     silenciar: (silenciada) => void silenciar(silenciada),
   };
+
+  const selecao: SelecaoNaConversa | null =
+    marcadas === null
+      ? null
+      : {
+          marcadas: new Set(marcadas),
+          cheia: marcadas.length >= MAXIMO_DE_MENSAGENS_NUM_CHAMADO,
+          alternar: (id) =>
+            definirSelecionadas((antes) => {
+              if (antes?.conversa !== conversa) return antes;
+              if (antes.ids.includes(id)) {
+                return { conversa, ids: antes.ids.filter((marcada) => marcada !== id) };
+              }
+              if (marcadas.length >= MAXIMO_DE_MENSAGENS_NUM_CHAMADO) return antes;
+              return { conversa, ids: [...antes.ids, id] };
+            }),
+        };
 
   // A conversa inteira é o lugar de soltar os anexos da caixa, e não só a caixa: o arquivo que cai um
   // pouco fora também entra. Sem a caixa, ela não recebe (tarefa 4.19).
@@ -201,30 +286,41 @@ export function TelaDaConversa({ conversa, alvo }: { conversa: string; alvo: str
         visivel={visivel}
         mensagens={mensagens}
         acoes={acoes}
+        selecao={selecao}
       />
-      {aberta.escreve ? (
-        <CaixaDoChat
-          caixa={caixa}
-          rascunho={rascunhoDaConversa(conversa)}
-          ajuda={ajudaDaCaixa(aberta)}
-          citar={!desligados.includes('chamados')}
-          mandar={(corpo) =>
-            pedir(
-              () =>
-                api.POST('/chat/conversas/{id}/mensagens', {
-                  params: { path: { id: conversa } },
-                  body: corpo,
-                }),
-              'mandar a mensagem',
-            )
-          }
-          aoEnviar={(mensagem) => {
-            const entrou = mensagens.mostrar(mensagem);
-            controle.current?.irAoFimAoEnviar(!entrou);
-          }}
+      {selecao && (
+        <BarraDaSelecao
+          quantas={selecao.marcadas.size}
+          transformar={transformarAsMarcadas}
+          cancelar={cancelarASelecao}
         />
+      )}
+      {aberta.escreve ? (
+        // Na seleção, a caixa fica montada e escondida: o texto, a respondida e a fila voltam.
+        <div className={estilos.lugarDaCaixa} hidden={selecao !== null}>
+          <CaixaDoChat
+            caixa={caixa}
+            rascunho={rascunhoDaConversa(conversa)}
+            ajuda={ajudaDaCaixa(aberta)}
+            citar={!desligados.includes('chamados')}
+            mandar={(corpo) =>
+              pedir(
+                () =>
+                  api.POST('/chat/conversas/{id}/mensagens', {
+                    params: { path: { id: conversa } },
+                    body: corpo,
+                  }),
+                'mandar a mensagem',
+              )
+            }
+            aoEnviar={(mensagem) => {
+              const entrou = mensagens.mostrar(mensagem);
+              controle.current?.irAoFimAoEnviar(!entrou);
+            }}
+          />
+        </div>
       ) : (
-        aberta.recusa !== null && <p className={estilos.semCaixa}>{aberta.recusa}</p>
+        aberta.recusa !== null && !selecao && <p className={estilos.semCaixa}>{aberta.recusa}</p>
       )}
     </LugarDeSoltar>
   );

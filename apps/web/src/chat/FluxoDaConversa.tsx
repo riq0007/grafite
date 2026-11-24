@@ -15,6 +15,7 @@ import { nomeNoChat } from '@grafite/domain';
 import {
   Avatar,
   Botao,
+  Checkbox,
   type DataHora,
   formatarTamanho,
   Icone,
@@ -188,7 +189,7 @@ function rolarPara(rolagem: HTMLElement, topo: number, propria: { current: numbe
 }
 
 /** O nome de quem escreveu, no chat: "Você" para a conta, e o "(TI)" para quem atende. */
-const nomeDoAutor = (autor: MensagemDoChat['autor'], conta: string) =>
+export const nomeDoAutor = (autor: MensagemDoChat['autor'], conta: string) =>
   autor.conta === conta ? 'Você' : nomeNoChat(autor.nome, autor.daTi);
 
 const LISTA = new Intl.ListFormat('pt-BR', { type: 'conjunction' });
@@ -202,12 +203,25 @@ export interface ControleDoFluxo {
   irAoFimAoEnviar: (comAsMaisNovas: boolean) => void;
 }
 
+/**
+ * A seleção das mensagens (change andamento-e-varias-mensagens, decisão 8): cada mensagem com a caixa
+ * de marcar, e o clique em qualquer ponto dela, também no link e no anexo, que marca sem abrir. A
+ * barra e o menu da mensagem saem, e as reações ficam à vista, sem ação.
+ */
+export interface SelecaoNaConversa {
+  marcadas: ReadonlySet<string>;
+  /** Com o máximo marcado, as outras ficam sem ação. */
+  cheia: boolean;
+  alternar: (id: string) => void;
+}
+
 export function FluxoDaConversa({
   conversa,
   alvo,
   visivel,
   mensagens: { trecho, mais },
   acoes = null,
+  selecao = null,
   ref,
 }: {
   conversa: string;
@@ -218,6 +232,8 @@ export function FluxoDaConversa({
   mensagens: MensagensDaConversa;
   /** O que a barra de cada mensagem faz; sem elas, as mensagens ficam sem a barra. */
   acoes?: AcoesDaMensagem | null;
+  /** A seleção em curso; nula fora dela. */
+  selecao?: SelecaoNaConversa | null;
   ref?: Ref<ControleDoFluxo | null>;
 }) {
   const sessao = useSessao();
@@ -496,7 +512,8 @@ export function FluxoDaConversa({
     transformarPeloAtalho.current = (evento) => {
       const transformar = acoes?.transformar;
       const { ctrlKey, shiftKey, altKey, metaKey, key } = evento;
-      if (!transformar || !ctrlKey || !shiftKey || altKey || metaKey) return;
+      // Na seleção, o atalho transforma as marcadas, pela tela da conversa.
+      if (selecao || !transformar || !ctrlKey || !shiftKey || altKey || metaKey) return;
       if (key.toLowerCase() !== 't' || evento.defaultPrevented) return;
       const focado = document.activeElement;
       if (focado?.closest(COM_O_ATALHO)) return;
@@ -537,8 +554,10 @@ export function FluxoDaConversa({
   const falhou = mais.isError ? mais.variables : null;
   const naMensagem: NaMensagem = {
     daVez,
+    selecao,
     barra: (mensagem, autor) =>
       acoes &&
+      !selecao &&
       (mensagem.id === daVez || mensagem.id === comOPonteiro || mensagem.id === doMenu?.id) ? (
         <BarraDaMensagem
           mensagem={mensagem}
@@ -549,7 +568,7 @@ export function FluxoDaConversa({
         />
       ) : null,
     irPara: irParaAMensagem,
-    reagir: acoes?.reagir ?? null,
+    reagir: selecao ? null : (acoes?.reagir ?? null),
   };
   // A tecla de menu e o Shift+F10 na mensagem com o foco, ou num botão dela, abrem o menu dela junto
   // do "Mais": sem isso, o navegador mandaria o "contextmenu" ao botão, e o menu abriria no canto
@@ -560,6 +579,7 @@ export function FluxoDaConversa({
       alvo instanceof HTMLElement ? alvo.closest<HTMLElement>('[data-escrita]') : null;
     if (
       acoes &&
+      !selecao &&
       pedeOMenu(evento) &&
       daMensagem &&
       evento.currentTarget.contains(daMensagem) &&
@@ -616,8 +636,9 @@ export function FluxoDaConversa({
         <ol
           ref={conteudo}
           className={estilos.itens}
-          data-toque-longo={acoes ? '' : undefined}
-          {...(acoes ? ouvintesDoMenu : undefined)}
+          data-toque-longo={acoes && !selecao ? '' : undefined}
+          data-selecao={selecao ? '' : undefined}
+          {...(acoes && !selecao ? ouvintesDoMenu : undefined)}
           // O toque não para em cima da mensagem: a barra fica para o mouse e a caneta.
           onPointerOver={(evento) => {
             if (evento.pointerType !== 'touch') {
@@ -742,8 +763,10 @@ interface NaMensagem {
   barra: (mensagem: MensagemDoChat, autor: string) => ReactNode;
   /** Leva à mensagem do trecho; sem ela no trecho, devolve falso, e o link abre a conversa nela. */
   irPara: (id: string) => boolean;
-  /** A reação pela cápsula dela; nulo na conversa arquivada. */
+  /** A reação pela cápsula dela; nulo na conversa arquivada e na seleção. */
   reagir: Reagir | null;
+  /** A seleção em curso, com a caixa de marcar em cada mensagem. */
+  selecao: SelecaoNaConversa | null;
 }
 
 function ItemDaConversa({
@@ -845,12 +868,28 @@ function MensagemNaConversa({
   const nome = nomeDoAutor(mensagem.autor, conta);
   const junta = seguida && !doLink;
   const { respondida } = mensagem;
-  const { reagir } = naMensagem;
+  const { reagir, selecao } = naMensagem;
+  const marcada = selecao?.marcadas.has(mensagem.id) ?? false;
+  // A que já virou chamado fica sem ação; no máximo, as não marcadas também.
+  const semAcao = mensagem.chamado !== null || (!marcada && (selecao?.cheia ?? false));
   return (
     <li
       className={estilos.mensagem}
       data-mensagem={mensagem.id}
       data-escrita=""
+      data-marcada={marcada || undefined}
+      // Na seleção, o clique em qualquer ponto marca ou desmarca, e o link e o anexo não abrem; a
+      // caixa de marcar age sozinha.
+      onClickCapture={
+        selecao
+          ? (evento) => {
+              if ((evento.target as Element).closest('[data-caixa-da-selecao]')) return;
+              evento.preventDefault();
+              evento.stopPropagation();
+              if (!semAcao) selecao.alternar(mensagem.id);
+            }
+          : undefined
+      }
       // A mensagem recebe o foco, que mostra a barra dela, e as setas andam pelas mensagens.
       tabIndex={mensagem.id === naMensagem.daVez ? 0 : -1}
       data-seguida={junta || undefined}
@@ -858,6 +897,20 @@ function MensagemNaConversa({
       data-virada={mensagem.chamado ? '' : undefined}
       aria-current={doLink || undefined}
     >
+      {selecao && (
+        <span className={estilos.caixaDaSelecao} data-caixa-da-selecao="">
+          <Checkbox
+            isSelected={marcada}
+            isDisabled={semAcao}
+            onChange={() => selecao.alternar(mensagem.id)}
+          >
+            <span className={estilos.paraOLeitor}>
+              {`Selecionar a mensagem de ${nome} das ${hora}`}
+              {mensagem.chamado ? ` · Já virou o #${mensagem.chamado.numero}` : ''}
+            </span>
+          </Checkbox>
+        </span>
+      )}
       {junta ? (
         <time className={estilos.horaAoLado} dateTime={mensagem.criadaEm}>
           {hora}

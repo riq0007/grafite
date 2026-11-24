@@ -112,7 +112,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - as listas.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.4 Selecionar as mensagens no computador (decisão 8; spec modulo-chat, "Mensagens selecionadas"):
+- [x] 4.4 Selecionar as mensagens no computador (decisão 8; spec modulo-chat, "Mensagens selecionadas"):
   - "Selecionar" no menu, que começa sem nenhuma na mensagem que já virou chamado;
   - as caixas de marcar e o fundo da marcada, com o clique em qualquer ponto, também no link e no anexo, que marca sem abrir;
   - as reações à vista, sem ação;

@@ -104,6 +104,15 @@
 
 /* No canal e na equipe em que a conta não escreve, a frase fica no lugar da caixa, na forma e na
    largura dela, de uma borda à outra da coluna, e começa à esquerda, como o texto da caixa. */
+/* O lugar da caixa de escrever, que some na seleção, sem desmontá-la. */
+.lugarDaCaixa {
+  display: contents;
+}
+
+.lugarDaCaixa[hidden] {
+  display: none;
+}
+
 .semCaixa {
   display: flex;
   flex: none;
