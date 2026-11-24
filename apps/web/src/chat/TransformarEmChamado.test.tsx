@@ -62,6 +62,7 @@ const umChamado = (
   abertoEm: '2026-11-18T12:00:00.000Z',
   resolvidoEm: null,
   atende: null,
+  pelaTi: false,
   respostaNova: 0,
   ultimaMensagem: null,
   ...mudar,
@@ -113,7 +114,7 @@ function servidorDoTransformar({
         await antesDosSugeridos;
         return Response.json({ ativos: sugeridos });
       },
-      [`POST /api/chat/mensagens/${id(2)}/chamado`]: async (pedido) => {
+      [`POST /api/chat/conversas/${CONVERSA}/chamado`]: async (pedido) => {
         pedidos.push(await pedido.json());
         if (recusa) return recusada(recusa);
         abertos.push(
@@ -191,6 +192,7 @@ describe('Transformar em chamado', () => {
     );
     expect(pedidos).toEqual([
       {
+        mensagens: [id(2)],
         tipo: IMPRESSORA.id,
         titulo: 'Impressora manchando',
         pessoa: CONTA_DE_EXEMPLO.pessoaId,

@@ -3,11 +3,13 @@
 // chamado no chat"): o cabeçalho, com "CHAMADO #1045", o título e a situação; as etapas, com a hora da
 // chegada a cada uma e a de agora marcada em texto; "Seus outros chamados", que levam a eles; a
 // conversa; a caixa do aberto, a do resolvido, que reabre, com "Reabrir até 18/11", e a frase do
-// fechado, sem caixa; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
+// fechado, sem caixa; a quem participa pela TI (change andamento-e-varias-mensagens, decisão 4), a
+// caixa "Escrever para Fernanda no #1045…", pela rota da TI, e, no resolvido, no lugar dela, "O #1045
+// está resolvido." com "Reabrir"; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
 // popover, pelo botão do cabeçalho. Sem o módulo Chamados, a tela diz que ele está desligado. No
 // celular (m08), o cabeçalho tem a seta de voltar, a marca e o selo, o título e quem atende, com a
 // previsão da resposta, e "Neste chamado" abre numa folha, com as etapas uma embaixo da outra.
-import { SITUACOES_PARA_QUEM_PARTICIPA, secoesDoChat } from '@grafite/domain';
+import { nomeCurto, nomeDaEtapa, secoesDoChat } from '@grafite/domain';
 import {
   avisar,
   Botao,
@@ -30,9 +32,16 @@ import {
   PanelRight,
   RotateCcw,
 } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { useAcoesDoAtendimento } from '../modulos/chamados/acoes.ts';
+import { ajudaDoCampo } from '../modulos/chamados/chamado/escrever.ts';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
+import {
+  AndamentoDoChamado,
+  type DialogoDoAndamentoAberto,
+  DialogosDoAndamento,
+} from './AndamentoDoChamado.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
   type ConversaDoChamado,
@@ -40,7 +49,13 @@ import {
   type EtapaNoChat,
   momentoDaEtapa,
 } from './chamado.ts';
-import { useAcoesDoChamado, useChamadoDoChat, useChamadosDoChat } from './consultas.ts';
+import {
+  useAcoesDoChamado,
+  useAndamentoNoChat,
+  useChamadoDoChat,
+  useChamadosDoChat,
+  useRelerOsChamadosDoChat,
+} from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { naoEncontrada } from './FluxoDaConversa.tsx';
 import { type ControleDaConversaDoChamado, FluxoDoChamado } from './FluxoDoChamado.tsx';
@@ -138,6 +153,7 @@ function ChamadoNaTela({
   const caixa = useRef<HTMLTextAreaElement>(null);
   const [reabrindo, definirReabrindo] = useState(false);
   const [painelNaFolha, definirPainelNaFolha] = useState(false);
+  const [dialogo, definirDialogo] = useState<DialogoDoAndamentoAberto | null>(null);
   const celular = usePostura() === 'celular';
   // As notificações deste chamado, nos dois endereços dele, como a resposta da TI, não viram aviso
   // enquanto ele está à vista.
@@ -149,6 +165,25 @@ function ChamadoNaTela({
     (daConta.data?.abertos ?? []).filter((outro) => outro.numero !== numero).map(comAsDatas),
   ).chamados;
   const resolvido = chamado.situacao === 'resolvido';
+  // A quem participa pela TI, a caixa escreve pela rota da TI; o tipo gerado não liga o `pelaTi` ao
+  // `andamento`, que vem a ela.
+  const daTi = chamado.pelaTi ? chamado.andamento : null;
+  const doChat = useAndamentoNoChat(numero);
+  const reler = useRelerOsChamadosDoChat();
+  const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
+  // O "Reabrir" da TI: a caixa volta com a releitura, e o foco vai a ela quando ela chega.
+  const focarNaCaixa = useRef(false);
+  useEffect(() => {
+    if (!focarNaCaixa.current || chamado.situacao === 'resolvido') return;
+    focarNaCaixa.current = false;
+    caixa.current?.focus();
+  }, [chamado.situacao]);
+  const reabrirPelaTi = async (versao: number) => {
+    definirReabrindo(true);
+    const resultado = await atendimento.reabrir(numero, versao);
+    definirReabrindo(false);
+    if (resultado) focarNaCaixa.current = true;
+  };
   const reabrirAte =
     chamado.reabrirAte === null ? null : diaDoReabrir(chamado.reabrirAte, agora, dataHora);
 
@@ -187,13 +222,23 @@ function ChamadoNaTela({
               >
                 {chamado.titulo}
               </h2>
-              <BotaoDeIcone
-                icone={PanelBottom}
-                rotulo="Neste chamado"
-                comDica={false}
-                className={estilos.botaoDaFolha}
-                onPress={() => definirPainelNaFolha(true)}
-              />
+              <span className={estilos.botoesDoTitulo}>
+                {chamado.andamento && (
+                  <AndamentoDoChamado
+                    numero={numero}
+                    andamento={chamado.andamento}
+                    celular
+                    aoPedir={definirDialogo}
+                  />
+                )}
+                <BotaoDeIcone
+                  icone={PanelBottom}
+                  rotulo="Neste chamado"
+                  comDica={false}
+                  className={estilos.botaoDaFolha}
+                  onPress={() => definirPainelNaFolha(true)}
+                />
+              </span>
             </div>
             {quemAtendeNaLinha !== null && (
               <p className={estilos.quemAtende}>{quemAtendeNaLinha}</p>
@@ -215,6 +260,16 @@ function ChamadoNaTela({
               {chamado.titulo}
             </h2>
             <SeloDoChamado texto={chamado.situacaoEmTexto} />
+            {chamado.andamento && (
+              <span className={estilos.andamento}>
+                <AndamentoDoChamado
+                  numero={numero}
+                  andamento={chamado.andamento}
+                  celular={false}
+                  aoPedir={definirDialogo}
+                />
+              </span>
+            )}
             <span className={estilos.botaoDoPainel}>
               <Popover
                 titulo="Neste chamado"
@@ -227,7 +282,14 @@ function ChamadoNaTela({
             </span>
           </header>
         )}
-        {!celular && <EtapasDoChamado etapas={chamado.etapas} agora={agora} dataHora={dataHora} />}
+        {!celular && (
+          <EtapasDoChamado
+            etapas={chamado.etapas}
+            pelaTi={chamado.pelaTi}
+            agora={agora}
+            dataHora={dataHora}
+          />
+        )}
         {outros.length > 0 && <OutrosChamados chamados={outros} vista={vista} />}
         {/* A conversa e a caixa são o lugar de soltar os anexos; fechado, ninguém recebe (tarefa 4.19). */}
         <LugarDeSoltar className={estilos.lugarDeSoltar}>
@@ -238,15 +300,46 @@ function ChamadoNaTela({
                 ? 'O chamado fechou. Para o mesmo problema, abra outro chamado.'
                 : `O chamado fechou em ${reabrirAte}. Para o mesmo problema, abra outro chamado.`}
             </p>
+          ) : daTi && resolvido ? (
+            // A quem participa pela TI, no resolvido, no lugar da caixa: o cadeado, a frase e o
+            // "Reabrir", pela rota da TI.
+            <div className={estilos.resolvidoDaTi}>
+              <Icone icone={Lock} tamanho={16} />
+              <p>{`O #${numero} está resolvido.`}</p>
+              {daTi.acoes.includes('reabrir') && (
+                <Botao
+                  icone={RotateCcw}
+                  carregando={reabrindo}
+                  rotuloCarregando="Reabrindo o chamado"
+                  onPress={() => void reabrirPelaTi(daTi.versao)}
+                >
+                  Reabrir
+                </Botao>
+              )}
+            </div>
           ) : (
-            <CaixaDoChat
+            // A mesma caixa nos dois lados, que troca só o envio e o texto de dentro: na troca, como
+            // na recusa "Responda pela TI", a frase, o foco e a fila ficam.
+            <CaixaDoChat<unknown>
               caixa={caixa}
               rascunho={rascunhoDoChamado(numero)}
-              ajuda={resolvido ? 'Escrever aqui reabre o chamado' : `Responder no #${numero}…`}
+              ajuda={
+                daTi
+                  ? `Escrever para ${nomeCurto(daTi.pessoa.nome)} no #${numero}…`
+                  : resolvido
+                    ? 'Escrever aqui reabre o chamado'
+                    : `Responder no #${numero}…`
+              }
               // No resolvido, o lugar da dica é do "Reabrir até", como no m04 e no m07.
               dica={resolvido ? undefined : '# cita um chamado'}
               citar
               anexosEm="/chamados/anexos"
+              // À pessoa que não usa o chat, a frase do Chamados.
+              nota={
+                daTi && !daTi.pessoa.usaOChat
+                  ? ajudaDoCampo(nomeCurto(daTi.pessoa.nome), false)
+                  : undefined
+              }
               inicio={resolvido ? <Icone icone={Lock} tamanho={16} /> : undefined}
               semTexto={
                 resolvido && reabrirAte !== null ? (
@@ -260,7 +353,9 @@ function ChamadoNaTela({
                   </Botao>
                 ) : undefined
               }
-              mandar={({ texto, anexos }) => acoes.responder({ texto, anexos })}
+              mandar={({ texto, anexos }) =>
+                daTi ? doChat.escrever({ texto, anexos }) : acoes.responder({ texto, anexos })
+              }
               aoEnviar={() => controle.current?.irAoFim()}
             />
           )}
@@ -272,10 +367,24 @@ function ChamadoNaTela({
         </h2>
         {neste}
       </aside>
+      {chamado.andamento && (
+        <DialogosDoAndamento
+          numero={numero}
+          andamento={chamado.andamento}
+          aberto={dialogo}
+          aoFechar={() => definirDialogo(null)}
+        />
+      )}
       {celular && (
         <Folha aberta={painelNaFolha} aoMudarAberta={definirPainelNaFolha} titulo="Neste chamado">
           <div className={estilos.naFolha}>
-            <EtapasDoChamado etapas={chamado.etapas} agora={agora} dataHora={dataHora} empilhadas />
+            <EtapasDoChamado
+              etapas={chamado.etapas}
+              pelaTi={chamado.pelaTi}
+              agora={agora}
+              dataHora={dataHora}
+              empilhadas
+            />
             {neste}
           </div>
         </Folha>
@@ -298,11 +407,14 @@ const ICONES_DAS_ETAPAS = {
  */
 function EtapasDoChamado({
   etapas,
+  pelaTi,
   agora,
   dataHora,
   empilhadas = false,
 }: {
   etapas: readonly EtapaNoChat[];
+  /** A quem participa pela TI, a espera é "Aguardando o colaborador". */
+  pelaTi: boolean;
   agora: Date;
   dataHora: DataHora;
   /** Uma embaixo da outra, como na folha "Neste chamado" do celular. */
@@ -315,7 +427,7 @@ function EtapasDoChamado({
       data-empilhadas={empilhadas || undefined}
     >
       {etapas.map((etapa) => {
-        const nome = SITUACOES_PARA_QUEM_PARTICIPA[etapa.situacao];
+        const nome = nomeDaEtapa(etapa.situacao, pelaTi);
         const marca = etapa.agora ? marcaDaPalavra(nome) : null;
         let hora: string | null = null;
         if (etapa.estado === 'chegou' && etapa.em !== null) {

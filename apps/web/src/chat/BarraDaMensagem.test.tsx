@@ -142,10 +142,11 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
         'Responder',
         'Reagir',
         'Copiar link da mensagem',
+        'Selecionar',
         'Transformar em chamado',
         'Silenciar a conversa',
       ]),
-    ).toEqual([0, 1, 2, 3, 4]);
+    ).toEqual([0, 1, 2, 3, 4, 5]);
     const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
     expect(transformar.dataset.informativo).toBe('true');
     expect(descricao(transformar)).toContain('Shift');
@@ -211,7 +212,9 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
   });
 
   it('a mensagem que já virou chamado dá "Já virou o #1045", sem ação, e o atalho a ignora', async () => {
-    const virada = mensagem(2, { chamado: { numero: 1045, abrir: true, mensagem: null } });
+    const virada = mensagem(2, {
+      chamado: { numero: 1045, abrir: true, mensagem: null, mensagens: 1 },
+    });
     const { servidor } = servidorDoMenu({ mensagens: [mensagem(1), virada, mensagem(3)] });
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
     const item = await comOMouse('Mensagem 2');
@@ -505,10 +508,11 @@ describe('o botão direito e a tecla de menu', () => {
         'Responder',
         'Reagir',
         'Copiar link da mensagem',
+        'Selecionar',
         'Transformar em chamado',
         'Silenciar a conversa',
       ]),
-    ).toEqual([0, 1, 2, 3, 4]);
+    ).toEqual([0, 1, 2, 3, 4, 5]);
     // Os mesmos itens do "Mais": o azul do chamado e o atalho.
     const transformar = within(menu).getByRole('menuitem', { name: 'Transformar em chamado' });
     expect(transformar.dataset.informativo).toBe('true');

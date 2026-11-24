@@ -47,13 +47,17 @@ function evento(n: number, em: string, codigo: string, frase = codigo): EventoDo
   return { especie: 'evento', id: id(n), em, evento: codigo, frase, resumo: null };
 }
 
-type Chamado = Pick<ConversaDoChamado, 'conversa' | 'respostaNova' | 'situacao' | 'fechado'>;
+type Chamado = Pick<
+  ConversaDoChamado,
+  'conversa' | 'respostaNova' | 'situacao' | 'fechado' | 'pelaTi'
+>;
 
 const chamado = (conversa: Chamado['conversa'], resto: Partial<Chamado> = {}): Chamado => ({
   conversa,
   respostaNova: { quantas: 0, desde: null },
   situacao: 'em-atendimento',
   fechado: false,
+  pelaTi: false,
   ...resto,
 });
 
@@ -120,6 +124,28 @@ describe('itensDoChamado', () => {
     expect(naTela(chamado(conversa, { respostaNova: { quantas: 0, desde: id(4) } }))).not.toContain(
       'Resposta nova',
     );
+  });
+
+  it('a quem participa pela TI, nem a resposta nova nem a avaliação, que a API ainda manda', () => {
+    const conversa = [
+      evento(1, '2026-11-11T13:32:00Z', 'abertura', 'Você abriu este chamado para Fernanda'),
+      mensagem(2, '2026-11-11T13:35:00Z', FERNANDA),
+      evento(3, '2026-11-11T13:40:00Z', 'resolveu', 'Você resolveu o chamado'),
+    ];
+    expect(
+      naTela(
+        chamado(conversa, {
+          situacao: 'resolvido',
+          pelaTi: true,
+          respostaNova: { quantas: 1, desde: id(2) },
+        }),
+      ),
+    ).toEqual([
+      'dia Hoje',
+      'abertura Você abriu este chamado para Fernanda',
+      'Mensagem 2',
+      'evento Você resolveu o chamado',
+    ]);
   });
 
   it('no resolvido, a avaliação vem logo depois do último resolvido, e o evento dela sai', () => {
@@ -228,12 +254,20 @@ describe('anexosDoChamado', () => {
     });
     const anexos = anexosDoChamado(
       {
-        origem: {
-          autor: 'Paulo Nunes',
-          texto: 'A impressora está manchando.',
-          em: '2026-11-10T20:01:00Z',
-          anexos: [anexo(1)],
-        },
+        origens: [
+          {
+            autor: 'Paulo Nunes',
+            texto: 'A impressora está manchando.',
+            em: '2026-11-10T20:01:00Z',
+            anexos: [anexo(1)],
+          },
+          {
+            autor: 'Tatiana Lopes',
+            texto: null,
+            em: '2026-11-10T20:03:00Z',
+            anexos: [anexo(7)],
+          },
+        ],
         anexosDosCampos: [{ ...anexo(2), campo: 'Print do erro' }],
         conversa: [
           mensagem(3, '2026-11-11T13:00:00Z'),
@@ -246,6 +280,7 @@ describe('anexosDoChamado', () => {
     );
     expect(anexos.map(({ nome, sobre }) => `${nome} · ${sobre}`)).toEqual([
       'arquivo-1.png · Paulo Nunes · ontem 17:01',
+      'arquivo-7.png · Tatiana Lopes · ontem 17:03',
       'arquivo-2.png · Print do erro',
       'arquivo-4.png · você · 10:32',
       'arquivo-6.png · Bruno Lima (TI) · 10:50',

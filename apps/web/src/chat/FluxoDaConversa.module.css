@@ -132,6 +132,48 @@
   outline-offset: -2px;
 }
 
+/* Na seleção (change andamento-e-varias-mensagens, decisão 8), a caixa de marcar à esquerda, numa
+   coluna a mais, o ponteiro de escolher em toda a mensagem e, na marcada, o fundo do azul do
+   chamado. A que não tem ação fica com o ponteiro de sempre. */
+.itens[data-selecao] .mensagem {
+  grid-template-columns: var(--esp-6) var(--esp-8) minmax(0, 1fr);
+  cursor: pointer;
+  /* O clique, que marca, não pinta o texto. */
+  user-select: none;
+}
+
+.itens[data-selecao] .mensagem:has(.caixaDaSelecao [data-disabled]) {
+  cursor: default;
+}
+
+/* A coluna da caixa estica até a altura da mensagem: o vazio dela deixa o toque cair na mensagem, e
+   só a caixa de marcar recebe o ponteiro. */
+.caixaDaSelecao {
+  display: flex;
+  pointer-events: none;
+  align-items: flex-start;
+  padding-block-start: var(--esp-1);
+}
+
+/* No toque, a caixa de marcar com 44 px de alvo, na coluna dela. */
+:root[data-postura="celular"] .itens[data-selecao] .mensagem {
+  grid-template-columns: var(--alvo-toque) var(--esp-8) minmax(0, 1fr);
+}
+
+.caixaDaSelecao > * {
+  pointer-events: auto;
+}
+
+:root[data-postura="celular"] .caixaDaSelecao > * {
+  justify-content: center;
+  min-inline-size: var(--alvo-toque);
+  min-block-size: var(--alvo-toque);
+}
+
+.itens[data-selecao] .mensagem[data-marcada] {
+  background-color: var(--cor-info-fundo);
+}
+
 /* A barra da mensagem (m01): "Reagir", "Responder" e "Mais", no canto de cima, por cima da
    anterior, com o mouse ou o foco na mensagem, e presa enquanto um menu dela está aberto. Escondida,
    ela fica montada na mensagem da vez do teclado, e o foco volta aos botões dela. */
@@ -241,7 +283,7 @@
     opacity: 1;
   }
 
-  .itens[data-toque-longo] .mensagem {
+  .itens:is([data-toque-longo], [data-selecao]) .mensagem {
     -webkit-touch-callout: none;
     user-select: none;
   }
@@ -249,6 +291,12 @@
 
 .corpo {
   min-inline-size: 0;
+}
+
+/* Na seleção, o texto, os links, os anexos e os chips não recebem o ponteiro: o toque ou o
+   clique cai na mensagem, que marca ou desmarca, e nada abre, nem o resumo do chamado. */
+.itens[data-selecao] .mensagem > .corpo {
+  pointer-events: none;
 }
 
 .quem {

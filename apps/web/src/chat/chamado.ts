@@ -39,14 +39,16 @@ export function itensDoChamado(
     respostaNova,
     situacao,
     fechado,
-  }: Pick<ConversaDoChamado, 'conversa' | 'respostaNova' | 'situacao' | 'fechado'>,
+    pelaTi,
+  }: Pick<ConversaDoChamado, 'conversa' | 'respostaNova' | 'situacao' | 'fechado' | 'pelaTi'>,
   { agora, dataHora }: { agora: Date; dataHora: DataHora },
 ): ItemDoChamadoNaTela[] {
-  const avaliavel = situacao === 'resolvido' && !fechado;
+  // A quem participa pela TI, nem a avaliação nem a resposta nova: a API as manda, e a tela as tira.
+  const avaliavel = situacao === 'resolvido' && !fechado && !pelaTi;
   const ultimoResolvido = avaliavel
     ? conversa.findLastIndex((item) => ehEvento(item, 'resolveu'))
     : -1;
-  const primeiraNova = respostaNova.quantas > 0 ? respostaNova.desde : null;
+  const primeiraNova = respostaNova.quantas > 0 && !pelaTi ? respostaNova.desde : null;
   const itens: ItemDoChamadoNaTela[] = [];
   let diaDeAntes: string | null = null;
   let comAbertura = false;
@@ -141,21 +143,21 @@ export interface AnexoNoPainel {
 }
 
 /**
- * Os anexos do chamado, na ordem em que chegaram: os da mensagem de onde ele foi aberto, os dos campos
+ * Os anexos do chamado, na ordem em que chegaram: os das mensagens de onde ele foi aberto, os dos campos
  * do formulário e os das mensagens da conversa.
  */
 export function anexosDoChamado(
   {
-    origem,
+    origens,
     anexosDosCampos,
     conversa,
-  }: Pick<ConversaDoChamado, 'origem' | 'anexosDosCampos' | 'conversa'>,
+  }: Pick<ConversaDoChamado, 'origens' | 'anexosDosCampos' | 'conversa'>,
   { agora, dataHora }: { agora: Date; dataHora: DataHora },
 ): AnexoNoPainel[] {
   const hora = (em: string) => horaNaConversa(new Date(em), agora, dataHora);
-  const daOrigem =
-    origem?.anexos.map((anexo) => ({ ...anexo, sobre: `${origem.autor} · ${hora(origem.em)}` })) ??
-    [];
+  const daOrigem = origens.flatMap((origem) =>
+    origem.anexos.map((anexo) => ({ ...anexo, sobre: `${origem.autor} · ${hora(origem.em)}` })),
+  );
   const dosCampos = anexosDosCampos.map(({ campo, ...anexo }) => ({ ...anexo, sobre: campo }));
   const dasMensagens = conversa.flatMap((item) => {
     if (item.especie !== 'mensagem') return [];

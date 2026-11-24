@@ -238,6 +238,7 @@ const umChamado = (
   abertoEm: '2026-11-18T12:00:00.000Z',
   resolvidoEm: null,
   atende: null,
+  pelaTi: false,
   respostaNova: 0,
   ultimaMensagem: null,
   ...mudar,

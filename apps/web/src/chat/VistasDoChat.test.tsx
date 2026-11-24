@@ -38,6 +38,7 @@ const chamado = (
   abertoEm: '2026-11-10T20:05:00Z',
   resolvidoEm: null,
   atende: 'Bruno Lima',
+  pelaTi: false,
   respostaNova: 0,
   ultimaMensagem: null,
   ...mudar,

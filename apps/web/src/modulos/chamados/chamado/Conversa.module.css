@@ -187,6 +187,11 @@
   font-weight: var(--peso-forte);
 }
 
+.citadas {
+  display: grid;
+  gap: var(--esp-3);
+}
+
 .citada {
   display: grid;
   gap: var(--esp-1);

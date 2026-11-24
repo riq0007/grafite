@@ -56,7 +56,10 @@ const conversa = (
   resumo: '',
   anexosDosCampos: [],
   origem: null,
+  origens: [],
   conversa: [],
+  pelaTi: false,
+  andamento: null,
   respostaNova: { quantas: 0, desde: null },
   avaliacao: null,
   ...mudar,
@@ -72,6 +75,7 @@ const naLista = (numero: number, titulo: string): ChamadoDeQuemParticipa => ({
   abertoEm: EM,
   resolvidoEm: null,
   atende: null,
+  pelaTi: false,
   respostaNova: 0,
   ultimaMensagem: null,
 });

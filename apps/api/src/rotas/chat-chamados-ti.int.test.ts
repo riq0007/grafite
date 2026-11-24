@@ -273,6 +273,14 @@ describe('a permissão', () => {
       texto: 'A cadeira da sala 3 quebrou.',
       em: '2026-11-17T13:19:00.000Z',
       anexos: [],
+      mensagens: [
+        {
+          autor: 'Paulo Nunes',
+          texto: 'A cadeira da sala 3 quebrou.',
+          em: '2026-11-17T13:19:00.000Z',
+          anexos: [],
+        },
+      ],
       abrir: null,
     });
     // Na direta com Paulo, ela participa; a direta diz quem escreveu e com quem.

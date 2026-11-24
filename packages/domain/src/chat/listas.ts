@@ -11,7 +11,16 @@ export interface ChamadoNaLista {
   fechado: boolean;
   abertoEm: Date;
   resolvidoEm: Date | null;
+  /**
+   * A conta participa dele pela TI (spec chamados, "Quem atende pelo chat"): a espera é da pessoa
+   * do chamado, e não dela, e o aguardando fica com os outros abertos.
+   */
+  pelaTi: boolean;
 }
+
+/** O chamado que espera a conta: o aguardando, fora o de quem participa pela TI. */
+const aguardaAConta = ({ situacao, pelaTi }: ChamadoNaLista) =>
+  situacao === 'aguardando' && !pelaTi;
 
 /** O chamado aberto: na triagem, em atendimento ou aguardando a pessoa. */
 export function chamadoAberto(situacao: SituacaoDoChamado): boolean {
@@ -35,7 +44,7 @@ const primeiro = (a: boolean, b: boolean) => antes(a) - antes(b);
  * As seções dos chamados na lista do Chat:
  * - CHAMADOS, com os abertos: o que a conta acaba de abrir (`novo`) no alto, até a lista se
  *   carregar de novo, depois os que aguardam a conta e então os outros, o aberto mais novo
- *   primeiro;
+ *   primeiro. O que aguarda a pessoa, a quem participa pela TI, fica com os outros;
  * - FECHADOS, com os resolvidos que ainda se reabrem, o resolvido mais novo primeiro. O fechado fica
  *   só na vista Chamados.
  */
@@ -49,7 +58,7 @@ export function secoesDoChat<T extends ChamadoNaLista>(
       .sort(
         (a, b) =>
           primeiro(a.numero === novo, b.numero === novo) ||
-          primeiro(a.situacao === 'aguardando', b.situacao === 'aguardando') ||
+          primeiro(aguardaAConta(a), aguardaAConta(b)) ||
           peloAberto(a, b),
       ),
     fechados: chamados
@@ -74,9 +83,16 @@ const GRUPO_DA_SITUACAO: Record<SituacaoDoChamado, GrupoDaVistaChamados> = {
   resolvido: 'fechados',
 };
 
+// O que aguarda a pessoa, a quem participa pela TI, segue com a TI: em EM ANDAMENTO.
+const grupoDoChamado = (chamado: ChamadoNaLista): GrupoDaVistaChamados =>
+  chamado.situacao === 'aguardando' && chamado.pelaTi
+    ? 'em-andamento'
+    : GRUPO_DA_SITUACAO[chamado.situacao];
+
 /**
  * Os grupos da vista Chamados, só os que têm chamados: nos abertos, o aberto mais novo primeiro,
  * como na lista do Chat; em FECHADOS, os resolvidos e os fechados, o resolvido mais novo primeiro.
+ * O que aguarda a pessoa, a quem participa pela TI, fica em EM ANDAMENTO.
  */
 export function gruposDaVistaChamados<T extends ChamadoNaLista>(
   chamados: readonly T[],
@@ -84,7 +100,7 @@ export function gruposDaVistaChamados<T extends ChamadoNaLista>(
   return GRUPOS_DA_VISTA_CHAMADOS.map((grupo) => ({
     grupo,
     chamados: chamados
-      .filter(({ situacao }) => GRUPO_DA_SITUACAO[situacao] === grupo)
+      .filter((chamado) => grupoDoChamado(chamado) === grupo)
       .sort(grupo === 'fechados' ? peloResolvido : peloAberto),
   })).filter(({ chamados: doGrupo }) => doGrupo.length > 0);
 }
@@ -148,14 +164,18 @@ export interface LinhaParaARespostaNova {
  * escolha, no "Reabrir", na avaliação e no "Marcar como vista" de quem participa; abrir a conversa
  * não a muda. O resolvido e o fechado não têm resposta nova: o "O que foi feito" do resolver é
  * mensagem da TI, e a pessoa o recebe pela notificação do resolvido.
+ *
+ * Quem participa pela TI não tem resposta nova: as mensagens da TI são para a pessoa do chamado, e
+ * ela fala como a TI. O `pelaTi` é obrigatório para nenhum chamador o esquecer.
  */
 export function respostaNova(pedido: {
   situacao: SituacaoDoChamado;
   linhas: readonly LinhaParaARespostaNova[];
   contaId: string;
   vistaAte: string | null;
+  pelaTi: boolean;
 }): number {
-  if (!chamadoAberto(pedido.situacao)) return 0;
+  if (pedido.pelaTi || !chamadoAberto(pedido.situacao)) return 0;
   const vistaAte = pedido.vistaAte?.toLowerCase() ?? null;
   return pedido.linhas.filter(
     ({ id, especie, autorConta }) =>

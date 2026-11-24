@@ -355,7 +355,7 @@ export async function montarChat(api: ApiDeTeste, host: string) {
 
     /**
      * O chamado passa a ser da mensagem, como a abertura pelo chat grava a origem: a conversa e a
-     * mensagem, e quem abriu.
+     * mensagem, quem abriu e a linha `origem`, com a cópia da mensagem, de onde saem as marcas.
      */
     virarChamadoDa: (
       numero: number,
@@ -363,8 +363,8 @@ export async function montarChat(api: ApiDeTeste, host: string) {
       mensagemId: string,
       usuario: UsuarioDoChat,
     ) =>
-      naOrg((tx) =>
-        tx
+      naOrg(async (tx) => {
+        const [chamado] = await tx
           .update(chamados)
           .set({
             origem: 'chat',
@@ -372,8 +372,31 @@ export async function montarChat(api: ApiDeTeste, host: string) {
             origemMensagemId: mensagemId,
             abertoPor: contasDe[usuario],
           })
-          .where(eq(chamados.numero, numero)),
-      ),
+          .where(eq(chamados.numero, numero))
+          .returning({ id: chamados.id, abertoEm: chamados.abertoEm });
+        const [mensagem] = await tx
+          .select({
+            autorConta: mensagensDoChat.autorConta,
+            texto: mensagensDoChat.texto,
+            criadaEm: mensagensDoChat.criadaEm,
+          })
+          .from(mensagensDoChat)
+          .where(eq(mensagensDoChat.id, mensagemId));
+        if (!chamado || !mensagem) throw new Error('O chamado ou a mensagem não existe.');
+        await tx.insert(mensagensDosChamados).values({
+          orgId: org,
+          chamadoId: chamado.id,
+          especie: 'origem',
+          autorConta: mensagem.autorConta,
+          texto: mensagem.texto,
+          dados: {
+            conversa: conversaId,
+            mensagem: mensagemId,
+            em: mensagem.criadaEm.toISOString(),
+          },
+          criadaEm: chamado.abertoEm,
+        });
+      }),
 
     /** O chamado aguardando a pessoa, com o relógio parado, direto no banco. */
     deixarAguardando: (numero: number) =>

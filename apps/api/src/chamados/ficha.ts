@@ -79,7 +79,7 @@ import { type CartaoDoAtivo, cartaoLido } from './cartao.ts';
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { lerContaQueAtende } from './quem-atende.ts';
-import { contasQueParticipam } from './quem-participa.ts';
+import { pessoaUsaOChat } from './quem-participa.ts';
 import { type ResumoDoAtivo, resumoDoAtivo } from './resumo-do-ativo.ts';
 
 /**
@@ -293,6 +293,14 @@ export type ItemDaConversa =
     }
   | { especie: 'alerta'; id: string; em: string; texto: string; severidade: SeveridadeDoAlerta };
 
+/** Uma mensagem do chat citada na abertura, como ficou na abertura. */
+export interface MensagemDaOrigemNaFicha {
+  autor: string;
+  texto: string | null;
+  em: string;
+  anexos: AnexoNaFicha[];
+}
+
 export interface FichaDoChamado {
   numero: number;
   titulo: string;
@@ -305,11 +313,14 @@ export interface FichaDoChamado {
    */
   origemNoChat: {
     conversa: { tipo: 'direta' | 'equipe' | 'canal'; nome: string };
+    /** O autor, o texto, a hora e os anexos da primeira das mensagens citadas. */
     autor: string;
     /** O texto, nulo na mensagem citada só com os anexos. */
     texto: string | null;
     em: string;
     anexos: AnexoNaFicha[];
+    /** As mensagens citadas, na ordem da conversa, de 1 a 20. */
+    mensagens: MensagemDaOrigemNaFicha[];
     abrir: { conversa: string; mensagem: string } | null;
   } | null;
   abertoEm: string;
@@ -511,14 +522,13 @@ export const anexoNaFicha = (
 async function origemNaFicha(
   tx: Transacao,
   chamado: { origemConversaId: string | null; origemMensagemId: string | null },
-  linha:
-    | {
-        autorConta: string | null;
-        texto: string | null;
-        dados: Record<string, unknown> | null;
-        criadaEm: Date;
-      }
-    | undefined,
+  linhas: readonly {
+    id: string;
+    autorConta: string | null;
+    texto: string | null;
+    dados: Record<string, unknown> | null;
+    criadaEm: Date;
+  }[],
   {
     contaId,
     acesso,
@@ -529,11 +539,18 @@ async function origemNaFicha(
     contaId: string;
     acesso: Acesso;
     ligado: (modulo: string) => boolean;
-    anexos: AnexoNaFicha[];
+    anexos: ReadonlyMap<string, AnexoNaFicha[]>;
     nomeDaConta: ReadonlyMap<string, string>;
   },
 ): Promise<FichaDoChamado['origemNoChat']> {
+  const [linha] = linhas;
   if (!linha || chamado.origemConversaId === null) return null;
+  const mensagens = linhas.map((daOrigem) => ({
+    autor: nomeDaConta.get(daOrigem.autorConta ?? '') ?? '',
+    texto: daOrigem.texto,
+    em: dadoDeTexto(daOrigem.dados, 'em') ?? daOrigem.criadaEm.toISOString(),
+    anexos: anexos.get(daOrigem.id) ?? [],
+  }));
   const [lida] = await tx
     .select()
     .from(conversas)
@@ -553,12 +570,14 @@ async function origemNaFicha(
       { id: contaId, usaOChat: true, grupos: await carregarGrupos(tx, contaId) },
       montada.conversa,
     ).participa;
+  const [primeira] = mensagens;
   return {
     conversa: { tipo: lida?.tipo ?? 'equipe', nome },
     autor,
     texto: linha.texto,
-    em: dadoDeTexto(linha.dados, 'em') ?? linha.criadaEm.toISOString(),
-    anexos,
+    em: primeira?.em ?? linha.criadaEm.toISOString(),
+    anexos: primeira?.anexos ?? [],
+    mensagens,
     abrir:
       participa && chamado.origemMensagemId !== null
         ? { conversa: chamado.origemConversaId, mensagem: chamado.origemMensagemId }
@@ -737,7 +756,7 @@ export async function fichaDoChamado(
       : null;
   };
 
-  let origemDaLinha: (typeof conversaLida)[number] | undefined;
+  const daOrigem: (typeof conversaLida)[number][] = [];
   const conversa: { item: ItemDaConversa; momento: Date }[] = [];
   for (const linha of conversaLida) {
     const em = linha.criadaEm.toISOString();
@@ -780,9 +799,9 @@ export async function fichaDoChamado(
       });
       continue;
     }
-    // A cópia da mensagem de origem do chat vem à parte, no `origemNoChat`.
+    // As cópias das mensagens de origem do chat vêm à parte, no `origemNoChat`, na ordem.
     if (linha.especie === 'origem') {
-      origemDaLinha = linha;
+      daOrigem.push(linha);
       continue;
     }
     const escolha = escolhas.get(linha.id.toLowerCase());
@@ -940,17 +959,14 @@ export async function fichaDoChamado(
   const anonimizada = pessoa.situacao === 'anonimizada';
   const vePessoa = !anonimizada && podeEm(acesso, 'pessoas.ver', pessoa.localId, arvore);
   const caminhos = new Map([...citados.local].map((id) => [id, arvore.caminho(id)]));
-  const origemNoChat = await origemNaFicha(tx, chamado, origemDaLinha, {
+  const origemNoChat = await origemNaFicha(tx, chamado, daOrigem, {
     contaId,
     acesso,
     ligado,
-    anexos: origemDaLinha ? (anexosDaMensagem.get(origemDaLinha.id) ?? []) : [],
+    anexos: anexosDaMensagem,
     nomeDaConta,
   });
-  // A pessoa usa o chat pela conta dela, como quem participa do chamado da origem 'ti'.
-  const usaOChat =
-    (await contasQueParticipam(tx, { pessoaId: pessoa.id, origem: 'ti', abertoPor: null })).length >
-    0;
+  const usaOChat = await pessoaUsaOChat(tx, pessoa.id);
   return {
     numero: chamado.numero,
     titulo: chamado.titulo,

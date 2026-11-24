@@ -5,7 +5,9 @@
 // chamado nas palavras do colaborador, o anexo e o resumo do chip. Participa a pessoa do chamado e
 // quem o abriu pelo chat; a conversa e o anexo respondem como inexistentes a quem não participa,
 // também a quem o vê com `chamados.ver`, que o lê no módulo Chamados. O resumo do chip vai também a
-// quem o vê e a quem participa da conversa de onde ele foi aberto.
+// quem o vê e a quem participa da conversa de onde ele foi aberto. A quem atende pelo chat, a leitura
+// traz o andamento, e quem participa pela TI lê o chamado como a TI (change
+// andamento-e-varias-mensagens, design, decisões 2 e 4; tarefa 3.1).
 import {
   anexosDosChamados,
   arquivos,
@@ -17,9 +19,13 @@ import {
   tiposDeChamado,
 } from '@grafite/db';
 import {
+  ACOES_DO_ANDAMENTO,
+  acoesDoAndamento,
   alcance,
+  atendePeloChat,
   comecoDoTexto,
   type EtapaDoChamado,
+  esperaAConta,
   estaFechado,
   etapasDoChamado,
   type Formulario,
@@ -30,6 +36,7 @@ import {
   nivelDaAvaliacao,
   participacao,
   participaDoChamado,
+  participaPelaTi,
   previsaoDaResposta,
   respostaNova,
   resumoDasRespostas,
@@ -60,6 +67,7 @@ import {
 } from '../chamados/ficha.ts';
 import { formularioDa } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
+import { comOAlcanceDeAtender, daConta, pessoaUsaOChat } from '../chamados/quem-participa.ts';
 import { lerContas } from './contas.ts';
 import { conversasParaParticipar } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
@@ -85,6 +93,17 @@ const AnexoNaLeitura = z
 
 const AtivoNaLeitura = z.object({ nome: z.string(), patrimonio: z.string().nullable() });
 
+/** Uma mensagem do chat de onde o chamado foi aberto, como ficou na abertura. */
+const OrigemNoChat = z
+  .object({
+    autor: z.string(),
+    /** O texto, nulo na mensagem só com os anexos. */
+    texto: z.string().nullable(),
+    em: z.string(),
+    anexos: z.array(AnexoNaLeitura),
+  })
+  .meta({ id: 'OrigemDoChamadoNoChat' });
+
 export const ChamadoDeQuemParticipa = z
   .object({
     numero: z.int(),
@@ -101,7 +120,12 @@ export const ChamadoDeQuemParticipa = z
     resolvidoEm: z.string().nullable(),
     /** O nome de quem atende, ou nulo, sem ninguém. */
     atende: z.string().nullable(),
-    /** As mensagens da TI que são resposta nova para a conta; zero no resolvido. */
+    /**
+     * A conta participa dele pela TI (spec chamados, "Quem atende pelo chat"): ela o abriu pelo chat
+     * no nome de outra pessoa e o atende, e a espera é da pessoa, e não dela.
+     */
+    pelaTi: z.boolean(),
+    /** As mensagens da TI que são resposta nova para a conta; zero no resolvido e a quem é da TI. */
     respostaNova: z.int(),
     /** A última mensagem da conversa, sem as notas e sem os eventos, com quem a escreveu. */
     ultimaMensagem: z
@@ -215,17 +239,32 @@ export const ConversaDoChamadoDeQuemParticipa = z
     /** O resumo das respostas, sem os campos só da TI. */
     resumo: z.string(),
     anexosDosCampos: z.array(AnexoNaLeitura.extend({ campo: z.string() })),
-    /** A mensagem do chat de onde o chamado foi aberto, como ficou na abertura. */
-    origem: z
+    /**
+     * A primeira das mensagens do chat de onde o chamado foi aberto, como ficou na abertura; o app
+     * do chat da versão anterior a lê (change andamento-e-varias-mensagens, decisão 7).
+     */
+    origem: OrigemNoChat.nullable(),
+    /** As mensagens do chat de onde o chamado foi aberto, na ordem da conversa, de 1 a 20. */
+    origens: z.array(OrigemNoChat),
+    conversa: z.array(ItemDaConversaDeQuemParticipa),
+    /**
+     * A conta participa dele pela TI: ela escreve como a TI, não tem a resposta nova, não escolhe
+     * as opções nem avalia, e reabre pelo andamento.
+     */
+    pelaTi: z.boolean(),
+    /**
+     * As ações do atendimento a quem atende pelo chat (spec chamados, "Quem atende pelo chat"): a
+     * versão do chamado, que as rotas da TI pedem, as ações que ele aceita agora, na ordem do menu,
+     * e a pessoa, para o "Aguardar Paulo" e o aviso de quem não usa o chat. Nulo a quem não atende
+     * os locais do chamado.
+     */
+    andamento: z
       .object({
-        autor: z.string(),
-        /** O texto, nulo na mensagem só com os anexos. */
-        texto: z.string().nullable(),
-        em: z.string(),
-        anexos: z.array(AnexoNaLeitura),
+        versao: z.int(),
+        acoes: z.array(z.enum(ACOES_DO_ANDAMENTO)),
+        pessoa: z.object({ nome: z.string(), usaOChat: z.boolean() }),
       })
       .nullable(),
-    conversa: z.array(ItemDaConversaDeQuemParticipa),
     /** A resposta nova: quantas e a primeira delas, onde entra o separador "Resposta nova". */
     respostaNova: z.object({ quantas: z.int(), desde: z.uuid().nullable() }),
     /**
@@ -270,13 +309,6 @@ export const ResumoDoChamadoNoChat = z
 type ResumoDoChamadoNoChat = z.infer<typeof ResumoDoChamadoNoChat>;
 
 type LinhaDoChamado = typeof chamados.$inferSelect;
-
-/** A conta como a participação no chamado a lê: quem lê pelo chat usa o chat. */
-export const daConta = (conta: ContaQueLeAsMensagens) => ({
-  id: conta.id,
-  pessoaId: conta.pessoaId,
-  usaOChat: true,
-});
 
 /** Os chamados de que a conta participa: os da pessoa dela e os que ela abriu pelo chat. */
 const deQuemParticipa = (conta: ContaQueLeAsMensagens): SQL | undefined =>
@@ -410,6 +442,7 @@ export async function chamadosDeQuemParticipa(
   }
   const nome = await nomesDe(tx, idsDasContas, idsDasPessoas);
   const { fuso } = await lerHorarioDaTi(tx);
+  const quemAtende = comOAlcanceDeAtender(conta, await lerArvore(tx));
 
   const item = ({
     chamado,
@@ -420,21 +453,24 @@ export async function chamadosDeQuemParticipa(
   }): ChamadoDeQuemParticipa => {
     const fechado = estaFechado(chamado, agora, fuso);
     const ultima = ultimaDe.get(chamado.id);
+    const pelaTi = participaPelaTi(quemAtende, chamado);
     return {
       numero: chamado.numero,
       titulo: chamado.titulo,
       tipo,
       situacao: chamado.situacao,
       fechado,
-      situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado),
+      situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado, pelaTi),
       abertoEm: chamado.abertoEm.toISOString(),
       resolvidoEm: chamado.resolvidoEm?.toISOString() ?? null,
       atende: chamado.responsavelId === null ? null : nome.conta(chamado.responsavelId),
+      pelaTi,
       respostaNova: respostaNova({
         situacao: chamado.situacao,
         linhas: daTi.filter(({ chamadoId }) => chamadoId === chamado.id),
         contaId: conta.id,
         vistaAte: vistaAte.get(chamado.id) ?? null,
+        pelaTi,
       }),
       ultimaMensagem: ultima
         ? {
@@ -457,6 +493,7 @@ export async function chamadosDeQuemParticipa(
       fechado: false,
       abertoEm: linha.chamado.abertoEm,
       resolvidoEm: linha.chamado.resolvidoEm,
+      pelaTi: participaPelaTi(quemAtende, linha.chamado),
       linha,
     })),
   ).chamados;
@@ -516,6 +553,11 @@ export async function conversaDeQuemParticipa(
   const formulario = formularioDeQuemParticipa(formularioDa(chamado));
   const respostas = chamado.respostas;
   const citados = citadosPelasRespostas(formulario, respostas);
+  // Quem atende pelo chat tem o andamento; quem participa pela TI lê o chamado como a TI.
+  const arvore = await lerArvore(tx);
+  const quemAtende = comOAlcanceDeAtender(conta, arvore);
+  const atende = atendePeloChat(quemAtende, chamado);
+  const pelaTi = participaPelaTi(quemAtende, chamado);
 
   const linhas = await tx
     .select({
@@ -537,6 +579,8 @@ export async function conversaDeQuemParticipa(
   const idsDasContas = new Set<string>();
   if (chamado.responsavelId !== null) idsDasContas.add(chamado.responsavelId);
   const idsDasPessoas = new Set(citados.pessoa);
+  // A pessoa, no andamento e na abertura de quem participa pela TI.
+  if (atende) idsDasPessoas.add(chamado.pessoaId);
   for (const linha of linhas) {
     if (linha.especie === 'nota') continue;
     if (linha.autorConta !== null) idsDasContas.add(linha.autorConta);
@@ -595,18 +639,18 @@ export async function conversaDeQuemParticipa(
       : null;
   };
 
-  let origem: ConversaDoChamadoDeQuemParticipa['origem'] = null;
+  const origens: ConversaDoChamadoDeQuemParticipa['origens'] = [];
   const conversa: ItemDaConversaDeQuemParticipa[] = [];
   for (const linha of linhas) {
     const em = linha.criadaEm.toISOString();
     if (linha.especie === 'nota') continue;
     if (linha.especie === 'origem') {
-      origem = {
+      origens.push({
         autor: nome.conta(linha.autorConta ?? ''),
         texto: linha.texto,
         em: dadoDeTexto(linha.dados, 'em') ?? em,
         anexos: anexosDaLinha.get(linha.id) ?? [],
-      };
+      });
       continue;
     }
     if (linha.especie === 'mensagem') {
@@ -649,6 +693,7 @@ export async function conversaDeQuemParticipa(
         nivel: linha.dados?.nivel,
       },
       conta.id,
+      pelaTi ? nome.pessoa(chamado.pessoaId) : null,
     );
     if (frase === null) continue;
     const resumo =
@@ -684,6 +729,7 @@ export async function conversaDeQuemParticipa(
     situacao: chamado.situacao,
     contaId: conta.id,
     vistaAte: leitura?.vistaAte ?? null,
+    pelaTi,
   };
   const quantas = respostaNova({ ...pedidoDaNova, linhas });
   const desde =
@@ -707,15 +753,27 @@ export async function conversaDeQuemParticipa(
   if (chamado.ativoId !== null) idsDosAtivos.add(chamado.ativoId);
   const ativoDe = await ativosPorId(tx, idsDosAtivos);
   const ligado = chamado.ativoId === null ? undefined : ativoDe.get(chamado.ativoId);
-  const arvore = await lerArvore(tx);
   const caminhos = new Map([...citados.local].map((id) => [id, arvore.caminho(id)]));
+  const andamento = atende
+    ? {
+        versao: chamado.versao,
+        acoes: acoesDoAndamento(
+          { situacao: chamado.situacao, responsavel: chamado.responsavelId, fechado },
+          { id: conta.id, pelaTi },
+        ),
+        pessoa: {
+          nome: nome.pessoa(chamado.pessoaId),
+          usaOChat: await pessoaUsaOChat(tx, chamado.pessoaId),
+        },
+      }
+    : null;
   return {
     numero: chamado.numero,
     titulo: chamado.titulo,
     tipo,
     situacao: chamado.situacao,
     fechado,
-    situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado),
+    situacaoEmTexto: situacaoParaQuemParticipa(chamado.situacao, fechado, pelaTi),
     abertoEm: chamado.abertoEm.toISOString(),
     atende:
       chamado.responsavelId !== null && chamado.responsavelDesde !== null
@@ -735,8 +793,11 @@ export async function conversaDeQuemParticipa(
       pessoas: new Map([...citados.pessoa].map((id) => [id, nome.pessoa(id)])),
     }),
     anexosDosCampos,
-    origem,
+    origem: origens[0] ?? null,
+    origens,
     conversa,
+    pelaTi,
+    andamento,
     respostaNova: { quantas, desde },
     avaliacao: avaliou && nivel ? { nivel, minha: avaliou.autorConta === conta.id } : null,
   };
@@ -812,7 +873,8 @@ export async function resumoDoChamadoNoChat(
   const [chamado] = await tx.select().from(chamados).where(eq(chamados.numero, numero));
   if (!chamado) throw chamadoNaoEncontrado();
   const participa = participaDoChamado(daConta(conta), chamado);
-  const ve = veOChamado(alcance(conta.acesso, 'chamados.ver', await lerArvore(tx)), chamado);
+  const arvore = await lerArvore(tx);
+  const ve = veOChamado(alcance(conta.acesso, 'chamados.ver', arvore), chamado);
   if (!participa && !ve && !(await participaDaOrigem(tx, conta, chamado.origemConversaId))) {
     throw chamadoNaoEncontrado();
   }
@@ -824,7 +886,11 @@ export async function resumoDoChamadoNoChat(
   const base = {
     numero: chamado.numero,
     titulo: chamado.titulo,
-    situacao: situacaoNoChat(chamado.situacao, estaFechado(chamado, agora, fuso), participa),
+    situacao: situacaoNoChat(
+      chamado.situacao,
+      estaFechado(chamado, agora, fuso),
+      esperaAConta(comOAlcanceDeAtender(conta, arvore), chamado),
+    ),
     atende:
       chamado.responsavelId === null
         ? null

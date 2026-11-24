@@ -1,0 +1,55 @@
+/* A barra da seleção, no lugar da caixa de escrever, na forma e na largura dela: quantas à
+   esquerda, "Cancelar" e "Transformar em chamado" à direita. */
+.barra {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  min-block-size: var(--esp-12);
+  margin: 0 var(--esp-5) var(--esp-4);
+  padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-info-borda);
+  border-radius: var(--esp-6);
+  background-color: var(--cor-superficie-afundada);
+}
+
+.quantas {
+  flex: 1;
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+}
+
+/* "Transformar em chamado" no azul do chamado, como o item do menu da mensagem. */
+.barra .transformar[data-nivel="primario"] {
+  border-color: var(--cor-info);
+  background-color: var(--cor-info);
+  color: var(--cor-sobre-info);
+}
+
+.barra .transformar[data-nivel="primario"]:is([data-hovered], [data-pressed]) {
+  background-color: var(--cor-info-forte);
+}
+
+.atalho {
+  margin-inline-start: var(--esp-2);
+}
+
+:root[data-postura="celular"] .barra {
+  margin: 0 var(--esp-3) max(var(--esp-3), env(safe-area-inset-bottom));
+}
+
+:root[data-postura="celular"] .barra .transformar {
+  flex: 1 1 100%;
+}
+
+:root[data-postura="celular"] .atalho {
+  display: none;
+}
+
+/* No toque, os botões da barra com 44 px de altura. */
+:root[data-postura="celular"] .barra button {
+  min-block-size: var(--alvo-toque);
+}

@@ -221,8 +221,10 @@ export {
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
   conferirAberturaPeloChat,
+  conferirMensagensATransformar,
   jaVirouChamado,
   type LidoParaAAberturaPeloChat,
+  MAXIMO_DE_MENSAGENS_NUM_CHAMADO,
   MENSAGENS_DA_ABERTURA_PELO_CHAT,
   type PedidoDaAberturaPeloChat,
   semAtivoSugerido,
@@ -432,6 +434,7 @@ export {
   ESPERA_DE_OUTRO,
   type EventoParaQuemParticipa,
   fraseDoEventoParaQuemParticipa,
+  nomeDaEtapa,
   previsaoDaResposta,
   SITUACAO_FECHADA,
   SITUACOES_PARA_QUEM_PARTICIPA,
@@ -552,6 +555,16 @@ export {
   tamanhoDoTitulo,
   tituloDasRespostas,
 } from './chamados/titulo-e-resumo.ts';
+export {
+  ACOES_DO_ANDAMENTO,
+  type AcaoDoAndamento,
+  acoesDoAndamento,
+  atendePeloChat,
+  type ChamadoParaAtenderPeloChat,
+  type ContaQueAtendePeloChat,
+  esperaAConta,
+  participaPelaTi,
+} from './chat/andamento.ts';
 export {
   type CampoDaEquipeOuCanal,
   type ConferenciaDaEquipeOuCanal,

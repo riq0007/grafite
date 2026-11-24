@@ -250,7 +250,7 @@ describe('as mensagens', () => {
               minha: true,
             },
           ],
-          chamado: { numero: 1045, abrir: true, mensagem: id(2) },
+          chamado: { numero: 1045, abrir: true, mensagem: id(2), mensagens: 1 },
         }),
         mensagem(3, { texto: 'Alguém já avisou a TI?', criadaEm: as('10:21') }),
         mensagem(4, {
@@ -259,7 +259,7 @@ describe('as mensagens', () => {
           texto: null,
           evento: 'virou-chamado',
           criadaEm: as('10:32'),
-          chamado: { numero: 1045, abrir: true, mensagem: id(2) },
+          chamado: { numero: 1045, abrir: true, mensagem: id(2), mensagens: 1 },
         }),
         mensagem(5, { autor: ANA, texto: 'Já abri o chamado.', criadaEm: as('10:33') }),
       ],
@@ -300,8 +300,39 @@ describe('as mensagens', () => {
     expect(within(await mensagemNaTela('Já abri o chamado.')).getByText('Você')).toBeTruthy();
   });
 
+  it('o evento de várias mensagens diz quantas e leva à primeira delas', async () => {
+    const chamado = { numero: 1046, abrir: true, mensagem: id(2), mensagens: 3 };
+    const { servidor } = servidorDaConversa({
+      mensagens: [
+        mensagem(2, { texto: 'A impressora manchou.', criadaEm: as('10:19'), chamado }),
+        mensagem(3, { texto: 'Aqui também.', criadaEm: as('10:20'), chamado }),
+        mensagem(4, {
+          especie: 'evento',
+          autor: ANA,
+          texto: null,
+          evento: 'virou-chamado',
+          criadaEm: as('10:32'),
+          chamado,
+        }),
+      ],
+    });
+    abrir(`/chat/c/${CONVERSA}`, comOChat(servidor));
+    const area = await areaDasMensagens();
+    await mensagemNaTela('Aqui também.');
+    const evento = within(area)
+      .getAllByRole('listitem')
+      .find((item) => item.textContent?.includes('transformou'));
+    if (!evento) throw new Error('O evento não está na conversa.');
+    expect(evento.textContent).toBe(
+      'Ana Souza (TI) transformou 3 mensagens no chamado #1046 · 10:32Abrir chamado',
+    );
+    expect(within(evento).getByRole('link', { name: '3 mensagens' }).getAttribute('href')).toBe(
+      `/chat/c/${CONVERSA}?m=${id(2)}`,
+    );
+  });
+
   it('o botão direito no dia, no evento e no "Abrir chamado" fica com o navegador; na foto, abre o menu da mensagem', async () => {
-    const chamado = { numero: 1045, abrir: true, mensagem: id(2) };
+    const chamado = { numero: 1045, abrir: true, mensagem: id(2), mensagens: 1 };
     const { servidor } = servidorDaConversa({
       mensagens: [
         mensagem(2, { texto: 'A impressora está manchando.', criadaEm: as('10:19'), chamado }),

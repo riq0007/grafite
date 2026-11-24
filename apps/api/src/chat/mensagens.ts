@@ -11,6 +11,7 @@ import {
   ESPECIES_DO_CHAT_NO_BANCO,
   leiturasDasConversas,
   mensagensDoChat,
+  mensagensDosChamados,
   reacoesDasMensagens,
   type Transacao,
 } from '@grafite/db';
@@ -20,6 +21,7 @@ import {
   citacoesDeChamados,
   comecoDoTexto,
   conferirMensagem,
+  esperaAConta,
   estaFechado,
   mensagemDaRecusaDaEscrita,
   nomeNoChat,
@@ -28,12 +30,13 @@ import {
   situacaoNoChat,
   veOChamado,
 } from '@grafite/domain';
-import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { MiniaturaDoAnexo, miniaturaDe } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { registrarEvento } from '../eventos/saida.ts';
 import type { EnviarTarefa } from '../fila/tarefas.ts';
 import { conflito, dadosInvalidos, naoEncontrado } from '../problemas.ts';
@@ -111,11 +114,17 @@ export const MensagemDoChat = z
     citacoes: z.array(CitacaoDeChamado),
     /**
      * O chamado em que a mensagem virou, ou o do evento `virou-chamado`, com o "Abrir chamado" a
-     * quem participa dele e a quem o vê com `chamados.ver` e a mensagem de origem, que o "esta
-     * mensagem" do evento cita; nulo nas outras.
+     * quem participa dele e a quem o vê com `chamados.ver`, a mensagem de origem, a primeira das
+     * citadas, que o evento cita, e quantas mensagens ele cita (o evento de antes conta uma); nulo
+     * nas outras.
      */
     chamado: z
-      .object({ numero: z.int(), abrir: z.boolean(), mensagem: z.uuid().nullable() })
+      .object({
+        numero: z.int(),
+        abrir: z.boolean(),
+        mensagem: z.uuid().nullable(),
+        mensagens: z.int(),
+      })
       .nullable(),
   })
   .meta({ id: 'MensagemDoChat' });
@@ -283,7 +292,8 @@ async function resolverCitacoes(
         .participa
     );
   };
-  const doVer = alcance(conta.acesso, 'chamados.ver', await lerArvore(tx));
+  const arvore = await lerArvore(tx);
+  const doVer = alcance(conta.acesso, 'chamados.ver', arvore);
   const vistos = citados.filter(
     (chamado) =>
       participaDoChamado({ id: conta.id, pessoaId: conta.pessoaId, usaOChat: true }, chamado) ||
@@ -297,12 +307,13 @@ async function resolverCitacoes(
     tx,
     vistos.flatMap(({ responsavelId }) => (responsavelId ? [responsavelId] : [])),
   );
+  const quemAtende = comOAlcanceDeAtender(conta, arvore);
   for (const chamado of vistos) {
     resolvidas.set(chamado.numero, {
       situacao: situacaoNoChat(
         chamado.situacao,
         estaFechado(chamado, agora, fuso),
-        participaDoChamado({ id: conta.id, pessoaId: conta.pessoaId, usaOChat: true }, chamado),
+        esperaAConta(quemAtende, chamado),
       ),
       atende: chamado.responsavelId
         ? (responsaveis.get(chamado.responsavelId)?.nome ?? null)
@@ -314,8 +325,10 @@ async function resolverCitacoes(
 
 /**
  * A marca do chamado em que cada mensagem virou e a do evento `virou-chamado` (spec chat, "Chamados
- * da conversa"): o número e o "Abrir chamado", resolvidos para a conta que lê, como a citação. Com
- * o módulo Chamados desligado, o número fica, sem o "Abrir chamado".
+ * da conversa"): o número e o "Abrir chamado", resolvidos para a conta que lê, como a citação. As
+ * mensagens saem das linhas `origem` do chamado, pelo índice delas; o evento conta as dele (change
+ * andamento-e-varias-mensagens, design, decisão 7). Com o módulo Chamados desligado, o número fica,
+ * sem o "Abrir chamado".
  */
 type MarcaDoChamado = NonNullable<MensagemDoChat['chamado']>;
 
@@ -329,11 +342,32 @@ async function marcasDosChamados(
   const doEvento = new Map(
     linhas.flatMap(({ id, evento, dados }) =>
       evento === 'virou-chamado' && typeof dados?.chamadoId === 'string'
-        ? [[id, dados.chamadoId] as const]
+        ? [
+            [
+              id,
+              {
+                chamadoId: dados.chamadoId,
+                mensagens: Number.isInteger(dados.mensagens) ? Number(dados.mensagens) : 1,
+              },
+            ] as const,
+          ]
         : [],
     ),
   );
   if (mensagens.length === 0 && doEvento.size === 0) return marcas;
+  const daOrigem = sql<string>`${mensagensDosChamados.dados} ->> 'mensagem'`;
+  const citadas =
+    mensagens.length > 0
+      ? await tx
+          .select({ mensagem: daOrigem, chamadoId: mensagensDosChamados.chamadoId })
+          .from(mensagensDosChamados)
+          .where(and(eq(mensagensDosChamados.especie, 'origem'), inArray(daOrigem, mensagens)))
+      : [];
+  const dasMensagens = [...new Set(citadas.map(({ chamadoId }) => chamadoId))];
+  const ids = [
+    ...new Set([...dasMensagens, ...[...doEvento.values()].map(({ chamadoId }) => chamadoId)]),
+  ];
+  if (ids.length === 0) return marcas;
   const lidos = await tx
     .select({
       id: chamados.id,
@@ -346,26 +380,44 @@ async function marcasDosChamados(
       semLocal: chamados.semLocal,
     })
     .from(chamados)
-    .where(
-      or(
-        mensagens.length > 0 ? inArray(chamados.origemMensagemId, mensagens) : undefined,
-        doEvento.size > 0 ? inArray(chamados.id, [...new Set(doEvento.values())]) : undefined,
-      ),
-    );
+    .where(inArray(chamados.id, ids));
   if (lidos.length === 0) return marcas;
+  const quantas = new Map(
+    dasMensagens.length > 0
+      ? (
+          await tx
+            .select({ chamadoId: mensagensDosChamados.chamadoId, quantas: count() })
+            .from(mensagensDosChamados)
+            .where(
+              and(
+                eq(mensagensDosChamados.especie, 'origem'),
+                inArray(mensagensDosChamados.chamadoId, dasMensagens),
+              ),
+            )
+            .groupBy(mensagensDosChamados.chamadoId)
+        ).map(({ chamadoId, quantas }) => [chamadoId, quantas] as const)
+      : [],
+  );
   const ligado = await ligadoNaTransacao(tx, 'chamados');
   const doVer = ligado ? alcance(conta.acesso, 'chamados.ver', await lerArvore(tx)) : null;
   const daConta = { id: conta.id, pessoaId: conta.pessoaId, usaOChat: true };
-  for (const chamado of lidos) {
-    const marca = {
-      numero: chamado.numero,
-      abrir: ligado && (participaDoChamado(daConta, chamado) || veOChamado(doVer, chamado)),
-      mensagem: chamado.origemMensagemId,
-    };
-    if (chamado.origemMensagemId) marcas.set(chamado.origemMensagemId, marca);
-    for (const [eventoId, chamadoId] of doEvento) {
-      if (chamadoId === chamado.id) marcas.set(eventoId, marca);
-    }
+  const doChamado = new Map(
+    lidos.map((chamado) => [
+      chamado.id,
+      {
+        numero: chamado.numero,
+        abrir: ligado && (participaDoChamado(daConta, chamado) || veOChamado(doVer, chamado)),
+        mensagem: chamado.origemMensagemId,
+      },
+    ]),
+  );
+  for (const { mensagem, chamadoId } of citadas) {
+    const marca = doChamado.get(chamadoId);
+    if (marca) marcas.set(mensagem, { ...marca, mensagens: quantas.get(chamadoId) ?? 1 });
+  }
+  for (const [eventoId, { chamadoId, mensagens: noEvento }] of doEvento) {
+    const marca = doChamado.get(chamadoId);
+    if (marca) marcas.set(eventoId, { ...marca, mensagens: noEvento });
   }
   return marcas;
 }

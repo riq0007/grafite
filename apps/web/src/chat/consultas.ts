@@ -2,6 +2,8 @@
 // chat atualizadas e avisos"; change chat-com-chamados, design, decisões 5 e 12): tudo fica debaixo
 // da chave do chat, com as conversas e os chamados à parte, para cada evento reler só o que muda.
 import type { components } from '@grafite/api-client';
+import { nomeCurto } from '@grafite/domain';
+import { avisar } from '@grafite/ui';
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -9,7 +11,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ClienteDaApi } from '../api/cliente.ts';
 import { consultar } from '../api/consultas.ts';
 import { type FalhaDoPedido, pedir } from '../api/pedir.ts';
@@ -311,6 +313,128 @@ export function useAcoesDoChamado(numero: number) {
 }
 
 export type AcoesDoChamado = ReturnType<typeof useAcoesDoChamado>;
+
+/**
+ * Relê, depois de uma ação do "Andamento", o chamado do chat, as listas, o resumo dos chamados e quem
+ * recebe, sem esperar o `chamados.mudaram` (change andamento-e-varias-mensagens, decisão 2): com a
+ * conexão de eventos caída, a ação seguinte iria com a versão velha.
+ */
+export function useRelerOsChamadosDoChat() {
+  const consultas = useQueryClient();
+  return useCallback(() => {
+    // O "Passar para…" reaberto mostra "Carregando quem atende…", e não a lista de antes da ação.
+    void consultas.resetQueries({ queryKey: [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'quem-recebe'] });
+    void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT });
+    void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+  }, [consultas]);
+}
+
+/**
+ * Quem recebe o chamado no "Passar para…" do "Andamento": as contas que atendem os locais dele, com
+ * a da sessão quando ele não está com ela, cada uma com os abertos. Só lê com o menu aberto.
+ */
+export function useQuemRecebeNoChat(numero: number, ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'quem-recebe', numero],
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(
+        () => api.GET('/chamados/{numero}/quem-recebe', { params: { path: { numero } }, signal }),
+        'carregar quem atende',
+      ),
+  });
+}
+
+/**
+ * A recusa que volta ao diálogo do "Andamento": a frase, se ela é do campo do diálogo e, na do campo
+ * só da TI vazio, que se preenche na ficha, o "Abrir no Chamados" ao lado dela.
+ */
+export interface RecusaNoAndamento {
+  erro: string;
+  doCampo: boolean;
+  abrirNoChamados: boolean;
+}
+
+/** A recusa do campo só da TI vazio no resolver, como "Preencha Contador de páginas antes de resolver.". */
+const CAMPO_DA_TI_VAZIO = /^Preencha .+ antes de resolver.$/;
+
+function recusaNoAndamento(falha: FalhaDoPedido, campo: string): RecusaNoAndamento {
+  const doCampo = falha.problema?.campos?.[campo];
+  if (doCampo) return { erro: doCampo, doCampo: true, abrirNoChamados: false };
+  return {
+    erro: falha.erro,
+    doCampo: false,
+    abrirNoChamados: falha.problema?.status === 409 && CAMPO_DA_TI_VAZIO.test(falha.erro),
+  };
+}
+
+/**
+ * As ações do "Andamento" que não são do atendimento do Chamados, pelas rotas da TI: o aguardar, com
+ * a mensagem para a pessoa; o retomar e o resolver, com a versão do chamado. O retorno vai no aviso;
+ * a recusa do retomar, no aviso crítico, e a do aguardar e a do resolver voltam ao diálogo. Aceita
+ * ou recusada, o chat relê o chamado e as listas. O `useAcoesDoChamadoAberto` do Chamados puxa o
+ * Toner, que não entra no app do chat (change andamento-e-varias-mensagens, decisão 2).
+ */
+export function useAndamentoNoChat(numero: number) {
+  const api = useApi();
+  const reler = useRelerOsChamadosDoChat();
+  return useMemo(() => {
+    const params = { path: { numero } };
+    return {
+      /**
+       * A mensagem de quem participa pela TI, pela rota da TI, com os anexos: aceita ou recusada, as
+       * listas e o chamado se releem.
+       */
+      escrever: async ({ texto, anexos }: { texto: string; anexos?: string[] }) => {
+        const resultado = await pedir(
+          () =>
+            api.POST('/chamados/{numero}/mensagem', {
+              params,
+              body: { texto, anexos: anexos ?? [] },
+            }),
+          'mandar a mensagem',
+        );
+        reler();
+        return resultado;
+      },
+      retomar: async (versao: number) => {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/retomar', { params, body: { versao } }),
+          'retomar o chamado',
+        );
+        reler();
+        if ('erro' in resultado) avisar({ situacao: 'critico', titulo: resultado.erro });
+        else avisar({ situacao: 'sucesso', titulo: `Você retomou o #${numero}.` });
+      },
+      /** Nulo quando o chamado ficou aguardando a pessoa; senão, a recusa. */
+      esperar: async (texto: string, pessoa: string): Promise<RecusaNoAndamento | null> => {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/esperar', { params, body: { texto } }),
+          'pôr o chamado aguardando a pessoa',
+        );
+        reler();
+        if ('erro' in resultado) return recusaNoAndamento(resultado, 'texto');
+        avisar({
+          situacao: 'sucesso',
+          titulo: `Você pôs o #${numero} aguardando ${nomeCurto(pessoa)}.`,
+        });
+        return null;
+      },
+      /** Nulo quando resolveu; senão, a recusa. */
+      resolver: async (versao: number, feito: string): Promise<RecusaNoAndamento | null> => {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/resolver', { params, body: { feito, versao } }),
+          'resolver o chamado',
+        );
+        reler();
+        if ('erro' in resultado) return recusaNoAndamento(resultado, 'feito');
+        avisar({ situacao: 'sucesso', titulo: `Você resolveu o #${numero}.` });
+        return null;
+      },
+    };
+  }, [api, numero, reler]);
+}
 
 /**
  * As pessoas que usam o chat, pelas palavras do nome, até 20, para a conversa direta. Enquanto a

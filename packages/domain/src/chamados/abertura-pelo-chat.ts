@@ -15,12 +15,39 @@ export const MENSAGENS_DA_ABERTURA_PELO_CHAT = {
   semPessoa: 'Escolha a pessoa.',
   pessoaNaoEncontrada: 'Pessoa não encontrada.',
   mensagemNaoEncontrada: 'A mensagem não foi encontrada.',
+  semMensagens: 'Escolha as mensagens.',
+  mensagensDemais: 'Escolha até 20 mensagens.',
 } as const;
 
 const M = MENSAGENS_DA_ABERTURA_PELO_CHAT;
 
-/** A recusa da mensagem que já virou chamado, pela única da origem. */
-export const jaVirouChamado = (numero: number) => `Esta mensagem já virou o chamado #${numero}.`;
+/** Quantas mensagens da mesma conversa um chamado cita, no máximo. */
+export const MAXIMO_DE_MENSAGENS_NUM_CHAMADO = 20;
+
+/**
+ * A recusa da mensagem que já virou chamado, pelas linhas da origem: com uma mensagem, "Esta
+ * mensagem"; com várias, "Uma das mensagens".
+ */
+export const jaVirouChamado = (numero: number, quantas = 1) =>
+  quantas === 1
+    ? `Esta mensagem já virou o chamado #${numero}.`
+    : `Uma das mensagens já virou o chamado #${numero}.`;
+
+/**
+ * As mensagens a transformar num chamado (change andamento-e-varias-mensagens, design, decisão 6):
+ * sem os ids repetidos, que valem um só também em maiúsculas, como o UUID que o banco devolve, e na
+ * ordem dos ids, que é a da conversa e a das travas. Recusa sem nenhuma e com mais de 20.
+ */
+export function conferirMensagensATransformar(
+  ids: readonly string[],
+): { ok: true; ids: string[] } | { ok: false; recusa: string } {
+  const unicos = [...new Set(ids.map((id) => id.toLowerCase()))].sort();
+  if (unicos.length === 0) return { ok: false, recusa: M.semMensagens };
+  if (unicos.length > MAXIMO_DE_MENSAGENS_NUM_CHAMADO) {
+    return { ok: false, recusa: M.mensagensDemais };
+  }
+  return { ok: true, ids: unicos };
+}
 
 /** A recusa do tipo que pede o ativo sem nenhum sugerido para a pessoa. */
 export const semAtivoSugerido = (pessoa: string) =>

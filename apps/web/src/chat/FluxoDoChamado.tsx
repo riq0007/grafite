@@ -63,19 +63,20 @@ import { ResumoDosTempos } from './ResumoDosTempos.tsx';
 const ACIMA_DA_NOVA = 16;
 
 /** O ícone e o tom de cada evento, na pílula dele; o de um código que esta versão não conhece, a boia. */
-const MARCAS_DOS_EVENTOS: Readonly<Record<string, { icone: LucideIcon; tom?: 'atencao' | 'ok' }>> =
-  {
-    abertura: { icone: Ticket },
-    assumiu: { icone: Wrench },
-    passou: { icone: Wrench },
-    devolveu: { icone: Undo2 },
-    aguardando: { icone: Hourglass, tom: 'atencao' },
-    retomou: { icone: Play },
-    resolveu: { icone: CircleCheck, tom: 'ok' },
-    reabriu: { icone: RotateCcw },
-    avaliou: { icone: Smile },
-    fechou: { icone: Archive },
-  };
+const MARCAS_DOS_EVENTOS: Readonly<
+  Record<string, { icone: LucideIcon; tom?: 'atencao' | 'ok' | 'info' }>
+> = {
+  abertura: { icone: Ticket },
+  assumiu: { icone: Wrench },
+  passou: { icone: Wrench },
+  devolveu: { icone: Undo2 },
+  aguardando: { icone: Hourglass, tom: 'atencao' },
+  retomou: { icone: Play },
+  resolveu: { icone: CircleCheck, tom: 'ok' },
+  reabriu: { icone: RotateCcw },
+  avaliou: { icone: Smile },
+  fechou: { icone: Archive },
+};
 
 /** O que a tela do chamado pede à conversa. */
 export interface ControleDaConversaDoChamado {
@@ -160,8 +161,9 @@ export function FluxoDoChamado({
     else avisar({ situacao: 'atencao', titulo: resposta.erro });
   };
 
-  // A escolha só no chamado aberto: o resolvido pede para escrever, e o fechado não muda mais.
-  const aceitaAEscolha = chamado.situacao !== 'resolvido' && !chamado.fechado;
+  // A escolha só no chamado aberto: o resolvido pede para escrever, e o fechado não muda mais. A
+  // quem participa pela TI, as opções ficam sem ação: a escolha é da pessoa.
+  const aceitaAEscolha = chamado.situacao !== 'resolvido' && !chamado.fechado && !chamado.pelaTi;
   const escolherNa = (mensagem: string): EscolherAOpcao | null =>
     aceitaAEscolha
       ? async (opcao) => {
@@ -257,7 +259,7 @@ function ItemDaConversaDoChamado({
     case 'evento':
       return (
         <li className={estilos.evento}>
-          <PilulaDoEvento evento={item.evento} dataHora={dataHora} />
+          <PilulaDoEvento evento={item.evento} pelaTi={chamado.pelaTi} dataHora={dataHora} />
           {item.evento.resumo && (
             <ResumoDosTempos resumo={item.evento.resumo} agora={agora} dataHora={dataHora} />
           )}
@@ -273,8 +275,19 @@ function ItemDaConversaDoChamado({
 }
 
 /** O evento numa pílula, no meio da conversa: o ícone, a frase e a hora, no tom da espera ou do resolvido. */
-function PilulaDoEvento({ evento, dataHora }: { evento: EventoDoChamado; dataHora: DataHora }) {
-  const marca = MARCAS_DOS_EVENTOS[evento.evento] ?? { icone: LifeBuoy };
+function PilulaDoEvento({
+  evento,
+  pelaTi,
+  dataHora,
+}: {
+  evento: EventoDoChamado;
+  /** A quem participa pela TI, a espera é de outra pessoa: na informação, como o selo dela. */
+  pelaTi: boolean;
+  dataHora: DataHora;
+}) {
+  const daTabela = MARCAS_DOS_EVENTOS[evento.evento] ?? { icone: LifeBuoy };
+  const marca =
+    pelaTi && evento.evento === 'aguardando' ? { ...daTabela, tom: 'info' as const } : daTabela;
   return (
     <p className={estilos.pilula} data-tom={marca.tom}>
       <span className={estilos.iconeDoEvento}>
@@ -339,8 +352,9 @@ function AnexosNoChamado({
 }
 
 /**
- * A abertura: a frase dela, como "Recebemos o seu chamado", com a hora, e, embaixo, a mensagem do
- * chat de onde o chamado veio, citada, ou o resumo das respostas, com os anexos dos campos.
+ * A abertura: a frase dela, como "Recebemos o seu chamado", com a hora, e, embaixo, as mensagens do
+ * chat de onde o chamado veio, citadas na ordem da conversa, cada uma com quem a escreveu, a hora, o
+ * texto e os anexos, ou o resumo das respostas, com os anexos dos campos.
  */
 function Abertura({
   evento,
@@ -353,31 +367,31 @@ function Abertura({
   agora: Date;
   dataHora: DataHora;
 }) {
-  const { origem } = chamado;
+  const { origens } = chamado;
   return (
     <li className={estilos.abertura}>
-      {evento && <PilulaDoEvento evento={evento} dataHora={dataHora} />}
-      {origem ? (
-        <figure className={estilos.origem}>
-          <figcaption className={estilos.deOnde}>
-            {`Mensagem de ${origem.autor} · ${horaNaConversa(new Date(origem.em), agora, dataHora)}`}
-          </figcaption>
-          {/* A citada só com os anexos fica sem o texto (tarefa 4.18). */}
-          {origem.texto && (
-            <blockquote className={estilos.citada}>
-              <p className={daConversa.texto}>{origem.texto}</p>
-            </blockquote>
+      {evento && <PilulaDoEvento evento={evento} pelaTi={chamado.pelaTi} dataHora={dataHora} />}
+      {origens.length > 0
+        ? origens.map((origem) => (
+            <figure key={`${origem.autor} ${origem.em}`} className={estilos.origem}>
+              <figcaption className={estilos.deOnde}>
+                {`Mensagem de ${origem.autor} · ${horaNaConversa(new Date(origem.em), agora, dataHora)}`}
+              </figcaption>
+              {/* A citada só com os anexos fica sem o texto (tarefa 4.18). */}
+              {origem.texto && (
+                <blockquote className={estilos.citada}>
+                  <p className={daConversa.texto}>{origem.texto}</p>
+                </blockquote>
+              )}
+              <AnexosNoChamado anexos={origem.anexos} numero={chamado.numero} />
+            </figure>
+          ))
+        : (chamado.resumo !== '' || chamado.anexosDosCampos.length > 0) && (
+            <div className={estilos.origem}>
+              {chamado.resumo !== '' && <p className={daConversa.texto}>{chamado.resumo}</p>}
+              <AnexosNoChamado anexos={chamado.anexosDosCampos} numero={chamado.numero} />
+            </div>
           )}
-          <AnexosNoChamado anexos={origem.anexos} numero={chamado.numero} />
-        </figure>
-      ) : (
-        (chamado.resumo !== '' || chamado.anexosDosCampos.length > 0) && (
-          <div className={estilos.origem}>
-            {chamado.resumo !== '' && <p className={daConversa.texto}>{chamado.resumo}</p>}
-            <AnexosNoChamado anexos={chamado.anexosDosCampos} numero={chamado.numero} />
-          </div>
-        )
-      )}
     </li>
   );
 }

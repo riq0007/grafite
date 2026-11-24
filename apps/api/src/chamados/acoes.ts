@@ -66,7 +66,7 @@ import { ATIVO_DO_CARTAO_NAO_ENCONTRADO, type CartaoDoAtivo, retratoDoAtivo } fr
 import { formularioDa } from './formulario.ts';
 import { lerHorarioDaTi } from './horario.ts';
 import { contasDaTriagem, lerContaQueAtende, nomeDaConta } from './quem-atende.ts';
-import { comQuemParticipa, contasQueParticipam } from './quem-participa.ts';
+import { comQuemParticipa, contasQueParticipam, semQuemParticipaPelaTi } from './quem-participa.ts';
 
 /**
  * O pedido de cada rota, depois do schema: a versão que a tela mostra, nas ações dos botões, com a
@@ -547,13 +547,19 @@ export async function agirNoChamado(
     escrito === null || pedido.acao === 'nota' || !soComOsAnexos
       ? []
       : ((await nomesDosAnexosDasMensagens(tx, [escrito])).get(escrito) ?? []);
+  // Quem participa pela TI recebe as da TI, acima, e não estas (change andamento-e-varias-mensagens,
+  // design, decisão 4). Os acessos de quem abriu só são lidos quando há a mensagem, sem a qual
+  // ninguém que participa é notificado.
+  const notificaQuemParticipa = decisao.conversa.some(({ especie }) => especie === 'mensagem');
   await notificar(
     tx,
     notificacoesParaQuemParticipa(
       { id: lido.id, numero: lido.numero, titulo: lido.titulo, ...participante },
       decisao,
       { contaId, nome: await nomeDaConta(tx, contaId) },
-      participam,
+      notificaQuemParticipa
+        ? await semQuemParticipaPelaTi(tx, { ...participante, ...locais }, participam, arvore)
+        : [],
       anexos,
     ),
     momento,

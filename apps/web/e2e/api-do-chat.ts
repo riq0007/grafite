@@ -5,6 +5,7 @@
 // "Pedir chamados pelo chat" na organização inteira, como o perfil Colaborador do runbook.
 import { readFileSync } from 'node:fs';
 import type { components } from '@grafite/api-client';
+import { acoesDoAndamento, jaVirouChamado } from '@grafite/domain';
 import type { Page, Route } from '@playwright/test';
 import { type PermissaoDaSessao, SEM_SESSAO, sessaoDe } from './fixtures.ts';
 
@@ -15,6 +16,7 @@ type ConversaAberta = Esquemas['ConversaAberta'];
 type ChamadoNaLista = Esquemas['ChamadoDeQuemParticipa'];
 type ConversaDoChamado = Esquemas['ConversaDoChamadoDeQuemParticipa'];
 type AnexoDaMensagem = Esquemas['AnexoDaMensagem'];
+type PedidoDaAbertura = Esquemas['PedidoDaAberturaDasMensagensInput'];
 
 const DA_COLABORADORA: PermissaoDaSessao[] = [
   { chave: 'chat.usar', organizacao: true, locais: [] },
@@ -76,6 +78,19 @@ interface ConversaGuardada {
   cabecalho: Omit<ConversaAberta, 'id' | 'lidaAte'>;
   mensagens: Mensagem[];
   lidaAte: string | null;
+}
+
+/** O chamado aberto de mensagens da conversa, com o corpo que a tela mandou. */
+export interface PedidoDeAbertura {
+  conversa: string;
+  corpo: PedidoDaAbertura;
+}
+
+/** Uma ação do "Andamento", com o chamado e a versão que a tela mandou. */
+export interface PedidoDoAndamento {
+  acao: string;
+  numero: number;
+  versao: number;
 }
 
 /** Uma mensagem guardada, que a tela manda, com o corpo. */
@@ -219,6 +234,7 @@ export async function simularChat(pagina: Page) {
     abertoEm: ha(180),
     resolvidoEm: null,
     atende: null,
+    pelaTi: false,
     respostaNova: 0,
     ultimaMensagem: null,
     ...mudar,
@@ -263,7 +279,10 @@ export async function simularChat(pagina: Page) {
     resumo: '',
     anexosDosCampos: [],
     origem: null,
+    origens: [],
     conversa: [],
+    pelaTi: false,
+    andamento: null,
     respostaNova: { quantas: 0, desde: null },
     avaliacao: null,
     ...mudar,
@@ -333,8 +352,71 @@ export async function simularChat(pagina: Page) {
     ],
   ]);
 
+  // O #1047, que a colaboradora abriu pelo chat no nome de Paulo, que ela atende: ela participa
+  // pela TI, e o chamado, na triagem, tem o "Andamento" (change andamento-e-varias-mensagens), com
+  // as ações que a API manda. Participar pela TI pede o "Atender chamados" nos locais de Paulo, que
+  // a sessão da simulação não tem: a tela segue o que a leitura do chamado diz, e o "Abrir no
+  // Chamados" do menu levaria a um módulo que ela não abre, e o teste não o escolhe.
+  const doAndamento = (situacao: ConversaDoChamado['situacao'], responsavel: string | null) =>
+    acoesDoAndamento({ situacao, responsavel, fechado: false }, { id: EU.conta, pelaTi: true });
+  conversasDosChamados.set(
+    1047,
+    doChamado(1047, {
+      titulo: 'Monitor piscando na recepção',
+      situacao: 'triagem',
+      situacaoEmTexto: 'Na triagem',
+      atende: null,
+      etapas: etapas('triagem', 1),
+      pelaTi: true,
+      andamento: {
+        versao: 3,
+        acoes: doAndamento('triagem', null),
+        pessoa: { nome: PAULO.nome, usaOChat: true },
+      },
+    }),
+  );
+
   const anexosEnviados = new Map<string, AnexoDaMensagem>();
   const pedidos: PedidoDeMensagem[] = [];
+  const aberturas: PedidoDeAbertura[] = [];
+  const andamentos: PedidoDoAndamento[] = [];
+  /** O número do próximo chamado aberto de mensagens. */
+  let proximoChamado = 1050;
+
+  /**
+   * Abre o chamado das mensagens, como a API: recusa com o 404 a que não é da conversa, e com o 409
+   * a que já virou chamado, com o número dele, e marca cada uma com o número, a primeira e quantas.
+   */
+  const transformar = (conversa: string, corpo: PedidoDaAbertura, rota: Route) => {
+    const guardada = conversas[conversa];
+    if (!guardada) return rota.fulfill(problema(404, 'nao-encontrado', 'Conversa não encontrada.'));
+    const citadas = guardada.mensagens.filter(({ id: daConversa }) =>
+      corpo.mensagens.includes(daConversa),
+    );
+    if (citadas.length !== corpo.mensagens.length) {
+      return rota.fulfill(problema(404, 'nao-encontrado', 'A mensagem não foi encontrada.'));
+    }
+    const jaVirou = citadas.find(({ chamado }) => chamado)?.chamado;
+    if (jaVirou) {
+      return rota.fulfill(
+        problema(409, 'conflito', jaVirouChamado(jaVirou.numero, corpo.mensagens.length)),
+      );
+    }
+    aberturas.push({ conversa, corpo });
+    const numero = proximoChamado++;
+    for (const citada of citadas) {
+      citada.chamado = {
+        numero,
+        abrir: true,
+        mensagem: citadas[0]?.id ?? null,
+        mensagens: citadas.length,
+      };
+    }
+    return rota.fulfill({
+      status: 201,
+      json: { numero } satisfies Esquemas['ChamadoAbertoPeloChat'],
+    });
+  };
 
   const lista = (): Esquemas['ListaDoChat'] => {
     const daLista = ([conversa, guardada]: [string, ConversaGuardada]) => ({
@@ -453,6 +535,9 @@ export async function simularChat(pagina: Page) {
       if (parte === 'mensagens' && metodo === 'POST') {
         return gravar(conversa, rota.request().postDataJSON(), rota);
       }
+      if (parte === 'chamado' && metodo === 'POST') {
+        return transformar(conversa, rota.request().postDataJSON(), rota);
+      }
       if (parte === 'leitura' && metodo === 'POST') {
         const { ate } = rota.request().postDataJSON() as { ate: string };
         if (guardada.lidaAte === null || ate > guardada.lidaAte) guardada.lidaAte = ate;
@@ -479,9 +564,78 @@ export async function simularChat(pagina: Page) {
     return rota.fallback();
   });
 
+  // O diálogo do transformar: um tipo só, sem campos, e as pessoas de "No nome de".
+  await pagina.route(/\/api\/chat\/chamados\/tipos(\?.*)?$/, (rota) =>
+    rota.fulfill({
+      json: {
+        itens: [
+          { id: id(501), nome: 'Outro', icone: 'reticencias', frase: null, pedeOAtivo: false },
+        ],
+      } satisfies Esquemas['TiposParaAbrirPeloChat'],
+    }),
+  );
+  await pagina.route(/\/api\/pessoas\/nomes(\?.*)?$/, (rota) =>
+    rota.fulfill({
+      json: {
+        pessoas: [{ id: id(7002), nome: PAULO.nome, doMesmoLocal: true }],
+        total: 1,
+      } satisfies Esquemas['NomesDasPessoas'],
+    }),
+  );
+  // O "Passar para…" do "Andamento" lista quem recebe assim que o menu abre.
+  await pagina.route(/\/api\/chamados\/\d+\/quem-recebe(\?.*)?$/, (rota) =>
+    rota.fulfill({
+      json: {
+        contas: [{ conta: BRUNO.conta, nome: BRUNO.nome, abertos: 2 }],
+      } satisfies Esquemas['QuemRecebeOChamado'],
+    }),
+  );
+  // O assumir do "Andamento": confere a versão e passa o chamado para a colaboradora.
+  await pagina.route(/\/api\/chamados\/\d+\/assumir$/, (rota) => {
+    const numero = Number(new URL(rota.request().url()).pathname.split('/')[3]);
+    const conversa = conversasDosChamados.get(numero);
+    const { versao } = rota.request().postDataJSON() as { versao: number };
+    if (!conversa?.andamento) {
+      return rota.fulfill(problema(404, 'nao-encontrado', 'Chamado não encontrado.'));
+    }
+    if (versao !== conversa.andamento.versao) {
+      return rota.fulfill(problema(409, 'conflito', 'O chamado mudou. Confira e tente de novo.'));
+    }
+    andamentos.push({ acao: 'assumir', numero, versao });
+    Object.assign(conversa, {
+      situacao: 'em-atendimento',
+      situacaoEmTexto: 'Em andamento',
+      atende: { nome: EU.nome, desde: new Date().toISOString() },
+      etapas: etapas('em-atendimento', 2),
+      andamento: {
+        ...conversa.andamento,
+        versao: versao + 1,
+        acoes: doAndamento('em-atendimento', EU.conta),
+      },
+    } satisfies Partial<ConversaDoChamado>);
+    return rota.fulfill({
+      json: {
+        numero,
+        versao: versao + 1,
+        situacao: 'em-atendimento',
+        responsavel: { id: EU.conta, nome: EU.nome },
+      } satisfies Esquemas['ChamadoDepoisDaAcao'],
+    });
+  });
+
   return {
     /** As mensagens que a tela mandou, na ordem. */
     pedidos,
+    /** Os chamados abertos de mensagens, na ordem. */
+    aberturas,
+    /** As ações do "Andamento" que a API aceitou, na ordem. */
+    andamentos,
+    /** A mensagem da conversa, por um trecho, vira o chamado por outra conta. */
+    virouChamado: (conversa: string, trecho: string, numero: number) => {
+      const alvo = conversas[conversa]?.mensagens.find(({ texto }) => texto?.includes(trecho));
+      if (!alvo) throw new Error(`Nenhuma mensagem com "${trecho}".`);
+      alvo.chamado = { numero, abrir: false, mensagem: alvo.id, mensagens: 1 };
+    },
     /** As mensagens da conversa, como a simulação as guarda. */
     mensagensDe: (conversa: string) => conversas[conversa]?.mensagens ?? [],
   };

@@ -4329,8 +4329,11 @@ export const mensagensDosChamados = orgScoped(
     index('mensagens_dos_chamados_chamado_idx').on(t.orgId, t.chamadoId, t.criadaEm),
     // Para o anexo da mensagem ser do mesmo chamado (anexos_dos_chamados_mensagem_fk).
     unique('mensagens_dos_chamados_id_chamado_unico').on(t.orgId, t.id, t.chamadoId),
-    uniqueIndex('mensagens_dos_chamados_origem_unica')
-      .on(t.orgId, t.chamadoId)
+    // Uma linha `origem` por mensagem do chat citada, e cada mensagem num chamado só, também no
+    // chamado aberto por várias (change andamento-e-varias-mensagens, decisão 5). O índice serve à
+    // busca das marcas das mensagens.
+    uniqueIndex('mensagens_dos_chamados_origem_da_mensagem')
+      .on(t.orgId, sql`(${t.dados} ->> 'mensagem')`)
       .where(sql`${t.especie} = 'origem'`),
     // A primeira escolha de cada pergunta vence; a violação vira "Esta pergunta já foi respondida.".
     uniqueIndex('mensagens_dos_chamados_escolha_unica')

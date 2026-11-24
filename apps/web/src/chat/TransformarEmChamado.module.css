@@ -241,3 +241,45 @@
   font-size: var(--texto-subtitulo);
   font-weight: var(--peso-forte);
 }
+
+/* As várias citadas: o título "3 mensagens" em cima e a lista, que rola dentro do diálogo depois da
+   terceira. */
+.varias {
+  display: grid;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.quantas {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.listaDasCitadas {
+  display: grid;
+  gap: var(--esp-2);
+  max-block-size: calc(var(--esp-12) * 4);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--raio-controle);
+}
+
+.listaDasCitadas:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* O lugar da recusa das mensagens, no alto: vazio, não ocupa o espaço da grade. */
+.alto:empty {
+  display: none;
+}
+
+.nenhuma {
+  margin: 0;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-dado);
+}

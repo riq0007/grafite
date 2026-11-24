@@ -1,0 +1,12 @@
+/* O diálogo do aguardar e do resolver: a recusa no alto, o campo embaixo. */
+.formulario {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/* A recusa que não é do campo, com o "Abrir no Chamados" da do campo só da TI vazio. */
+.recusa {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-2);
+}

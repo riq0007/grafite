@@ -16,17 +16,14 @@ import {
   mensagensDoChat,
   naOrganizacao,
 } from '@grafite/db';
-import {
-  estaFechado,
-  ordemDasEquipesECanais,
-  participaDoChamado,
-  situacaoNoChat,
-} from '@grafite/domain';
+import { esperaAConta, estaFechado, ordemDasEquipesECanais, situacaoNoChat } from '@grafite/domain';
 import { and, count, countDistinct, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
+import { lerArvore } from '../arvore.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { ContaDoChat, contaDoChat, lerContas } from '../chat/contas.ts';
 import { idsDeQuemParticipa, lerConversaDaConta } from '../chat/conversa.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
@@ -305,6 +302,8 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
             abertoEm: chamados.abertoEm,
             pessoaId: chamados.pessoaId,
             origem: chamados.origem,
+            locais: chamados.locais,
+            semLocal: chamados.semLocal,
           })
           .from(chamados)
           .where(
@@ -324,6 +323,8 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
           ),
         );
         const momento = agora();
+        // A espera é "Aguardando você" só a quem participa do chamado, e não pela TI.
+        const quemAtende = comOAlcanceDeAtender(conta, await lerArvore(tx));
         return {
           itens: pagina.map((chamado) => ({
             numero: chamado.numero,
@@ -331,10 +332,7 @@ export const rotasDasEquipesDoChat: FastifyPluginAsyncZod<{
             situacao: situacaoNoChat(
               chamado.situacao,
               estaFechado(chamado, momento, fuso),
-              participaDoChamado(
-                { id: conta.id, pessoaId: conta.pessoaId, usaOChat: true },
-                chamado,
-              ),
+              esperaAConta(quemAtende, chamado),
             ),
             atende: chamado.responsavelId ? (nomes.get(chamado.responsavelId)?.nome ?? null) : null,
             abriu: chamado.abertoPor ? (nomes.get(chamado.abertoPor)?.nome ?? null) : null,

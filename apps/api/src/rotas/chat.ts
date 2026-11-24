@@ -20,12 +20,14 @@ import {
   type Transacao,
 } from '@grafite/db';
 import {
+  type Acesso,
   chamadosComRespostaNova,
   MAXIMO_NO_CONTADOR,
   nomeNoChat,
   normalizarTexto,
   ordemDasEquipesECanais,
   ordemDasRecentes,
+  participaPelaTi,
   respostaNova,
   totalDoChat,
 } from '@grafite/domain';
@@ -41,7 +43,9 @@ import {
   IMAGEM_ENTREGUE,
   imagemNaoEncontrada,
 } from '../arquivos/imagem-do-registro.ts';
+import { lerArvore } from '../arvore.ts';
 import { contendo } from '../busca.ts';
+import { comOAlcanceDeAtender } from '../chamados/quem-participa.ts';
 import { ContaDoChat, colunasDaConta, contaDoChat, lerContas } from '../chat/contas.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { RespostaDeProblema } from '../problemas.ts';
@@ -187,9 +191,12 @@ async function conversasDaConta(tx: Transacao, contaId: string): Promise<LinhaDa
 /**
  * Os chamados abertos de que a conta participa com resposta nova: os da pessoa dela e os que ela
  * abriu pelo chat (`participaDoChamado`), com as mensagens da TI de outra conta, que o domínio conta
- * depois da `vista_ate` (`respostaNova`).
+ * depois da `vista_ate` (`respostaNova`). O de quem participa pela TI não tem resposta nova.
  */
-async function chamadosComResposta(tx: Transacao, contaId: string): Promise<number> {
+async function chamadosComResposta(
+  tx: Transacao,
+  { contaId, acesso }: { contaId: string; acesso: Acesso },
+): Promise<number> {
   const [conta] = await tx
     .select({ pessoaId: contas.pessoaId })
     .from(contas)
@@ -199,6 +206,11 @@ async function chamadosComResposta(tx: Transacao, contaId: string): Promise<numb
     .select({
       id: chamados.id,
       situacao: chamados.situacao,
+      pessoaId: chamados.pessoaId,
+      origem: chamados.origem,
+      abertoPor: chamados.abertoPor,
+      locais: chamados.locais,
+      semLocal: chamados.semLocal,
       vistaAte: leiturasDosChamados.vistaAte,
     })
     .from(chamados)
@@ -238,6 +250,10 @@ async function chamadosComResposta(tx: Transacao, contaId: string): Promise<numb
         isNotNull(mensagensDosChamados.autorConta),
       ),
     );
+  const quemAtende = comOAlcanceDeAtender(
+    { id: contaId, pessoaId: conta.pessoaId, acesso },
+    await lerArvore(tx),
+  );
   return chamadosComRespostaNova(
     abertos.map((chamado) => ({
       respostaNova: respostaNova({
@@ -245,6 +261,7 @@ async function chamadosComResposta(tx: Transacao, contaId: string): Promise<numb
         linhas: linhas.filter(({ chamadoId }) => chamadoId === chamado.id),
         contaId,
         vistaAte: chamado.vistaAte,
+        pelaTi: participaPelaTi(quemAtende, chamado),
       }),
     })),
   );
@@ -266,11 +283,11 @@ export const rotasDoChat: FastifyPluginAsyncZod<{
       },
     },
     async (requisicao) => {
-      const { contaId } = sessaoDa(requisicao);
+      const { contaId, acesso } = sessaoDa(requisicao);
       return naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => ({
         naoLidas: totalDoChat(await conversasDaConta(tx, contaId)),
         chamadosComRespostaNova: (await ligadoNaTransacao(tx, 'chamados'))
-          ? await chamadosComResposta(tx, contaId)
+          ? await chamadosComResposta(tx, { contaId, acesso })
           : null,
       }));
     },

@@ -4,12 +4,19 @@
 // da TI, o "usa o chat" da ficha e o público do `chamados.mudaram` as leem.
 import { contas, type Transacao } from '@grafite/db';
 import {
+  type Acesso,
+  type ArvoreDeLocais,
+  alcance,
+  type ChamadoParaAtenderPeloChat,
   type ChamadoParaParticipar,
+  type ContaQueAtendePeloChat,
+  esperaAConta,
   type LocaisDoChamado,
   type PublicoDoEvento,
   participaDoChamado,
 } from '@grafite/domain';
 import { inArray, or, sql } from 'drizzle-orm';
+import { carregarAcesso } from '../acesso/acesso.ts';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import { usaOChatNaConsulta } from '../chat/quem-usa.ts';
 import { publicoDoChamado } from './alcance.ts';
@@ -18,6 +25,53 @@ export interface ContaQueParticipa {
   id: string;
   pessoaId: string;
   usaOChat: boolean;
+}
+
+/** A conta da sessão como a participação no chamado a lê: quem lê pelo chat usa o chat. */
+export const daConta = (conta: { id: string; pessoaId: string }): ContaQueParticipa => ({
+  id: conta.id,
+  pessoaId: conta.pessoaId,
+  usaOChat: true,
+});
+
+/**
+ * A conta da sessão com o alcance de `chamados.atender` dela, lido uma vez por pedido, para saber em
+ * que chamados ela atende pelo chat e participa pela TI.
+ */
+export const comOAlcanceDeAtender = (
+  conta: { id: string; pessoaId: string; acesso: Acesso },
+  arvore: ArvoreDeLocais,
+): ContaQueAtendePeloChat => ({
+  ...daConta(conta),
+  alcance: alcance(conta.acesso, 'chamados.atender', arvore),
+});
+
+/**
+ * As contas que participam do chamado e esperam a TI, fora quem participa pela TI (design, decisão
+ * 4): quem o abriu pelo chat no nome de outra pessoa e atende os locais dele recebe as notificações
+ * da TI, como quem atende, e não as de quem participa. O lado sai dos acessos dela, e não dos de
+ * quem age; a pessoa do chamado sempre espera, sem ler os acessos.
+ */
+export async function semQuemParticipaPelaTi(
+  tx: Transacao,
+  chamado: ChamadoParaAtenderPeloChat,
+  participam: readonly ContaQueParticipa[],
+  arvore: ArvoreDeLocais,
+): Promise<ContaQueParticipa[]> {
+  const esperam: ContaQueParticipa[] = [];
+  for (const conta of participam) {
+    const espera =
+      conta.pessoaId === chamado.pessoaId ||
+      esperaAConta(
+        {
+          ...conta,
+          alcance: alcance(await carregarAcesso(tx, conta.id), 'chamados.atender', arvore),
+        },
+        chamado,
+      );
+    if (espera) esperam.push(conta);
+  }
+  return esperam;
 }
 
 /**
@@ -63,6 +117,14 @@ export async function contasQueParticipam(
   chamado: ChamadoParaParticipar,
 ): Promise<ContaQueParticipa[]> {
   return (await contasQueParticipamDos(tx, [chamado])).get(chamado) ?? [];
+}
+
+/**
+ * A pessoa usa o chat pela conta dela, com o módulo ligado: a mensagem da TI chega a ela. É quem
+ * participaria do chamado da origem `ti` (a ficha e o andamento do chat).
+ */
+export async function pessoaUsaOChat(tx: Transacao, pessoaId: string): Promise<boolean> {
+  return (await contasQueParticipam(tx, { pessoaId, origem: 'ti', abertoPor: null })).length > 0;
 }
 
 /** O público com as contas de quem participa somadas, que leem o chamado sem as permissões dele. */

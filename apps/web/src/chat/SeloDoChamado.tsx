@@ -1,7 +1,8 @@
 // O selo da situação do chamado no chat (spec modulo-chat, "Selos e movimento do chat"): a palavra,
 // como a API a manda, sempre com a mesma marca e o mesmo ícone. A marca vai pela palavra, como a
 // tabela da spec, porque a lista, "Chamados da equipe" e o chip só recebem a palavra; a espera que a
-// TI lê, "Aguardando o colaborador", tem a marca da espera.
+// TI lê, "Aguardando o colaborador", tem o ícone da espera na informação, como no Chamados: a
+// atenção chama a conta a responder, e essa espera é de outra pessoa.
 import {
   ESPERA_DE_OUTRO,
   SITUACOES_PARA_QUEM_PARTICIPA as PALAVRAS,
@@ -22,7 +23,7 @@ const MARCAS: ReadonlyMap<string, MarcaDaPalavra> = new Map([
   [PALAVRAS.triagem, ABERTO],
   [PALAVRAS['em-atendimento'], { situacao: 'info', icone: Wrench }],
   [PALAVRAS.aguardando, ESPERA],
-  [ESPERA_DE_OUTRO, ESPERA],
+  [ESPERA_DE_OUTRO, { situacao: 'info', icone: Hourglass }],
   [PALAVRAS.resolvido, { situacao: 'sucesso', icone: CircleCheck }],
   [SITUACAO_FECHADA, { situacao: 'neutra', icone: Archive }],
 ]);

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { MENSAGEM_DA_PESSOA_INATIVA } from '../solicitacoes/solicitacoes.ts';
 import {
   conferirAberturaPeloChat,
+  conferirMensagensATransformar,
   jaVirouChamado,
   MENSAGENS_DA_ABERTURA_PELO_CHAT as M,
   tipoAbrePeloChat,
@@ -107,5 +108,36 @@ describe('a conferência da abertura pelo chat', () => {
 
   it('a mensagem que já virou chamado diz o número', () => {
     expect(jaVirouChamado(1045)).toBe('Esta mensagem já virou o chamado #1045.');
+  });
+});
+
+describe('as mensagens a transformar', () => {
+  /** O id da mensagem, na ordem da conversa. */
+  const id = (i: number) => `01a20b21-1d19-7941-8b47-${String(i).padStart(12, '0')}`;
+  const vinteEUma = Array.from({ length: 21 }, (_, i) => id(i));
+
+  it('tira os ids repetidos, também em maiúsculas, e põe na ordem dos ids, que é a da conversa', () => {
+    expect(conferirMensagensATransformar([id(2), id(0), id(2).toUpperCase(), id(1)])).toEqual({
+      ok: true,
+      ids: [id(0), id(1), id(2)],
+    });
+  });
+
+  it('recusa sem nenhuma e com mais de 20, depois de tirar os repetidos', () => {
+    expect(conferirMensagensATransformar([])).toEqual({ ok: false, recusa: M.semMensagens });
+    expect(conferirMensagensATransformar(vinteEUma)).toEqual({
+      ok: false,
+      recusa: M.mensagensDemais,
+    });
+    expect(conferirMensagensATransformar([...vinteEUma.slice(0, 20), id(0)])).toMatchObject({
+      ok: true,
+    });
+    expect(M.semMensagens).toBe('Escolha as mensagens.');
+    expect(M.mensagensDemais).toBe('Escolha até 20 mensagens.');
+  });
+
+  it('a que já virou chamado, com uma e com várias', () => {
+    expect(jaVirouChamado(1045, 1)).toBe('Esta mensagem já virou o chamado #1045.');
+    expect(jaVirouChamado(1045, 3)).toBe('Uma das mensagens já virou o chamado #1045.');
   });
 });

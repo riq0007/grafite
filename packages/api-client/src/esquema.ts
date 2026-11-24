@@ -28253,6 +28253,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/quem-recebe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem recebe o chamado no "Passar para…": as contas que atendem os locais dele */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuemRecebeOChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/{numero}/cartao": {
         parameters: {
             query?: never;
@@ -30695,6 +30787,102 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["PedidoDaAberturaPeloChatInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAbertoPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversas/{id}/chamado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abre um chamado a partir de até 20 mensagens da conversa, cada uma num chamado só, citadas na ordem da conversa */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAberturaDasMensagensInput"];
                 };
             };
             responses: {
@@ -40516,6 +40704,12 @@ export interface components {
             bytes: number;
             miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
         };
+        OrigemDoChamadoNoChatInput: {
+            autor: string;
+            texto: string | null;
+            em: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+        };
         ChamadoDeQuemParticipaInput: {
             numero: number;
             titulo: string;
@@ -40531,6 +40725,7 @@ export interface components {
             abertoEm: string;
             resolvidoEm: string | null;
             atende: string | null;
+            pelaTi: boolean;
             respostaNova: number;
             ultimaMensagem: {
                 autor: string;
@@ -40628,13 +40823,18 @@ export interface components {
                 miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 campo: string;
             }[];
-            origem: {
-                autor: string;
-                texto: string | null;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
-            } | null;
+            origem: components["schemas"]["OrigemDoChamadoNoChatInput"] | null;
+            origens: components["schemas"]["OrigemDoChamadoNoChatInput"][];
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
+            pelaTi: boolean;
+            andamento: {
+                versao: number;
+                acoes: ("assumir" | "passar" | "devolver" | "esperar" | "retomar" | "resolver" | "reabrir")[];
+                pessoa: {
+                    nome: string;
+                    usaOChat: boolean;
+                };
+            } | null;
             respostaNova: {
                 quantas: number;
                 desde: string | null;
@@ -41129,6 +41329,14 @@ export interface components {
             }[];
             total: number;
         };
+        QuemRecebeOChamadoInput: {
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                abertos: number;
+            }[];
+        };
         QuadroDosChamadosInput: {
             triagem: {
                 abertos: number[];
@@ -41310,6 +41518,20 @@ export interface components {
                     tipo: string;
                     bytes: number;
                     miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
+                }[];
+                mensagens: {
+                    autor: string;
+                    texto: string | null;
+                    /** Format: date-time */
+                    em: string;
+                    anexos: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        tipo: string;
+                        bytes: number;
+                        miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
+                    }[];
                 }[];
                 abrir: {
                     /** Format: uuid */
@@ -41842,6 +42064,7 @@ export interface components {
                 numero: number;
                 abrir: boolean;
                 mensagem: string | null;
+                mensagens: number;
             } | null;
         };
         PaginaDeMensagensInput: {
@@ -41875,6 +42098,13 @@ export interface components {
             titulo: string;
             pessoa?: string | null;
             ativo?: string | null;
+        };
+        PedidoDaAberturaDasMensagensInput: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+            mensagens: string[];
         };
         ChamadoAbertoPeloChatInput: {
             numero: number;
@@ -46401,6 +46631,12 @@ export interface components {
             bytes: number;
             miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
         };
+        OrigemDoChamadoNoChat: {
+            autor: string;
+            texto: string | null;
+            em: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+        };
         ChamadoDeQuemParticipa: {
             numero: number;
             titulo: string;
@@ -46416,6 +46652,7 @@ export interface components {
             abertoEm: string;
             resolvidoEm: string | null;
             atende: string | null;
+            pelaTi: boolean;
             respostaNova: number;
             ultimaMensagem: {
                 autor: string;
@@ -46513,13 +46750,18 @@ export interface components {
                 miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 campo: string;
             }[];
-            origem: {
-                autor: string;
-                texto: string | null;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
-            } | null;
+            origem: components["schemas"]["OrigemDoChamadoNoChat"] | null;
+            origens: components["schemas"]["OrigemDoChamadoNoChat"][];
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
+            pelaTi: boolean;
+            andamento: {
+                versao: number;
+                acoes: ("assumir" | "passar" | "devolver" | "esperar" | "retomar" | "resolver" | "reabrir")[];
+                pessoa: {
+                    nome: string;
+                    usaOChat: boolean;
+                };
+            } | null;
             respostaNova: {
                 quantas: number;
                 desde: string | null;
@@ -47014,6 +47256,14 @@ export interface components {
             }[];
             total: number;
         };
+        QuemRecebeOChamado: {
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                abertos: number;
+            }[];
+        };
         QuadroDosChamados: {
             triagem: {
                 abertos: number[];
@@ -47195,6 +47445,20 @@ export interface components {
                     tipo: string;
                     bytes: number;
                     miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
+                }[];
+                mensagens: {
+                    autor: string;
+                    texto: string | null;
+                    /** Format: date-time */
+                    em: string;
+                    anexos: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        tipo: string;
+                        bytes: number;
+                        miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
+                    }[];
                 }[];
                 abrir: {
                     /** Format: uuid */
@@ -47727,6 +47991,7 @@ export interface components {
                 numero: number;
                 abrir: boolean;
                 mensagem: string | null;
+                mensagens: number;
             } | null;
         };
         PaginaDeMensagens: {
@@ -47760,6 +48025,13 @@ export interface components {
             titulo: string;
             pessoa?: string | null;
             ativo?: string | null;
+        };
+        PedidoDaAberturaDasMensagens: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+            mensagens: string[];
         };
         ChamadoAbertoPeloChat: {
             numero: number;

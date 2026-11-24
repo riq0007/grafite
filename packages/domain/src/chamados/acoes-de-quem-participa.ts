@@ -2,7 +2,8 @@
 // "Avaliação do atendimento", "Resposta nova" e "Fechamento do chamado"; change chat-com-chamados,
 // design, decisão 9): a matriz situação × ação, com o Fechado, ao lado da matriz da TI
 // (`MATRIZ_DAS_ACOES`), cujo retomar e reabrir a mensagem, a escolha e o "Reabrir" fazem; a mudança
-// que a rota aplica, com o chamado travado; e a recusa com a frase da spec.
+// que a rota aplica, com o chamado travado; e a recusa com a frase da spec. Quem participa pela TI
+// fala pela TI (change andamento-e-varias-mensagens, decisão 4).
 import { lerTexto } from '../campos/textos.ts';
 import {
   type AcaoDoChamado,
@@ -110,6 +111,11 @@ export interface ChamadoParaQuemParticipa extends LocaisComNome {
   responsavel: string | null;
   /** A resolução de agora, a chave da avaliação; nula fora do resolvido. */
   resolvidoEm: Date | null;
+  /**
+   * A conta que age participa dele pela TI (`participaPelaTi`), com os acessos de agora: ela
+   * responde pela TI e não avalia.
+   */
+  pelaTi: boolean;
 }
 
 /** A pergunta da TI que a escolha responde, lida com o chamado travado. */
@@ -176,6 +182,8 @@ export type RecusaDeQuemParticipa =
   | { motivo: 'comentario-longo' }
   | { motivo: 'ja-respondida' }
   | { motivo: 'opcao-de-fora' }
+  | { motivo: 'responda-pela-ti' }
+  | { motivo: 'quem-atende-nao-avalia' }
   | Extract<
       RecusaDaAcao,
       { motivo: 'nao-resolvido' | 'sem-texto' | 'texto-longo' | 'anexos-demais' }
@@ -214,11 +222,20 @@ function lerAMensagem(
  * como o retomar da TI, com quem atende; a mensagem e o "Reabrir" do resolvido o reabrem, como o
  * reabrir da TI: com quem resolveu, se a conta ainda atende os locais, ou na triagem. A versão sobe
  * só na retomada e na reabertura.
+ *
+ * Quem participa pela TI é recusada antes da célula, como quem age na TI antes do fechado: a
+ * mensagem, a escolha e o "Reabrir" vão pela TI, e quem atende não avalia. A marcação como vista
+ * segue, porque muda só a leitura dela.
  */
 export function decidirAcaoDeQuemParticipa(
   chamado: ChamadoParaQuemParticipa,
   pedido: PedidoDeQuemParticipa,
 ): DecisaoDeQuemParticipa {
+  if (chamado.pelaTi && pedido.acao !== 'vista') {
+    return recusada({
+      motivo: pedido.acao === 'avaliar' ? 'quem-atende-nao-avalia' : 'responda-pela-ti',
+    });
+  }
   const partida: SituacaoComOFechado = chamado.fechado ? 'fechado' : chamado.situacao;
   const celula = MATRIZ_DE_QUEM_PARTICIPA[pedido.acao][partida];
   if ('recusa' in celula) return recusada({ motivo: celula.recusa });
@@ -323,6 +340,10 @@ export function mensagemDaRecusaDeQuemParticipa(
       return MENSAGENS_DA_PERGUNTA.respondida;
     case 'opcao-de-fora':
       return MENSAGENS_DA_PERGUNTA.deFora;
+    case 'responda-pela-ti':
+      return `Você atende o chamado #${numero}. Responda pela TI.`;
+    case 'quem-atende-nao-avalia':
+      return `Quem atende o chamado #${numero} não o avalia.`;
     default:
       return mensagemDaRecusaDaAcao(numero, recusa);
   }

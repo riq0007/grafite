@@ -313,9 +313,10 @@ function Escrito({
 }
 
 /**
- * A origem pelo chat, no começo da conversa (m05): de que conversa o chamado veio e a mensagem
- * citada, como ficou na abertura, com quem a escreveu, a hora, o texto e os anexos, que o chamado
- * guardou. "Abrir a conversa" leva ao chat nessa mensagem, só a quem participa dela.
+ * A origem pelo chat, no começo da conversa (m05): de que conversa o chamado veio e as mensagens
+ * citadas, na ordem da conversa, como ficaram na abertura, cada uma com quem a escreveu, a hora, o
+ * texto e os anexos, que o chamado guardou. "Abrir a conversa" leva ao chat na primeira delas, só a
+ * quem participa dela.
  */
 function OrigemNoChat({
   origem,
@@ -333,22 +334,26 @@ function OrigemNoChat({
       <Icone icone={MessagesSquare} />
       <div className={estilos.deOnde}>
         <p className={estilos.tituloDaOrigem}>{tituloDaOrigem(origem.conversa)}</p>
-        <figure className={estilos.citada}>
-          <figcaption className={estilos.quemEscreveu}>
-            {'Mensagem de '}
-            <b>{origem.autor}</b>
-            {', '}
-            <time dateTime={origem.em}>
-              {momentoNaConversa(new Date(origem.em), agora, dataHora)}
-            </time>
-          </figcaption>
-          {origem.texto && (
-            <blockquote className={estilos.textoCitado}>
-              <p>{origem.texto}</p>
-            </blockquote>
-          )}
-        </figure>
-        {origem.anexos.length > 0 && <Anexos anexos={origem.anexos} numero={numero} />}
+        <div className={estilos.citadas}>
+          {origem.mensagens.map((citada) => (
+            <figure key={`${citada.autor} ${citada.em}`} className={estilos.citada}>
+              <figcaption className={estilos.quemEscreveu}>
+                {'Mensagem de '}
+                <b>{citada.autor}</b>
+                {', '}
+                <time dateTime={citada.em}>
+                  {momentoNaConversa(new Date(citada.em), agora, dataHora)}
+                </time>
+              </figcaption>
+              {citada.texto && (
+                <blockquote className={estilos.textoCitado}>
+                  <p>{citada.texto}</p>
+                </blockquote>
+              )}
+              {citada.anexos.length > 0 && <Anexos anexos={citada.anexos} numero={numero} />}
+            </figure>
+          ))}
+        </div>
         {origem.abrir && (
           <LinkDoChat
             className={estilos.abrirAConversa}

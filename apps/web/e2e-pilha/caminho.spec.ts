@@ -2162,6 +2162,11 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
   await escolherSugestao(page, 'Conta', 'Carla', 'Carla Dias (carla.dias)');
   await inclusao.getByRole('button', { name: 'Incluir', exact: true }).click();
   await expect(page.getByRole('list', { name: 'Membros do grupo' })).toContainText('Carla Dias');
+  // A administradora também, para conversar na equipe com Carla (passo 40).
+  await page.getByRole('button', { name: 'Incluir conta' }).click();
+  await escolherSugestao(page, 'Conta', 'Ana', 'Ana Souza (ana.souza)');
+  await inclusao.getByRole('button', { name: 'Incluir', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Membros do grupo' })).toContainText('Ana Souza');
   await page.getByRole('button', { name: 'Atribuir perfil' }).click();
   const aoGrupo = await preencherAtribuicao(
     page,
@@ -2258,6 +2263,114 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       'Reiniciei o roteador da recepção. Voltou aí?',
     );
     expect(await daCarla.evaluate(() => window.__mesmaPagina)).toBe(true);
+
+    // 40. O andamento pelo chat e as várias mensagens (change andamento-e-varias-mensagens): Carla
+    // escreve duas mensagens na equipe. A administradora, na mesma equipe, marca as duas por
+    // "Selecionar" e as transforma num chamado no nome de Carla; o evento diz "2 mensagens". No
+    // chamado do chat, ela o assume pelo "Andamento" e responde na caixa, pela TI, e a resposta
+    // chega à tela aberta de Carla como a da TI, sem recarregar.
+    await daCarla
+      .getByRole('region', { name: 'Chat', exact: true })
+      .getByRole('link', { name: /^Recepção/ })
+      .click();
+    const daEquipe = daCarla.getByRole('textbox', { name: 'Escrever uma mensagem em Recepção' });
+    for (const texto of [
+      'A impressora da recepção não imprime.',
+      'Ela diz que tem papel atolado, mas não tem.',
+    ]) {
+      const foi = daCarla.waitForResponse(
+        (resposta) =>
+          /\/api\/chat\/conversas\/[^/]+\/mensagens$/.test(resposta.url()) &&
+          resposta.request().method() === 'POST',
+      );
+      await daEquipe.fill(texto);
+      await daCarla.getByRole('button', { name: 'Enviar', exact: true }).click();
+      expect((await foi).ok()).toBe(true);
+    }
+    const equipe = new URL(daCarla.url()).pathname;
+
+    await page.goto(equipe);
+    const daAna = page.getByRole('region', { name: 'Mensagens' });
+    const primeira = daAna
+      .getByRole('listitem')
+      .filter({ hasText: 'A impressora da recepção não imprime.' });
+    const segunda = daAna
+      .getByRole('listitem')
+      .filter({ hasText: 'Ela diz que tem papel atolado, mas não tem.' });
+    const selecionadas = page.getByRole('status').filter({ hasText: /selecionadas?$/ });
+    await primeira.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Selecionar' }).click();
+    // O "Selecionar" age depois de o menu fechar: a segunda é marcada com a seleção já começada.
+    await expect(selecionadas).toHaveText('1 mensagem selecionada');
+    // Na seleção, o clique em qualquer ponto da mensagem a marca.
+    await segunda.click();
+    await expect(selecionadas).toHaveText('2 mensagens selecionadas');
+    await page.getByRole('button', { name: /^Transformar em chamado/ }).click();
+    const varias = page.getByRole('dialog', { name: 'Transformar em chamado' });
+    await expect(varias.getByRole('heading', { name: '2 mensagens' })).toBeVisible();
+    await expect(
+      varias.getByRole('list', { name: '2 mensagens' }).locator('blockquote'),
+    ).toHaveText([
+      'A impressora da recepção não imprime.',
+      'Ela diz que tem papel atolado, mas não tem.',
+    ]);
+    await escolher(page, 'Tipo', 'Outro');
+    await varias.getByRole('textbox', { name: 'Título' }).fill('A impressora da recepção atola');
+    await varias.getByRole('button', { name: 'Trocar a pessoa' }).click();
+    await page.getByRole('combobox', { name: 'Pessoa' }).fill('Carla');
+    await page.getByRole('option', { name: 'Carla Dias' }).click();
+    await expect(varias.getByRole('group', { name: 'No nome de' })).toContainText('Carla Dias');
+    await varias.getByRole('button', { name: 'Abrir chamado' }).click();
+    await expect(varias).toHaveCount(0);
+    await expect(page.getByText('Chamado #3 aberto.')).toBeVisible();
+    await expect(selecionadas).toHaveCount(0);
+    const eventoDasDuas = daAna
+      .getByRole('listitem')
+      .filter({ hasText: /transformou 2 mensagens no chamado #3/ });
+    await expect(eventoDasDuas).toBeVisible();
+    await expect(primeira).toContainText('Virou o chamado #3');
+    await expect(segunda).toContainText('Virou o chamado #3');
+    const daPrimeira = await primeira.getAttribute('data-mensagem');
+    expect(daPrimeira).toBeTruthy();
+    await expect(eventoDasDuas.getByRole('link', { name: '2 mensagens' })).toHaveAttribute(
+      'href',
+      new RegExp(String(daPrimeira)),
+    );
+
+    // Carla abre o chamado novo no chat dela e fica com a tela aberta.
+    await daCarla
+      .getByRole('region', { name: 'Chat', exact: true })
+      .getByRole('link', { name: /A impressora da recepção atola/ })
+      .click();
+    await expect(daCarla).toHaveURL(/\/chat\/chamados\/3$/);
+    const doChamado = daCarla.getByRole('region', { name: 'Conversa do chamado' });
+    await expect(doChamado.locator('blockquote')).toHaveText([
+      'A impressora da recepção não imprime.',
+      'Ela diz que tem papel atolado, mas não tem.',
+    ]);
+    await daCarla.evaluate(() => {
+      window.__mesmaPagina = true;
+    });
+
+    await page.goto('/chat/chamados/3');
+    await page.getByRole('button', { name: 'Andamento' }).click();
+    await page.getByRole('menuitem', { name: 'Assumir' }).click();
+    await expect(
+      page.getByRole('list', { name: 'Etapas do chamado' }).locator('[aria-current="step"]'),
+    ).toContainText('Em andamento');
+    await expect(
+      daCarla.getByRole('list', { name: 'Etapas do chamado' }).locator('[aria-current="step"]'),
+    ).toContainText('Em andamento');
+    const pelaTi = page.getByRole('textbox', { name: /^Escrever para Carla no #3/ });
+    await pelaTi.fill('Vou aí destravar a impressora agora.');
+    await page.getByRole('button', { name: 'Enviar', exact: true }).click();
+    await expect(pelaTi).toHaveValue('');
+
+    await expect(doChamado).toContainText('Vou aí destravar a impressora agora.');
+    await expect(
+      doChamado.getByRole('listitem').filter({ hasText: 'Vou aí destravar a impressora agora.' }),
+    ).toContainText('Ana Souza (TI)');
+    expect(await daCarla.evaluate(() => window.__mesmaPagina)).toBe(true);
   } finally {
     await doChat.close();
   }
@@ -2265,6 +2378,8 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     'chamado.aberto',
     'chamado.assumido',
     'chamado.resolvido',
+    'chamado.aberto',
+    'chamado.assumido',
     'chamado.aberto',
     'chamado.assumido',
   ]);
