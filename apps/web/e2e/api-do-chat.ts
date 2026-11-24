@@ -5,6 +5,7 @@
 // "Pedir chamados pelo chat" na organização inteira, como o perfil Colaborador do runbook.
 import { readFileSync } from 'node:fs';
 import type { components } from '@grafite/api-client';
+import { acoesDoAndamento, jaVirouChamado } from '@grafite/domain';
 import type { Page, Route } from '@playwright/test';
 import { type PermissaoDaSessao, SEM_SESSAO, sessaoDe } from './fixtures.ts';
 
@@ -352,7 +353,12 @@ export async function simularChat(pagina: Page) {
   ]);
 
   // O #1047, que a colaboradora abriu pelo chat no nome de Paulo, que ela atende: ela participa
-  // pela TI, e o chamado, na triagem, tem o "Andamento" (change andamento-e-varias-mensagens).
+  // pela TI, e o chamado, na triagem, tem o "Andamento" (change andamento-e-varias-mensagens), com
+  // as ações que a API manda. Participar pela TI pede o "Atender chamados" nos locais de Paulo, que
+  // a sessão da simulação não tem: a tela segue o que a leitura do chamado diz, e o "Abrir no
+  // Chamados" do menu levaria a um módulo que ela não abre, e o teste não o escolhe.
+  const doAndamento = (situacao: ConversaDoChamado['situacao'], responsavel: string | null) =>
+    acoesDoAndamento({ situacao, responsavel, fechado: false }, { id: EU.conta, pelaTi: true });
   conversasDosChamados.set(
     1047,
     doChamado(1047, {
@@ -364,7 +370,7 @@ export async function simularChat(pagina: Page) {
       pelaTi: true,
       andamento: {
         versao: 3,
-        acoes: ['assumir', 'esperar', 'resolver'],
+        acoes: doAndamento('triagem', null),
         pessoa: { nome: PAULO.nome, usaOChat: true },
       },
     }),
@@ -378,8 +384,8 @@ export async function simularChat(pagina: Page) {
   let proximoChamado = 1050;
 
   /**
-   * Abre o chamado das mensagens, como a API: recusa a que não é da conversa ou que já virou
-   * chamado, e marca cada uma com o número, a primeira e quantas.
+   * Abre o chamado das mensagens, como a API: recusa com o 404 a que não é da conversa, e com o 409
+   * a que já virou chamado, com o número dele, e marca cada uma com o número, a primeira e quantas.
    */
   const transformar = (conversa: string, corpo: PedidoDaAbertura, rota: Route) => {
     const guardada = conversas[conversa];
@@ -387,8 +393,14 @@ export async function simularChat(pagina: Page) {
     const citadas = guardada.mensagens.filter(({ id: daConversa }) =>
       corpo.mensagens.includes(daConversa),
     );
-    if (citadas.length !== corpo.mensagens.length || citadas.some(({ chamado }) => chamado)) {
-      return rota.fulfill(problema(409, 'conflito', 'Esta mensagem já virou o chamado.'));
+    if (citadas.length !== corpo.mensagens.length) {
+      return rota.fulfill(problema(404, 'nao-encontrado', 'A mensagem não foi encontrada.'));
+    }
+    const jaVirou = citadas.find(({ chamado }) => chamado)?.chamado;
+    if (jaVirou) {
+      return rota.fulfill(
+        problema(409, 'conflito', jaVirouChamado(jaVirou.numero, corpo.mensagens.length)),
+      );
     }
     aberturas.push({ conversa, corpo });
     const numero = proximoChamado++;
@@ -570,6 +582,14 @@ export async function simularChat(pagina: Page) {
       } satisfies Esquemas['NomesDasPessoas'],
     }),
   );
+  // O "Passar para…" do "Andamento" lista quem recebe assim que o menu abre.
+  await pagina.route(/\/api\/chamados\/\d+\/quem-recebe(\?.*)?$/, (rota) =>
+    rota.fulfill({
+      json: {
+        contas: [{ conta: BRUNO.conta, nome: BRUNO.nome, abertos: 2 }],
+      } satisfies Esquemas['QuemRecebeOChamado'],
+    }),
+  );
   // O assumir do "Andamento": confere a versão e passa o chamado para a colaboradora.
   await pagina.route(/\/api\/chamados\/\d+\/assumir$/, (rota) => {
     const numero = Number(new URL(rota.request().url()).pathname.split('/')[3]);
@@ -587,7 +607,11 @@ export async function simularChat(pagina: Page) {
       situacaoEmTexto: 'Em andamento',
       atende: { nome: EU.nome, desde: new Date().toISOString() },
       etapas: etapas('em-atendimento', 2),
-      andamento: { ...conversa.andamento, versao: versao + 1, acoes: ['esperar', 'resolver'] },
+      andamento: {
+        ...conversa.andamento,
+        versao: versao + 1,
+        acoes: doAndamento('em-atendimento', EU.conta),
+      },
     } satisfies Partial<ConversaDoChamado>);
     return rota.fulfill({
       json: {
@@ -606,6 +630,12 @@ export async function simularChat(pagina: Page) {
     aberturas,
     /** As ações do "Andamento" que a API aceitou, na ordem. */
     andamentos,
+    /** A mensagem da conversa, por um trecho, vira o chamado por outra conta. */
+    virouChamado: (conversa: string, trecho: string, numero: number) => {
+      const alvo = conversas[conversa]?.mensagens.find(({ texto }) => texto?.includes(trecho));
+      if (!alvo) throw new Error(`Nenhuma mensagem com "${trecho}".`);
+      alvo.chamado = { numero, abrir: false, mensagem: alvo.id, mensagens: 1 };
+    },
     /** As mensagens da conversa, como a simulação as guarda. */
     mensagensDe: (conversa: string) => conversas[conversa]?.mensagens ?? [],
   };

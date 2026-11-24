@@ -414,6 +414,46 @@ test.describe('na conversa aberta', () => {
     await expect(paulo).toContainText('Virou o chamado #1050');
   });
 
+  test('a que virou chamado por outra conta é recusada no alto, sai das citadas e da seleção, e o resto abre', async ({
+    page,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto(`/chat/c/${EQUIPE}`);
+    const paulo = mensagem(page, 'manchando todas as folhas');
+    await expect(paulo).toBeVisible();
+    await botaoDireito(page, paulo.getByText(/manchando todas as folhas/));
+    await menuDaMensagem(page, 'Paulo Nunes').getByRole('menuitem', { name: 'Selecionar' }).click();
+    await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
+    await mensagem(page, 'Quem vai fechar o relatório').click();
+    await expect(selecionadas(page)).toHaveText('2 mensagens selecionadas');
+    await page.getByRole('button', { name: /^Transformar em chamado/ }).click();
+    const dialogo = page.getByRole('dialog', { name: 'Transformar em chamado' });
+    await expect(dialogo.getByRole('heading', { name: '2 mensagens' })).toBeVisible();
+    await dialogo
+      .getByRole('radiogroup', { name: 'Tipo' })
+      .locator('label')
+      .filter({ has: page.getByRole('radio', { name: 'Outro', exact: true }) })
+      .click();
+    await dialogo.getByRole('textbox', { name: 'Título' }).fill('Impressora do Financeiro mancha');
+
+    // Antes do "Abrir chamado", a de Paulo vira o #1045 por outra conta.
+    chat.virouChamado(EQUIPE, 'manchando todas as folhas', 1045);
+    await dialogo.getByRole('button', { name: 'Abrir chamado' }).click();
+    await expect(dialogo.getByText('Uma das mensagens já virou o chamado #1045.')).toBeVisible();
+    // A conversa se relê: a de Paulo sai das citadas e da seleção, com a marca.
+    await expect(dialogo.getByRole('heading', { name: '2 mensagens' })).toHaveCount(0);
+    await expect(dialogo.locator('blockquote')).toHaveText([/Quem vai fechar o relatório/]);
+    await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
+    await expect(paulo).toContainText('Virou o chamado #1045');
+    expect(chat.aberturas).toEqual([]);
+
+    await dialogo.getByRole('button', { name: 'Abrir chamado' }).click();
+    await expect(dialogo).toHaveCount(0);
+    await expect(page.getByText('Chamado #1050 aberto.')).toBeVisible();
+    const [primeira] = chat.mensagensDe(EQUIPE);
+    expect(chat.aberturas.map(({ corpo }) => corpo.mensagens)).toEqual([[primeira?.id]]);
+  });
+
   test('no canal em que ela não escreve, a barra da seleção fica no lugar da frase, e o Esc a desfaz', async ({
     page,
   }) => {
@@ -428,6 +468,14 @@ test.describe('na conversa aberta', () => {
     await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
     await expect(frase).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Transformar em chamado/ })).toBeEnabled();
+
+    // O Ctrl+Shift+T abre o transformar com a marcada; o Esc fecha só o diálogo, e a seleção fica.
+    await page.keyboard.press('Control+Shift+T');
+    const dialogo = page.getByRole('dialog', { name: 'Transformar em chamado' });
+    await expect(dialogo.locator('blockquote')).toHaveText(/A rede do 2º andar/);
+    await page.keyboard.press('Escape');
+    await expect(dialogo).toHaveCount(0);
+    await expect(selecionadas(page)).toHaveText('1 mensagem selecionada');
 
     await page.keyboard.press('Escape');
     await expect(selecionadas(page)).toHaveCount(0);
@@ -452,6 +500,7 @@ test.describe('na conversa aberta', () => {
     const menu = page.getByRole('menu', { name: 'Andamento do #1047' });
     await expect(menu.getByRole('menuitem')).toHaveText([
       'Assumir',
+      'Passar para…',
       'Aguardar Paulo…',
       'Resolver…',
       /^Abrir no Chamados/,
@@ -463,6 +512,8 @@ test.describe('na conversa aberta', () => {
     expect(chat.andamentos).toEqual([{ acao: 'assumir', numero: 1047, versao: 3 }]);
     await page.getByRole('button', { name: 'Andamento' }).click();
     await expect(menu.getByRole('menuitem')).toHaveText([
+      'Passar para…',
+      'Devolver à triagem',
       'Aguardar Paulo…',
       'Resolver…',
       /^Abrir no Chamados/,
