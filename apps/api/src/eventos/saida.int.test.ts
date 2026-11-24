@@ -180,6 +180,32 @@ describe('registrarEvento', () => {
     ]);
   });
 
+  // O público da aba (change aba-dos-colaboradores, design, decisão 6): o evento que só o tem passa
+  // no CHECK, e as listas também vão em linhas de 20.
+  it('grava o público da aba, só com ele, e divide os aparelhos em linhas de 20', async () => {
+    const aparelhos = Array.from(
+      { length: 21 },
+      (_, i) => `0199a3f0-0000-7000-b000-${String(i).padStart(12, '0')}`,
+    );
+    const sessaoDaAba = '0199a3f0-0000-7000-c000-000000000001';
+    await naOrganizacao(api.banco, org, async (tx) => {
+      await registrarEvento(tx, {
+        tipo: 'sessao.encerrada',
+        alvo: null,
+        publico: { sessoesDaAba: [sessaoDaAba] },
+      });
+      await registrarEvento(tx, { tipo: 'sessao.encerrada', alvo: null, publico: { aparelhos } });
+      await registrarEvento(tx, { tipo: 'sessao.encerrada', alvo: null, publico: { abas: true } });
+    });
+    const linhas = (await gravados()).sort((a, b) => a.id.localeCompare(b.id));
+    expect(linhas).toMatchObject([
+      { sessoesDaAba: [sessaoDaAba], aparelhosDaAba: null, abas: false },
+      { sessoesDaAba: null, aparelhosDaAba: aparelhos.slice(0, 20), abas: false },
+      { sessoesDaAba: null, aparelhosDaAba: aparelhos.slice(20), abas: false },
+      { sessoesDaAba: null, aparelhosDaAba: null, abas: true },
+    ]);
+  });
+
   it('grava os grupos vazios como lista vazia, que não alcança ninguém pela permissão', async () => {
     await naOrganizacao(api.banco, org, (tx) =>
       registrarEvento(tx, {

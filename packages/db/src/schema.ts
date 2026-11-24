@@ -419,7 +419,10 @@ export const aparelhosDaAba = orgScoped(
     entrada: text('entrada', { enum: ENTRADAS_DA_ABA }).notNull().default('windows'),
     tetoDeContas: integer('teto_de_contas').notNull().default(5),
     tokenHash: bytea('token_hash').notNull().unique('aparelhos_da_aba_token_hash_unico'),
+    /** O primeiro registro; o re-registro não o regrava. */
     registradoEm: momento('registrado_em').notNull().defaultNow(),
+    /** O último registro, quando o token foi trocado. */
+    tokenTrocadoEm: momento('token_trocado_em').notNull().defaultNow(),
     ultimoContatoEm: momento('ultimo_contato_em'),
     bloqueadoEm: momento('bloqueado_em'),
   },
@@ -477,6 +480,8 @@ export const sessoesDaAba = orgScoped(
       .on(t.orgId, t.contaId, t.aparelhoId)
       .where(sql`${t.encerradaEm} is null`),
     index('sessoes_da_aba_aparelho_idx').on(t.orgId, t.aparelhoId),
+    // Para a sessão do chat na aba se prender à mesma conta da sessão da aba.
+    unique('sessoes_da_aba_org_id_id_conta_unico').on(t.orgId, t.id, t.contaId),
     check('sessoes_da_aba_entrada_valida', sql`${t.entrada} in (${lista(ENTRADAS_DA_ABA)})`),
     check(
       'sessoes_da_aba_fim_com_motivo',
@@ -549,8 +554,8 @@ export const sessoes = orgScoped(
   (t) => [
     foreignKey({
       name: 'sessoes_sessao_da_aba_fk',
-      columns: [t.orgId, t.sessaoDaAbaId],
-      foreignColumns: [sessoesDaAba.orgId, sessoesDaAba.id],
+      columns: [t.orgId, t.sessaoDaAbaId, t.contaId],
+      foreignColumns: [sessoesDaAba.orgId, sessoesDaAba.id, sessoesDaAba.contaId],
     }),
     check(
       'sessoes_alcance_valido',
@@ -885,6 +890,13 @@ export const eventos = orgScoped(
     permissoes: text('permissoes').array(),
     contas: uuid('contas').array(),
     sessoes: uuid('sessoes').array(),
+    /**
+     * A aba dos colaboradores e o chat dentro dela: as sessões da aba, os aparelhos e todas as abas
+     * da organização (change aba-dos-colaboradores, design, decisão 6).
+     */
+    sessoesDaAba: uuid('sessoes_da_aba').array(),
+    aparelhosDaAba: uuid('aparelhos_da_aba').array(),
+    abas: boolean('abas').notNull().default(false),
   },
   (t) => [
     index('eventos_momento_idx').on(t.orgId, t.momento),
@@ -892,7 +904,8 @@ export const eventos = orgScoped(
     check(
       'eventos_publico_valido',
       sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
-          or ${t.contas} is not null or ${t.sessoes} is not null)
+          or ${t.contas} is not null or ${t.sessoes} is not null
+          or ${t.sessoesDaAba} is not null or ${t.aparelhosDaAba} is not null or ${t.abas})
         and (${t.locais} is null or ${t.permissao} is not null)
         and (${t.grupos} is null or ${t.permissao} is not null)`,
     ),
@@ -902,7 +915,9 @@ export const eventos = orgScoped(
         and coalesce(cardinality(${t.grupos}), 0) <= 8
         and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
-        and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
+        and coalesce(cardinality(${t.sessoes}), 0) <= 20
+        and coalesce(cardinality(${t.sessoesDaAba}), 0) <= 20
+        and coalesce(cardinality(${t.aparelhosDaAba}), 0) <= 20`,
     ),
   ],
 );

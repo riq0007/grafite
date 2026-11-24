@@ -505,6 +505,13 @@
       "when": 1795552525020,
       "tag": "0071_aba_dos_colaboradores",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1795553224449,
+      "tag": "0072_eventos_e_sessoes_da_aba",
+      "breakpoints": true
     }
   ]
 }

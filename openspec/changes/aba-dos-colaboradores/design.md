@@ -59,7 +59,7 @@ A entrada é do aparelho, guardada no servidor: `windows` ou `senha`. O MSI só 
 - **Pela senha:**
   - a tela da aba pede o usuário e a senha. O pedido vai pelo pipe ao serviço, e dele à API, com o token do aparelho;
   - a API confere pela mesma função da entrada (`rotas/sessao.ts`), extraída para ser chamada dos dois lugares, e não por uma cópia: o `conferirNoDiretorio`, o bloqueio por tentativas e a pendência dos dois passos;
-  - **o código:** a primeira chamada pode responder `falta-o-codigo`, com uma sessão pendente da aba, de 5 minutos. A segunda leva o código e o id da pendente, e as tentativas do código contam como na entrada. A conta que exige os dois passos sem os ter cadastrado é recusada com a frase da spec;
+  - **o código:** a primeira chamada pode responder `falta-o-codigo`, com uma sessão pendente da aba, de 5 minutos. A primeira devolve o token da pendente, e a segunda leva o código e esse token, achado pelo hash como na pendente da web. Ao ativar, o último uso volta para o agora, e as tentativas do código contam como na entrada. A conta que exige os dois passos sem os ter cadastrado é recusada com a frase da spec;
   - **o fim:** a sessão termina no servidor (`DELETE /api/aba/sessao`) com o "Sair", com o fim da sessão do Windows ou a tela bloqueada (`WTSRegisterSessionNotification`: `WTS_SESSION_LOCK` e `WTS_SESSION_LOGOFF`) e com 30 minutos sem uso. O servidor conta os 30 minutos pelo último uso, e assim o computador desligado também tem a sessão vencida. O uso é a aba ou a tela maior com o foco, que o lado nativo informa ao servidor no máximo uma vez por minuto;
   - **o que fica no computador:** o token da sessão fica só na memória. A aba limpa os dados do chat (`clear_all_browsing_data` do WebView2) ao terminar e também ao abrir, para o caso de o processo ter morrido;
   - **a renovação** vai pelo token da sessão, sem a senha, e a API confere a pessoa no AD pela conta de serviço.
@@ -88,10 +88,14 @@ O escopo da aba segue o do coletor: a organização vem do endereço, o token do
 As tabelas, todas com `orgScoped()` e RLS forçado:
 - **`chaves_da_aba`:** o hash, quando foi criada e quando foi trocada; uma ativa por organização.
 - **`configuracoes_da_aba`:** a forma, o contato e a versão.
-- **`aparelhos_da_aba`:** o identificador da máquina (`MachineGuid`), o identificador curto, o nome, a versão, a entrada, o último contato, o hash do token e o bloqueio.
-- **`sessoes_da_aba`:** a conta, o aparelho, a entrada, o hash do token, quando começou, o último uso, quando vence, quando terminou e o motivo.
-- **`bilhetes_da_aba`:** o hash, a sessão da aba, o destino, quando vence e quando foi usado.
-- **Nas `sessoes`:** o `alcance` (`comum` ou `chat-da-aba`) e o `sessao_da_aba_id`. O nome é outro que o do `aparelho_id`, que é do aparelho confiável.
+- **`aparelhos_da_aba`:** o identificador da máquina (`MachineGuid`), o identificador curto, o nome, a versão, a entrada, o último contato, o hash do token e o bloqueio. O `registrado_em` é o primeiro registro, que o `aba aparelhos` lê; o `token_trocado_em` é o último, que a regra do re-registro em menos de 1 hora lê.
+- **`sessoes_da_aba`:** a conta, o aparelho, a entrada, o hash do token, quando começou, o último uso, quando vence, quando terminou e o motivo. Só a abertura, a ativação e o `POST /api/aba/uso` gravam o último uso, e o escopo da aba não o toca a cada pedido: senão a releitura do estado manteria viva a sessão da entrada pela senha. Uma aberta por conta e aparelho:
+  - a entrada encerra a aberta antes de incluir, na mesma transação: com o motivo 'sem-uso' a que já venceu, e 'outra-sessao-no-aparelho' a que segue valendo;
+  - duas entradas ao mesmo tempo dão o 23505 numa delas, e a rota responde como a outra entrada;
+  - a aba que recebe o fim 'outra-sessao-no-aparelho' não pede outra sessão sozinha, para duas sessões do Windows com a mesma conta não se derrubarem em laço.
+- **`bilhetes_da_aba`:** o hash, a sessão da aba, o destino, quando vence e quando foi usado. A manutenção diária apaga os vencidos há mais de 24 horas.
+- **Nos `eventos`:** as sessões da aba, os aparelhos e todas as abas, como partes do público, com as listas em linhas de 20.
+- **Nas `sessoes`:** o `alcance` (`comum` ou `chat-da-aba`) e o `sessao_da_aba_id`, com a FK pela organização, pela sessão da aba e pela conta, para a sessão do chat na aba ser da mesma conta da sessão da aba. O nome é outro que o do `aparelho_id`, que é do aparelho confiável.
 - **Nos `aparelhos_da_aba`,** também o teto de contas por dia, 5 de fábrica.
 
 A sessão da aba fica numa tabela própria, e não nas `sessoes`:
@@ -317,7 +321,7 @@ O MSI, o serviço e o webview do chat são conferidos à mão neste computador, 
 
 ## Migration Plan
 
-- As migrations criam as tabelas da aba e a tabela `aberturas_dos_chamados` e as colunas `alcance` e `sessao_da_aba_id` (`sessoes`), com os valores de hoje como padrão. Nada mais muda nas que existem.
+- As migrations criam as tabelas da aba e a tabela `aberturas_dos_chamados`, as colunas `alcance` e `sessao_da_aba_id` (`sessoes`) e as partes da aba no público dos `eventos` (`sessoes_da_aba`, `aparelhos_da_aba` e `abas`), com os valores de hoje como padrão. Nada mais muda nas que existem.
 - A aba só aparece onde o Intune a instala, e sem a chave criada nenhuma aba conecta.
 - **Depois de restaurar um backup do servidor,** os aparelhos registrados depois dele ficam com "Este computador precisa ser registrado de novo." A TI repõe a chave pelo script do Intune do runbook.
 - **Mudar o endereço do servidor** é reinstalar o MSI com o `GRAFITE_SERVIDOR` novo.

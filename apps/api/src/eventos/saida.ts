@@ -28,17 +28,35 @@ function emPartes(lista: readonly string[] | undefined): string[][] {
 
 /**
  * Grava o evento na transação dada: se a mudança for desfeita, o evento também é. Com mais de 20
- * contas ou sessões, ele vai em várias linhas: a primeira leva o resto do público, e as seguintes,
- * só as contas e as sessões que sobram.
+ * contas, sessões, sessões da aba ou aparelhos, ele vai em várias linhas: a primeira leva o resto do público, e as seguintes,
+ * só essas listas, no que sobra.
  */
 export async function registrarEvento(tx: Transacao, { tipo, alvo, publico }: EventoParaGravar) {
   const { todas = false, permissao = null, locais, grupos, permissoes, contas, sessoes } = publico;
-  if (!todas && !permissao && !permissoes?.length && !contas?.length && !sessoes?.length) {
+  const { sessoesDaAba, aparelhos, abas = false } = publico;
+  if (
+    !todas &&
+    !abas &&
+    !permissao &&
+    !permissoes?.length &&
+    !contas?.length &&
+    !sessoes?.length &&
+    !sessoesDaAba?.length &&
+    !aparelhos?.length
+  ) {
     throw new Error(`O evento ${tipo} não tem público.`);
   }
   const partesDasContas = emPartes(contas);
   const partesDasSessoes = emPartes(sessoes);
-  const linhas = Math.max(1, partesDasContas.length, partesDasSessoes.length);
+  const partesDasSessoesDaAba = emPartes(sessoesDaAba);
+  const partesDosAparelhos = emPartes(aparelhos);
+  const linhas = Math.max(
+    1,
+    partesDasContas.length,
+    partesDasSessoes.length,
+    partesDasSessoesDaAba.length,
+    partesDosAparelhos.length,
+  );
   await tx.insert(eventos).values(
     Array.from({ length: linhas }, (_, linha) => {
       const primeira = linha === 0;
@@ -56,6 +74,9 @@ export async function registrarEvento(tx: Transacao, { tipo, alvo, publico }: Ev
         permissoes: primeira && permissoes?.length ? [...permissoes] : null,
         contas: partesDasContas[linha] ?? null,
         sessoes: partesDasSessoes[linha] ?? null,
+        sessoesDaAba: partesDasSessoesDaAba[linha] ?? null,
+        aparelhosDaAba: partesDosAparelhos[linha] ?? null,
+        abas: primeira && abas,
       };
     }),
   );

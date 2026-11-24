@@ -12,6 +12,7 @@ let orgA = '';
 let orgB = '';
 let contaDeA = '';
 let contaDeB = '';
+let outraContaDeA = '';
 
 async function emTransacao<T>(
   pool: pg.Pool,
@@ -102,6 +103,7 @@ beforeAll(async () => {
   orgB = await criarOrganizacao('Organização B');
   contaDeA = await criarConta(orgA, 'fernanda.lima');
   contaDeB = await criarConta(orgB, 'paulo.nunes');
+  outraContaDeA = await criarConta(orgA, 'bruno.alves');
 });
 
 afterAll(async () => {
@@ -125,28 +127,33 @@ describe('isolamento', () => {
         [orgB, randomBytes(32), sessao],
       );
     });
-    const contagens = await emTransacao(app, orgA, async (c) => {
-      const tabelas = [
-        'chaves_da_aba',
-        'configuracoes_da_aba',
-        'aparelhos_da_aba',
-        'sessoes_da_aba',
-        'bilhetes_da_aba',
-        'aberturas_dos_chamados',
-      ];
-      const resultado: Record<string, number> = {};
-      for (const tabela of tabelas) {
-        const { rows } = await c.query<{ n: number }>(`select count(*)::int as n from ${tabela}`);
-        resultado[tabela] = rows[0]?.n ?? -1;
-      }
-      return resultado;
-    });
-    expect(Object.values(contagens)).toEqual([0, 0, 0, 0, 0, 0]);
+    // As aberturas dos chamados pedem um chamado; o RLS delas fica com o teste-guarda.
+    const tabelas = [
+      'chaves_da_aba',
+      'configuracoes_da_aba',
+      'aparelhos_da_aba',
+      'sessoes_da_aba',
+      'bilhetes_da_aba',
+    ];
+    const contar = (vista: string) =>
+      emTransacao(app, vista, async (c) => {
+        const resultado: number[] = [];
+        for (const tabela of tabelas) {
+          const { rows } = await c.query<{ n: number }>(
+            `select count(*)::int as n from ${tabela} where org_id = $1`,
+            [orgB],
+          );
+          resultado.push(rows[0]?.n ?? -1);
+        }
+        return resultado;
+      });
+    expect((await contar(orgB)).every((n) => n > 0)).toBe(true);
+    expect(await contar(orgA)).toEqual([0, 0, 0, 0, 0]);
   });
 
   it('o aparelho de outra organização não serve à sessão da aba', async () => {
     const deB = await criarAparelho(orgB, 'outra-maquina-de-b');
-    expect(await codigoDoErro(criarSessaoDaAba(orgA, contaDeA, deB))).not.toBeNull();
+    expect(await codigoDoErro(criarSessaoDaAba(orgA, contaDeA, deB))).toBe('23503');
   });
 });
 
@@ -215,14 +222,35 @@ describe('aparelhos', () => {
     expect(erro).toBe('23514');
   });
 
-  it('o papel da aplicação não apaga o aparelho', async () => {
-    const aparelho = await criarAparelho(orgA, 'maquina-que-fica');
-    const erro = await codigoDoErro(
+  it('o identificador curto é do Crockford, em maiúsculas, e único na organização', async () => {
+    const comCurto = (identificador: string, maquina: string) =>
       emTransacao(app, orgA, (c) =>
-        c.query('delete from aparelhos_da_aba where id = $1', [aparelho]),
-      ),
-    );
-    expect(erro).toBe('42501');
+        c.query(
+          `insert into aparelhos_da_aba (org_id, identificador_da_maquina, identificador_curto, nome, token_hash)
+           values ($1, $2, $3, 'PC-CURTO', $4)`,
+          [orgA, maquina, identificador, randomBytes(32)],
+        ),
+      );
+    for (const errado of ['ab0001', 'AB000I', 'AB000L', 'AB000O', 'AB000U', 'AB00012']) {
+      expect(await codigoDoErro(comCurto(errado, `maquina-${errado}`))).toBe('23514');
+    }
+    expect(await codigoDoErro(comCurto('ZZ9999', 'maquina-curta-1'))).toBeNull();
+    expect(await codigoDoErro(comCurto('ZZ9999', 'maquina-curta-2'))).toBe('23505');
+  });
+
+  it('o papel da aplicação não apaga a chave, a configuração, o aparelho, a sessão nem a abertura', async () => {
+    for (const tabela of [
+      'chaves_da_aba',
+      'configuracoes_da_aba',
+      'aparelhos_da_aba',
+      'sessoes_da_aba',
+      'aberturas_dos_chamados',
+    ]) {
+      const erro = await codigoDoErro(
+        emTransacao(app, orgA, (c) => c.query(`delete from ${tabela}`)),
+      );
+      expect(erro, tabela).toBe('42501');
+    }
   });
 });
 
@@ -247,6 +275,17 @@ describe('sessões da aba', () => {
       c.query('update sessoes_da_aba set encerrada_em = now() where id = $1', [sessao]),
     );
     expect(await codigoDoErro(semMotivo)).toBe('23514');
+    const semFim = emTransacao(app, orgA, (c) =>
+      c.query("update sessoes_da_aba set motivo_do_fim = 'sem-uso' where id = $1", [sessao]),
+    );
+    expect(await codigoDoErro(semFim)).toBe('23514');
+    const foraDaLista = emTransacao(app, orgA, (c) =>
+      c.query(
+        "update sessoes_da_aba set encerrada_em = now(), motivo_do_fim = 'qualquer' where id = $1",
+        [sessao],
+      ),
+    );
+    expect(await codigoDoErro(foraDaLista)).toBe('23514');
   });
 });
 
@@ -277,6 +316,23 @@ describe('alcance da sessão comum', () => {
     expect(await codigoDoErro(inserir('comum', sessaoDaAba))).toBe('23514');
     expect(await codigoDoErro(inserir('chat-da-aba', sessaoDaAba))).toBeNull();
   });
+
+  it('o chat da aba fica preso à sessão da aba da mesma conta e da mesma organização', async () => {
+    const aparelhoDeA = await criarAparelho(orgA, 'maquina-de-outra-conta');
+    const daOutraConta = await criarSessaoDaAba(orgA, outraContaDeA, aparelhoDeA);
+    const aparelhoDeB = await criarAparelho(orgB, 'maquina-de-outra-organizacao');
+    const daOutraOrganizacao = await criarSessaoDaAba(orgB, contaDeB, aparelhoDeB);
+    const inserir = (ligada: string) =>
+      emTransacao(app, orgA, (c) =>
+        c.query(
+          `insert into sessoes (org_id, conta_id, token_hash, token_csrf, expira_em, alcance, sessao_da_aba_id)
+           values ($1, $2, $3, 'csrf', now() + interval '10 minutes', 'chat-da-aba', $4)`,
+          [orgA, contaDeA, randomBytes(32), ligada],
+        ),
+      );
+    expect(await codigoDoErro(inserir(daOutraConta))).toBe('23503');
+    expect(await codigoDoErro(inserir(daOutraOrganizacao))).toBe('23503');
+  });
 });
 
 describe('bilhetes', () => {
@@ -295,5 +351,10 @@ describe('bilhetes', () => {
     expect(await codigoDoErro(inserir('chat', 1041))).toBe('23514');
     expect(await codigoDoErro(inserir('chamado', 1041))).toBeNull();
     expect(await codigoDoErro(inserir('chat', null))).toBeNull();
+  });
+
+  it('o papel da aplicação apaga o bilhete, para a limpeza dos vencidos', async () => {
+    const apagados = await emTransacao(app, orgA, (c) => c.query('delete from bilhetes_da_aba'));
+    expect(apagados.rowCount).toBeGreaterThan(0);
   });
 });

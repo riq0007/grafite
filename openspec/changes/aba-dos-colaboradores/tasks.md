@@ -106,7 +106,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `POST /api/aba/bilhete`, com o destino fechado e a recusa da conta com os dois passos na entrada pelo Windows;
   - o `POST /api/sessao/bilhete`, com o uso único, os 60 s, a mesma resposta para o usado, o vencido e o desconhecido, a pendência calculada de novo e o `LIMITE_DA_ENTRADA`;
   - a entrada do chat com a marca da aba, que nasce no alcance;
-  - a auditoria.
+  - a auditoria;
+  - a limpeza dos bilhetes vencidos há mais de 24 horas, na manutenção diária.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato, o lint e o typecheck.
 

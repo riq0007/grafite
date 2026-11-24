@@ -26,6 +26,9 @@ const linha = (publico: Partial<typeof eventos.$inferSelect>): typeof eventos.$i
   grupos: null,
   contas: null,
   sessoes: null,
+  sessoesDaAba: null,
+  aparelhosDaAba: null,
+  abas: false,
   ...publico,
 });
 
@@ -39,6 +42,12 @@ describe('eventoDaLinha', () => {
       alvo: { tipo: 'tipo-de-chamado', id: ALVO },
       publico: { permissoes: ['chamados.ver', 'chamados.configurar'] },
     });
+  });
+
+  it('o público da aba volta com as sessões da aba, os aparelhos e todas as abas', () => {
+    expect(
+      eventoDaLinha(linha({ sessoesDaAba: [SESSAO], aparelhosDaAba: [ALVO], abas: true })).publico,
+    ).toEqual({ sessoesDaAba: [SESSAO], aparelhos: [ALVO], abas: true });
   });
 
   it('o público leva cada parte que a linha tem, e só elas', () => {
