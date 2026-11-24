@@ -324,6 +324,9 @@ describe('as recusas', () => {
     // A conversa direta, de que Tatiana não participa.
     const deFora = await abrir('tatiana', direta, [daDireta]);
     expect(deFora.statusCode, deFora.body).toBe(404);
+    // A conversa que não existe.
+    const semConversa = await abrir('fernanda', crypto.randomUUID(), [das1019.id]);
+    expect(semConversa.statusCode, semConversa.body).toBe(404);
     expect(await contarChamados()).toBe(0);
 
     // A das 10:19 vira o chamado: com ela, a abertura é recusada, só ou com as outras.
@@ -331,6 +334,12 @@ describe('as recusas', () => {
     const so = await abrir('tatiana', equipe, [das1019.id]);
     expect(so.statusCode, so.body).toBe(409);
     expect(so.json()).toMatchObject({ detail: `Esta mensagem já virou o chamado #${numero}.` });
+    // A mesma, repetida em maiúsculas, conta uma.
+    const repetida = await abrir('tatiana', equipe, [das1019.id, das1019.id.toUpperCase()]);
+    expect(repetida.statusCode, repetida.body).toBe(409);
+    expect(repetida.json()).toMatchObject({
+      detail: `Esta mensagem já virou o chamado #${numero}.`,
+    });
     const comOutras = await abrir('tatiana', equipe, [das1021.id, das1019.id, das1020.id]);
     expect(comOutras.statusCode, comOutras.body).toBe(409);
     expect(comOutras.json()).toMatchObject({
