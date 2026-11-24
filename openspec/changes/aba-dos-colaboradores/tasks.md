@@ -176,7 +176,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   Começa pelos testes do Rust, com o servidor falso recusado. Verificar: esses testes e o `clippy`.
 - [ ] 5.11 O serviço do Windows:
   - o token do aparelho cifrado no `%ProgramData%`, com a permissão só do sistema e dos administradores;
-  - a chave lida do `HKLM` sempre que aparece, com o registro, e apagada depois;
+  - a chave lida do `HKLM` sempre que aparece, com o registro, um por vez, e apagada só depois de um contato com o token dar certo; o 429 do registro é "tentar depois", e não a chave recusada;
+  - o nome do computador no `x-grafite-computador` só em ASCII, porque o Node lê o cabeçalho em latin1; o nome com acento vai pelo corpo do registro;
   - a configuração guardada para todas as pessoas;
   - os logs sem segredo.
 
