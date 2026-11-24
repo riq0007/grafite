@@ -221,8 +221,10 @@ export {
 export { lerValor, mostrarValor } from './campos/valores.ts';
 export {
   conferirAberturaPeloChat,
+  conferirMensagensATransformar,
   jaVirouChamado,
   type LidoParaAAberturaPeloChat,
+  MAXIMO_DE_MENSAGENS_NUM_CHAMADO,
   MENSAGENS_DA_ABERTURA_PELO_CHAT,
   type PedidoDaAberturaPeloChat,
   semAtivoSugerido,

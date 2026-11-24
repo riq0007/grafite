@@ -62,7 +62,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - as notificações de quem participa (a mensagem da TI e o resolvido) não vão a ela, pelo `pelaTi` de quem abriu, com os acessos dela.
 
   Começa pelos testes de integração das recusas e das notificações: Diego escreve a Paulo e resolve o #1050, e Paulo recebe as duas, e Ana, nenhuma. Verificar: esses testes, o lint e o typecheck.
-- [ ] 3.4 Abrir com várias mensagens (decisão 6):
+- [x] 3.4 Abrir com várias mensagens (decisão 6):
   - o `conferirMensagensATransformar` no domínio, com os testes unitários;
   - `POST /chat/conversas/:id/chamado`, com:
     - as travas na ordem dos ids;

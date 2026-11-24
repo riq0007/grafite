@@ -1,12 +1,14 @@
 // A abertura de um chamado pelo chat (spec chamados, "Abrir um chamado pelo chat"; spec chat,
 // "Chamados da conversa"; change chat-com-chamados, design, decisões 8 e 14; tarefa 3.7): os tipos
-// que o chat oferece, os ativos sugeridos para a pessoa e a abertura a partir da mensagem. As rotas
+// que o chat oferece, os ativos sugeridos para a pessoa e a abertura a partir da mensagem ou de até
+// 20 da conversa (change andamento-e-varias-mensagens, decisão 6; tarefa 3.4). As rotas
 // ficam no escopo do Chat, que confere o módulo ligado; elas pedem `chamados.pedir`, o `chat.usar`
 // e o módulo Chamados ligado.
 import { type Banco, naOrganizacao, type Transacao } from '@grafite/db';
 import {
   ICONES_DO_TIPO_DE_CHAMADO,
   MENSAGENS_DA_ABERTURA_PELO_CHAT as M,
+  MAXIMO_DE_MENSAGENS_NUM_CHAMADO,
   pode,
 } from '@grafite/domain';
 import type { FastifyRequest } from 'fastify';
@@ -67,9 +69,21 @@ const PedidoDaAberturaPeloChat = z
   })
   .meta({ id: 'PedidoDaAberturaPeloChat' });
 
+const PedidoDaAberturaDasMensagens = PedidoDaAberturaPeloChat.extend({
+  /**
+   * As mensagens da conversa, de 1 a 20, em qualquer ordem: o chamado as cita na ordem da conversa.
+   * O domínio tira as repetidas e conta as que sobram.
+   */
+  mensagens: z
+    .array(z.uuid({ error: M.mensagemNaoEncontrada }))
+    .max(10 * MAXIMO_DE_MENSAGENS_NUM_CHAMADO, { error: M.mensagensDemais }),
+}).meta({ id: 'PedidoDaAberturaDasMensagens' });
+
 const ChamadoAbertoPeloChat = z.object({ numero: z.int() }).meta({ id: 'ChamadoAbertoPeloChat' });
 
 const ParametrosDaMensagem = z.object({ id: z.uuid({ error: M.mensagemNaoEncontrada }) });
+
+const ParametrosDaConversa = z.object({ id: z.uuid({ error: M.mensagemNaoEncontrada }) });
 
 const PROBLEMAS = {
   401: RespostaDeProblema,
@@ -144,7 +158,41 @@ export const rotasDosChamadosDoChat: FastifyPluginAsyncZod<{
         abrirPeloChat(
           tx,
           await contaDaSessao(tx, requisicao),
-          requisicao.params.id,
+          // A rota de uma mensagem, que o app do chat da versão anterior ainda chama, pelo mesmo
+          // código (change andamento-e-varias-mensagens, design, decisão 6).
+          { conversa: null, ids: [requisicao.params.id] },
+          {
+            tipo: requisicao.body.tipo ?? null,
+            titulo: requisicao.body.titulo,
+            pessoa: requisicao.body.pessoa ?? null,
+            ativo: requisicao.body.ativo ?? null,
+          },
+          { requisicao, momento, enviar: enviar() },
+        ),
+      );
+      return resposta.status(201).send({ numero });
+    },
+  );
+
+  app.post(
+    '/chat/conversas/:id/chamado',
+    {
+      config: { permissao: 'chamados.pedir' },
+      schema: {
+        summary:
+          'Abre um chamado a partir de até 20 mensagens da conversa, cada uma num chamado só, citadas na ordem da conversa',
+        params: ParametrosDaConversa,
+        body: PedidoDaAberturaDasMensagens,
+        response: { 201: ChamadoAbertoPeloChat, ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      const momento = agora();
+      const { numero } = await deQuemAbre(requisicao, async (tx) =>
+        abrirPeloChat(
+          tx,
+          await contaDaSessao(tx, requisicao),
+          { conversa: requisicao.params.id, ids: requisicao.body.mensagens },
           {
             tipo: requisicao.body.tipo ?? null,
             titulo: requisicao.body.titulo,

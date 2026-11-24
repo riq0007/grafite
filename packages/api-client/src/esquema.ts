@@ -30861,6 +30861,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/conversas/{id}/chamado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abre um chamado a partir de até 20 mensagens da conversa, cada uma num chamado só, citadas na ordem da conversa */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaAberturaDasMensagensInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChamadoAbertoPeloChat"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/chamados": {
         parameters: {
             query?: never;
@@ -41986,6 +42082,13 @@ export interface components {
             pessoa?: string | null;
             ativo?: string | null;
         };
+        PedidoDaAberturaDasMensagensInput: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+            mensagens: string[];
+        };
         ChamadoAbertoPeloChatInput: {
             numero: number;
         };
@@ -47888,6 +47991,13 @@ export interface components {
             titulo: string;
             pessoa?: string | null;
             ativo?: string | null;
+        };
+        PedidoDaAberturaDasMensagens: {
+            tipo?: string | null;
+            titulo: string;
+            pessoa?: string | null;
+            ativo?: string | null;
+            mensagens: string[];
         };
         ChamadoAbertoPeloChat: {
             numero: number;

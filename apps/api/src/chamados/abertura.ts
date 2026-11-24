@@ -136,22 +136,28 @@ export async function lerTipo(tx: Transacao, id: string) {
 type PessoaDaAbertura = NonNullable<Awaited<ReturnType<typeof lerPessoa>>>;
 type TipoDaAbertura = NonNullable<Awaited<ReturnType<typeof lerTipo>>>;
 
-/** De onde o chamado vem: da TI, com o "Fica comigo", ou de uma mensagem do chat. */
+/** Uma mensagem do chat citada na abertura, para a linha da origem dela. */
+export interface MensagemDaOrigem {
+  id: string;
+  /** O texto da mensagem, nulo na mensagem só com os anexos. */
+  texto: string | null;
+  /** Quem a escreveu e quando. */
+  autorConta: string;
+  escritaEm: Date;
+  /** Os arquivos dos anexos da mensagem, que passam a ser também do chamado. */
+  anexos: readonly string[];
+}
+
+/**
+ * De onde o chamado vem: da TI, com o "Fica comigo", ou de uma ou mais mensagens de uma conversa do
+ * chat, na ordem da conversa; a primeira é a mensagem de origem do chamado.
+ */
 export type OrigemDaAbertura =
   | { tipo: 'ti'; ficaComigo: boolean }
   | {
       tipo: 'chat';
       conversaId: string;
-      mensagemId: string;
-      /**
-       * O texto da mensagem, quem a escreveu e quando, para a linha da origem; o texto é nulo na
-       * mensagem só com os anexos.
-       */
-      texto: string | null;
-      autorConta: string;
-      escritaEm: Date;
-      /** Os arquivos dos anexos da mensagem, que passam a ser também do chamado. */
-      anexos: readonly string[];
+      mensagens: readonly MensagemDaOrigem[];
     };
 
 /** A abertura conferida, que a TI e o chat gravam do mesmo jeito. */
@@ -390,6 +396,8 @@ export async function gravarAbertura(
   const { contaId } = sessaoDa(requisicao);
   const { arvore } = leitor;
   const peloChat = origem.tipo === 'chat' ? origem : null;
+  const daOrigem = peloChat?.mensagens[0] ?? null;
+  if (peloChat && !daOrigem) throw new Error('A abertura pelo chat veio sem as mensagens.');
 
   // A abertura lê o horário sem a trava `horario-da-ti` (design, decisão 3, que só a pede nas ações
   // que mexem nos relógios). Se o horário muda junto, o chamado nasce com o prazo e o atendimento do
@@ -416,7 +424,7 @@ export async function gravarAbertura(
       pessoaId: pessoa.id,
       origem: origem.tipo,
       origemConversaId: peloChat?.conversaId ?? null,
-      origemMensagemId: peloChat?.mensagemId ?? null,
+      origemMensagemId: daOrigem?.id ?? null,
       abertoPor: contaId,
       abertoEm: momento,
       formulario: { ...formulario },
@@ -448,33 +456,35 @@ export async function gravarAbertura(
     .returning({ id: chamados.id });
   if (!aberto) throw new Error('O chamado não foi aberto.');
 
-  // Pelo chat, a linha da origem vem primeiro, com a mensagem como estava, e os anexos dela passam a
-  // ser também do chamado, sobre os mesmos arquivos (change chat-com-chamados, decisão 8).
-  if (peloChat) {
-    const [daOrigem] = await tx
+  // Pelo chat, as linhas da origem vêm primeiro, uma por mensagem, na ordem da conversa, uma insert
+  // de cada vez, para o `uuidv7()` seguir essa ordem; cada mensagem como estava, e os anexos dela
+  // passam a ser também do chamado, sobre os mesmos arquivos, na linha dela (change
+  // chat-com-chamados, decisão 8; change andamento-e-varias-mensagens, decisão 5).
+  for (const mensagem of peloChat?.mensagens ?? []) {
+    const [linha] = await tx
       .insert(mensagensDosChamados)
       .values({
         orgId: sql`app.current_org()`,
         chamadoId: aberto.id,
         especie: 'origem',
-        autorConta: peloChat.autorConta,
-        texto: peloChat.texto,
+        autorConta: mensagem.autorConta,
+        texto: mensagem.texto,
         dados: {
-          conversa: peloChat.conversaId,
-          mensagem: peloChat.mensagemId,
-          em: peloChat.escritaEm.toISOString(),
+          conversa: peloChat?.conversaId,
+          mensagem: mensagem.id,
+          em: mensagem.escritaEm.toISOString(),
         },
         criadaEm: momento,
       })
       .returning({ id: mensagensDosChamados.id });
-    if (!daOrigem) throw new Error('A linha da origem não foi gravada.');
-    if (peloChat.anexos.length > 0) {
+    if (!linha) throw new Error('A linha da origem não foi gravada.');
+    if (mensagem.anexos.length > 0) {
       await tx.insert(anexosDosChamados).values(
-        peloChat.anexos.map((arquivoId) => ({
+        mensagem.anexos.map((arquivoId) => ({
           orgId: sql`app.current_org()`,
           arquivoId,
           chamadoId: aberto.id,
-          mensagemId: daOrigem.id,
+          mensagemId: linha.id,
         })),
       );
     }
@@ -531,8 +541,10 @@ export async function gravarAbertura(
       : null,
     // A solicitação a que o chamado nasceu ligado, gerada pelo tipo ou a pendente do Toner.
     solicitacao: solicitacao?.numero ?? null,
-    // De onde o chamado veio: a TI ou o chat (change chat-com-chamados, decisão 8).
+    // De onde o chamado veio: a TI ou o chat (change chat-com-chamados, decisão 8), e, pelo chat,
+    // quantas mensagens ele cita (change andamento-e-varias-mensagens, decisão 6).
     origem: origem.tipo,
+    mensagens: peloChat?.mensagens.length ?? null,
   };
   await registrarNaAuditoria(tx, {
     acao: 'chamado.aberto',
