@@ -199,6 +199,10 @@ describe('a pessoa pelo SID', () => {
     estado.chamadas = [];
     expect(await cliente.buscarPeloSid('S-1-5-21-1)(objectClass=*')).toBeNull();
     expect(await cliente.buscarPeloSid('S-1-1-0')).toBeNull();
+    // O zero à esquerda, a parte acima de 32 bits e o SID do Entra também não vão ao AD.
+    expect(await cliente.buscarPeloSid('S-1-5-21-01-2-3-500')).toBeNull();
+    expect(await cliente.buscarPeloSid('S-1-5-21-4294967296-2-3-500')).toBeNull();
+    expect(await cliente.buscarPeloSid('S-1-12-1-1-2-3-4')).toBeNull();
     expect(chamadas('search')).toEqual([]);
   });
 

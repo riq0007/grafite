@@ -129,7 +129,11 @@ describe('a pessoa aceita', () => {
 
 describe('as recusas, sem conta criada', () => {
   it('Usuário local do Windows: o SID fora do diretório', async () => {
-    expect(await conferir(SID.local)).toEqual({ tipo: 'recusada', motivo: 'usuario-de-fora' });
+    expect(await conferir(SID.local)).toEqual({
+      tipo: 'recusada',
+      motivo: 'usuario-de-fora',
+      detalhe: 'sid-fora-do-diretorio',
+    });
     expect(FRASES_SEM_CONEXAO['usuario-de-fora']).toBe(
       'Entre no Windows com o seu usuário da empresa para usar a aba.',
     );
@@ -140,12 +144,17 @@ describe('as recusas, sem conta criada', () => {
     expect(await conferir('S-1-5-21-1)(objectClass=*')).toEqual({
       tipo: 'recusada',
       motivo: 'usuario-de-fora',
+      detalhe: 'sid-fora-da-forma',
     });
     expect(ad.estado.acessos.length).toBe(antes);
   });
 
   it('o usuário do AD que não serve de usuário do Grafite tem a mesma frase', async () => {
-    expect(await conferir(SID.invalido)).toEqual({ tipo: 'recusada', motivo: 'usuario-de-fora' });
+    expect(await conferir(SID.invalido)).toEqual({
+      tipo: 'recusada',
+      motivo: 'usuario-de-fora',
+      detalhe: 'usuario-nao-serve',
+    });
     expect(await quantasContas()).toBe(1);
   });
 
@@ -153,7 +162,7 @@ describe('as recusas, sem conta criada', () => {
     const [antes] = await naOrg((tx) =>
       tx.select().from(contas).where(eq(contas.usuario, 'admin')),
     );
-    expect(await conferir(SID.admin)).toEqual({ tipo: 'recusada', motivo: 'conta-local' });
+    expect(await conferir(SID.admin)).toMatchObject({ tipo: 'recusada', motivo: 'conta-local' });
     expect(FRASES_SEM_CONEXAO['conta-local']).toBe(
       'A conta deste usuário é local do Grafite e não entra pela aba.',
     );
@@ -177,7 +186,7 @@ describe('as recusas, sem conta criada', () => {
     await naOrg((tx) =>
       tx.update(contas).set({ situacao: 'inativa' }).where(eq(contas.id, contaId)),
     );
-    expect(await conferir(SID.sergio)).toEqual({ tipo: 'recusada', motivo: 'conta-inativa' });
+    expect(await conferir(SID.sergio)).toMatchObject({ tipo: 'recusada', motivo: 'conta-inativa' });
     await naOrg(async (tx) => {
       await tx.update(contas).set({ situacao: 'ativa' }).where(eq(contas.id, contaId));
       const [conta] = await tx.select().from(contas).where(eq(contas.id, contaId));
@@ -186,15 +195,23 @@ describe('as recusas, sem conta criada', () => {
         .set({ situacao: 'inativa' })
         .where(eq(pessoas.id, conta?.pessoaId ?? ''));
     });
-    expect(await conferir(SID.sergio)).toEqual({ tipo: 'recusada', motivo: 'conta-inativa' });
+    expect(await conferir(SID.sergio)).toMatchObject({ tipo: 'recusada', motivo: 'conta-inativa' });
     expect(FRASES_SEM_CONEXAO['conta-inativa']).toBe(
       'Sua conta está inativa no Grafite. Fale com a TI.',
     );
   });
 
   it('sem grupo mapeado, e a conta desativada no AD, com a frase da entrada pelo diretório', async () => {
-    expect(await conferir(SID.semGrupo)).toEqual({ tipo: 'recusada', motivo: 'sem-grupo' });
-    expect(await conferir(SID.desativada)).toEqual({ tipo: 'recusada', motivo: 'sem-grupo' });
+    expect(await conferir(SID.semGrupo)).toEqual({
+      tipo: 'recusada',
+      motivo: 'sem-grupo',
+      detalhe: 'sem-grupo-mapeado',
+    });
+    expect(await conferir(SID.desativada)).toEqual({
+      tipo: 'recusada',
+      motivo: 'sem-grupo',
+      detalhe: 'desativada-no-ad',
+    });
     expect(FRASES_SEM_CONEXAO['sem-grupo']).toBe(
       'Seu usuário do AD não tem acesso ao Grafite. Peça a liberação a quem administra os acessos.',
     );
@@ -202,7 +219,7 @@ describe('as recusas, sem conta criada', () => {
 
   it('o AD fora do ar e o diretório desligado: a TI fora do alcance', async () => {
     ad.estado.foraDoAr = true;
-    expect(await conferir(SID.fernanda)).toEqual({
+    expect(await conferir(SID.fernanda)).toMatchObject({
       tipo: 'recusada',
       motivo: 'ti-fora-do-alcance',
     });
@@ -212,7 +229,7 @@ describe('as recusas, sem conta criada', () => {
     );
     ad.estado.foraDoAr = false;
     await naOrg((tx) => tx.update(diretorios).set({ ligado: false }));
-    expect(await conferir(SID.fernanda)).toEqual({
+    expect(await conferir(SID.fernanda)).toMatchObject({
       tipo: 'recusada',
       motivo: 'ti-fora-do-alcance',
     });

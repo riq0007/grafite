@@ -18,11 +18,19 @@ import {
 } from '../aba/sessao.ts';
 import { violouUnicidade } from '../banco.ts';
 import type { ChavesDoCofre } from '../cofre/cifra.ts';
-import { conferirPessoaPeloSid, recusaDaConta } from '../diretorio/aba.ts';
+import {
+  conferirPessoaPeloSid,
+  type DetalheDaRecusa,
+  type PessoaPeloSid,
+  recusaDaConta,
+} from '../diretorio/aba.ts';
 import type { ConectarDiretorio } from '../diretorio/cliente.ts';
 import { contaPeloDiretorio } from '../diretorio/entrada.ts';
 import { ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { origemDa } from './sessao.ts';
+
+/** Quanto tempo a API responde o AD fora do ar sem tentar de novo. */
+const PAUSA_DO_AD_FORA_DO_AR = 30_000;
 
 const PedidoDaSessaoPeloWindows = z
   .object({
@@ -80,14 +88,32 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
   agora: () => Date;
   diretorio: { chavesDoCofre: ChavesDoCofre; conectar: ConectarDiretorio };
 }> = async (app, { banco, agora, diretorio }) => {
-  const conferir = (orgId: string, sid: string, avisar: (dados: object, msg: string) => void) =>
-    conferirPessoaPeloSid(banco, {
+  // O AD fora do ar, por organização: as abas da empresa tentam de novo como na rede caída, e cada
+  // tentativa seguraria o pedido pelo prazo da conexão e gravaria um aviso.
+  const adForaDoArAte = new Map<string, number>();
+  const conferir = async (
+    orgId: string,
+    sid: string,
+    avisar: (dados: object, msg: string) => void,
+  ): Promise<PessoaPeloSid> => {
+    const agoraMs = agora().getTime();
+    if ((adForaDoArAte.get(orgId) ?? 0) > agoraMs) {
+      return { tipo: 'recusada', motivo: 'ti-fora-do-alcance', detalhe: 'ad-fora-do-ar' };
+    }
+    const pessoa = await conferirPessoaPeloSid(banco, {
       orgId,
       sid,
       chaves: diretorio.chavesDoCofre,
       conectar: diretorio.conectar,
       avisar,
     });
+    if (pessoa.tipo === 'recusada' && pessoa.detalhe === 'ad-fora-do-ar') {
+      adForaDoArAte.set(orgId, agoraMs + PAUSA_DO_AD_FORA_DO_AR);
+    } else {
+      adForaDoArAte.delete(orgId);
+    }
+    return pessoa;
+  };
 
   app.post(
     '/aba/sessao',
@@ -108,13 +134,13 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
       const momento = agora();
       const origem = origemDa(requisicao);
       const doWindows = usuarioDoWindows ? { usuarioDoWindows } : {};
-      const recusar = async (motivo: MotivoSemConexao) => {
+      const recusar = async (motivo: MotivoSemConexao, detalhe: DetalheDaRecusa | 'teto') => {
         await naOrganizacao(banco, orgId, (tx) =>
           auditarPessoaRecusada(tx, {
             aparelho,
             motivo,
             pessoa: sid,
-            dados: doWindows,
+            dados: { detalhe, ...doWindows },
             origem,
             momento,
           }),
@@ -122,14 +148,14 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
         return pessoaRecusada(motivo);
       };
       const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
-      if (pessoa.tipo === 'recusada') throw await recusar(pessoa.motivo);
+      if (pessoa.tipo === 'recusada') throw await recusar(pessoa.motivo, pessoa.detalhe);
       const abrir = () =>
         naOrganizacao(banco, orgId, async (tx) => {
           // A conta pode ter mudado entre a conferência e a transação.
           const daConta = await recusaDaConta(tx, pessoa.usuario);
-          if (daConta) return { tipo: 'recusada', motivo: daConta } as const;
+          if (daConta) return { tipo: 'recusada', motivo: daConta, detalhe: daConta } as const;
           if (await passouDoTeto(tx, { aparelho, usuario: pessoa.usuario, momento })) {
-            return { tipo: 'recusada', motivo: 'teto-do-aparelho' } as const;
+            return { tipo: 'recusada', motivo: 'teto-do-aparelho', detalhe: 'teto' } as const;
           }
           const contaId = await contaPeloDiretorio(tx, {
             orgId,
@@ -174,7 +200,9 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
           throw deNovo;
         }
       }
-      if (resultado.tipo === 'recusada') throw await recusar(resultado.motivo);
+      if (resultado.tipo === 'recusada') {
+        throw await recusar(resultado.motivo, resultado.detalhe);
+      }
       return {
         token: resultado.token,
         expiraEm: resultado.expiraEm.toISOString(),
@@ -211,19 +239,26 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
           .select({ usuario: contas.usuario })
           .from(contas)
           .where(eq(contas.id, sessao.contaId));
-        const motivo: MotivoSemConexao | null =
+        const daConta =
+          pessoa.tipo === 'aceita' && conta?.usuario === pessoa.usuario
+            ? await recusaDaConta(tx, pessoa.usuario)
+            : null;
+        const recusada: { motivo: MotivoSemConexao; detalhe: string } | null =
           pessoa.tipo === 'recusada'
-            ? pessoa.motivo
+            ? pessoa
             : conta?.usuario !== pessoa.usuario
-              ? 'usuario-de-fora'
-              : await recusaDaConta(tx, pessoa.usuario);
-        if (motivo) {
+              ? { motivo: 'usuario-de-fora', detalhe: 'outra-pessoa-no-windows' }
+              : daConta
+                ? { motivo: daConta, detalhe: daConta }
+                : null;
+        if (recusada) {
+          const { motivo, detalhe } = recusada;
           await encerrarSessaoDaAba(tx, {
             sessaoId: sessao.id,
             contaId: sessao.contaId,
             aparelho,
             motivo: 'pessoa-recusada',
-            dados: { recusa: motivo, sid },
+            dados: { recusa: motivo, detalhe, sid },
             origem,
             momento,
           });

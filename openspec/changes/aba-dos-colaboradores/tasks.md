@@ -239,6 +239,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
     - o script do Intune que repõe a chave depois de restaurar um backup;
     - o sysprep das imagens, com a imagem tirada antes de a aba registrar, porque a clonada depois leva o mesmo token, o proxy sem PAC, os logs e a mudança do endereço;
     - o teto por aparelho e os downloads que ficam no perfil genérico;
+    - o computador ingressado só no Entra, com o SID `S-1-12-…`, que entra pela senha;
     - o primeiro dia da resposta por ver, com as respostas já lidas pela web que aparecem na aba;
   - o `docs/mapa.md`, com a capacidade, a change e os termos novos;
   - os comandos no `CLAUDE.md`.
@@ -249,7 +250,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   Verificar: `pnpm test:e2e:pilha`.
 - [ ] 7.3 A conferência numa VM Windows de testes:
   - o MSI instalado com as propriedades;
-  - a entrada pelo Windows com a conta de teste do AD e o SID no filtro;
+  - a entrada pelo Windows com a conta de teste do AD e o SID no filtro, com o `objectSid` vindo em bytes pelo `explicitBufferAttributes` e a forma `S-1-5-…` aceita no filtro (senão, a forma binária escapada);
   - o usuário local;
   - a entrada pela senha com duas pessoas no mesmo computador;
   - a resposta chegando;

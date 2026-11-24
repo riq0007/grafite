@@ -75,8 +75,21 @@ const um = (entrada: Entry, atributo: string) => valores(entrada, atributo)[0] ?
 
 const ATRIBUTOS_DO_USUARIO = ['displayName', 'cn', 'mail', 'userAccountControl', 'memberOf'];
 
-/** O SID como o Windows o escreve: `S-1-5` e as subautoridades, só o da autoridade NT. */
-export const FORMA_DO_SID = /^S-1-5(-\d{1,10}){1,14}$/;
+/**
+ * O SID como o Windows o escreve: `S-1-5` e até 15 subautoridades, sem zeros à esquerda e de 32
+ * bits, só o da autoridade NT. O do computador só no Entra (`S-1-12-…`) fica de fora.
+ */
+const FORMA_DO_SID = /^S-1-5(-(0|[1-9]\d{0,9})){1,15}$/;
+
+export function sidValido(sid: string): boolean {
+  return (
+    FORMA_DO_SID.test(sid) &&
+    sid
+      .split('-')
+      .slice(3)
+      .every((parte) => Number(parte) <= 0xffffffff)
+  );
+}
 
 /**
  * O `objectSid` binário do AD em texto (MS-DTYP, 2.4.2.2): a revisão, a quantidade de
@@ -231,7 +244,7 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
     },
 
     async buscarPeloSid(sid) {
-      if (!FORMA_DO_SID.test(sid)) return null;
+      if (!sidValido(sid)) return null;
       return comServico(async (cliente) => {
         const { searchEntries } = await cliente.search(acesso.baseDn, {
           scope: 'sub',

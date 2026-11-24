@@ -110,14 +110,16 @@ O cliente do diretório ganha `buscarPeloSid(sid)`, que entra com a conta de ser
 
 Do resultado, a API lê o atributo do usuário configurado, que passa por `normalizarUsuario` e `validarUsuario` e vira o `contas.usuario`. Assim, a conta é a mesma da entrada pela web. O nome que o Windows manda fica só na auditoria. A conferência do domínio NetBIOS não existe: achado pelo SID dentro da base é do diretório, e não achado é o usuário de fora.
 
-A conferência (`diretorio/aba.ts`) recusa, antes do `contaPeloDiretorio`:
+A conferência (`diretorio/aba.ts`) recusa, antes do `contaPeloDiretorio` e nesta ordem:
+- o diretório desligado, sem o qual não há o que conferir;
+- o SID fora da forma `S-1-5-…`, que nem vai ao AD, como o do computador só no Entra (`S-1-12-…`);
+- o AD fora do ar, e a conta de serviço que o cofre não abre;
 - o SID fora do diretório e o usuário que não passa no `validarUsuario`;
 - a conta local com o mesmo usuário, conferida aqui de novo, porque o `contaPeloDiretorio` não olha a origem;
 - a conta ou a pessoa inativa no Grafite;
-- a falta de grupo mapeado e a conta desativada no AD, com a frase de quem não tem acesso;
-- o diretório desligado ou fora do ar.
+- a conta desativada no AD e a falta de grupo mapeado, com a frase de quem não tem acesso.
 
-Cada recusa tem a sua frase e o seu teste de integração.
+Cada recusa tem a sua frase e o seu teste de integração. A frase da tela junta casos que a TI resolve de jeitos diferentes, então a auditoria leva também o detalhe de cada um, como a desativada no AD e a sem grupo. Com o AD fora do ar, a API responde a TI fora do alcance por 30 segundos sem tentar o AD de novo, para as abas da empresa, que tentam como na rede caída, não segurarem os pedidos pelo prazo da conexão.
 
 Sem senha, não há bloqueio por tentativas na entrada pelo Windows. As recusas ficam na auditoria com o aparelho. A renovação, de hora em hora, refaz a busca.
 

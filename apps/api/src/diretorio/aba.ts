@@ -9,7 +9,7 @@ import { and, eq } from 'drizzle-orm';
 import type { ChavesDoCofre } from '../cofre/cifra.ts';
 import { type ConectarDiretorio, FalhaDoDiretorio } from './cliente.ts';
 import { aceitaComOsGrupos, type ConferenciaNoDiretorio, prepararODiretorio } from './entrada.ts';
-import { FORMA_DO_SID } from './ldap.ts';
+import { sidValido } from './ldap.ts';
 
 /** Os motivos da pessoa recusada pelo SID. */
 export type RecusaDaPessoaPeloSid = Extract<
@@ -17,8 +17,23 @@ export type RecusaDaPessoaPeloSid = Extract<
   'usuario-de-fora' | 'conta-local' | 'conta-inativa' | 'sem-grupo' | 'ti-fora-do-alcance'
 >;
 
+/**
+ * O caso de cada recusa, só para a auditoria: a TI resolve a desativada no AD e a sem grupo, ou o
+ * SID fora do diretório e o usuário que não serve, de jeitos diferentes, e a frase da tela é a mesma.
+ */
+export type DetalheDaRecusa =
+  | 'diretorio-desligado'
+  | 'sid-fora-da-forma'
+  | 'ad-fora-do-ar'
+  | 'sid-fora-do-diretorio'
+  | 'usuario-nao-serve'
+  | 'conta-local'
+  | 'conta-inativa'
+  | 'desativada-no-ad'
+  | 'sem-grupo-mapeado';
+
 export type PessoaPeloSid =
-  | { tipo: 'recusada'; motivo: RecusaDaPessoaPeloSid }
+  | { tipo: 'recusada'; motivo: RecusaDaPessoaPeloSid; detalhe: DetalheDaRecusa }
   | {
       tipo: 'aceita';
       /** O usuário da conta, normalizado. */
@@ -26,7 +41,8 @@ export type PessoaPeloSid =
       aceita: Extract<ConferenciaNoDiretorio, { tipo: 'aceita' }>;
     };
 
-const recusa = (motivo: RecusaDaPessoaPeloSid) => ({ tipo: 'recusada', motivo }) as const;
+const recusa = (motivo: RecusaDaPessoaPeloSid, detalhe: DetalheDaRecusa) =>
+  ({ tipo: 'recusada', motivo, detalhe }) as const;
 
 /**
  * A conta do Grafite com o usuário, se houver, que não entra pela aba: a local, com a mesma frase da
@@ -48,9 +64,10 @@ export async function recusaDaConta(
 }
 
 /**
- * Confere a pessoa do SID, antes da transação da sessão. A ordem é a do design: o SID fora do
- * diretório e o usuário que não serve; a conta local; a inativa; a falta de grupo mapeado e a conta
- * desativada no AD, que dão a frase de quem não tem acesso; e o diretório desligado ou fora do ar.
+ * Confere a pessoa do SID, antes da transação da sessão, nesta ordem (design, decisão 4): o
+ * diretório desligado, sem o qual não há o que conferir; a forma do SID; o AD fora do ar; o SID fora
+ * do diretório e o usuário que não serve; a conta local; a inativa; e a conta desativada no AD e a
+ * falta de grupo mapeado, que dão a frase de quem não tem acesso.
  */
 export async function conferirPessoaPeloSid(
   banco: Banco,
@@ -71,21 +88,26 @@ export async function conferirPessoaPeloSid(
   const preparo = await naOrganizacao(banco, orgId, (tx) =>
     prepararODiretorio(tx, { orgId, chaves, avisar }),
   );
-  if (!preparo?.acesso) return recusa('ti-fora-do-alcance');
-  if (!FORMA_DO_SID.test(sid)) return recusa('usuario-de-fora');
+  if (!preparo) return recusa('ti-fora-do-alcance', 'diretorio-desligado');
+  // A conta de serviço que o cofre não abre deixa o AD tão fora do alcance quanto a rede.
+  if (!preparo.acesso) return recusa('ti-fora-do-alcance', 'ad-fora-do-ar');
+  if (!sidValido(sid)) return recusa('usuario-de-fora', 'sid-fora-da-forma');
   let achado: Awaited<ReturnType<ReturnType<ConectarDiretorio>['buscarPeloSid']>>;
   try {
     achado = await conectar(preparo.acesso).buscarPeloSid(sid);
   } catch (erro) {
     if (!(erro instanceof FalhaDoDiretorio)) throw erro;
     avisar({ motivo: erro.motivo }, 'o diretório não atendeu a pessoa da aba');
-    return recusa('ti-fora-do-alcance');
+    return recusa('ti-fora-do-alcance', 'ad-fora-do-ar');
   }
-  if (!achado || validarUsuario(achado.usuario) !== null) return recusa('usuario-de-fora');
+  if (!achado) return recusa('usuario-de-fora', 'sid-fora-do-diretorio');
+  if (validarUsuario(achado.usuario) !== null)
+    return recusa('usuario-de-fora', 'usuario-nao-serve');
   const usuario = normalizarUsuario(achado.usuario);
   const daConta = await naOrganizacao(banco, orgId, (tx) => recusaDaConta(tx, usuario));
-  if (daConta) return recusa(daConta);
-  const aceita = achado.ativa ? aceitaComOsGrupos(achado, preparo.mapeamentos) : null;
-  if (!aceita) return recusa('sem-grupo');
+  if (daConta) return recusa(daConta, daConta);
+  if (!achado.ativa) return recusa('sem-grupo', 'desativada-no-ad');
+  const aceita = aceitaComOsGrupos(achado, preparo.mapeamentos);
+  if (!aceita) return recusa('sem-grupo', 'sem-grupo-mapeado');
   return { tipo: 'aceita', usuario, aceita };
 }

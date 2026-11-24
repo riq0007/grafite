@@ -230,6 +230,30 @@ describe('a renovação', () => {
     expect(r.statusCode).toBe(503);
     expect(r.json()).toMatchObject({ motivo: 'ti-fora-do-alcance' });
     expect(await sessaoDo(token)).toMatchObject({ encerradaEm: null });
+    // Nos 30 segundos seguintes, a API responde sem tentar o AD; depois, tenta de novo.
+    ad.estado.foraDoAr = false;
+    const tentativas = ad.estado.acessos.length;
+    expect((await renovar(token, SID.fernanda)).statusCode).toBe(503);
+    expect(ad.estado.acessos.length).toBe(tentativas);
+    api.relogio.avancar(31_000);
+    expect((await renovar(token, SID.fernanda)).statusCode).toBe(200);
+  });
+
+  it('a recusa leva à auditoria o detalhe que a frase da tela junta', async () => {
+    const carla = ad.usuario({
+      usuario: 'carla.dias',
+      nome: 'Carla Dias',
+      senha: 'x',
+      ativa: false,
+      sid: 'S-1-5-21-1004336348-1177238915-682003330-1112',
+    });
+    ad.incluir(carla, dns.grupo ?? '');
+    const pc = await registrar('guid-carla', 'PC-CARLA');
+    const r = await abrir(pc.token, 'S-1-5-21-1004336348-1177238915-682003330-1112');
+    expect(r.json()).toMatchObject({ motivo: 'sem-grupo' });
+    expect((await acoes('sessao-da-aba.recusada')).at(-1)).toMatchObject({
+      dados: { computador: 'PC-CARLA', motivo: 'sem-grupo', detalhe: 'desativada-no-ad' },
+    });
   });
 
   it('quem saiu do grupo mapeado tem a sessão encerrada, com a auditoria', async () => {
