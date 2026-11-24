@@ -160,8 +160,9 @@ export function FluxoDoChamado({
     else avisar({ situacao: 'atencao', titulo: resposta.erro });
   };
 
-  // A escolha só no chamado aberto: o resolvido pede para escrever, e o fechado não muda mais.
-  const aceitaAEscolha = chamado.situacao !== 'resolvido' && !chamado.fechado;
+  // A escolha só no chamado aberto: o resolvido pede para escrever, e o fechado não muda mais. A
+  // quem participa pela TI, as opções ficam sem ação: a escolha é da pessoa.
+  const aceitaAEscolha = chamado.situacao !== 'resolvido' && !chamado.fechado && !chamado.pelaTi;
   const escolherNa = (mensagem: string): EscolherAOpcao | null =>
     aceitaAEscolha
       ? async (opcao) => {

@@ -226,6 +226,14 @@
   padding-inline: var(--esp-4);
 }
 
+/* A frase embaixo da caixa, como a de quem ainda não usa o chat. */
+.nota {
+  margin: 0;
+  padding-inline: var(--esp-4);
+  color: var(--cor-texto-2);
+  font-size: var(--texto-rotulo);
+}
+
 .paraOLeitor {
   position: absolute;
   inline-size: 1px;

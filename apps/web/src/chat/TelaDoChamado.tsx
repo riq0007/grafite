@@ -3,11 +3,13 @@
 // chamado no chat"): o cabeçalho, com "CHAMADO #1045", o título e a situação; as etapas, com a hora da
 // chegada a cada uma e a de agora marcada em texto; "Seus outros chamados", que levam a eles; a
 // conversa; a caixa do aberto, a do resolvido, que reabre, com "Reabrir até 18/11", e a frase do
-// fechado, sem caixa; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
+// fechado, sem caixa; a quem participa pela TI (change andamento-e-varias-mensagens, decisão 4), a
+// caixa "Escrever para Fernanda no #1045…", pela rota da TI, e, no resolvido, no lugar dela, "O #1045
+// está resolvido." com "Reabrir"; e "Neste chamado", ao lado da conversa na tela larga e, na estreita, num
 // popover, pelo botão do cabeçalho. Sem o módulo Chamados, a tela diz que ele está desligado. No
 // celular (m08), o cabeçalho tem a seta de voltar, a marca e o selo, o título e quem atende, com a
 // previsão da resposta, e "Neste chamado" abre numa folha, com as etapas uma embaixo da outra.
-import { SITUACOES_PARA_QUEM_PARTICIPA, secoesDoChat } from '@grafite/domain';
+import { nomeCurto, nomeDaEtapa, secoesDoChat } from '@grafite/domain';
 import {
   avisar,
   Botao,
@@ -30,7 +32,9 @@ import {
   PanelRight,
   RotateCcw,
 } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { type RefObject, useId, useRef, useState } from 'react';
+import { useAcoesDoAtendimento } from '../modulos/chamados/acoes.ts';
+import { ajudaDoCampo } from '../modulos/chamados/chamado/escrever.ts';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
 import { AndamentoDoChamado } from './AndamentoDoChamado.tsx';
@@ -41,7 +45,13 @@ import {
   type EtapaNoChat,
   momentoDaEtapa,
 } from './chamado.ts';
-import { useAcoesDoChamado, useChamadoDoChat, useChamadosDoChat } from './consultas.ts';
+import {
+  useAcoesDoChamado,
+  useAndamentoNoChat,
+  useChamadoDoChat,
+  useChamadosDoChat,
+  useRelerOsChamadosDoChat,
+} from './consultas.ts';
 import { FalhaDoChat } from './FalhaDoChat.tsx';
 import { naoEncontrada } from './FluxoDaConversa.tsx';
 import { type ControleDaConversaDoChamado, FluxoDoChamado } from './FluxoDoChamado.tsx';
@@ -238,7 +248,14 @@ function ChamadoNaTela({
             </span>
           </header>
         )}
-        {!celular && <EtapasDoChamado etapas={chamado.etapas} agora={agora} dataHora={dataHora} />}
+        {!celular && (
+          <EtapasDoChamado
+            etapas={chamado.etapas}
+            pelaTi={chamado.pelaTi}
+            agora={agora}
+            dataHora={dataHora}
+          />
+        )}
         {outros.length > 0 && <OutrosChamados chamados={outros} vista={vista} />}
         {/* A conversa e a caixa são o lugar de soltar os anexos; fechado, ninguém recebe (tarefa 4.19). */}
         <LugarDeSoltar className={estilos.lugarDeSoltar}>
@@ -249,6 +266,14 @@ function ChamadoNaTela({
                 ? 'O chamado fechou. Para o mesmo problema, abra outro chamado.'
                 : `O chamado fechou em ${reabrirAte}. Para o mesmo problema, abra outro chamado.`}
             </p>
+          ) : chamado.pelaTi && chamado.andamento ? (
+            // O tipo gerado não liga o `pelaTi` ao `andamento`, que vem a quem participa pela TI.
+            <CaixaDaTi
+              chamado={chamado}
+              andamento={chamado.andamento}
+              caixa={caixa}
+              aoEnviar={() => controle.current?.irAoFim()}
+            />
           ) : (
             <CaixaDoChat
               caixa={caixa}
@@ -286,12 +311,80 @@ function ChamadoNaTela({
       {celular && (
         <Folha aberta={painelNaFolha} aoMudarAberta={definirPainelNaFolha} titulo="Neste chamado">
           <div className={estilos.naFolha}>
-            <EtapasDoChamado etapas={chamado.etapas} agora={agora} dataHora={dataHora} empilhadas />
+            <EtapasDoChamado
+              etapas={chamado.etapas}
+              pelaTi={chamado.pelaTi}
+              agora={agora}
+              dataHora={dataHora}
+              empilhadas
+            />
             {neste}
           </div>
         </Folha>
       )}
     </div>
+  );
+}
+
+/**
+ * A caixa de quem participa pela TI: a mesma de quem pediu, com o mesmo rascunho, que troca só o envio,
+ * pela rota da TI, e o texto de dentro. À pessoa que não usa o chat, a frase do Chamados. No
+ * resolvido, no lugar dela, o cadeado, "O #1045 está resolvido." e "Reabrir", pela rota da TI.
+ */
+function CaixaDaTi({
+  chamado,
+  andamento,
+  caixa,
+  aoEnviar,
+}: {
+  chamado: ConversaDoChamado;
+  andamento: NonNullable<ConversaDoChamado['andamento']>;
+  caixa: RefObject<HTMLTextAreaElement | null>;
+  aoEnviar: () => void;
+}) {
+  const { numero } = chamado;
+  const doChat = useAndamentoNoChat(numero);
+  const reler = useRelerOsChamadosDoChat();
+  const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
+  const [reabrindo, definirReabrindo] = useState(false);
+  const primeiroNome = nomeCurto(andamento.pessoa.nome);
+
+  if (chamado.situacao === 'resolvido') {
+    const reabrir = async () => {
+      definirReabrindo(true);
+      const resultado = await atendimento.reabrir(numero, andamento.versao);
+      definirReabrindo(false);
+      if (resultado) caixa.current?.focus();
+    };
+    return (
+      <div className={estilos.resolvidoDaTi}>
+        <Icone icone={Lock} tamanho={16} />
+        <p>{`O #${numero} está resolvido.`}</p>
+        {andamento.acoes.includes('reabrir') && (
+          <Botao
+            icone={RotateCcw}
+            carregando={reabrindo}
+            rotuloCarregando="Reabrindo o chamado"
+            onPress={() => void reabrir()}
+          >
+            Reabrir
+          </Botao>
+        )}
+      </div>
+    );
+  }
+  return (
+    <CaixaDoChat
+      caixa={caixa}
+      rascunho={rascunhoDoChamado(numero)}
+      ajuda={`Escrever para ${primeiroNome} no #${numero}…`}
+      dica="# cita um chamado"
+      citar
+      anexosEm="/chamados/anexos"
+      nota={andamento.pessoa.usaOChat ? undefined : ajudaDoCampo(primeiroNome, false)}
+      mandar={doChat.escrever}
+      aoEnviar={aoEnviar}
+    />
   );
 }
 
@@ -309,11 +402,14 @@ const ICONES_DAS_ETAPAS = {
  */
 function EtapasDoChamado({
   etapas,
+  pelaTi,
   agora,
   dataHora,
   empilhadas = false,
 }: {
   etapas: readonly EtapaNoChat[];
+  /** A quem participa pela TI, a espera é "Aguardando o colaborador". */
+  pelaTi: boolean;
   agora: Date;
   dataHora: DataHora;
   /** Uma embaixo da outra, como na folha "Neste chamado" do celular. */
@@ -326,7 +422,7 @@ function EtapasDoChamado({
       data-empilhadas={empilhadas || undefined}
     >
       {etapas.map((etapa) => {
-        const nome = SITUACOES_PARA_QUEM_PARTICIPA[etapa.situacao];
+        const nome = nomeDaEtapa(etapa.situacao, pelaTi);
         const marca = etapa.agora ? marcaDaPalavra(nome) : null;
         let hora: string | null = null;
         if (etapa.estado === 'chegou' && etapa.em !== null) {

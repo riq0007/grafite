@@ -39,14 +39,16 @@ export function itensDoChamado(
     respostaNova,
     situacao,
     fechado,
-  }: Pick<ConversaDoChamado, 'conversa' | 'respostaNova' | 'situacao' | 'fechado'>,
+    pelaTi,
+  }: Pick<ConversaDoChamado, 'conversa' | 'respostaNova' | 'situacao' | 'fechado' | 'pelaTi'>,
   { agora, dataHora }: { agora: Date; dataHora: DataHora },
 ): ItemDoChamadoNaTela[] {
-  const avaliavel = situacao === 'resolvido' && !fechado;
+  // A quem participa pela TI, nem a avaliação nem a resposta nova: a API as manda, e a tela as tira.
+  const avaliavel = situacao === 'resolvido' && !fechado && !pelaTi;
   const ultimoResolvido = avaliavel
     ? conversa.findLastIndex((item) => ehEvento(item, 'resolveu'))
     : -1;
-  const primeiraNova = respostaNova.quantas > 0 ? respostaNova.desde : null;
+  const primeiraNova = respostaNova.quantas > 0 && !pelaTi ? respostaNova.desde : null;
   const itens: ItemDoChamadoNaTela[] = [];
   let diaDeAntes: string | null = null;
   let comAbertura = false;

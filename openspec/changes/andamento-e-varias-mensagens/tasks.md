@@ -102,7 +102,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o "Reabrir" no menu.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.3 O chamado de quem participa pela TI (decisão 4; spec modulo-chat, "Chamado no chat"):
+- [x] 4.3 O chamado de quem participa pela TI (decisão 4; spec modulo-chat, "Chamado no chat"):
   - a caixa com "Escrever para Fernanda no #1045…", pela rota da TI, com os anexos e, à pessoa que não usa o chat, a frase do Chamados. É a mesma caixa de quem pediu, montada nos dois lados, que troca só o envio e o texto de dentro: a recusa "Responda pela TI" relê o chamado com o `pelaTi`, e o texto e os anexos na fila ficam;
   - no resolvido, o cadeado, "O #1045 está resolvido." e "Reabrir";
   - a espera "Aguardando o colaborador" nas etapas, pelo `nomeDaEtapa`, que também dá a marca da etapa de agora, e o selo dela na informação, também no chip de quem não participa (spec modulo-chat, "Selos e movimento do chat");

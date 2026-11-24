@@ -66,6 +66,11 @@ export interface PropsDaCaixaDoChat<T> {
   inicio?: ReactNode;
   /** O que fica no lugar do envio com a caixa vazia, como o "Reabrir até 18/11". */
   semTexto?: ReactNode;
+  /**
+   * A frase embaixo da caixa, sempre à vista, como "Fernanda ainda não usa o chat: a mensagem fica
+   * no chamado.", que o leitor de tela também ouve como a descrição da caixa.
+   */
+  nota?: string;
 }
 
 export function CaixaDoChat<T>({
@@ -79,6 +84,7 @@ export function CaixaDoChat<T>({
   dica,
   inicio,
   semTexto,
+  nota,
 }: PropsDaCaixaDoChat<T>) {
   const [rascunho, mudarRascunho] = useRascunho(chave);
   const { texto, respondida, anexos } = rascunho;
@@ -90,6 +96,7 @@ export function CaixaDoChat<T>({
   const [cursor, definirCursor] = useState<number | null>(null);
   const idDaRecusa = useId();
   const idDaDica = useId();
+  const idDaNota = useId();
   const { fila, progresso, recusas, receber, limparRecusas } = useFilaDeAnexos({
     ocupados: anexos.length,
     soNoNavegador: false,
@@ -249,7 +256,11 @@ export function CaixaDoChat<T>({
             aria-label={ajuda.replace(/…$/u, '')}
             aria-invalid={recusa !== null || undefined}
             aria-describedby={
-              [recusasAVista.length > 0 ? idDaRecusa : null, dica ? idDaDica : null]
+              [
+                recusasAVista.length > 0 ? idDaRecusa : null,
+                dica ? idDaDica : null,
+                nota ? idDaNota : null,
+              ]
                 .filter(Boolean)
                 .join(' ') || undefined
             }
@@ -365,6 +376,11 @@ export function CaixaDoChat<T>({
             <Recusa key={id} texto={frase} />
           ))}
         </div>
+      )}
+      {nota && (
+        <p id={idDaNota} className={estilos.nota}>
+          {nota}
+        </p>
       )}
       <span role="status" className={estilos.paraOLeitor}>
         {lista.aberta ? lista.anuncio : ''}

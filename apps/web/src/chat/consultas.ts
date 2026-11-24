@@ -382,6 +382,22 @@ export function useAndamentoNoChat(numero: number) {
   return useMemo(() => {
     const params = { path: { numero } };
     return {
+      /**
+       * A mensagem de quem participa pela TI, pela rota da TI, com os anexos: aceita ou recusada, as
+       * listas e o chamado se releem.
+       */
+      escrever: async ({ texto, anexos }: { texto: string; anexos?: string[] }) => {
+        const resultado = await pedir(
+          () =>
+            api.POST('/chamados/{numero}/mensagem', {
+              params,
+              body: { texto, anexos: anexos ?? [] },
+            }),
+          'mandar a mensagem',
+        );
+        reler();
+        return resultado;
+      },
       retomar: async (versao: number) => {
         const resultado = await pedir(
           () => api.POST('/chamados/{numero}/retomar', { params, body: { versao } }),
