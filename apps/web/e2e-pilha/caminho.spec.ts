@@ -2294,14 +2294,16 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     const primeira = daAna
       .getByRole('listitem')
       .filter({ hasText: 'A impressora da recepção não imprime.' });
+    const segunda = daAna
+      .getByRole('listitem')
+      .filter({ hasText: 'Ela diz que tem papel atolado, mas não tem.' });
+    const selecionadas = page.getByRole('status').filter({ hasText: /selecionadas?$/ });
     await primeira.click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Selecionar' }).click();
+    // O "Selecionar" age depois de o menu fechar: a segunda é marcada com a seleção já começada.
+    await expect(selecionadas).toHaveText('1 mensagem selecionada');
     // Na seleção, o clique em qualquer ponto da mensagem a marca.
-    await daAna
-      .getByRole('listitem')
-      .filter({ hasText: 'Ela diz que tem papel atolado, mas não tem.' })
-      .click();
-    const selecionadas = page.getByRole('status').filter({ hasText: /selecionadas?$/ });
+    await segunda.click();
     await expect(selecionadas).toHaveText('2 mensagens selecionadas');
     await page.getByRole('button', { name: /^Transformar em chamado/ }).click();
     const varias = page.getByRole('dialog', { name: 'Transformar em chamado' });
@@ -2322,9 +2324,18 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     await expect(varias).toHaveCount(0);
     await expect(page.getByText('Chamado #3 aberto.')).toBeVisible();
     await expect(selecionadas).toHaveCount(0);
-    await expect(
-      daAna.getByRole('listitem').filter({ hasText: /transformou 2 mensagens no chamado #3/ }),
-    ).toBeVisible();
+    const eventoDasDuas = daAna
+      .getByRole('listitem')
+      .filter({ hasText: /transformou 2 mensagens no chamado #3/ });
+    await expect(eventoDasDuas).toBeVisible();
+    await expect(primeira).toContainText('Virou o chamado #3');
+    await expect(segunda).toContainText('Virou o chamado #3');
+    const daPrimeira = await primeira.getAttribute('data-mensagem');
+    expect(daPrimeira).toBeTruthy();
+    await expect(eventoDasDuas.getByRole('link', { name: '2 mensagens' })).toHaveAttribute(
+      'href',
+      new RegExp(String(daPrimeira)),
+    );
 
     // Carla abre o chamado novo no chat dela e fica com a tela aberta.
     await daCarla
@@ -2332,6 +2343,11 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
       .getByRole('link', { name: /A impressora da recepção atola/ })
       .click();
     await expect(daCarla).toHaveURL(/\/chat\/chamados\/3$/);
+    const doChamado = daCarla.getByRole('region', { name: 'Conversa do chamado' });
+    await expect(doChamado.locator('blockquote')).toHaveText([
+      'A impressora da recepção não imprime.',
+      'Ela diz que tem papel atolado, mas não tem.',
+    ]);
     await daCarla.evaluate(() => {
       window.__mesmaPagina = true;
     });
@@ -2342,12 +2358,14 @@ test('a primeira conta entra com os dois passos e dá a uma conta nova só as pe
     await expect(
       page.getByRole('list', { name: 'Etapas do chamado' }).locator('[aria-current="step"]'),
     ).toContainText('Em andamento');
+    await expect(
+      daCarla.getByRole('list', { name: 'Etapas do chamado' }).locator('[aria-current="step"]'),
+    ).toContainText('Em andamento');
     const pelaTi = page.getByRole('textbox', { name: /^Escrever para Carla no #3/ });
     await pelaTi.fill('Vou aí destravar a impressora agora.');
     await page.getByRole('button', { name: 'Enviar', exact: true }).click();
     await expect(pelaTi).toHaveValue('');
 
-    const doChamado = daCarla.getByRole('region', { name: 'Conversa do chamado' });
     await expect(doChamado).toContainText('Vou aí destravar a impressora agora.');
     await expect(
       doChamado.getByRole('listitem').filter({ hasText: 'Vou aí destravar a impressora agora.' }),
