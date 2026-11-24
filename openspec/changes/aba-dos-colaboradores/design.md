@@ -146,7 +146,7 @@ O `/api/aba/eventos` reusa o distribuidor com o público da conta, e manda à ab
 - a configuração e a entrada;
 - o fim da sessão da aba e o bloqueio do aparelho.
 
-O `PublicoDoEvento` (`packages/domain`) ganha as sessões da aba e o aparelho. O sinal de vida dessa conexão é de 10 s. Nos eventos de muita gente (a configuração e a mensagem num canal), a aba relê o estado com um atraso sorteado de até 3 s, para 500 abas não lerem no mesmo instante. Na resposta a uma pessoa, relê na hora.
+O `PublicoDoEvento` (`packages/domain`) ganha as sessões da aba, os aparelhos e todas as abas. O `todas` e as `contas` seguem chegando à conexão da aba, e é a rota que corta pelo tipo: o chat da aba usa a mesma função e precisa dos tipos que o chat lê. A conexão da aba, sem linha nas `sessoes`, leva no `sessaoId` um valor que nunca casa, e não o id da sessão da aba. A configuração, a entrada e o bloqueio ganham tipos próprios no `TIPOS_DE_EVENTO`; o fim da sessão da aba vai pelo `registrarEvento` com o público dado (`sessoesDaAba`), porque o público deduzido do `sessao.encerrada` é o da sessão comum. O aviso do banco (`app.avisar_evento()`) leva as três partes novas, como a linha. O sinal de vida dessa conexão é de 10 s. Nos eventos de muita gente (a configuração e a mensagem num canal), a aba relê o estado com um atraso sorteado de até 3 s, para 500 abas não lerem no mesmo instante. Na resposta a uma pessoa, relê na hora.
 
 Sem nenhuma sessão no computador, como na tela de pedir a senha ou na pessoa recusada, não há conexão de eventos. O serviço confere o `GET /api/aba/configuracao` a cada 60 s.
 
@@ -323,6 +323,7 @@ O MSI, o serviço e o webview do chat são conferidos à mão neste computador, 
 
 - As migrations criam as tabelas da aba e a tabela `aberturas_dos_chamados`, as colunas `alcance` e `sessao_da_aba_id` (`sessoes`) e as partes da aba no público dos `eventos` (`sessoes_da_aba`, `aparelhos_da_aba` e `abas`), com os valores de hoje como padrão. Nada mais muda nas que existem.
 - A aba só aparece onde o Intune a instala, e sem a chave criada nenhuma aba conecta.
+- As `aberturas_dos_chamados` nascem vazias: no primeiro dia, a resposta nova que a pessoa já leu pela web, sem responder nem marcar como vista, aparece na aba como resposta por ver. Fica assim, e o runbook diz: é resposta que segue sem resposta dela.
 - **Depois de restaurar um backup do servidor,** os aparelhos registrados depois dele ficam com "Este computador precisa ser registrado de novo." A TI repõe a chave pelo script do Intune do runbook.
 - **Mudar o endereço do servidor** é reinstalar o MSI com o `GRAFITE_SERVIDOR` novo.
 - **Para voltar atrás,** desinstalar o MSI pelo Intune e trocar a chave.

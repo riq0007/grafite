@@ -4,9 +4,9 @@ import {
   chegouAs,
   FRASES_SEM_CONEXAO,
   larguraDoPainel,
+  RETOMADA_DO_MOTIVO,
   respostasNovas,
   tamanhoDaAbaFechada,
-  tentaDeNovoSozinha,
 } from './estado.ts';
 
 const FUSO = 'America/Sao_Paulo';
@@ -41,14 +41,16 @@ describe('tamanho da aba fechada', () => {
 });
 
 describe('largura do painel', () => {
-  it('293 de fábrica e 372 com a linha da resposta', () => {
-    expect(larguraDoPainel(false, 1920)).toBe(293);
-    expect(larguraDoPainel(true, 1920)).toBe(372);
+  it('293 de fábrica, e 372 com a linha da resposta ou sem conexão', () => {
+    expect(larguraDoPainel('de-fabrica', 1920)).toBe(293);
+    expect(larguraDoPainel('com-resposta', 1920)).toBe(372);
+    expect(larguraDoPainel('sem-conexao', 1920)).toBe(372);
   });
 
   it('225 e 300 no notebook de 1366', () => {
-    expect(larguraDoPainel(false, 1366)).toBe(225);
-    expect(larguraDoPainel(true, 1366)).toBe(300);
+    expect(larguraDoPainel('de-fabrica', 1366)).toBe(225);
+    expect(larguraDoPainel('com-resposta', 1366)).toBe(300);
+    expect(larguraDoPainel('sem-conexao', 1366)).toBe(300);
   });
 });
 
@@ -113,15 +115,32 @@ describe('sem conexão', () => {
     expect(FRASES_SEM_CONEXAO['aparelho-bloqueado']).toBe(
       'Este computador foi bloqueado na aba. Fale com a TI.',
     );
+    expect(FRASES_SEM_CONEXAO['sem-rede']).toBe('Sem conexão com o Grafite.');
     expect(FRASES_SEM_CONEXAO['usuario-de-fora']).toBe(
       'Entre no Windows com o seu usuário da empresa para usar a aba.',
     );
   });
 
-  it('só a rede e o AD fora do ar tentam de novo sozinhos', () => {
-    const sozinhos = (
-      Object.keys(FRASES_SEM_CONEXAO) as (keyof typeof FRASES_SEM_CONEXAO)[]
-    ).filter(tentaDeNovoSozinha);
-    expect(sozinhos).toEqual(['sem-rede', 'ti-fora-do-alcance']);
+  it('a rede e o AD tentam logo, a pessoa recusada a cada 10 minutos, e o aparelho pelo serviço', () => {
+    const de = (retomada: string) =>
+      Object.entries(RETOMADA_DO_MOTIVO)
+        .filter(([, quem]) => quem === retomada)
+        .map(([motivo]) => motivo)
+        .sort();
+    expect(de('aba')).toEqual(['sem-rede', 'ti-fora-do-alcance']);
+    expect(de('aba-devagar')).toEqual([
+      'conta-inativa',
+      'conta-local',
+      'sem-grupo',
+      'teto-do-aparelho',
+      'usuario-de-fora',
+    ]);
+    expect(de('servico')).toEqual([
+      'aparelho-bloqueado',
+      'chave-recusada',
+      'nao-configurada',
+      'registrar-de-novo',
+    ]);
+    expect(de('pessoa')).toEqual(['cadastrar-o-codigo']);
   });
 });

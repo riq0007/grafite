@@ -341,6 +341,12 @@ describe('podeReceber', () => {
     expect(podeReceber(bloqueio, conexao(SEM_PERMISSOES), ARVORE)).toBe(false);
   });
 
+  it('a conexão da aba segue recebendo pela conta e por toda a organização', () => {
+    const naAba = conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc' });
+    expect(podeReceber(evento({ todas: true }), naAba, ARVORE)).toBe(true);
+    expect(podeReceber(evento({ contas: [naAba.contaId] }), naAba, ARVORE)).toBe(true);
+  });
+
   it('entrega o evento de todas as abas só às conexões das abas', () => {
     const configuracao = evento({ abas: true });
     const naAba = conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc' });

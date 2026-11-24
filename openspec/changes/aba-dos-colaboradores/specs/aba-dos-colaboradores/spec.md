@@ -94,7 +94,9 @@ A pessoa SHALL ficar sem conexão, com o motivo e sem conta criada, quando:
 - o usuário é de uma conta local do Grafite: "A conta deste usuário é local do Grafite e não entra pela aba.";
 - a conta ou a pessoa está inativa no Grafite: "Sua conta está inativa no Grafite. Fale com a TI.";
 - o usuário não está em nenhum grupo mapeado: a mesma frase da entrada pelo diretório;
-- o diretório está desligado, ou o AD não responde: "A TI não está ao alcance agora." Nesse caso, a aba tenta de novo sozinha.
+- o diretório está desligado, ou o AD não responde: "A TI não está ao alcance agora." Nesse caso, a aba tenta de novo sozinha, como na rede caída.
+
+Nas outras recusas a pessoa não tem o que fazer na aba. A aba SHALL tentar de novo a cada 10 minutos, e a recusa pelo mesmo motivo SHALL NOT repetir a auditoria. Assim, a TI reativa a conta ou mapeia o grupo, e a aba volta sem a pessoa sair do Windows.
 
 #### Scenario: Fernanda na aba pela primeira vez
 - **WHEN** Fernanda, do grupo Colaboradores-Financeiro no AD, entra no Windows do PC-FIN-09 pela primeira vez com a aba instalada
@@ -240,8 +242,8 @@ No aparelho com a entrada pela senha, o painel SHALL mostrar também quem está 
 
 ### Requirement: Aviso da resposta nova
 
-Com uma resposta por ver da TI num chamado da pessoa, a aba fechada SHALL alargar e dizer o aviso em texto, com o ponto ao lado:
-- com uma, "1 resposta nova · Ana Souza", com o nome de quem respondeu, cortado com reticências em até 280 px de aviso;
+Com uma resposta por ver da TI num chamado da pessoa, a aba fechada SHALL alargar e dizer o aviso em texto, com o ponto ao lado. O aviso SHALL contar os chamados com resposta por ver, e não as mensagens, como "Visualizar chamados" conta:
+- com um, "1 resposta nova · Ana Souza", com o nome de quem respondeu por último, cortado com reticências em até 280 px de aviso, também quando Ana escreveu duas mensagens seguidas;
 - com mais, "3 respostas novas".
 
 O ponto SHALL pulsar por 1.400 ms quando a resposta chega, e depois ficar parado.
@@ -288,8 +290,8 @@ A aba SHALL seguir o tema do Windows: o escuro, o claro e o de alto contraste, e
 
 ### Requirement: Aba sem conexão
 
-Sem a API, a aba SHALL ficar no tom neutro, sem vermelho, amarelo ou pulso, com "Sem conexão" escrito. Aberta, ela SHALL mostrar:
-- o motivo;
+Sem a API, a aba SHALL ficar no tom neutro, sem vermelho, amarelo ou pulso, com "Sem conexão" escrito. Aberta, no painel de 372 px de largura, ou 300 px numa tela de 1366 px de largura ou menos, ela SHALL mostrar:
+- o motivo, que na rede caída é "Sem conexão com o Grafite.";
 - o contato de reserva da configuração, como "Ramal 2000, das 8h às 18h";
 - "Abrir chat", a linha da resposta e o chat da tela maior indisponíveis, com o motivo.
 

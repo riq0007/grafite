@@ -27,14 +27,17 @@ export function tamanhoDaAbaFechada(forma: FormaDaAba, larguraDaTela: number): T
     : { forma, largura: 162, altura: 34 };
 }
 
+/** O painel aberto: o de fábrica, o com a linha da resposta e o sem conexão. */
+export type PainelDaAba = 'de-fabrica' | 'com-resposta' | 'sem-conexao';
+
 /**
- * A largura do painel aberto: 293 px de fábrica, ou 372 com a linha da resposta; na tela de até
- * 1366 px, 225 e 300. O painel guarda a largura até fechar, e quem a guarda é a tela.
+ * A largura do painel aberto: 293 px de fábrica, e 372 com a linha da resposta ou sem conexão; na
+ * tela de até 1366 px, 225 e 300. O painel guarda a largura até fechar, e quem a guarda é a tela.
  */
-export function larguraDoPainel(comLinhaDaResposta: boolean, larguraDaTela: number): number {
+export function larguraDoPainel(painel: PainelDaAba, larguraDaTela: number): number {
   const pequena = larguraDaTela <= LARGURA_DA_TELA_PEQUENA;
-  if (comLinhaDaResposta) return pequena ? 300 : 372;
-  return pequena ? 225 : 293;
+  if (painel === 'de-fabrica') return pequena ? 225 : 293;
+  return pequena ? 300 : 372;
 }
 
 /** A contagem de respostas nas palavras da aba: "1 resposta nova", "3 respostas novas". */
@@ -49,15 +52,18 @@ export interface AvisoDaAba {
   quem: string | null;
 }
 
-/** O aviso das respostas por ver, ou `null` sem nenhuma. */
+/**
+ * O aviso das respostas por ver, ou `null` sem nenhuma. Conta os chamados com resposta por ver, e
+ * não as mensagens: duas mensagens seguidas de Ana no #1041 são "1 resposta nova · Ana Souza".
+ */
 export function avisoDaAba(
-  porVer: number,
+  chamadosPorVer: number,
   quemRespondeuPorUltimo: string | null,
 ): AvisoDaAba | null {
-  if (porVer <= 0) return null;
+  if (chamadosPorVer <= 0) return null;
   return {
-    contagem: respostasNovas(porVer),
-    quem: porVer === 1 ? quemRespondeuPorUltimo : null,
+    contagem: respostasNovas(chamadosPorVer),
+    quem: chamadosPorVer === 1 ? quemRespondeuPorUltimo : null,
   };
 }
 
@@ -118,7 +124,30 @@ export const FRASES_SEM_CONEXAO: Record<MotivoSemConexao, string> = {
   'cadastrar-o-codigo': 'Cadastre o código do app pelo navegador antes de usar a aba.',
 };
 
-/** Os motivos em que a aba tenta de novo sozinha; nos outros, ela espera a TI ou a pessoa. */
-export function tentaDeNovoSozinha(motivo: MotivoSemConexao): boolean {
-  return motivo === 'sem-rede' || motivo === 'ti-fora-do-alcance';
-}
+/** De quanto em quanto a aba tenta de novo nas recusas da pessoa, que só a TI resolve. */
+export const INTERVALO_DA_RECUSA_DA_PESSOA = 10 * 60_000;
+
+/**
+ * Quem traz a aba de volta:
+ * - `aba`: ela tenta de novo logo, na rede e no AD fora do ar;
+ * - `aba-devagar`: ela tenta de novo a cada 10 minutos, nas recusas da pessoa, para a mudança da
+ *   TI valer sem a pessoa sair do Windows;
+ * - `servico`: o contato de 60 s do serviço, nos motivos do aparelho;
+ * - `pessoa`: o formulário da entrada pela senha.
+ */
+export type RetomadaDaAba = 'aba' | 'aba-devagar' | 'servico' | 'pessoa';
+
+export const RETOMADA_DO_MOTIVO: Record<MotivoSemConexao, RetomadaDaAba> = {
+  'sem-rede': 'aba',
+  'ti-fora-do-alcance': 'aba',
+  'usuario-de-fora': 'aba-devagar',
+  'conta-local': 'aba-devagar',
+  'conta-inativa': 'aba-devagar',
+  'sem-grupo': 'aba-devagar',
+  'teto-do-aparelho': 'aba-devagar',
+  'nao-configurada': 'servico',
+  'chave-recusada': 'servico',
+  'registrar-de-novo': 'servico',
+  'aparelho-bloqueado': 'servico',
+  'cadastrar-o-codigo': 'pessoa',
+};
