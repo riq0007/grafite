@@ -177,7 +177,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 5.11 O serviço do Windows:
   - o token do aparelho cifrado no `%ProgramData%`, com a permissão só do sistema e dos administradores;
   - a chave lida do `HKLM` sempre que aparece, com o registro, um por vez, e apagada só depois de um contato com o token dar certo; o 429 do registro é "tentar depois", e não a chave recusada;
-  - o nome do computador no `x-grafite-computador` só em ASCII, porque o Node lê o cabeçalho em latin1; o nome com acento vai pelo corpo do registro;
+  - o nome do computador no `x-grafite-computador` só em ASCII, porque o Node lê o cabeçalho em latin1: o nome com acento omite o cabeçalho, sem transliterar, e vai só pelo corpo do registro;
+  - o token recusado tenta de novo a cada 10 minutos, como a recusa da pessoa, e o 429 do escopo, sem o `retry-after`, espera o que o `detail` diz ou 1 minuto;
   - a configuração guardada para todas as pessoas;
   - os logs sem segredo.
 

@@ -225,6 +225,9 @@ describe('o registro', () => {
   it('o nome com caractere de controle é dado inválido, como no cabeçalho', async () => {
     const r = await registrar({ chave, identificadorDaMaquina: 'guid-esc', nome: 'PC\u001b[2J' });
     expect(r.statusCode).toBe(400);
+    // Os de 8 bits também, como o U+009B, que alguns terminais leem como o ESC.
+    const oito = await registrar({ chave, identificadorDaMaquina: 'guid-esc', nome: 'PC\u009b2J' });
+    expect(oito.statusCode).toBe(400);
     expect(await aparelhoDa('guid-esc')).toBeUndefined();
   });
 });
@@ -302,17 +305,20 @@ describe('a configuração', () => {
 
   it('o token que não vale é contado por endereço, e passado o limite é recusado antes do banco', async () => {
     const ip = novoIp();
+    // O computador do Financeiro acabou de falar com o servidor, de outro endereço.
+    expect((await configuracao(tokenDoFin)).statusCode).toBe(200);
     const respostas = [];
     for (let i = 0; i < 21; i++)
       respostas.push((await configuracao(`sorteado-${i}`, { ip })).statusCode);
     expect(respostas.slice(0, 20).every((status) => status === 401)).toBe(true);
     expect(respostas[20]).toBe(429);
-    // O token que vale, do mesmo endereço, também espera: o endereço passou do limite.
-    expect((await configuracao(tokenDoFin, { ip })).statusCode).toBe(429);
-    // Outro endereço segue, e o mesmo volta depois da janela.
-    expect((await configuracao(tokenDoFin)).statusCode).toBe(200);
-    api.relogio.avancar(MINUTO);
+    // O token que valeu há pouco passa, do mesmo endereço; o que ainda não valeu espera.
     expect((await configuracao(tokenDoFin, { ip })).statusCode).toBe(200);
+    const novo = await registrar({ chave, identificadorDaMaquina: 'guid-nat', nome: 'PC-NAT' });
+    expect((await configuracao(novo.json().token, { ip })).statusCode).toBe(429);
+    // O endereço volta depois da janela.
+    api.relogio.avancar(MINUTO);
+    expect((await configuracao(novo.json().token, { ip })).statusCode).toBe(200);
   });
 
   it('o limite de requisições é por token', async () => {

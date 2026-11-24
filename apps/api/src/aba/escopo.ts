@@ -131,7 +131,9 @@ export function versaoDoCabecalho(cabecalho: string | string[] | undefined): str
  * no terminal de quem roda o `grafite aba aparelhos`.
  */
 export function nomeDoComputadorValido(nome: string): boolean {
-  const visivel = [...nome].every((caractere) => caractere >= ' ' && caractere !== '\u007f');
+  const visivel = [...nome].every(
+    (caractere) => caractere >= ' ' && (caractere < '\u007f' || caractere > '\u009f'),
+  );
   return nome.length >= 1 && nome.length <= 63 && visivel;
 }
 
@@ -202,14 +204,19 @@ export function instalarAba(
     const orgId = requisicao.organizacao?.id;
     if (!orgId) throw tokenDaAbaRecusado();
     const momento = agora();
+    const hash = token ? hashDoToken(token) : null;
     const espera = recusas.espera(requisicao.ip, momento.getTime());
-    if (espera !== null) throw muitasRecusas(espera);
+    // O token que valeu há pouco passa: o computador registrado de novo não espera atrás das
+    // recusas dos outros do mesmo endereço, como na filial atrás de um NAT.
+    if (
+      espera !== null &&
+      !(hash && recusas.valeu(hash.toString('base64url'), momento.getTime()))
+    ) {
+      throw muitasRecusas(espera);
+    }
     const achado = await naOrganizacao(banco, orgId, async (tx) => {
-      const [linha] = token
-        ? await tx
-            .select()
-            .from(aparelhosDaAba)
-            .where(eq(aparelhosDaAba.tokenHash, hashDoToken(token)))
+      const [linha] = hash
+        ? await tx.select().from(aparelhosDaAba).where(eq(aparelhosDaAba.tokenHash, hash))
         : [];
       if (!linha) {
         await auditarRecusa(tx, {
@@ -250,6 +257,7 @@ export function instalarAba(
       throw tokenDaAbaRecusado();
     }
     if (achado === 'bloqueado') throw aparelhoBloqueado();
+    if (hash) recusas.lembrar(hash.toString('base64url'), momento.getTime());
     requisicao.aparelhoDaAba = achado;
   });
 }
@@ -268,6 +276,8 @@ const muitasRecusas = (esperaMs: number) =>
  */
 export class ContadorDeRecusas {
   readonly #porEndereco = new Map<string, { inicio: number; quantas: number }>();
+  /** Os hashes dos tokens que valeram, com até quando passam pelo limite das recusas. */
+  readonly #validos = new Map<string, number>();
 
   readonly maximo: number;
   readonly janela: number;
@@ -287,6 +297,20 @@ export class ContadorDeRecusas {
       return null;
     }
     return conta.quantas >= this.maximo ? fim - agora : null;
+  }
+
+  /** O token que valeu nos últimos 10 minutos. */
+  valeu(hash: string, agora: number): boolean {
+    const ate = this.#validos.get(hash);
+    if (ate === undefined) return false;
+    if (agora < ate) return true;
+    this.#validos.delete(hash);
+    return false;
+  }
+
+  lembrar(hash: string, agora: number) {
+    if (this.#validos.size >= ENDERECOS_CONTADOS && !this.#validos.has(hash)) this.#validos.clear();
+    this.#validos.set(hash, agora + INTERVALO_DA_RECUSA_NA_AUDITORIA);
   }
 
   contar(endereco: string, agora: number) {
