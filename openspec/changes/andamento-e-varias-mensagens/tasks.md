@@ -51,7 +51,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - do resumo: Diego escreve a Paulo no #1050, que Ana abriu no nome dele e atende, e o resumo de Ana dá 0, e o de Paulo, 1.
 
   Verificar: esses testes, o `contrato:verificar`, o lint e o typecheck.
-- [ ] 3.2 Quem recebe o chamado (decisão 3): `GET /chamados/:numero/quem-recebe`.
+- [x] 3.2 Quem recebe o chamado (decisão 3): `GET /chamados/:numero/quem-recebe`.
   - A rota pede `chamados.atender`. O chamado que a conta não vê responde como inexistente, e quem não atende os locais é recusado.
   - Ela devolve as contas ativas que atendem todos os locais, fora quem está com o chamado, pelo nome, com os abertos contados nos locais que quem pede vê com `chamados.ver`, como no quadro.
 

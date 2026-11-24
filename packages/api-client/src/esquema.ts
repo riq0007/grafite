@@ -28253,6 +28253,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chamados/{numero}/quem-recebe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem recebe o chamado no "Passar para…": as contas que atendem os locais dele */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QuemRecebeOChamado"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chamados/{numero}/cartao": {
         parameters: {
             query?: never;
@@ -41139,6 +41231,14 @@ export interface components {
             }[];
             total: number;
         };
+        QuemRecebeOChamadoInput: {
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                abertos: number;
+            }[];
+        };
         QuadroDosChamadosInput: {
             triagem: {
                 abertos: number[];
@@ -47033,6 +47133,14 @@ export interface components {
                 local: string | null;
             }[];
             total: number;
+        };
+        QuemRecebeOChamado: {
+            contas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                abertos: number;
+            }[];
         };
         QuadroDosChamados: {
             triagem: {

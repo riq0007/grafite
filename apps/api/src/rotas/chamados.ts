@@ -10,6 +10,7 @@
 // dos campos, para a gaveta mostrá-las juntas.
 import { type Banco, naOrganizacao } from '@grafite/db';
 import {
+  alcance,
   COMO_O_CHAMADO_TEM_A_SOLICITACAO,
   CORES_DE_CONSUMIVEL,
   fusoReconhecido,
@@ -20,6 +21,7 @@ import {
   nomeDoFuso,
   ORIGENS_DO_CHAMADO,
   RECUSA_DO_FORMULARIO,
+  recusaDeQuemAbre,
   SEVERIDADES_DO_ALERTA,
   SITUACOES_DA_ORDEM,
   SITUACOES_DA_SOLICITACAO,
@@ -35,7 +37,7 @@ import { lerArvore } from '../arvore.ts';
 import { DisponibilidadeDoAtivo, SuprimentosDoAtivo } from '../ativos/esquemas.ts';
 import { abrirChamado, RECUSAS_DA_ABERTURA } from '../chamados/abertura.ts';
 import { agirNoChamado, type PedidoDoAtendimento, RECUSAS_DAS_ACOES } from '../chamados/acoes.ts';
-import { NumeroDoChamado } from '../chamados/alcance.ts';
+import { chamadoQueAContaVe, NumeroDoChamado } from '../chamados/alcance.ts';
 import { ANEXO_NAO_ENCONTRADO } from '../chamados/anexos.ts';
 import { buscarChamados } from '../chamados/busca.ts';
 import {
@@ -46,10 +48,11 @@ import {
 import { mudarOsCamposDaTi, trocarOAtivo, trocarOTitulo } from '../chamados/edicao.ts';
 import { EVENTOS_DA_FICHA, fichaDoChamado } from '../chamados/ficha.ts';
 import { FormularioDeChamado } from '../chamados/formulario.ts';
+import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { virarOs } from '../chamados/os.ts';
 import { buscarPessoas } from '../chamados/pessoas.ts';
 import { prazosDosChamados } from '../chamados/prazos.ts';
-import { quadroDosChamados } from '../chamados/quadro.ts';
+import { quadroDosChamados, quemRecebeOChamado } from '../chamados/quadro.ts';
 import { sugestoesDaPessoa } from '../chamados/sugestoes.ts';
 import { lerTiposDaAbertura, TipoDaAbertura, ValorDoPrazo } from '../chamados/tipos.ts';
 import { pedirToner } from '../chamados/toner.ts';
@@ -57,7 +60,7 @@ import { ResumoDosTemposLido } from '../chat/chamados-de-quem-participa.ts';
 import { ConsumivelCompativel } from '../consumiveis/compativeis.ts';
 import type { FilaDeTarefas } from '../fila/fila.ts';
 import { OrdemDeServico } from '../ordens/esquemas.ts';
-import { RespostaDeProblema } from '../problemas.ts';
+import { conflito, RespostaDeProblema } from '../problemas.ts';
 import { PedidoDoToner } from '../solicitacoes/esquemas.ts';
 import { HorarioDaTiLido } from './chamados-horario.ts';
 import { PROBLEMAS_DO_ACESSO } from './sessao.ts';
@@ -199,6 +202,16 @@ const PedidoComOFuso = z.object({
 
 /** O aberto há mais tempo, pela abertura: "mais antigo #1041, há 17 h". */
 const MaisAntigo = z.object({ numero: z.int(), abertoEm: z.iso.datetime() }).nullable();
+
+const QuemRecebeOChamado = z
+  .object({
+    /**
+     * As contas ativas que atendem todos os locais do chamado, fora quem está com ele, pelo nome,
+     * cada uma com os abertos da coluna dela no quadro, contados nos locais que quem pede vê.
+     */
+    contas: z.array(z.object({ conta: z.uuid(), nome: z.string(), abertos: z.int() })),
+  })
+  .meta({ id: 'QuemRecebeOChamado' });
 
 const QuadroDosChamados = z
   .object({
@@ -975,6 +988,34 @@ export const rotasDosChamados: FastifyPluginAsyncZod<{
           agora: agora(),
         }),
       ),
+  );
+
+  app.get(
+    '/chamados/:numero/quem-recebe',
+    {
+      config: { permissao: 'chamados.atender' },
+      schema: {
+        summary: 'Quem recebe o chamado no "Passar para…": as contas que atendem os locais dele',
+        params: z.object({ numero: NumeroDoChamado }),
+        response: { 200: QuemRecebeOChamado, ...PROBLEMAS },
+      },
+    },
+    (requisicao) =>
+      naOrganizacao(banco, requisicao.organizacao?.id ?? '', async (tx) => {
+        const chamado = await chamadoQueAContaVe(tx, requisicao, requisicao.params.numero);
+        const arvore = await lerArvore(tx);
+        const { acesso } = sessaoDa(requisicao);
+        // Quem pede atende os locais do chamado, com a frase de quem age e de quem abre.
+        const recusa = recusaDeQuemAbre(alcance(acesso, 'chamados.atender', arvore), {
+          locais: chamado.locais.map((id) => ({ id, nome: arvore.caminho(id) })),
+          semLocal: chamado.semLocal,
+        });
+        if (recusa) throw conflito(recusa);
+        const { fuso } = await lerHorarioDaTi(tx);
+        return {
+          contas: await quemRecebeOChamado(tx, chamado, { acesso, arvore, fuso, agora: agora() }),
+        };
+      }),
   );
 
   app.get(

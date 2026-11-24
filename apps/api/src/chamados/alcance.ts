@@ -32,9 +32,14 @@ export async function chamadoQueAContaVe(
   tx: Transacao,
   requisicao: FastifyRequest,
   numero: number,
-): Promise<{ id: string; locais: string[]; semLocal: boolean }> {
+): Promise<{ id: string; locais: string[]; semLocal: boolean; responsavel: string | null }> {
   const [chamado] = await tx
-    .select({ id: chamados.id, locais: chamados.locais, semLocal: chamados.semLocal })
+    .select({
+      id: chamados.id,
+      locais: chamados.locais,
+      semLocal: chamados.semLocal,
+      responsavel: chamados.responsavelId,
+    })
     .from(chamados)
     .where(eq(chamados.numero, numero));
   if (!chamado) throw chamadoNaoEncontrado();
