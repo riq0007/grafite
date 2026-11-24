@@ -95,7 +95,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `aoMudar` do `useAcoesDoAtendimento`, que relê o chamado do chat e as listas depois de cada ação, aceita ou recusada, e do "Desfazer".
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`, no computador e a 390 px.
-- [ ] 4.2 Os diálogos do aguardar e do resolver e o reabrir:
+- [x] 4.2 Os diálogos do aguardar e do resolver e o reabrir:
   - "Aguardar Fernanda no #1045", com "Mensagem para Fernanda" e, à pessoa que não usa o chat, "Fernanda ainda não usa o chat: a mensagem fica no chamado.";
   - "Resolver o #1045", com "O que foi feito";
   - nos dois, a recusa do campo nele e toda outra no alto, com o diálogo aberto e o texto escrito: no resolver, a de versão e a do campo só da TI vazio, com "Abrir no Chamados"; no aguardar, que não leva a versão, a da situação;

@@ -2,6 +2,7 @@
 // chat atualizadas e avisos"; change chat-com-chamados, design, decisões 5 e 12): tudo fica debaixo
 // da chave do chat, com as conversas e os chamados à parte, para cada evento reler só o que muda.
 import type { components } from '@grafite/api-client';
+import { nomeCurto } from '@grafite/domain';
 import { avisar } from '@grafite/ui';
 import {
   keepPreviousData,
@@ -344,31 +345,77 @@ export function useQuemRecebeNoChat(numero: number, ligado: boolean) {
 }
 
 /**
- * As ações do "Andamento" que não são do atendimento do Chamados, pelas rotas da TI: o retomar, com
- * a versão do chamado. O retorno vai no aviso; a recusa, no aviso crítico, com a frase da API; e,
- * aceita ou recusada, o chat relê o chamado e as listas.
+ * A recusa que volta ao diálogo do "Andamento": a frase, se ela é do campo do diálogo e, na do campo
+ * só da TI vazio, que se preenche na ficha, o "Abrir no Chamados" ao lado dela.
+ */
+export interface RecusaNoAndamento {
+  erro: string;
+  doCampo: boolean;
+  abrirNoChamados: boolean;
+}
+
+/** A recusa do campo só da TI vazio no resolver, como "Preencha Contador de páginas antes de resolver.". */
+const CAMPO_DA_TI_VAZIO = /^Preencha .+ antes de resolver.$/;
+
+function recusaNoAndamento(falha: FalhaDoPedido, campo: string): RecusaNoAndamento {
+  const doCampo = falha.problema?.campos?.[campo];
+  if (doCampo) return { erro: doCampo, doCampo: true, abrirNoChamados: false };
+  return {
+    erro: falha.erro,
+    doCampo: false,
+    abrirNoChamados: falha.problema?.status === 409 && CAMPO_DA_TI_VAZIO.test(falha.erro),
+  };
+}
+
+/**
+ * As ações do "Andamento" que não são do atendimento do Chamados, pelas rotas da TI: o aguardar, com
+ * a mensagem para a pessoa; o retomar e o resolver, com a versão do chamado. O retorno vai no aviso;
+ * a recusa do retomar, no aviso crítico, e a do aguardar e a do resolver voltam ao diálogo. Aceita
+ * ou recusada, o chat relê o chamado e as listas. O `useAcoesDoChamadoAberto` do Chamados puxa o
+ * Toner, que não entra no app do chat (change andamento-e-varias-mensagens, decisão 2).
  */
 export function useAndamentoNoChat(numero: number) {
   const api = useApi();
   const reler = useRelerOsChamadosDoChat();
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    const params = { path: { numero } };
+    return {
       retomar: async (versao: number) => {
         const resultado = await pedir(
-          () =>
-            api.POST('/chamados/{numero}/retomar', {
-              params: { path: { numero } },
-              body: { versao },
-            }),
+          () => api.POST('/chamados/{numero}/retomar', { params, body: { versao } }),
           'retomar o chamado',
         );
         reler();
         if ('erro' in resultado) avisar({ situacao: 'critico', titulo: resultado.erro });
         else avisar({ situacao: 'sucesso', titulo: `Você retomou o #${numero}.` });
       },
-    }),
-    [api, numero, reler],
-  );
+      /** Nulo quando o chamado ficou aguardando a pessoa; senão, a recusa. */
+      esperar: async (texto: string, pessoa: string): Promise<RecusaNoAndamento | null> => {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/esperar', { params, body: { texto } }),
+          'pôr o chamado aguardando a pessoa',
+        );
+        reler();
+        if ('erro' in resultado) return recusaNoAndamento(resultado, 'texto');
+        avisar({
+          situacao: 'sucesso',
+          titulo: `Você pôs o #${numero} aguardando ${nomeCurto(pessoa)}.`,
+        });
+        return null;
+      },
+      /** Nulo quando resolveu; senão, a recusa. */
+      resolver: async (versao: number, feito: string): Promise<RecusaNoAndamento | null> => {
+        const resultado = await pedir(
+          () => api.POST('/chamados/{numero}/resolver', { params, body: { feito, versao } }),
+          'resolver o chamado',
+        );
+        reler();
+        if ('erro' in resultado) return recusaNoAndamento(resultado, 'feito');
+        avisar({ situacao: 'sucesso', titulo: `Você resolveu o #${numero}.` });
+        return null;
+      },
+    };
+  }, [api, numero, reler]);
 }
 
 /**
