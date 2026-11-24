@@ -99,6 +99,16 @@
 }
 
 /* O "Andamento", a quem atende pelo chat, antes de "Neste chamado", que some com o painel ao lado. */
+/* No cabeçalho do computador, o título tem base: os botões descem à linha de baixo, à direita, antes
+   de espremê-lo. No do celular, a linha do título não quebra. */
+.cabecalho > .titulo {
+  flex: 1 1 calc(var(--esp-12) * 4);
+}
+
+.cabecalho > .andamento {
+  margin-inline-start: auto;
+}
+
 .andamento,
 .botaoDoPainel {
   display: inline-flex;

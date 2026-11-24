@@ -322,6 +322,8 @@ export type AcoesDoChamado = ReturnType<typeof useAcoesDoChamado>;
 export function useRelerOsChamadosDoChat() {
   const consultas = useQueryClient();
   return useCallback(() => {
+    // O "Passar para…" reaberto mostra "Carregando quem atende…", e não a lista de antes da ação.
+    void consultas.resetQueries({ queryKey: [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'quem-recebe'] });
     void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT });
     void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
   }, [consultas]);
