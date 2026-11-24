@@ -264,6 +264,26 @@ describe('a entrada pela senha', () => {
   });
 });
 
+describe('os limites da entrada pela senha', () => {
+  it('o usuário com mais de 64 caracteres é recusado na forma, como na web', async () => {
+    const r = await entrar('a'.repeat(65), 'qualquer');
+    expect(r.statusCode).toBe(400);
+  });
+
+  it('as recusas das credenciais têm, por computador, o limite da entrada', async () => {
+    const sala = await registrar('guid-treino-01', 'PC-TREINO-01', 'senha');
+    for (let i = 0; i < 20; i++) {
+      expect((await entrar(`sorteado.${i}`, 'senha-comum', sala.token)).statusCode).toBe(401);
+    }
+    const passou = await entrar('carla.dias', 'senha-da-carla', sala.token);
+    expect(passou.statusCode).toBe(429);
+    // O outro computador não espera, e este volta depois do minuto.
+    expect((await entrar('carla.dias', 'senha-da-carla')).statusCode).toBe(200);
+    api.relogio.avancar(MINUTO);
+    expect((await entrar('carla.dias', 'senha-da-carla', sala.token)).statusCode).toBe(200);
+  });
+});
+
 describe('o código do app', () => {
   let chaveDoApp: Buffer;
 
@@ -324,6 +344,16 @@ describe('o código do app', () => {
     expect(await sessaoDo(pendente)).toMatchObject({ motivoDoFim: 'tentativas-esgotadas' });
     expect((await comCodigo(pendente, codigoCerto())).statusCode).toBe(401);
     await liberar('davi.costa');
+  });
+
+  it('o código certo depois de quatro errados zera as tentativas do usuário', async () => {
+    const { pendente } = (await entrar('davi.costa', 'senha-do-davi')).json();
+    for (let i = 0; i < 4; i++) await comCodigo(pendente, '000000');
+    expect((await comCodigo(pendente, codigoCerto())).statusCode).toBe(200);
+    const [tentativa] = await naOrg((tx) =>
+      tx.select().from(tentativasDeEntrada).where(eq(tentativasDeEntrada.usuario, 'davi.costa')),
+    );
+    expect(tentativa).toMatchObject({ falhasSeguidas: 0, bloqueadaAte: null });
   });
 
   it('quem exige os dois passos sem os ter é recusado com a frase de cadastrar pelo navegador', async () => {

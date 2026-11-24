@@ -5,7 +5,14 @@
 // e devolve o token da sessão, de 1 hora. A renovação, com o token da sessão, estende a mesma sessão
 // e confere a pessoa de novo pela conta de serviço; a pessoa que não passa mais tem a sessão
 // encerrada. A da senha termina também com o "Sair" e com 30 minutos sem uso.
-import { type Banco, contas, naOrganizacao, pessoas, type Transacao } from '@grafite/db';
+import {
+  type Banco,
+  contas,
+  naOrganizacao,
+  pessoas,
+  type Transacao,
+  tentativasDeEntrada,
+} from '@grafite/db';
 import {
   FRASES_SEM_CONEXAO,
   type MotivoSemConexao,
@@ -17,8 +24,10 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
   type AparelhoDaRequisicao,
+  ContadorDeRecusas,
   exigirEntrada,
   LIMITE_POR_TOKEN_DA_ABA,
+  muitasRecusas,
   tokenDaAbaRecusado,
 } from '../aba/escopo.ts';
 import {
@@ -48,6 +57,7 @@ import type { ConectarDiretorio } from '../diretorio/cliente.ts';
 import { lerDiretorio } from '../diretorio/diretorio.ts';
 import { conferirNoDiretorio, contaPeloDiretorio } from '../diretorio/entrada.ts';
 import { ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
+import { LIMITE_DA_ENTRADA } from '../protecao.ts';
 import { conferirAEntrada, credenciaisInvalidas, origemDa, registrarRecusa } from './sessao.ts';
 
 /** Quanto tempo a API responde o AD fora do ar sem tentar de novo. */
@@ -66,7 +76,11 @@ const PedidoDaSessaoPeloWindows = z
 const PedidoDaSessaoPelaSenha = z
   .object({
     entrada: z.literal('senha'),
-    usuario: z.string().trim().min(1).max(256),
+    usuario: z
+      .string({ error: 'Informe o usuário.' })
+      .trim()
+      .min(1, { error: 'Informe o usuário.' })
+      .max(64, { error: 'Use até 64 caracteres.' }),
     senha: z.string().min(1).max(1024),
   })
   .strict()
@@ -198,6 +212,10 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
   // O AD fora do ar, por organização: as abas da empresa tentam de novo como na rede caída, e cada
   // tentativa seguraria o pedido pelo prazo da conexão e gravaria um aviso.
   const adForaDoArAte = new Map<string, number>();
+  // As recusas das credenciais pela senha, por computador, com o limite da entrada: o token de um
+  // computador não testa uma senha comum em muitos usuários por minuto, abaixo do bloqueio por
+  // usuário. O pedido pelo Windows segue no limite do token.
+  const recusasDaSenha = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
   const conferir = async (
     orgId: string,
     busca: { sid: string } | { usuario: string },
@@ -251,7 +269,9 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             .select({ usuario: contas.usuario })
             .from(contas)
             .where(eq(contas.id, pendente.contaId));
-          const usuario = conta?.usuario ?? '';
+          // A conta anonimizada nos 5 minutos da pendente não tem usuário: a pendente não serve.
+          const usuario = conta?.usuario;
+          if (!usuario) return { tipo: 'vencida' } as const;
           const ator = { tipo: 'conta', contaId: pendente.contaId } as const;
           const { aceito } = await conferirCodigoDaConta(tx, {
             contaId: pendente.contaId,
@@ -295,6 +315,11 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             });
             return { tipo: 'esgotado' } as const;
           }
+          // O código certo zera as tentativas do usuário, como na entrada da web.
+          await tx
+            .update(tentativasDeEntrada)
+            .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
+            .where(eq(tentativasDeEntrada.usuario, usuario));
           // A conta pode ter mudado nos 5 minutos da pendente.
           const daConta = await recusaDaConta(tx, usuario);
           if (daConta) {
@@ -351,6 +376,8 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
 
       if ('senha' in corpo) {
         // A entrada pela senha: a mesma conferência da entrada da web, só pelo diretório.
+        const espera = recusasDaSenha.espera(aparelho.id, agora().getTime());
+        if (espera !== null) throw muitasRecusas(espera);
         const usuario = normalizarUsuario(corpo.usuario);
         const ligado = await naOrganizacao(banco, orgId, async (tx) => {
           const lido = await lerDiretorio(tx);
@@ -409,7 +436,10 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
         }
         if (resultado.tipo === 'fora-do-ar') throw pessoaRecusada('ti-fora-do-alcance');
         if (resultado.tipo === 'sem-acesso') throw pessoaRecusada('sem-grupo');
-        if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
+        if (resultado.tipo === 'recusada') {
+          recusasDaSenha.contar(aparelho.id, momento.getTime());
+          throw credenciaisInvalidas();
+        }
         if (resultado.tipo === 'sem-o-codigo') throw pessoaRecusada('cadastrar-o-codigo');
         if (resultado.tipo === 'pendente') {
           return {

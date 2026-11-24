@@ -81,7 +81,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 3.7 Os fins da sessão da aba e a lista:
   - os seis encerramentos da conta, o "Encerrar as outras", o bloqueio e a troca da entrada do aparelho pelo `grafite aba`, no `encerramento.ts`, com o fim em até 30 s;
   - a sessão da aba na lista das sessões do usuário, como "Aba · PC-FIN-09", com a frase do bloqueio;
-  - a tela das sessões na web.
+  - a tela das sessões na web;
+  - os quatro lugares que encerram a sessão da aba (a entrada, a renovação, o `DELETE` e o `sem-uso` do escopo) passam pelo fim da sessão do chat e pelo evento; a lista lê o `semValer`, porque a parada e a vencida ficam abertas no banco até o pedido seguinte.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato e a tela das sessões no `pnpm dev`.
 - [ ] 3.8 O estado e os eventos (decisão 6):
@@ -180,7 +181,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o nome do computador no `x-grafite-computador` só em ASCII, porque o Node lê o cabeçalho em latin1: o nome com acento omite o cabeçalho, sem transliterar, e vai só pelo corpo do registro;
   - o token recusado tenta de novo a cada 10 minutos, como a recusa da pessoa, e o 429 do escopo, sem o `retry-after`, espera o que o `detail` diz ou 1 minuto;
   - a configuração guardada para todas as pessoas;
-  - os logs sem segredo.
+  - os logs sem segredo;
+  - o serviço decide pelo `type` do problema, e não pelo status: só o `token-da-aba-recusado` é do computador, e os 401 da pessoa (`credenciais-invalidas`, `codigo-invalido`, `tentativas-esgotadas`, `pendente-da-aba-recusada`) e o `sessao-da-aba-recusada` voltam à aba.
 
   Verificar: os testes do Rust e o serviço instalado à mão neste computador, registrando o aparelho no `pnpm dev`.
 - [ ] 5.12 A sessão pelo Windows entregue à aba: o pedido pelo pipe, a renovação de hora em hora e o token da pessoa cifrado pelo DPAPI dela.
@@ -191,7 +193,10 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o token só na memória;
   - o uso informado;
   - os quatro fins: o "Sair", a tela bloqueada, a saída do Windows e os 30 minutos;
-  - os dados do chat limpos ao terminar e ao abrir.
+  - os dados do chat limpos ao terminar e ao abrir;
+  - a decisão pelo `type` do problema, como na 5.11: a senha errada de alguém não põe o computador em "registrar de novo";
+  - a sessão recusada como `usuario-de-fora` (o usuário apagado ou renomeado no AD) volta ao formulário, sem a frase do Windows;
+  - a dica no formulário: só o usuário, sem o domínio nem o e-mail.
 
   Verificar: os testes do Rust e, com a entrada trocada pelo comando, a aba no `tauri dev` com a senha `aba123`: o "Sair" encerra a sessão no servidor.
 - [ ] 5.14 A rede e o estado (decisão 10):
