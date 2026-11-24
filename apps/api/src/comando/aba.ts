@@ -72,29 +72,45 @@ export async function gravarChaveDaAba(
         'Esta organização ainda não tem a chave da aba. Crie com: grafite aba chave criar.',
       );
     }
-    let id: string;
-    if (atual) {
-      await tx
-        .update(chavesDaAba)
-        .set({ hash: hashDoToken(chave), trocadaEm: momento })
-        .where(eq(chavesDaAba.id, atual.id));
-      id = atual.id;
-    } else {
-      const [criada] = await tx
-        .insert(chavesDaAba)
-        .values({ orgId: sql`app.current_org()`, hash: hashDoToken(chave), criadaEm: momento })
-        .returning({ id: chavesDaAba.id });
-      if (!criada) throw new Error('A chave da aba não foi gravada.');
-      id = criada.id;
-    }
-    await registrarNaAuditoria(tx, {
-      acao: trocar ? 'chave-da-aba.trocada' : 'chave-da-aba.criada',
-      ator: ator(trocar ? 'chave trocar' : 'chave criar'),
-      alvo: { tipo: 'chave-da-aba', id },
-      momento,
-    });
+    await gravarChave(tx, { chave, momento, ator: ator(trocar ? 'chave trocar' : 'chave criar') });
     return chave;
   });
+}
+
+/**
+ * Grava o hash da chave da organização do contexto, com a auditoria da criação ou da troca: o
+ * caminho único do comando e do `pnpm dev`, para o hash e o `trocada_em` não divergirem. A
+ * mesma chave não muda nada.
+ */
+export async function gravarChave(
+  tx: Transacao,
+  { chave, momento, ator: quem }: { chave: string; momento: Date; ator: Ator },
+): Promise<'criada' | 'trocada' | 'igual'> {
+  const hash = hashDoToken(chave);
+  const [atual] = await tx.select({ id: chavesDaAba.id, hash: chavesDaAba.hash }).from(chavesDaAba);
+  if (atual?.hash.equals(hash)) return 'igual';
+  let id: string;
+  if (atual) {
+    await tx
+      .update(chavesDaAba)
+      .set({ hash, trocadaEm: momento })
+      .where(eq(chavesDaAba.id, atual.id));
+    id = atual.id;
+  } else {
+    const [criada] = await tx
+      .insert(chavesDaAba)
+      .values({ orgId: sql`app.current_org()`, hash, criadaEm: momento })
+      .returning({ id: chavesDaAba.id });
+    if (!criada) throw new Error('A chave da aba não foi gravada.');
+    id = criada.id;
+  }
+  await registrarNaAuditoria(tx, {
+    acao: atual ? 'chave-da-aba.trocada' : 'chave-da-aba.criada',
+    ator: quem,
+    alvo: { tipo: 'chave-da-aba', id },
+    momento,
+  });
+  return atual ? 'trocada' : 'criada';
 }
 
 export interface ConfiguracaoPeloComando {

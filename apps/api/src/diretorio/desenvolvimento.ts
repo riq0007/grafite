@@ -6,6 +6,7 @@
 // atende o servidor marcado e a organização só com endereços locais, como a senha fixa do `admin`.
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { validarUsuario } from '@grafite/domain';
 import {
   type AcessoAoDiretorio,
   type ClienteDoDiretorio,
@@ -47,6 +48,22 @@ export function usuarioDoWindowsAtual(): UsuarioDoWindows | null {
   const whoami = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'whoami.exe');
   const r = spawnSync(whoami, ['/user', '/fo', 'csv', '/nh'], { encoding: 'utf8' });
   return r.status === 0 ? lerUsuarioDoWindows(r.stdout) : null;
+}
+
+/**
+ * O que o `pnpm dev` diz de como a aba entra, ou por que o usuário do Windows não entra: o usuário
+ * que não serve de usuário do Grafite, como o com espaço ou acento, e o de uma conta local que já
+ * existe ficam com a entrada local, e a senha da aba responderia "usuário ou senha".
+ */
+export function fraseDaAba(usuario: string, contaLocal: boolean): string {
+  const erro = validarUsuario(usuario);
+  if (erro !== null) {
+    return `O usuário do Windows "${usuario}" não serve de usuário do Grafite (${erro.replace(/\.$/, '')}): a aba não entra pelo diretório simulado neste computador.`;
+  }
+  if (contaLocal) {
+    return `A organização de desenvolvimento já tem a conta local ${usuario}, que entra pela senha dela: a aba não entra pelo diretório simulado com esse usuário.`;
+  }
+  return `A aba entra pelo Windows com ${usuario}, ou pela senha com ${usuario} e ${SENHA_DA_ABA_DE_DESENVOLVIMENTO}.`;
 }
 
 const RECUSADO = 'o diretório de desenvolvimento só atende a organização só com endereços locais';

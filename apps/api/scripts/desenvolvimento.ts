@@ -14,10 +14,7 @@ import {
   USUARIO_DE_DESENVOLVIMENTO,
 } from '../src/comando/desenvolvimento.ts';
 import { ErroDoComando } from '../src/comando/erros.ts';
-import {
-  SENHA_DA_ABA_DE_DESENVOLVIMENTO,
-  usuarioDoWindowsAtual,
-} from '../src/diretorio/desenvolvimento.ts';
+import { fraseDaAba, usuarioDoWindowsAtual } from '../src/diretorio/desenvolvimento.ts';
 
 let pool: pg.Pool | undefined;
 const banco = () => {
@@ -48,24 +45,32 @@ try {
   const chaveDoCofre = process.env.GRAFITE_CHAVE_DO_COFRE;
   const chaveDaAba = process.env.GRAFITE_ABA_CHAVE_DE_DESENVOLVIMENTO;
   if (process.env.GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO === '1' && chaveDoCofre && chaveDaAba) {
+    // O usuário do Windows lido antes: sem ele, o diretório simulado não tem quem atender, e só a
+    // chave da aba é gravada.
+    const quem = usuarioDoWindowsAtual();
     const diretorio = await garantirDiretorioDeDesenvolvimento({
       banco,
       agora: () => new Date(),
       nodeEnv: process.env.NODE_ENV,
       chavesDoCofre: { atual: Buffer.from(chaveDoCofre, 'base64') },
       chaveDaAba,
+      usuarioDoWindows: quem?.usuario ?? null,
     });
-    const quem = usuarioDoWindowsAtual();
-    if (diretorio === 'outro-diretorio') {
+    if (diretorio.tipo === 'so-a-chave') {
       console.log(
-        'A organização de desenvolvimento tem outro diretório configurado: o diretório simulado fica desligado.',
+        'O diretório simulado pede o Windows, que diz o usuário e o SID: só a chave da aba foi gravada.',
+      );
+    } else if (diretorio.tipo === 'outro-diretorio') {
+      console.log(
+        'A organização de desenvolvimento tem outro diretório ligado: o diretório simulado fica desligado.',
       );
     } else if (quem) {
-      console.log(
-        `A aba entra pelo Windows com ${quem.usuario}, ou pela senha com ${quem.usuario} e ${SENHA_DA_ABA_DE_DESENVOLVIMENTO}.`,
-      );
-    } else {
-      console.log('O diretório simulado pede o Windows, que diz o usuário e o SID.');
+      if (diretorio.tipo === 'gravado' && diretorio.desligadoSubstituido) {
+        console.log(
+          `O diretório desligado ${diretorio.desligadoSubstituido} deu lugar ao simulado.`,
+        );
+      }
+      console.log(fraseDaAba(quem.usuario, diretorio.contaLocal));
     }
   }
 } catch (erro) {

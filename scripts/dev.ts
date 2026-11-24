@@ -160,14 +160,15 @@ export const CHAVE_DA_ABA = 'GRAFITE_ABA_CHAVE_DE_DESENVOLVIMENTO';
 /**
  * O diretório de desenvolvimento e a chave da aba (change aba-dos-colaboradores, design, decisão
  * 13): o .env liga o AD simulado na API e ganha a chave da aba uma vez. A chave que já existe não é
- * trocada: as abas registradas no computador de quem desenvolve não precisam dela de novo.
+ * trocada: as abas registradas no computador de quem desenvolve não precisam dela de novo. O AD
+ * simulado só é ligado no .env do ambiente de desenvolvimento: no de outro ambiente, como o
+ * `teste`, a configuração recusaria a partida da API.
  */
 export function completarAbaDoDesenvolvimento(conteudo: string, token: () => string): string {
-  const comDiretorio = completarVariavel(
-    conteudo,
-    'GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO',
-    () => '1',
-  );
+  const doDesenvolvimento = /^GRAFITE_AMBIENTE=desenvolvimento\s*$/m.test(conteudo);
+  const comDiretorio = doDesenvolvimento
+    ? completarVariavel(conteudo, 'GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO', () => '1')
+    : conteudo;
   return completarVariavel(comDiretorio, CHAVE_DA_ABA, token);
 }
 

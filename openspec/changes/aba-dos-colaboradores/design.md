@@ -257,17 +257,23 @@ O job `aba` do `ci.yml`, no `windows-2022`:
 
 ### 13. O diretório de desenvolvimento
 
-O `pnpm dev`, no Windows, lê o SID e o usuário de quem roda (`whoami /user`) e liga na organização de desenvolvimento um diretório simulado. Ele usa o mesmo `conectarDiretorio` falso dos testes, movido para um módulo que a API só carrega com `GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO=1`. A validação da configuração recusa essa variável:
-- com o ambiente de produção;
-- numa organização com endereço que não é local.
+O `pnpm dev`, no Windows, lê o SID e o usuário de quem roda (`whoami /user`) e liga na organização de desenvolvimento um diretório simulado. Ele usa o mesmo `conectarDiretorio` falso dos testes, movido para um módulo (`diretorio/simulado.ts`) que a API só carrega, por import dinâmico, com `GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO=1`. Duas travas recusam o diretório simulado fora do desenvolvimento:
+- a validação da configuração recusa a variável em qualquer ambiente que não seja o de desenvolvimento: na produção e também no `teste`, que tem a cópia das contas da produção;
+- a organização com algum endereço que não é local, ou sem endereço, recebe o AD fora do ar. Essa recusa não cabe na validação da configuração, que não lê o banco: ela é conferida onde o diretório simulado atende, por organização, antes de cada pedido.
 
-A recusa da organização com endereço que não é local não cabe na validação da configuração, que não lê o banco. Ela é conferida onde o diretório simulado atende, por organização.
+Só o servidor marcado `ldap://diretorio.localhost` cai no diretório simulado. Os outros seguem para o cliente de verdade (o ldapts), para quem desenvolve contra um AD de verdade.
 
 O diretório simulado tem:
-- o usuário de quem desenvolve, num grupo mapeado a um grupo do Grafite com o chat, e sem os dois passos;
+- o usuário de quem desenvolve, num grupo mapeado ao grupo "Colaboradores" do Grafite, com o perfil "Colaborador da aba", e sem os dois passos. O perfil tem o chat e o pedido de chamados (`chat.usar` e `chamados.pedir`), como o dos colaboradores da chat-com-chamados, para quem desenvolve abrir um chamado pela aba e ver o aviso e o painel com resposta. O `pnpm dev` garante cada peça por si, pelo nome: o perfil (acrescentando as permissões que faltam), o grupo e a atribuição em vigor entre os dois, e o mapeamento;
 - a senha `aba123`, que só ele aceita, para a entrada pela senha.
 
-O `.env` ganha também a chave da aba de desenvolvimento, gerada uma vez.
+O diretório que a organização de desenvolvimento já tem:
+- ligado, com outro servidor, fica como está, e o terminal diz que o simulado ficou desligado;
+- desligado, dá lugar ao simulado, porque só cabe um diretório por organização, e o terminal diz "O diretório desligado <servidor> deu lugar ao simulado.". A base, o filtro, a AC e os mapeamentos do anterior se perdem, e o segredo da conta de serviço anterior fica no Cofre.
+
+Fora do Windows, sem o `whoami`, não há quem atender: o `pnpm dev` grava só a chave da aba, e o diretório fica como está. O usuário do Windows que não serve de usuário do Grafite (com espaço ou acento, como o de um computador do Entra) e o de uma conta local que já existe na organização ficam com a entrada local: o terminal diz o motivo, em vez da frase de como a aba entra.
+
+O `.env` ganha também a chave da aba de desenvolvimento, gerada uma vez, gravada pelo mesmo caminho do `grafite aba chave`, com a auditoria. A variável do diretório simulado só entra no `.env` do ambiente de desenvolvimento: o `.env` de outro ambiente ganha só a chave.
 
 ### 14. Os testes
 
@@ -292,7 +298,7 @@ O `.env` ganha também a chave da aba de desenvolvimento, gerada uma vez.
 
   O chat da aba no e2e da web, com o `naAba`.
 - **Visual:** as capturas da aba fechada e aberta nos três temas, com as referências gravadas nas tarefas da tela.
-- **Pilha:** a aba simulada pelas rotas: o aparelho, a pessoa do AD falso, o bilhete e o chat da aba com a sessão dele.
+- **Pilha:** a aba simulada pelas rotas: o aparelho, a pessoa do AD falso, o bilhete e o chat da aba com a sessão dele. O AD falso da pilha não é o diretório de desenvolvimento: a pilha sobe a API em `producao`, onde a variável é recusada, e o CI é Linux, sem o `whoami`. Ele é um servidor LDAP em processo, como o SMTP e o push falsos da pilha.
 
 O MSI, o serviço e o webview do chat são conferidos à mão neste computador, contra o `pnpm dev`, e numa VM Windows de testes.
 

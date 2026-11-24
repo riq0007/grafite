@@ -7,7 +7,6 @@
 import {
   atribuicoes,
   type Banco,
-  chavesDaAba,
   contas,
   diretorios,
   enderecosDeAcesso,
@@ -20,12 +19,11 @@ import {
   tentativasDeEntrada,
 } from '@grafite/db';
 import { normalizarDn, normalizarTexto } from '@grafite/domain';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { comCredenciais } from '../acesso/credenciais.ts';
 import { encerrarSessoesDaConta } from '../acesso/encerramento.ts';
 import { organizacaoDoEndereco } from '../acesso/organizacao.ts';
 import { conferirSenha, gerarHashDaSenha } from '../acesso/senhas.ts';
-import { hashDoToken } from '../acesso/sessoes.ts';
 import { registrarNaAuditoria, visaoDaConta } from '../auditoria.ts';
 import { type ChavesDoCofre, cifrarSegredo } from '../cofre/cifra.ts';
 import {
@@ -37,6 +35,7 @@ import {
   SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO,
 } from '../diretorio/desenvolvimento.ts';
 import { saidaDaConta } from '../eventos/pessoas.ts';
+import { gravarChave } from './aba.ts';
 import { ErroDoComando } from './erros.ts';
 
 /** O endereço pelo qual a organização de desenvolvimento é achada. */
@@ -163,12 +162,24 @@ export async function garantirSenhaDeDesenvolvimento({
 /** O nome do perfil e do segredo que o diretório de desenvolvimento cria. */
 const PERFIL_DA_ABA_DE_DESENVOLVIMENTO = 'Colaborador da aba';
 const SEGREDO_DO_DIRETORIO_DE_DESENVOLVIMENTO = 'Conta do diretório de desenvolvimento';
+/** O que o perfil dos colaboradores tem, como na chat-com-chamados: o chat e o pedido de chamados. */
+export const PERMISSOES_DA_ABA_DE_DESENVOLVIMENTO = ['chat.usar', 'chamados.pedir'] as const;
+
+export type ResultadoDoDiretorioDeDesenvolvimento =
+  /** Algo foi gravado; com o servidor do diretório desligado que deu lugar ao simulado. */
+  | { tipo: 'gravado'; desligadoSubstituido?: string; contaLocal: boolean }
+  | { tipo: 'mantido'; contaLocal: boolean }
+  | { tipo: 'outro-diretorio' }
+  /** Sem quem desenvolve no Windows: só a chave da aba, e o diretório fica como está. */
+  | { tipo: 'so-a-chave'; gravouAChave: boolean };
 
 /**
  * Liga na organização de desenvolvimento o diretório simulado, com a conta de serviço no Cofre, o
- * grupo "Colaboradores" com o perfil do chat e o mapeamento, e grava a chave da aba do .env. O
- * diretório ligado com outro servidor, de quem desenvolve contra um AD de verdade, não é tocado; o
- * desligado dá lugar ao simulado. A chave só é regravada quando o .env traz outra.
+ * grupo "Colaboradores" com o perfil do chat e dos chamados e o mapeamento, e grava a chave da aba
+ * do .env. O diretório ligado com outro servidor, de quem desenvolve contra um AD de verdade, não é
+ * tocado; o desligado dá lugar ao simulado. Sem o usuário do Windows, só a chave. O `contaLocal` diz que a
+ * organização já tem uma conta local com o usuário do Windows, que então não entra pelo diretório. A
+ * chave só é regravada quando o .env traz outra.
  */
 export async function garantirDiretorioDeDesenvolvimento({
   banco,
@@ -176,18 +187,25 @@ export async function garantirDiretorioDeDesenvolvimento({
   nodeEnv,
   chavesDoCofre,
   chaveDaAba,
-}: AmbienteDoDesenvolvimento & { chavesDoCofre: ChavesDoCofre; chaveDaAba: string }): Promise<
-  'gravado' | 'mantido' | 'outro-diretorio'
-> {
+  usuarioDoWindows,
+}: AmbienteDoDesenvolvimento & {
+  chavesDoCofre: ChavesDoCofre;
+  chaveDaAba: string;
+  /** Quem roda o `pnpm dev` no Windows; sem ele, o diretório simulado não tem quem atender. */
+  usuarioDoWindows: string | null;
+}): Promise<ResultadoDoDiretorioDeDesenvolvimento> {
   const momento = agora();
   const oQue = { nome: 'diretório de desenvolvimento', genero: 'o' } as const;
   return naOrganizacaoDeDesenvolvimento(oQue, { banco, nodeEnv }, async (tx, orgId) => {
-    let gravou = await garantirChaveDaAba(tx, orgId, chaveDaAba, momento);
+    const chave = await gravarChave(tx, { chave: chaveDaAba, momento, ator: ATOR });
+    let gravou = chave !== 'igual';
+    if (usuarioDoWindows === null) return { tipo: 'so-a-chave', gravouAChave: gravou };
     const [existente] = await tx.select().from(diretorios);
     const deOutroServidor =
       existente !== undefined && existente.servidor !== SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO;
     // O outro diretório ligado é o de quem desenvolve contra um AD de verdade, e fica.
-    if (deOutroServidor && existente.ligado) return 'outro-diretorio';
+    if (deOutroServidor && existente.ligado) return { tipo: 'outro-diretorio' };
+    let desligadoSubstituido: string | undefined;
     if (!existente || deOutroServidor) {
       const { rows } = await tx.execute<{ id: string }>(sql`select uuidv7() as id`);
       const segredoId = rows[0]?.id ?? '';
@@ -212,7 +230,7 @@ export async function garantirDiretorioDeDesenvolvimento({
         conferirCertificado: false,
         ligado: true,
       };
-      // O desligado, como o de um teste antigo, dá lugar ao simulado.
+      // O desligado, como o de um teste antigo, dá lugar ao simulado: só cabe um por organização.
       const [gravado] = existente
         ? await tx
             .update(diretorios)
@@ -234,8 +252,11 @@ export async function garantirDiretorioDeDesenvolvimento({
         },
         momento,
       });
+      if (existente) desligadoSubstituido = existente.servidor;
       gravou = true;
     }
+    const grupo = await garantirGrupoDosColaboradores(tx, orgId);
+    if (grupo.mudou) gravou = true;
     const [mapeado] = await tx
       .select({ id: mapeamentosDoDiretorio.id })
       .from(mapeamentosDoDiretorio)
@@ -243,60 +264,94 @@ export async function garantirDiretorioDeDesenvolvimento({
         eq(mapeamentosDoDiretorio.grupoDnNormalizado, normalizarDn(GRUPO_DO_AD_DE_DESENVOLVIMENTO)),
       );
     if (!mapeado) {
-      const grupoId = await grupoDoChat(tx, orgId);
       await tx.insert(mapeamentosDoDiretorio).values({
         orgId,
         grupoDn: GRUPO_DO_AD_DE_DESENVOLVIMENTO,
         grupoDnNormalizado: normalizarDn(GRUPO_DO_AD_DE_DESENVOLVIMENTO),
-        grupoId,
+        grupoId: grupo.id,
       });
       gravou = true;
     }
-    return gravou ? 'gravado' : 'mantido';
+    const [local] = await tx
+      .select({ id: contas.id })
+      .from(contas)
+      .where(and(eq(contas.usuario, usuarioDoWindows), eq(contas.origem, 'local')));
+    const contaLocal = local !== undefined;
+    if (!gravou) return { tipo: 'mantido', contaLocal };
+    return desligadoSubstituido
+      ? { tipo: 'gravado', desligadoSubstituido, contaLocal }
+      : { tipo: 'gravado', contaLocal };
   });
 }
 
-/** A chave da aba de desenvolvimento, pelo hash, gravada só quando falta ou é outra. */
-async function garantirChaveDaAba(
+/**
+ * O grupo "Colaboradores" com o perfil "Colaborador da aba", cada peça garantida por si: o perfil
+ * pelo nome, com as permissões que faltam acrescentadas; o grupo pelo nome; e a atribuição em vigor
+ * do perfil ao grupo, na organização inteira.
+ */
+async function garantirGrupoDosColaboradores(
   tx: Transacao,
   orgId: string,
-  chave: string,
-  momento: Date,
-): Promise<boolean> {
-  const hash = hashDoToken(chave);
-  const [atual] = await tx.select({ hash: chavesDaAba.hash }).from(chavesDaAba);
-  if (atual?.hash.equals(hash)) return false;
-  if (atual) {
-    await tx.update(chavesDaAba).set({ hash, trocadaEm: momento });
+): Promise<{ id: string; mudou: boolean }> {
+  let mudou = false;
+  const nomeDoPerfil = normalizarTexto(PERFIL_DA_ABA_DE_DESENVOLVIMENTO);
+  let [perfil] = await tx
+    .select({ id: perfis.id, permissoes: perfis.permissoes })
+    .from(perfis)
+    .where(eq(perfis.nomeNormalizado, nomeDoPerfil));
+  if (!perfil) {
+    [perfil] = await tx
+      .insert(perfis)
+      .values({
+        orgId,
+        nome: PERFIL_DA_ABA_DE_DESENVOLVIMENTO,
+        nomeNormalizado: nomeDoPerfil,
+        permissoes: [...PERMISSOES_DA_ABA_DE_DESENVOLVIMENTO],
+      })
+      .returning({ id: perfis.id, permissoes: perfis.permissoes });
+    mudou = true;
   } else {
-    await tx.insert(chavesDaAba).values({ orgId, hash });
+    const faltam = PERMISSOES_DA_ABA_DE_DESENVOLVIMENTO.filter(
+      (permissao) => !perfil?.permissoes.includes(permissao),
+    );
+    if (faltam.length > 0) {
+      await tx
+        .update(perfis)
+        .set({ permissoes: [...perfil.permissoes, ...faltam] })
+        .where(eq(perfis.id, perfil.id));
+      mudou = true;
+    }
   }
-  return true;
-}
+  if (!perfil) throw new Error('O perfil da aba não foi gravado.');
 
-/** O grupo "Colaboradores", com o perfil que dá o chat, criados quando faltam. */
-async function grupoDoChat(tx: Transacao, orgId: string): Promise<string> {
-  const nomeNormalizado = normalizarTexto(NOME_DO_GRUPO_DE_DESENVOLVIMENTO);
-  const [existente] = await tx
+  const nomeDoGrupo = normalizarTexto(NOME_DO_GRUPO_DE_DESENVOLVIMENTO);
+  let [grupo] = await tx
     .select({ id: grupos.id })
     .from(grupos)
-    .where(eq(grupos.nomeNormalizado, nomeNormalizado));
-  if (existente) return existente.id;
-  const [perfil] = await tx
-    .insert(perfis)
-    .values({
-      orgId,
-      nome: PERFIL_DA_ABA_DE_DESENVOLVIMENTO,
-      nomeNormalizado: normalizarTexto(PERFIL_DA_ABA_DE_DESENVOLVIMENTO),
-      permissoes: ['chat.usar'],
-    })
-    .returning({ id: perfis.id });
-  const [grupo] = await tx
-    .insert(grupos)
-    .values({ orgId, nome: NOME_DO_GRUPO_DE_DESENVOLVIMENTO, nomeNormalizado })
-    .returning({ id: grupos.id });
-  await tx
-    .insert(atribuicoes)
-    .values({ orgId, perfilId: perfil?.id ?? '', grupoId: grupo?.id ?? '' });
-  return grupo?.id ?? '';
+    .where(eq(grupos.nomeNormalizado, nomeDoGrupo));
+  if (!grupo) {
+    [grupo] = await tx
+      .insert(grupos)
+      .values({ orgId, nome: NOME_DO_GRUPO_DE_DESENVOLVIMENTO, nomeNormalizado: nomeDoGrupo })
+      .returning({ id: grupos.id });
+    mudou = true;
+  }
+  if (!grupo) throw new Error('O grupo dos colaboradores não foi gravado.');
+
+  const [emVigor] = await tx
+    .select({ id: atribuicoes.id })
+    .from(atribuicoes)
+    .where(
+      and(
+        eq(atribuicoes.perfilId, perfil.id),
+        eq(atribuicoes.grupoId, grupo.id),
+        isNull(atribuicoes.localId),
+        isNull(atribuicoes.encerradaEm),
+      ),
+    );
+  if (!emVigor) {
+    await tx.insert(atribuicoes).values({ orgId, perfilId: perfil.id, grupoId: grupo.id });
+    mudou = true;
+  }
+  return { id: grupo.id, mudou };
 }

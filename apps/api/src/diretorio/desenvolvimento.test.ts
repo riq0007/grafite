@@ -6,6 +6,7 @@ import { type AcessoAoDiretorio, type ClienteDoDiretorio, FalhaDoDiretorio } fro
 import {
   CONTA_DE_SERVICO_DE_DESENVOLVIMENTO,
   conectarDiretorioDeDesenvolvimento,
+  fraseDaAba,
   GRUPO_DO_AD_DE_DESENVOLVIMENTO,
   lerUsuarioDoWindows,
   SENHA_DA_ABA_DE_DESENVOLVIMENTO,
@@ -42,6 +43,21 @@ function montar(enderecos: Record<string, string[]>) {
 describe('o usuário do Windows', () => {
   it('lê o usuário, sem o domínio e em minúsculas, e o SID do whoami', () => {
     expect(lerUsuarioDoWindows(`"EMPRESA\\Fernanda.Lima","${SID}"\r\n`)).toEqual(quem);
+  });
+
+  it('o usuário com espaço e acento é lido, e a frase diz por que ele não entra', () => {
+    const lido = lerUsuarioDoWindows(`"PC\\João Silva","${SID}"`);
+    expect(lido).toEqual({ usuario: 'joão silva', sid: SID });
+    expect(fraseDaAba(lido?.usuario ?? '', false)).toBe(
+      'O usuário do Windows "joão silva" não serve de usuário do Grafite (Use só letras sem acento, números, ponto (.), hífen (-) e sublinhado (_)): a aba não entra pelo diretório simulado neste computador.',
+    );
+  });
+
+  it('a frase do usuário que serve e a da conta local que já existe', () => {
+    expect(fraseDaAba('fernanda.lima', false)).toBe(
+      'A aba entra pelo Windows com fernanda.lima, ou pela senha com fernanda.lima e aba123.',
+    );
+    expect(fraseDaAba('fernanda.lima', true)).toContain('já tem a conta local fernanda.lima');
   });
 
   it('sem o SID na saída, não há usuário', () => {

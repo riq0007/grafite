@@ -101,6 +101,12 @@ describe('completarAbaDoDesenvolvimento', () => {
     expect(valor(env, 'GRAFITE_ABA_CHAVE_DE_DESENVOLVIMENTO')).toBe('chave-1');
     expect(completarAbaDoDesenvolvimento(env, () => 'chave-2')).toBe(env);
   });
+
+  it('no .env de outro ambiente, só a chave da aba entra, sem o diretório simulado', () => {
+    const env = completarAbaDoDesenvolvimento('GRAFITE_AMBIENTE=teste\n', () => 'chave-1');
+    expect(valor(env, 'GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO')).toBe('');
+    expect(valor(env, 'GRAFITE_ABA_CHAVE_DE_DESENVOLVIMENTO')).toBe('chave-1');
+  });
 });
 
 describe('completarEnvDeDesenvolvimento', () => {

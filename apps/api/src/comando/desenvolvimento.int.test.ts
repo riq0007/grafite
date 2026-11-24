@@ -3,6 +3,7 @@
 // `admin123`, sem troca, garantida a cada execução do `pnpm dev`, e nunca fora dele. Os testes
 // seguem em ordem, sobre a mesma organização, como execuções seguidas do `pnpm dev`.
 import {
+  atribuicoes,
   auditoria,
   chavesDaAba,
   contas,
@@ -14,7 +15,7 @@ import {
   perfis,
   tentativasDeEntrada,
 } from '@grafite/db';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
 import { type ApiDeTeste, abrirApi, clienteDaApi, novoIp } from '../../test/integracao.ts';
@@ -180,14 +181,29 @@ describe('o diretório de desenvolvimento', () => {
   const CHAVE_DA_ABA = 'chave-da-aba-de-desenvolvimento-de-teste';
   const QUEM = { usuario: 'fernanda.lima', sid: 'S-1-5-21-1004336348-1177238915-682003330-1001' };
 
-  const garantirODiretorio = (nodeEnv = 'development') =>
+  const garantirODiretorio = (
+    usuarioDoWindows: string | null = QUEM.usuario,
+    chaveDaAba = CHAVE_DA_ABA,
+  ) =>
     garantirDiretorioDeDesenvolvimento({
       banco: () => api.banco,
       agora: api.relogio.agora,
-      nodeEnv,
+      nodeEnv: 'development',
       chavesDoCofre: CHAVES_DO_COFRE_DE_TESTE,
-      chaveDaAba: CHAVE_DA_ABA,
+      chaveDaAba,
+      usuarioDoWindows,
     });
+
+  /** As atribuições em vigor do perfil "Colaborador da aba", com o nome do grupo. */
+  const atribuidos = () =>
+    naOrganizacao(api.banco, orgId, (tx) =>
+      tx
+        .select({ grupo: grupos.nome })
+        .from(atribuicoes)
+        .innerJoin(perfis, eq(perfis.id, atribuicoes.perfilId))
+        .innerJoin(grupos, eq(grupos.id, atribuicoes.grupoId))
+        .where(and(eq(perfis.nome, 'Colaborador da aba'), isNull(atribuicoes.encerradaEm))),
+    );
 
   const oQueTem = () =>
     naOrganizacao(api.banco, orgId, async (tx) => ({
@@ -212,6 +228,7 @@ describe('o diretório de desenvolvimento', () => {
       nodeEnv: 'production',
       chavesDoCofre: CHAVES_DO_COFRE_DE_TESTE,
       chaveDaAba: CHAVE_DA_ABA,
+      usuarioDoWindows: QUEM.usuario,
     });
     await expect(recusa).rejects.toThrow(/produção/);
   });
@@ -226,8 +243,8 @@ describe('o diretório de desenvolvimento', () => {
     );
   });
 
-  it('liga o diretório simulado, o grupo com o chat e a chave da aba', async () => {
-    expect(await garantirODiretorio()).toBe('gravado');
+  it('liga o diretório simulado, o grupo com o chat e os chamados, e a chave da aba', async () => {
+    expect(await garantirODiretorio()).toEqual({ tipo: 'gravado', contaLocal: false });
     const tem = await oQueTem();
     expect(tem.diretorios).toMatchObject([
       {
@@ -239,17 +256,27 @@ describe('o diretório de desenvolvimento', () => {
     expect(tem.mapeamentos).toEqual([
       { grupoDn: GRUPO_DO_AD_DE_DESENVOLVIMENTO, grupo: 'Colaboradores' },
     ]);
-    expect(tem.perfis).toEqual([{ nome: 'Colaborador da aba', permissoes: ['chat.usar'] }]);
+    expect(tem.perfis).toEqual([
+      { nome: 'Colaborador da aba', permissoes: ['chat.usar', 'chamados.pedir'] },
+    ]);
+    expect(await atribuidos()).toEqual([{ grupo: 'Colaboradores' }]);
     expect(tem.chaves).toEqual([{ hash: hashDoToken(CHAVE_DA_ABA) }]);
+    const registros = await naOrganizacao(api.banco, orgId, (tx) =>
+      tx
+        .select({ acao: auditoria.acao })
+        .from(auditoria)
+        .where(eq(auditoria.alvoTipo, 'chave-da-aba')),
+    );
+    expect(registros).toEqual([{ acao: 'chave-da-aba.criada' }]);
   });
 
   it('na segunda vez, nada é gravado de novo', async () => {
     const antes = await oQueTem();
-    expect(await garantirODiretorio()).toBe('mantido');
+    expect(await garantirODiretorio()).toEqual({ tipo: 'mantido', contaLocal: false });
     expect(await oQueTem()).toEqual(antes);
   });
 
-  it('quem desenvolve entra pelo diretório com a senha da aba, e ganha o grupo do chat', async () => {
+  it('quem desenvolve entra pelo diretório com a senha da aba, com o chat e o pedido de chamados', async () => {
     const comODiretorio = await abrirApi({
       conectarDiretorio: conectarDiretorioDeDesenvolvimento({
         quem: QUEM,
@@ -269,6 +296,18 @@ describe('o diretório de desenvolvimento', () => {
         payload: { usuario: 'fernanda.lima', senha: SENHA_DA_ABA_DE_DESENVOLVIMENTO },
       });
       expect(entrada.statusCode).toBe(200);
+      const sessao = await comODiretorio.app.inject({
+        method: 'GET',
+        url: '/sessao',
+        remoteAddress: novoIp(),
+        headers: {
+          host: 'localhost',
+          cookie: String(entrada.headers['set-cookie']).split(';')[0] ?? '',
+        },
+      });
+      const permissoes = JSON.stringify(sessao.json().sessao?.acesso.permissoes);
+      expect(permissoes).toContain('chat.usar');
+      expect(permissoes).toContain('chamados.pedir');
     } finally {
       await comODiretorio.fechar();
     }
@@ -278,13 +317,73 @@ describe('o diretório de desenvolvimento', () => {
     await naOrganizacao(api.banco, orgId, (tx) =>
       tx.update(diretorios).set({ servidor: 'ldaps://dc01.empresa.local' }),
     );
-    expect(await garantirODiretorio()).toBe('outro-diretorio');
+    expect(await garantirODiretorio()).toEqual({ tipo: 'outro-diretorio' });
     expect((await oQueTem()).diretorios[0]?.servidor).toBe('ldaps://dc01.empresa.local');
 
     await naOrganizacao(api.banco, orgId, (tx) => tx.update(diretorios).set({ ligado: false }));
-    expect(await garantirODiretorio()).toBe('gravado');
+    expect(await garantirODiretorio()).toEqual({
+      tipo: 'gravado',
+      desligadoSubstituido: 'ldaps://dc01.empresa.local',
+      contaLocal: false,
+    });
     expect((await oQueTem()).diretorios).toMatchObject([
       { servidor: SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO, ligado: true },
     ]);
+  });
+
+  it('o perfil gravado só com o chat ganha o pedido de chamados', async () => {
+    await naOrganizacao(api.banco, orgId, (tx) =>
+      tx
+        .update(perfis)
+        .set({ permissoes: ['chat.usar'] })
+        .where(eq(perfis.nome, 'Colaborador da aba')),
+    );
+    expect(await garantirODiretorio()).toEqual({ tipo: 'gravado', contaLocal: false });
+    expect((await oQueTem()).perfis).toEqual([
+      { nome: 'Colaborador da aba', permissoes: ['chat.usar', 'chamados.pedir'] },
+    ]);
+  });
+
+  it('o grupo renomeado e um "Colaboradores" novo sem perfil: cada peça é garantida', async () => {
+    await naOrganizacao(api.banco, orgId, async (tx) => {
+      await tx.delete(mapeamentosDoDiretorio);
+      await tx
+        .update(grupos)
+        .set({ nome: 'Antigos', nomeNormalizado: 'antigos' })
+        .where(eq(grupos.nome, 'Colaboradores'));
+      await tx
+        .insert(grupos)
+        .values({ orgId, nome: 'Colaboradores', nomeNormalizado: 'colaboradores' });
+    });
+    expect(await garantirODiretorio()).toEqual({ tipo: 'gravado', contaLocal: false });
+    expect(await atribuidos()).toEqual(
+      expect.arrayContaining([{ grupo: 'Antigos' }, { grupo: 'Colaboradores' }]),
+    );
+    expect((await oQueTem()).mapeamentos).toEqual([
+      { grupoDn: GRUPO_DO_AD_DE_DESENVOLVIMENTO, grupo: 'Colaboradores' },
+    ]);
+  });
+
+  it('a conta local com o usuário do Windows é avisada', async () => {
+    await naOrganizacao(api.banco, orgId, (tx) =>
+      tx.update(contas).set({ origem: 'local' }).where(eq(contas.usuario, QUEM.usuario)),
+    );
+    expect(await garantirODiretorio()).toEqual({ tipo: 'mantido', contaLocal: true });
+  });
+
+  it('sem o usuário do Windows, só a chave da aba é gravada e o diretório fica', async () => {
+    await naOrganizacao(api.banco, orgId, (tx) => tx.update(diretorios).set({ ligado: false }));
+    const antes = await oQueTem();
+    expect(await garantirODiretorio(null, 'outra-chave-da-aba-de-teste')).toEqual({
+      tipo: 'so-a-chave',
+      gravouAChave: true,
+    });
+    const depois = await oQueTem();
+    expect(depois.diretorios).toEqual(antes.diretorios);
+    expect(depois.chaves).toEqual([{ hash: hashDoToken('outra-chave-da-aba-de-teste') }]);
+    expect(await garantirODiretorio(null, 'outra-chave-da-aba-de-teste')).toEqual({
+      tipo: 'so-a-chave',
+      gravouAChave: false,
+    });
   });
 });
