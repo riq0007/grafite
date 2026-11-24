@@ -74,7 +74,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a rota de uma mensagem pelo mesmo código.
 
   Começa pelo teste de integração da ordem das linhas `origem`. Verificar: esses testes, os da abertura de uma mensagem, o `contrato:verificar`, o lint e o typecheck.
-- [ ] 3.5 As origens nas leituras (decisão 7):
+- [x] 3.5 As origens nas leituras (decisão 7):
   - as `origens` na leitura do chat, com a `origem` de hoje, que fica como a primeira;
   - as `mensagens` na `origemNoChat` da ficha, com os campos de hoje, que ficam como os da primeira;
   - as marcas de cada mensagem pelas linhas `origem`;

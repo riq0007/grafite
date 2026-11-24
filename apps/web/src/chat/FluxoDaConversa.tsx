@@ -1001,7 +1001,8 @@ function MensagemNaConversa({
 
 /**
  * O evento numa linha, no quadro azul do chamado (m03): "Fernanda Rocha transformou esta mensagem no
- * chamado #1045 · 10:32", que leva à mensagem de origem, com "Abrir chamado" a quem pode abri-lo.
+ * chamado #1045 · 10:32", ou, com várias, "transformou 3 mensagens", que leva à mensagem de origem,
+ * a primeira delas, com "Abrir chamado" a quem pode abri-lo.
  * Quem transformou é dito pelo nome, também à conta que agiu, como na spec e no m03.
  */
 function EventoNaConversa({
@@ -1014,7 +1015,8 @@ function EventoNaConversa({
   dataHora: DataHora;
 }) {
   if (mensagem.evento !== 'virou-chamado' || !mensagem.chamado) return null;
-  const { numero, abrir, mensagem: origem } = mensagem.chamado;
+  const { numero, abrir, mensagem: origem, mensagens } = mensagem.chamado;
+  const citadas = mensagens === 1 ? 'esta mensagem' : `${mensagens} mensagens`;
   return (
     <li className={estilos.evento} data-mensagem={mensagem.id}>
       <span className={estilos.iconeDoEvento}>
@@ -1023,9 +1025,9 @@ function EventoNaConversa({
       <p>
         <strong>{nomeNoChat(mensagem.autor.nome, mensagem.autor.daTi)}</strong> transformou{' '}
         {origem ? (
-          <LinkDoChat para={daConversaEm(conversa, origem)}>esta mensagem</LinkDoChat>
+          <LinkDoChat para={daConversaEm(conversa, origem)}>{citadas}</LinkDoChat>
         ) : (
-          'esta mensagem'
+          citadas
         )}{' '}
         no chamado <span className={estilos.numero}>#{numero}</span>
         <span className={estilos.horaDoEvento}>

@@ -211,7 +211,9 @@ describe('Transformar em chamado, só a quem pode abrir pelo chat', () => {
   });
 
   it('a mensagem que já virou chamado dá "Já virou o #1045", sem ação, e o atalho a ignora', async () => {
-    const virada = mensagem(2, { chamado: { numero: 1045, abrir: true, mensagem: null } });
+    const virada = mensagem(2, {
+      chamado: { numero: 1045, abrir: true, mensagem: null, mensagens: 1 },
+    });
     const { servidor } = servidorDoMenu({ mensagens: [mensagem(1), virada, mensagem(3)] });
     abrir(`/chat/c/${CONVERSA}`, comOChat(servidor, {}, ['chamados.pedir']));
     const item = await comOMouse('Mensagem 2');

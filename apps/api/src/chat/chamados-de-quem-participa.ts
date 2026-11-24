@@ -93,6 +93,17 @@ const AnexoNaLeitura = z
 
 const AtivoNaLeitura = z.object({ nome: z.string(), patrimonio: z.string().nullable() });
 
+/** Uma mensagem do chat de onde o chamado foi aberto, como ficou na abertura. */
+const OrigemNoChat = z
+  .object({
+    autor: z.string(),
+    /** O texto, nulo na mensagem só com os anexos. */
+    texto: z.string().nullable(),
+    em: z.string(),
+    anexos: z.array(AnexoNaLeitura),
+  })
+  .meta({ id: 'OrigemDoChamadoNoChat' });
+
 export const ChamadoDeQuemParticipa = z
   .object({
     numero: z.int(),
@@ -228,16 +239,13 @@ export const ConversaDoChamadoDeQuemParticipa = z
     /** O resumo das respostas, sem os campos só da TI. */
     resumo: z.string(),
     anexosDosCampos: z.array(AnexoNaLeitura.extend({ campo: z.string() })),
-    /** A mensagem do chat de onde o chamado foi aberto, como ficou na abertura. */
-    origem: z
-      .object({
-        autor: z.string(),
-        /** O texto, nulo na mensagem só com os anexos. */
-        texto: z.string().nullable(),
-        em: z.string(),
-        anexos: z.array(AnexoNaLeitura),
-      })
-      .nullable(),
+    /**
+     * A primeira das mensagens do chat de onde o chamado foi aberto, como ficou na abertura; o app
+     * do chat da versão anterior a lê (change andamento-e-varias-mensagens, decisão 7).
+     */
+    origem: OrigemNoChat.nullable(),
+    /** As mensagens do chat de onde o chamado foi aberto, na ordem da conversa, de 1 a 20. */
+    origens: z.array(OrigemNoChat),
     conversa: z.array(ItemDaConversaDeQuemParticipa),
     /**
      * A conta participa dele pela TI: ela escreve como a TI, não tem a resposta nova, não escolhe
@@ -631,18 +639,18 @@ export async function conversaDeQuemParticipa(
       : null;
   };
 
-  let origem: ConversaDoChamadoDeQuemParticipa['origem'] = null;
+  const origens: ConversaDoChamadoDeQuemParticipa['origens'] = [];
   const conversa: ItemDaConversaDeQuemParticipa[] = [];
   for (const linha of linhas) {
     const em = linha.criadaEm.toISOString();
     if (linha.especie === 'nota') continue;
     if (linha.especie === 'origem') {
-      origem = {
+      origens.push({
         autor: nome.conta(linha.autorConta ?? ''),
         texto: linha.texto,
         em: dadoDeTexto(linha.dados, 'em') ?? em,
         anexos: anexosDaLinha.get(linha.id) ?? [],
-      };
+      });
       continue;
     }
     if (linha.especie === 'mensagem') {
@@ -785,7 +793,8 @@ export async function conversaDeQuemParticipa(
       pessoas: new Map([...citados.pessoa].map((id) => [id, nome.pessoa(id)])),
     }),
     anexosDosCampos,
-    origem,
+    origem: origens[0] ?? null,
+    origens,
     conversa,
     pelaTi,
     andamento,

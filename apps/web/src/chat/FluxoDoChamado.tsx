@@ -339,8 +339,9 @@ function AnexosNoChamado({
 }
 
 /**
- * A abertura: a frase dela, como "Recebemos o seu chamado", com a hora, e, embaixo, a mensagem do
- * chat de onde o chamado veio, citada, ou o resumo das respostas, com os anexos dos campos.
+ * A abertura: a frase dela, como "Recebemos o seu chamado", com a hora, e, embaixo, as mensagens do
+ * chat de onde o chamado veio, citadas na ordem da conversa, cada uma com quem a escreveu, a hora, o
+ * texto e os anexos, ou o resumo das respostas, com os anexos dos campos.
  */
 function Abertura({
   evento,
@@ -353,31 +354,31 @@ function Abertura({
   agora: Date;
   dataHora: DataHora;
 }) {
-  const { origem } = chamado;
+  const { origens } = chamado;
   return (
     <li className={estilos.abertura}>
       {evento && <PilulaDoEvento evento={evento} dataHora={dataHora} />}
-      {origem ? (
-        <figure className={estilos.origem}>
-          <figcaption className={estilos.deOnde}>
-            {`Mensagem de ${origem.autor} · ${horaNaConversa(new Date(origem.em), agora, dataHora)}`}
-          </figcaption>
-          {/* A citada só com os anexos fica sem o texto (tarefa 4.18). */}
-          {origem.texto && (
-            <blockquote className={estilos.citada}>
-              <p className={daConversa.texto}>{origem.texto}</p>
-            </blockquote>
+      {origens.length > 0
+        ? origens.map((origem) => (
+            <figure key={`${origem.autor} ${origem.em}`} className={estilos.origem}>
+              <figcaption className={estilos.deOnde}>
+                {`Mensagem de ${origem.autor} · ${horaNaConversa(new Date(origem.em), agora, dataHora)}`}
+              </figcaption>
+              {/* A citada só com os anexos fica sem o texto (tarefa 4.18). */}
+              {origem.texto && (
+                <blockquote className={estilos.citada}>
+                  <p className={daConversa.texto}>{origem.texto}</p>
+                </blockquote>
+              )}
+              <AnexosNoChamado anexos={origem.anexos} numero={chamado.numero} />
+            </figure>
+          ))
+        : (chamado.resumo !== '' || chamado.anexosDosCampos.length > 0) && (
+            <div className={estilos.origem}>
+              {chamado.resumo !== '' && <p className={daConversa.texto}>{chamado.resumo}</p>}
+              <AnexosNoChamado anexos={chamado.anexosDosCampos} numero={chamado.numero} />
+            </div>
           )}
-          <AnexosNoChamado anexos={origem.anexos} numero={chamado.numero} />
-        </figure>
-      ) : (
-        (chamado.resumo !== '' || chamado.anexosDosCampos.length > 0) && (
-          <div className={estilos.origem}>
-            {chamado.resumo !== '' && <p className={daConversa.texto}>{chamado.resumo}</p>}
-            <AnexosNoChamado anexos={chamado.anexosDosCampos} numero={chamado.numero} />
-          </div>
-        )
-      )}
     </li>
   );
 }

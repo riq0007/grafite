@@ -56,6 +56,7 @@ const conversa = (
   resumo: '',
   anexosDosCampos: [],
   origem: null,
+  origens: [],
   conversa: [],
   pelaTi: false,
   andamento: null,

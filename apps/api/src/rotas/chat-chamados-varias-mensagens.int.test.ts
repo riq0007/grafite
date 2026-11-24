@@ -81,7 +81,7 @@ async function escrever(usuario: UsuarioDoChat, texto: string, anexo?: string) {
   expect(escrita.statusCode, escrita.body).toBe(201);
   const em = api.relogio.agora().toISOString();
   api.relogio.avancar(MINUTO);
-  return { id: (escrita.json() as { id: string }).id, em, anexos };
+  return { id: (escrita.json() as { id: string }).id, texto, em, anexos };
 }
 
 const contarChamados = () =>
@@ -198,6 +198,100 @@ describe('a abertura com várias mensagens', () => {
         .where(eq(mensagensDoChat.evento, 'virou-chamado')),
     );
     expect(evento?.dados).toMatchObject({ numero, mensagens: 1 });
+  });
+});
+
+describe('as leituras (tarefa 3.5)', () => {
+  interface Citada {
+    autor: string;
+    texto: string | null;
+    em: string;
+    anexos: { id: string }[];
+  }
+  const citada = ({ autor, texto, em, anexos }: Citada) => ({
+    autor,
+    texto,
+    em,
+    anexos: anexos.map(({ id }) => id),
+  });
+
+  it('o chamado no chat e a ficha citam todas, na ordem, e a origem de hoje é a primeira', async () => {
+    const das1019 = await escrever('paulo', 'A impressora do Financeiro manchou.');
+    const das1020 = await escrever('paulo', 'Olha a folha.', 'folha manchada.pdf');
+    const das1021 = await escrever('fernanda', 'Aqui também.');
+    const numero = await aberto('fernanda', equipe, [das1021.id, das1019.id, das1020.id]);
+    const esperadas = [
+      { autor: 'Paulo Nunes', texto: das1019.texto, em: das1019.em, anexos: [] },
+      { autor: 'Paulo Nunes', texto: das1020.texto, em: das1020.em, anexos: das1020.anexos },
+      { autor: 'Fernanda Rocha', texto: das1021.texto, em: das1021.em, anexos: [] },
+    ];
+
+    const noChat = await c.cliente.consultar(`/chat/chamados/${numero}`, c.como('fernanda'));
+    expect(noChat.statusCode, noChat.body).toBe(200);
+    const lido = noChat.json() as { origem: Citada | null; origens: Citada[] };
+    expect(lido.origens.map(citada)).toEqual(esperadas);
+    expect(lido.origem && citada(lido.origem)).toEqual(esperadas[0]);
+
+    const naFicha = await c.cliente.consultar(`/chamados/${numero}`, c.como('ana'));
+    expect(naFicha.statusCode, naFicha.body).toBe(200);
+    const { origemNoChat } = naFicha.json() as {
+      origemNoChat: Citada & {
+        mensagens: Citada[];
+        abrir: { conversa: string; mensagem: string } | null;
+      };
+    };
+    expect(origemNoChat.mensagens.map(citada)).toEqual(esperadas);
+    expect(citada(origemNoChat)).toEqual(esperadas[0]);
+  });
+
+  it('cada mensagem citada ganha a marca, e o evento diz quantas; o evento de antes conta uma', async () => {
+    const das1019 = await escrever('paulo', 'A impressora do Financeiro manchou.');
+    const das1020 = await escrever('paulo', 'Olha a folha.');
+    const fora = await escrever('tatiana', 'Bom dia!');
+    const das1021 = await escrever('fernanda', 'Aqui também.');
+    const numero = await aberto('fernanda', equipe, [das1019.id, das1020.id, das1021.id]);
+
+    const marcas = async () => {
+      const r = await c.cliente.consultar(`/chat/conversas/${equipe}/mensagens`, c.como('paulo'));
+      expect(r.statusCode, r.body).toBe(200);
+      return (
+        r.json() as {
+          itens: {
+            id: string;
+            evento: string | null;
+            chamado: { numero: number; mensagem: string | null; mensagens: number } | null;
+          }[];
+        }
+      ).itens.map(({ id, evento, chamado }) => ({ id, evento, chamado }));
+    };
+    const marca = { numero, mensagem: das1019.id, mensagens: 3 };
+    const lidas = await marcas();
+    expect(lidas.slice(0, 4)).toEqual([
+      { id: das1019.id, evento: null, chamado: expect.objectContaining(marca) },
+      { id: das1020.id, evento: null, chamado: expect.objectContaining(marca) },
+      { id: fora.id, evento: null, chamado: null },
+      { id: das1021.id, evento: null, chamado: expect.objectContaining(marca) },
+    ]);
+    expect(lidas[4]).toEqual({
+      id: expect.any(String),
+      evento: 'virou-chamado',
+      chamado: expect.objectContaining(marca),
+    });
+
+    // O evento gravado antes da contagem, sem as `mensagens`, conta uma; o chat não muda as
+    // mensagens, e a mudança vai pelo dono das tabelas.
+    const dono = await api.dono.connect();
+    try {
+      await dono.query('begin');
+      await dono.query("select set_config('app.org_id', $1, true)", [c.org]);
+      await dono.query(
+        "update mensagens_do_chat set dados = dados - 'mensagens' where evento = 'virou-chamado'",
+      );
+      await dono.query('commit');
+    } finally {
+      dono.release();
+    }
+    expect((await marcas())[4]?.chamado?.mensagens).toBe(1);
   });
 });
 

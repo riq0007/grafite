@@ -227,13 +227,21 @@ describe('a abertura pelo chat', () => {
     // "Abrir chamado"; a Fernanda, que o abriu, com ele. O evento cita a mensagem de origem.
     const doPaulo = await pagina('paulo', equipe);
     expect(doPaulo.map(({ especie, evento, chamado }) => ({ especie, evento, chamado }))).toEqual([
-      { especie: 'mensagem', evento: null, chamado: { numero, abrir: false, mensagem } },
-      { especie: 'evento', evento: 'virou-chamado', chamado: { numero, abrir: false, mensagem } },
+      {
+        especie: 'mensagem',
+        evento: null,
+        chamado: { numero, abrir: false, mensagem, mensagens: 1 },
+      },
+      {
+        especie: 'evento',
+        evento: 'virou-chamado',
+        chamado: { numero, abrir: false, mensagem, mensagens: 1 },
+      },
     ]);
     expect(doPaulo[1]?.autor.nome).toBe('Fernanda Rocha');
     expect((await pagina('fernanda', equipe)).map(({ chamado }) => chamado)).toEqual([
-      { numero, abrir: true, mensagem },
-      { numero, abrir: true, mensagem },
+      { numero, abrir: true, mensagem, mensagens: 1 },
+      { numero, abrir: true, mensagem, mensagens: 1 },
     ]);
   });
 

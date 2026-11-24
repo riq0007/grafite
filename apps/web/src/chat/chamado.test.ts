@@ -228,12 +228,20 @@ describe('anexosDoChamado', () => {
     });
     const anexos = anexosDoChamado(
       {
-        origem: {
-          autor: 'Paulo Nunes',
-          texto: 'A impressora está manchando.',
-          em: '2026-11-10T20:01:00Z',
-          anexos: [anexo(1)],
-        },
+        origens: [
+          {
+            autor: 'Paulo Nunes',
+            texto: 'A impressora está manchando.',
+            em: '2026-11-10T20:01:00Z',
+            anexos: [anexo(1)],
+          },
+          {
+            autor: 'Tatiana Lopes',
+            texto: null,
+            em: '2026-11-10T20:03:00Z',
+            anexos: [anexo(7)],
+          },
+        ],
         anexosDosCampos: [{ ...anexo(2), campo: 'Print do erro' }],
         conversa: [
           mensagem(3, '2026-11-11T13:00:00Z'),
@@ -246,6 +254,7 @@ describe('anexosDoChamado', () => {
     );
     expect(anexos.map(({ nome, sobre }) => `${nome} · ${sobre}`)).toEqual([
       'arquivo-1.png · Paulo Nunes · ontem 17:01',
+      'arquivo-7.png · Tatiana Lopes · ontem 17:03',
       'arquivo-2.png · Print do erro',
       'arquivo-4.png · você · 10:32',
       'arquivo-6.png · Bruno Lima (TI) · 10:50',

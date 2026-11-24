@@ -40704,6 +40704,12 @@ export interface components {
             bytes: number;
             miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
         };
+        OrigemDoChamadoNoChatInput: {
+            autor: string;
+            texto: string | null;
+            em: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
+        };
         ChamadoDeQuemParticipaInput: {
             numero: number;
             titulo: string;
@@ -40817,12 +40823,8 @@ export interface components {
                 miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 campo: string;
             }[];
-            origem: {
-                autor: string;
-                texto: string | null;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChatInput"][];
-            } | null;
+            origem: components["schemas"]["OrigemDoChamadoNoChatInput"] | null;
+            origens: components["schemas"]["OrigemDoChamadoNoChatInput"][];
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipaInput"][];
             pelaTi: boolean;
             andamento: {
@@ -41517,6 +41519,20 @@ export interface components {
                     bytes: number;
                     miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
                 }[];
+                mensagens: {
+                    autor: string;
+                    texto: string | null;
+                    /** Format: date-time */
+                    em: string;
+                    anexos: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        tipo: string;
+                        bytes: number;
+                        miniatura: components["schemas"]["MiniaturaDoAnexoInput"] | null;
+                    }[];
+                }[];
                 abrir: {
                     /** Format: uuid */
                     conversa: string;
@@ -42048,6 +42064,7 @@ export interface components {
                 numero: number;
                 abrir: boolean;
                 mensagem: string | null;
+                mensagens: number;
             } | null;
         };
         PaginaDeMensagensInput: {
@@ -46614,6 +46631,12 @@ export interface components {
             bytes: number;
             miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
         };
+        OrigemDoChamadoNoChat: {
+            autor: string;
+            texto: string | null;
+            em: string;
+            anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
+        };
         ChamadoDeQuemParticipa: {
             numero: number;
             titulo: string;
@@ -46727,12 +46750,8 @@ export interface components {
                 miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 campo: string;
             }[];
-            origem: {
-                autor: string;
-                texto: string | null;
-                em: string;
-                anexos: components["schemas"]["AnexoDoChamadoNoChat"][];
-            } | null;
+            origem: components["schemas"]["OrigemDoChamadoNoChat"] | null;
+            origens: components["schemas"]["OrigemDoChamadoNoChat"][];
             conversa: components["schemas"]["ItemDaConversaDeQuemParticipa"][];
             pelaTi: boolean;
             andamento: {
@@ -47427,6 +47446,20 @@ export interface components {
                     bytes: number;
                     miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
                 }[];
+                mensagens: {
+                    autor: string;
+                    texto: string | null;
+                    /** Format: date-time */
+                    em: string;
+                    anexos: {
+                        /** Format: uuid */
+                        id: string;
+                        nome: string;
+                        tipo: string;
+                        bytes: number;
+                        miniatura: components["schemas"]["MiniaturaDoAnexo"] | null;
+                    }[];
+                }[];
                 abrir: {
                     /** Format: uuid */
                     conversa: string;
@@ -47958,6 +47991,7 @@ export interface components {
                 numero: number;
                 abrir: boolean;
                 mensagem: string | null;
+                mensagens: number;
             } | null;
         };
         PaginaDeMensagens: {

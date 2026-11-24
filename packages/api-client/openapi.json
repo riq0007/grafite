@@ -10644,6 +10644,35 @@
           "miniatura"
         ]
       },
+      "OrigemDoChamadoNoChatInput": {
+        "type": "object",
+        "properties": {
+          "autor": {
+            "type": "string"
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "em": {
+            "type": "string"
+          },
+          "anexos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnexoDoChamadoNoChatInput"
+            }
+          }
+        },
+        "required": [
+          "autor",
+          "texto",
+          "em",
+          "anexos"
+        ]
+      },
       "ChamadoDeQuemParticipaInput": {
         "type": "object",
         "properties": {
@@ -11220,38 +11249,18 @@
           "origem": {
             "anyOf": [
               {
-                "type": "object",
-                "properties": {
-                  "autor": {
-                    "type": "string"
-                  },
-                  "texto": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "em": {
-                    "type": "string"
-                  },
-                  "anexos": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/AnexoDoChamadoNoChatInput"
-                    }
-                  }
-                },
-                "required": [
-                  "autor",
-                  "texto",
-                  "em",
-                  "anexos"
-                ]
+                "$ref": "#/components/schemas/OrigemDoChamadoNoChatInput"
               },
               {
                 "type": "null"
               }
             ]
+          },
+          "origens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrigemDoChamadoNoChatInput"
+            }
           },
           "conversa": {
             "type": "array",
@@ -11385,6 +11394,7 @@
           "resumo",
           "anexosDosCampos",
           "origem",
+          "origens",
           "conversa",
           "pelaTi",
           "andamento",
@@ -14969,6 +14979,75 @@
                       ]
                     }
                   },
+                  "mensagens": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "autor": {
+                          "type": "string"
+                        },
+                        "texto": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "em": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "anexos": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "nome": {
+                                "type": "string"
+                              },
+                              "tipo": {
+                                "type": "string"
+                              },
+                              "bytes": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "miniatura": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/components/schemas/MiniaturaDoAnexoInput"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nome",
+                              "tipo",
+                              "bytes",
+                              "miniatura"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "autor",
+                        "texto",
+                        "em",
+                        "anexos"
+                      ]
+                    }
+                  },
                   "abrir": {
                     "anyOf": [
                       {
@@ -15002,6 +15081,7 @@
                   "texto",
                   "em",
                   "anexos",
+                  "mensagens",
                   "abrir"
                 ]
               },
@@ -17556,12 +17636,18 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "mensagens": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
                   "numero",
                   "abrir",
-                  "mensagem"
+                  "mensagem",
+                  "mensagens"
                 ]
               },
               {
@@ -40479,6 +40565,36 @@
         ],
         "additionalProperties": false
       },
+      "OrigemDoChamadoNoChat": {
+        "type": "object",
+        "properties": {
+          "autor": {
+            "type": "string"
+          },
+          "texto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "em": {
+            "type": "string"
+          },
+          "anexos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnexoDoChamadoNoChat"
+            }
+          }
+        },
+        "required": [
+          "autor",
+          "texto",
+          "em",
+          "anexos"
+        ],
+        "additionalProperties": false
+      },
       "ChamadoDeQuemParticipa": {
         "type": "object",
         "properties": {
@@ -41071,39 +41187,18 @@
           "origem": {
             "anyOf": [
               {
-                "type": "object",
-                "properties": {
-                  "autor": {
-                    "type": "string"
-                  },
-                  "texto": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "em": {
-                    "type": "string"
-                  },
-                  "anexos": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/AnexoDoChamadoNoChat"
-                    }
-                  }
-                },
-                "required": [
-                  "autor",
-                  "texto",
-                  "em",
-                  "anexos"
-                ],
-                "additionalProperties": false
+                "$ref": "#/components/schemas/OrigemDoChamadoNoChat"
               },
               {
                 "type": "null"
               }
             ]
+          },
+          "origens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrigemDoChamadoNoChat"
+            }
           },
           "conversa": {
             "type": "array",
@@ -41241,6 +41336,7 @@
           "resumo",
           "anexosDosCampos",
           "origem",
+          "origens",
           "conversa",
           "pelaTi",
           "andamento",
@@ -44947,6 +45043,77 @@
                       "additionalProperties": false
                     }
                   },
+                  "mensagens": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "autor": {
+                          "type": "string"
+                        },
+                        "texto": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "em": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "anexos": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "nome": {
+                                "type": "string"
+                              },
+                              "tipo": {
+                                "type": "string"
+                              },
+                              "bytes": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "miniatura": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/components/schemas/MiniaturaDoAnexo"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nome",
+                              "tipo",
+                              "bytes",
+                              "miniatura"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "autor",
+                        "texto",
+                        "em",
+                        "anexos"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
                   "abrir": {
                     "anyOf": [
                       {
@@ -44981,6 +45148,7 @@
                   "texto",
                   "em",
                   "anexos",
+                  "mensagens",
                   "abrir"
                 ],
                 "additionalProperties": false
@@ -47635,12 +47803,18 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "mensagens": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
                   "numero",
                   "abrir",
-                  "mensagem"
+                  "mensagem",
+                  "mensagens"
                 ],
                 "additionalProperties": false
               },

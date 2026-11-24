@@ -467,11 +467,21 @@ const FichaDoChamado = z
     origemNoChat: z
       .object({
         conversa: z.object({ tipo: z.enum(['direta', 'equipe', 'canal']), nome: z.string() }),
+        /** O autor, o texto, a hora e os anexos da primeira das mensagens citadas. */
         autor: z.string(),
         /** O texto, nulo na mensagem citada só com os anexos. */
         texto: z.string().nullable(),
         em: z.iso.datetime(),
         anexos: z.array(AnexoDaFicha),
+        /** As mensagens citadas, na ordem da conversa, de 1 a 20 (change andamento-e-varias-mensagens). */
+        mensagens: z.array(
+          z.object({
+            autor: z.string(),
+            texto: z.string().nullable(),
+            em: z.iso.datetime(),
+            anexos: z.array(AnexoDaFicha),
+          }),
+        ),
         abrir: z.object({ conversa: z.uuid(), mensagem: z.uuid() }).nullable(),
       })
       .nullable(),
