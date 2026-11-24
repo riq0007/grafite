@@ -23,7 +23,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 2. Domínio
 
-- [ ] 2.1 O estado que a aba mostra (os requisitos "Aba fechada", "Aviso da resposta nova" e "Aba durante uma apresentação"):
+- [x] 2.1 O estado que a aba mostra (os requisitos "Aba fechada", "Aviso da resposta nova" e "Aba durante uma apresentação"):
   - a forma e o tamanho pela configuração e pela largura da tela;
   - o aviso, com "1 resposta nova · Ana Souza", o corte e "3 respostas novas";
   - o "chegou às" por 1 minuto, com uma e com várias;

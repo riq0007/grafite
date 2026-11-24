@@ -1,4 +1,19 @@
 export {
+  type AvisoDaAba,
+  avisoDaAba,
+  chegouAs,
+  DURACAO_DO_CHEGOU_AS,
+  type FormaDaAba,
+  FRASES_SEM_CONEXAO,
+  LARGURA_DA_TELA_PEQUENA,
+  larguraDoPainel,
+  type MotivoSemConexao,
+  respostasNovas,
+  type TamanhoDaAba,
+  tamanhoDaAbaFechada,
+  tentaDeNovoSozinha,
+} from './aba/estado.ts';
+export {
   type Acesso,
   type AlcanceDaPermissao,
   type AtribuicaoParaAcesso,
