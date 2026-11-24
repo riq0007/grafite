@@ -78,6 +78,7 @@ const SESSOES: Sessao[] = [
   {
     id: 's1',
     dispositivo: 'Chrome no Windows',
+    aviso: null,
     ip: '10.0.0.12',
     criadaEm: '2026-10-07T11:00:00.000Z',
     ultimoUsoEm: '2026-10-07T12:10:00.000Z',
@@ -85,6 +86,7 @@ const SESSOES: Sessao[] = [
   {
     id: 's2',
     dispositivo: 'Safari no iPhone',
+    aviso: null,
     ip: null,
     criadaEm: '2026-10-06T18:00:00.000Z',
     ultimoUsoEm: '2026-10-06T18:40:00.000Z',

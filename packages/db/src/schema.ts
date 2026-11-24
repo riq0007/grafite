@@ -346,6 +346,8 @@ export const MOTIVOS_DO_FIM_DA_SESSAO = [
   'conta-inativada',
   'encerrada-pela-administracao',
   'dois-passos-removidos',
+  /** A sessão do chat na aba, que termina junto com a sessão da aba (change aba-dos-colaboradores). */
+  'sessao-da-aba-encerrada',
 ] as const;
 
 /** As formas da aba fechada (spec aba-dos-colaboradores, "Aba fechada"). */

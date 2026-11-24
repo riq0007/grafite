@@ -4,16 +4,18 @@
 
 import { createHash, randomBytes } from 'node:crypto';
 import {
+  aparelhosDaAba,
   type Banco,
   contas,
   doisPassos,
   naOrganizacao,
   pessoas,
   sessoes,
+  sessoesDaAba,
   type Transacao,
 } from '@grafite/db';
 import type { Acesso } from '@grafite/domain';
-import { and, desc, eq, gt, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 import type { FastifyReply } from 'fastify';
 import { carregarAcesso, exigeDoisPassos } from './acesso.ts';
 import { type Pendencia, pendenciaDa } from './pendencia.ts';
@@ -211,20 +213,53 @@ export async function ativarSessao(tx: Transacao, sessaoId: string, momento: Dat
   return { token, tokenCsrf, expiraEm };
 }
 
+/** Quanto a sessão da aba pela senha fica sem uso antes de terminar (change aba-dos-colaboradores). */
+const SEM_USO_DA_ABA_PELA_SENHA = 30 * 60_000;
+
+/** Uma sessão aberta da conta, nas duas listas: a do navegador, a da aba ou a do chat na aba. */
+export interface SessaoAberta {
+  id: string;
+  agente: string | null;
+  ip: string | null;
+  criadaEm: Date;
+  ultimoUsoEm: Date;
+  /** A sessão da aba, com o computador e a entrada dele. */
+  aba: { computador: string; entrada: 'windows' | 'senha' } | null;
+  /** A sessão do chat na aba, com o computador da sessão da aba dela. */
+  chatNaAba: { computador: string } | null;
+}
+
 /**
  * As sessões que valem de uma conta, da usada por último à mais antiga: sem as pendentes, as
- * encerradas, as expiradas e as paradas há mais tempo que o limite. Nunca com o token.
+ * encerradas, as expiradas e as paradas há mais tempo que o limite, e com as da aba (change
+ * aba-dos-colaboradores, spec entrada-e-sessoes, "Sessões do usuário"). Nunca com o token.
  */
-export function lerSessoesAbertas(tx: Transacao, contaId: string, momento: Date) {
-  return tx
+export async function lerSessoesAbertas(
+  tx: Transacao,
+  contaId: string,
+  momento: Date,
+): Promise<SessaoAberta[]> {
+  const doNavegador = await tx
     .select({
       id: sessoes.id,
       agente: sessoes.agente,
       ip: sessoes.ip,
       criadaEm: sessoes.criadaEm,
       ultimoUsoEm: sessoes.ultimoUsoEm,
+      computador: aparelhosDaAba.nome,
     })
     .from(sessoes)
+    .leftJoin(
+      sessoesDaAba,
+      and(eq(sessoesDaAba.orgId, sessoes.orgId), eq(sessoesDaAba.id, sessoes.sessaoDaAbaId)),
+    )
+    .leftJoin(
+      aparelhosDaAba,
+      and(
+        eq(aparelhosDaAba.orgId, sessoesDaAba.orgId),
+        eq(aparelhosDaAba.id, sessoesDaAba.aparelhoId),
+      ),
+    )
     .where(
       and(
         eq(sessoes.contaId, contaId),
@@ -233,6 +268,70 @@ export function lerSessoesAbertas(tx: Transacao, contaId: string, momento: Date)
         gt(sessoes.expiraEm, momento),
         gt(sessoes.ultimoUsoEm, new Date(momento.getTime() - TEMPOS_DA_SESSAO.inatividade)),
       ),
+    );
+  // As da aba: a vencida e a da senha parada há 30 minutos ficam abertas no banco até o pedido
+  // seguinte, e não entram na lista.
+  const daAba = await tx
+    .select({
+      id: sessoesDaAba.id,
+      ip: sessoesDaAba.ip,
+      criadaEm: sessoesDaAba.criadaEm,
+      ultimoUsoEm: sessoesDaAba.ultimoUsoEm,
+      computador: aparelhosDaAba.nome,
+      entrada: sessoesDaAba.entrada,
+    })
+    .from(sessoesDaAba)
+    .innerJoin(
+      aparelhosDaAba,
+      and(
+        eq(aparelhosDaAba.orgId, sessoesDaAba.orgId),
+        eq(aparelhosDaAba.id, sessoesDaAba.aparelhoId),
+      ),
     )
-    .orderBy(desc(sessoes.ultimoUsoEm));
+    .where(
+      and(
+        eq(sessoesDaAba.contaId, contaId),
+        isNull(sessoesDaAba.encerradaEm),
+        isNotNull(sessoesDaAba.ativadaEm),
+        gt(sessoesDaAba.expiraEm, momento),
+        or(
+          ne(sessoesDaAba.entrada, 'senha'),
+          gt(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_ABA_PELA_SENHA)),
+        ),
+      ),
+    );
+  return [
+    ...doNavegador.map(({ computador, ...linha }) => ({
+      ...linha,
+      aba: null,
+      chatNaAba: computador === null ? null : { computador },
+    })),
+    ...daAba.map(({ computador, entrada, ...linha }) => ({
+      ...linha,
+      agente: null,
+      aba: { computador, entrada },
+      chatNaAba: null,
+    })),
+  ].sort((a, b) => b.ultimoUsoEm.getTime() - a.ultimoUsoEm.getTime());
+}
+
+/** A frase da sessão da aba pelo Windows na lista: encerrá-la vale só até a aba abrir outra. */
+export const AVISO_DA_ABA_PELO_WINDOWS =
+  'Pelo Windows, a aba abre outra sessão na hora. Para parar este computador, peça à TI para bloqueá-lo.';
+
+/** Como a lista mostra a sessão: o navegador e o sistema, ou o computador da aba. */
+export function descreverSessao(
+  linha: SessaoAberta,
+  descreverDispositivo: (agente: string | null) => string,
+): { dispositivo: string; aviso: string | null } {
+  if (linha.aba) {
+    return {
+      dispositivo: `Aba · ${linha.aba.computador}`,
+      aviso: linha.aba.entrada === 'windows' ? AVISO_DA_ABA_PELO_WINDOWS : null,
+    };
+  }
+  if (linha.chatNaAba) {
+    return { dispositivo: `Chat na aba · ${linha.chatNaAba.computador}`, aviso: null };
+  }
+  return { dispositivo: descreverDispositivo(linha.agente), aviso: null };
 }

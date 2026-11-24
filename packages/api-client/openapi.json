@@ -8656,6 +8656,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -8676,6 +8682,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm"
@@ -27964,6 +27971,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -27987,6 +28000,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm",
@@ -38772,6 +38786,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -38792,6 +38812,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm"
@@ -58744,6 +58765,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -58767,6 +58794,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm",

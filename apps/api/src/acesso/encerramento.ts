@@ -1,11 +1,22 @@
 // O fim das sessões de uma conta por uma ação (spec entrada-e-sessoes): a troca da senha, a
 // ativação dos dois passos ou a redefinição pelo comando no servidor. Cada sessão encerrada fica na
-// auditoria, com o motivo; a que já tinha expirado não conta.
-import { type MOTIVOS_DO_FIM_DA_SESSAO, sessoes, type Transacao } from '@grafite/db';
-import { and, eq, gt, isNull, ne } from 'drizzle-orm';
+// auditoria, com o motivo; a que já tinha expirado não conta. As sessões da aba e as do chat na aba
+// contam como as outras (change aba-dos-colaboradores), e o fim da sessão da aba leva junto o chat
+// na aba dela.
+import {
+  aparelhosDaAba,
+  contas,
+  type MOTIVOS_DO_FIM_DA_SESSAO,
+  type MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA,
+  sessoes,
+  sessoesDaAba,
+  type Transacao,
+} from '@grafite/db';
+import { and, eq, gt, inArray, isNull, ne, type SQL } from 'drizzle-orm';
 import { type Ator, type EventoDeAuditoria, registrarNaAuditoria } from '../auditoria.ts';
 
 export type MotivoDoFim = (typeof MOTIVOS_DO_FIM_DA_SESSAO)[number];
+export type MotivoDoFimDaAba = (typeof MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA)[number];
 
 export interface EncerramentoDeSessoes {
   contaId: string;
@@ -17,7 +28,102 @@ export interface EncerramentoDeSessoes {
   exceto?: string;
 }
 
-/** Encerra as sessões abertas da conta e devolve quantas foram. */
+/**
+ * Encerra as sessões do chat na aba das sessões da aba dadas, que terminam junto com elas. Sem a
+ * auditoria: a do fim da sessão da aba já diz.
+ */
+export async function encerrarChatsDaAba(
+  tx: Transacao,
+  sessoesDaAbaIds: string[],
+  momento: Date,
+): Promise<void> {
+  if (sessoesDaAbaIds.length === 0) return;
+  await tx
+    .update(sessoes)
+    .set({ encerradaEm: momento, motivoDoFim: 'sessao-da-aba-encerrada' })
+    .where(and(inArray(sessoes.sessaoDaAbaId, sessoesDaAbaIds), isNull(sessoes.encerradaEm)));
+}
+
+/**
+ * Encerra as sessões abertas da aba que o filtro escolhe, com as do chat na aba delas, e põe cada
+ * uma na auditoria, com o computador e o motivo. Devolve quantas foram.
+ */
+export async function encerrarSessoesDaAba(
+  tx: Transacao,
+  {
+    onde,
+    motivo,
+    momento,
+    ator,
+    origem,
+  }: {
+    onde: SQL | undefined;
+    motivo: MotivoDoFimDaAba;
+    momento: Date;
+    ator: Ator;
+    origem?: EventoDeAuditoria['origem'];
+  },
+): Promise<number> {
+  const encerradas = await tx
+    .update(sessoesDaAba)
+    .set({ encerradaEm: momento, motivoDoFim: motivo })
+    .where(and(onde, isNull(sessoesDaAba.encerradaEm)))
+    .returning({
+      id: sessoesDaAba.id,
+      contaId: sessoesDaAba.contaId,
+      aparelhoId: sessoesDaAba.aparelhoId,
+    });
+  if (encerradas.length === 0) return 0;
+  await encerrarChatsDaAba(
+    tx,
+    encerradas.map((sessao) => sessao.id),
+    momento,
+  );
+  const aparelhos = await tx
+    .select({
+      id: aparelhosDaAba.id,
+      nome: aparelhosDaAba.nome,
+      identificadorCurto: aparelhosDaAba.identificadorCurto,
+    })
+    .from(aparelhosDaAba)
+    .where(
+      inArray(
+        aparelhosDaAba.id,
+        encerradas.map((sessao) => sessao.aparelhoId),
+      ),
+    );
+  const donos = await tx
+    .select({ id: contas.id, usuario: contas.usuario })
+    .from(contas)
+    .where(
+      inArray(
+        contas.id,
+        encerradas.map((sessao) => sessao.contaId),
+      ),
+    );
+  for (const sessao of encerradas) {
+    const aparelho = aparelhos.find((linha) => linha.id === sessao.aparelhoId);
+    await registrarNaAuditoria(tx, {
+      acao: 'sessao-da-aba.encerrada',
+      ator,
+      alvo: { tipo: 'aparelho-da-aba', id: sessao.aparelhoId },
+      dados: {
+        computador: aparelho?.nome ?? null,
+        identificador: aparelho?.identificadorCurto ?? null,
+        contaId: sessao.contaId,
+        usuario: donos.find((dono) => dono.id === sessao.contaId)?.usuario ?? null,
+        motivo,
+      },
+      origem,
+      momento,
+    });
+  }
+  return encerradas.length;
+}
+
+/**
+ * Encerra as sessões abertas da conta, com as da aba e as do chat na aba, e devolve quantas foram.
+ */
 export async function encerrarSessoesDaConta(
   tx: Transacao,
   { contaId, motivo, momento, ator, origem, exceto }: EncerramentoDeSessoes,
@@ -44,10 +150,20 @@ export async function encerrarSessoesDaConta(
       momento,
     });
   }
-  return encerradas.length;
+  const daAba = await encerrarSessoesDaAba(tx, {
+    onde: and(eq(sessoesDaAba.contaId, contaId), gt(sessoesDaAba.expiraEm, momento)),
+    motivo,
+    momento,
+    ator,
+    origem,
+  });
+  return encerradas.length + daAba;
 }
 
-/** Encerra uma sessão da conta, se ela ainda estiver aberta; diz se encerrou. */
+/**
+ * Encerra uma sessão da conta, se ela ainda estiver aberta; diz se encerrou. A sessão da aba da
+ * conta também vale, com o chat na aba dela.
+ */
 export async function encerrarSessao(
   tx: Transacao,
   {
@@ -64,7 +180,16 @@ export async function encerrarSessao(
     .set({ encerradaEm: momento, motivoDoFim: motivo })
     .where(and(eq(sessoes.id, sessaoId), eq(sessoes.contaId, contaId), isNull(sessoes.encerradaEm)))
     .returning({ id: sessoes.id });
-  if (!encerrada) return false;
+  if (!encerrada) {
+    const daAba = await encerrarSessoesDaAba(tx, {
+      onde: and(eq(sessoesDaAba.id, sessaoId), eq(sessoesDaAba.contaId, contaId)),
+      motivo,
+      momento,
+      ator,
+      origem,
+    });
+    return daAba > 0;
+  }
   await registrarNaAuditoria(tx, {
     acao: 'sessao.encerrada',
     ator,

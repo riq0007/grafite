@@ -12,6 +12,7 @@ import {
 } from '@grafite/db';
 import type { MotivoSemConexao } from '@grafite/domain';
 import { and, desc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
+import { encerrarChatsDaAba } from '../acesso/encerramento.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
 import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
 import {
@@ -185,14 +186,21 @@ export async function abrirSessaoDaAba(
     eq(sessoesDaAba.aparelhoId, aparelho.id),
     isNull(sessoesDaAba.encerradaEm),
   );
-  await tx
+  const paradas = await tx
     .update(sessoesDaAba)
     .set({ encerradaEm: momento, motivoDoFim: 'sem-uso' })
-    .where(and(daConta, semValer(momento)));
-  await tx
+    .where(and(daConta, semValer(momento)))
+    .returning({ id: sessoesDaAba.id });
+  const trocadas = await tx
     .update(sessoesDaAba)
     .set({ encerradaEm: momento, motivoDoFim: 'outra-sessao-no-aparelho' })
-    .where(daConta);
+    .where(daConta)
+    .returning({ id: sessoesDaAba.id });
+  await encerrarChatsDaAba(
+    tx,
+    [...paradas, ...trocadas].map((sessao) => sessao.id),
+    momento,
+  );
   const token = novoToken();
   const expiraEm = new Date(
     momento.getTime() + (pendente ? VALIDADE_DA_PENDENTE_DA_ABA : VALIDADE_DA_SESSAO_DA_ABA),
@@ -371,6 +379,7 @@ export async function encerrarSessaoDaAba(
     .where(and(eq(sessoesDaAba.id, sessaoId), isNull(sessoesDaAba.encerradaEm)))
     .returning({ id: sessoesDaAba.id });
   if (encerradas.length === 0) return;
+  await encerrarChatsDaAba(tx, [sessaoId], momento);
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.encerrada',
     ator,

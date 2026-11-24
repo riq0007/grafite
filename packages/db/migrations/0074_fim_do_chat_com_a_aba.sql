@@ -1,0 +1,6 @@
+-- Change aba-dos-colaboradores (tarefa 3.7): o motivo do fim da sessão do chat na aba, que termina
+-- junto com a sessão da aba.
+ALTER TABLE "sessoes" DROP CONSTRAINT "sessoes_fim_com_motivo";--> statement-breakpoint
+ALTER TABLE "sessoes_da_aba" DROP CONSTRAINT "sessoes_da_aba_fim_com_motivo";--> statement-breakpoint
+ALTER TABLE "sessoes" ADD CONSTRAINT "sessoes_fim_com_motivo" CHECK (("sessoes"."encerrada_em" is null) = ("sessoes"."motivo_do_fim" is null) and ("sessoes"."motivo_do_fim" is null or "sessoes"."motivo_do_fim" in ('saida', 'encerrada-pelo-usuario', 'outras-encerradas', 'senha-trocada', 'dois-passos-ativados', 'redefinicao', 'tentativas-esgotadas', 'conta-inativada', 'encerrada-pela-administracao', 'dois-passos-removidos', 'sessao-da-aba-encerrada')));--> statement-breakpoint
+ALTER TABLE "sessoes_da_aba" ADD CONSTRAINT "sessoes_da_aba_fim_com_motivo" CHECK (("sessoes_da_aba"."encerrada_em" is null) = ("sessoes_da_aba"."motivo_do_fim" is null) and ("sessoes_da_aba"."motivo_do_fim" is null or "sessoes_da_aba"."motivo_do_fim" in ('saida', 'encerrada-pelo-usuario', 'outras-encerradas', 'senha-trocada', 'dois-passos-ativados', 'redefinicao', 'tentativas-esgotadas', 'conta-inativada', 'encerrada-pela-administracao', 'dois-passos-removidos', 'sessao-da-aba-encerrada', 'aparelho-bloqueado', 'pessoa-recusada', 'sem-uso', 'outra-sessao-no-aparelho')));

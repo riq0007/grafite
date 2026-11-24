@@ -101,7 +101,7 @@ describe('GET /conta/sessoes', () => {
     expect(atual).toMatchObject({ dispositivo: 'Chrome no Windows', ip: '10.9.0.1' });
     for (const sessao of sessoes) {
       expect(Object.keys(sessao).sort()).toEqual(
-        ['atual', 'criadaEm', 'dispositivo', 'id', 'ip', 'ultimoUsoEm'].sort(),
+        ['atual', 'aviso', 'criadaEm', 'dispositivo', 'id', 'ip', 'ultimoUsoEm'].sort(),
       );
       expect(new Date(sessao.criadaEm).getTime()).not.toBeNaN();
     }

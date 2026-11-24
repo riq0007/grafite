@@ -40780,6 +40780,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -44639,6 +44640,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -46769,6 +46771,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -50629,6 +50632,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;

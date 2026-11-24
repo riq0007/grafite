@@ -78,7 +78,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `DELETE /api/aba/sessao`, o `POST /api/aba/uso` e os 30 minutos contados no servidor.
 
   Começa pelos testes de integração. Verificar: esses testes, os da entrada de hoje, o contrato, o lint e o typecheck.
-- [ ] 3.7 Os fins da sessão da aba e a lista:
+- [x] 3.7 Os fins da sessão da aba e a lista:
   - os seis encerramentos da conta, o "Encerrar as outras", o bloqueio e a troca da entrada do aparelho pelo `grafite aba`, no `encerramento.ts`, com o fim em até 30 s;
   - a sessão da aba na lista das sessões do usuário, como "Aba · PC-FIN-09", com a frase do bloqueio;
   - a tela das sessões na web;

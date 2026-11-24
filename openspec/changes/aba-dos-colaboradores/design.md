@@ -98,6 +98,7 @@ As tabelas, todas com `orgScoped()` e RLS forçado:
 - **Nos `eventos`:** as sessões da aba, os aparelhos e todas as abas, como partes do público, com as listas em linhas de 20.
 - **Nas `sessoes`:** o `alcance` (`comum` ou `chat-da-aba`) e o `sessao_da_aba_id`, com a FK pela organização, pela sessão da aba e pela conta, para a sessão do chat na aba ser da mesma conta da sessão da aba. O nome é outro que o do `aparelho_id`, que é do aparelho confiável.
 - **Nos `aparelhos_da_aba`,** também o teto de contas por dia, 5 de fábrica.
+- **Os fins:** o `encerramento.ts` encerra as sessões da aba com as do chat na aba delas, que terminam com o motivo `sessao-da-aba-encerrada` (migration 0074). Isso vale nas mudanças da conta, no "Encerrar" e no "Encerrar as outras" da lista, no bloqueio do aparelho (`aparelho-bloqueado`) e na troca da entrada (`encerrada-pela-administracao`). A entrada nova, a renovação recusada, o "Sair" e o `sem-uso` do escopo também levam o chat. As duas listas leem as sessões da aba que valem, como "Aba · PC-FIN-09", e as do chat como "Chat na aba · PC-FIN-09"; a da aba pelo Windows traz o aviso de que a aba abre outra sessão na hora e de que quem para o computador é o bloqueio.
 
 A sessão da aba fica numa tabela própria, e não nas `sessoes`:
 - não tem CSRF, segundo passo nem cofre;

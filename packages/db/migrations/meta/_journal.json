@@ -519,6 +519,13 @@
       "when": 1795553647118,
       "tag": "0073_aviso_do_evento_da_aba",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1795562023907,
+      "tag": "0074_fim_do_chat_com_a_aba",
+      "breakpoints": true
     }
   ]
 }

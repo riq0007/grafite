@@ -12,10 +12,12 @@ import {
   ENTRADAS_DA_ABA,
   FORMAS_DA_ABA,
   naOrganizacao,
+  sessoesDaAba,
   type Transacao,
 } from '@grafite/db';
 import { lerIdentificadorCurto } from '@grafite/domain';
 import { asc, eq, sql } from 'drizzle-orm';
+import { encerrarSessoesDaAba } from '../acesso/encerramento.ts';
 import { organizacaoDoEndereco } from '../acesso/organizacao.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
 import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
@@ -299,6 +301,13 @@ export async function mudarAparelho(
           depois: { entrada: mudanca.entrada },
           momento,
         });
+        // A sessão de uma entrada não vale na outra: a aba volta a pedir pela entrada nova.
+        await encerrarSessoesDaAba(tx, {
+          onde: eq(sessoesDaAba.aparelhoId, aparelho.id),
+          motivo: 'encerrada-pela-administracao',
+          momento,
+          ator: ator('entrada'),
+        });
         return resultado(true);
       }
       case 'teto': {
@@ -333,6 +342,14 @@ export async function mudarAparelho(
           dados,
           momento,
         });
+        if (bloquear) {
+          await encerrarSessoesDaAba(tx, {
+            onde: eq(sessoesDaAba.aparelhoId, aparelho.id),
+            motivo: 'aparelho-bloqueado',
+            momento,
+            ator: ator('bloquear'),
+          });
+        }
         return resultado(true);
       }
     }

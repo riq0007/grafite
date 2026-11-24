@@ -663,6 +663,7 @@ function Sessoes() {
                 { rotulo: 'Último uso', valor: formatarHorario(new Date(sessao.ultimoUsoEm)) },
               ]}
             />
+            {sessao.aviso && <p className={estilos.explicacao}>{sessao.aviso}</p>}
             {!sessao.atual && (
               <div>
                 <Botao

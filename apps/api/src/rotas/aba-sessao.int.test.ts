@@ -365,14 +365,17 @@ describe('as recusas', () => {
     expect((await abrir(sala.token, SID.rita)).statusCode).toBe(200);
   });
 
-  it('o aparelho bloqueado recusa a renovação', async () => {
+  it('o bloqueio encerra a sessão, e o pedido seguinte do aparelho é recusado', async () => {
     const bloq = await registrar('guid-bloq', 'PC-BLOQ');
     const token = (await abrir(bloq.token, SID.fernanda)).json().token;
     const bloqueio = await comando('aba', 'bloquear', bloq.identificadorCurto, '--endereco', host);
     expect(bloqueio, bloqueio.saida).toMatchObject({ codigo: 0 });
     const r = await renovar(token, SID.fernanda);
-    expect(r.statusCode).toBe(403);
-    expect(r.json()).toMatchObject({
+    expect(r.statusCode).toBe(401);
+    expect(r.json()).toMatchObject({ motivoDoFim: 'aparelho-bloqueado' });
+    const peloAparelho = await abrir(bloq.token, SID.fernanda);
+    expect(peloAparelho.statusCode).toBe(403);
+    expect(peloAparelho.json()).toMatchObject({
       detail: 'Este computador foi bloqueado na aba. Fale com a TI.',
     });
   });
