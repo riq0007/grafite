@@ -201,6 +201,16 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
     });
   }
 
+  /** O único usuário com o atributo do usuário dado, pela conta de serviço. */
+  const peloUsuario = (usuario: string) =>
+    comServico(async (cliente) => {
+      const { searchEntries } = await buscar(cliente, filtroDoUsuario(acesso, usuario), 2);
+      const [unica] = searchEntries;
+      return searchEntries.length === 1 && unica
+        ? usuarioDa(unica, acesso.atributoDoUsuario)
+        : null;
+    });
+
   const doMembro = (operation: 'add' | 'delete', usuarioDn: string) =>
     new Change({ operation, modification: new Attribute({ type: 'member', values: [usuarioDn] }) });
 
@@ -220,16 +230,12 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
         return quantos;
       }),
 
+    buscarPeloUsuario: (usuario) => peloUsuario(usuario),
+
     async autenticar(usuario, senha) {
       // O AD aceita a senha vazia como entrada anônima: ela nunca chega ao bind.
       if (senha === '') return null;
-      const pessoa = await comServico(async (cliente) => {
-        const { searchEntries } = await buscar(cliente, filtroDoUsuario(acesso, usuario), 2);
-        const [unica] = searchEntries;
-        return searchEntries.length === 1 && unica
-          ? usuarioDa(unica, acesso.atributoDoUsuario)
-          : null;
-      });
+      const pessoa = await peloUsuario(usuario);
       if (!pessoa) return null;
       const cliente = abrir();
       try {

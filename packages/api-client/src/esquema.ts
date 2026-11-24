@@ -38704,7 +38704,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Abrir a sessão da aba para a pessoa do Windows, com o token do aparelho */
+        /** Abrir a sessão da aba, pelo Windows ou pela senha, com o token do aparelho */
         post: {
             parameters: {
                 query?: never;
@@ -38714,7 +38714,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["PedidoDaSessaoDaAbaInput"];
+                    "application/json": components["schemas"]["PedidoDaSessaoDaAbaInput"] | components["schemas"]["PedidoDaSessaoDaAbaPelaSenhaInput"] | components["schemas"]["PedidoDoCodigoDaAbaInput"];
                 };
             };
             responses: {
@@ -38724,7 +38724,16 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["SessaoDaAba"];
+                        "application/json": components["schemas"]["SessaoDaAba"] | components["schemas"]["FaltaOCodigoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
                     };
                 };
                 /** @description Default Response */
@@ -38755,6 +38764,15 @@ export interface paths {
                     };
                 };
                 /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -38765,7 +38783,79 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
+        /** Sair da aba: encerra a sessão da aba no servidor */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -38804,6 +38894,15 @@ export interface paths {
                     };
                 };
                 /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
                 401: {
                     headers: {
                         [name: string]: unknown;
@@ -38823,6 +38922,103 @@ export interface paths {
                 };
                 /** @description Default Response */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/uso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O uso da aba ou da tela maior com o foco, no máximo uma vez por minuto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -39711,6 +39907,18 @@ export interface components {
             sid: string;
             usuarioDoWindows?: string;
         };
+        PedidoDaSessaoDaAbaPelaSenhaInput: {
+            /** @constant */
+            entrada: "senha";
+            usuario: string;
+            senha: string;
+        };
+        PedidoDoCodigoDaAbaInput: {
+            /** @constant */
+            entrada: "senha";
+            pendente: string;
+            codigo: string;
+        };
         SessaoDaAbaInput: {
             token: string;
             /** Format: date-time */
@@ -39719,8 +39927,15 @@ export interface components {
                 nome: string;
             };
         };
+        FaltaOCodigoDaAbaInput: {
+            /** @constant */
+            faltaOCodigo: true;
+            pendente: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
         PedidoDeRenovacaoDaSessaoDaAbaInput: {
-            sid: string;
+            sid?: string;
         };
         RenovacaoDaSessaoDaAbaInput: {
             /** Format: date-time */
@@ -45681,6 +45896,18 @@ export interface components {
             sid: string;
             usuarioDoWindows?: string;
         };
+        PedidoDaSessaoDaAbaPelaSenha: {
+            /** @constant */
+            entrada: "senha";
+            usuario: string;
+            senha: string;
+        };
+        PedidoDoCodigoDaAba: {
+            /** @constant */
+            entrada: "senha";
+            pendente: string;
+            codigo: string;
+        };
         SessaoDaAba: {
             token: string;
             /** Format: date-time */
@@ -45689,8 +45916,15 @@ export interface components {
                 nome: string;
             };
         };
+        FaltaOCodigoDaAba: {
+            /** @constant */
+            faltaOCodigo: true;
+            pendente: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
         PedidoDeRenovacaoDaSessaoDaAba: {
-            sid: string;
+            sid?: string;
         };
         RenovacaoDaSessaoDaAba: {
             /** Format: date-time */

@@ -26,6 +26,7 @@ export type DetalheDaRecusa =
   | 'sid-fora-da-forma'
   | 'ad-fora-do-ar'
   | 'sid-fora-do-diretorio'
+  | 'usuario-fora-do-diretorio'
   | 'usuario-nao-serve'
   | 'conta-local'
   | 'conta-inativa'
@@ -82,13 +83,14 @@ export async function conferirPessoaPeloSid(
   banco: Banco,
   {
     orgId,
-    sid,
+    busca,
     chaves,
     conectar,
     avisar,
   }: {
     orgId: string;
-    sid: string;
+    /** O SID, na entrada pelo Windows, ou o usuário da conta, na renovação da entrada pela senha. */
+    busca: { sid: string } | { usuario: string };
     chaves: ChavesDoCofre;
     conectar: ConectarDiretorio;
     avisar: (dados: object, mensagem: string) => void;
@@ -100,16 +102,27 @@ export async function conferirPessoaPeloSid(
   if (!preparo) return recusa('ti-fora-do-alcance', 'diretorio-desligado');
   // A conta de serviço que o cofre não abre deixa o AD tão fora do alcance quanto a rede.
   if (!preparo.acesso) return recusa('ti-fora-do-alcance', 'ad-fora-do-ar');
-  if (!sidValido(sid)) return recusa('usuario-de-fora', 'sid-fora-da-forma');
+  if ('sid' in busca && !sidValido(busca.sid)) {
+    return recusa('usuario-de-fora', 'sid-fora-da-forma');
+  }
   let achado: Awaited<ReturnType<ReturnType<ConectarDiretorio>['buscarPeloSid']>>;
   try {
-    achado = await conectar(preparo.acesso).buscarPeloSid(sid);
+    const cliente = conectar(preparo.acesso);
+    achado =
+      'sid' in busca
+        ? await cliente.buscarPeloSid(busca.sid)
+        : await cliente.buscarPeloUsuario(busca.usuario);
   } catch (erro) {
     if (!(erro instanceof FalhaDoDiretorio)) throw erro;
     avisar({ motivo: erro.motivo }, 'o diretório não atendeu a pessoa da aba');
     return recusa('ti-fora-do-alcance', 'ad-fora-do-ar');
   }
-  if (!achado) return recusa('usuario-de-fora', 'sid-fora-do-diretorio');
+  if (!achado) {
+    return recusa(
+      'usuario-de-fora',
+      'sid' in busca ? 'sid-fora-do-diretorio' : 'usuario-fora-do-diretorio',
+    );
+  }
   const quem = { usuario: achado.usuario, nome: achado.nome };
   if (validarUsuario(achado.usuario) !== null) {
     return recusa('usuario-de-fora', 'usuario-nao-serve', quem);

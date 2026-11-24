@@ -15,7 +15,7 @@ import {
   sessoesDaAba,
   type Transacao,
 } from '@grafite/db';
-import { and, desc, eq, gt, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
@@ -23,6 +23,7 @@ import { registrarNaAuditoria } from '../auditoria.ts';
 import { ProblemaDaApi } from '../problemas.ts';
 import { LIMITE_DA_ENTRADA } from '../protecao.ts';
 import { origemDa } from '../rotas/sessao.ts';
+import { SEM_USO_DA_SENHA } from './sessao.ts';
 
 export type EntradaDaAba = (typeof ENTRADAS_DA_ABA)[number];
 
@@ -372,7 +373,7 @@ export class ContadorDeRecusas {
 
 /**
  * A sessão aberta e dentro da validade do token, com o aparelho dela; `{ encerrada }` com o motivo
- * do fim, ou `null` na vencida, antes de olhar o bloqueio, porque o pedido seguinte, com o token do
+ * do fim, `null` na vencida ou `'sem-uso'` na da senha parada há 30 minutos, que este encerra, antes de olhar o bloqueio, porque o pedido seguinte, com o token do
  * aparelho, já dá o 403; `'bloqueado'` com a sessão válida no aparelho bloqueado; ou `null` com o
  * token desconhecido.
  */
@@ -405,6 +406,20 @@ async function sessaoDoToken(
   if (!linha) return null;
   if (linha.sessao.encerradaEm !== null) return { encerrada: linha.sessao.motivoDoFim };
   if (linha.sessao.expiraEm <= momento) return { encerrada: null };
+  // A da entrada pela senha termina com 30 minutos sem uso, contados aqui pelo último uso: o
+  // computador desligado também a tem vencida (decisão 2).
+  if (
+    linha.sessao.entrada === 'senha' &&
+    linha.sessao.ultimoUsoEm.getTime() + SEM_USO_DA_SENHA <= momento.getTime()
+  ) {
+    await naOrganizacao(banco, orgId, (tx) =>
+      tx
+        .update(sessoesDaAba)
+        .set({ encerradaEm: momento, motivoDoFim: 'sem-uso' })
+        .where(and(eq(sessoesDaAba.id, linha.sessao.id), isNull(sessoesDaAba.encerradaEm))),
+    );
+    return { encerrada: 'sem-uso' };
+  }
   if (linha.aparelho.bloqueadoEm !== null) return 'bloqueado';
   const { sessao, aparelho } = linha;
   return {

@@ -4334,6 +4334,56 @@
           "sid"
         ]
       },
+      "PedidoDaSessaoDaAbaPelaSenhaInput": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "usuario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "entrada",
+          "usuario",
+          "senha"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoCodigoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "pendente": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "entrada",
+          "pendente",
+          "codigo"
+        ],
+        "additionalProperties": false
+      },
       "SessaoDaAbaInput": {
         "type": "object",
         "properties": {
@@ -4363,6 +4413,28 @@
           "pessoa"
         ]
       },
+      "FaltaOCodigoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "faltaOCodigo": {
+            "type": "boolean",
+            "const": true
+          },
+          "pendente": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "faltaOCodigo",
+          "pendente",
+          "expiraEm"
+        ]
+      },
       "PedidoDeRenovacaoDaSessaoDaAbaInput": {
         "type": "object",
         "properties": {
@@ -4371,10 +4443,7 @@
             "minLength": 1,
             "maxLength": 200
           }
-        },
-        "required": [
-          "sid"
-        ]
+        }
       },
       "RenovacaoDaSessaoDaAbaInput": {
         "type": "object",
@@ -34235,6 +34304,56 @@
         ],
         "additionalProperties": false
       },
+      "PedidoDaSessaoDaAbaPelaSenha": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "usuario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "entrada",
+          "usuario",
+          "senha"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoCodigoDaAba": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "pendente": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "entrada",
+          "pendente",
+          "codigo"
+        ],
+        "additionalProperties": false
+      },
       "SessaoDaAba": {
         "type": "object",
         "properties": {
@@ -34266,6 +34385,29 @@
         ],
         "additionalProperties": false
       },
+      "FaltaOCodigoDaAba": {
+        "type": "object",
+        "properties": {
+          "faltaOCodigo": {
+            "type": "boolean",
+            "const": true
+          },
+          "pendente": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "faltaOCodigo",
+          "pendente",
+          "expiraEm"
+        ],
+        "additionalProperties": false
+      },
       "PedidoDeRenovacaoDaSessaoDaAba": {
         "type": "object",
         "properties": {
@@ -34275,9 +34417,6 @@
             "maxLength": 200
           }
         },
-        "required": [
-          "sid"
-        ],
         "additionalProperties": false
       },
       "RenovacaoDaSessaoDaAba": {
@@ -100235,13 +100374,23 @@
     },
     "/aba/sessao": {
       "post": {
-        "summary": "Abrir a sessão da aba para a pessoa do Windows, com o token do aparelho",
+        "summary": "Abrir a sessão da aba, pelo Windows ou pela senha, com o token do aparelho",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PedidoDaSessaoDaAbaInput"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PedidoDaSessaoDaAbaInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PedidoDaSessaoDaAbaPelaSenhaInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PedidoDoCodigoDaAbaInput"
+                  }
+                ]
               }
             }
           }
@@ -100252,7 +100401,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SessaoDaAba"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessaoDaAba"
+                    },
+                    {
+                      "$ref": "#/components/schemas/FaltaOCodigoDaAba"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
                 }
               }
             }
@@ -100278,6 +100444,84 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Sair da aba: encerra a sessão da aba no servidor",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
             "description": "Default Response",
             "content": {
               "application/json": {
@@ -100324,6 +100568,16 @@
               }
             }
           },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Default Response",
             "content": {
@@ -100345,6 +100599,86 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/uso": {
+      "post": {
+        "summary": "O uso da aba ou da tela maior com o foco, no máximo uma vez por minuto",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
             "description": "Default Response",
             "content": {
               "application/json": {

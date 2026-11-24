@@ -12,6 +12,7 @@ import {
   tentativasDeEntrada,
 } from '@grafite/db';
 import {
+  type Acesso,
   type AjustesDasPreferencias as Ajustes,
   AMBIENTES,
   bloqueioDepois,
@@ -34,7 +35,7 @@ import {
   lerCookieDoAparelho,
   prazoDaConta,
 } from '../acesso/aparelhos.ts';
-import { comCredenciais } from '../acesso/credenciais.ts';
+import { type ContaComCredenciais, comCredenciais } from '../acesso/credenciais.ts';
 import { encerrarSessao } from '../acesso/encerramento.ts';
 import { concluirEntrada } from '../acesso/entrada.ts';
 import { exigirSessao } from '../acesso/escopo.ts';
@@ -50,7 +51,11 @@ import { FotoDaPessoa } from '../arquivos/esquemas.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import type { ChavesDoCofre } from '../cofre/cifra.ts';
 import type { ConectarDiretorio } from '../diretorio/cliente.ts';
-import { conferirNoDiretorio, contaPeloDiretorio } from '../diretorio/entrada.ts';
+import {
+  type ConferenciaNoDiretorio,
+  conferirNoDiretorio,
+  contaPeloDiretorio,
+} from '../diretorio/entrada.ts';
 import { AjustesDasPreferencias } from '../preferencias/esquemas.ts';
 import { enviarProblema, ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { LIMITE_DA_ENTRADA } from '../protecao.ts';
@@ -243,7 +248,7 @@ export const origemDa = (requisicao: FastifyRequest) => ({
   codigoDeRastreio: requisicao.id,
 });
 
-const credenciaisInvalidas = () =>
+export const credenciaisInvalidas = () =>
   new ProblemaDaApi({
     codigo: 'credenciais-invalidas',
     status: 401,
@@ -291,6 +296,147 @@ export async function restanteDoBloqueio(
     .where(eq(tentativasDeEntrada.usuario, usuario));
   const restante = (tentativa?.ate?.getTime() ?? 0) - momento.getTime();
   return Math.max(0, restante);
+}
+
+/** O resultado da conferência do usuário e da senha, na entrada da web e na da aba pela senha. */
+export type ConferenciaDaEntrada =
+  | { tipo: 'bloqueada'; restante: number }
+  | { tipo: 'fora-do-ar' }
+  | { tipo: 'sem-acesso' }
+  | { tipo: 'recusada' }
+  | {
+      tipo: 'aceita';
+      conta: ContaComCredenciais;
+      nome: string;
+      doisPassosAtivos: boolean;
+      acesso: Acesso;
+    };
+
+/**
+ * Na transação da entrada, depois do `conferirNoDiretorio`: o bloqueio do usuário digitado, o AD
+ * fora do ar, a conta do diretório criada ou sincronizada, a senha, a situação da conta, as recusas
+ * com a auditoria e o bloqueio por tentativas, e a conta aceita com o acesso. A entrada da web e a
+ * da aba pela senha (change aba-dos-colaboradores, design, decisão 2) chamam a mesma.
+ *
+ * Com `daAba`, só a entrada pelo diretório vale: sem ela (a conta local ou o usuário que não serve
+ * de conta), a senha não é conferida, e a recusa é a das credenciais, para a aba não dizer quem
+ * tem conta local. Os `dados` dela vão junto nos registros da auditoria.
+ */
+export async function conferirAEntrada(
+  tx: Transacao,
+  {
+    orgId,
+    usuario,
+    senha,
+    peloDiretorio,
+    momento,
+    origem,
+    conferirDeEngano,
+    daAba,
+  }: {
+    orgId: string;
+    usuario: string;
+    senha: string;
+    peloDiretorio: ConferenciaNoDiretorio | null;
+    momento: Date;
+    origem: { ip: string; codigoDeRastreio: string };
+    conferirDeEngano: (senha: string) => Promise<false>;
+    daAba?: { dados: Record<string, unknown> };
+  },
+): Promise<ConferenciaDaEntrada> {
+  const extras = daAba?.dados ?? {};
+  const restante = await restanteDoBloqueio(tx, { usuario, momento });
+  if (restante > 0) {
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta' },
+      dados: { usuario, motivo: 'bloqueio', ...extras },
+      origem,
+      momento,
+    });
+    return { tipo: 'bloqueada', restante };
+  }
+  if (peloDiretorio?.tipo === 'fora-do-ar') {
+    // O AD fora do ar não conta para o bloqueio: a senha nem foi conferida.
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta' },
+      dados: { usuario, motivo: 'diretorio-fora-do-ar', ...extras },
+      origem,
+      momento,
+    });
+    return { tipo: 'fora-do-ar' };
+  }
+  // A primeira entrada pelo AD cria a conta, e cada uma sincroniza os grupos mapeados.
+  const contaDoDiretorio =
+    peloDiretorio?.tipo === 'aceita'
+      ? await contaPeloDiretorio(tx, { orgId, usuario, aceita: peloDiretorio, momento })
+      : null;
+  const [linha] = await tx
+    .select({ conta: contas, nome: pessoas.nome, doisPassosAtivadoEm: doisPassos.ativadoEm })
+    .from(contas)
+    .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
+    .leftJoin(doisPassos, eq(doisPassos.contaId, contas.id))
+    .where(contaDoDiretorio ? eq(contas.id, contaDoDiretorio) : eq(contas.usuario, usuario));
+  // Lida pelo usuário, a conta nunca é uma anonimizada, que não tem usuário.
+  const conta = linha ? comCredenciais(linha.conta) : undefined;
+  // Pelo diretório, a senha foi conferida no AD; a senha local da conta do diretório nunca
+  // confere. Na aba, a senha local nem é conferida.
+  const confere = peloDiretorio
+    ? peloDiretorio.tipo === 'aceita'
+    : conta && !daAba
+      ? await conferirSenha(senha, conta.hashSenha)
+      : await conferirDeEngano(senha);
+  if (!conta || !confere || conta.situacao !== 'ativa') {
+    const motivo =
+      peloDiretorio?.tipo === 'sem-acesso'
+        ? 'sem-acesso-no-diretorio'
+        : daAba && !peloDiretorio && conta?.origem === 'local'
+          ? 'conta-local'
+          : conta && confere
+            ? 'conta-inativa'
+            : 'credenciais';
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta', id: conta?.id ?? null },
+      dados: { usuario, motivo, ...extras },
+      origem,
+      momento,
+    });
+    const ate = await registrarRecusa(tx, { usuario, momento });
+    if (ate) {
+      await registrarNaAuditoria(tx, {
+        acao: 'entrada.bloqueada',
+        ator: { tipo: 'anonimo' },
+        alvo: { tipo: 'conta', id: conta?.id ?? null },
+        dados: { usuario, ate: ate.toISOString(), ...extras },
+        origem,
+        momento,
+      });
+    }
+    return peloDiretorio?.tipo === 'sem-acesso' ? { tipo: 'sem-acesso' } : { tipo: 'recusada' };
+  }
+  await tx
+    .update(tentativasDeEntrada)
+    .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
+    .where(eq(tentativasDeEntrada.usuario, usuario));
+  // A senha do AD nunca vira o hash da conta.
+  if (!peloDiretorio && precisaRegravar(conta.hashSenha)) {
+    await tx
+      .update(contas)
+      .set({ hashSenha: await gerarHashDaSenha(senha) })
+      .where(eq(contas.id, conta.id));
+  }
+  return {
+    tipo: 'aceita',
+    conta,
+    nome: linha?.nome ?? '',
+    doisPassosAtivos: (linha?.doisPassosAtivadoEm ?? null) !== null,
+    acesso: await carregarAcesso(tx, conta.id),
+  };
 }
 
 export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async (
@@ -350,92 +496,17 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           })
         : null;
       const resultado = await naOrganizacao(banco, orgId, async (tx) => {
-        const restante = await restanteDoBloqueio(tx, { usuario, momento });
-        if (restante > 0) {
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta' },
-            dados: { usuario, motivo: 'bloqueio' },
-            origem,
-            momento,
-          });
-          return { tipo: 'bloqueada', restante } as const;
-        }
-        if (peloDiretorio?.tipo === 'fora-do-ar') {
-          // O AD fora do ar não conta para o bloqueio: a senha nem foi conferida.
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta' },
-            dados: { usuario, motivo: 'diretorio-fora-do-ar' },
-            origem,
-            momento,
-          });
-          return { tipo: 'fora-do-ar' } as const;
-        }
-        // A primeira entrada pelo AD cria a conta, e cada uma sincroniza os grupos mapeados.
-        const contaDoDiretorio =
-          peloDiretorio?.tipo === 'aceita'
-            ? await contaPeloDiretorio(tx, { orgId, usuario, aceita: peloDiretorio, momento })
-            : null;
-        const [linha] = await tx
-          .select({ conta: contas, nome: pessoas.nome, doisPassosAtivadoEm: doisPassos.ativadoEm })
-          .from(contas)
-          .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
-          .leftJoin(doisPassos, eq(doisPassos.contaId, contas.id))
-          .where(contaDoDiretorio ? eq(contas.id, contaDoDiretorio) : eq(contas.usuario, usuario));
-        // Lida pelo usuário, a conta nunca é uma anonimizada, que não tem usuário.
-        const conta = linha ? comCredenciais(linha.conta) : undefined;
-        // Pelo diretório, a senha foi conferida no AD; a senha local da conta do diretório nunca
-        // confere.
-        const confere = peloDiretorio
-          ? peloDiretorio.tipo === 'aceita'
-          : conta
-            ? await conferirSenha(senha, conta.hashSenha)
-            : await conferirDeEngano(senha);
-        if (!conta || !confere || conta.situacao !== 'ativa') {
-          const motivo =
-            peloDiretorio?.tipo === 'sem-acesso'
-              ? 'sem-acesso-no-diretorio'
-              : conta && confere
-                ? 'conta-inativa'
-                : 'credenciais';
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta', id: conta?.id ?? null },
-            dados: { usuario, motivo },
-            origem,
-            momento,
-          });
-          const ate = await registrarRecusa(tx, { usuario, momento });
-          if (ate) {
-            await registrarNaAuditoria(tx, {
-              acao: 'entrada.bloqueada',
-              ator: { tipo: 'anonimo' },
-              alvo: { tipo: 'conta', id: conta?.id ?? null },
-              dados: { usuario, ate: ate.toISOString() },
-              origem,
-              momento,
-            });
-          }
-          return peloDiretorio?.tipo === 'sem-acesso'
-            ? ({ tipo: 'sem-acesso' } as const)
-            : ({ tipo: 'recusada' } as const);
-        }
-        await tx
-          .update(tentativasDeEntrada)
-          .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
-          .where(eq(tentativasDeEntrada.usuario, usuario));
-        // A senha do AD nunca vira o hash da conta.
-        if (!peloDiretorio && precisaRegravar(conta.hashSenha)) {
-          await tx
-            .update(contas)
-            .set({ hashSenha: await gerarHashDaSenha(senha) })
-            .where(eq(contas.id, conta.id));
-        }
-        const acesso = await carregarAcesso(tx, conta.id);
+        const conferida = await conferirAEntrada(tx, {
+          orgId,
+          usuario,
+          senha,
+          peloDiretorio,
+          momento,
+          origem,
+          conferirDeEngano,
+        });
+        if (conferida.tipo !== 'aceita') return conferida;
+        const { conta, nome, doisPassosAtivos, acesso } = conferida;
         // O aparelho confiável só é conferido aqui, depois da senha certa (change
         // aparelho-confiavel, design, decisão 2): antes dela, a resposta é a mesma com e sem o
         // cookie. O aparelho que confere dispensa o código; o cookie que não confere é apagado.
@@ -450,7 +521,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           : null;
         const pendencia = pendenciaDa({
           conta: { ...conta, exigeDoisPassos: exigeDoisPassos(conta, acesso) },
-          doisPassosAtivos: (linha?.doisPassosAtivadoEm ?? null) !== null,
+          doisPassosAtivos,
           segundoPassoEm: aparelho ? momento : null,
         });
         const sessao = await criarSessao(tx, {
@@ -479,7 +550,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           dados: await lerDadosDoEstado(tx, conta.id, pendencia),
           sessao: {
             usuario: conta.usuario,
-            nome: linha?.nome ?? '',
+            nome,
             pendencia,
             tokenCsrf: sessao.tokenCsrf,
             expiraEm: sessao.expiraEm,

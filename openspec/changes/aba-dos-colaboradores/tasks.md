@@ -71,7 +71,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o token só nas rotas da aba, e o cookie fora delas.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato, o lint e o typecheck.
-- [ ] 3.6 A sessão da aba pela senha (decisão 2):
+- [x] 3.6 A sessão da aba pela senha (decisão 2):
   - a conferência da entrada extraída do `rotas/sessao.ts`, chamada dos dois lugares;
   - o bloqueio por tentativas, a pendente de 5 minutos com o código e as tentativas dele;
   - a recusa de quem exige os dois passos sem os ter;

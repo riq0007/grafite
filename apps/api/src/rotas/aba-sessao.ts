@@ -1,21 +1,41 @@
-// A sessão da aba pelo Windows (spec aba-dos-colaboradores, "Pessoa pelo usuário do Windows" e
-// "Sessão da aba"; design, decisões 3 e 4), no escopo da aba. O serviço pede a sessão com o token do
-// aparelho e o SID de quem está no Windows; a API confere a pessoa no AD e no Grafite, o teto do
-// aparelho, e devolve o token da sessão, de 1 hora. A renovação, com o token da sessão, estende a
-// mesma sessão e confere a pessoa de novo; a pessoa que não passa mais tem a sessão encerrada.
-import { type Banco, contas, naOrganizacao, pessoas } from '@grafite/db';
-import { FRASES_SEM_CONEXAO, type MotivoSemConexao } from '@grafite/domain';
+// A sessão da aba (spec aba-dos-colaboradores, "Pessoa pelo usuário do Windows", "Pessoa pela senha
+// do AD" e "Sessão da aba"; design, decisões 2, 3 e 4), no escopo da aba. O serviço pede a sessão
+// com o token do aparelho: pelo SID de quem está no Windows, ou pelo usuário e a senha do AD, com o
+// código do app numa segunda chamada quando a conta o tem. A API confere a pessoa no AD e no Grafite
+// e devolve o token da sessão, de 1 hora. A renovação, com o token da sessão, estende a mesma sessão
+// e confere a pessoa de novo pela conta de serviço; a pessoa que não passa mais tem a sessão
+// encerrada. A da senha termina também com o "Sair" e com 30 minutos sem uso.
+import { type Banco, contas, naOrganizacao, pessoas, type Transacao } from '@grafite/db';
+import {
+  FRASES_SEM_CONEXAO,
+  type MotivoSemConexao,
+  mensagemDoBloqueio,
+  normalizarUsuario,
+} from '@grafite/domain';
 import { and, eq } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { exigirEntrada, LIMITE_POR_TOKEN_DA_ABA, tokenDaAbaRecusado } from '../aba/escopo.ts';
+import {
+  type AparelhoDaRequisicao,
+  exigirEntrada,
+  LIMITE_POR_TOKEN_DA_ABA,
+  tokenDaAbaRecusado,
+} from '../aba/escopo.ts';
 import {
   abrirSessaoDaAba,
+  ativarPendenteDaAba,
   auditarPessoaRecusada,
   encerrarSessaoDaAba,
   estenderSessaoDaAba,
   passouDoTeto,
+  pendenteDaAba,
+  registrarUsoDaAba,
+  somarCodigoErrado,
+  TENTATIVAS_DO_CODIGO_DA_ABA,
 } from '../aba/sessao.ts';
+import { exigeDoisPassos } from '../acesso/acesso.ts';
+import { conferirCodigoDaConta } from '../acesso/dois-passos.ts';
+import { registrarNaAuditoria } from '../auditoria.ts';
 import { violouUnicidade } from '../banco.ts';
 import type { ChavesDoCofre } from '../cofre/cifra.ts';
 import {
@@ -25,9 +45,10 @@ import {
   recusaDaConta,
 } from '../diretorio/aba.ts';
 import type { ConectarDiretorio } from '../diretorio/cliente.ts';
-import { contaPeloDiretorio } from '../diretorio/entrada.ts';
+import { lerDiretorio } from '../diretorio/diretorio.ts';
+import { conferirNoDiretorio, contaPeloDiretorio } from '../diretorio/entrada.ts';
 import { ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
-import { origemDa } from './sessao.ts';
+import { conferirAEntrada, credenciaisInvalidas, origemDa, registrarRecusa } from './sessao.ts';
 
 /** Quanto tempo a API responde o AD fora do ar sem tentar de novo. */
 const PAUSA_DO_AD_FORA_DO_AR = 30_000;
@@ -42,25 +63,58 @@ const PedidoDaSessaoPeloWindows = z
   })
   .meta({ id: 'PedidoDaSessaoDaAba' });
 
+const PedidoDaSessaoPelaSenha = z
+  .object({
+    entrada: z.literal('senha'),
+    usuario: z.string().trim().min(1).max(256),
+    senha: z.string().min(1).max(1024),
+  })
+  .strict()
+  .meta({ id: 'PedidoDaSessaoDaAbaPelaSenha' });
+
+const PedidoDoCodigoDaAba = z
+  .object({
+    entrada: z.literal('senha'),
+    /** O token da pendente, da primeira chamada. */
+    pendente: z.string().min(1).max(200),
+    codigo: z.string().trim().min(1).max(32),
+  })
+  .strict()
+  .meta({ id: 'PedidoDoCodigoDaAba' });
+
 const SessaoDaAba = z
   .object({
-    /** O token da sessão, que só aparece aqui; a aba o guarda cifrado só para a pessoa. */
+    /** O token da sessão, que só aparece aqui; a aba o guarda só na memória ou cifrado para a pessoa. */
     token: z.string(),
     expiraEm: z.iso.datetime(),
     pessoa: z.object({ nome: z.string() }),
   })
   .meta({ id: 'SessaoDaAba' });
 
+const FaltaOCodigo = z
+  .object({
+    faltaOCodigo: z.literal(true),
+    /** O token da pendente, de 5 minutos, que volta com o código. */
+    pendente: z.string(),
+    expiraEm: z.iso.datetime(),
+  })
+  .meta({ id: 'FaltaOCodigoDaAba' });
+
 const PedidoDeRenovacao = z
-  .object({ sid: z.string().trim().min(1).max(200) })
+  .object({
+    /** O SID de quem está no Windows, na entrada pelo Windows; na pela senha, nada. */
+    sid: z.string().trim().min(1).max(200).optional(),
+  })
   .meta({ id: 'PedidoDeRenovacaoDaSessaoDaAba' });
 
 const Renovacao = z.object({ expiraEm: z.iso.datetime() }).meta({ id: 'RenovacaoDaSessaoDaAba' });
 
 const PROBLEMAS = {
+  400: RespostaDeProblema,
   401: RespostaDeProblema,
   403: RespostaDeProblema,
   404: RespostaDeProblema,
+  429: RespostaDeProblema,
   503: RespostaDeProblema,
 };
 
@@ -83,17 +137,70 @@ const outraSessaoAoMesmoTempo = () =>
     detalhe: 'Outra sessão da aba foi aberta ao mesmo tempo. Tente de novo.',
   });
 
+const entradaBloqueada = (restante: number) =>
+  new ProblemaDaApi({
+    codigo: 'entrada-bloqueada',
+    status: 429,
+    titulo: 'Entrada bloqueada',
+    detalhe: mensagemDoBloqueio(restante),
+    extras: { restante: Math.ceil(restante / 1000) },
+  });
+
+const pendenteVencida = () =>
+  new ProblemaDaApi({
+    codigo: 'pendente-da-aba-recusada',
+    status: 401,
+    titulo: 'Entre de novo',
+    detalhe: 'O tempo para o código passou. Entre de novo.',
+  });
+
+/** As duas entradas ao mesmo tempo: a da mesma sessão no aparelho, ou a primeira da mesma conta. */
+const aoMesmoTempo = (erro: unknown) =>
+  violouUnicidade(erro, 'sessoes_da_aba_uma_aberta_por_conta_e_aparelho') ||
+  violouUnicidade(erro, 'contas_usuario_unico');
+
+/** A transação da abertura, com uma nova tentativa quando a outra entrada ganhou (decisão 3). */
+async function comNovaTentativa<T>(abrir: () => Promise<T>): Promise<T> {
+  try {
+    return await abrir();
+  } catch (erro) {
+    if (!aoMesmoTempo(erro)) throw erro;
+    try {
+      return await abrir();
+    } catch (deNovo) {
+      if (aoMesmoTempo(deNovo)) throw outraSessaoAoMesmoTempo();
+      throw deNovo;
+    }
+  }
+}
+
+async function nomeDaConta(tx: Transacao, contaId: string): Promise<string | null> {
+  const [dono] = await tx
+    .select({ nome: pessoas.nome })
+    .from(contas)
+    .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
+    .where(eq(contas.id, contaId));
+  return dono?.nome ?? null;
+}
+
+const doAparelho = (aparelho: AparelhoDaRequisicao) => ({
+  computador: aparelho.nome,
+  identificador: aparelho.identificadorCurto,
+});
+
 export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
   banco: Banco;
   agora: () => Date;
+  chaveDoisPassos: Buffer;
+  conferirDeEngano: (senha: string) => Promise<false>;
   diretorio: { chavesDoCofre: ChavesDoCofre; conectar: ConectarDiretorio };
-}> = async (app, { banco, agora, diretorio }) => {
+}> = async (app, { banco, agora, chaveDoisPassos, conferirDeEngano, diretorio }) => {
   // O AD fora do ar, por organização: as abas da empresa tentam de novo como na rede caída, e cada
   // tentativa seguraria o pedido pelo prazo da conexão e gravaria um aviso.
   const adForaDoArAte = new Map<string, number>();
   const conferir = async (
     orgId: string,
-    sid: string,
+    busca: { sid: string } | { usuario: string },
     avisar: (dados: object, msg: string) => void,
   ): Promise<PessoaPeloSid> => {
     const agoraMs = agora().getTime();
@@ -102,7 +209,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
     }
     const pessoa = await conferirPessoaPeloSid(banco, {
       orgId,
-      sid,
+      busca,
       chaves: diretorio.chavesDoCofre,
       conectar: diretorio.conectar,
       avisar,
@@ -120,20 +227,207 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
     {
       config: { rateLimit: LIMITE_POR_TOKEN_DA_ABA },
       schema: {
-        summary: 'Abrir a sessão da aba para a pessoa do Windows, com o token do aparelho',
-        body: PedidoDaSessaoPeloWindows,
-        response: { 200: SessaoDaAba, ...PROBLEMAS },
+        summary: 'Abrir a sessão da aba, pelo Windows ou pela senha, com o token do aparelho',
+        body: z.union([PedidoDaSessaoPeloWindows, PedidoDaSessaoPelaSenha, PedidoDoCodigoDaAba]),
+        response: { 200: z.union([SessaoDaAba, FaltaOCodigo]), ...PROBLEMAS },
       },
     },
-    async (requisicao) => {
+    async (requisicao, resposta) => {
       const { aparelhoDaAba: aparelho, organizacao } = requisicao;
       if (!aparelho || !organizacao) throw tokenDaAbaRecusado();
-      exigirEntrada(aparelho, 'windows');
       const orgId = organizacao.id;
-      const { sid, usuarioDoWindows } = requisicao.body;
       const origem = origemDa(requisicao);
+      const corpo = requisicao.body;
+      exigirEntrada(aparelho, corpo.entrada);
+      const avisar = (dados: object, msg: string) => requisicao.log.warn(dados, msg);
+
+      if ('codigo' in corpo) {
+        // A segunda chamada da entrada pela senha: o código e a pendente.
+        const momento = agora();
+        const resultado = await naOrganizacao(banco, orgId, async (tx) => {
+          const pendente = await pendenteDaAba(tx, { token: corpo.pendente, aparelho, momento });
+          if (!pendente) return { tipo: 'vencida' } as const;
+          const [conta] = await tx
+            .select({ usuario: contas.usuario })
+            .from(contas)
+            .where(eq(contas.id, pendente.contaId));
+          const usuario = conta?.usuario ?? '';
+          const ator = { tipo: 'conta', contaId: pendente.contaId } as const;
+          const { aceito } = await conferirCodigoDaConta(tx, {
+            contaId: pendente.contaId,
+            codigo: corpo.codigo,
+            momento,
+            chaveDoisPassos,
+            ator,
+            origem,
+          });
+          if (!aceito) {
+            const tentativa = await somarCodigoErrado(tx, pendente.id);
+            await registrarNaAuditoria(tx, {
+              acao: 'segundo-passo.recusado',
+              ator,
+              alvo: { tipo: 'aparelho-da-aba', id: aparelho.id },
+              dados: { tentativa, ...doAparelho(aparelho) },
+              origem,
+              momento,
+            });
+            const ate = await registrarRecusa(tx, { usuario, momento });
+            if (ate) {
+              await registrarNaAuditoria(tx, {
+                acao: 'entrada.bloqueada',
+                ator: { tipo: 'anonimo' },
+                alvo: { tipo: 'conta', id: pendente.contaId },
+                dados: { usuario, ate: ate.toISOString(), ...doAparelho(aparelho) },
+                origem,
+                momento,
+              });
+            }
+            if (tentativa < TENTATIVAS_DO_CODIGO_DA_ABA) return { tipo: 'recusado' } as const;
+            await encerrarSessaoDaAba(tx, {
+              sessaoId: pendente.id,
+              contaId: pendente.contaId,
+              usuario,
+              aparelho,
+              motivo: 'tentativas-esgotadas',
+              ator,
+              origem,
+              momento,
+            });
+            return { tipo: 'esgotado' } as const;
+          }
+          // A conta pode ter mudado nos 5 minutos da pendente.
+          const daConta = await recusaDaConta(tx, usuario);
+          if (daConta) {
+            await encerrarSessaoDaAba(tx, {
+              sessaoId: pendente.id,
+              contaId: pendente.contaId,
+              usuario,
+              aparelho,
+              motivo: 'pessoa-recusada',
+              dados: { recusa: daConta, detalhe: daConta },
+              origem,
+              momento,
+            });
+            return { tipo: 'recusada', motivo: daConta } as const;
+          }
+          const ativa = await ativarPendenteDaAba(tx, {
+            sessaoId: pendente.id,
+            contaId: pendente.contaId,
+            aparelho,
+            dados: { pessoa: usuario },
+            origem,
+            momento,
+          });
+          return {
+            tipo: 'aberta',
+            ...ativa,
+            nome: (await nomeDaConta(tx, pendente.contaId)) ?? usuario,
+          } as const;
+        });
+        if (resultado.tipo === 'vencida') throw pendenteVencida();
+        if (resultado.tipo === 'recusado') {
+          throw new ProblemaDaApi({
+            codigo: 'codigo-invalido',
+            status: 401,
+            titulo: 'Código incorreto',
+            detalhe: 'Código incorreto.',
+          });
+        }
+        if (resultado.tipo === 'esgotado') {
+          throw new ProblemaDaApi({
+            codigo: 'tentativas-esgotadas',
+            status: 401,
+            titulo: 'Tentativas esgotadas',
+            detalhe: 'Códigos errados demais. Entre de novo.',
+          });
+        }
+        if (resultado.tipo === 'recusada') throw pessoaRecusada(resultado.motivo);
+        return {
+          token: resultado.token,
+          expiraEm: resultado.expiraEm.toISOString(),
+          pessoa: { nome: resultado.nome },
+        };
+      }
+
+      if ('senha' in corpo) {
+        // A entrada pela senha: a mesma conferência da entrada da web, só pelo diretório.
+        const usuario = normalizarUsuario(corpo.usuario);
+        const ligado = await naOrganizacao(banco, orgId, async (tx) => {
+          const lido = await lerDiretorio(tx);
+          return lido?.diretorio.ligado === true;
+        });
+        if (!ligado) throw pessoaRecusada('ti-fora-do-alcance');
+        const peloDiretorio = await conferirNoDiretorio(banco, {
+          orgId,
+          usuario,
+          senha: corpo.senha,
+          chaves: diretorio.chavesDoCofre,
+          conectar: diretorio.conectar,
+          avisar,
+        });
+        const momento = agora();
+        const resultado = await comNovaTentativa(() =>
+          naOrganizacao(banco, orgId, async (tx) => {
+            const conferida = await conferirAEntrada(tx, {
+              orgId,
+              usuario,
+              senha: corpo.senha,
+              peloDiretorio,
+              momento,
+              origem,
+              conferirDeEngano,
+              daAba: { dados: doAparelho(aparelho) },
+            });
+            if (conferida.tipo !== 'aceita') return conferida;
+            const { conta, nome, doisPassosAtivos, acesso } = conferida;
+            if (!doisPassosAtivos && exigeDoisPassos(conta, acesso)) {
+              await auditarPessoaRecusada(tx, {
+                aparelho,
+                motivo: 'cadastrar-o-codigo',
+                pessoa: usuario,
+                dados: { detalhe: 'sem-o-codigo', usuario: conta.usuario, nome },
+                origem,
+                momento,
+              });
+              return { tipo: 'sem-o-codigo' } as const;
+            }
+            const aberta = await abrirSessaoDaAba(tx, {
+              contaId: conta.id,
+              aparelho,
+              entrada: 'senha',
+              pendente: doisPassosAtivos,
+              dados: { pessoa: usuario },
+              origem,
+              momento,
+            });
+            return { tipo: doisPassosAtivos ? 'pendente' : 'aberta', ...aberta, nome } as const;
+          }),
+        );
+        if (resultado.tipo === 'bloqueada') {
+          resposta.header('retry-after', String(Math.ceil(resultado.restante / 1000)));
+          throw entradaBloqueada(resultado.restante);
+        }
+        if (resultado.tipo === 'fora-do-ar') throw pessoaRecusada('ti-fora-do-alcance');
+        if (resultado.tipo === 'sem-acesso') throw pessoaRecusada('sem-grupo');
+        if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
+        if (resultado.tipo === 'sem-o-codigo') throw pessoaRecusada('cadastrar-o-codigo');
+        if (resultado.tipo === 'pendente') {
+          return {
+            faltaOCodigo: true as const,
+            pendente: resultado.token,
+            expiraEm: resultado.expiraEm.toISOString(),
+          };
+        }
+        return {
+          token: resultado.token,
+          expiraEm: resultado.expiraEm.toISOString(),
+          pessoa: { nome: resultado.nome },
+        };
+      }
+
+      const { sid, usuarioDoWindows } = corpo;
       const doWindows = usuarioDoWindows ? { usuarioDoWindows } : {};
-      const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
+      const pessoa = await conferir(orgId, { sid }, avisar);
       // Lido depois do AD, que pode levar segundos: a validade conta do fim da conferência.
       const momento = agora();
       const recusar = async (
@@ -161,7 +455,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
         throw await recusar(pessoa.motivo, pessoa.detalhe, pessoa.quem);
       }
       const quem = { usuario: pessoa.usuario, nome: pessoa.aceita.usuario.nome };
-      const abrir = () =>
+      const resultado = await comNovaTentativa(() =>
         naOrganizacao(banco, orgId, async (tx) => {
           // A conta pode ter mudado entre a conferência e a transação.
           const daConta = await recusaDaConta(tx, pessoa.usuario);
@@ -183,37 +477,13 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             origem,
             momento,
           });
-          const [dono] = await tx
-            .select({ nome: pessoas.nome })
-            .from(contas)
-            .innerJoin(
-              pessoas,
-              and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)),
-            )
-            .where(eq(contas.id, contaId));
           return {
             tipo: 'aberta',
             ...aberta,
-            nome: dono?.nome ?? pessoa.aceita.usuario.nome,
+            nome: (await nomeDaConta(tx, contaId)) ?? pessoa.aceita.usuario.nome,
           } as const;
-        });
-      // Duas entradas ao mesmo tempo: a da mesma sessão no aparelho, ou a primeira da mesma conta.
-      const aoMesmoTempo = (erro: unknown) =>
-        violouUnicidade(erro, 'sessoes_da_aba_uma_aberta_por_conta_e_aparelho') ||
-        violouUnicidade(erro, 'contas_usuario_unico');
-      let resultado: Awaited<ReturnType<typeof abrir>>;
-      try {
-        resultado = await abrir();
-      } catch (erro) {
-        if (!aoMesmoTempo(erro)) throw erro;
-        // A outra entrada ganhou: esta encerra a dela e abre de novo, uma vez.
-        try {
-          resultado = await abrir();
-        } catch (deNovo) {
-          if (aoMesmoTempo(deNovo)) throw outraSessaoAoMesmoTempo();
-          throw deNovo;
-        }
-      }
+        }),
+      );
       if (resultado.tipo === 'recusada') {
         throw await recusar(resultado.motivo, resultado.detalhe, quem);
       }
@@ -238,29 +508,46 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
     async (requisicao) => {
       const { aparelhoDaAba: aparelho, sessaoDaAba: sessao, organizacao } = requisicao;
       if (!aparelho || !sessao || !organizacao) throw tokenDaAbaRecusado();
-      exigirEntrada(aparelho, 'windows');
+      // A sessão é da entrada que o aparelho tem: a troca da entrada a encerra (tarefa 3.7).
+      exigirEntrada(aparelho, sessao.entrada);
       const orgId = organizacao.id;
       const { sid } = requisicao.body;
+      if (sessao.entrada === 'windows' && !sid) {
+        throw new ProblemaDaApi({
+          codigo: 'falta-o-sid',
+          status: 400,
+          titulo: 'Falta o SID',
+          detalhe: 'A renovação pelo Windows leva o SID de quem está no Windows.',
+        });
+      }
       const origem = origemDa(requisicao);
-      const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
+      const [conta] = await naOrganizacao(banco, orgId, (tx) =>
+        tx.select({ usuario: contas.usuario }).from(contas).where(eq(contas.id, sessao.contaId)),
+      );
+      const usuarioDaConta = conta?.usuario ?? null;
+      // Pela senha, a pessoa é a da conta, buscada no AD sem a senha, pela conta de serviço.
+      const pessoa: PessoaPeloSid =
+        sessao.entrada === 'windows'
+          ? await conferir(orgId, { sid: sid ?? '' }, (d, m) => requisicao.log.warn(d, m))
+          : usuarioDaConta
+            ? await conferir(orgId, { usuario: usuarioDaConta }, (d, m) =>
+                requisicao.log.warn(d, m),
+              )
+            : { tipo: 'recusada', motivo: 'conta-inativa', detalhe: 'conta-inativa' };
       const momento = agora();
       // O AD fora do alcance não encerra a sessão: ela vale até vencer, e a aba tenta de novo.
       if (pessoa.tipo === 'recusada' && pessoa.motivo === 'ti-fora-do-alcance') {
         throw pessoaRecusada(pessoa.motivo);
       }
       const resultado = await naOrganizacao(banco, orgId, async (tx) => {
-        const [conta] = await tx
-          .select({ usuario: contas.usuario })
-          .from(contas)
-          .where(eq(contas.id, sessao.contaId));
         const daConta =
-          pessoa.tipo === 'aceita' && conta?.usuario === pessoa.usuario
+          pessoa.tipo === 'aceita' && usuarioDaConta === pessoa.usuario
             ? await recusaDaConta(tx, pessoa.usuario)
             : null;
         const recusada: { motivo: MotivoSemConexao; detalhe: string } | null =
           pessoa.tipo === 'recusada'
             ? pessoa
-            : conta?.usuario !== pessoa.usuario
+            : usuarioDaConta !== pessoa.usuario
               ? { motivo: 'usuario-de-fora', detalhe: 'outra-pessoa-no-windows' }
               : daConta
                 ? { motivo: daConta, detalhe: daConta }
@@ -270,10 +557,10 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
           await encerrarSessaoDaAba(tx, {
             sessaoId: sessao.id,
             contaId: sessao.contaId,
-            usuario: conta?.usuario ?? null,
+            usuario: usuarioDaConta,
             aparelho,
             motivo: 'pessoa-recusada',
-            dados: { recusa: motivo, detalhe, sid },
+            dados: { recusa: motivo, detalhe, ...(sid ? { sid } : {}) },
             origem,
             momento,
           });
@@ -291,6 +578,57 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
       });
       if (resultado.tipo === 'recusada') throw pessoaRecusada(resultado.motivo);
       return { expiraEm: resultado.expiraEm.toISOString() };
+    },
+  );
+
+  app.delete(
+    '/aba/sessao',
+    {
+      config: { daSessaoDaAba: true, rateLimit: LIMITE_POR_TOKEN_DA_ABA },
+      schema: {
+        summary: 'Sair da aba: encerra a sessão da aba no servidor',
+        response: { 204: z.null(), ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      const { aparelhoDaAba: aparelho, sessaoDaAba: sessao, organizacao } = requisicao;
+      if (!aparelho || !sessao || !organizacao) throw tokenDaAbaRecusado();
+      await naOrganizacao(banco, organizacao.id, async (tx) => {
+        const [conta] = await tx
+          .select({ usuario: contas.usuario })
+          .from(contas)
+          .where(eq(contas.id, sessao.contaId));
+        await encerrarSessaoDaAba(tx, {
+          sessaoId: sessao.id,
+          contaId: sessao.contaId,
+          usuario: conta?.usuario ?? null,
+          aparelho,
+          motivo: 'saida',
+          ator: { tipo: 'conta', contaId: sessao.contaId },
+          origem: origemDa(requisicao),
+          momento: agora(),
+        });
+      });
+      return resposta.code(204).send(null);
+    },
+  );
+
+  app.post(
+    '/aba/uso',
+    {
+      config: { daSessaoDaAba: true, rateLimit: LIMITE_POR_TOKEN_DA_ABA },
+      schema: {
+        summary: 'O uso da aba ou da tela maior com o foco, no máximo uma vez por minuto',
+        response: { 204: z.null(), ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      const { sessaoDaAba: sessao, organizacao } = requisicao;
+      if (!sessao || !organizacao) throw tokenDaAbaRecusado();
+      await naOrganizacao(banco, organizacao.id, (tx) =>
+        registrarUsoDaAba(tx, { sessaoId: sessao.id, momento: agora() }),
+      );
+      return resposta.code(204).send(null);
     },
   );
 };

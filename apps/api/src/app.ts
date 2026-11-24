@@ -516,6 +516,8 @@ export async function criarApp({
     await escopo.register(rotasDaSessaoDaAba, {
       banco,
       agora,
+      chaveDoisPassos,
+      conferirDeEngano,
       diretorio: { chavesDoCofre, conectar: conectarDiretorio },
     });
   });

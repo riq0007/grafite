@@ -82,6 +82,7 @@ const CAMPOS_DA_ABA: Record<string, string> = {
   recusa: 'Recusa',
   detalhe: 'Caso',
   identificador: 'Identificador',
+  tentativa: 'Tentativa',
 };
 
 /** Os motivos da recusa e do fim da sessão da aba, e o caso de cada recusa, em pt-BR. */
@@ -99,10 +100,15 @@ const MOTIVOS_DA_ABA: Record<string, string> = {
   'sid-fora-da-forma': 'SID fora da forma',
   'ad-fora-do-ar': 'AD fora do ar',
   'sid-fora-do-diretorio': 'SID fora do diretório',
+  'usuario-fora-do-diretorio': 'Usuário fora do diretório',
   'usuario-nao-serve': 'Usuário do AD que não serve no Grafite',
   'desativada-no-ad': 'Conta desativada no AD',
   'sem-grupo-mapeado': 'Sem grupo mapeado',
   'outra-pessoa-no-windows': 'Outra pessoa no Windows',
+  'cadastrar-o-codigo': 'Sem o código do app cadastrado',
+  'sem-o-codigo': 'Exige o código do app, sem o ter cadastrado',
+  saida: 'Saída pela pessoa',
+  'tentativas-esgotadas': 'Códigos errados demais',
   teto: 'Teto de contas do computador',
 };
 

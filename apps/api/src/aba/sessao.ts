@@ -3,11 +3,17 @@
 // só pelo hash. A entrada encerra a aberta da mesma conta no mesmo aparelho antes de incluir a nova,
 // na mesma transação. O teto do aparelho conta as contas diferentes das sessões das últimas 24 horas.
 import { randomBytes } from 'node:crypto';
-import { auditoria, contas, sessoesDaAba, type Transacao } from '@grafite/db';
+import {
+  auditoria,
+  contas,
+  type MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA,
+  sessoesDaAba,
+  type Transacao,
+} from '@grafite/db';
 import type { MotivoSemConexao } from '@grafite/domain';
 import { and, desc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
 import { hashDoToken } from '../acesso/sessoes.ts';
-import { registrarNaAuditoria } from '../auditoria.ts';
+import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
 import {
   type AparelhoDaRequisicao,
   type EntradaDaAba,
@@ -16,6 +22,27 @@ import {
 
 /** A validade da sessão da aba, que o serviço renova antes de vencer. */
 export const VALIDADE_DA_SESSAO_DA_ABA = 60 * 60_000;
+/** A validade da sessão pendente da entrada pela senha, à espera do código do app. */
+export const VALIDADE_DA_PENDENTE_DA_ABA = 5 * 60_000;
+/** Quanto a sessão da entrada pela senha fica sem uso antes de terminar, contado no servidor. */
+export const SEM_USO_DA_SENHA = 30 * 60_000;
+/** Quantos códigos errados a sessão pendente aceita, como a pendente da web. */
+export const TENTATIVAS_DO_CODIGO_DA_ABA = 5;
+
+type MotivoDoFim = (typeof MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA)[number];
+
+/**
+ * A sessão aberta que já não vale: a vencida, e a da entrada pela senha sem uso há 30 minutos (decisão
+ * 2). O `momento` é o da conferência.
+ */
+export const semValer = (momento: Date) =>
+  or(
+    lte(sessoesDaAba.expiraEm, momento),
+    and(
+      eq(sessoesDaAba.entrada, 'senha'),
+      lte(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_SENHA)),
+    ),
+  );
 /** A janela do teto de contas do aparelho. */
 export const JANELA_DO_TETO = 24 * 60 * 60_000;
 /** Quantas pessoas recusadas um aparelho põe na auditoria a cada 10 minutos, no máximo. */
@@ -129,10 +156,70 @@ export async function auditarPessoaRecusada(
 }
 
 /**
- * Abre a sessão da conta no aparelho, já ativa, encerrando a aberta da mesma conta nele: a vencida
- * com 'sem-uso', a que segue valendo com 'outra-sessao-no-aparelho'. Devolve o token.
+ * Abre a sessão da conta no aparelho, encerrando a aberta da mesma conta nele: a que já não vale
+ * com 'sem-uso', a que segue valendo com 'outra-sessao-no-aparelho'. Devolve o token. A pendente,
+ * da entrada pela senha à espera do código, vale 5 minutos e só vai à auditoria ao ser ativada.
  */
 export async function abrirSessaoDaAba(
+  tx: Transacao,
+  {
+    contaId,
+    aparelho,
+    entrada,
+    pendente = false,
+    dados,
+    origem,
+    momento,
+  }: {
+    contaId: string;
+    aparelho: AparelhoDaRequisicao;
+    entrada: EntradaDaAba;
+    pendente?: boolean;
+    dados?: Record<string, unknown>;
+    origem: OrigemDaAba;
+    momento: Date;
+  },
+): Promise<{ token: string; sessaoId: string; expiraEm: Date }> {
+  const daConta = and(
+    eq(sessoesDaAba.contaId, contaId),
+    eq(sessoesDaAba.aparelhoId, aparelho.id),
+    isNull(sessoesDaAba.encerradaEm),
+  );
+  await tx
+    .update(sessoesDaAba)
+    .set({ encerradaEm: momento, motivoDoFim: 'sem-uso' })
+    .where(and(daConta, semValer(momento)));
+  await tx
+    .update(sessoesDaAba)
+    .set({ encerradaEm: momento, motivoDoFim: 'outra-sessao-no-aparelho' })
+    .where(daConta);
+  const token = novoToken();
+  const expiraEm = new Date(
+    momento.getTime() + (pendente ? VALIDADE_DA_PENDENTE_DA_ABA : VALIDADE_DA_SESSAO_DA_ABA),
+  );
+  const [sessao] = await tx
+    .insert(sessoesDaAba)
+    .values({
+      orgId: sql`app.current_org()`,
+      contaId,
+      aparelhoId: aparelho.id,
+      entrada,
+      tokenHash: hashDoToken(token),
+      criadaEm: momento,
+      ativadaEm: pendente ? null : momento,
+      ultimoUsoEm: momento,
+      expiraEm,
+      ip: origem.ip,
+    })
+    .returning({ id: sessoesDaAba.id });
+  if (!sessao) throw new Error('A sessão da aba não foi gravada.');
+  if (!pendente) {
+    await auditarAberta(tx, { contaId, aparelho, entrada, dados, origem, momento });
+  }
+  return { token, sessaoId: sessao.id, expiraEm };
+}
+
+async function auditarAberta(
   tx: Transacao,
   {
     contaId,
@@ -149,38 +236,7 @@ export async function abrirSessaoDaAba(
     origem: OrigemDaAba;
     momento: Date;
   },
-): Promise<{ token: string; sessaoId: string; expiraEm: Date }> {
-  const daConta = and(
-    eq(sessoesDaAba.contaId, contaId),
-    eq(sessoesDaAba.aparelhoId, aparelho.id),
-    isNull(sessoesDaAba.encerradaEm),
-  );
-  await tx
-    .update(sessoesDaAba)
-    .set({ encerradaEm: momento, motivoDoFim: 'sem-uso' })
-    .where(and(daConta, lte(sessoesDaAba.expiraEm, momento)));
-  await tx
-    .update(sessoesDaAba)
-    .set({ encerradaEm: momento, motivoDoFim: 'outra-sessao-no-aparelho' })
-    .where(daConta);
-  const token = novoToken();
-  const expiraEm = new Date(momento.getTime() + VALIDADE_DA_SESSAO_DA_ABA);
-  const [sessao] = await tx
-    .insert(sessoesDaAba)
-    .values({
-      orgId: sql`app.current_org()`,
-      contaId,
-      aparelhoId: aparelho.id,
-      entrada,
-      tokenHash: hashDoToken(token),
-      criadaEm: momento,
-      ativadaEm: momento,
-      ultimoUsoEm: momento,
-      expiraEm,
-      ip: origem.ip,
-    })
-    .returning({ id: sessoesDaAba.id });
-  if (!sessao) throw new Error('A sessão da aba não foi gravada.');
+) {
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.aberta',
     ator: { tipo: 'conta', contaId },
@@ -194,7 +250,80 @@ export async function abrirSessaoDaAba(
     origem,
     momento,
   });
-  return { token, sessaoId: sessao.id, expiraEm };
+}
+
+/** A pendente da entrada pela senha no aparelho, pelo token dela, enquanto vale, ou `null`. */
+export async function pendenteDaAba(
+  tx: Transacao,
+  { token, aparelho, momento }: { token: string; aparelho: AparelhoDaRequisicao; momento: Date },
+) {
+  const [pendente] = await tx
+    .select({ id: sessoesDaAba.id, contaId: sessoesDaAba.contaId })
+    .from(sessoesDaAba)
+    .where(
+      and(
+        eq(sessoesDaAba.tokenHash, hashDoToken(token)),
+        eq(sessoesDaAba.aparelhoId, aparelho.id),
+        eq(sessoesDaAba.entrada, 'senha'),
+        isNull(sessoesDaAba.ativadaEm),
+        isNull(sessoesDaAba.encerradaEm),
+        gt(sessoesDaAba.expiraEm, momento),
+      ),
+    );
+  return pendente ?? null;
+}
+
+/** Soma um código errado na pendente e devolve quantos já foram. */
+export async function somarCodigoErrado(tx: Transacao, sessaoId: string): Promise<number> {
+  const [atualizada] = await tx
+    .update(sessoesDaAba)
+    .set({ tentativasDeCodigo: sql`${sessoesDaAba.tentativasDeCodigo} + 1` })
+    .where(eq(sessoesDaAba.id, sessaoId))
+    .returning({ tentativas: sessoesDaAba.tentativasDeCodigo });
+  return atualizada?.tentativas ?? TENTATIVAS_DO_CODIGO_DA_ABA;
+}
+
+/**
+ * Ativa a pendente com o código certo: o token novo, que substitui o da pendente, a validade de 1
+ * hora e o último uso no agora, com a auditoria da abertura.
+ */
+export async function ativarPendenteDaAba(
+  tx: Transacao,
+  {
+    sessaoId,
+    contaId,
+    aparelho,
+    dados,
+    origem,
+    momento,
+  }: {
+    sessaoId: string;
+    contaId: string;
+    aparelho: AparelhoDaRequisicao;
+    dados?: Record<string, unknown>;
+    origem: OrigemDaAba;
+    momento: Date;
+  },
+): Promise<{ token: string; expiraEm: Date }> {
+  const token = novoToken();
+  const expiraEm = new Date(momento.getTime() + VALIDADE_DA_SESSAO_DA_ABA);
+  await tx
+    .update(sessoesDaAba)
+    .set({ tokenHash: hashDoToken(token), ativadaEm: momento, ultimoUsoEm: momento, expiraEm })
+    .where(eq(sessoesDaAba.id, sessaoId));
+  await auditarAberta(tx, { contaId, aparelho, entrada: 'senha', dados, origem, momento });
+  return { token, expiraEm };
+}
+
+/** O uso da aba ou da tela maior com o foco, que conta os 30 minutos da entrada pela senha. */
+export async function registrarUsoDaAba(
+  tx: Transacao,
+  { sessaoId, momento }: { sessaoId: string; momento: Date },
+) {
+  await tx
+    .update(sessoesDaAba)
+    .set({ ultimoUsoEm: momento })
+    .where(and(eq(sessoesDaAba.id, sessaoId), isNull(sessoesDaAba.encerradaEm)));
 }
 
 /** A renovação: a mesma sessão, com a validade contada de agora, sem a auditoria. */
@@ -219,6 +348,7 @@ export async function encerrarSessaoDaAba(
     usuario,
     aparelho,
     motivo,
+    ator = { tipo: 'sistema', descricao: 'Aba' },
     dados,
     origem,
     momento,
@@ -227,7 +357,9 @@ export async function encerrarSessaoDaAba(
     contaId: string;
     usuario: string | null;
     aparelho: AparelhoDaRequisicao;
-    motivo: 'pessoa-recusada';
+    motivo: Extract<MotivoDoFim, 'pessoa-recusada' | 'saida' | 'tentativas-esgotadas'>;
+    /** Quem encerrou: a aba, ou a pessoa no "Sair". */
+    ator?: Ator;
     dados?: Record<string, unknown>;
     origem: OrigemDaAba;
     momento: Date;
@@ -241,7 +373,7 @@ export async function encerrarSessaoDaAba(
   if (encerradas.length === 0) return;
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.encerrada',
-    ator: { tipo: 'sistema', descricao: 'Aba' },
+    ator,
     alvo: { tipo: 'aparelho-da-aba', id: aparelho.id },
     dados: {
       computador: aparelho.nome,

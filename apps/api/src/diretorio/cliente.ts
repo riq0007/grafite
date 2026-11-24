@@ -46,6 +46,11 @@ export interface ClienteDoDiretorio {
    * ou `null` sem ele (change aba-dos-colaboradores, design, decisão 4).
    */
   buscarPeloSid(sid: string): Promise<UsuarioDoDiretorio | null>;
+  /**
+   * O usuário pelo atributo do usuário, sem a senha, dentro da base e do filtro das pessoas, ou
+   * `null` sem ele ou com mais de um: a renovação da sessão da aba pela senha (decisão 2).
+   */
+  buscarPeloUsuario(usuario: string): Promise<UsuarioDoDiretorio | null>;
   buscarUsuarios(termo: string, limite: number): Promise<UsuarioDoDiretorio[]>;
   usuario(dn: string): Promise<UsuarioDoDiretorio | null>;
   buscarGrupos(termo: string, limite: number): Promise<GrupoDoDiretorio[]>;

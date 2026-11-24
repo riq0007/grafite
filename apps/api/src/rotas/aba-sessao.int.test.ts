@@ -378,6 +378,21 @@ describe('as recusas', () => {
   });
 });
 
+describe('a renovação sem o SID', () => {
+  it('a sessão pelo Windows não renova sem o SID', async () => {
+    const { token } = (await abrir(fin.token, SID.fernanda)).json();
+    const r = await api.app.inject({
+      method: 'POST',
+      url: '/api/aba/sessao/renovar',
+      remoteAddress: novoIp(),
+      headers: comToken(token),
+      payload: {},
+    });
+    expect(r.statusCode).toBe(400);
+    expect(r.json()).toMatchObject({ type: 'urn:grafite:problema:falta-o-sid' });
+  });
+});
+
 describe('o limite das sessões recusadas', () => {
   it('o token encerrado num laço não conta, e o sorteio de tokens espera', async () => {
     const ip = novoIp();

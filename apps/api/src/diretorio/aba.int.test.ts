@@ -43,7 +43,7 @@ const naOrg = <T>(fazer: Parameters<typeof naOrganizacao<T>>[2]) =>
 const conferir = (sid: string) =>
   conferirPessoaPeloSid(api.banco, {
     orgId: org,
-    sid,
+    busca: { sid },
     chaves: CHAVES_DO_COFRE_DE_TESTE,
     conectar: ad.conectar,
     avisar,
