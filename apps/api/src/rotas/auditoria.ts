@@ -3,6 +3,7 @@
 // contrário, paginada pelo cursor de (momento, id), com os filtros valendo para o conjunto inteiro e
 // o total contado até 10.000. Os nomes de quem fez e do alvo são os atuais, resolvidos na consulta.
 import {
+  aparelhosDaAba,
   ativos,
   auditoria,
   type Banco,
@@ -165,6 +166,21 @@ const LEITORES_DOS_NOMES = new Map<string, LeitorDosNomes>([
         ativo.ativo.id,
         rotuloDoAtivo({ nome: ativo.ativo.nome, modelo: ativo.modelo, tipo: ativo.tipo }),
       ]),
+  ],
+  // O computador da aba pelo nome e pelo identificador curto, como está agora.
+  [
+    'aparelho-da-aba',
+    async (tx, ids) =>
+      (
+        await tx
+          .select({
+            id: aparelhosDaAba.id,
+            nome: aparelhosDaAba.nome,
+            curto: aparelhosDaAba.identificadorCurto,
+          })
+          .from(aparelhosDaAba)
+          .where(inArray(aparelhosDaAba.id, ids))
+      ).map(({ id, nome, curto }) => [id, `${nome} (${curto})`]),
   ],
   // O segredo do cofre pelo nome: os dados dele, nunca o valor.
   [

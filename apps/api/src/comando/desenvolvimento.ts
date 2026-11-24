@@ -254,6 +254,19 @@ export async function garantirDiretorioDeDesenvolvimento({
       });
       if (existente) desligadoSubstituido = existente.servidor;
       gravou = true;
+    } else if (!existente.ligado) {
+      // O simulado desligado na tela volta a ligar, como a senha do `admin`, que o comando garante
+      // a cada execução: desligado, a aba não entra.
+      await tx.update(diretorios).set({ ligado: true, atualizadoEm: momento });
+      await registrarNaAuditoria(tx, {
+        acao: 'diretorio.configurado',
+        ator: ATOR,
+        alvo: { tipo: 'diretorio', id: existente.id },
+        antes: { ligado: false },
+        depois: { ligado: true },
+        momento,
+      });
+      gravou = true;
     }
     const grupo = await garantirGrupoDosColaboradores(tx, orgId);
     if (grupo.mudou) gravou = true;

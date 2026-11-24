@@ -394,7 +394,7 @@ O aparelho SHALL ser escolhido pelo nome ou pelo identificador curto. Com o nome
 - **THEN** a saída mostra a chave uma vez e o exemplo das propriedades do MSI para o Intune
 
 #### Scenario: Computador de perfil genérico
-- **WHEN** quem opera o servidor roda `grafite aba entrada PC-PROD-03 senha`
+- **WHEN** quem opera o servidor roda `grafite aba entrada PC-PROD-03 senha --endereco grafite.empresa.local`
 - **THEN** a aba do PC-PROD-03 passa a pedir o usuário e a senha do AD em até 30 s
 
 ### Requirement: Auditoria e eventos da aba

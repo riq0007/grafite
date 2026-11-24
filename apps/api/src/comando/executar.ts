@@ -437,6 +437,14 @@ async function abaConfigurar(
     ...(forma ? { forma } : {}),
     ...(contato !== undefined ? { contato } : {}),
   });
+  if (!feita.mudou) {
+    ambiente.escrever(
+      `A aba já está com a forma ${feita.forma} e ${
+        feita.contato ? `o contato "${feita.contato}"` : 'sem contato de reserva'
+      }; nada mudou.`,
+    );
+    return;
+  }
   ambiente.escrever(
     `Aba configurada (versão ${feita.versao}): forma ${feita.forma}, ${
       feita.contato ? `contato "${feita.contato}"` : 'sem contato de reserva'
@@ -465,7 +473,8 @@ async function abaAparelhos(
       a.ultimoContatoEm ? `último contato ${dataLocal(a.ultimoContatoEm)}` : 'sem contato ainda',
       a.versao ? `versão ${a.versao}` : 'versão desconhecida',
       a.bloqueado ? 'bloqueado' : 'liberado',
-      ...(a.novo ? ['registrado nas últimas 24 h'] : []),
+      ...(a.registro === 'novo' ? ['registrado nas últimas 24 h'] : []),
+      ...(a.registro === 'de-novo' ? ['registrado de novo nas últimas 24 h'] : []),
     ];
     ambiente.escrever(partes.join(' · '));
   }

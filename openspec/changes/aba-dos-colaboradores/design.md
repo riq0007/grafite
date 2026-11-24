@@ -70,7 +70,7 @@ O aparelho com a entrada pela senha recusa o pedido pelo SID, e o com a entrada 
 
 As rotas, todas no OpenAPI, com o `/api` de fora. O cliente em Rust é escrito à mão, e um teste do job do CI confere os exemplos dele contra o OpenAPI gerado.
 1. **`POST /api/aba/aparelho`**, do serviço, com a chave: registra ou re-registra, e devolve o token do aparelho e a entrada. Recusa o aparelho bloqueado.
-2. **`GET /api/aba/configuracao`**, do serviço, com o token do aparelho: a forma, o contato, a entrada e a versão.
+2. **`GET /api/aba/configuracao`**, do serviço, com o token do aparelho: a forma, o contato, a entrada e a versão. Enquanto a organização não tem a linha da configuração, a resposta leva a forma de fábrica, sem contato, e a versão 0, para o primeiro `grafite aba configurar`, que grava a versão 1, ser visto pelo serviço que relê pela versão. O `configurar` que não muda nada não sobe a versão.
 3. **`POST /api/aba/sessao`**, do serviço, com o token do aparelho e o SID, ou o usuário e a senha, ou o código e a pendente: devolve o token da sessão da aba, de 1 h.
 4. **As rotas da sessão,** da aba, com o token da sessão:
    - `POST /api/aba/sessao/renovar`, que estende a mesma sessão;
@@ -248,6 +248,8 @@ O serviço lê a chave sempre que ela aparece no registro e ele não tem token, 
 
 O WebView2 vai pelo bootstrapper embutido.
 
+O MSI que o job guarda como artefato e que a release leva se chama `Grafite-Aba.msi`, sem a versão nem a arquitetura do nome de fábrica do Tauri, porque é o nome do exemplo que o `grafite aba chave` mostra e o do runbook.
+
 O job `aba` do `ci.yml`, no `windows-2022`:
 - `cargo fmt --check`, `cargo clippy -D warnings` e `cargo test`;
 - `tauri build`;
@@ -269,11 +271,12 @@ O diretório simulado tem:
 
 O diretório que a organização de desenvolvimento já tem:
 - ligado, com outro servidor, fica como está, e o terminal diz que o simulado ficou desligado;
-- desligado, dá lugar ao simulado, porque só cabe um diretório por organização, e o terminal diz "O diretório desligado <servidor> deu lugar ao simulado.". A base, o filtro, a AC e os mapeamentos do anterior se perdem, e o segredo da conta de serviço anterior fica no Cofre.
+- desligado, dá lugar ao simulado, porque só cabe um diretório por organização, e o terminal diz "O diretório desligado <servidor> deu lugar ao simulado.". A base, o filtro e a AC do anterior se perdem; os mapeamentos e o segredo da conta de serviço anterior ficam;
+- o simulado desligado na tela volta a ligar, como a senha do `admin`, que o comando garante a cada execução.
 
 Fora do Windows, sem o `whoami`, não há quem atender: o `pnpm dev` grava só a chave da aba, e o diretório fica como está. O usuário do Windows que não serve de usuário do Grafite (com espaço ou acento, como o de um computador do Entra) e o de uma conta local que já existe na organização ficam com a entrada local: o terminal diz o motivo, em vez da frase de como a aba entra.
 
-O `.env` ganha também a chave da aba de desenvolvimento, gerada uma vez, gravada pelo mesmo caminho do `grafite aba chave`, com a auditoria. A variável do diretório simulado só entra no `.env` do ambiente de desenvolvimento: o `.env` de outro ambiente ganha só a chave.
+O `.env` ganha também a chave da aba de desenvolvimento, gerada uma vez, gravada pelo mesmo caminho do `grafite aba chave`, com a auditoria. A variável do diretório simulado só entra no `.env` do ambiente de desenvolvimento. O `.env` de outro ambiente ganha a chave, mas ela não é gravada na organização: quem a grava é o mesmo passo do diretório simulado, que só roda com a variável.
 
 ### 14. Os testes
 

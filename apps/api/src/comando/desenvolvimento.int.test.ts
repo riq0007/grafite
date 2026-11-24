@@ -331,6 +331,14 @@ describe('o diretório de desenvolvimento', () => {
     ]);
   });
 
+  it('o simulado desligado na tela volta a ligar, com a auditoria', async () => {
+    await naOrganizacao(api.banco, orgId, (tx) => tx.update(diretorios).set({ ligado: false }));
+    expect(await garantirODiretorio()).toEqual({ tipo: 'gravado', contaLocal: false });
+    expect((await oQueTem()).diretorios).toMatchObject([
+      { servidor: SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO, ligado: true },
+    ]);
+  });
+
   it('o perfil gravado só com o chat ganha o pedido de chamados', async () => {
     await naOrganizacao(api.banco, orgId, (tx) =>
       tx

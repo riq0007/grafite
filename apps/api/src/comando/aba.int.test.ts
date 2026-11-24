@@ -35,11 +35,17 @@ const HORA = 60 * 60 * 1000;
 
 async function aparelho(
   orgId: string,
-  dados: { curto: string; nome: string; registradoHaHoras?: number; maquina?: string },
+  dados: {
+    curto: string;
+    nome: string;
+    registradoHaHoras?: number;
+    trocadoHaHoras?: number;
+    maquina?: string;
+  },
 ) {
-  const registrado = new Date(
-    api.relogio.agora().getTime() - (dados.registradoHaHoras ?? 48) * HORA,
-  );
+  const haHoras = (horas: number) => new Date(api.relogio.agora().getTime() - horas * HORA);
+  const registrado = haHoras(dados.registradoHaHoras ?? 48);
+  const trocado = haHoras(dados.trocadoHaHoras ?? dados.registradoHaHoras ?? 48);
   const [linha] = await naOrganizacao(api.banco, orgId, (tx) =>
     tx
       .insert(aparelhosDaAba)
@@ -50,7 +56,7 @@ async function aparelho(
         nome: dados.nome,
         tokenHash: hash(randomBytes(16).toString('hex')),
         registradoEm: registrado,
-        tokenTrocadoEm: registrado,
+        tokenTrocadoEm: trocado,
       })
       .returning(),
   );
@@ -177,6 +183,20 @@ describe('aba configurar', () => {
     ]);
   });
 
+  it('a mesma configuração não sobe a versão nem audita', async () => {
+    expect(await executar('aba', 'configurar', '--endereco', endereco, '--forma', 'entalhe')).toBe(
+      0,
+    );
+    expect(saida).toEqual([
+      'A aba já está com a forma entalhe e sem contato de reserva; nada mudou.',
+    ]);
+    const [linha] = await naOrganizacao(api.banco, org, (tx) =>
+      tx.select().from(configuracoesDaAba),
+    );
+    expect(linha?.versao).toBe(3);
+    expect(await auditoriaDo(linha?.id ?? '')).toHaveLength(3);
+  });
+
   it('recusa a forma desconhecida e o contato com o sem-contato', async () => {
     expect(await executar('aba', 'configurar', '--endereco', endereco, '--forma', 'bola')).toBe(2);
     expect(erros).toEqual(['--forma: use pilula ou entalhe.']);
@@ -207,6 +227,12 @@ describe('os aparelhos', () => {
       registradoHaHoras: 200,
     });
     prodNovo = await aparelho(org, { curto: 'D4E5F6', nome: 'PC-PROD-03', registradoHaHoras: 2 });
+    await aparelho(org, {
+      curto: 'H7J8K9',
+      nome: 'PC-RH-02',
+      registradoHaHoras: 300,
+      trocadoHaHoras: 1,
+    });
     await aparelho(outraOrg, { curto: 'ZZZZZZ', nome: 'PC-OUTRA-01' });
   });
 
@@ -216,6 +242,7 @@ describe('os aparelhos', () => {
       '7K3Q9P · PC-FIN-09 · entrada pelo Windows · teto 5 por dia · sem contato ainda · versão desconhecida · liberado',
       'A1B2C3 · PC-PROD-03 · entrada pelo Windows · teto 5 por dia · sem contato ainda · versão desconhecida · liberado',
       'D4E5F6 · PC-PROD-03 · entrada pelo Windows · teto 5 por dia · sem contato ainda · versão desconhecida · liberado · registrado nas últimas 24 h',
+      'H7J8K9 · PC-RH-02 · entrada pelo Windows · teto 5 por dia · sem contato ainda · versão desconhecida · liberado · registrado de novo nas últimas 24 h',
     ]);
   });
 
@@ -224,7 +251,7 @@ describe('os aparelhos', () => {
     expect(erros[0]).toContain(
       'Há 2 computadores com o nome PC-PROD-03. Escolha pelo identificador:',
     );
-    expect(erros[0]).toContain('A1B2C3');
+    expect(erros[0]).toMatch(/A1B2C3 {2}registrado em .+, sem contato ainda/);
     expect(erros[0]).toContain('D4E5F6');
     expect((await doAparelho(prodNovo.id))?.entrada).toBe('windows');
   });
@@ -240,6 +267,7 @@ describe('os aparelhos', () => {
         antes: { entrada: 'windows' },
         depois: { entrada: 'senha' },
         atorDescricao: 'comando no servidor: aba entrada',
+        dados: { computador: 'PC-PROD-03', identificador: 'D4E5F6' },
       },
     ]);
   });

@@ -61,6 +61,10 @@ const TIPOS_DO_ALVO: Record<string, string> = {
   'horario-da-ti': 'Horário da TI',
   // As equipes e os canais do chat (change chat-com-chamados), que saem pelo tipo da ação.
   conversa: 'Conversa',
+  // A aba dos colaboradores (change aba-dos-colaboradores).
+  'chave-da-aba': 'Chave da aba',
+  'configuracao-da-aba': 'Configuração da aba',
+  'aparelho-da-aba': 'Computador com a aba',
 };
 
 /** O tipo da conversa do alvo pela ação: as `equipe.*` e as `canal.*`. */
@@ -78,6 +82,10 @@ const CAMPOS: Record<string, string> = {
   tipo: 'Tipo',
   situacao: 'Situação',
   usuario: 'Usuário',
+  entrada: 'Entrada',
+  tetoDeContas: 'Contas por dia',
+  forma: 'Forma',
+  computador: 'Computador',
   senhaTemporaria: 'Senha temporária',
   exigeDoisPassos: 'Exige verificação em dois passos',
   descricao: 'Descrição',

@@ -109,6 +109,20 @@ describe('o registro de um segredo na auditoria', () => {
     expect(textoDoAlvo(doSegredo({}).alvo)).toBe('Segredo: Switch do CPD');
   });
 
+  it('o computador da aba, e a entrada e o teto pelos rótulos', () => {
+    const registro = doAtivo({
+      acao: 'entrada-do-aparelho.trocada',
+      rotulo: 'Entrada do computador na aba trocada',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-PROD-03 (D4E5F6)', usuario: null },
+      antes: { entrada: 'windows', tetoDeContas: 5 },
+      depois: { entrada: 'senha', tetoDeContas: 12 },
+      dados: { computador: 'PC-PROD-03' },
+    });
+    expect(textoDoAlvo(registro.alvo)).toBe('Computador com a aba: PC-PROD-03 (D4E5F6)');
+    const rotulos = camposDoDetalhe(registro, formatar).map((campo) => campo.rotulo);
+    expect(rotulos).toEqual(expect.arrayContaining(['Entrada', 'Contas por dia', 'Computador']));
+  });
+
   it('os dados do segredo pelo rótulo, com o tipo e a classificação em texto', () => {
     const registro = doSegredo({
       antes: { tipo: 'usuario-e-senha', classificacao: 'pessoal', identificador: 'adm' },

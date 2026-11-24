@@ -124,7 +124,7 @@ export async function configurarAba(
   banco: Banco,
   agora: () => Date,
   { endereco, ...mudanca }: ConfiguracaoPeloComando & { endereco: string },
-): Promise<{ forma: FormaDaAba; contato: string | null; versao: number }> {
+): Promise<{ forma: FormaDaAba; contato: string | null; versao: number; mudou: boolean }> {
   return naOrganizacaoDoEndereco(banco, endereco, async (tx) => {
     const momento = agora();
     const [antes] = await tx
@@ -137,6 +137,10 @@ export async function configurarAba(
       .from(configuracoesDaAba);
     const forma = mudanca.forma ?? antes?.forma ?? 'pilula';
     const contato = mudanca.contato === undefined ? (antes?.contato ?? null) : mudanca.contato;
+    // Nada a mudar: a versão não sobe, para as abas não relerem a configuração à toa.
+    if (antes && antes.forma === forma && antes.contato === contato) {
+      return { forma, contato, versao: antes.versao, mudou: false };
+    }
     const versao = (antes?.versao ?? 0) + 1;
     let id: string;
     if (antes) {
@@ -161,7 +165,7 @@ export async function configurarAba(
       depois: { forma, contato },
       momento,
     });
-    return { forma, contato, versao };
+    return { forma, contato, versao, mudou: true };
   });
 }
 
@@ -173,8 +177,8 @@ export interface AparelhoListado {
   versao: string | null;
   ultimoContatoEm: Date | null;
   bloqueado: boolean;
-  /** Registrado (ou re-registrado) nas últimas 24 horas. */
-  novo: boolean;
+  /** Registrado nas últimas 24 horas: pela primeira vez, ou de novo, com o token trocado. */
+  registro: 'novo' | 'de-novo' | null;
 }
 
 /** `aba aparelhos`: os aparelhos da organização, pelo nome. */
@@ -197,7 +201,12 @@ export async function listarAparelhos(
       versao: a.versao,
       ultimoContatoEm: a.ultimoContatoEm,
       bloqueado: a.bloqueadoEm !== null,
-      novo: a.tokenTrocadoEm.getTime() >= desde,
+      registro:
+        a.tokenTrocadoEm.getTime() < desde
+          ? null
+          : a.registradoEm.getTime() < a.tokenTrocadoEm.getTime()
+            ? 'de-novo'
+            : 'novo',
     }));
   });
 }
@@ -228,7 +237,14 @@ export async function acharAparelho(tx: Transacao, quem: string): Promise<Aparel
     );
   if (outros.length > 0) {
     const lista = achados
-      .map((a) => `  ${a.identificadorCurto}  registrado em ${dataLocal(a.registradoEm)}`)
+      .map(
+        (a) =>
+          `  ${a.identificadorCurto}  registrado em ${dataLocal(a.registradoEm)}, ${
+            a.ultimoContatoEm
+              ? `último contato ${dataLocal(a.ultimoContatoEm)}`
+              : 'sem contato ainda'
+          }`,
+      )
       .join('\n');
     throw new ErroDoComando(
       1,
@@ -265,6 +281,8 @@ export async function mudarAparelho(
       mudou,
     });
     const alvo = { tipo: 'aparelho-da-aba', id: aparelho.id };
+    // O nome daquele momento: o re-registro pode trocá-lo.
+    const dados = { computador: aparelho.nome, identificador: aparelho.identificadorCurto };
     switch (mudanca.tipo) {
       case 'entrada': {
         if (aparelho.entrada === mudanca.entrada) return resultado(false);
@@ -276,6 +294,7 @@ export async function mudarAparelho(
           acao: 'entrada-do-aparelho.trocada',
           ator: ator('entrada'),
           alvo,
+          dados,
           antes: { entrada: aparelho.entrada },
           depois: { entrada: mudanca.entrada },
           momento,
@@ -292,6 +311,7 @@ export async function mudarAparelho(
           acao: 'teto-do-aparelho.trocado',
           ator: ator('teto'),
           alvo,
+          dados,
           antes: { tetoDeContas: aparelho.tetoDeContas },
           depois: { tetoDeContas: mudanca.teto },
           momento,
@@ -310,6 +330,7 @@ export async function mudarAparelho(
           acao: bloquear ? 'aparelho-da-aba.bloqueado' : 'aparelho-da-aba.desbloqueado',
           ator: ator(mudanca.tipo),
           alvo,
+          dados,
           momento,
         });
         return resultado(true);
@@ -318,11 +339,23 @@ export async function mudarAparelho(
   });
 }
 
-/** A data e a hora no fuso do servidor, para a saída do comando. */
-export function dataLocal(momento: Date): string {
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-    momento,
-  );
+/**
+ * A data e a hora no fuso do servidor, com o fuso escrito, para a hora nunca ficar ambígua: no Linux,
+ * o contêiner do comando recebe o TZ do config.env.
+ */
+export function dataLocal(momento: Date, fuso?: string): string {
+  const partes = new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    ...(fuso ? { timeZone: fuso } : {}),
+  }).format(momento);
+  const nomeDoFuso = new Intl.DateTimeFormat('pt-BR', {
+    timeZoneName: 'short',
+    ...(fuso ? { timeZone: fuso } : {}),
+  })
+    .formatToParts(momento)
+    .find((parte) => parte.type === 'timeZoneName')?.value;
+  return nomeDoFuso ? `${partes} (${nomeDoFuso})` : partes;
 }
 
 export function lerForma(texto: string): FormaDaAba {
