@@ -512,6 +512,13 @@
       "when": 1795553224449,
       "tag": "0072_eventos_e_sessoes_da_aba",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1795553647118,
+      "tag": "0073_aviso_do_evento_da_aba",
+      "breakpoints": true
     }
   ]
 }

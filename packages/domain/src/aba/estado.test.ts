@@ -141,6 +141,6 @@ describe('sem conexão', () => {
       'nao-configurada',
       'registrar-de-novo',
     ]);
-    expect(de('pessoa')).toEqual(['cadastrar-o-codigo']);
+    expect(de('pessoa')).toEqual(['cadastrar-o-codigo', 'outra-sessao-do-windows']);
   });
 });

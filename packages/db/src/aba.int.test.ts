@@ -354,7 +354,16 @@ describe('bilhetes', () => {
   });
 
   it('o papel da aplicação apaga o bilhete, para a limpeza dos vencidos', async () => {
-    const apagados = await emTransacao(app, orgA, (c) => c.query('delete from bilhetes_da_aba'));
-    expect(apagados.rowCount).toBeGreaterThan(0);
+    const aparelho = await criarAparelho(orgA, 'maquina-da-limpeza');
+    const sessao = await criarSessaoDaAba(orgA, contaDeA, aparelho);
+    const apagados = await emTransacao(app, orgA, async (c) => {
+      await c.query(
+        `insert into bilhetes_da_aba (org_id, hash, sessao_da_aba_id, destino, expira_em)
+         values ($1, $2, $3, 'chat', now() - interval '1 day')`,
+        [orgA, randomBytes(32), sessao],
+      );
+      return c.query('delete from bilhetes_da_aba where sessao_da_aba_id = $1', [sessao]);
+    });
+    expect(apagados.rowCount).toBe(1);
   });
 });

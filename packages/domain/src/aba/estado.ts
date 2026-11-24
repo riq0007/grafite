@@ -106,7 +106,8 @@ export type MotivoSemConexao =
   | 'sem-grupo'
   | 'ti-fora-do-alcance'
   | 'teto-do-aparelho'
-  | 'cadastrar-o-codigo';
+  | 'cadastrar-o-codigo'
+  | 'outra-sessao-do-windows';
 
 /** A frase de cada motivo, na aba aberta. A do "sem grupo" é a da entrada pelo diretório. */
 export const FRASES_SEM_CONEXAO: Record<MotivoSemConexao, string> = {
@@ -122,6 +123,7 @@ export const FRASES_SEM_CONEXAO: Record<MotivoSemConexao, string> = {
   'ti-fora-do-alcance': 'A TI não está ao alcance agora.',
   'teto-do-aparelho': 'Este computador abriu a aba para muitas pessoas hoje. Fale com a TI.',
   'cadastrar-o-codigo': 'Cadastre o código do app pelo navegador antes de usar a aba.',
+  'outra-sessao-do-windows': 'Você abriu a aba em outra sessão do Windows deste computador.',
 };
 
 /** De quanto em quanto a aba tenta de novo nas recusas da pessoa, que só a TI resolve. */
@@ -133,7 +135,8 @@ export const INTERVALO_DA_RECUSA_DA_PESSOA = 10 * 60_000;
  * - `aba-devagar`: ela tenta de novo a cada 10 minutos, nas recusas da pessoa, para a mudança da
  *   TI valer sem a pessoa sair do Windows;
  * - `servico`: o contato de 60 s do serviço, nos motivos do aparelho;
- * - `pessoa`: o formulário da entrada pela senha.
+ * - `pessoa`: o formulário da entrada pela senha, ou sair do Windows e entrar de novo, na sessão
+ *   derrubada por outra sessão do Windows com a mesma conta.
  */
 export type RetomadaDaAba = 'aba' | 'aba-devagar' | 'servico' | 'pessoa';
 
@@ -150,4 +153,5 @@ export const RETOMADA_DO_MOTIVO: Record<MotivoSemConexao, RetomadaDaAba> = {
   'registrar-de-novo': 'servico',
   'aparelho-bloqueado': 'servico',
   'cadastrar-o-codigo': 'pessoa',
+  'outra-sessao-do-windows': 'pessoa',
 };

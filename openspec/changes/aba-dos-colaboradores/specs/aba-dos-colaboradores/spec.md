@@ -96,6 +96,8 @@ A pessoa SHALL ficar sem conexão, com o motivo e sem conta criada, quando:
 - o usuário não está em nenhum grupo mapeado: a mesma frase da entrada pelo diretório;
 - o diretório está desligado, ou o AD não responde: "A TI não está ao alcance agora." Nesse caso, a aba tenta de novo sozinha, como na rede caída.
 
+A sessão da aba encerrada por outra sessão do Windows com a mesma conta, no mesmo computador, SHALL ficar sem conexão com "Você abriu a aba em outra sessão do Windows deste computador.", e SHALL NOT pedir outra sessão sozinha: a pessoa volta saindo do Windows e entrando de novo.
+
 Nas outras recusas a pessoa não tem o que fazer na aba. A aba SHALL tentar de novo a cada 10 minutos, e a recusa pelo mesmo motivo SHALL NOT repetir a auditoria. Assim, a TI reativa a conta ou mapeia o grupo, e a aba volta sem a pessoa sair do Windows.
 
 #### Scenario: Fernanda na aba pela primeira vez
