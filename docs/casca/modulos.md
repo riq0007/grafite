@@ -1970,7 +1970,9 @@ O público diz quem recebe o evento, e basta uma das partes valer:
  *   grupo dela (change chat-com-chamados, design, decisão 4); com os `locais`, valem os dois;
  * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
  *   design, decisão 13);
- * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
+ * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão;
+ * - `sessoesDaAba`, `aparelhos` e `abas`: a aba dos colaboradores e o chat dentro dela, pela
+ *   sessão da aba, pelo aparelho ou em todos os aparelhos (change aba-dos-colaboradores).
  */
 export interface PublicoDoEvento {
   todas?: boolean;
@@ -1980,11 +1982,15 @@ export interface PublicoDoEvento {
   permissoes?: readonly Permissao[];
   contas?: readonly string[];
   sessoes?: readonly string[];
+  sessoesDaAba?: readonly string[];
+  aparelhos?: readonly string[];
+  abas?: boolean;
 }
 ```
 
 - **Por grupo:** a mudança que só os membros de um grupo veem, como a mensagem da equipe do chat, vai com a `permissao` e os `grupos`. A conexão guarda os grupos ativos da conta com o acesso dela, relidos no `acessos.mudaram` da entrada e da saída de um grupo, e quem sai do grupo deixa de receber dali em diante.
 - **Por conta:** quem vê o registro por outro caminho, sem a permissão, como a pessoa do chamado e quem o abriu pelo chat, entra pelas `contas`, no mesmo evento.
+- **Pela aba:** a aba dos colaboradores recebe os eventos pela conexão dela, fora das telas: `sessoesDaAba` para a pessoa entrada num computador, `aparelhos` para o computador e `abas` para todos os computadores da organização, como a configuração da aba.
 
 ## Valores coletados
 
