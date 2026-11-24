@@ -125,6 +125,34 @@ describe('o registro de um segredo na auditoria', () => {
     expect(entrada?.valor).toBe('Pelo Windows → Pela senha');
   });
 
+  it('a pessoa recusada na aba, com o motivo e o caso em texto', () => {
+    const registro = doAtivo({
+      acao: 'sessao-da-aba.recusada',
+      rotulo: 'Pessoa recusada na aba',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-FIN-09 (D4E5F6)', usuario: null },
+      antes: null,
+      depois: null,
+      dados: {
+        computador: 'PC-FIN-09',
+        pessoa: 'S-1-5-21-1-2-3-1107',
+        motivo: 'sem-grupo',
+        detalhe: 'desativada-no-ad',
+        usuario: 'carla.dias',
+        usuarioDoWindows: 'EMPRESA\\carla.dias',
+      },
+    });
+    const valores = Object.fromEntries(
+      camposDoDetalhe(registro, formatar).map((campo) => [campo.rotulo, campo.valor]),
+    );
+    expect(valores).toMatchObject({
+      'Pessoa pedida': 'S-1-5-21-1-2-3-1107',
+      Motivo: 'Sem acesso pelo AD',
+      Caso: 'Conta desativada no AD',
+      Usuário: 'carla.dias',
+      'Usuário do Windows': 'EMPRESA\\carla.dias',
+    });
+  });
+
   it('os dados do segredo pelo rótulo, com o tipo e a classificação em texto', () => {
     const registro = doSegredo({
       antes: { tipo: 'usuario-e-senha', classificacao: 'pessoal', identificador: 'adm' },

@@ -15,7 +15,7 @@ import {
   sessoesDaAba,
   type Transacao,
 } from '@grafite/db';
-import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNotNull } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { hashDoToken } from '../acesso/sessoes.ts';
@@ -65,6 +65,8 @@ const CONTATO_GRAVADO_A_CADA = 60_000;
 const MINUTO = 60_000;
 /** A mesma recusa do mesmo endereço vai à auditoria uma vez neste intervalo. */
 export const INTERVALO_DA_RECUSA_NA_AUDITORIA = 10 * MINUTO;
+/** O limite das recusas do token da sessão por endereço, o mesmo do limite geral. */
+const LIMITE_DAS_SESSOES_RECUSADAS = 600;
 /** Quantos endereços o contador das recusas guarda antes de recomeçar. */
 const ENDERECOS_CONTADOS = 10_000;
 
@@ -96,12 +98,17 @@ export const tokenDaAbaRecusado = () =>
     detalhe: 'Este computador precisa ser registrado de novo. Fale com a TI.',
   });
 
-export const sessaoDaAbaRecusada = () =>
+/**
+ * A sessão que não vale mais. A encerrada leva o motivo do fim, para a aba que perdeu o evento não
+ * pedir outra sozinha depois de 'outra-sessao-no-aparelho'; a vencida e a desconhecida vão sem.
+ */
+export const sessaoDaAbaRecusada = (motivoDoFim?: string) =>
   new ProblemaDaApi({
     codigo: 'sessao-da-aba-recusada',
     status: 401,
     titulo: 'Sessão da aba terminada',
     detalhe: 'A sessão da aba terminou.',
+    ...(motivoDoFim ? { extras: { motivoDoFim } } : {}),
   });
 
 export const aparelhoBloqueado = () =>
@@ -219,6 +226,9 @@ export function instalarAba(
   escopo.decorateRequest('aparelhoDaAba', null);
   escopo.decorateRequest('sessaoDaAba', null);
   const recusas = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
+  // As recusas do token da sessão, com o limite geral: a manhã com as sessões vencidas de uma
+  // filial atrás de um NAT passa, e o sorteio de tokens não.
+  const recusasDaSessao = new ContadorDeRecusas(LIMITE_DAS_SESSOES_RECUSADAS, MINUTO);
   escopo.addHook('onRequest', async (requisicao) => {
     if (requisicao.routeOptions.config?.semTokenDaAba) return;
     const token = tokenDoCabecalho(requisicao.headers.authorization);
@@ -226,10 +236,15 @@ export function instalarAba(
     if (!orgId) throw tokenDaAbaRecusado();
     const momento = agora();
     if (requisicao.routeOptions.config?.daSessaoDaAba) {
-      // A sessão vencida é rotina, e a recusa dela fica fora do contador e da auditoria.
+      // A sessão vencida é rotina: a recusa dela fica fora da auditoria e conta no limite geral.
+      const espera = recusasDaSessao.espera(requisicao.ip, momento.getTime());
+      if (espera !== null) throw muitasRecusas(espera);
       const daSessao = token ? await sessaoDoToken(banco, orgId, token, momento) : null;
-      if (!daSessao) throw sessaoDaAbaRecusada();
       if (daSessao === 'bloqueado') throw aparelhoBloqueado();
+      if (!daSessao || 'encerrada' in daSessao) {
+        recusasDaSessao.contar(requisicao.ip, momento.getTime());
+        throw sessaoDaAbaRecusada(daSessao?.encerrada ?? undefined);
+      }
       requisicao.sessaoDaAba = daSessao.sessao;
       requisicao.aparelhoDaAba = daSessao.aparelho;
       return;
@@ -363,7 +378,12 @@ async function sessaoDoToken(
   orgId: string,
   token: string,
   momento: Date,
-): Promise<{ sessao: SessaoDaRequisicao; aparelho: AparelhoDaRequisicao } | 'bloqueado' | null> {
+): Promise<
+  | { sessao: SessaoDaRequisicao; aparelho: AparelhoDaRequisicao }
+  | { encerrada: string | null }
+  | 'bloqueado'
+  | null
+> {
   const [linha] = await naOrganizacao(banco, orgId, (tx) =>
     tx
       .select({ sessao: sessoesDaAba, aparelho: aparelhosDaAba })
@@ -376,15 +396,12 @@ async function sessaoDoToken(
         ),
       )
       .where(
-        and(
-          eq(sessoesDaAba.tokenHash, hashDoToken(token)),
-          isNull(sessoesDaAba.encerradaEm),
-          isNotNull(sessoesDaAba.ativadaEm),
-          gt(sessoesDaAba.expiraEm, momento),
-        ),
+        and(eq(sessoesDaAba.tokenHash, hashDoToken(token)), isNotNull(sessoesDaAba.ativadaEm)),
       ),
   );
   if (!linha) return null;
+  if (linha.sessao.encerradaEm !== null) return { encerrada: linha.sessao.motivoDoFim };
+  if (linha.sessao.expiraEm <= momento) return { encerrada: null };
   if (linha.aparelho.bloqueadoEm !== null) return 'bloqueado';
   const { sessao, aparelho } = linha;
   return {

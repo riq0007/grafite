@@ -131,24 +131,36 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
       exigirEntrada(aparelho, 'windows');
       const orgId = organizacao.id;
       const { sid, usuarioDoWindows } = requisicao.body;
-      const momento = agora();
       const origem = origemDa(requisicao);
       const doWindows = usuarioDoWindows ? { usuarioDoWindows } : {};
-      const recusar = async (motivo: MotivoSemConexao, detalhe: DetalheDaRecusa | 'teto') => {
-        await naOrganizacao(banco, orgId, (tx) =>
-          auditarPessoaRecusada(tx, {
-            aparelho,
-            motivo,
-            pessoa: sid,
-            dados: { detalhe, ...doWindows },
-            origem,
-            momento,
-          }),
-        );
+      const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
+      // Lido depois do AD, que pode levar segundos: a validade conta do fim da conferência.
+      const momento = agora();
+      const recusar = async (
+        motivo: MotivoSemConexao,
+        detalhe: DetalheDaRecusa | 'teto',
+        quem?: { usuario: string; nome: string },
+      ) => {
+        // O AD fora do ar não é da pessoa: fica só no aviso do log, e não um registro por computador.
+        if (motivo !== 'ti-fora-do-alcance') {
+          await naOrganizacao(banco, orgId, (tx) =>
+            auditarPessoaRecusada(tx, {
+              aparelho,
+              motivo,
+              // O SID fora da forma não vai inteiro: é o que o cliente mandou, até 200 caracteres.
+              pessoa: detalhe === 'sid-fora-da-forma' ? 'fora-da-forma' : sid,
+              dados: { detalhe, ...quem, ...doWindows },
+              origem,
+              momento,
+            }),
+          );
+        }
         return pessoaRecusada(motivo);
       };
-      const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
-      if (pessoa.tipo === 'recusada') throw await recusar(pessoa.motivo, pessoa.detalhe);
+      if (pessoa.tipo === 'recusada') {
+        throw await recusar(pessoa.motivo, pessoa.detalhe, pessoa.quem);
+      }
+      const quem = { usuario: pessoa.usuario, nome: pessoa.aceita.usuario.nome };
       const abrir = () =>
         naOrganizacao(banco, orgId, async (tx) => {
           // A conta pode ter mudado entre a conferência e a transação.
@@ -167,7 +179,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             contaId,
             aparelho,
             entrada: 'windows',
-            dados: { sid, ...doWindows },
+            dados: { pessoa: sid, sid, ...doWindows },
             origem,
             momento,
           });
@@ -185,23 +197,25 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             nome: dono?.nome ?? pessoa.aceita.usuario.nome,
           } as const;
         });
+      // Duas entradas ao mesmo tempo: a da mesma sessão no aparelho, ou a primeira da mesma conta.
+      const aoMesmoTempo = (erro: unknown) =>
+        violouUnicidade(erro, 'sessoes_da_aba_uma_aberta_por_conta_e_aparelho') ||
+        violouUnicidade(erro, 'contas_usuario_unico');
       let resultado: Awaited<ReturnType<typeof abrir>>;
       try {
         resultado = await abrir();
       } catch (erro) {
-        if (!violouUnicidade(erro, 'sessoes_da_aba_uma_aberta_por_conta_e_aparelho')) throw erro;
+        if (!aoMesmoTempo(erro)) throw erro;
         // A outra entrada ganhou: esta encerra a dela e abre de novo, uma vez.
         try {
           resultado = await abrir();
         } catch (deNovo) {
-          if (violouUnicidade(deNovo, 'sessoes_da_aba_uma_aberta_por_conta_e_aparelho')) {
-            throw outraSessaoAoMesmoTempo();
-          }
+          if (aoMesmoTempo(deNovo)) throw outraSessaoAoMesmoTempo();
           throw deNovo;
         }
       }
       if (resultado.tipo === 'recusada') {
-        throw await recusar(resultado.motivo, resultado.detalhe);
+        throw await recusar(resultado.motivo, resultado.detalhe, quem);
       }
       return {
         token: resultado.token,
@@ -227,9 +241,9 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
       exigirEntrada(aparelho, 'windows');
       const orgId = organizacao.id;
       const { sid } = requisicao.body;
-      const momento = agora();
       const origem = origemDa(requisicao);
       const pessoa = await conferir(orgId, sid, (dados, msg) => requisicao.log.warn(dados, msg));
+      const momento = agora();
       // O AD fora do alcance não encerra a sessão: ela vale até vencer, e a aba tenta de novo.
       if (pessoa.tipo === 'recusada' && pessoa.motivo === 'ti-fora-do-alcance') {
         throw pessoaRecusada(pessoa.motivo);
@@ -256,6 +270,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
           await encerrarSessaoDaAba(tx, {
             sessaoId: sessao.id,
             contaId: sessao.contaId,
+            usuario: conta?.usuario ?? null,
             aparelho,
             motivo: 'pessoa-recusada',
             dados: { recusa: motivo, detalhe, sid },

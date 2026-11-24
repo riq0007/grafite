@@ -8,12 +8,18 @@ import type { MotivoSemConexao } from '@grafite/domain';
 import { and, desc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
 import { hashDoToken } from '../acesso/sessoes.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
-import type { AparelhoDaRequisicao, EntradaDaAba } from './escopo.ts';
+import {
+  type AparelhoDaRequisicao,
+  type EntradaDaAba,
+  INTERVALO_DA_RECUSA_NA_AUDITORIA,
+} from './escopo.ts';
 
 /** A validade da sessão da aba, que o serviço renova antes de vencer. */
 export const VALIDADE_DA_SESSAO_DA_ABA = 60 * 60_000;
 /** A janela do teto de contas do aparelho. */
 export const JANELA_DO_TETO = 24 * 60 * 60_000;
+/** Quantas pessoas recusadas um aparelho põe na auditoria a cada 10 minutos, no máximo. */
+const RECUSAS_DO_APARELHO_NA_AUDITORIA = 20;
 
 export interface OrigemDaAba {
   ip: string;
@@ -45,6 +51,8 @@ export async function passouDoTeto(
     .where(
       and(
         eq(sessoesDaAba.aparelhoId, aparelho.id),
+        // Só as pelo Windows: o aparelho que mudou da senha no mesmo dia não chega ao teto.
+        eq(sessoesDaAba.entrada, 'windows'),
         gt(sessoesDaAba.criadaEm, desde),
         or(isNull(contas.usuario), ne(contas.usuario, usuario)),
       ),
@@ -75,26 +83,34 @@ export async function auditarPessoaRecusada(
     momento: Date;
   },
 ) {
+  const doAparelho = and(
+    eq(auditoria.alvoTipo, 'aparelho-da-aba'),
+    eq(auditoria.alvoId, aparelho.id),
+  );
+  // O último registro desta pessoa no aparelho, a recusa ou a sessão aberta dela.
   const [ultima] = await tx
     .select({ acao: auditoria.acao, dados: auditoria.dados })
     .from(auditoria)
     .where(
       and(
-        eq(auditoria.alvoTipo, 'aparelho-da-aba'),
-        eq(auditoria.alvoId, aparelho.id),
+        doAparelho,
         inArray(auditoria.acao, ['sessao-da-aba.recusada', 'sessao-da-aba.aberta']),
+        sql`${auditoria.dados}->>'pessoa' = ${pessoa}`,
       ),
     )
     .orderBy(desc(auditoria.momento), desc(auditoria.id))
     .limit(1);
-  const anteriores = ultima?.dados as { motivo?: unknown; pessoa?: unknown } | null | undefined;
-  if (
-    ultima?.acao === 'sessao-da-aba.recusada' &&
-    anteriores?.motivo === motivo &&
-    anteriores?.pessoa === pessoa
-  ) {
-    return;
-  }
+  const anteriores = ultima?.dados as { motivo?: unknown } | null | undefined;
+  if (ultima?.acao === 'sessao-da-aba.recusada' && anteriores?.motivo === motivo) return;
+  // E um teto por aparelho, para os pedidos que nunca repetem a pessoa.
+  const desde = new Date(momento.getTime() - INTERVALO_DA_RECUSA_NA_AUDITORIA);
+  const [recentes] = await tx
+    .select({ quantas: sql<number>`count(*)::int` })
+    .from(auditoria)
+    .where(
+      and(doAparelho, eq(auditoria.acao, 'sessao-da-aba.recusada'), gt(auditoria.momento, desde)),
+    );
+  if ((recentes?.quantas ?? 0) >= RECUSAS_DO_APARELHO_NA_AUDITORIA) return;
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.recusada',
     ator: { tipo: 'anonimo' },
@@ -199,6 +215,7 @@ export async function encerrarSessaoDaAba(
   {
     sessaoId,
     contaId,
+    usuario,
     aparelho,
     motivo,
     dados,
@@ -207,6 +224,7 @@ export async function encerrarSessaoDaAba(
   }: {
     sessaoId: string;
     contaId: string;
+    usuario: string | null;
     aparelho: AparelhoDaRequisicao;
     motivo: 'pessoa-recusada';
     dados?: Record<string, unknown>;
@@ -227,7 +245,8 @@ export async function encerrarSessaoDaAba(
     dados: {
       computador: aparelho.nome,
       identificador: aparelho.identificadorCurto,
-      conta: contaId,
+      contaId,
+      usuario,
       motivo,
       ...dados,
     },

@@ -33,7 +33,13 @@ export type DetalheDaRecusa =
   | 'sem-grupo-mapeado';
 
 export type PessoaPeloSid =
-  | { tipo: 'recusada'; motivo: RecusaDaPessoaPeloSid; detalhe: DetalheDaRecusa }
+  | {
+      tipo: 'recusada';
+      motivo: RecusaDaPessoaPeloSid;
+      detalhe: DetalheDaRecusa;
+      /** Quem o AD achou, quando achou: a auditoria diz quem é, e não só o SID. */
+      quem?: { usuario: string; nome: string };
+    }
   | {
       tipo: 'aceita';
       /** O usuário da conta, normalizado. */
@@ -41,8 +47,11 @@ export type PessoaPeloSid =
       aceita: Extract<ConferenciaNoDiretorio, { tipo: 'aceita' }>;
     };
 
-const recusa = (motivo: RecusaDaPessoaPeloSid, detalhe: DetalheDaRecusa) =>
-  ({ tipo: 'recusada', motivo, detalhe }) as const;
+const recusa = (
+  motivo: RecusaDaPessoaPeloSid,
+  detalhe: DetalheDaRecusa,
+  quem?: { usuario: string; nome: string },
+) => ({ tipo: 'recusada', motivo, detalhe, ...(quem ? { quem } : {}) }) as const;
 
 /**
  * A conta do Grafite com o usuário, se houver, que não entra pela aba: a local, com a mesma frase da
@@ -101,13 +110,15 @@ export async function conferirPessoaPeloSid(
     return recusa('ti-fora-do-alcance', 'ad-fora-do-ar');
   }
   if (!achado) return recusa('usuario-de-fora', 'sid-fora-do-diretorio');
-  if (validarUsuario(achado.usuario) !== null)
-    return recusa('usuario-de-fora', 'usuario-nao-serve');
+  const quem = { usuario: achado.usuario, nome: achado.nome };
+  if (validarUsuario(achado.usuario) !== null) {
+    return recusa('usuario-de-fora', 'usuario-nao-serve', quem);
+  }
   const usuario = normalizarUsuario(achado.usuario);
   const daConta = await naOrganizacao(banco, orgId, (tx) => recusaDaConta(tx, usuario));
-  if (daConta) return recusa(daConta, daConta);
-  if (!achado.ativa) return recusa('sem-grupo', 'desativada-no-ad');
+  if (daConta) return recusa(daConta, daConta, quem);
+  if (!achado.ativa) return recusa('sem-grupo', 'desativada-no-ad', quem);
   const aceita = aceitaComOsGrupos(achado, preparo.mapeamentos);
-  if (!aceita) return recusa('sem-grupo', 'sem-grupo-mapeado');
+  if (!aceita) return recusa('sem-grupo', 'sem-grupo-mapeado', quem);
   return { tipo: 'aceita', usuario, aceita };
 }

@@ -191,7 +191,10 @@ describe('a sessão pelo Windows', () => {
     const primeira = (await abrir(fin.token, SID.fernanda)).json().token;
     const segunda = (await abrir(fin.token, SID.fernanda)).json().token;
     expect(await sessaoDo(primeira)).toMatchObject({ motivoDoFim: 'outra-sessao-no-aparelho' });
-    expect((await renovar(primeira, SID.fernanda)).statusCode).toBe(401);
+    const recusada = await renovar(primeira, SID.fernanda);
+    expect(recusada.statusCode).toBe(401);
+    // O motivo do fim vai junto: a aba que perdeu o evento não pede outra sozinha.
+    expect(recusada.json()).toMatchObject({ motivoDoFim: 'outra-sessao-no-aparelho' });
     expect((await renovar(segunda, SID.fernanda)).statusCode).toBe(200);
   });
 
@@ -252,7 +255,13 @@ describe('a renovação', () => {
     const r = await abrir(pc.token, 'S-1-5-21-1004336348-1177238915-682003330-1112');
     expect(r.json()).toMatchObject({ motivo: 'sem-grupo' });
     expect((await acoes('sessao-da-aba.recusada')).at(-1)).toMatchObject({
-      dados: { computador: 'PC-CARLA', motivo: 'sem-grupo', detalhe: 'desativada-no-ad' },
+      dados: {
+        computador: 'PC-CARLA',
+        motivo: 'sem-grupo',
+        detalhe: 'desativada-no-ad',
+        usuario: 'carla.dias',
+        nome: 'Carla Dias',
+      },
     });
   });
 
@@ -295,6 +304,33 @@ describe('as recusas', () => {
       (linha) => (linha.dados as { computador?: string }).computador === 'PC-LOCAL',
     );
     expect(recusas).toMatchObject([{ dados: { motivo: 'usuario-de-fora', pessoa: SID.local } }]);
+  });
+
+  it('duas pessoas recusadas alternando no mesmo aparelho ficam uma vez cada na auditoria', async () => {
+    const rdp = await registrar('guid-rdp', 'SRV-RDP-01');
+    const outro = 'S-1-5-21-3623811015-3361044348-30300820-1014';
+    for (const sid of [SID.local, outro, SID.local, outro]) {
+      expect((await abrir(rdp.token, sid)).statusCode).toBe(403);
+    }
+    const doRdp = (await acoes('sessao-da-aba.recusada')).filter(
+      (linha) => (linha.dados as { computador?: string }).computador === 'SRV-RDP-01',
+    );
+    expect(doRdp.map((linha) => (linha.dados as { pessoa?: string }).pessoa)).toEqual([
+      SID.local,
+      outro,
+    ]);
+  });
+
+  it('o AD fora do ar não vai à auditoria como pessoa recusada', async () => {
+    const pc = await registrar('guid-queda', 'PC-QUEDA');
+    ad.estado.foraDoAr = true;
+    expect((await abrir(pc.token, SID.fernanda)).statusCode).toBe(503);
+    ad.estado.foraDoAr = false;
+    api.relogio.avancar(31_000);
+    const daQueda = (await acoes('sessao-da-aba.recusada')).filter(
+      (linha) => (linha.dados as { computador?: string }).computador === 'PC-QUEDA',
+    );
+    expect(daQueda).toEqual([]);
   });
 
   it('o aparelho com a entrada pela senha recusa o pedido pelo SID', async () => {

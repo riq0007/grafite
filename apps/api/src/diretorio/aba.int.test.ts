@@ -129,7 +129,7 @@ describe('a pessoa aceita', () => {
 
 describe('as recusas, sem conta criada', () => {
   it('Usuário local do Windows: o SID fora do diretório', async () => {
-    expect(await conferir(SID.local)).toEqual({
+    expect(await conferir(SID.local)).toMatchObject({
       tipo: 'recusada',
       motivo: 'usuario-de-fora',
       detalhe: 'sid-fora-do-diretorio',
@@ -141,7 +141,7 @@ describe('as recusas, sem conta criada', () => {
 
   it('o SID fora da forma não chega ao AD', async () => {
     const antes = ad.estado.acessos.length;
-    expect(await conferir('S-1-5-21-1)(objectClass=*')).toEqual({
+    expect(await conferir('S-1-5-21-1)(objectClass=*')).toMatchObject({
       tipo: 'recusada',
       motivo: 'usuario-de-fora',
       detalhe: 'sid-fora-da-forma',
@@ -150,7 +150,7 @@ describe('as recusas, sem conta criada', () => {
   });
 
   it('o usuário do AD que não serve de usuário do Grafite tem a mesma frase', async () => {
-    expect(await conferir(SID.invalido)).toEqual({
+    expect(await conferir(SID.invalido)).toMatchObject({
       tipo: 'recusada',
       motivo: 'usuario-de-fora',
       detalhe: 'usuario-nao-serve',
@@ -202,15 +202,16 @@ describe('as recusas, sem conta criada', () => {
   });
 
   it('sem grupo mapeado, e a conta desativada no AD, com a frase da entrada pelo diretório', async () => {
-    expect(await conferir(SID.semGrupo)).toEqual({
+    expect(await conferir(SID.semGrupo)).toMatchObject({
       tipo: 'recusada',
       motivo: 'sem-grupo',
       detalhe: 'sem-grupo-mapeado',
     });
-    expect(await conferir(SID.desativada)).toEqual({
+    expect(await conferir(SID.desativada)).toMatchObject({
       tipo: 'recusada',
       motivo: 'sem-grupo',
       detalhe: 'desativada-no-ad',
+      quem: { usuario: 'carla.dias', nome: 'Carla Dias' },
     });
     expect(FRASES_SEM_CONEXAO['sem-grupo']).toBe(
       'Seu usuário do AD não tem acesso ao Grafite. Peça a liberação a quem administra os acessos.',
