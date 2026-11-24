@@ -1,6 +1,8 @@
-// O AD em memória dos testes de integração (change integracao-ad-ldap, design, decisão 1): os
-// usuários com a senha e o userAccountControl, os grupos com os membros, o memberOf calculado, a
-// conta de serviço conferida e o AD fora do ar. Ele cumpre o mesmo ClienteDoDiretorio do ldapts.
+// O AD em memória (change integracao-ad-ldap, design, decisão 1): os usuários com a senha, o SID e o
+// userAccountControl, os grupos com os membros, o memberOf calculado, a conta de serviço conferida
+// e o AD fora do ar. Ele cumpre o mesmo ClienteDoDiretorio do ldapts. Servem dele os testes de
+// integração e o diretório de desenvolvimento do `pnpm dev` (change aba-dos-colaboradores, design,
+// decisão 13), que a API só carrega com a GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO.
 import { comSituacaoNoAd, contaAtivaNoAd, normalizarDn } from '@grafite/domain';
 import {
   type AcessoAoDiretorio,
@@ -8,7 +10,7 @@ import {
   FalhaDoDiretorio,
   type GrupoDoDiretorio,
   type UsuarioDoDiretorio,
-} from '../src/diretorio/cliente.ts';
+} from './cliente.ts';
 
 interface UsuarioNoAd {
   dn: string;
@@ -16,6 +18,8 @@ interface UsuarioNoAd {
   nome: string;
   email: string | null;
   senha: string;
+  /** O objectSid em texto, como S-1-5-21-…, ou `null` sem ele. */
+  sid: string | null;
   controle: number;
 }
 
@@ -25,12 +29,12 @@ interface GrupoNoAd {
   membros: Set<string>;
 }
 
-export const CONTA_DE_SERVICO_DE_TESTE = {
+export const CONTA_DE_SERVICO_SIMULADA = {
   usuario: 'svc_grafite@empresa.local',
   senha: 'senha-do-servico',
 };
 
-export function criarAdDeTeste() {
+export function criarDiretorioSimulado() {
   const usuarios = new Map<string, UsuarioNoAd>();
   const grupos = new Map<string, GrupoNoAd>();
   const estado = {
@@ -86,8 +90,8 @@ export function criarAdDeTeste() {
         throw new FalhaDoDiretorio('certificado');
       }
       if (
-        acesso.conta.usuario !== CONTA_DE_SERVICO_DE_TESTE.usuario ||
-        acesso.conta.senha !== CONTA_DE_SERVICO_DE_TESTE.senha
+        acesso.conta.usuario !== CONTA_DE_SERVICO_SIMULADA.usuario ||
+        acesso.conta.senha !== CONTA_DE_SERVICO_SIMULADA.senha
       ) {
         throw new FalhaDoDiretorio('conta-recusada');
       }
@@ -178,6 +182,7 @@ export function criarAdDeTeste() {
       senha: string;
       email?: string;
       ativa?: boolean;
+      sid?: string;
     }): string {
       const dn = `CN=${dados.nome},OU=Usuarios,DC=empresa,DC=local`;
       usuarios.set(normalizarDn(dn), {
@@ -186,6 +191,7 @@ export function criarAdDeTeste() {
         nome: dados.nome,
         email: dados.email ?? null,
         senha: dados.senha,
+        sid: dados.sid ?? null,
         controle: comSituacaoNoAd(512, dados.ativa ?? true),
       });
       return dn;
@@ -217,4 +223,4 @@ export function criarAdDeTeste() {
   };
 }
 
-export type AdDeTeste = ReturnType<typeof criarAdDeTeste>;
+export type DiretorioSimulado = ReturnType<typeof criarDiretorioSimulado>;

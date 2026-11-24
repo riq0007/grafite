@@ -24,6 +24,8 @@ export interface GrupoDoDiretorio {
 
 /** A configuração do diretório com a conta de serviço já aberta do Cofre. */
 export interface AcessoAoDiretorio {
+  /** A organização dona da configuração, que o diretório de desenvolvimento confere. */
+  orgId: string;
   servidor: string;
   baseDn: string;
   atributoDoUsuario: string;

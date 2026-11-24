@@ -44,6 +44,30 @@ describe('carregarConfiguracao', () => {
     });
   });
 
+  // O diretório de desenvolvimento (change aba-dos-colaboradores, design, decisão 13): o AD simulado
+  // só liga no desenvolvimento, e a variável fora dele reprova a partida.
+  it('o diretório de desenvolvimento liga só no ambiente de desenvolvimento', () => {
+    const ligado = { GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO: '1' };
+    expect(
+      carregarConfiguracao({ ...minima, ...ligado, GRAFITE_AMBIENTE: 'desenvolvimento' }),
+    ).toMatchObject({ diretorioDeDesenvolvimento: true });
+    for (const ambiente of ['producao', 'teste']) {
+      const erro = erroDe({ ...minima, ...ligado, GRAFITE_AMBIENTE: ambiente });
+      expect(erro?.variaveis).toEqual(['GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO']);
+      expect(erro?.message).toContain(
+        'GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO: só vale no ambiente de desenvolvimento',
+      );
+    }
+    expect(
+      erroDe({
+        ...minima,
+        GRAFITE_AMBIENTE: 'desenvolvimento',
+        GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO: 'sim',
+      })?.variaveis,
+    ).toEqual(['GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO']);
+    expect(carregarConfiguracao(minima)).not.toHaveProperty('diretorioDeDesenvolvimento');
+  });
+
   it('a pasta dos arquivos é obrigatória, e a relativa vale a partir da pasta atual', () => {
     const { GRAFITE_ARQUIVOS_PASTA: _, ...semPasta } = minima;
     expect(() => carregarConfiguracao(semPasta)).toThrow(/GRAFITE_ARQUIVOS_PASTA: obrigatória/);

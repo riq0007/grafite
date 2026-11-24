@@ -96,6 +96,8 @@ export interface Configuracao {
   origemDosLinks?: string;
   /** As origens de serviços de push aceitas além das dos navegadores, como a falsa dos testes. */
   servicosDePushExtras?: string[];
+  /** O AD simulado do `pnpm dev` (change aba-dos-colaboradores, design, decisão 13). */
+  diretorioDeDesenvolvimento?: true;
 }
 
 /** Base64 de exatamente 32 bytes: 43 caracteres e um `=` de preenchimento. */
@@ -305,8 +307,20 @@ const esquema = z
       })
       .transform((origens) => origens.map((origem) => new URL(origem).origin))
       .optional(),
+    GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO: z.enum(['1'], { error: 'deve ser 1' }).optional(),
   })
   .superRefine((env, contexto) => {
+    if (
+      env.GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO !== undefined &&
+      env.GRAFITE_AMBIENTE !== 'desenvolvimento'
+    ) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO'],
+        message:
+          'só vale no ambiente de desenvolvimento (o diretório simulado nunca liga na produção nem no teste)',
+      });
+    }
     const anterior = env.GRAFITE_CHAVE_DO_COFRE_ANTERIOR;
     if (
       anterior !== undefined &&
@@ -427,5 +441,6 @@ export function carregarConfiguracao(env: Record<string, string | undefined>): C
     ...(noTeste && (email || push) && { canaisIgnoradosNoTeste: true }),
     origemDosLinks: dados.GRAFITE_ORIGEM_DOS_LINKS,
     servicosDePushExtras: dados.GRAFITE_PUSH_SERVICOS_EXTRAS,
+    ...(dados.GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO === '1' && { diretorioDeDesenvolvimento: true }),
   };
 }

@@ -4,17 +4,33 @@
 // seguem em ordem, sobre a mesma organização, como execuções seguidas do `pnpm dev`.
 import {
   auditoria,
+  chavesDaAba,
   contas,
+  diretorios,
   enderecosDeAcesso,
+  grupos,
+  mapeamentosDoDiretorio,
   naOrganizacao,
+  perfis,
   tentativasDeEntrada,
 } from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
 import { type ApiDeTeste, abrirApi, clienteDaApi, novoIp } from '../../test/integracao.ts';
 import { organizacaoDoEndereco } from '../acesso/organizacao.ts';
 import { conferirSenha, gerarHashDaSenha } from '../acesso/senhas.ts';
-import { garantirSenhaDeDesenvolvimento } from './desenvolvimento.ts';
+import { hashDoToken } from '../acesso/sessoes.ts';
+import {
+  conectarDiretorioDeDesenvolvimento,
+  GRUPO_DO_AD_DE_DESENVOLVIMENTO,
+  SENHA_DA_ABA_DE_DESENVOLVIMENTO,
+  SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO,
+} from '../diretorio/desenvolvimento.ts';
+import {
+  garantirDiretorioDeDesenvolvimento,
+  garantirSenhaDeDesenvolvimento,
+} from './desenvolvimento.ts';
 import { ErroDoComando } from './erros.ts';
 import { criarOrganizacao } from './organizacao.ts';
 
@@ -155,5 +171,120 @@ describe('a senha de desenvolvimento', () => {
     const antes = await situacao();
     await expect(garantir()).rejects.toThrow(deVerdade);
     expect(await situacao()).toEqual(antes);
+  });
+});
+
+// O diretório de desenvolvimento (change aba-dos-colaboradores, design, decisão 13): o `pnpm dev`
+// liga na mesma organização o AD simulado, com o grupo mapeado ao chat e a chave da aba do .env.
+describe('o diretório de desenvolvimento', () => {
+  const CHAVE_DA_ABA = 'chave-da-aba-de-desenvolvimento-de-teste';
+  const QUEM = { usuario: 'fernanda.lima', sid: 'S-1-5-21-1004336348-1177238915-682003330-1001' };
+
+  const garantirODiretorio = (nodeEnv = 'development') =>
+    garantirDiretorioDeDesenvolvimento({
+      banco: () => api.banco,
+      agora: api.relogio.agora,
+      nodeEnv,
+      chavesDoCofre: CHAVES_DO_COFRE_DE_TESTE,
+      chaveDaAba: CHAVE_DA_ABA,
+    });
+
+  const oQueTem = () =>
+    naOrganizacao(api.banco, orgId, async (tx) => ({
+      diretorios: await tx.select().from(diretorios),
+      mapeamentos: await tx
+        .select({ grupoDn: mapeamentosDoDiretorio.grupoDn, grupo: grupos.nome })
+        .from(mapeamentosDoDiretorio)
+        .innerJoin(grupos, eq(grupos.id, mapeamentosDoDiretorio.grupoId)),
+      chaves: await tx.select({ hash: chavesDaAba.hash }).from(chavesDaAba),
+      perfis: await tx
+        .select({ nome: perfis.nome, permissoes: perfis.permissoes })
+        .from(perfis)
+        .where(eq(perfis.nome, 'Colaborador da aba')),
+    }));
+
+  it('em produção, recusa antes de abrir o banco', async () => {
+    const recusa = garantirDiretorioDeDesenvolvimento({
+      banco: () => {
+        throw new Error('O banco não devia ser aberto em produção.');
+      },
+      agora: api.relogio.agora,
+      nodeEnv: 'production',
+      chavesDoCofre: CHAVES_DO_COFRE_DE_TESTE,
+      chaveDaAba: CHAVE_DA_ABA,
+    });
+    await expect(recusa).rejects.toThrow(/produção/);
+  });
+
+  it('a organização com um endereço que não é local é recusada, sem nada gravado', async () => {
+    await expect(garantirODiretorio()).rejects.toThrow('grafite.desenvolvimento.example');
+    expect(await oQueTem()).toEqual({ diretorios: [], mapeamentos: [], chaves: [], perfis: [] });
+    await naOrganizacao(api.banco, orgId, (tx) =>
+      tx
+        .delete(enderecosDeAcesso)
+        .where(eq(enderecosDeAcesso.endereco, 'grafite.desenvolvimento.example')),
+    );
+  });
+
+  it('liga o diretório simulado, o grupo com o chat e a chave da aba', async () => {
+    expect(await garantirODiretorio()).toBe('gravado');
+    const tem = await oQueTem();
+    expect(tem.diretorios).toMatchObject([
+      {
+        servidor: SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO,
+        ligado: true,
+        conferirCertificado: false,
+      },
+    ]);
+    expect(tem.mapeamentos).toEqual([
+      { grupoDn: GRUPO_DO_AD_DE_DESENVOLVIMENTO, grupo: 'Colaboradores' },
+    ]);
+    expect(tem.perfis).toEqual([{ nome: 'Colaborador da aba', permissoes: ['chat.usar'] }]);
+    expect(tem.chaves).toEqual([{ hash: hashDoToken(CHAVE_DA_ABA) }]);
+  });
+
+  it('na segunda vez, nada é gravado de novo', async () => {
+    const antes = await oQueTem();
+    expect(await garantirODiretorio()).toBe('mantido');
+    expect(await oQueTem()).toEqual(antes);
+  });
+
+  it('quem desenvolve entra pelo diretório com a senha da aba, e ganha o grupo do chat', async () => {
+    const comODiretorio = await abrirApi({
+      conectarDiretorio: conectarDiretorioDeDesenvolvimento({
+        quem: QUEM,
+        enderecosDa: async () => ['localhost', '127.0.0.1'],
+        outro: () => {
+          throw new Error('Só o diretório simulado devia atender.');
+        },
+        avisar: () => {},
+      }),
+    });
+    try {
+      const entrada = await comODiretorio.app.inject({
+        method: 'POST',
+        url: '/sessao',
+        remoteAddress: novoIp(),
+        headers: { host: 'localhost', 'sec-fetch-site': 'same-origin' },
+        payload: { usuario: 'fernanda.lima', senha: SENHA_DA_ABA_DE_DESENVOLVIMENTO },
+      });
+      expect(entrada.statusCode).toBe(200);
+    } finally {
+      await comODiretorio.fechar();
+    }
+  });
+
+  it('com outro diretório ligado, ele fica como está; desligado, dá lugar ao simulado', async () => {
+    await naOrganizacao(api.banco, orgId, (tx) =>
+      tx.update(diretorios).set({ servidor: 'ldaps://dc01.empresa.local' }),
+    );
+    expect(await garantirODiretorio()).toBe('outro-diretorio');
+    expect((await oQueTem()).diretorios[0]?.servidor).toBe('ldaps://dc01.empresa.local');
+
+    await naOrganizacao(api.banco, orgId, (tx) => tx.update(diretorios).set({ ligado: false }));
+    expect(await garantirODiretorio()).toBe('gravado');
+    expect((await oQueTem()).diretorios).toMatchObject([
+      { servidor: SERVIDOR_DO_DIRETORIO_DE_DESENVOLVIMENTO, ligado: true },
+    ]);
   });
 });

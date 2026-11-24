@@ -56,6 +56,7 @@ export async function abrirContaDeServico(
 export function acessoAoDiretorio(
   configuracao: Pick<
     LinhaDoDiretorio,
+    | 'orgId'
     | 'servidor'
     | 'baseDn'
     | 'atributoDoUsuario'
@@ -66,6 +67,7 @@ export function acessoAoDiretorio(
   conta: { usuario: string; senha: string },
 ): AcessoAoDiretorio {
   return {
+    orgId: configuracao.orgId,
     servidor: configuracao.servidor,
     baseDn: configuracao.baseDn,
     atributoDoUsuario: configuracao.atributoDoUsuario,

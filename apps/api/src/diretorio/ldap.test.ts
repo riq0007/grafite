@@ -63,6 +63,7 @@ vi.mock('ldapts', async (original) => {
 const { conectarPeloLdap } = await import('./ldap.ts');
 
 const ACESSO = {
+  orgId: '019a8000-0000-7000-8000-0000000000a1',
   servidor: 'ldaps://dc01.empresa.local',
   baseDn: 'DC=empresa,DC=local',
   atributoDoUsuario: 'sAMAccountName',

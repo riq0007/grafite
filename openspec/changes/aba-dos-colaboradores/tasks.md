@@ -36,7 +36,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 3. API
 
-- [ ] 3.1 O diretório de desenvolvimento (decisão 13):
+- [x] 3.1 O diretório de desenvolvimento (decisão 13):
   - o AD falso num módulo próprio, que os testes e o `pnpm dev` usam;
   - a `GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO`, recusada na validação da configuração da produção e, por organização, onde o diretório simulado atende, na organização com endereço de verdade;
   - o `dev.ts`, com o SID e o usuário de quem roda, o grupo mapeado, a senha `aba123` e a chave da aba de desenvolvimento no `.env`.

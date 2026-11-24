@@ -1,5 +1,5 @@
 // Ponto de entrada da API. A configuração vem do ambiente e é validada antes de tudo.
-import { criarBanco } from '@grafite/db';
+import { criarBanco, enderecosDeAcesso, naOrganizacao } from '@grafite/db';
 import pg from 'pg';
 import pacote from '../package.json' with { type: 'json' };
 import { criarApp } from './app.ts';
@@ -9,6 +9,8 @@ import { criarPoolDoBanco } from './banco.ts';
 import { criarCarteiroDeEmail } from './canais/email.ts';
 import { criarEntregadorDePush } from './canais/push.ts';
 import { type Configuracao, carregarConfiguracao, ErroDeConfiguracao } from './config.ts';
+import type { ConectarDiretorio } from './diretorio/cliente.ts';
+import { conectarPeloLdap } from './diretorio/ldap.ts';
 import { FilaSemEsquema } from './fila/fila.ts';
 import { tarefasDaApi } from './fila/tarefas.ts';
 
@@ -27,6 +29,31 @@ try {
 const pool = criarPoolDoBanco(config.urlBanco, (erro) =>
   app.log.warn({ err: erro }, 'conexão com o banco perdida'),
 );
+const banco = criarBanco(pool);
+
+/**
+ * O diretório de desenvolvimento (change aba-dos-colaboradores, design, decisão 13): o módulo só é
+ * carregado com a variável, que a configuração recusa fora do desenvolvimento.
+ */
+async function conectarDiretorio(): Promise<ConectarDiretorio> {
+  if (!config.diretorioDeDesenvolvimento) return conectarPeloLdap;
+  const desenvolvimento = await import('./diretorio/desenvolvimento.ts');
+  const quem = desenvolvimento.usuarioDoWindowsAtual();
+  if (!quem) {
+    console.warn('O diretório de desenvolvimento pede o Windows, que diz o usuário e o SID.');
+    return conectarPeloLdap;
+  }
+  return desenvolvimento.conectarDiretorioDeDesenvolvimento({
+    quem,
+    enderecosDa: (orgId) =>
+      naOrganizacao(banco, orgId, (tx) =>
+        tx.select({ endereco: enderecosDeAcesso.endereco }).from(enderecosDeAcesso),
+      ).then((linhas) => linhas.map(({ endereco }) => endereco)),
+    outro: conectarPeloLdap,
+    avisar: (dados, mensagem) => app.log.warn(dados, mensagem),
+  });
+}
+
 const app = await criarApp({
   ambiente: config.ambiente,
   proxiesConfiaveis: config.proxiesConfiaveis,
@@ -35,7 +62,8 @@ const app = await criarApp({
   verificarBanco: async () => {
     await pool.query('select 1');
   },
-  banco: criarBanco(pool),
+  banco,
+  conectarDiretorio: await conectarDiretorio(),
   chaveDoisPassos: config.chaveDoisPassos,
   chavesDoCofre: config.chavesDoCofre,
   armazenamento: new ArmazenamentoEmDisco(config.pastaDosArquivos),
