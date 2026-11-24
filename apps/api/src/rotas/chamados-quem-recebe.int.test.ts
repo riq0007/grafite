@@ -111,6 +111,20 @@ describe('quem entra na lista', () => {
       { conta: conta('livia'), nome: 'Lívia Prates', abertos: 0 },
     ]);
 
+    // Devolvido à triagem, ninguém está com ele: Ana entra, sem nenhum aberto.
+    const devolvido = await c.cliente.enviar(
+      'POST',
+      `/chamados/${daMarina}/devolver`,
+      c.como('ana'),
+      {},
+    );
+    expect(devolvido.statusCode, devolvido.body).toBe(200);
+    expect(await quemRecebe('ana', daMarina)).toEqual([
+      { conta: conta('ana'), nome: 'Ana Souza', abertos: 0 },
+      { conta: conta('diego'), nome: 'Diego Ramos', abertos: 1 },
+      { conta: conta('livia'), nome: 'Lívia Prates', abertos: 1 },
+    ]);
+
     // A conta inativa sai da lista.
     await naOrganizacao(api.banco, c.org, (tx) =>
       tx
@@ -119,6 +133,7 @@ describe('quem entra na lista', () => {
         .where(eq(contas.id, conta('livia'))),
     );
     expect(await quemRecebe('ana', daMarina)).toEqual([
+      { conta: conta('ana'), nome: 'Ana Souza', abertos: 0 },
       { conta: conta('diego'), nome: 'Diego Ramos', abertos: 1 },
     ]);
   });

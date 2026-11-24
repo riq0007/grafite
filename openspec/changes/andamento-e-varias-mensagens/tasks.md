@@ -89,7 +89,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 4.1 O menu "Andamento" (decisões 2 e 9; spec modulo-chat, "Andamento do chamado no chat"):
   - o botão no cabeçalho do computador e o de ícone no do celular;
   - "Assumir", com o "Desfazer";
-  - "Passar para…", pelo `quem-recebe`;
+  - "Passar para…", pelo `quem-recebe`, com a própria conta quando o chamado não está com ela, como no Chamados, e, na falha da lista, a mensagem do erro no lugar do "Carregando quem atende…", como no `ChamadoAberto`, e não o "Ninguém mais atende os locais do chamado.";
   - "Devolver à triagem", "Retomar" e "Abrir no Chamados";
   - os avisos e as recusas, no aviso crítico, como no Chamados;
   - o `aoMudar` do `useAcoesDoAtendimento`, que relê o chamado do chat e as listas depois de cada ação, aceita ou recusada, e do "Desfazer".
