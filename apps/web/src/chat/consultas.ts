@@ -2,6 +2,7 @@
 // chat atualizadas e avisos"; change chat-com-chamados, design, decisões 5 e 12): tudo fica debaixo
 // da chave do chat, com as conversas e os chamados à parte, para cada evento reler só o que muda.
 import type { components } from '@grafite/api-client';
+import { avisar } from '@grafite/ui';
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -9,7 +10,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ClienteDaApi } from '../api/cliente.ts';
 import { consultar } from '../api/consultas.ts';
 import { type FalhaDoPedido, pedir } from '../api/pedir.ts';
@@ -311,6 +312,64 @@ export function useAcoesDoChamado(numero: number) {
 }
 
 export type AcoesDoChamado = ReturnType<typeof useAcoesDoChamado>;
+
+/**
+ * Relê, depois de uma ação do "Andamento", o chamado do chat, as listas, o resumo dos chamados e quem
+ * recebe, sem esperar o `chamados.mudaram` (change andamento-e-varias-mensagens, decisão 2): com a
+ * conexão de eventos caída, a ação seguinte iria com a versão velha.
+ */
+export function useRelerOsChamadosDoChat() {
+  const consultas = useQueryClient();
+  return useCallback(() => {
+    void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS_DO_CHAT });
+    void consultas.invalidateQueries({ queryKey: CHAVE_DO_RESUMO_DO_CHAT });
+  }, [consultas]);
+}
+
+/**
+ * Quem recebe o chamado no "Passar para…" do "Andamento": as contas que atendem os locais dele, com
+ * a da sessão quando ele não está com ela, cada uma com os abertos. Só lê com o menu aberto.
+ */
+export function useQuemRecebeNoChat(numero: number, ligado: boolean) {
+  const api = useApi();
+  return useQuery({
+    queryKey: [...CHAVE_DOS_CHAMADOS_DO_CHAT, 'quem-recebe', numero],
+    enabled: ligado,
+    queryFn: ({ signal }) =>
+      consultar(
+        () => api.GET('/chamados/{numero}/quem-recebe', { params: { path: { numero } }, signal }),
+        'carregar quem atende',
+      ),
+  });
+}
+
+/**
+ * As ações do "Andamento" que não são do atendimento do Chamados, pelas rotas da TI: o retomar, com
+ * a versão do chamado. O retorno vai no aviso; a recusa, no aviso crítico, com a frase da API; e,
+ * aceita ou recusada, o chat relê o chamado e as listas.
+ */
+export function useAndamentoNoChat(numero: number) {
+  const api = useApi();
+  const reler = useRelerOsChamadosDoChat();
+  return useMemo(
+    () => ({
+      retomar: async (versao: number) => {
+        const resultado = await pedir(
+          () =>
+            api.POST('/chamados/{numero}/retomar', {
+              params: { path: { numero } },
+              body: { versao },
+            }),
+          'retomar o chamado',
+        );
+        reler();
+        if ('erro' in resultado) avisar({ situacao: 'critico', titulo: resultado.erro });
+        else avisar({ situacao: 'sucesso', titulo: `Você retomou o #${numero}.` });
+      },
+    }),
+    [api, numero, reler],
+  );
+}
 
 /**
  * As pessoas que usam o chat, pelas palavras do nome, até 20, para a conversa direta. Enquanto a

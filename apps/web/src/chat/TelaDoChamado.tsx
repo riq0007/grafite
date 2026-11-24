@@ -33,6 +33,7 @@ import {
 import { useId, useRef, useState } from 'react';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
 import { useServidor } from '../sessao/useSessao.tsx';
+import { AndamentoDoChamado } from './AndamentoDoChamado.tsx';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
   type ConversaDoChamado,
@@ -187,13 +188,18 @@ function ChamadoNaTela({
               >
                 {chamado.titulo}
               </h2>
-              <BotaoDeIcone
-                icone={PanelBottom}
-                rotulo="Neste chamado"
-                comDica={false}
-                className={estilos.botaoDaFolha}
-                onPress={() => definirPainelNaFolha(true)}
-              />
+              <span className={estilos.botoesDoTitulo}>
+                {chamado.andamento && (
+                  <AndamentoDoChamado numero={numero} andamento={chamado.andamento} celular />
+                )}
+                <BotaoDeIcone
+                  icone={PanelBottom}
+                  rotulo="Neste chamado"
+                  comDica={false}
+                  className={estilos.botaoDaFolha}
+                  onPress={() => definirPainelNaFolha(true)}
+                />
+              </span>
             </div>
             {quemAtendeNaLinha !== null && (
               <p className={estilos.quemAtende}>{quemAtendeNaLinha}</p>
@@ -215,6 +221,11 @@ function ChamadoNaTela({
               {chamado.titulo}
             </h2>
             <SeloDoChamado texto={chamado.situacaoEmTexto} />
+            {chamado.andamento && (
+              <span className={estilos.andamento}>
+                <AndamentoDoChamado numero={numero} andamento={chamado.andamento} celular={false} />
+              </span>
+            )}
             <span className={estilos.botaoDoPainel}>
               <Popover
                 titulo="Neste chamado"

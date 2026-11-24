@@ -98,6 +98,8 @@
   overflow-wrap: anywhere;
 }
 
+/* O "Andamento", a quem atende pelo chat, antes de "Neste chamado", que some com o painel ao lado. */
+.andamento,
 .botaoDoPainel {
   display: inline-flex;
   flex: none;
@@ -365,6 +367,23 @@
 
 .linhaDoTitulo .titulo {
   padding-block-start: calc(var(--esp-1) * 2.5);
+}
+
+/* O "Andamento do #1045", a quem atende pelo chat, ao lado de "Neste chamado". */
+.botoesDoTitulo {
+  display: flex;
+  flex: none;
+}
+
+.botoesDoTitulo > button {
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  color: var(--cor-texto);
+}
+
+.botoesDoTitulo > button svg {
+  width: var(--esp-5);
+  height: var(--esp-5);
 }
 
 button.botaoDaFolha {

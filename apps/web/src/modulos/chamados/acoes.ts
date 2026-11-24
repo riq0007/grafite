@@ -4,12 +4,13 @@
 // mostra. O retorno vai num aviso; a recusa, no aviso crítico, com a frase da API. Aceita ou
 // recusada, a tela relê os chamados (o quadro, os prazos e a ficha) sem esperar o
 // `chamados.mudaram`: depois do `chamado-mudou`, ela mostra o chamado como ele está. O quadro, a
-// ficha (5.10) e o painel dos prazos (5.16) agem por aqui.
+// ficha (5.10), o painel dos prazos (5.16) e o "Andamento" do chamado no chat agem por aqui; o chat
+// passa o `aoMudar`, que relê as consultas dele (change andamento-e-varias-mensagens, decisão 2).
 import type { components } from '@grafite/api-client';
 import { nomeCurto } from '@grafite/domain';
 import { avisar } from '@grafite/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { pedir, type RespostaDaApi } from '../../api/pedir.ts';
 import { useApi } from '../../api/useApi.tsx';
 import { CHAVE_DOS_CHAMADOS } from './consultas.ts';
@@ -62,10 +63,23 @@ export interface AcoesDoAtendimento {
   reabrir: (numero: number, versao: number) => Promise<ChamadoDepoisDaAcao | null>;
 }
 
-/** As ações do atendimento, que avisam o retorno e releem os chamados. */
-export function useAcoesDoAtendimento(): AcoesDoAtendimento {
+/**
+ * As ações do atendimento, que avisam o retorno e releem os chamados. O `aoMudar` roda depois de
+ * cada uma, aceita ou recusada, também do "Desfazer" do aviso, para quem lê o chamado por outras
+ * consultas, como o chat, relê-las.
+ */
+export function useAcoesDoAtendimento({
+  aoMudar,
+}: {
+  aoMudar?: () => void;
+} = {}): AcoesDoAtendimento {
   const api = useApi();
   const consultas = useQueryClient();
+  // Pela referência: o "Desfazer" do aviso chama o de agora, e as ações não mudam a cada desenho.
+  const depoisDaAcao = useRef(aoMudar);
+  useEffect(() => {
+    depoisDaAcao.current = aoMudar;
+  }, [aoMudar]);
   return useMemo(() => {
     const agir = async (
       acao: AcaoDoAtendimento,
@@ -73,6 +87,7 @@ export function useAcoesDoAtendimento(): AcoesDoAtendimento {
     ): Promise<ChamadoDepoisDaAcao | null> => {
       const resultado = await pedir(fazer, NO_ERRO[acao]);
       void consultas.invalidateQueries({ queryKey: CHAVE_DOS_CHAMADOS });
+      depoisDaAcao.current?.();
       if ('erro' in resultado) {
         avisar({ situacao: 'critico', titulo: resultado.erro });
         return null;
