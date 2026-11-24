@@ -204,7 +204,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `reqwest` com o schannel e os dois proxies;
   - os comandos da tela;
   - os eventos passados à tela, com o atraso sorteado só nos de muita gente, a releitura a cada 60 s e o sem conexão em 30 s;
-  - o estado lido depois de a conexão de eventos abrir, e não antes, porque ela não retoma; os eventos que chegam durante o atraso viram uma leitura só, pelo limite de 120 por minuto do token; o `reiniciar` relê como os de muita gente; o `sessao` é o fim: a aba pede outra sessão ou volta ao formulário, e o motivo vem do 401 do pedido seguinte;
+  - o estado lido depois de a conexão de eventos abrir, e não antes, porque ela não retoma; os eventos que chegam durante o atraso viram uma leitura só, pelo limite de 120 por minuto do token; o `reiniciar` relê como os de muita gente; o `sessao` é o fim: a aba pede outra sessão ou volta ao formulário, e o motivo vem do 401 do pedido seguinte; a conexão que termina sem o `sessao`, como a mais antiga fechada pelo limite ou todas na atualização da API, não é o fim: a aba reconecta com o atraso sorteado e só fica sem conexão pelos 30 s sem o sinal de vida;
   - a configuração conferida a cada 60 s sem sessão.
 
   Verificar: a aba no `tauri dev` contra o `pnpm dev`: a resposta no chamado chega à aba, e a API parada a deixa sem conexão.

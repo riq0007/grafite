@@ -4,7 +4,15 @@
 // tipos que mudam o estado dela, com a marca dos que vão a muita gente, o sinal de vida e o fim da
 // sessão. Qual evento chega a qual aba: a configuração a todas, a entrada e o bloqueio às do
 // aparelho, o fim da sessão à aba e ao chat da aba daquela sessão.
-import { atribuicoes, contas, grupos, naOrganizacao, sessoes, sessoesDaAba } from '@grafite/db';
+import {
+  atribuicoes,
+  contas,
+  grupos,
+  naOrganizacao,
+  organizacoes,
+  sessoes,
+  sessoesDaAba,
+} from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ligarDiretorioSimulado } from '../../test/diretorio.ts';
@@ -107,7 +115,9 @@ let pcFin10 = '';
 beforeAll(async () => {
   api = await abrirApi({
     conectarDiretorio: ad.conectar,
-    intervalosDosEventosDaAba: { sinalDeVida: 100, conferencia: 200 },
+    // A conferência fica nos 60 s: os fins pelo evento não passam por ela. O teste da conferência
+    // abre outra API, no mesmo banco, com a curta.
+    intervalosDosEventosDaAba: { sinalDeVida: 100 },
   });
   org = await criarOrganizacao(api, { nome: 'Empresa', enderecos: [host] });
   cliente = clienteDaApi(api, host);
@@ -330,7 +340,19 @@ describe('GET /aba/eventos', () => {
 
   it('a conferência termina a conexão da sessão que venceu sem ninguém gravar o fim', async () => {
     const token = await abrirAba(pcFin09);
-    const fluxo = await eventosDaAba(token);
+    const comConferencia = await abrirApi({
+      conectarDiretorio: ad.conectar,
+      relogio: api.relogio,
+      intervalosDosEventosDaAba: { sinalDeVida: 100, conferencia: 200 },
+    });
+    const fluxo = await abrirEventos(
+      comConferencia,
+      host,
+      { cookie: '', csrf: '' },
+      { caminho: '/api/aba/eventos', cabecalhos: { authorization: `Bearer ${token}` } },
+    );
+    abertos.push(fluxo);
+    expect(fluxo.status).toBe(200);
     await naOrg((tx) =>
       tx
         .update(sessoesDaAba)
@@ -339,6 +361,7 @@ describe('GET /aba/eventos', () => {
     );
     await vi.waitFor(() => expect(fluxo.terminou()).toBe(true), { timeout: 2000 });
     expect(tipos(fluxo)).toContain('sessao');
+    await comConferencia.fechar();
   });
 
   it('a quarta conexão da mesma sessão entra, e a mais antiga termina', async () => {
@@ -349,6 +372,7 @@ describe('GET /aba/eventos', () => {
     const quarta = await eventosDaAba(token);
     expect(quarta.status).toBe(200);
     await vi.waitFor(() => expect(primeira.terminou()).toBe(true), { timeout: 2000 });
+    expect(tipos(primeira)).not.toContain('sessao');
     expect(segunda.terminou()).toBe(false);
     expect(terceira.terminou()).toBe(false);
   });
@@ -356,12 +380,24 @@ describe('GET /aba/eventos', () => {
   it('o módulo desligado chega à aba, que relê o estado sem as contagens dele', async () => {
     const token = await abrirAba(pcFin09);
     const fluxo = await eventosDaAba(token);
-    await naOrg((tx) =>
-      registrarEvento(tx, { tipo: 'modulos.mudaram', alvo: null, publico: { todas: true } }),
-    );
+    const desligar = (desligados: string[]) =>
+      naOrg(async (tx) => {
+        await tx
+          .update(organizacoes)
+          .set({ modulosDesligados: desligados })
+          .where(eq(organizacoes.id, org));
+        await registrarEvento(tx, {
+          tipo: 'modulos.mudaram',
+          alvo: null,
+          publico: { todas: true },
+        });
+      });
+    await desligar(['chat', 'chamados']);
     await vi.waitFor(() => expect(tipos(fluxo)).toContain('modulos.mudaram'), { timeout: 2000 });
     expect(fluxo.mensagens.find((m) => m.evento === 'modulos.mudaram')?.dados).toMatchObject({
       deMuitos: true,
     });
+    expect((await estado(token)).json()).toMatchObject({ naoLidas: null, respostasNovas: null });
+    await desligar([]);
   });
 });

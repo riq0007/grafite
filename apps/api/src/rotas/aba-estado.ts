@@ -156,7 +156,7 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
       }));
       const daSessao = porSessao.get(sessao.id) ?? [];
       porSessao.set(sessao.id, daSessao);
-      while (daSessao.length >= CONEXOES_POR_SESSAO_DA_ABA) daSessao[0]?.();
+      while (daSessao.length >= CONEXOES_POR_SESSAO_DA_ABA) daSessao.shift()?.();
 
       resposta.hijack();
       const saida = resposta.raw;
