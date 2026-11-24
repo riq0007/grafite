@@ -81,11 +81,11 @@ const abrir = (tokenDoAparelho: string, sid: string, ip = novoIp()) =>
     payload: { entrada: 'windows', sid, usuarioDoWindows: 'EMPRESA\\fernanda.lima' },
   });
 
-const renovar = (tokenDaSessao: string, sid: string) =>
+const renovar = (tokenDaSessao: string, sid: string, ip = novoIp()) =>
   api.app.inject({
     method: 'POST',
     url: '/api/aba/sessao/renovar',
-    remoteAddress: novoIp(),
+    remoteAddress: ip,
     headers: comToken(tokenDaSessao),
     payload: { sid },
   });
@@ -181,10 +181,11 @@ describe('a sessão pelo Windows', () => {
         computador: 'PC-FIN-09',
         identificador: fin.identificadorCurto,
         entrada: 'windows',
-        sid: SID.fernanda,
+        pessoa: SID.fernanda,
         usuarioDoWindows: 'EMPRESA\\fernanda.lima',
       },
     });
+    expect(abertas.at(-1)?.dados).not.toHaveProperty('sid');
   });
 
   it('a nova entrada encerra a aberta da mesma conta no aparelho, e o token dela para de valer', async () => {
@@ -374,6 +375,24 @@ describe('as recusas', () => {
     expect(r.json()).toMatchObject({
       detail: 'Este computador foi bloqueado na aba. Fale com a TI.',
     });
+  });
+});
+
+describe('o limite das sessões recusadas', () => {
+  it('o token encerrado num laço não conta, e o sorteio de tokens espera', async () => {
+    const ip = novoIp();
+    const antiga = (await abrir(fin.token, SID.fernanda)).json().token;
+    const valendo = (await abrir(fin.token, SID.fernanda)).json().token;
+    for (let i = 0; i < 601; i++) {
+      expect((await renovar(antiga, SID.fernanda, ip)).statusCode).toBe(401);
+    }
+    expect((await renovar(valendo, SID.fernanda, ip)).statusCode).toBe(200);
+    for (let i = 0; i < 600; i++) {
+      expect((await renovar(`sorteado-${i}`, SID.fernanda, ip)).statusCode).toBe(401);
+    }
+    expect((await renovar(valendo, SID.fernanda, ip)).statusCode).toBe(429);
+    api.relogio.avancar(MINUTO);
+    expect((await renovar(valendo, SID.fernanda, ip)).statusCode).toBe(200);
   });
 });
 

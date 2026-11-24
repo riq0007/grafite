@@ -226,8 +226,9 @@ export function instalarAba(
   escopo.decorateRequest('aparelhoDaAba', null);
   escopo.decorateRequest('sessaoDaAba', null);
   const recusas = new ContadorDeRecusas(LIMITE_DA_ENTRADA.max, LIMITE_DA_ENTRADA.timeWindow);
-  // As recusas do token da sessão, com o limite geral: a manhã com as sessões vencidas de uma
-  // filial atrás de um NAT passa, e o sorteio de tokens não.
+  // As recusas do token desconhecido da sessão, com o limite geral: o sorteio de tokens espera, e a
+  // vencida e a encerrada, que já valeram, não contam, para a aba presa num laço com um token antigo
+  // não segurar as sessões que valem da filial atrás do mesmo NAT.
   const recusasDaSessao = new ContadorDeRecusas(LIMITE_DAS_SESSOES_RECUSADAS, MINUTO);
   escopo.addHook('onRequest', async (requisicao) => {
     if (requisicao.routeOptions.config?.semTokenDaAba) return;
@@ -242,7 +243,7 @@ export function instalarAba(
       const daSessao = token ? await sessaoDoToken(banco, orgId, token, momento) : null;
       if (daSessao === 'bloqueado') throw aparelhoBloqueado();
       if (!daSessao || 'encerrada' in daSessao) {
-        recusasDaSessao.contar(requisicao.ip, momento.getTime());
+        if (!daSessao) recusasDaSessao.contar(requisicao.ip, momento.getTime());
         throw sessaoDaAbaRecusada(daSessao?.encerrada ?? undefined);
       }
       requisicao.sessaoDaAba = daSessao.sessao;
@@ -370,8 +371,10 @@ export class ContadorDeRecusas {
 }
 
 /**
- * A sessão aberta e dentro da validade do token, com o aparelho dela, ou `'bloqueado'` com o
- * aparelho bloqueado, ou `null`.
+ * A sessão aberta e dentro da validade do token, com o aparelho dela; `{ encerrada }` com o motivo
+ * do fim, ou `null` na vencida, antes de olhar o bloqueio, porque o pedido seguinte, com o token do
+ * aparelho, já dá o 403; `'bloqueado'` com a sessão válida no aparelho bloqueado; ou `null` com o
+ * token desconhecido.
  */
 async function sessaoDoToken(
   banco: Banco,

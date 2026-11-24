@@ -87,6 +87,16 @@ export async function auditarPessoaRecusada(
     eq(auditoria.alvoTipo, 'aparelho-da-aba'),
     eq(auditoria.alvoId, aparelho.id),
   );
+  // Primeiro o teto por aparelho, para os pedidos que nunca repetem a pessoa: lê só 10 minutos, e a
+  // busca pela pessoa, que anda o histórico do aparelho, fica para quando ainda cabe registro.
+  const desde = new Date(momento.getTime() - INTERVALO_DA_RECUSA_NA_AUDITORIA);
+  const [recentes] = await tx
+    .select({ quantas: sql<number>`count(*)::int` })
+    .from(auditoria)
+    .where(
+      and(doAparelho, eq(auditoria.acao, 'sessao-da-aba.recusada'), gt(auditoria.momento, desde)),
+    );
+  if ((recentes?.quantas ?? 0) >= RECUSAS_DO_APARELHO_NA_AUDITORIA) return;
   // O último registro desta pessoa no aparelho, a recusa ou a sessão aberta dela.
   const [ultima] = await tx
     .select({ acao: auditoria.acao, dados: auditoria.dados })
@@ -102,15 +112,6 @@ export async function auditarPessoaRecusada(
     .limit(1);
   const anteriores = ultima?.dados as { motivo?: unknown } | null | undefined;
   if (ultima?.acao === 'sessao-da-aba.recusada' && anteriores?.motivo === motivo) return;
-  // E um teto por aparelho, para os pedidos que nunca repetem a pessoa.
-  const desde = new Date(momento.getTime() - INTERVALO_DA_RECUSA_NA_AUDITORIA);
-  const [recentes] = await tx
-    .select({ quantas: sql<number>`count(*)::int` })
-    .from(auditoria)
-    .where(
-      and(doAparelho, eq(auditoria.acao, 'sessao-da-aba.recusada'), gt(auditoria.momento, desde)),
-    );
-  if ((recentes?.quantas ?? 0) >= RECUSAS_DO_APARELHO_NA_AUDITORIA) return;
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.recusada',
     ator: { tipo: 'anonimo' },

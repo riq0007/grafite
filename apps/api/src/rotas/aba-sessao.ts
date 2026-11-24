@@ -179,7 +179,7 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
             contaId,
             aparelho,
             entrada: 'windows',
-            dados: { pessoa: sid, sid, ...doWindows },
+            dados: { pessoa: sid, ...doWindows },
             origem,
             momento,
           });
