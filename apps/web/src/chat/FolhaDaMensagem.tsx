@@ -1,9 +1,10 @@
 // A folha da mensagem no celular (spec modulo-chat, "Chat no celular" e "Menu da mensagem"; change
 // chat-com-chamados, design, decisão 15, "O celular"; mockup m09): o toque longo levanta a mensagem,
 // acima da folha, com as reações de sempre e a escrita, e a folha tem o menu da mensagem, com
-// "Copiar o texto", que o toque não seleciona, e "Transformar em chamado" no azul. O que leva o foco
-// a outro lugar, como o responder, o transformar e a reação escrita, age depois de a folha sair, com
-// o foco de volta na mensagem, que fica como o lugar da volta do diálogo e do popover.
+// "Copiar o texto", que o toque não seleciona, "Selecionar", que começa a seleção com ela (change
+// andamento-e-varias-mensagens, decisão 8), e "Transformar em chamado" no azul. O que leva o foco a
+// outro lugar, como o responder, o selecionar, o transformar e a reação escrita, age depois de a
+// folha sair, com o foco de volta na mensagem, que fica como o lugar da volta do diálogo e do popover.
 import {
   Avatar,
   avisar,
@@ -14,7 +15,17 @@ import {
   MenuNaFolha,
   useDataHora,
 } from '@grafite/ui';
-import { Bell, BellOff, Check, Copy, CornerUpLeft, LifeBuoy, Link, PenLine } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  Check,
+  Copy,
+  CornerUpLeft,
+  LifeBuoy,
+  Link,
+  PenLine,
+  SquareCheck,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { miniaturasNoChat } from '../api/fotos.ts';
 import {
@@ -58,7 +69,7 @@ export function FolhaDaMensagem({
   const ancora = useRef<Element | null>(elemento.firstElementChild ?? elemento);
   const depois = useRef<(() => void) | null>(null);
   const dataHora = useDataHora();
-  const { responder, reagir, transformar } = acoes;
+  const { responder, reagir, transformar, selecionar } = acoes;
   const minhas = new Set(mensagem.reacoes.filter(({ minha }) => minha).map(({ texto }) => texto));
 
   /** Fecha a folha, e a ação age depois de ela sair, com o foco de volta na mensagem. */
@@ -165,6 +176,15 @@ export function FolhaDaMensagem({
             >
               Copiar link da mensagem
             </ItemDeMenu>
+            {selecionar && (
+              <ItemDeMenu
+                id="selecionar"
+                icone={SquareCheck}
+                onAction={() => agirDepois(() => selecionar(mensagem))}
+              >
+                Selecionar
+              </ItemDeMenu>
+            )}
             {transformar && (
               <ItemDeMenu
                 id="transformar"

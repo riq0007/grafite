@@ -150,6 +150,17 @@
   padding-block-start: var(--esp-1);
 }
 
+/* No toque, a caixa de marcar com 44 px de alvo, na coluna dela. */
+:root[data-postura="celular"] .itens[data-selecao] .mensagem {
+  grid-template-columns: var(--alvo-toque) var(--esp-8) minmax(0, 1fr);
+}
+
+:root[data-postura="celular"] .caixaDaSelecao > * {
+  justify-content: center;
+  min-inline-size: var(--alvo-toque);
+  min-block-size: var(--alvo-toque);
+}
+
 .itens[data-selecao] .mensagem[data-marcada] {
   background-color: var(--cor-info-fundo);
 }
@@ -271,6 +282,12 @@
 
 .corpo {
   min-inline-size: 0;
+}
+
+/* Na seleção, o texto, os links, os anexos e os chips não recebem o ponteiro: o toque ou o
+   clique cai na mensagem, que marca ou desmarca, e nada abre, nem o resumo do chamado. */
+.itens[data-selecao] .mensagem > .corpo {
+  pointer-events: none;
 }
 
 .quem {

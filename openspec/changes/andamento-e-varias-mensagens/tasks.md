@@ -122,7 +122,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a caixa montada e escondida, que volta com o texto, o "Respondendo a…" e os anexos na fila.
 
   Verificar: o lint, o typecheck e a tela no `pnpm dev`.
-- [ ] 4.5 Selecionar no celular:
+- [x] 4.5 Selecionar no celular:
   - "Selecionar" na folha do toque longo;
   - o toque que marca e desmarca, também no link e no anexo, sem a folha na seleção;
   - a barra embaixo, com os alvos de 44 px.

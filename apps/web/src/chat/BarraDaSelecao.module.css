@@ -45,3 +45,8 @@
 :root[data-postura="celular"] .atalho {
   display: none;
 }
+
+/* No toque, os botões da barra com 44 px de altura. */
+:root[data-postura="celular"] .barra button {
+  min-block-size: var(--alvo-toque);
+}
