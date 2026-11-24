@@ -139,7 +139,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 5. Fechamento
 
-- [ ] 5.1 A documentação:
+- [x] 5.1 A documentação:
   - a linha do S7 na spec mestre;
   - o runbook, com as exceções da volta à versão anterior (design, "Migration Plan");
   - o `docs/mapa.md`.
