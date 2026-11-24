@@ -113,7 +113,7 @@ const MOTIVOS_DA_ABA: Record<string, string> = {
   'aparelho-bloqueado': 'Computador bloqueado',
   'encerrada-pela-administracao': 'Encerrada pela administração',
   'encerrada-pelo-usuario': 'Encerrada pela pessoa',
-  'outras-encerradas': 'Outras sessões encerradas',
+  'outras-encerradas': 'Encerrada com as outras, pela pessoa',
   'senha-trocada': 'Senha trocada',
   'dois-passos-ativados': 'Verificação em dois passos ativada',
   redefinicao: 'Acesso redefinido',

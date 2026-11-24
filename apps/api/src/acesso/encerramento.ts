@@ -14,6 +14,7 @@ import {
 } from '@grafite/db';
 import { and, eq, gt, inArray, isNull, ne, type SQL } from 'drizzle-orm';
 import { type Ator, type EventoDeAuditoria, registrarNaAuditoria } from '../auditoria.ts';
+import { registrarEvento } from '../eventos/saida.ts';
 
 export type MotivoDoFim = (typeof MOTIVOS_DO_FIM_DA_SESSAO)[number];
 export type MotivoDoFimDaAba = (typeof MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA)[number];
@@ -29,19 +30,26 @@ export interface EncerramentoDeSessoes {
 }
 
 /**
- * Encerra as sessões do chat na aba das sessões da aba dadas, que terminam junto com elas. Sem a
- * auditoria: a do fim da sessão da aba já diz.
+ * O que segue o fim das sessões da aba dadas: as sessões do chat na aba delas terminam junto, e o
+ * `sessao.encerrada` vai à aba e ao chat da aba de cada uma (design, decisão 6), que fecham a
+ * conexão de eventos. Sem a auditoria: a do fim da sessão da aba já diz.
  */
-export async function encerrarChatsDaAba(
+export async function fimDasSessoesDaAba(
   tx: Transacao,
   sessoesDaAbaIds: string[],
   momento: Date,
 ): Promise<void> {
   if (sessoesDaAbaIds.length === 0) return;
-  await tx
+  const chats = await tx
     .update(sessoes)
     .set({ encerradaEm: momento, motivoDoFim: 'sessao-da-aba-encerrada' })
-    .where(and(inArray(sessoes.sessaoDaAbaId, sessoesDaAbaIds), isNull(sessoes.encerradaEm)));
+    .where(and(inArray(sessoes.sessaoDaAbaId, sessoesDaAbaIds), isNull(sessoes.encerradaEm)))
+    .returning({ id: sessoes.id });
+  await registrarEvento(tx, {
+    tipo: 'sessao.encerrada',
+    alvo: null,
+    publico: { sessoesDaAba: sessoesDaAbaIds, sessoes: chats.map((chat) => chat.id) },
+  });
 }
 
 /**
@@ -74,7 +82,7 @@ export async function encerrarSessoesDaAba(
       aparelhoId: sessoesDaAba.aparelhoId,
     });
   if (encerradas.length === 0) return 0;
-  await encerrarChatsDaAba(
+  await fimDasSessoesDaAba(
     tx,
     encerradas.map((sessao) => sessao.id),
     momento,

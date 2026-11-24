@@ -17,7 +17,7 @@ import {
 } from '@grafite/db';
 import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { encerrarChatsDaAba } from '../acesso/encerramento.ts';
+import { fimDasSessoesDaAba } from '../acesso/encerramento.ts';
 import { exigirOrganizacao, type ResolvedorDeOrganizacao } from '../acesso/organizacao.ts';
 import { hashDoToken, SEM_USO_DA_ABA_PELA_SENHA } from '../acesso/sessoes.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
@@ -377,7 +377,7 @@ export class ContadorDeRecusas {
  * antes de olhar o bloqueio, porque o pedido seguinte, com o token do aparelho, já dá o 403;
  * `'bloqueado'` com a sessão válida no aparelho bloqueado; ou `null` com o token desconhecido.
  */
-async function sessaoDoToken(
+export async function sessaoDoToken(
   banco: Banco,
   orgId: string,
   token: string,
@@ -417,7 +417,7 @@ async function sessaoDoToken(
         .update(sessoesDaAba)
         .set({ encerradaEm: momento, motivoDoFim: 'sem-uso' })
         .where(and(eq(sessoesDaAba.id, linha.sessao.id), isNull(sessoesDaAba.encerradaEm)));
-      await encerrarChatsDaAba(tx, [linha.sessao.id], momento);
+      await fimDasSessoesDaAba(tx, [linha.sessao.id], momento);
     });
     return { encerrada: 'sem-uso' };
   }

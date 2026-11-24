@@ -49,6 +49,7 @@ import { criarPonteDosPaineis } from './paineis/ponte.ts';
 import { gerarCodigoDeRastreio, registrarProblemas } from './problemas.ts';
 import { registrarLimiteDeRequisicoes } from './protecao.ts';
 import { rotasDaAba } from './rotas/aba.ts';
+import { type IntervalosDosEventosDaAba, rotasDoEstadoDaAba } from './rotas/aba-estado.ts';
 import { rotasDaSessaoDaAba } from './rotas/aba-sessao.ts';
 import { rotasDoAcesso } from './rotas/acesso.ts';
 import { rotasDoAcessoRemoto } from './rotas/acesso-remoto.ts';
@@ -168,6 +169,8 @@ export interface Dependencias {
   conectarOuvinte?: () => pg.Client;
   /** Os intervalos da conexão de eventos, menores nos testes. */
   intervalosDosEventos?: Partial<IntervalosDosEventos>;
+  /** Os intervalos da conexão de eventos da aba, menores nos testes. */
+  intervalosDosEventosDaAba?: Partial<IntervalosDosEventosDaAba>;
   /** O prazo da primeira resposta da máquina no acesso remoto, em ms (padrão: 10 s), menor nos testes. */
   prazoDoAcessoRemoto?: number;
   /** Quem conecta ao diretório da organização (padrão: o ldapts); os testes usam um AD em memória. */
@@ -219,6 +222,7 @@ export async function criarApp({
   canais = {},
   conectarOuvinte,
   intervalosDosEventos,
+  intervalosDosEventosDaAba,
   prazoDoAcessoRemoto,
   conectarDiretorio = conectarPeloLdap,
   acordarAgente = acordarPeloHttp,
@@ -519,6 +523,12 @@ export async function criarApp({
       chaveDoisPassos,
       conferirDeEngano,
       diretorio: { chavesDoCofre, conectar: conectarDiretorio },
+    });
+    await escopo.register(rotasDoEstadoDaAba, {
+      banco,
+      agora,
+      distribuidor,
+      intervalos: intervalosDosEventosDaAba,
     });
   });
   // O agente do GLPI (change inventario-pelo-agente-glpi): o protocolo dele, pelo token do caminho.

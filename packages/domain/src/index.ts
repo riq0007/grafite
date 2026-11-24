@@ -914,6 +914,7 @@ export {
   type ConexaoQueRecebe,
   EVENTO_DA_ACAO,
   type EventoDeSaida,
+  eventoDeMuitos,
   type PublicoDoEvento,
   podeReceber,
   publicoDerivado,

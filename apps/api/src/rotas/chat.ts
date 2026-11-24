@@ -138,7 +138,7 @@ interface LinhaDaConversa {
  * os canais ativos. As arquivadas saem das listas, embora abram para ler pelo link. A conta da
  * sessão usa o chat, pela guarda.
  */
-async function conversasDaConta(tx: Transacao, contaId: string): Promise<LinhaDaConversa[]> {
+export async function conversasDaConta(tx: Transacao, contaId: string): Promise<LinhaDaConversa[]> {
   const grupos = await carregarGrupos(tx, contaId);
   const naoLidas = sql<number>`(select count(*)::int from (
       select 1 from ${mensagensDoChat}
@@ -193,7 +193,7 @@ async function conversasDaConta(tx: Transacao, contaId: string): Promise<LinhaDa
  * abriu pelo chat (`participaDoChamado`), com as mensagens da TI de outra conta, que o domínio conta
  * depois da `vista_ate` (`respostaNova`). O de quem participa pela TI não tem resposta nova.
  */
-async function chamadosComResposta(
+export async function chamadosComResposta(
   tx: Transacao,
   { contaId, acesso }: { contaId: string; acesso: Acesso },
 ): Promise<number> {

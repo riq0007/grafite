@@ -12,8 +12,8 @@ import {
 } from '@grafite/db';
 import type { MotivoSemConexao } from '@grafite/domain';
 import { and, desc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
-import { encerrarChatsDaAba } from '../acesso/encerramento.ts';
-import { hashDoToken, SEM_USO_DA_ABA_PELA_SENHA as SEM_USO_DA_SENHA } from '../acesso/sessoes.ts';
+import { fimDasSessoesDaAba } from '../acesso/encerramento.ts';
+import { hashDoToken, SEM_USO_DA_ABA_PELA_SENHA } from '../acesso/sessoes.ts';
 import { type Ator, registrarNaAuditoria } from '../auditoria.ts';
 import {
   type AparelhoDaRequisicao,
@@ -39,7 +39,7 @@ export const semValer = (momento: Date) =>
     lte(sessoesDaAba.expiraEm, momento),
     and(
       eq(sessoesDaAba.entrada, 'senha'),
-      lte(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_SENHA)),
+      lte(sessoesDaAba.ultimoUsoEm, new Date(momento.getTime() - SEM_USO_DA_ABA_PELA_SENHA)),
     ),
   );
 /** A janela do teto de contas do aparelho. */
@@ -194,7 +194,7 @@ export async function abrirSessaoDaAba(
     .set({ encerradaEm: momento, motivoDoFim: 'outra-sessao-no-aparelho' })
     .where(daConta)
     .returning({ id: sessoesDaAba.id });
-  await encerrarChatsDaAba(
+  await fimDasSessoesDaAba(
     tx,
     [...paradas, ...trocadas].map((sessao) => sessao.id),
     momento,
@@ -385,7 +385,7 @@ export async function encerrarSessaoDaAba(
     .where(and(eq(sessoesDaAba.id, sessaoId), isNull(sessoesDaAba.encerradaEm)))
     .returning({ id: sessoesDaAba.id });
   if (encerradas.length === 0) return;
-  await encerrarChatsDaAba(tx, [sessaoId], momento);
+  await fimDasSessoesDaAba(tx, [sessaoId], momento);
   await registrarNaAuditoria(tx, {
     acao: 'sessao-da-aba.encerrada',
     ator,

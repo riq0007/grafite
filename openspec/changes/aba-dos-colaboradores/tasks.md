@@ -85,7 +85,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - os quatro lugares que encerram a sessão da aba (a entrada, a renovação, o `DELETE` e o `sem-uso` do escopo) passam pelo fim da sessão do chat, e o evento do fim entra na 3.8; a lista lê o complemento do `semValer`, porque a parada e a vencida ficam abertas no banco até o pedido seguinte.
 
   Começa pelos testes de integração. Verificar: esses testes, o contrato e a tela das sessões no `pnpm dev`.
-- [ ] 3.8 O estado e os eventos (decisão 6):
+- [x] 3.8 O estado e os eventos (decisão 6):
   - o `GET /api/aba/estado`;
   - o `GET /api/aba/eventos`, com os tipos, o sinal de 10 s e o fim da sessão;
   - os eventos da configuração, da entrada e do bloqueio, com a marca dos que vão a muita gente;

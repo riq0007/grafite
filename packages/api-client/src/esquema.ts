@@ -39043,6 +39043,132 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aba/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O estado da aba: as não lidas, as respostas novas e a versão da configuração */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EstadoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conexão de eventos da aba, em text/event-stream */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O fluxo dos eventos da aba, com o sinal de vida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/event-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -39901,6 +40027,58 @@ export interface components {
             versao: number;
             proximaEm: number;
         };
+        ConsumivelCompativelInput: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number | null;
+        };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
+        ConversaNaListaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+        };
+        ListaDoChatInput: {
+            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
+            recentes: components["schemas"]["ConversaNaListaInput"][];
+        };
+        ResumoDoChatInput: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChatInput: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                conversa: string | null;
+            }[];
+        };
+        EstadoDaAbaInput: {
+            naoLidas: number | null;
+            respostasNovas: number | null;
+            versaoDaConfiguracao: number;
+        };
         PedidoDaSessaoDaAbaInput: {
             /** @constant */
             entrada: "windows";
@@ -39943,17 +40121,6 @@ export interface components {
         };
         AdministradoresDoAcessoInput: {
             administradores: string[];
-        };
-        ConsumivelCompativelInput: {
-            /** Format: uuid */
-            id: string;
-            codigo: string;
-            nome: string | null;
-            /** @enum {string} */
-            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
-            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-            rendimento: number | null;
-            saldo: number | null;
         };
         AgenteDoGlpiInput: {
             /** Format: uuid */
@@ -41152,13 +41319,6 @@ export interface components {
                     valor: boolean;
                 })[];
             }[];
-        };
-        ContaDoChatInput: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
         };
         CartaoDoAtivoInput: {
             /** Format: uuid */
@@ -42530,35 +42690,6 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamadoInput"];
             pedeOAtivo: boolean;
             abertos: number;
-        };
-        ConversaNaListaInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            tipo: "direta" | "equipe" | "canal";
-            nome: string;
-            naoLidas: number;
-            silenciada: boolean;
-            ultimaMensagemEm: string | null;
-            outra: components["schemas"]["ContaDoChatInput"] | null;
-        };
-        ListaDoChatInput: {
-            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
-            recentes: components["schemas"]["ConversaNaListaInput"][];
-        };
-        ResumoDoChatInput: {
-            naoLidas: number;
-            chamadosComRespostaNova: number | null;
-        };
-        PessoasDoChatInput: {
-            pessoas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-                daTi: boolean;
-                foto: components["schemas"]["FotoDaPessoaInput"] | null;
-                conversa: string | null;
-            }[];
         };
         AnexoDaMensagemInput: {
             /** Format: uuid */
@@ -45892,6 +46023,58 @@ export interface components {
             versao: number;
             proximaEm: number;
         };
+        ConsumivelCompativel: {
+            /** Format: uuid */
+            id: string;
+            codigo: string;
+            nome: string | null;
+            /** @enum {string} */
+            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
+            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
+            rendimento: number | null;
+            saldo: number | null;
+        };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
+        ConversaNaLista: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChat"] | null;
+        };
+        ListaDoChat: {
+            equipesECanais: components["schemas"]["ConversaNaLista"][];
+            recentes: components["schemas"]["ConversaNaLista"][];
+        };
+        ResumoDoChat: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChat: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoa"] | null;
+                conversa: string | null;
+            }[];
+        };
+        EstadoDaAba: {
+            naoLidas: number | null;
+            respostasNovas: number | null;
+            versaoDaConfiguracao: number;
+        };
         PedidoDaSessaoDaAba: {
             /** @constant */
             entrada: "windows";
@@ -45934,17 +46117,6 @@ export interface components {
         };
         AdministradoresDoAcesso: {
             administradores: string[];
-        };
-        ConsumivelCompativel: {
-            /** Format: uuid */
-            id: string;
-            codigo: string;
-            nome: string | null;
-            /** @enum {string} */
-            tipo: "toner" | "cilindro" | "tinta" | "fita" | "kit-de-manutencao" | "peca" | "outro";
-            cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
-            rendimento: number | null;
-            saldo: number | null;
         };
         AgenteDoGlpi: {
             /** Format: uuid */
@@ -47144,13 +47316,6 @@ export interface components {
                     valor: boolean;
                 })[];
             }[];
-        };
-        ContaDoChat: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
         };
         CartaoDoAtivo: {
             /** Format: uuid */
@@ -48522,35 +48687,6 @@ export interface components {
             formulario: components["schemas"]["FormularioDeChamado"];
             pedeOAtivo: boolean;
             abertos: number;
-        };
-        ConversaNaLista: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            tipo: "direta" | "equipe" | "canal";
-            nome: string;
-            naoLidas: number;
-            silenciada: boolean;
-            ultimaMensagemEm: string | null;
-            outra: components["schemas"]["ContaDoChat"] | null;
-        };
-        ListaDoChat: {
-            equipesECanais: components["schemas"]["ConversaNaLista"][];
-            recentes: components["schemas"]["ConversaNaLista"][];
-        };
-        ResumoDoChat: {
-            naoLidas: number;
-            chamadosComRespostaNova: number | null;
-        };
-        PessoasDoChat: {
-            pessoas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-                daTi: boolean;
-                foto: components["schemas"]["FotoDaPessoa"] | null;
-                conversa: string | null;
-            }[];
         };
         AnexoDaMensagem: {
             /** Format: uuid */
