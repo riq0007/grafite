@@ -143,5 +143,9 @@ describe('as notificações de quem participa', () => {
     expect(mensagem.statusCode, mensagem.body).toBe(200);
     expect(await avisosNoChat('paulo', numero)).toEqual([`Lívia Prates respondeu o #${numero}`]);
     expect(await avisosNoChat('ana', numero)).toEqual([`Lívia Prates respondeu o #${numero}`]);
+
+    // E volta a responder como quem pediu, pela rota de quem participa.
+    const resposta = await comoQuemParticipa('ana', numero, 'mensagens', { texto: 'Obrigada.' });
+    expect(resposta.statusCode, resposta.body).toBe(200);
   });
 });

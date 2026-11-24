@@ -548,14 +548,18 @@ export async function agirNoChamado(
       ? []
       : ((await nomesDosAnexosDasMensagens(tx, [escrito])).get(escrito) ?? []);
   // Quem participa pela TI recebe as da TI, acima, e não estas (change andamento-e-varias-mensagens,
-  // design, decisão 4).
+  // design, decisão 4). Os acessos de quem abriu só são lidos quando há a mensagem, sem a qual
+  // ninguém que participa é notificado.
+  const notificaQuemParticipa = decisao.conversa.some(({ especie }) => especie === 'mensagem');
   await notificar(
     tx,
     notificacoesParaQuemParticipa(
       { id: lido.id, numero: lido.numero, titulo: lido.titulo, ...participante },
       decisao,
       { contaId, nome: await nomeDaConta(tx, contaId) },
-      await semQuemParticipaPelaTi(tx, { ...participante, ...locais }, participam, arvore),
+      notificaQuemParticipa
+        ? await semQuemParticipaPelaTi(tx, { ...participante, ...locais }, participam, arvore)
+        : [],
       anexos,
     ),
     momento,
