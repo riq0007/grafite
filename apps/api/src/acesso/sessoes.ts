@@ -4,6 +4,7 @@
 
 import { createHash, randomBytes } from 'node:crypto';
 import {
+  type ALCANCES_DA_SESSAO,
   aparelhosDaAba,
   type Banco,
   contas,
@@ -40,6 +41,9 @@ export function hashDoToken(token: string): Buffer {
 
 const novoToken = () => randomBytes(32).toString('base64url');
 
+/** Onde a sessão vale: em tudo, ou só no chat da aba (change aba-dos-colaboradores, decisão 8). */
+export type AlcanceDaSessao = (typeof ALCANCES_DA_SESSAO)[number];
+
 /** A sessão de uma requisição, já conferida: existe, não terminou e é de uma conta ativa. */
 export interface SessaoDaRequisicao {
   id: string;
@@ -55,6 +59,8 @@ export interface SessaoDaRequisicao {
   doisPassosAtivos: boolean;
   /** Até quando o código do app liberou revelar e copiar nesta sessão, ou `null`. */
   cofreLiberadoAte: Date | null;
+  /** A sessão do chat na aba, com o alcance `chat-da-aba`: só vale nas rotas da lista. */
+  naAba: boolean;
 }
 
 export interface NovaSessao {
@@ -106,6 +112,11 @@ export async function criarSessao(
  * A sessão do token, na organização do endereço, se ela ainda vale. O último uso é regravado
  * quando passa de 60 s, a menos que a leitura não conte como uso (`tocar: false`): a da conexão de
  * eventos e a das requisições que a tela faz sozinha (design do F2c, decisão 13).
+ *
+ * Só volta a sessão dos alcances que o chamador aceita, e sem eles só a comum: a do chat na aba é
+ * recusada por padrão (change aba-dos-colaboradores, decisão 8). A do chat na aba confere ao vivo a
+ * sessão da aba ligada: vencida, terminada, parada pela senha ou com o aparelho bloqueado, a do chat
+ * também vale como terminada.
  */
 export function lerSessao(
   banco: Banco,
@@ -114,7 +125,14 @@ export function lerSessao(
     token,
     agora,
     tocar = true,
-  }: { orgId: string; token: string; agora: Date; tocar?: boolean },
+    alcances = ['comum'],
+  }: {
+    orgId: string;
+    token: string;
+    agora: Date;
+    tocar?: boolean;
+    alcances?: readonly AlcanceDaSessao[];
+  },
 ): Promise<SessaoDaRequisicao | null> {
   return naOrganizacao(banco, orgId, async (tx) => {
     const [linha] = await tx
@@ -126,21 +144,53 @@ export function lerSessao(
         exigeDoisPassos: contas.exigeDoisPassos,
         nome: pessoas.nome,
         doisPassosAtivadoEm: doisPassos.ativadoEm,
+        aba: {
+          encerradaEm: sessoesDaAba.encerradaEm,
+          ativadaEm: sessoesDaAba.ativadaEm,
+          expiraEm: sessoesDaAba.expiraEm,
+          entrada: sessoesDaAba.entrada,
+          ultimoUsoEm: sessoesDaAba.ultimoUsoEm,
+          bloqueadoEm: aparelhosDaAba.bloqueadoEm,
+        },
       })
       .from(sessoes)
       .innerJoin(contas, and(eq(contas.orgId, sessoes.orgId), eq(contas.id, sessoes.contaId)))
       .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
       .leftJoin(doisPassos, eq(doisPassos.contaId, contas.id))
+      .leftJoin(
+        sessoesDaAba,
+        and(eq(sessoesDaAba.orgId, sessoes.orgId), eq(sessoesDaAba.id, sessoes.sessaoDaAbaId)),
+      )
+      .leftJoin(
+        aparelhosDaAba,
+        and(
+          eq(aparelhosDaAba.orgId, sessoesDaAba.orgId),
+          eq(aparelhosDaAba.id, sessoesDaAba.aparelhoId),
+        ),
+      )
       .where(eq(sessoes.tokenHash, hashDoToken(token)));
     if (!linha) return null;
-    const { sessao } = linha;
+    const { sessao, aba } = linha;
+    if (!alcances.includes(sessao.alcance)) return null;
     const momento = agora.getTime();
     const semUso = momento - sessao.ultimoUsoEm.getTime();
+    const abaVale =
+      sessao.alcance === 'comum' ||
+      (aba !== null &&
+        aba.encerradaEm === null &&
+        aba.ativadaEm !== null &&
+        aba.expiraEm !== null &&
+        aba.expiraEm.getTime() > momento &&
+        (aba.entrada !== 'senha' ||
+          (aba.ultimoUsoEm !== null &&
+            momento - aba.ultimoUsoEm.getTime() < SEM_USO_DA_ABA_PELA_SENHA)) &&
+        aba.bloqueadoEm === null);
     const valendo =
       sessao.encerradaEm === null &&
       sessao.expiraEm.getTime() > momento &&
       semUso < TEMPOS_DA_SESSAO.inatividade &&
-      linha.situacao === 'ativa';
+      linha.situacao === 'ativa' &&
+      abaVale;
     if (!valendo || linha.usuario === null) return null;
     if (tocar && semUso > TEMPOS_DA_SESSAO.toque) {
       await tx.update(sessoes).set({ ultimoUsoEm: agora }).where(eq(sessoes.id, sessao.id));
@@ -164,6 +214,7 @@ export function lerSessao(
       acesso,
       doisPassosAtivos: linha.doisPassosAtivadoEm !== null,
       cofreLiberadoAte: sessao.cofreLiberadoAte,
+      naAba: sessao.alcance === 'chat-da-aba',
     };
   });
 }

@@ -95,7 +95,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [x] 3.9 A resposta por ver na API: a gravação da abertura (`POST /api/chat/chamados/:numero/aberta`), o evento à pessoa e as respostas por ver no estado da aba.
 
   Verificar: os testes de integração, o contrato, o lint e o typecheck.
-- [ ] 3.10 O alcance `chat-da-aba` (decisão 8):
+- [x] 3.10 O alcance `chat-da-aba` (decisão 8):
   - o `lerSessao` com os alcances aceitos, nos três chamadores, e a sessão da aba ligada conferida ao vivo;
   - o `chatDaAba` nas rotas da lista, fixada num teste, com o `POST /api/chat/chamados/:numero/aberta` (da 3.9), que o chat na aba é quem mais chama;
   - o 403 `fora-do-alcance-da-aba`;

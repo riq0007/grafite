@@ -4168,6 +4168,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -4176,7 +4179,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -20855,6 +20859,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -20863,7 +20870,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -22315,6 +22323,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -22323,7 +22334,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -28027,6 +28039,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -28035,7 +28050,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -34240,6 +34256,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -34248,7 +34267,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -51489,6 +51509,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -51497,7 +51520,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -53009,6 +53033,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -53017,7 +53044,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -58917,6 +58945,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -58925,7 +58956,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },

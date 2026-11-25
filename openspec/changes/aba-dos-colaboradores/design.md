@@ -213,6 +213,8 @@ A sessão do chat na aba é uma linha nas `sessoes`, com `alcance = 'chat-da-aba
 - **A conexão de eventos da sessão do chat na aba** recebe só os tipos que o chat usa.
 - **O `/api/sessao` diz `naAba: true`,** e o app do chat esconde o que leva à casca, o "Andamento", a instalação e o push.
 
+Na API (tarefa 3.10), o gancho do escopo lê a sessão com os dois alcances e decide pela rota: fora da lista, a de entrada a trata como sem sessão (o `POST /sessao` segue abrindo a entrada), e as outras recebem o 403. As rotas de `/chat/` entram na lista sozinhas, no registro, e as outras declaram o `chatDaAba`: o `GET /sessao`, o `GET /eventos` e as duas fotos no `GET`. A lista juntada no registro (`ROTAS_DO_CHAT_DA_ABA`) é a que o teste fixa. Os tipos da conexão do chat na aba são os que o chat relê, os do que o `/api/sessao` traz (as preferências e os padrões) e o fim da sessão. O `GET /pessoas/nomes` do "No nome de" fica fora: só a TI o usa, e o chat o trata como o pedido que falhou.
+
 Com a entrada pelo Windows, a conta que exige ou tem os dois passos não recebe o bilhete. O webview mostra a entrada do chat, com a senha e o código. A página de entrada do chat aberta pela aba leva a marca da aba (`/chat/entrar?aba=<id curto do aparelho>`), e a sessão que sai dali nasce com o alcance `chat-da-aba`, ligada à sessão da aba da mesma conta e do mesmo aparelho. Sem essa sessão da aba, a entrada é recusada. Falsificar a marca só reduz o alcance.
 
 ### 9. Os tokens da aba

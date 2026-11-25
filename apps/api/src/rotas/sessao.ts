@@ -118,6 +118,11 @@ export const EstadoDaSessao = z
         expiraEm: z.iso.datetime(),
         /** Vazio enquanto a sessão está pendente. */
         acesso: AcessoDaSessao,
+        /**
+         * A sessão do chat na aba (change aba-dos-colaboradores, decisão 8): o chat esconde o que leva
+         * à casca, o "Andamento", a instalação e o push.
+         */
+        naAba: z.boolean(),
       })
       .nullable(),
   })
@@ -212,10 +217,13 @@ export async function lerDadosDoEstado(
 export function estadoDaSessao(
   requisicao: Pick<FastifyRequest, 'server' | 'organizacao'>,
   dados: DadosDoEstado,
-  sessao: Pick<
-    SessaoDaRequisicao,
-    'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso'
-  > | null,
+  sessao:
+    | (Pick<
+        SessaoDaRequisicao,
+        'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso'
+      > &
+        Partial<Pick<SessaoDaRequisicao, 'naAba'>>)
+    | null,
 ) {
   const conta = sessao?.pendencia === null ? dados.conta : null;
   return {
@@ -239,6 +247,7 @@ export function estadoDaSessao(
       csrf: sessao.tokenCsrf,
       expiraEm: sessao.expiraEm.toISOString(),
       acesso: { permissoes: sessao.pendencia === null ? listarPermissoes(sessao.acesso) : [] },
+      naAba: sessao.naAba ?? false,
     },
   };
 }
@@ -446,7 +455,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
   app.get(
     '/sessao',
     {
-      config: { semPermissao: 'entrada' },
+      config: { semPermissao: 'entrada', chatDaAba: true },
       schema: {
         summary: 'Estado da sessão neste endereço',
         response: { 200: EstadoDaSessao, ...PROBLEMAS_DO_ACESSO },

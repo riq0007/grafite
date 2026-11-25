@@ -40079,6 +40079,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
         };
         PedidoDeEntradaInput: {
@@ -43393,6 +43394,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             sessoesEncerradas: number;
         };
@@ -43704,6 +43706,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             codigosDeRecuperacao: string[];
             sessoesEncerradas: number;
@@ -44855,6 +44858,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             codigosRestantes?: number;
         };
@@ -46085,6 +46089,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
         };
         PedidoDeEntrada: {
@@ -49400,6 +49405,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             sessoesEncerradas: number;
         };
@@ -49711,6 +49717,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             codigosDeRecuperacao: string[];
             sessoesEncerradas: number;
@@ -50862,6 +50869,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             codigosRestantes?: number;
         };

@@ -1425,6 +1425,11 @@ Toda rota declara a permissão que exige, ou a exceção que só pede a sessão,
     semPermissao?: ExcecaoDePermissao;
     /** A rota que nunca conta como uso da sessão, como a conexão de eventos. */
     naoContaComoUso?: true;
+    /**
+     * A rota que a sessão do chat na aba também usa (change aba-dos-colaboradores, decisão 8). As de
+     * `/chat/` a ganham sozinhas; as outras da lista a declaram.
+     */
+    chatDaAba?: true;
   }
 ```
 
