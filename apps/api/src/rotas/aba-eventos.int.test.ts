@@ -176,7 +176,12 @@ describe('GET /aba/estado', () => {
     const token = await abrirAba(pcFin09);
     const antes = await estado(token);
     expect(antes.statusCode, antes.body).toBe(200);
-    expect(antes.json()).toEqual({ naoLidas: 0, respostasNovas: 0, versaoDaConfiguracao: 0 });
+    expect(antes.json()).toEqual({
+      naoLidas: 0,
+      respostasNovas: 0,
+      porVer: { quantas: 0, ultima: null },
+      versaoDaConfiguracao: 0,
+    });
     const mandada = await cliente.enviar(
       'POST',
       `/chat/diretas/${contaDaFernanda}/mensagens`,
@@ -190,6 +195,7 @@ describe('GET /aba/estado', () => {
     expect((await estado(token)).json()).toEqual({
       naoLidas: 1,
       respostasNovas: 0,
+      porVer: { quantas: 0, ultima: null },
       versaoDaConfiguracao: 1,
     });
   });

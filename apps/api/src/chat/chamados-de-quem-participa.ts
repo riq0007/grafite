@@ -9,6 +9,7 @@
 // traz o andamento, e quem participa pela TI lê o chamado como a TI (change
 // andamento-e-varias-mensagens, design, decisões 2 e 4; tarefa 3.1).
 import {
+  aberturasDosChamados,
   anexosDosChamados,
   arquivos,
   chamados,
@@ -68,6 +69,7 @@ import {
 import { formularioDa } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { comOAlcanceDeAtender, daConta, pessoaUsaOChat } from '../chamados/quem-participa.ts';
+import { registrarEvento } from '../eventos/saida.ts';
 import { lerContas } from './contas.ts';
 import { conversasParaParticipar } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
@@ -516,6 +518,41 @@ async function chamadoDeQuemParticipa(tx: Transacao, conta: ContaQueLeAsMensagen
     .where(eq(chamados.numero, numero));
   if (!lido || !participaDoChamado(daConta(conta), lido.chamado)) throw chamadoNaoEncontrado();
   return lido;
+}
+
+/**
+ * A abertura da conversa do chamado pela conta (change aba-dos-colaboradores, spec chamados,
+ * "Resposta por ver"; design, decisão 5): o momento da última, por conta e chamado, que tira a
+ * resposta por ver sem tirar a resposta nova. A gravação avisa só as telas e a aba da conta.
+ */
+export async function gravarAbertura(
+  tx: Transacao,
+  conta: ContaQueLeAsMensagens,
+  numero: number,
+  momento: Date,
+): Promise<void> {
+  const { chamado } = await chamadoDeQuemParticipa(tx, conta, numero);
+  await tx
+    .insert(aberturasDosChamados)
+    .values({
+      orgId: sql`app.current_org()`,
+      chamadoId: chamado.id,
+      contaId: conta.id,
+      abertaEm: momento,
+    })
+    .onConflictDoUpdate({
+      target: [
+        aberturasDosChamados.orgId,
+        aberturasDosChamados.contaId,
+        aberturasDosChamados.chamadoId,
+      ],
+      set: { abertaEm: momento },
+    });
+  await registrarEvento(tx, {
+    tipo: 'chamados.mudaram',
+    alvo: { tipo: 'chamado', id: chamado.id },
+    publico: { contas: [conta.id] },
+  });
 }
 
 /** O formulário sem os campos só da TI, que a pessoa não lê, nem as respostas nem os anexos. */

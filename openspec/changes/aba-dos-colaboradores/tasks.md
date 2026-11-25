@@ -92,7 +92,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `PublicoDoEvento` com as sessões da aba e o aparelho.
 
   Começa pelos testes de qual evento chega a qual aba. Verificar: esses testes, o contrato, o lint e o typecheck.
-- [ ] 3.9 A resposta por ver na API: a gravação da abertura (`POST /api/chat/chamados/:numero/aberta`), o evento à pessoa e as respostas por ver no estado da aba.
+- [x] 3.9 A resposta por ver na API: a gravação da abertura (`POST /api/chat/chamados/:numero/aberta`), o evento à pessoa e as respostas por ver no estado da aba.
 
   Verificar: os testes de integração, o contrato, o lint e o typecheck.
 - [ ] 3.10 O alcance `chat-da-aba` (decisão 8):

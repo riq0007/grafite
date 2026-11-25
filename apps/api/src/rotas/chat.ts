@@ -6,6 +6,7 @@
 // gravado: a consulta tem o mesmo corte do domínio (`participacao`), e as outras contas passam pelo
 // corte do acesso (`chat/quem-usa.ts`).
 import {
+  aberturasDosChamados,
   type Banco,
   chamados,
   contas,
@@ -22,6 +23,7 @@ import {
 import {
   type Acesso,
   chamadosComRespostaNova,
+  linhasPorVer,
   MAXIMO_NO_CONTADOR,
   nomeNoChat,
   normalizarTexto,
@@ -188,23 +190,43 @@ export async function conversasDaConta(tx: Transacao, contaId: string): Promise<
   return linhas.map((linha) => ({ ...linha, silenciada: linha.silenciada ?? false }));
 }
 
+/** A última resposta por ver: quem respondeu, o chamado e a hora (spec aba-dos-colaboradores). */
+export interface UltimaPorVer {
+  quem: string;
+  numero: number;
+  titulo: string;
+  momento: Date;
+}
+
+/** As respostas dos chamados da conta: os com resposta nova e os com resposta por ver. */
+export interface RespostasDaConta {
+  novas: number;
+  porVer: { quantas: number; ultima: UltimaPorVer | null };
+}
+
 /**
- * Os chamados abertos de que a conta participa com resposta nova: os da pessoa dela e os que ela
- * abriu pelo chat (`participaDoChamado`), com as mensagens da TI de outra conta, que o domínio conta
- * depois da `vista_ate` (`respostaNova`). O de quem participa pela TI não tem resposta nova.
+ * Os chamados abertos de que a conta participa com resposta nova e com resposta por ver: os da
+ * pessoa dela e os que ela abriu pelo chat (`participaDoChamado`), com as mensagens da TI de outra
+ * conta, que o domínio conta depois da `vista_ate` (`respostaNova`) e da última abertura
+ * (`linhasPorVer`, change aba-dos-colaboradores, decisão 5). As linhas vão na ordem da conversa, e
+ * a última por ver é a mais recente entre os chamados, pela hora. O de quem participa pela TI não
+ * tem resposta nova.
  */
-export async function chamadosComResposta(
+export async function respostasDaConta(
   tx: Transacao,
   { contaId, acesso }: { contaId: string; acesso: Acesso },
-): Promise<number> {
+): Promise<RespostasDaConta> {
+  const nenhuma: RespostasDaConta = { novas: 0, porVer: { quantas: 0, ultima: null } };
   const [conta] = await tx
     .select({ pessoaId: contas.pessoaId })
     .from(contas)
     .where(eq(contas.id, contaId));
-  if (!conta) return 0;
+  if (!conta) return nenhuma;
   const abertos = await tx
     .select({
       id: chamados.id,
+      numero: chamados.numero,
+      titulo: chamados.titulo,
       situacao: chamados.situacao,
       pessoaId: chamados.pessoaId,
       origem: chamados.origem,
@@ -212,6 +234,7 @@ export async function chamadosComResposta(
       locais: chamados.locais,
       semLocal: chamados.semLocal,
       vistaAte: leiturasDosChamados.vistaAte,
+      abertaEm: aberturasDosChamados.abertaEm,
     })
     .from(chamados)
     .leftJoin(
@@ -220,6 +243,14 @@ export async function chamadosComResposta(
         eq(leiturasDosChamados.orgId, chamados.orgId),
         eq(leiturasDosChamados.chamadoId, chamados.id),
         eq(leiturasDosChamados.contaId, contaId),
+      ),
+    )
+    .leftJoin(
+      aberturasDosChamados,
+      and(
+        eq(aberturasDosChamados.orgId, chamados.orgId),
+        eq(aberturasDosChamados.chamadoId, chamados.id),
+        eq(aberturasDosChamados.contaId, contaId),
       ),
     )
     .where(
@@ -231,13 +262,14 @@ export async function chamadosComResposta(
         ),
       ),
     );
-  if (abertos.length === 0) return 0;
+  if (abertos.length === 0) return nenhuma;
   const linhas = await tx
     .select({
       chamadoId: mensagensDosChamados.chamadoId,
       id: mensagensDosChamados.id,
       especie: mensagensDosChamados.especie,
       autorConta: mensagensDosChamados.autorConta,
+      criadaEm: mensagensDosChamados.criadaEm,
     })
     .from(mensagensDosChamados)
     .where(
@@ -249,22 +281,58 @@ export async function chamadosComResposta(
         eq(mensagensDosChamados.especie, 'mensagem'),
         isNotNull(mensagensDosChamados.autorConta),
       ),
-    );
+    )
+    .orderBy(asc(mensagensDosChamados.id));
   const quemAtende = comOAlcanceDeAtender(
     { id: contaId, pessoaId: conta.pessoaId, acesso },
     await lerArvore(tx),
   );
-  return chamadosComRespostaNova(
-    abertos.map((chamado) => ({
-      respostaNova: respostaNova({
-        situacao: chamado.situacao,
-        linhas: linhas.filter(({ chamadoId }) => chamadoId === chamado.id),
-        contaId,
-        vistaAte: chamado.vistaAte,
-        pelaTi: participaPelaTi(quemAtende, chamado),
-      }),
-    })),
-  );
+  let porVer = 0;
+  let achada: { chamado: (typeof abertos)[number]; autorConta: string; momento: Date } | null =
+    null;
+  const comResposta: { respostaNova: number }[] = [];
+  for (const chamado of abertos) {
+    const pedido = {
+      situacao: chamado.situacao,
+      linhas: linhas.filter(({ chamadoId }) => chamadoId === chamado.id),
+      contaId,
+      vistaAte: chamado.vistaAte,
+      pelaTi: participaPelaTi(quemAtende, chamado),
+    };
+    comResposta.push({ respostaNova: respostaNova(pedido) });
+    const derradeira = linhasPorVer({ ...pedido, abertaEm: chamado.abertaEm }).at(-1);
+    if (!derradeira) continue;
+    porVer++;
+    if (achada === null || derradeira.criadaEm.getTime() > achada.momento.getTime()) {
+      achada = { chamado, autorConta: derradeira.autorConta ?? '', momento: derradeira.criadaEm };
+    }
+  }
+  let daUltima: UltimaPorVer | null = null;
+  if (achada) {
+    const [autor] = await tx
+      .select({ nome: pessoas.nome })
+      .from(contas)
+      .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
+      .where(eq(contas.id, achada.autorConta));
+    daUltima = {
+      quem: autor?.nome ?? '',
+      numero: achada.chamado.numero,
+      titulo: achada.chamado.titulo,
+      momento: achada.momento,
+    };
+  }
+  return {
+    novas: chamadosComRespostaNova(comResposta),
+    porVer: { quantas: porVer, ultima: daUltima },
+  };
+}
+
+/** Os chamados com resposta nova, para a trilha e o dock. */
+export async function chamadosComResposta(
+  tx: Transacao,
+  pedido: { contaId: string; acesso: Acesso },
+): Promise<number> {
+  return (await respostasDaConta(tx, pedido)).novas;
 }
 
 export const rotasDoChat: FastifyPluginAsyncZod<{

@@ -31123,6 +31123,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/chamados/{numero}/aberta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A conversa do chamado apareceu na tela: tira a resposta por ver, e não a nova */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/chamados/{numero}/resumo": {
         parameters: {
             query?: never;
@@ -40077,6 +40158,16 @@ export interface components {
         EstadoDaAbaInput: {
             naoLidas: number | null;
             respostasNovas: number | null;
+            porVer: {
+                quantas: number;
+                ultima: {
+                    quem: string;
+                    numero: number;
+                    titulo: string;
+                    /** Format: date-time */
+                    momento: string;
+                } | null;
+            } | null;
             versaoDaConfiguracao: number;
         };
         PedidoDaSessaoDaAbaInput: {
@@ -46073,6 +46164,16 @@ export interface components {
         EstadoDaAba: {
             naoLidas: number | null;
             respostasNovas: number | null;
+            porVer: {
+                quantas: number;
+                ultima: {
+                    quem: string;
+                    numero: number;
+                    titulo: string;
+                    /** Format: date-time */
+                    momento: string;
+                } | null;
+            } | null;
             versaoDaConfiguracao: number;
         };
         PedidoDaSessaoDaAba: {

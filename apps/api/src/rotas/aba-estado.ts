@@ -1,6 +1,7 @@
 // O estado e os eventos da aba (spec aba-dos-colaboradores, "Estado da aba" e "Auditoria e eventos
 // da aba"; change aba-dos-colaboradores, design, decisão 6), com o token da sessão da aba:
-// - `GET /api/aba/estado`: as não lidas do chat, os chamados com resposta nova e a versão da
+// - `GET /api/aba/estado`: as não lidas do chat, os chamados com resposta nova e com resposta por
+//   ver, com a última, e a versão da
 //   configuração, que a aba lê ao abrir, a cada evento e a cada 60 s sem a conexão;
 // - `GET /api/aba/eventos`: o text/event-stream da aba, pelo mesmo distribuidor das telas, com o
 //   público da conta, da sessão da aba e do aparelho. Só vão os tipos que mudam o estado da aba, com
@@ -26,7 +27,7 @@ import { carregarAcesso, carregarGrupos } from '../acesso/acesso.ts';
 import { ligadoNaTransacao } from '../acesso/modulos.ts';
 import type { ConexaoDeEventos, DistribuidorDeEventos } from '../eventos/distribuidor.ts';
 import { RespostaDeProblema } from '../problemas.ts';
-import { chamadosComResposta, conversasDaConta } from './chat.ts';
+import { conversasDaConta, respostasDaConta } from './chat.ts';
 
 export interface IntervalosDosEventosDaAba {
   /** De quanto em quanto tempo vai o sinal de vida: a aba fica sem conexão sem ele por 30 s. */
@@ -63,6 +64,23 @@ const EstadoDaAba = z
     naoLidas: z.number().int().nullable(),
     /** Os chamados da pessoa com resposta nova; `null` com os chamados desligados. */
     respostasNovas: z.number().int().nullable(),
+    /**
+     * Os chamados com resposta por ver e a última delas, a mais recente pela hora; `null` com os
+     * chamados desligados. É o aviso da aba fechada: a web segue com a resposta nova.
+     */
+    porVer: z
+      .object({
+        quantas: z.number().int(),
+        ultima: z
+          .object({
+            quem: z.string(),
+            numero: z.number().int(),
+            titulo: z.string(),
+            momento: z.iso.datetime(),
+          })
+          .nullable(),
+      })
+      .nullable(),
     versaoDaConfiguracao: z.number().int(),
   })
   .meta({ id: 'EstadoDaAba' });
@@ -119,10 +137,18 @@ export const rotasDoEstadoDaAba: FastifyPluginAsyncZod<DependenciasDoEstadoDaAba
         const [configuracao] = await tx
           .select({ versao: configuracoesDaAba.versao })
           .from(configuracoesDaAba);
+        const respostas = (await ligadoNaTransacao(tx, 'chamados'))
+          ? await respostasDaConta(tx, { contaId: sessao.contaId, acesso })
+          : null;
+        const ultima = respostas?.porVer.ultima ?? null;
         return {
           naoLidas: usaOChat ? totalDoChat(await conversasDaConta(tx, sessao.contaId)) : null,
-          respostasNovas: (await ligadoNaTransacao(tx, 'chamados'))
-            ? await chamadosComResposta(tx, { contaId: sessao.contaId, acesso })
+          respostasNovas: respostas?.novas ?? null,
+          porVer: respostas
+            ? {
+                quantas: respostas.porVer.quantas,
+                ultima: ultima ? { ...ultima, momento: ultima.momento.toISOString() } : null,
+              }
             : null,
           versaoDaConfiguracao: configuracao?.versao ?? 0,
         };

@@ -4608,6 +4608,61 @@
               }
             ]
           },
+          "porVer": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "quantas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "ultima": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "quem": {
+                            "type": "string"
+                          },
+                          "numero": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "titulo": {
+                            "type": "string"
+                          },
+                          "momento": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "quem",
+                          "numero",
+                          "titulo",
+                          "momento"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "quantas",
+                  "ultima"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "versaoDaConfiguracao": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -4617,6 +4672,7 @@
         "required": [
           "naoLidas",
           "respostasNovas",
+          "porVer",
           "versaoDaConfiguracao"
         ]
       },
@@ -34637,6 +34693,63 @@
               }
             ]
           },
+          "porVer": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "quantas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "ultima": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "quem": {
+                            "type": "string"
+                          },
+                          "numero": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "titulo": {
+                            "type": "string"
+                          },
+                          "momento": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "quem",
+                          "numero",
+                          "titulo",
+                          "momento"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "quantas",
+                  "ultima"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "versaoDaConfiguracao": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -34646,6 +34759,7 @@
         "required": [
           "naoLidas",
           "respostasNovas",
+          "porVer",
           "versaoDaConfiguracao"
         ],
         "additionalProperties": false
@@ -92926,6 +93040,78 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/chamados/{numero}/aberta": {
+      "post": {
+        "summary": "A conversa do chamado apareceu na tela: tira a resposta por ver, e não a nova",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
           },
           "400": {
             "description": "Default Response",

@@ -26,6 +26,7 @@ import {
   ConversaDoChamadoDeQuemParticipa,
   chamadosDeQuemParticipa,
   conversaDeQuemParticipa,
+  gravarAbertura,
   ResumoDoChamadoNoChat,
   resumoDoChamadoNoChat,
 } from '../chat/chamados-de-quem-participa.ts';
@@ -85,6 +86,24 @@ export const rotasDaLeituraDosChamadosDoChat: FastifyPluginAsyncZod<
       deQuemLe(requisicao, (tx, conta) =>
         conversaDeQuemParticipa(tx, conta, requisicao.params.numero, agora()),
       ),
+  );
+
+  app.post(
+    '/chat/chamados/:numero/aberta',
+    {
+      config: { permissao: 'chat.usar' },
+      schema: {
+        summary: 'A conversa do chamado apareceu na tela: tira a resposta por ver, e não a nova',
+        params: ParametrosDoChamado,
+        response: { 204: z.null(), ...PROBLEMAS },
+      },
+    },
+    async (requisicao, resposta) => {
+      await deQuemLe(requisicao, (tx, conta) =>
+        gravarAbertura(tx, conta, requisicao.params.numero, agora()),
+      );
+      return resposta.status(204).send(null);
+    },
   );
 
   app.get(
