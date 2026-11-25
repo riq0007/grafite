@@ -97,7 +97,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   Verificar: os testes de integração, o contrato, o lint e o typecheck.
 - [ ] 3.10 O alcance `chat-da-aba` (decisão 8):
   - o `lerSessao` com os alcances aceitos, nos três chamadores, e a sessão da aba ligada conferida ao vivo;
-  - o `chatDaAba` nas rotas da lista, fixada num teste;
+  - o `chatDaAba` nas rotas da lista, fixada num teste, com o `POST /api/chat/chamados/:numero/aberta` (da 3.9), que o chat na aba é quem mais chama;
   - o 403 `fora-do-alcance-da-aba`;
   - os eventos filtrados pelos tipos do chat;
   - o `naAba` no `/api/sessao`.
@@ -205,7 +205,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - os comandos da tela;
   - os eventos passados à tela, com o atraso sorteado só nos de muita gente, a releitura a cada 60 s e o sem conexão em 30 s;
   - o estado lido depois de a conexão de eventos abrir, e não antes, porque ela não retoma; os eventos que chegam durante o atraso viram uma leitura só, pelo limite de 120 por minuto do token; o `reiniciar` relê como os de muita gente; o `sessao` é o fim: a aba pede outra sessão ou volta ao formulário, e o motivo vem do 401 do pedido seguinte; a conexão que termina sem o `sessao`, como a mais antiga fechada pelo limite ou todas na atualização da API, não é o fim: a aba reconecta com o atraso sorteado e só fica sem conexão pelos 30 s sem o sinal de vida;
-  - a configuração conferida a cada 60 s sem sessão.
+  - a configuração conferida a cada 60 s sem sessão;
+  - o aviso novo da resposta por ver seguro por cerca de 1 s e mostrado só se o estado seguir com ela: com a conversa à vista na web, a abertura chega logo depois da mensagem, e a aba não alarga nem pulsa por um instante.
 
   Verificar: a aba no `tauri dev` contra o `pnpm dev`: a resposta no chamado chega à aba, e a API parada a deixa sem conexão.
 - [ ] 5.15 O chat na tela maior (decisão 8):

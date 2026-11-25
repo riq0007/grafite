@@ -137,7 +137,7 @@ Fechar a tela maior destrói o webview do chat (decisão 8). Assim, a conversa q
 
 A gravação manda o evento da leitura à pessoa. O domínio ganha a conta das duas respostas, a nova e a por ver. A por ver só vai ao estado da aba: a web segue com a resposta nova.
 
-Na API (tarefa 3.9), a gravação usa o mesmo corte de quem participa da leitura: quem não participa recebe 404. O evento é o `chamados.mudaram` só às contas da pessoa. O estado da aba traz o `porVer` com quantas e a última por ver, a mais recente entre os chamados pela hora: quem respondeu, o número, o título e o momento.
+Na API (tarefa 3.9), a gravação usa o mesmo corte de quem participa da leitura: quem não participa recebe 404. O evento é o `chamados.mudaram` só à conta dela, e só quando a abertura tira a resposta por ver (há mensagem de outra conta depois da abertura anterior): a segunda abertura seguida não avisa, e a tela que grava a abertura ao reler não entra em laço. O estado da aba traz o `porVer` com quantas e a última por ver, a mais recente entre os chamados pela hora: quem respondeu, o número, o título e o momento.
 
 ### 6. O estado e os eventos
 

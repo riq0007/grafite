@@ -115,6 +115,30 @@ describe('a resposta por ver', () => {
     });
   });
 
+  it('a abertura que não tira resposta por ver não avisa', async () => {
+    const numero = await c.abrirChamado('fernanda');
+    await daAna(numero, 'Qual é a sala?');
+    const daAbertura = async () =>
+      (
+        await naOrganizacao(api.banco, c.org, (tx) =>
+          tx
+            .select({ id: eventos.id })
+            .from(eventos)
+            .where(and(eq(eventos.tipo, 'chamados.mudaram'), isNull(eventos.permissao))),
+        )
+      ).length;
+    api.relogio.avancar(MINUTO);
+    await abrir(numero);
+    api.relogio.avancar(MINUTO);
+    expect((await abrir(numero)).statusCode).toBe(204);
+    expect(await daAbertura()).toBe(1);
+    api.relogio.avancar(MINUTO);
+    await daAna(numero, 'Chego em 10 minutos.');
+    api.relogio.avancar(MINUTO);
+    await abrir(numero);
+    expect(await daAbertura()).toBe(2);
+  });
+
   it('a abertura avisa só a conta, e quem não participa recebe 404', async () => {
     const numero = await c.abrirChamado('fernanda');
     await daAna(numero, 'Qual é a sala?');

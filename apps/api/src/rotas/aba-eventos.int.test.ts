@@ -8,13 +8,17 @@ import {
   atribuicoes,
   contas,
   grupos,
+  horarioDaTi,
   naOrganizacao,
+  numeracaoDosChamados,
   organizacoes,
   sessoes,
   sessoesDaAba,
+  tiposDeChamado,
 } from '@grafite/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { HORARIO_DOS_CHAMADOS } from '../../test/chamados.ts';
 import { ligarDiretorioSimulado } from '../../test/diretorio.ts';
 import { abrirEventos, type FluxoDeEventos } from '../../test/eventos.ts';
 import {
@@ -30,6 +34,7 @@ import {
 } from '../../test/integracao.ts';
 import { encerrarSessoesDaConta } from '../acesso/encerramento.ts';
 import { criarSessao, hashDoToken, NOME_DO_COOKIE } from '../acesso/sessoes.ts';
+import { criarTiposDeFabrica } from '../chamados/fabrica.ts';
 import { executarComando } from '../comando/executar.ts';
 import { criarDiretorioSimulado } from '../diretorio/simulado.ts';
 import { registrarEvento } from '../eventos/saida.ts';
@@ -197,6 +202,62 @@ describe('GET /aba/estado', () => {
       respostasNovas: 0,
       porVer: { quantas: 0, ultima: null },
       versaoDaConfiguracao: 1,
+    });
+  });
+
+  it('a resposta por ver, com a última: quem, o chamado e a hora', async () => {
+    const token = await abrirAba(pcFin09);
+    await naOrg(async (tx) => {
+      await criarTiposDeFabrica(tx, {
+        ator: { tipo: 'sistema', descricao: 'teste da aba' },
+        momento: api.relogio.agora(),
+      });
+      await tx
+        .insert(horarioDaTi)
+        .values({ orgId: org, ...HORARIO_DOS_CHAMADOS, dias: [...HORARIO_DOS_CHAMADOS.dias] });
+      await tx.insert(numeracaoDosChamados).values({ orgId: org, ultimo: 1040 });
+    });
+    const [tipo] = await naOrg((tx) =>
+      tx
+        .select({ id: tiposDeChamado.id })
+        .from(tiposDeChamado)
+        .where(eq(tiposDeChamado.nome, 'Outro')),
+    );
+    const [daFernanda] = await naOrg((tx) =>
+      tx.select({ pessoaId: contas.pessoaId }).from(contas).where(eq(contas.id, contaDaFernanda)),
+    );
+    const daTi = await criarPerfil(api, org, {
+      nome: 'TI',
+      permissoes: ['chat.usar', 'chamados.atender', 'pessoas.ver'],
+    });
+    const doTiago = await criarConta(api, org, { usuario: 'tiago', nome: 'Tiago Melo' });
+    await atribuir(api, org, { perfilId: daTi, contaId: doTiago.id });
+    const tiago = await cliente.entrar('tiago');
+    const aberto = await cliente.enviar('POST', '/chamados', tiago, {
+      pessoa: daFernanda?.pessoaId,
+      tipo: tipo?.id,
+      respostas: { relato: 'O monitor pisca.' },
+      ficaComigo: true,
+    });
+    expect(aberto.statusCode, aberto.body).toBe(201);
+    const { numero } = aberto.json() as { numero: number };
+    const respondida = await cliente.enviar('POST', `/chamados/${numero}/mensagem`, tiago, {
+      texto: 'Já vou ver.',
+    });
+    expect(respondida.statusCode, respondida.body).toBe(200);
+    const lido = await estado(token);
+    expect(lido.statusCode, lido.body).toBe(200);
+    expect(lido.json()).toMatchObject({
+      respostasNovas: 1,
+      porVer: {
+        quantas: 1,
+        ultima: {
+          quem: 'Tiago Melo',
+          numero,
+          titulo: expect.any(String),
+          momento: api.relogio.agora().toISOString(),
+        },
+      },
     });
   });
 
@@ -403,7 +464,11 @@ describe('GET /aba/eventos', () => {
     expect(fluxo.mensagens.find((m) => m.evento === 'modulos.mudaram')?.dados).toMatchObject({
       deMuitos: true,
     });
-    expect((await estado(token)).json()).toMatchObject({ naoLidas: null, respostasNovas: null });
+    expect((await estado(token)).json()).toMatchObject({
+      naoLidas: null,
+      respostasNovas: null,
+      porVer: null,
+    });
     await desligar([]);
   });
 });

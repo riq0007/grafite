@@ -26,7 +26,7 @@ import {
   ConversaDoChamadoDeQuemParticipa,
   chamadosDeQuemParticipa,
   conversaDeQuemParticipa,
-  gravarAbertura,
+  gravarAberturaDaConversa,
   ResumoDoChamadoNoChat,
   resumoDoChamadoNoChat,
 } from '../chat/chamados-de-quem-participa.ts';
@@ -100,7 +100,7 @@ export const rotasDaLeituraDosChamadosDoChat: FastifyPluginAsyncZod<
     },
     async (requisicao, resposta) => {
       await deQuemLe(requisicao, (tx, conta) =>
-        gravarAbertura(tx, conta, requisicao.params.numero, agora()),
+        gravarAberturaDaConversa(tx, conta, requisicao.params.numero, agora()),
       );
       return resposta.status(204).send(null);
     },
