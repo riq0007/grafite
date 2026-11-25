@@ -1907,6 +1907,9 @@ export const TIPOS_DE_EVENTO = [
   'chamados.mudaram',
   'ajustes-dos-chamados.mudaram',
   'chat.mudou',
+  'configuracao-da-aba.mudou',
+  'entrada-da-aba.mudou',
+  'bloqueio-da-aba.mudou',
 ] as const;
 ```
 
