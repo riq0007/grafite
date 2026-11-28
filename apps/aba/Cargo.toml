@@ -1,7 +1,8 @@
 # O workspace Cargo da aba (change aba-dos-colaboradores, design, decisão 1): o programa da aba, que
-# roda como a pessoa, e o serviço do Windows, que roda como o sistema e guarda o token do aparelho.
+# roda como a pessoa, o serviço do Windows, que roda como o sistema e guarda o token do aparelho, e o
+# pipe local entre os dois.
 [workspace]
-members = ["src-tauri", "servico"]
+members = ["src-tauri", "servico", "pipe"]
 resolver = "3"
 
 [workspace.package]

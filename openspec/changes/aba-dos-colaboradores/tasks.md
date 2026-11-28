@@ -173,7 +173,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `SHQueryUserNotificationState` e o Ctrl+Alt+T.
 
   Verificar: os testes do Rust e, no `tauri dev`, o tema trocado ao vivo e um vídeo em tela cheia encolhendo a aba.
-- [ ] 5.10 O pipe do serviço (decisão 1): o servidor com a DACL e as flags, a aba que confere o processo do serviço, e quem chama pelo `ImpersonateNamedPipeClient`.
+- [x] 5.10 O pipe do serviço (decisão 1): o servidor com a DACL e as flags, a aba que confere o processo do serviço, e quem chama pelo `ImpersonateNamedPipeClient`.
 
   Começa pelos testes do Rust, com o servidor falso recusado. Verificar: esses testes e o `clippy`.
 - [ ] 5.11 O serviço do Windows:

@@ -1438,8 +1438,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "grafite-aba-pipe"
+version = "0.1.0"
+dependencies = [
+ "windows",
+]
+
+[[package]]
 name = "grafite-aba-servico"
 version = "0.1.0"
+dependencies = [
+ "grafite-aba-pipe",
+]
 
 [[package]]
 name = "gtk"

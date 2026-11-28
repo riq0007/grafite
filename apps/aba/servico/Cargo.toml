@@ -8,3 +8,6 @@ publish.workspace = true
 [[bin]]
 name = "grafite-aba-servico"
 path = "src/main.rs"
+
+[dependencies]
+grafite-aba-pipe = { path = "../pipe" }

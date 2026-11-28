@@ -255,6 +255,18 @@ No `tauri dev`:
 
 O alto contraste e as animações não foram trocados no Windows desta máquina: a leitura é a mesma do tema, e a precedência tem teste.
 
+O pipe (tarefa 5.10) fica num terceiro pacote do workspace, o `pipe` (`grafite-aba-pipe`), que o serviço e a aba usam: o servidor, o cliente que confere o serviço e quem chama. O que as mensagens dizem entra com o serviço, nas tarefas 5.11 a 5.13.
+- **a DACL:** `D:P(A;;GA;;;SY)(A;;0x12019b;;;IU)`. Os usuários interativos leem e escrevem, sem o `FILE_CREATE_PIPE_INSTANCE` que o `FILE_GENERIC_WRITE` traria, e só o sistema cria instâncias. Ao abrir, a aba pede só ler e escrever os dados e os atributos, e não o `GENERIC_WRITE`;
+- **o modo:** o de mensagem, com o `PIPE_REJECT_REMOTE_CLIENTS`. Cada mensagem vai inteira, até 64 KiB, e a maior é recusada dos dois lados;
+- **a conferência da aba:** o `GetNamedPipeServerProcessId` tem de ser o processo do serviço `GrafiteAba` no gerenciador de serviços, rodando, com a conta `LocalSystem`. A pessoa sem administrador não abre o token de um processo do sistema; o gerenciador é a fonte, e só o administrador muda o serviço. O serviço parado é o "sem serviço";
+- **quem chama:** o `ImpersonateNamedPipeClient` depois da primeira mensagem. O token da linha é aberto como quem chama e lido já como o serviço, com o SID, o nome e a sessão do Windows: com a identificação, a linha não consulta o nome da conta.
+
+Os testes criam o pipe com um nome só deles e com a DACL do serviço mais o usuário do teste, porque o executor do CI não é interativo. Eles conferem:
+- o servidor falso recusado e o sem serviço;
+- quem chama, pelo Windows;
+- a outra instância recusada a quem não é o sistema;
+- a mensagem grande.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat
