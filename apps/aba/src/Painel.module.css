@@ -23,6 +23,9 @@
   display: grid;
   justify-items: center;
   gap: var(--vao);
+  /* A forma que cresce da aba fechada corta o que ainda não cabe; no entalhe, o encaixe fica à vista. */
+  overflow: clip;
+  overflow-clip-margin: calc(var(--encaixe, 0px) + var(--fio));
   /* A largura da spec (293 e 225), também quando o fio de 1,5 px arredonda para 1 px na tela. */
   width: calc(2 * var(--largura-da-opcao) + 6px + 2 * var(--respiro) + 3px);
   padding: var(--respiro);
@@ -67,6 +70,124 @@
 .logo {
   display: flex;
   justify-content: center;
+}
+
+/* ---------- O abrir (m05): o logo dos 60 aos 200 ms, e a cascata das opções até os 340 ms ---------- */
+.logo,
+.linha {
+  animation: subir-o-logo var(--dur-aba-entrada) var(--curva-padrao) var(--dur-aba-inicio-do-logo)
+    backwards;
+}
+
+.opcao,
+.nota,
+.quem {
+  animation: subir-a-opcao var(--dur-aba-entrada) var(--curva-mola-suave)
+    calc(var(--dur-aba-inicio-da-cascata) + var(--ordem, 0) * var(--dur-aba-cascata)) backwards;
+}
+
+@keyframes subir-o-logo {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes subir-a-opcao {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* O fechar: o conteúdo some junto com a forma, que volta à aba fechada. */
+.fechando {
+  pointer-events: none;
+}
+
+.fechando > * {
+  opacity: 0;
+  transition: opacity var(--dur-aba-fechar) var(--curva-saida);
+}
+
+/* ---------- A linha da resposta, no alto (m02 e m04) ---------- */
+.linha {
+  appearance: none;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-fundo-2);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition: background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.linha:hover {
+  background-color: var(--cor-aba-flutuante-bloco);
+}
+
+.linha:focus {
+  outline: 0;
+}
+
+/* Lida com o painel aberto, a linha sai em 140 ms. */
+.saindo {
+  animation: sair var(--dur-aba-entrada) var(--curva-saida) forwards;
+}
+
+@keyframes sair {
+  to {
+    opacity: 0;
+  }
+}
+
+.ponto {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-aba-flutuante-atencao);
+}
+
+.textoDaLinha {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.quemRespondeu,
+.chamado {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quemRespondeu {
+  font-weight: var(--peso-forte);
+}
+
+.chamado {
+  color: var(--cor-aba-flutuante-segundo-tom);
+}
+
+.hora {
+  align-self: flex-start;
+  padding-top: 1px;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
 }
 
 /* A marca, na cor do texto da aba, e não na do tema do Grafite. */
@@ -130,8 +251,10 @@
 /* O anel do foco, sempre visível pelo teclado; no foco dado pelo atalho, também (m08). */
 .opcao:focus-visible,
 .sair:focus-visible,
+.linha:focus-visible,
 .painel[data-teclado] .opcao:focus,
-.painel[data-teclado] .sair:focus {
+.painel[data-teclado] .sair:focus,
+.painel[data-teclado] .linha:focus {
   box-shadow: var(--anel-do-foco);
   transition: none;
 }
@@ -234,13 +357,37 @@
   background-color: var(--cor-aba-flutuante-bloco);
 }
 
+/* Com a linha da resposta (m02 e m04): 372 px, ou 300 na tela pequena, até fechar. */
+.largo {
+  --altura-da-larga: 92px;
+  width: 372px;
+}
+
+.largo.compacta {
+  --altura-da-larga: 80px;
+  width: 300px;
+}
+
+.largo .opcoes {
+  justify-self: stretch;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.largo .quem,
+.largo .nota {
+  justify-self: stretch;
+  width: auto;
+  max-width: none;
+}
+
 /* ---------- O alto contraste (m07): fio de 2 px, opções contornadas e nenhuma sombra ---------- */
 :global([data-windows-theme="alto-contraste"]) .painel {
   --fio: 2px;
   filter: none;
 }
 
-:global([data-windows-theme="alto-contraste"]) .opcao {
+:global([data-windows-theme="alto-contraste"]) .opcao,
+:global([data-windows-theme="alto-contraste"]) .linha {
   border: 2px solid var(--cor-aba-flutuante-contorno);
 }
 
@@ -254,7 +401,8 @@
     filter: none;
   }
 
-  :global(:root:not([data-windows-theme])) .opcao {
+  :global(:root:not([data-windows-theme])) .opcao,
+  :global(:root:not([data-windows-theme])) .linha {
     border: 2px solid var(--cor-aba-flutuante-contorno);
   }
 

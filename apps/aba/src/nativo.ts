@@ -52,10 +52,22 @@ export function informarForma(retangulos: RetanguloDaForma[]): Promise<void> {
  * aba (com a entrada pela senha, ela tem o "Sair") e se o atalho ficou com outro programa.
  */
 export interface EstadoDaAba {
-  naoLidas: number;
-  respostasNovas: number;
+  /** As não lidas do chat; `null` sem o chat. */
+  naoLidas: number | null;
+  /** Os chamados com resposta nova; `null` sem os chamados. */
+  respostasNovas: number | null;
+  /** Os chamados com resposta por ver e a última delas, como o `GET /api/aba/estado` dá. */
+  porVer: { quantas: number; ultima: RespostaPorVer | null } | null;
   pessoa: { nome: string; pelaSenha: boolean } | null;
   atalhoOcupado: boolean;
+}
+
+/** A última resposta por ver: quem respondeu, o chamado e o momento, em ISO 8601. */
+export interface RespostaPorVer {
+  quem: string;
+  numero: number;
+  titulo: string;
+  momento: string;
 }
 
 export const COMANDO_DO_ESTADO = 'estado';
@@ -82,6 +94,11 @@ export type OpcaoDaAba = 'abrir-chamado' | 'abrir-chat' | 'visualizar-chamados';
 /** Abre a tela maior, embaixo da aba, na opção escolhida. */
 export function abrirTelaMaior(destino: OpcaoDaAba): Promise<void> {
   return invoke('abrir_tela_maior', { destino });
+}
+
+/** Abre a tela maior no chat da aba, já no chamado da resposta. */
+export function abrirChamado(numero: number): Promise<void> {
+  return invoke('abrir_tela_maior', { destino: 'chamado', numero });
 }
 
 /** Devolve o foco à janela que estava na frente antes do atalho; sem atalho, não faz nada. */

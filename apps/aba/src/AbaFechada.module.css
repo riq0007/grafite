@@ -148,6 +148,97 @@
   box-shadow: var(--anel-do-foco);
 }
 
+/* ---------- O aviso da resposta (m02 e m04): o texto diz, e o ponto acompanha ---------- */
+.comAviso {
+  gap: 10px;
+  max-width: 280px;
+  padding-left: 14px;
+}
+
+.entalhe.comAviso {
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.aviso {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: aparecer var(--dur-aba-entrada) var(--curva-padrao) var(--dur-aba-inicio-do-aviso)
+    backwards;
+}
+
+.quem {
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-weight: var(--peso-medio);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * O ponto pulsa uma vez quando a resposta chega, por 1.400 ms, e depois fica parado (decisão 7): o
+ * anel vai de 0,6 a 1,5 vez e some. Sem animações no Windows, o anel fica parado à vista (m06).
+ */
+.ponto {
+  position: relative;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-aba-flutuante-atencao);
+}
+
+.ponto::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--cor-aba-flutuante-atencao);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.pulsando::after {
+  animation: pulsar var(--dur-aba-ponto) var(--curva-saida);
+}
+
+@keyframes pulsar {
+  from {
+    opacity: 0.5;
+    transform: scale(0.6);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+:global([data-motion="reduzido"]) .ponto::after {
+  animation: none;
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(:root:not([data-motion])) .ponto::after {
+    animation: none;
+    opacity: 0.45;
+  }
+}
+
+/* O nome da aba, para quem usa o leitor de tela, antes do aviso. */
+.soParaOLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- O alto contraste (m07): fio de 2 px e nenhuma sombra ---------- */
 :global([data-windows-theme="alto-contraste"]) .aba {
   --fio: 2px;

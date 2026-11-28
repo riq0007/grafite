@@ -10,9 +10,17 @@ export interface Aparencia {
   tela: { largura: number; altura: number };
 }
 
+export interface RespostaPorVer {
+  quem: string;
+  numero: number;
+  titulo: string;
+  momento: string;
+}
+
 export interface Estado {
-  naoLidas: number;
-  respostasNovas: number;
+  naoLidas: number | null;
+  respostasNovas: number | null;
+  porVer: { quantas: number; ultima: RespostaPorVer | null } | null;
   pessoa: { nome: string; pelaSenha: boolean } | null;
   atalhoOcupado: boolean;
 }
@@ -28,6 +36,7 @@ export const aparencia = (mudanca: Partial<Aparencia> = {}): Aparencia => ({
 export const estado = (mudanca: Partial<Estado> = {}): Estado => ({
   naoLidas: 0,
   respostasNovas: 0,
+  porVer: { quantas: 0, ultima: null },
   pessoa: { nome: 'Fernanda Rocha', pelaSenha: false },
   atalhoOcupado: false,
   ...mudanca,
@@ -48,6 +57,41 @@ export async function ultimaForma(page: Page): Promise<Retangulo | undefined> {
     retangulos: Retangulo[];
   }>;
   return chamadas.at(-1)?.retangulos[0];
+}
+
+/** Espera o movimento da tela acabar: o abrir, a cascata, o fechar e o pulso do ponto. */
+export async function esperarOMovimento(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((animacao) => animacao.finished.catch(() => null))),
+  );
+}
+
+/** Guarda as animações que a tela pede pelo `animate`, com os quadros, a duração e a curva. */
+export async function gravarAsAnimacoes(page: Page) {
+  await page.addInitScript(() => {
+    const janela = window as unknown as { __animacoes: unknown[] };
+    janela.__animacoes = [];
+    const animar = Element.prototype.animate;
+    Element.prototype.animate = function (quadros, opcoes) {
+      const { duration, easing } = typeof opcoes === 'object' ? opcoes : { duration: opcoes };
+      janela.__animacoes.push({
+        quadros: JSON.parse(JSON.stringify(quadros)),
+        duracao: duration,
+        curva: easing,
+      });
+      return animar.call(this, quadros, opcoes);
+    };
+  });
+}
+
+export interface AnimacaoGravada {
+  quadros: Record<string, string>[];
+  duracao: number;
+  curva: string;
+}
+
+export async function animacoes(page: Page): Promise<AnimacaoGravada[]> {
+  return page.evaluate(() => (window as unknown as { __animacoes: AnimacaoGravada[] }).__animacoes);
 }
 
 /** A janela da aba: do tamanho do painel maior, com a sombra. */

@@ -190,6 +190,14 @@ No painel (tarefa 5.4), o contrato cresce:
 
 O logo é a `Marca` do `@grafite/ui`, na cor do texto da aba, e não o "g" desenhado do mockup. Com um selo, as opções de baixo crescem 8 px para o selo não cobrir o símbolo, como o painel da notificação do m04. Quem está na aba, com "Sair", fica embaixo das opções, e o "Sair" entra na grade e no Tab. O fio de 1,5 px arredonda para 1 px na tela de escala 1, e o painel tem a largura da spec escrita.
 
+No aviso (tarefa 5.5), o estado que a tela lê tem o formato do `GET /api/aba/estado`: o `porVer` com quantas e a última, que pode faltar, e as contas que podem ser `null`. O nome da aba fica para o leitor de tela antes do aviso ("Suporte da TI: 1 resposta nova · Ana Souza"). Escolher a linha da resposta pede `abrir_tela_maior` com o destino `chamado` e o número: a spec abre o chamado no chat da aba, e não em "Visualizar chamados", como a legenda do m02 dizia. O movimento:
+- o ponto pulsa uma vez em cada chegada (o número e o momento da última), e não de novo quando a aba volta do painel; sem animações no Windows, o anel fica parado à vista, como o quadro 6 do m06;
+- a linha da resposta entra com o logo, aos 60 ms, para a cascata não passar dos 340 ms, e o "Sair" e a nota entram com a última opção;
+- a forma que cresce corta o conteúdo que ainda não cabe (`overflow: clip`), com a margem do encaixe à vista no entalhe; o encaixe, registrado com o `@property`, cresce de 14 para 18 px;
+- ao fechar, o painel volta à aba fechada de quando abriu, e a aba anima dela para a largura de agora, como os 246 para 162 px do m04 depois de ler.
+
+As referências da 5.4 foram gravadas de novo: as opções que sobem na cascata mudam a suavização do texto, e nada mais.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

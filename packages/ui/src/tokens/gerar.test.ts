@@ -178,10 +178,16 @@ describe('gerarCss', () => {
 
   it('com movimento reduzido, a aba do Windows troca em 1 ms, sem cascata, e o ponto para', () => {
     const reduzido = bloco(css, '[data-motion="reduzido"]');
-    for (const nome of ['abrir', 'entrada', 'fechar', 'entalhe', 'pressionada']) {
+    for (const nome of ['abrir', 'entrada', 'fechar', 'entalhe', 'pressionada', 'alargar']) {
       expect(reduzido[`--dur-aba-${nome}`], nome).toBe('1ms');
     }
-    for (const nome of ['inicio-do-logo', 'inicio-da-cascata', 'cascata', 'ponto']) {
+    for (const nome of [
+      'inicio-do-logo',
+      'inicio-da-cascata',
+      'cascata',
+      'inicio-do-aviso',
+      'ponto',
+    ]) {
       expect(reduzido[`--dur-aba-${nome}`], nome).toBe('0ms');
     }
   });

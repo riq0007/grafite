@@ -3,6 +3,7 @@ import {
   type Aparencia,
   abrirATela,
   type Estado,
+  esperarOMovimento,
   estado,
   JANELA,
   ultimaForma,
@@ -23,6 +24,7 @@ async function abrirOPainel(
   await aba.click();
   const painel = page.getByRole('dialog', { name: 'Suporte da TI' });
   await expect(painel).toBeVisible();
+  await esperarOMovimento(page);
   return painel;
 }
 

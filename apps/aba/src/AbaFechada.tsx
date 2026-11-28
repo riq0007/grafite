@@ -1,6 +1,8 @@
-import type { Ref } from 'react';
+import { type Ref, type RefObject, useRef } from 'react';
 import estilos from './AbaFechada.module.css';
 import encaixe from './Encaixe.module.css';
+import type { AvisoDaResposta } from './estado.ts';
+import { useLarguraAnimada } from './movimento.ts';
 import type { FormaDaAba } from './nativo.ts';
 import { Simbolo } from './Simbolo.tsx';
 
@@ -9,26 +11,51 @@ export const ROTULO_DA_ABA = 'Suporte da TI';
 interface Props {
   forma: FormaDaAba;
   compacta: boolean;
+  /** A resposta por ver: a aba alarga e diz o aviso em texto, com o ponto ao lado. */
+  aviso?: AvisoDaResposta | null;
+  /** O ponto pulsa uma vez na chegada, e não de novo quando a aba volta do painel. */
+  pulsar?: boolean;
+  /** A largura do painel que acabou de fechar: a aba anima dela para a sua. */
+  deLargura?: number | null;
   ref?: Ref<HTMLButtonElement>;
   aoAbrir?: () => void;
 }
 
 /**
- * A aba fechada (spec aba-dos-colaboradores, "Aba fechada"): a pílula de fábrica ou o entalhe preso
- * à borda de cima, sem o logo, com os estados repouso, mouse em cima, pressionada e foco.
+ * A aba fechada (spec aba-dos-colaboradores, "Aba fechada" e "Aviso da resposta nova"): a pílula de
+ * fábrica ou o entalhe preso à borda de cima, sem o logo, com os estados repouso, mouse em cima,
+ * pressionada e foco. Com uma resposta por ver, ela alarga e diz o aviso; o ponto pulsa uma vez.
  */
-export function AbaFechada({ forma, compacta, ref, aoAbrir }: Props) {
+export function AbaFechada({
+  forma,
+  compacta,
+  aviso = null,
+  pulsar = false,
+  deLargura = null,
+  ref,
+  aoAbrir,
+}: Props) {
+  const propria = useRef<HTMLButtonElement | null>(null);
+  const guardar = (elemento: HTMLButtonElement | null) => {
+    propria.current = elemento;
+    if (typeof ref === 'function') ref(elemento);
+    else if (ref) (ref as RefObject<HTMLButtonElement | null>).current = elemento;
+  };
+  const textoDoAviso = aviso ? `${aviso.resumo}|${aviso.quem ?? ''}` : '';
+  useLarguraAnimada(propria, textoDoAviso, `${forma} ${compacta}`, deLargura);
+
   const classes = [
     estilos.aba,
     estilos[forma],
     forma === 'entalhe' && encaixe.encaixe,
     compacta && forma === 'pilula' && estilos.compacta,
+    aviso && estilos.comAviso,
   ]
     .filter(Boolean)
     .join(' ');
   return (
     <button
-      ref={ref}
+      ref={guardar}
       type="button"
       className={classes}
       data-forma={forma}
@@ -36,10 +63,26 @@ export function AbaFechada({ forma, compacta, ref, aoAbrir }: Props) {
       aria-expanded={false}
       onClick={aoAbrir}
     >
-      <span className={estilos.disco}>
-        <Simbolo nome="ajuda" />
-      </span>
-      {ROTULO_DA_ABA}
+      {aviso ? (
+        <>
+          <span className={estilos.soParaOLeitor}>{ROTULO_DA_ABA}: </span>
+          <span
+            key={aviso.chegada}
+            className={`${estilos.ponto} ${pulsar ? estilos.pulsando : ''}`}
+          />
+          <span key={textoDoAviso} className={estilos.aviso}>
+            <span className={estilos.resumo}>{aviso.resumo}</span>
+            {aviso.quem && <span className={estilos.quem}> · {aviso.quem}</span>}
+          </span>
+        </>
+      ) : (
+        <>
+          <span className={estilos.disco}>
+            <Simbolo nome="ajuda" />
+          </span>
+          {ROTULO_DA_ABA}
+        </>
+      )}
       <Simbolo nome="baixo" className={estilos.seta} />
     </button>
   );

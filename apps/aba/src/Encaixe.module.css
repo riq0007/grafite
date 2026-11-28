@@ -2,6 +2,13 @@
  * O encaixe do entalhe (m01): a curva côncava de cada lado sai tangente à borda da tela e chega
  * tangente ao lado da forma, com o fio claro até ela. A forma dá o --encaixe, o --fio e o --fundo.
  */
+/* O encaixe cresce de 14 para 18 px com a ilha que abre: registrado, ele anima. */
+@property --encaixe {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 14px;
+}
+
 .encaixe {
   position: relative;
 }

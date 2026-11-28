@@ -150,7 +150,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [x] 5.4 O painel e o teclado: o painel 2+1, com o logo, os números e o "Sair" da entrada pela senha; as setas, o Enter e o Esc dentro dele.
 
   Verificar: o e2e, as referências visuais e a tela contra o m01 e o m08.
-- [ ] 5.5 O aviso e o movimento:
+- [x] 5.5 O aviso e o movimento:
   - a linha da resposta e o aviso, com o ponto de 1.400 ms (decisão 7), o corte e as larguras;
   - o abrir, a cascata e o fechar, com o reduzir movimento.
 

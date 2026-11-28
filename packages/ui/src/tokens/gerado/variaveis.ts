@@ -68,6 +68,8 @@ export const variaveis = [
   '--dur-aba-fechar',
   '--dur-aba-entalhe',
   '--dur-aba-pressionada',
+  '--dur-aba-alargar',
+  '--dur-aba-inicio-do-aviso',
   '--dur-aba-ponto',
   '--dur-deslocamento',
   '--dur-folha',

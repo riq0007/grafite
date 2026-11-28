@@ -150,7 +150,13 @@ function escalasFixas(): Declaracoes {
 }
 
 /** Os começos, a cascata e o ponto do aviso: sem movimento, nada espera e o ponto não pulsa. */
-const PARADOS_NA_ABA = new Set(['inicioDoLogo', 'inicioDaCascata', 'cascata', 'ponto']);
+const PARADOS_NA_ABA = new Set([
+  'inicioDoLogo',
+  'inicioDaCascata',
+  'cascata',
+  'inicioDoAviso',
+  'ponto',
+]);
 
 const MOVIMENTO_REDUZIDO: Declaracoes = [
   ['--dur-deslocamento', '0ms'],

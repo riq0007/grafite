@@ -68,6 +68,8 @@
   --dur-aba-fechar: 160ms;
   --dur-aba-entalhe: 120ms;
   --dur-aba-pressionada: 80ms;
+  --dur-aba-alargar: 180ms;
+  --dur-aba-inicio-do-aviso: 60ms;
   --dur-aba-ponto: 1400ms;
   --dur-deslocamento: var(--dur-media);
   --dur-folha: var(--dur-lenta);
@@ -864,6 +866,8 @@
   --dur-aba-fechar: 1ms;
   --dur-aba-entalhe: 1ms;
   --dur-aba-pressionada: 1ms;
+  --dur-aba-alargar: 1ms;
+  --dur-aba-inicio-do-aviso: 0ms;
   --dur-aba-ponto: 0ms;
 }
 
@@ -893,6 +897,8 @@
     --dur-aba-fechar: 1ms;
     --dur-aba-entalhe: 1ms;
     --dur-aba-pressionada: 1ms;
+    --dur-aba-alargar: 1ms;
+    --dur-aba-inicio-do-aviso: 0ms;
     --dur-aba-ponto: 0ms;
   }
 }
