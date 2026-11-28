@@ -1,0 +1,33 @@
+{
+  "name": "@grafite/aba",
+  "private": true,
+  "description": "A aba dos colaboradores no Windows (Tauri 2): a tela em React + Vite, o lado nativo e o serviço do Windows em Rust, num workspace Cargo.",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "dev:tela": "vite",
+    "build:tela": "vite build",
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@grafite/ui": "workspace:*",
+    "@tauri-apps/api": "^2.12.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tauri-apps/cli": "^2.12.6",
+    "@types/node": "^24.13.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "happy-dom": "^20.14.5",
+    "vite": "^8.3.0"
+  }
+}

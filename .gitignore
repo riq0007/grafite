@@ -2,6 +2,9 @@
 node_modules/
 dist/
 build/
+# O que o Cargo compila e os esquemas que o Tauri gera a cada build (apps/aba).
+target/
+apps/aba/src-tauri/gen/
 coverage/
 storybook-static/
 .turbo/

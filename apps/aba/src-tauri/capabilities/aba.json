@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "aba",
+  "description": "O que a tela da aba pode chamar no lado nativo. A tela maior do chat, com a página remota, não entra aqui.",
+  "windows": ["aba"],
+  "permissions": ["core:default"]
+}

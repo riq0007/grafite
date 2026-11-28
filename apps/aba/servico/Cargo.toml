@@ -1,0 +1,10 @@
+[package]
+name = "grafite-aba-servico"
+description = "O serviço do Windows da aba: guarda o token do aparelho e atende a aba pelo pipe"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "grafite-aba-servico"
+path = "src/main.rs"

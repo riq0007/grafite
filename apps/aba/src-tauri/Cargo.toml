@@ -1,0 +1,18 @@
+[package]
+name = "grafite-aba"
+description = "A aba dos colaboradores no Windows"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "grafite_aba"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

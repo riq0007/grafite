@@ -127,7 +127,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 5. Aba
 
-- [ ] 5.1 O esqueleto do `apps/aba`:
+- [x] 5.1 O esqueleto do `apps/aba`:
   - o Tauri 2, com a tela em React e Vite e o workspace Cargo com a aba e o serviço;
   - os scripts `dev`, `build`, `lint` e `test`, e o `apps/aba` no verificador de cores;
   - o projeto do e2e em `apps/aba/e2e`, no `pnpm test:e2e`;

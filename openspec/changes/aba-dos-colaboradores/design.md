@@ -49,6 +49,8 @@ O serviço segura o risco no nível que o usuário aceitou:
 
 Com isso, se passar por outra pessoa pede trocar o serviço ou ler o arquivo, e os dois pedem o administrador do computador.
 
+No repositório (tarefa 5.1), o workspace Cargo fica em `apps/aba`, com o `src-tauri` (o pacote `grafite-aba`) e o `servico` (`grafite-aba-servico`), e o `target` dos dois ao lado. O `build` da aba é o `tauri build`, que gera o MSI; a tela sozinha é o `build:tela`. O lint, os tipos, os testes e a ponta a ponta da aba não chamam o Cargo, e o resto do CI segue sem o Rust: o `cargo fmt`, o `clippy` e o `cargo test` ficam no job `aba` (tarefa 6.2). A ponta a ponta da tela usa a porta da web mais 3 (4176, e 4276 na instância seguinte do executor), livre das da pilha e do coletor. Os ícones vêm do ícone da PWA (`tauri icon`), só os do Windows.
+
 O token da sessão da aba, por pessoa, fica com a aba, cifrado pelo DPAPI da pessoa (`CurrentUser`). Outra pessoa do mesmo computador não o abre.
 
 ### 2. As duas entradas
