@@ -39,6 +39,15 @@ export function useChegadasDasFontes(): number {
   return chegadas;
 }
 
+function animandoALargura(elemento: HTMLElement): boolean {
+  return (elemento.getAnimations?.() ?? []).some((animacao) => {
+    const efeito = animacao.effect;
+    return (
+      efeito instanceof KeyframeEffect && efeito.getKeyframes().some((quadro) => 'width' in quadro)
+    );
+  });
+}
+
 /**
  * A largura que muda anima da antiga para a nova: alarga em `alargar`, e volta ao repouso em
  * `fechar`. A troca de forma ou de tamanho da tela não anima. Com `deLargura`, a primeira medida
@@ -54,12 +63,13 @@ export function useLarguraAnimada(
     deLargura === null ? null : { largura: deLargura, semAnimar },
   );
   const chegadasDasFontes = useChegadasDasFontes();
-  // A medida de antes passa a ser a com a fonte, se nada está animando a largura agora.
+  // A medida de antes passa a ser a com a fonte, se a largura não está animando agora. As transições
+  // do CSS, como a da cor do tema na chegada, não contam.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo só quando as fontes chegam.
   useLayoutEffect(() => {
     const elemento = ref.current;
     if (chegadasDasFontes === 0 || !elemento || !antes.current) return;
-    if ((elemento.getAnimations?.() ?? []).length > 0) return;
+    if (animandoALargura(elemento)) return;
     antes.current = { ...antes.current, largura: elemento.offsetWidth };
   }, [chegadasDasFontes]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada aviso.
