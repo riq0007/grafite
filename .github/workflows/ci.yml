@@ -188,6 +188,10 @@ jobs:
           rustup toolchain install "$RUST_DA_ABA" --profile minimal --component rustfmt,clippy
           rustup default "$RUST_DA_ABA"
 
+      # O generate_context! do Tauri embute a tela compilada, e o clippy e os testes já a pedem.
+      - name: A tela compilada, que o programa embute
+        run: pnpm --filter @grafite/aba build:tela
+
       - name: Formatação do Rust
         working-directory: apps/aba
         run: cargo fmt --all --check

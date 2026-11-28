@@ -13,7 +13,7 @@ import { useAvisoDoNativo, useDoNativo } from './doNativo.ts';
 import { avisoDaResposta, avisoDaVolta, useEstado } from './estado.ts';
 import { useFormaInformada } from './forma.ts';
 import { Linha } from './Linha.tsx';
-import type { FormaMedida } from './movimento.ts';
+import { type FormaMedida, useChegadasDasFontes } from './movimento.ts';
 import {
   abrirChamado,
   abrirTelaMaior,
@@ -70,8 +70,10 @@ export function Aba() {
   const [chegadaVista, setChegadaVista] = useState<string | null>(null);
   const chegada = useRef<string | null>(null);
   chegada.current = avisoDeSempre?.chegada ?? null;
-  // A aba fechada medida a cada render, para a linha da apresentação encolher dela.
+  // A aba fechada medida a cada render, para a linha da apresentação encolher dela. A fonte que
+  // chega também renderiza, para a medida ser com ela.
   const ultimaForma = useRef<FormaMedida | null>(null);
+  useChegadasDasFontes();
   const [saiuDaLinha, setSaiuDaLinha] = useState(false);
   const forma = useRef<HTMLElement>(null);
   const aba = useRef<HTMLButtonElement>(null);

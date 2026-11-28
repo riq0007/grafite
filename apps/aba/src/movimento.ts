@@ -21,6 +21,25 @@ export function curva(nome: 'padrao' | 'saida'): string {
 }
 
 /**
+ * Quantas vezes as fontes chegaram. A fonte da interface vem pelo `@font-face`, depois da primeira
+ * medida, e com a fonte reserva a aba tem outra largura (a DejaVu do Linux a alarga de 162 para
+ * 178 px). Cada chegada renderiza de novo, e quem guarda uma medida para animar dela mede de novo. A
+ * fonte que chegou antes de o efeito ouvir conta como uma chegada.
+ */
+export function useChegadasDasFontes(): number {
+  const [chegadas, setChegadas] = useState(0);
+  useEffect(() => {
+    const fontes = typeof document === 'undefined' ? undefined : document.fonts;
+    if (!fontes) return;
+    const chegou = () => setChegadas((antes) => antes + 1);
+    fontes.addEventListener('loadingdone', chegou);
+    if (fontes.status === 'loaded') chegou();
+    return () => fontes.removeEventListener('loadingdone', chegou);
+  }, []);
+  return chegadas;
+}
+
+/**
  * A largura que muda anima da antiga para a nova: alarga em `alargar`, e volta ao repouso em
  * `fechar`. A troca de forma ou de tamanho da tela não anima. Com `deLargura`, a primeira medida
  * também anima, dela para a de agora: é a aba fechada que volta do painel.
@@ -34,6 +53,15 @@ export function useLarguraAnimada(
   const antes = useRef<{ largura: number; semAnimar: string } | null>(
     deLargura === null ? null : { largura: deLargura, semAnimar },
   );
+  const chegadasDasFontes = useChegadasDasFontes();
+  // A medida de antes passa a ser a com a fonte, se nada está animando a largura agora.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo só quando as fontes chegam.
+  useLayoutEffect(() => {
+    const elemento = ref.current;
+    if (chegadasDasFontes === 0 || !elemento || !antes.current) return;
+    if ((elemento.getAnimations?.() ?? []).length > 0) return;
+    antes.current = { ...antes.current, largura: elemento.offsetWidth };
+  }, [chegadasDasFontes]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: mede de novo a cada aviso.
   useLayoutEffect(() => {
     const elemento = ref.current;

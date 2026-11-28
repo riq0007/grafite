@@ -141,5 +141,8 @@ export async function abrirATela(
   await page.goto('/');
   const aba = page.getByRole('button', { name: 'Suporte da TI' });
   await aba.waitFor();
+  // As medidas e as animações dos testes são com a fonte da interface, e não com a reserva, que no
+  // Linux do CI é mais larga.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
   return aba;
 }
