@@ -75,12 +75,17 @@ export interface NovaSessao {
    * resolvido e guarda o aparelho.
    */
   aparelhoId?: string | null;
+  /**
+   * A sessão do chat na aba (change aba-dos-colaboradores, decisão 8): nasce no alcance
+   * `chat-da-aba`, ligada à sessão da aba, e termina com ela.
+   */
+  chatDaAba?: { sessaoDaAbaId: string; segundoPassoEm: Date | null };
 }
 
 /** Cria a sessão na organização da transação e devolve o token, que só existe aqui e no cookie. */
 export async function criarSessao(
   tx: Transacao,
-  { contaId, momento, ip, agente, pendente, aparelhoId = null }: NovaSessao,
+  { contaId, momento, ip, agente, pendente, aparelhoId = null, chatDaAba }: NovaSessao,
 ) {
   const token = novoToken();
   const tokenCsrf = novoToken();
@@ -98,8 +103,11 @@ export async function criarSessao(
       ultimoUsoEm: momento,
       expiraEm,
       ativadaEm: pendente ? null : momento,
-      segundoPassoEm: aparelhoId ? momento : null,
+      segundoPassoEm: chatDaAba ? chatDaAba.segundoPassoEm : aparelhoId ? momento : null,
       aparelhoId,
+      ...(chatDaAba
+        ? { alcance: 'chat-da-aba' as const, sessaoDaAbaId: chatDaAba.sessaoDaAbaId }
+        : {}),
       ip,
       agente: agente?.slice(0, 512) ?? null,
     })
@@ -268,7 +276,7 @@ export async function ativarSessao(tx: Transacao, sessaoId: string, momento: Dat
 export const SEM_USO_DA_ABA_PELA_SENHA = 30 * 60_000;
 
 /** A sessão da aba aberta, ativada e valendo: o complemento do `semValer` do `aba/sessao.ts`. */
-const abaValendo = (momento: Date) =>
+export const abaValendo = (momento: Date) =>
   and(
     isNull(sessoesDaAba.encerradaEm),
     isNotNull(sessoesDaAba.ativadaEm),

@@ -259,6 +259,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessao/bilhete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trocar o bilhete da aba pela sessão do chat na aba */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoBilheteInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoPeloBilhete"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessao/segundo-passo": {
         parameters: {
             query?: never;
@@ -39036,6 +39121,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aba/bilhete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pedir o bilhete que leva o chat da aba à sessão dele, por 60 s e uma vez só */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DestinoDoBilheteInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BilheteDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/aba/uso": {
         parameters: {
             query?: never;
@@ -40047,6 +40226,14 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        DestinoDoBilheteInput: {
+            /** @constant */
+            destino: "chat";
+        } | {
+            /** @constant */
+            destino: "chamado";
+            numero: number;
+        };
         AcessoDaSessaoInput: {
             permissoes: {
                 /** @enum {string} */
@@ -40085,6 +40272,38 @@ export interface components {
         PedidoDeEntradaInput: {
             usuario: string;
             senha: string;
+            aba?: string;
+        };
+        PedidoDoBilheteInput: {
+            bilhete: string;
+        };
+        SessaoPeloBilheteInput: {
+            /** @enum {string} */
+            ambiente: "desenvolvimento" | "teste" | "producao";
+            organizacao: {
+                nome: string;
+                preferencias: components["schemas"]["AjustesDasPreferenciasInput"];
+                operaOServidor: boolean;
+                modulosDesligados: string[];
+            };
+            sessao: {
+                conta: {
+                    id: string | null;
+                    usuario: string;
+                    nome: string;
+                    pessoaId: string | null;
+                    foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                    preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
+                };
+                pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
+                csrf: string;
+                /** Format: date-time */
+                expiraEm: string;
+                acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
+            } | null;
+            destino: components["schemas"]["DestinoDoBilheteInput"];
         };
         PedidoDeRegistroDaAbaInput: {
             chave: string;
@@ -40208,6 +40427,11 @@ export interface components {
             sid?: string;
         };
         RenovacaoDaSessaoDaAbaInput: {
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        BilheteDaAbaInput: {
+            bilhete: string;
             /** Format: date-time */
             expiraEm: string;
         };
@@ -46057,6 +46281,14 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        DestinoDoBilhete: {
+            /** @constant */
+            destino: "chat";
+        } | {
+            /** @constant */
+            destino: "chamado";
+            numero: number;
+        };
         AcessoDaSessao: {
             permissoes: {
                 /** @enum {string} */
@@ -46095,6 +46327,38 @@ export interface components {
         PedidoDeEntrada: {
             usuario: string;
             senha: string;
+            aba?: string;
+        };
+        PedidoDoBilhete: {
+            bilhete: string;
+        };
+        SessaoPeloBilhete: {
+            /** @enum {string} */
+            ambiente: "desenvolvimento" | "teste" | "producao";
+            organizacao: {
+                nome: string;
+                preferencias: components["schemas"]["AjustesDasPreferencias"];
+                operaOServidor: boolean;
+                modulosDesligados: string[];
+            };
+            sessao: {
+                conta: {
+                    id: string | null;
+                    usuario: string;
+                    nome: string;
+                    pessoaId: string | null;
+                    foto: components["schemas"]["FotoDaPessoa"] | null;
+                    preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
+                };
+                pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
+                csrf: string;
+                /** Format: date-time */
+                expiraEm: string;
+                acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
+            } | null;
+            destino: components["schemas"]["DestinoDoBilhete"];
         };
         PedidoDeRegistroDaAba: {
             chave: string;
@@ -46218,6 +46482,11 @@ export interface components {
             sid?: string;
         };
         RenovacaoDaSessaoDaAba: {
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        BilheteDaAba: {
+            bilhete: string;
             /** Format: date-time */
             expiraEm: string;
         };

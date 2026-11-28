@@ -28,6 +28,12 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import {
+  DestinoDoBilhete,
+  daSessaoDaAba,
+  sessaoDaAbaPelaMarca,
+  trocarBilhete,
+} from '../aba/bilhete.ts';
 import { carregarAcesso, exigeDoisPassos } from '../acesso/acesso.ts';
 import {
   apagarCookieDoAparelho,
@@ -139,8 +145,31 @@ const PedidoDeEntrada = z
       .string({ error: 'Informe a senha.' })
       .min(1, { error: 'Informe a senha.' })
       .max(1024, { error: 'Use até 1024 caracteres.' }),
+    /**
+     * A marca da aba (change aba-dos-colaboradores, decisão 8): o identificador curto do computador,
+     * na página de entrada do chat aberta pela aba. A sessão nasce no alcance do chat da aba, ligada
+     * à sessão da aba da conta nele; sem ela, a entrada é recusada.
+     */
+    aba: z.string().trim().min(1).max(32).optional(),
   })
   .meta({ id: 'PedidoDeEntrada' });
+
+const PedidoDoBilhete = z
+  .object({ bilhete: z.string().min(1).max(200) })
+  .meta({ id: 'PedidoDoBilhete' });
+
+const SessaoPeloBilhete = EstadoDaSessao.extend({ destino: DestinoDoBilhete }).meta({
+  id: 'SessaoPeloBilhete',
+});
+
+/** O usado, o vencido e o desconhecido: a mesma resposta (decisão 8). */
+const bilheteRecusado = () =>
+  new ProblemaDaApi({
+    codigo: 'bilhete-recusado',
+    status: 401,
+    titulo: 'Bilhete recusado',
+    detalhe: 'O chat da aba não abriu. Feche e abra o chat de novo pela aba.',
+  });
 
 /** Os problemas que toda rota de acesso pode responder, além dos dela. */
 export const PROBLEMAS_DO_ACESSO = {
@@ -217,13 +246,10 @@ export async function lerDadosDoEstado(
 export function estadoDaSessao(
   requisicao: Pick<FastifyRequest, 'server' | 'organizacao'>,
   dados: DadosDoEstado,
-  sessao:
-    | (Pick<
-        SessaoDaRequisicao,
-        'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso'
-      > &
-        Partial<Pick<SessaoDaRequisicao, 'naAba'>>)
-    | null,
+  sessao: Pick<
+    SessaoDaRequisicao,
+    'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso' | 'naAba'
+  > | null,
 ) {
   const conta = sessao?.pendencia === null ? dados.conta : null;
   return {
@@ -247,7 +273,7 @@ export function estadoDaSessao(
       csrf: sessao.tokenCsrf,
       expiraEm: sessao.expiraEm.toISOString(),
       acesso: { permissoes: sessao.pendencia === null ? listarPermissoes(sessao.acesso) : [] },
-      naAba: sessao.naAba ?? false,
+      naAba: sessao.naAba,
     },
   };
 }
@@ -528,10 +554,30 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
               acesso,
             })
           : null;
+        // A página de entrada do chat aberta pela aba (decisão 8): a sessão nasce no alcance do chat
+        // da aba, ligada à sessão da aba da conta no computador da marca. A marca falsa não acha a
+        // sessão da aba: só reduz o alcance, ou a entrada é recusada.
+        const { aba: marca } = requisicao.body;
+        const aba = marca
+          ? await sessaoDaAbaPelaMarca(tx, { contaId: conta.id, marca, momento })
+          : null;
+        if (marca !== undefined && !aba) {
+          await registrarNaAuditoria(tx, {
+            acao: 'entrada.recusada',
+            ator: { tipo: 'anonimo' },
+            alvo: { tipo: 'conta', id: conta.id },
+            dados: { usuario, motivo: 'sem-sessao-da-aba', aba: marca },
+            origem,
+            momento,
+          });
+          return { tipo: 'sem-sessao-da-aba' } as const;
+        }
+        const doChat = aba ? daSessaoDaAba(aba) : null;
+        const segundoPassoEm = aparelho ? momento : (doChat?.segundoPassoEm ?? null);
         const pendencia = pendenciaDa({
           conta: { ...conta, exigeDoisPassos: exigeDoisPassos(conta, acesso) },
           doisPassosAtivos,
-          segundoPassoEm: aparelho ? momento : null,
+          segundoPassoEm,
         });
         const sessao = await criarSessao(tx, {
           contaId: conta.id,
@@ -540,12 +586,18 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           agente: requisicao.headers['user-agent'] ?? null,
           pendente: pendencia !== null,
           aparelhoId: aparelho?.id ?? null,
+          ...(doChat ? { chatDaAba: { ...doChat, segundoPassoEm } } : {}),
         });
         await registrarNaAuditoria(tx, {
           acao: 'sessao.iniciada',
           ator: { tipo: 'conta', contaId: conta.id },
           alvo: { tipo: 'sessao', id: sessao.id },
-          dados: { pendencia },
+          dados: {
+            pendencia,
+            ...(aba
+              ? { chatDaAba: { computador: aba.computador, identificador: aba.identificador } }
+              : {}),
+          },
           origem,
           momento,
         });
@@ -564,6 +616,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
             tokenCsrf: sessao.tokenCsrf,
             expiraEm: sessao.expiraEm,
             acesso,
+            naAba: aba !== null,
           },
         } as const;
       });
@@ -593,9 +646,62 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
         });
       }
       if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
+      if (resultado.tipo === 'sem-sessao-da-aba') {
+        return enviarProblema(requisicao, resposta, {
+          codigo: 'sem-sessao-da-aba',
+          status: 403,
+          titulo: 'Sem a sessão da aba',
+          detalhe: 'Abra o chat pela aba deste computador.',
+        });
+      }
       if (resultado.apagarAparelho) apagarCookieDoAparelho(resposta);
       gravarCookieDaSessao(resposta, resultado.token, resultado.sessao.expiraEm, momento);
       return estadoDaSessao(requisicao, resultado.dados, resultado.sessao);
+    },
+  );
+
+  app.post(
+    '/sessao/bilhete',
+    {
+      config: { rateLimit: LIMITE_DA_ENTRADA, semPermissao: 'entrada' },
+      schema: {
+        summary: 'Trocar o bilhete da aba pela sessão do chat na aba',
+        body: PedidoDoBilhete,
+        response: { 200: SessaoPeloBilhete, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    async (requisicao, resposta) => {
+      const orgId = requisicao.organizacao?.id ?? '';
+      const momento = agora();
+      const resultado = await naOrganizacao(banco, orgId, async (tx) => {
+        const trocado = await trocarBilhete(tx, {
+          bilhete: requisicao.body.bilhete,
+          momento,
+          ip: requisicao.ip,
+          agente: requisicao.headers['user-agent'] ?? null,
+          origem: origemDa(requisicao),
+        });
+        if (!trocado) return null;
+        return {
+          ...trocado,
+          dados: await lerDadosDoEstado(tx, trocado.contaId, trocado.pendencia),
+        };
+      });
+      if (!resultado) throw bilheteRecusado();
+      const { sessao } = resultado;
+      gravarCookieDaSessao(resposta, sessao.token, sessao.expiraEm, momento);
+      return {
+        ...estadoDaSessao(requisicao, resultado.dados, {
+          usuario: resultado.usuario,
+          nome: resultado.nome,
+          pendencia: resultado.pendencia,
+          tokenCsrf: sessao.tokenCsrf,
+          expiraEm: sessao.expiraEm,
+          acesso: resultado.acesso,
+          naAba: true,
+        }),
+        destino: resultado.destino,
+      };
     },
   );
 

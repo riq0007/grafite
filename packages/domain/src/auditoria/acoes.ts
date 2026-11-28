@@ -290,6 +290,7 @@ export const ACOES_DA_AUDITORIA = {
   'sessao-da-aba.aberta': 'Sessão da aba aberta',
   'sessao-da-aba.recusada': 'Pessoa recusada na aba',
   'sessao-da-aba.encerrada': 'Sessão da aba encerrada',
+  'sessao-do-chat-da-aba.aberta': 'Sessão do chat na aba aberta',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

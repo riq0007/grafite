@@ -169,6 +169,7 @@ describe('as rotas do alcance', () => {
         !rota.split(' ')[1]?.startsWith('/chat/') &&
         ![
           'GET /sessao',
+          'POST /sessao/segundo-passo',
           'GET /eventos',
           'GET /pessoas/:id/foto/:arquivo/:tamanho',
           'GET /conta/foto/:arquivo/:tamanho',
@@ -177,6 +178,7 @@ describe('as rotas do alcance', () => {
     expect(fora).toEqual([]);
     for (const rota of [
       'GET /sessao',
+      'POST /sessao/segundo-passo',
       'GET /eventos',
       'GET /pessoas/:id/foto/:arquivo/:tamanho',
       'GET /conta/foto/:arquivo/:tamanho',
@@ -192,6 +194,7 @@ describe('as rotas do alcance', () => {
       'GET /conta/sessoes',
       'DELETE /sessao',
       'POST /sessao',
+      'POST /sessao/bilhete',
       'GET /pessoas/nomes',
     ]) {
       expect(ROTAS_DO_CHAT_DA_ABA, rota).not.toContain(rota);

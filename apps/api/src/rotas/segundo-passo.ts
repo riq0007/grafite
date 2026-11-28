@@ -71,7 +71,8 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
   app.post(
     '/sessao/segundo-passo',
     {
-      config: { rateLimit: LIMITE_DA_ENTRADA, semPermissao: 'entrada' },
+      // A sessão pendente do chat na aba chega ao código (change aba-dos-colaboradores, decisão 8).
+      config: { rateLimit: LIMITE_DA_ENTRADA, semPermissao: 'entrada', chatDaAba: true },
       preHandler: exigirPendencia('segundo-passo'),
       schema: {
         summary: 'Mandar o código do segundo passo da entrada',
@@ -202,7 +203,13 @@ export const rotasDoSegundoPasso: FastifyPluginAsyncZod<DependenciasDoSegundoPas
           doisPassosAtivos: true,
           segundoPassoEm: momento,
         });
-        const base = { usuario: conta.usuario, nome: linha.nome, pendencia, acesso };
+        const base = {
+          usuario: conta.usuario,
+          nome: linha.nome,
+          pendencia,
+          acesso,
+          naAba: sessao.naAba,
+        };
         const dados = await lerDadosDoEstado(tx, sessao.contaId);
         if (pendencia !== null) {
           return {

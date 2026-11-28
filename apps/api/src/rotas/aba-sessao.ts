@@ -22,6 +22,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { DestinoDoBilhete, emitirBilhete, precisaDaEntradaDoChat } from '../aba/bilhete.ts';
 import {
   type AparelhoDaRequisicao,
   ContadorDeRecusas,
@@ -122,6 +123,14 @@ const PedidoDeRenovacao = z
   .meta({ id: 'PedidoDeRenovacaoDaSessaoDaAba' });
 
 const Renovacao = z.object({ expiraEm: z.iso.datetime() }).meta({ id: 'RenovacaoDaSessaoDaAba' });
+
+const BilheteDaAba = z
+  .object({
+    /** O bilhete de uso único, que a aba põe no fragmento de `/chat/entrar`. */
+    bilhete: z.string(),
+    expiraEm: z.iso.datetime(),
+  })
+  .meta({ id: 'BilheteDaAba' });
 
 const PROBLEMAS = {
   400: RespostaDeProblema,
@@ -645,6 +654,46 @@ export const rotasDaSessaoDaAba: FastifyPluginAsyncZod<{
         });
       });
       return resposta.code(204).send(null);
+    },
+  );
+
+  app.post(
+    '/aba/bilhete',
+    {
+      config: { daSessaoDaAba: true, rateLimit: LIMITE_POR_TOKEN_DA_ABA },
+      schema: {
+        summary: 'Pedir o bilhete que leva o chat da aba à sessão dele, por 60 s e uma vez só',
+        body: DestinoDoBilhete,
+        response: { 200: BilheteDaAba, ...PROBLEMAS },
+      },
+    },
+    async (requisicao) => {
+      const { aparelhoDaAba: aparelho, sessaoDaAba: sessao, organizacao } = requisicao;
+      if (!aparelho || !sessao || !organizacao) throw tokenDaAbaRecusado();
+      const resultado = await naOrganizacao(banco, organizacao.id, async (tx) => {
+        // Na entrada pelo Windows, a conta com os dois passos entra pela página do chat, com a
+        // senha e o código; a marca da aba liga a sessão que sai de lá a esta.
+        if (
+          await precisaDaEntradaDoChat(tx, { contaId: sessao.contaId, entrada: sessao.entrada })
+        ) {
+          return null;
+        }
+        return emitirBilhete(tx, {
+          sessaoDaAbaId: sessao.id,
+          destino: requisicao.body,
+          momento: agora(),
+        });
+      });
+      if (!resultado) {
+        throw new ProblemaDaApi({
+          codigo: 'bilhete-pede-a-entrada',
+          status: 403,
+          titulo: 'Entre no chat',
+          detalhe: 'Esta conta entra no chat da aba com a senha e o código.',
+          extras: { aba: aparelho.identificadorCurto },
+        });
+      }
+      return { bilhete: resultado.bilhete, expiraEm: resultado.expiraEm.toISOString() };
     },
   );
 

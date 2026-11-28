@@ -249,6 +249,7 @@ export const rotasDaConta: FastifyPluginAsyncZod<{ banco: Banco; agora: () => Da
           tokenCsrf: etapa.tokenCsrf,
           expiraEm: etapa.expiraEm,
           acesso: sessao.acesso,
+          naAba: sessao.naAba,
         }),
         sessoesEncerradas: resultado.sessoesEncerradas,
       };

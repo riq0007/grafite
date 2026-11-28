@@ -380,6 +380,7 @@ export const EVENTO_DA_ACAO = {
   'sessao-da-aba.aberta': null,
   'sessao-da-aba.recusada': null,
   'sessao-da-aba.encerrada': null,
+  'sessao-do-chat-da-aba.aberta': null,
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */

@@ -102,10 +102,10 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o `naAba` no `/api/sessao`.
 
   Começa pelos testes de integração, com a linha posta à mão: a casca e a ponte dos painéis recusam, e a conexão de eventos segue depois de mais de uma conferência. Verificar: esses testes, o contrato, o lint e o typecheck.
-- [ ] 3.11 O bilhete:
+- [x] 3.11 O bilhete:
   - o `POST /api/aba/bilhete`, com o destino fechado e a recusa da conta com os dois passos na entrada pelo Windows;
   - o `POST /api/sessao/bilhete`, com o uso único, os 60 s, a mesma resposta para o usado, o vencido e o desconhecido, a pendência calculada de novo e o `LIMITE_DA_ENTRADA`;
-  - a entrada do chat com a marca da aba, que nasce no alcance, com o `POST /sessao/segundo-passo` na lista do alcance (a sessão pendente do chat na aba chega ao código), com o teste, e o que a página diz à conta que precisa trocar a senha temporária ou ativar os dois passos, que ficam no `/conta`, fora do alcance: abrir o Grafite no navegador;
+  - a entrada do chat com a marca da aba, que nasce no alcance, com o `POST /sessao/segundo-passo` na lista do alcance (a sessão pendente do chat na aba chega ao código), com o teste;
   - o `naAba` passado ao `estadoDaSessao` na resposta da entrada com a marca e na do bilhete (opcional ali, esquecê-lo compila e diz `false`);
   - a auditoria;
   - a limpeza dos bilhetes vencidos há mais de 24 horas, na manutenção diária.
@@ -117,7 +117,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 4.1 O chat na aba:
   - a entrada pelo bilhete em `/chat/entrar`, com a troca, o endereço limpo e o destino;
   - o `naAba`, sem o que leva à casca, o "Andamento", a instalação e o push;
-  - o 401 que navega para `/chat/entrar` sem o fragmento, o 403 do alcance tratado como o pedido que falhou e o Esc não consumido que navega para `/chat/fechar-a-aba`.
+  - o 401 que navega para `/chat/entrar` sem o fragmento, o 403 do alcance tratado como o pedido que falhou e o Esc não consumido que navega para `/chat/fechar-a-aba`;
+  - a página de entrada do chat com a marca da aba, e o que ela diz à conta que precisa trocar a senha temporária ou ativar os dois passos, que ficam no `/conta`, fora do alcance: abrir o Grafite no navegador.
 
   Verificar: o e2e da web simulada, com os pedidos que saem do app do chat todos dentro da lista do alcance, o caso da PWA com o service worker, o lint e o typecheck.
 - [ ] 4.2 A abertura do chamado gravada pelo chat, na conversa que aparece e na mensagem que chega com ela à vista e com o foco.

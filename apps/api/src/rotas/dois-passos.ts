@@ -269,6 +269,7 @@ export const rotasDosDoisPassos: FastifyPluginAsyncZod<DependenciasDosDoisPassos
           tokenCsrf: etapa.tokenCsrf,
           expiraEm: etapa.expiraEm,
           acesso: sessao.acesso,
+          naAba: sessao.naAba,
         }),
         codigosDeRecuperacao: resultado.codigos,
         sessoesEncerradas: resultado.sessoesEncerradas,
