@@ -175,10 +175,7 @@ mod testes {
 
     #[test]
     fn o_endereco_estranho_e_recusado() {
-        assert_eq!(
-            endereco_valido("https://ti@grafite.empresa.com.br"),
-            None
-        );
+        assert_eq!(endereco_valido("https://ti@grafite.empresa.com.br"), None);
         assert_eq!(endereco_valido("https://grafite.empresa.com.br/?a=1"), None);
         assert_eq!(endereco_valido("ftp://grafite.empresa.com.br"), None);
         assert_eq!(endereco_valido("grafite.empresa.com.br"), None);
