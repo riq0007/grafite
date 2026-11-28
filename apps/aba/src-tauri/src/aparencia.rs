@@ -21,7 +21,6 @@ pub enum Forma {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
-#[allow(dead_code, reason = "o tema do Windows entra na tarefa 5.9")]
 pub enum Tema {
     Escuro,
     Claro,

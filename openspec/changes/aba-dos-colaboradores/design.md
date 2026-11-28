@@ -231,6 +231,30 @@ No `tauri dev`, numa tela de 1920×1080:
 - com o ponteiro na aba, dá a aba, e ao sair dela volta à de baixo;
 - o clique abre o painel, "Abrir chamado" abre a tela maior em 580,168, e o Esc a fecha.
 
+O foco, a instância única, o tema, a apresentação e o atalho no lado nativo (tarefa 5.9):
+- **a janela da frente:** a linha do ponteiro guarda, a cada passo, a última janela de outro programa na frente, e o atalho a guarda antes de trazer a aba. Assim o Esc a devolve também depois do clique, como o quadro 5 do m08;
+- **o foco perdido:** quando uma janela nossa perde o foco, o lado nativo espera 80 ms e, com outro programa na frente, fecha o painel (`fechar-o-painel`) e a tela maior. O foco que passa da aba à tela maior não fecha nada, e o Esc da tela maior a fecha e devolve o foco à janela da aba;
+- **a instância única:** o plugin `single-instance`, com o mutex sem o `Global\`, um por sessão do Windows. Abrir de novo não abre outra;
+- **fora do Alt+Tab:** o Tauri põe o `WS_EX_APPWINDOW` e refaz o estilo a cada mudança, como a do clique que passa. O subclass filtra o `WM_STYLECHANGING`, e a janela fica a de ferramenta, sem a de app;
+- **o tema:**
+  - o `AppsUseLightTheme`; sem ele, o claro, como o Windows;
+  - o `SPI_GETHIGHCONTRAST`, que vence os dois;
+  - o `SPI_GETCLIENTAREAANIMATION`, para o reduzir movimento.
+
+  Os três são relidos no `WM_SETTINGCHANGE`, no `WM_THEMECHANGED` e no `WM_SYSCOLORCHANGE`, e a rajada vira uma releitura só;
+- **a apresentação:** o `SHQueryUserNotificationState` a cada 2 s, com os estados 2 a 4;
+- **o atalho:** o plugin `global-shortcut`. A falha no registro vira o `atalhoOcupado`. O comando `estado` e o evento `estado-mudou` entram com o estado de fábrica; a rede e a sessão entram nas tarefas 5.12 a 5.14.
+
+No `tauri dev`:
+- o estilo estendido é 0x801B8: o de ferramenta, sem o de app;
+- abrir o programa de novo deixa uma instância;
+- o tema dos apps trocado no registro, com o `WM_SETTINGCHANGE`, troca a aba sem reiniciar;
+- uma janela em tela cheia dá o `QUNS_BUSY`, a aba vira a linha e volta quando ela fecha;
+- o Ctrl+Alt+T traz o painel com o foco em "Abrir chamado", e o Esc devolve a frente à janela de antes;
+- o clique noutra janela fecha o painel.
+
+O alto contraste e as animações não foram trocados no Windows desta máquina: a leitura é a mesma do tema, e a precedência tem teste.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

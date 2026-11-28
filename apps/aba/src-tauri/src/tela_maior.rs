@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
-use crate::janela::{self, JANELA_DA_TELA_MAIOR, Janelas};
+use crate::janela::{self, JANELA_DA_ABA, JANELA_DA_TELA_MAIOR, Janelas};
 
 pub const EVENTO_DA_TELA_MAIOR: &str = "tela-maior-mudou";
 
@@ -83,20 +83,33 @@ pub async fn abrir_tela_maior(
         .map_err(|erro| erro.to_string())
 }
 
+/// O Esc da moldura e o voltar da trilha: a tela maior fecha, e o foco volta ao painel.
 #[tauri::command]
-pub async fn fechar_tela_maior(app: AppHandle) -> Result<(), String> {
+pub async fn fechar_tela_maior(app: AppHandle) {
+    fechar(&app, true);
+}
+
+/// Fecha a tela maior, se ela está aberta. Com `devolver_a_aba`, o foco volta à janela da aba, que o
+/// Windows daria à janela de baixo; no foco perdido para outro programa, ele fica lá.
+pub fn fechar(app: &AppHandle, devolver_a_aba: bool) {
     let estado = app.state::<EstadoDaTelaMaior>();
-    if let Ok(mut tela) = estado.tela.lock() {
-        *tela = None;
-    }
+    let estava_aberta = estado
+        .tela
+        .lock()
+        .is_ok_and(|mut tela| tela.take().is_some());
     if let Ok(mut corpo) = estado.corpo.lock() {
         *corpo = None;
     }
     if let Some(maior) = app.get_webview_window(JANELA_DA_TELA_MAIOR) {
-        maior.destroy().map_err(|erro| erro.to_string())?;
+        let _ = maior.destroy();
     }
-    app.emit(EVENTO_DA_TELA_MAIOR, None::<TelaMaior>)
-        .map_err(|erro| erro.to_string())
+    if !estava_aberta {
+        return;
+    }
+    if devolver_a_aba && let Some(aba) = app.get_webview_window(JANELA_DA_ABA) {
+        let _ = aba.set_focus();
+    }
+    let _ = app.emit(EVENTO_DA_TELA_MAIOR, None::<TelaMaior>);
 }
 
 #[tauri::command]

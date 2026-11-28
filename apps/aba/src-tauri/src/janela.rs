@@ -14,14 +14,17 @@ use tauri::{
 use crate::aparencia::{Aparencia, EVENTO_DA_APARENCIA};
 use crate::forma::{self, Retangulo};
 use crate::posicao::{Lugar, Monitor, Origem, Tela};
+use crate::{foco, sistema};
 
 pub const JANELA_DA_ABA: &str = "aba";
 pub const JANELA_DA_TELA_MAIOR: &str = "maior";
 
 /// O ponteiro é conferido a cada 16 ms, um quadro de 60 Hz.
 const PASSO_DO_PONTEIRO: Duration = Duration::from_millis(16);
-/// As trocas da tela chegam em rajada: a recolocação espera elas pararem.
+/// As trocas da tela e dos ajustes chegam em rajada: a releitura espera elas pararem.
 const ESPERA_DA_TROCA: Duration = Duration::from_millis(250);
+/// A apresentação é lida a cada 2 s.
+const PASSO_DA_APRESENTACAO: Duration = Duration::from_secs(2);
 
 /// O que o clique precisa de cada janela: a forma, onde ela está e se o clique passa agora.
 #[derive(Debug, Clone, PartialEq)]
@@ -100,8 +103,26 @@ fn colocar(janela: &WebviewWindow, lugar: Lugar) {
     let _ = janela.set_position(PhysicalPosition::new(lugar.x, lugar.y));
 }
 
-/// Liga o clique que passa numa janela nova: até a forma chegar, todo clique passa.
+/// Muda a aparência e avisa a tela, só quando ela muda.
+fn mudar_a_aparencia(app: &AppHandle, mudanca: impl FnOnce(&mut Aparencia)) {
+    let janelas = app.state::<Janelas>();
+    let nova = {
+        let Ok(mut atual) = janelas.aparencia.lock() else {
+            return;
+        };
+        let antes = atual.clone();
+        mudanca(&mut atual);
+        (*atual != antes).then(|| atual.clone())
+    };
+    if let Some(nova) = nova {
+        let _ = app.emit(EVENTO_DA_APARENCIA, nova);
+    }
+}
+
+/// Prepara uma janela nossa antes de ela aparecer: fora do Alt+Tab e com o clique que passa, que até
+/// a forma chegar deixa todo clique passar.
 pub fn registrar(janela: &WebviewWindow) {
+    nativo::tirar_do_alt_tab(janela);
     let origem = origem_de(janela.as_ref().window()).unwrap_or(Origem {
         x: 0,
         y: 0,
@@ -142,25 +163,37 @@ pub fn preparar(app: &AppHandle, trocas: Receiver<()>) -> tauri::Result<()> {
         colocar(&aba, monitor.lugar_da_aba());
     }
     registrar(&aba);
-    // A aba aparece sem tirar o foco do programa em que a pessoa está.
-    nativo::mostrar_sem_ativar(&aba)?;
-    nativo::ouvir_a_troca_da_tela(
+    nativo::ouvir_o_windows(
         &aba,
         app.state::<Janelas>().trocas.lock().map(|t| t.clone()).ok(),
     );
+    // A aba aparece sem tirar o foco do programa em que a pessoa está.
+    nativo::mostrar_sem_ativar(&aba)?;
 
     let ponteiro = app.clone();
     thread::spawn(move || acompanhar_o_ponteiro(&ponteiro));
-    let recolocar = app.clone();
+    let apresentacao = app.clone();
+    thread::spawn(move || acompanhar_a_apresentacao(&apresentacao));
+    let atualizacao = app.clone();
     thread::spawn(move || {
         while trocas.recv().is_ok() {
-            // A rajada de trocas vira uma recolocação só.
+            // A rajada de trocas vira uma releitura só.
             thread::sleep(ESPERA_DA_TROCA);
             while trocas.try_recv().is_ok() {}
-            recolocar_as_janelas(&recolocar);
+            atualizar(&atualizacao);
         }
     });
     Ok(())
+}
+
+/// O `SHQueryUserNotificationState` a cada 2 s: um programa em tela cheia em qualquer monitor, ou o
+/// modo de apresentação, encolhe a aba para a linha.
+fn acompanhar_a_apresentacao(app: &AppHandle) {
+    loop {
+        thread::sleep(PASSO_DA_APRESENTACAO);
+        let agora = sistema::apresentacao();
+        mudar_a_aparencia(app, |aparencia| aparencia.apresentacao = agora);
+    }
 }
 
 /// Liga e desliga o clique que passa conforme o ponteiro entra e sai da forma. Só chama o Windows
@@ -168,6 +201,7 @@ pub fn preparar(app: &AppHandle, trocas: Receiver<()>) -> tauri::Result<()> {
 fn acompanhar_o_ponteiro(app: &AppHandle) {
     loop {
         thread::sleep(PASSO_DO_PONTEIRO);
+        foco::guardar_a_frente(app);
         let Some((x, y)) = nativo::ponteiro() else {
             continue;
         };
@@ -195,20 +229,19 @@ fn acompanhar_o_ponteiro(app: &AppHandle) {
     }
 }
 
-/// Volta as janelas ao monitor principal, com a escala dele, e avisa a tela da tela nova.
-fn recolocar_as_janelas(app: &AppHandle) {
+/// Lê de novo o tema, o alto contraste e as animações, volta as janelas ao monitor principal, com a
+/// escala dele, e avisa a tela do que mudou.
+fn atualizar(app: &AppHandle) {
+    let do_windows = sistema::ler();
+    mudar_a_aparencia(app, |aparencia| {
+        aparencia.tema = do_windows.tema;
+        aparencia.movimento_reduzido = do_windows.movimento_reduzido;
+    });
     let Some(monitor) = monitor_principal(app) else {
         return;
     };
+    mudar_a_aparencia(app, |aparencia| aparencia.tela = monitor.tela());
     let estado = app.state::<Janelas>();
-    let aparencia = {
-        let Ok(mut aparencia) = estado.aparencia.lock() else {
-            return;
-        };
-        let mudou = aparencia.tela != monitor.tela();
-        aparencia.tela = monitor.tela();
-        mudou.then(|| aparencia.clone())
-    };
     if let Some(aba) = app.get_webview_window(JANELA_DA_ABA) {
         colocar(&aba, monitor.lugar_da_aba());
     }
@@ -219,12 +252,9 @@ fn recolocar_as_janelas(app: &AppHandle) {
             .map_or(8.0, |aparencia| aparencia.topo_da_aba());
         colocar(&maior, monitor.lugar_da_tela_maior(topo));
     }
-    if let Some(aparencia) = aparencia {
-        let _ = app.emit(EVENTO_DA_APARENCIA, aparencia);
-    }
 }
 
-/// O que as janelas avisam: o lugar novo, a escala trocada e a janela fechada.
+/// O que as janelas avisam: o lugar novo, a escala trocada, o foco perdido e a janela fechada.
 pub fn ao_mudar(janela: &Window, evento: &WindowEvent) {
     let estado = janela.state::<Janelas>();
     match evento {
@@ -238,6 +268,7 @@ pub fn ao_mudar(janela: &Window, evento: &WindowEvent) {
         }
         // O WM_DPICHANGED: a escala do monitor mudou, ou a janela passou a outro.
         WindowEvent::ScaleFactorChanged { .. } => estado.avisar_a_troca(),
+        WindowEvent::Focused(false) => foco::ao_perder_o_foco(janela.app_handle()),
         WindowEvent::Destroyed => {
             if let Ok(mut cliques) = estado.cliques.lock() {
                 cliques.remove(janela.label());
@@ -247,7 +278,7 @@ pub fn ao_mudar(janela: &Window, evento: &WindowEvent) {
     }
 }
 
-/// O que só o Windows responde: o ponteiro e o aviso da troca da tela.
+/// O que só o Windows responde: o ponteiro, o Alt+Tab e o aviso da troca da tela e dos ajustes.
 #[cfg(windows)]
 mod nativo {
     use std::sync::mpsc::Sender;
@@ -256,11 +287,24 @@ mod nativo {
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, WPARAM};
     use windows::Win32::UI::Shell::{DefSubclassProc, SetWindowSubclass};
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetCursorPos, GetForegroundWindow, SetForegroundWindow, WM_DISPLAYCHANGE,
+        GWL_EXSTYLE, GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, STYLESTRUCT,
+        SetForegroundWindow, SetWindowLongPtrW, WM_DISPLAYCHANGE, WM_SETTINGCHANGE,
+        WM_STYLECHANGING, WM_SYSCOLORCHANGE, WM_THEMECHANGED, WS_EX_APPWINDOW, WS_EX_TOOLWINDOW,
     };
 
-    /// O identificador do nosso subclass na janela da aba.
-    const TROCA_DA_TELA: usize = 0x6772_6166;
+    /// O identificador do nosso subclass nas janelas.
+    const DA_ABA: usize = 0x6772_6166;
+
+    #[cfg(test)]
+    pub fn sem_alt_tab_para_teste(estilo: u32) -> u32 {
+        sem_alt_tab(estilo)
+    }
+
+    /// Fora do Alt+Tab e da barra de tarefas: a janela de ferramenta, sem a de app. O Tauri refaz o
+    /// estilo a cada mudança, como a do clique que passa, e por isso o filtro fica no WM_STYLECHANGING.
+    fn sem_alt_tab(estilo: u32) -> u32 {
+        (estilo | WS_EX_TOOLWINDOW.0) & !WS_EX_APPWINDOW.0
+    }
 
     /// O ponteiro em px físicos da tela (`GetCursorPos`, com a janela ciente da escala por monitor).
     pub fn ponteiro() -> Option<(f64, f64)> {
@@ -278,10 +322,22 @@ mod nativo {
         _id: usize,
         dados: usize,
     ) -> LRESULT {
-        if mensagem == WM_DISPLAYCHANGE {
-            // SAFETY: `dados` é o `Sender` que `ouvir_a_troca_da_tela` deixou para a vida do programa.
-            let trocas = unsafe { &*(dados as *const Sender<()>) };
-            let _ = trocas.send(());
+        match mensagem {
+            WM_STYLECHANGING if wparam.0 as i32 == GWL_EXSTYLE.0 => {
+                // SAFETY: no WM_STYLECHANGING do estilo estendido, o lparam é o STYLESTRUCT que o
+                // Windows vai aplicar.
+                let estilos = unsafe { &mut *(lparam.0 as *mut STYLESTRUCT) };
+                estilos.styleNew = sem_alt_tab(estilos.styleNew);
+            }
+            // A resolução, o monitor principal, o tema, o alto contraste e as animações.
+            WM_DISPLAYCHANGE | WM_SETTINGCHANGE | WM_THEMECHANGED | WM_SYSCOLORCHANGE
+                if dados != 0 =>
+            {
+                // SAFETY: `dados` é o `Sender` que `ouvir_o_windows` deixou para a vida do programa.
+                let trocas = unsafe { &*(dados as *const Sender<()>) };
+                let _ = trocas.send(());
+            }
+            _ => {}
         }
         // SAFETY: a mensagem segue para a janela como chegou.
         unsafe { DefSubclassProc(janela, mensagem, wparam, lparam) }
@@ -299,15 +355,35 @@ mod nativo {
         Ok(())
     }
 
-    /// O WM_DISPLAYCHANGE, que chega a toda janela de cima quando a resolução ou o monitor principal
-    /// mudam, e que o Tauri não passa adiante.
-    pub fn ouvir_a_troca_da_tela(janela: &WebviewWindow, trocas: Option<Sender<()>>) {
-        let (Some(trocas), Ok(hwnd)) = (trocas, janela.hwnd()) else {
+    fn subclasse(janela: &WebviewWindow, dados: usize) {
+        let Ok(hwnd) = janela.hwnd() else {
             return;
         };
-        let dados = Box::into_raw(Box::new(trocas)) as usize;
-        // SAFETY: a janela é nossa e vive com o programa; os dados nunca são soltos.
-        let _ = unsafe { SetWindowSubclass(hwnd, Some(ao_receber), TROCA_DA_TELA, dados) };
+        // SAFETY: a janela é nossa; o mesmo identificador troca os dados do subclass anterior.
+        let _ = unsafe { SetWindowSubclass(hwnd, Some(ao_receber), DA_ABA, dados) };
+    }
+
+    /// Tira a janela do Alt+Tab, antes de ela aparecer.
+    pub fn tirar_do_alt_tab(janela: &WebviewWindow) {
+        subclasse(janela, 0);
+        let Ok(hwnd) = janela.hwnd() else {
+            return;
+        };
+        // SAFETY: a janela é nossa; o filtro do subclass confere o estilo novo.
+        unsafe {
+            let estilo = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, sem_alt_tab(estilo) as isize);
+        }
+    }
+
+    /// O WM_DISPLAYCHANGE e o WM_SETTINGCHANGE, que chegam a toda janela de cima e que o Tauri não
+    /// passa adiante.
+    pub fn ouvir_o_windows(janela: &WebviewWindow, trocas: Option<Sender<()>>) {
+        let Some(trocas) = trocas else {
+            return;
+        };
+        // Os dados nunca são soltos: a janela da aba vive com o programa.
+        subclasse(janela, Box::into_raw(Box::new(trocas)) as usize);
     }
 }
 
@@ -325,12 +401,26 @@ mod nativo {
         janela.show()
     }
 
-    pub fn ouvir_a_troca_da_tela(_janela: &WebviewWindow, _trocas: Option<Sender<()>>) {}
+    pub fn tirar_do_alt_tab(_janela: &WebviewWindow) {}
+
+    pub fn ouvir_o_windows(_janela: &WebviewWindow, _trocas: Option<Sender<()>>) {}
 }
 
 #[cfg(test)]
 mod testes {
     use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn a_janela_fica_fora_do_alt_tab_mesmo_com_o_estilo_de_app() {
+        // O estilo que o Tauri dá: por cima, o clique que passa, a borda, os arquivos e o de app.
+        let do_tauri = 0x000C_0138;
+        let estilo = nativo::sem_alt_tab_para_teste(do_tauri);
+        assert_eq!(estilo & 0x0004_0000, 0, "sem o WS_EX_APPWINDOW");
+        assert_eq!(estilo & 0x0000_0080, 0x80, "com o WS_EX_TOOLWINDOW");
+        assert_eq!(estilo & 0x0000_0008, 0x08, "segue por cima");
+        assert_eq!(estilo & 0x0000_0020, 0x20, "segue com o clique que passa");
+    }
 
     fn clique_da_pilula(escala: f64) -> Clique {
         Clique {
