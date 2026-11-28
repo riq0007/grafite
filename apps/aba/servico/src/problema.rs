@@ -11,12 +11,13 @@ const PREFIXO_DO_TIPO: &str = "urn:grafite:problema:";
 pub const ESPERA_DO_429: Duration = Duration::from_secs(60);
 
 /// As recusas da pessoa, que a aba mostra no formulário ou resolve pedindo outra sessão.
-const DA_PESSOA: [&str; 5] = [
+const DA_PESSOA: [&str; 6] = [
     "credenciais-invalidas",
     "codigo-invalido",
     "tentativas-esgotadas",
     "pendente-da-aba-recusada",
     "sessao-da-aba-recusada",
+    "pessoa-recusada-na-aba",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -25,6 +26,12 @@ pub struct Problema {
     pub tipo: String,
     #[serde(rename = "detail", default)]
     pub detalhe: Option<String>,
+    /// O motivo da pessoa recusada, como `sem-grupo`.
+    #[serde(default)]
+    pub motivo: Option<String>,
+    /// O motivo do fim da sessão encerrada.
+    #[serde(rename = "motivoDoFim", default)]
+    pub motivo_do_fim: Option<String>,
 }
 
 impl Problema {
@@ -95,6 +102,8 @@ mod testes {
         Problema {
             tipo: format!("{PREFIXO_DO_TIPO}{codigo}"),
             detalhe: None,
+            motivo: None,
+            motivo_do_fim: None,
         }
     }
 

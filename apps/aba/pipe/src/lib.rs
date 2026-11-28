@@ -24,7 +24,7 @@ mod servidor;
 pub use cliente::{Cliente, conferir_o_servico};
 #[cfg(windows)]
 pub use prazo::com_prazo;
-pub use protocolo::{Aparelho, Configuracao, Entrada, Forma, Pedido, Resposta, Situacao};
+pub use protocolo::{Aparelho, Configuracao, Entrada, Forma, Pedido, Recusa, Resposta, Situacao};
 #[cfg(windows)]
 pub use seguranca::Descritor;
 #[cfg(windows)]

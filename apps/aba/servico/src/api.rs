@@ -6,7 +6,9 @@ use std::time::Duration;
 
 use reqwest::blocking::{Client, RequestBuilder, Response};
 use reqwest::redirect::Policy;
+use serde::Deserialize;
 use serde::de::DeserializeOwned;
+use serde_json::json;
 
 use crate::aparelho::{Api, Falha, PedidoDeRegistro, Registro, RespostaDaConfiguracao, VERSAO};
 use crate::problema::{Decisao, Problema, decidir};
@@ -15,6 +17,47 @@ use crate::segredo::Segredo;
 pub const CABECALHO_DA_VERSAO: &str = "x-grafite-versao-da-aba";
 pub const CABECALHO_DO_COMPUTADOR: &str = "x-grafite-computador";
 
+/// A sessão aberta pela API.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessaoAberta {
+    pub token: Segredo,
+    pub expira_em: String,
+    pub pessoa: PessoaDaSessao,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PessoaDaSessao {
+    pub nome: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Renovacao {
+    pub expira_em: String,
+}
+
+/// Os pedidos da sessão pelo Windows, que o pipe faz em nome de quem chama.
+pub trait ApiDaSessao {
+    fn abrir_pelo_windows(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        sid: &str,
+        usuario_do_windows: &str,
+        computador: Option<&str>,
+    ) -> Result<SessaoAberta, Falha>;
+
+    fn renovar(
+        &self,
+        servidor: &str,
+        token_da_sessao: &Segredo,
+        sid: &str,
+        computador: Option<&str>,
+    ) -> Result<Renovacao, Falha>;
+}
+
+#[derive(Clone)]
 pub struct ApiHttp {
     cliente: Client,
 }
@@ -43,7 +86,8 @@ fn cabecalhos(pedido: RequestBuilder, computador: Option<&str>) -> RequestBuilde
 fn resposta<T: DeserializeOwned>(enviado: reqwest::Result<Response>) -> Result<T, Falha> {
     let resposta = enviado.map_err(|erro| Falha {
         decisao: Decisao::TentarDepois,
-        detalhe: None,
+        status: 0,
+        problema: None,
         // O erro do reqwest leva o endereço, sem segredo: o token vai no cabeçalho.
         para_o_log: format!("sem resposta: {erro}"),
     })?;
@@ -51,7 +95,8 @@ fn resposta<T: DeserializeOwned>(enviado: reqwest::Result<Response>) -> Result<T
     if status.is_success() {
         return resposta.json::<T>().map_err(|erro| Falha {
             decisao: Decisao::TentarDepois,
-            detalhe: None,
+            status: status.as_u16(),
+            problema: None,
             para_o_log: format!("resposta estranha da API: {erro}"),
         });
     }
@@ -68,7 +113,8 @@ fn resposta<T: DeserializeOwned>(enviado: reqwest::Result<Response>) -> Result<T
     let para_o_log = format!("{} {codigo}", status.as_u16());
     Err(Falha {
         decisao: decidir(status.as_u16(), problema.as_ref(), retry_after.as_deref()),
-        detalhe: problema.and_then(|problema| problema.detalhe),
+        status: status.as_u16(),
+        problema: problema.map(Box::new),
         para_o_log,
     })
 }
@@ -100,6 +146,48 @@ impl Api for ApiHttp {
             computador,
         )
         .bearer_auth(token.expor())
+        .send();
+        resposta(enviado)
+    }
+}
+
+impl ApiDaSessao for ApiHttp {
+    fn abrir_pelo_windows(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        sid: &str,
+        usuario_do_windows: &str,
+        computador: Option<&str>,
+    ) -> Result<SessaoAberta, Falha> {
+        let enviado = cabecalhos(
+            self.cliente.post(format!("{servidor}/api/aba/sessao")),
+            computador,
+        )
+        .bearer_auth(token_do_aparelho.expor())
+        .json(&json!({
+            "entrada": "windows",
+            "sid": sid,
+            "usuarioDoWindows": usuario_do_windows,
+        }))
+        .send();
+        resposta(enviado)
+    }
+
+    fn renovar(
+        &self,
+        servidor: &str,
+        token_da_sessao: &Segredo,
+        sid: &str,
+        computador: Option<&str>,
+    ) -> Result<Renovacao, Falha> {
+        let enviado = cabecalhos(
+            self.cliente
+                .post(format!("{servidor}/api/aba/sessao/renovar")),
+            computador,
+        )
+        .bearer_auth(token_da_sessao.expor())
+        .json(&json!({ "sid": sid }))
         .send();
         resposta(enviado)
     }

@@ -1,6 +1,6 @@
 //! O estado que a tela lê pelo comando `estado` e recebe no evento `estado-mudou`, com o formato do
-//! `GET /api/aba/estado` (design, decisão 6). A rede e a sessão entram nas tarefas 5.12 a 5.14; aqui
-//! fica o de fábrica, com o atalho ocupado.
+//! `GET /api/aba/estado` (design, decisão 6). A sessão pelo Windows dá a pessoa e o motivo da aba sem
+//! conexão; a rede entra na tarefa 5.14.
 
 use std::sync::Mutex;
 
@@ -28,14 +28,12 @@ pub struct PorVer {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code, reason = "a sessão entra nas tarefas 5.12 e 5.13")]
 pub struct Pessoa {
     pub nome: String,
     pub pela_senha: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[allow(dead_code, reason = "a rede entra na tarefa 5.14")]
 pub struct SemConexao {
     pub motivo: String,
 }

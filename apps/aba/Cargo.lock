@@ -1444,6 +1444,7 @@ dependencies = [
 name = "grafite-aba"
 version = "0.1.0"
 dependencies = [
+ "grafite-aba-pipe",
  "serde",
  "serde_json",
  "tauri",

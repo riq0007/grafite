@@ -295,6 +295,30 @@ Na verificação, o serviço foi instalado à mão com o `sc.exe`, do `C:\Progra
 - o serviço reiniciado leu o token do disco e não registrou de novo;
 - o exemplo `aparelho` do `grafite-aba-pipe`, pelo `Cliente::abrir`, conferiu o serviço no gerenciador de serviços e recebeu a situação `registrada` com a configuração de fábrica.
 
+A sessão pelo Windows (tarefa 5.12) passa pelo pipe em dois pedidos, `sessao-pelo-windows` e `renovar`, com o token da pessoa. O serviço lê quem chama só nesses dois, depois da primeira mensagem, e manda à API o SID e o nome que o Windows lhe dá:
+- **a abertura** vai com o token do aparelho. Sem um token do aparelho que valha neste servidor, a resposta é a situação do aparelho, com o motivo;
+- **a renovação** vai com o token da sessão, sem o do aparelho, e com o SID de quem chama: o token levado a outra pessoa do Windows é recusado pela API como `usuario-de-fora`, com a sessão encerrada;
+- **a recusa** volta à aba como veio: o status, o código do `type`, o `detail`, o `motivo` da pessoa recusada, o `motivoDoFim` da sessão encerrada e a espera do 429. O token do aparelho recusado e o bloqueio acordam o laço do aparelho, que confere já;
+- **o prazo** de 5 s fica na leitura do pedido e na escrita da resposta, cada uma. O pedido à API, entre as duas, tem o prazo do `reqwest`, porque o AD pode levar segundos.
+
+A situação do aparelho no pipe passa a levar o endereço do servidor, que a aba usa.
+
+Do lado da aba, uma linha pede a situação do aparelho a cada minuto, no máximo, e abre ou renova a sessão:
+- **o token** fica na memória e no `%LOCALAPPDATA%\Grafite\Aba\sessao`, cifrado pelo DPAPI da pessoa, com um sal da aba e com o servidor que o deu. O de outro servidor é esquecido;
+- **a renovação** vai a cada 50 minutos, antes de a hora da sessão acabar, sem ler a hora do servidor: a aba conta do momento da resposta. A sessão do disco é renovada assim que a aba abre, o que confere o token e a pessoa;
+- **as recusas**, pelo código:
+  - a pessoa recusada fica sem conexão com a frase do `detail` e tenta de novo a cada 10 minutos. A TI fora do alcance tenta em 30 s e, na renovação, não derruba a sessão, que vale até vencer;
+  - a sessão recusada na renovação abre outra na hora, fora a encerrada por `outra-sessao-no-aparelho`, que espera a pessoa entrar no Windows de novo;
+  - o 429 espera o que a API disse;
+  - sem o serviço, ou com o pipe falso, a aba não foi configurada. O aparelho sem registro, com o registro recusado ou bloqueado esquece a sessão e mostra o motivo do serviço.
+
+A entrada pela senha fica para a 5.13, e a sessão é passada à tela só pela pessoa e pelo motivo do sem conexão; os pedidos da aba à API com o token entram na 5.14.
+
+Na verificação, com o serviço novo instalado e o `tauri dev` contra o `pnpm dev`:
+- a aba pediu a sessão pelo pipe, e o serviço a abriu com o SID de quem roda a aba, com o `200` da API e o usuário do Windows no log do serviço;
+- o token ficou cifrado no `%LOCALAPPDATA%` da pessoa;
+- a aba aberta de novo leu o token do disco e o renovou (`POST /api/aba/sessao/renovar`, `200`), sem pedir outra sessão.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

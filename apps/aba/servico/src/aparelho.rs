@@ -13,14 +13,14 @@
 use std::io;
 use std::time::{Duration, Instant};
 
-use grafite_aba_pipe::{Aparelho, Configuracao, Entrada, Forma, Situacao};
+use grafite_aba_pipe::{Aparelho, Configuracao, Entrada, Forma, Recusa, Situacao};
 use serde::{Deserialize, Serialize};
 
 use crate::cofre::Guardado;
 use crate::computador::{Computador, nome_no_cabecalho};
 use crate::instalacao::{Instalacao, endereco_valido};
 use crate::log;
-use crate::problema::Decisao;
+use crate::problema::{Decisao, Problema};
 use crate::segredo::Segredo;
 
 pub const VERSAO: &str = env!("CARGO_PKG_VERSION");
@@ -75,12 +75,33 @@ pub struct ConfiguracaoGuardada {
     pub configuracao: Configuracao,
 }
 
-/// Uma resposta que não deu certo: a decisão, a frase do `detail` e o que vai ao log.
+/// Uma resposta que não deu certo: a decisão, o problema e o que vai ao log.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Falha {
     pub decisao: Decisao,
-    pub detalhe: Option<String>,
+    /// 0 quando a API não respondeu.
+    pub status: u16,
+    /// Numa caixa: o problema é grande, e a falha vai e volta em cada `Result`.
+    pub problema: Option<Box<Problema>>,
     pub para_o_log: String,
+}
+
+impl Falha {
+    /// A recusa como a aba a recebe pelo pipe.
+    pub fn para_a_aba(&self) -> Recusa {
+        let problema = self.problema.as_deref();
+        Recusa {
+            status: self.status,
+            codigo: problema.and_then(Problema::codigo).map(str::to_owned),
+            detalhe: problema.and_then(|problema| problema.detalhe.clone()),
+            motivo: problema.and_then(|problema| problema.motivo.clone()),
+            motivo_do_fim: problema.and_then(|problema| problema.motivo_do_fim.clone()),
+            espera_em_segundos: match self.decisao {
+                Decisao::Esperar(espera) => Some(espera.as_secs()),
+                _ => None,
+            },
+        }
+    }
 }
 
 pub trait Api {
@@ -119,6 +140,8 @@ pub struct ServicoDoAparelho<A, M> {
     chave_recusada: Option<(Segredo, Instant)>,
     situacao: Situacao,
     motivo: Option<String>,
+    /// O endereço que vale no registro do Windows, no último passo.
+    servidor: Option<String>,
 }
 
 impl<A: Api, M: Maquina> ServicoDoAparelho<A, M> {
@@ -151,12 +174,24 @@ impl<A: Api, M: Maquina> ServicoDoAparelho<A, M> {
             chave_recusada: None,
             situacao,
             motivo,
+            servidor: None,
         }
+    }
+
+    /// O servidor e o token do aparelho, para os pedidos da sessão: só o token deste servidor, e não
+    /// o recusado.
+    pub fn credencial(&self) -> Option<(String, Segredo)> {
+        let servidor = self.servidor.as_ref()?;
+        self.guardado
+            .as_ref()
+            .filter(|guardado| &guardado.servidor == servidor && self.token_recusado_em.is_none())
+            .map(|guardado| (guardado.servidor.clone(), guardado.token.clone()))
     }
 
     /// O que a aba de cada pessoa recebe pelo pipe.
     pub fn retrato(&self) -> Aparelho {
         Aparelho {
+            servidor: self.servidor.clone(),
             situacao: self.situacao,
             motivo: self.motivo.clone(),
             configuracao: self
@@ -181,9 +216,11 @@ impl<A: Api, M: Maquina> ServicoDoAparelho<A, M> {
             if instalacao.servidor.is_some() && self.situacao != Situacao::NaoConfigurada {
                 log::aviso("o endereço do servidor no registro do Windows foi recusado");
             }
+            self.servidor = None;
             self.mudar(Situacao::NaoConfigurada, Some(SEM_CONFIGURACAO));
             return UM_MINUTO;
         };
+        self.servidor = Some(servidor.clone());
         // A configuração e o token de outro servidor não valem neste.
         if self
             .configuracao
@@ -502,7 +539,8 @@ mod testes {
     fn falha(decisao: Decisao) -> Falha {
         Falha {
             decisao,
-            detalhe: None,
+            status: 401,
+            problema: None,
             para_o_log: "teste".into(),
         }
     }
@@ -842,6 +880,56 @@ mod testes {
         *maquina.configuracao.borrow_mut() = None;
         servico.passo(agora + UM_MINUTO);
         assert_eq!(*maquina.configuracao.borrow(), None);
+    }
+
+    #[test]
+    fn a_credencial_e_so_a_do_token_que_vale_neste_servidor() {
+        let api = ApiFalsa::default();
+        api.configuracoes.borrow_mut().push_back(configuracao(1));
+        api.configuracoes
+            .borrow_mut()
+            .push_back(Err(falha(Decisao::TokenRecusado)));
+        let maquina = MaquinaFalsa::com(Some(SERVIDOR), None);
+        let mut servico =
+            ServicoDoAparelho::novo(&api, &maquina, Some(guardado("tok_1", SERVIDOR)), None);
+        assert_eq!(servico.credencial(), None, "antes do primeiro passo");
+        let agora = Instant::now();
+        servico.passo(agora);
+        assert_eq!(
+            servico.credencial(),
+            Some((SERVIDOR.to_owned(), Segredo::novo("tok_1")))
+        );
+        assert_eq!(servico.retrato().servidor.as_deref(), Some(SERVIDOR));
+        servico.passo(agora + UM_MINUTO);
+        assert_eq!(
+            servico.credencial(),
+            None,
+            "o token recusado não vai à sessão"
+        );
+    }
+
+    #[test]
+    fn a_recusa_vai_a_aba_com_o_codigo_e_o_motivo() {
+        let falha = Falha {
+            decisao: Decisao::DaPessoa("pessoa-recusada-na-aba".into()),
+            status: 403,
+            problema: Some(Box::new(Problema {
+                tipo: "urn:grafite:problema:pessoa-recusada-na-aba".into(),
+                detalhe: Some("Sua conta está inativa no Grafite. Fale com a TI.".into()),
+                motivo: Some("conta-inativa".into()),
+                motivo_do_fim: None,
+            })),
+            para_o_log: "403".into(),
+        };
+        let recusa = falha.para_a_aba();
+        assert_eq!(recusa.codigo.as_deref(), Some("pessoa-recusada-na-aba"));
+        assert_eq!(recusa.motivo.as_deref(), Some("conta-inativa"));
+        assert_eq!(recusa.status, 403);
+        let espera = Falha {
+            decisao: Decisao::Esperar(Duration::from_secs(9)),
+            ..falha
+        };
+        assert_eq!(espera.para_a_aba().espera_em_segundos, Some(9));
     }
 
     #[test]

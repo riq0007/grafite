@@ -4,7 +4,7 @@
 use std::ffi::OsString;
 use std::io;
 use std::process::ExitCode;
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -18,8 +18,9 @@ use windows_service::{define_windows_service, service_dispatcher};
 
 use crate::aparelho::{ConfiguracaoGuardada, Maquina, ServicoDoAparelho, VERSAO};
 use crate::api::ApiHttp;
+use crate::atendimento::{Contexto, Sinal};
 use crate::cofre::{self, Guardado};
-use crate::computador::{self, Computador};
+use crate::computador::{self, Computador, nome_no_cabecalho};
 use crate::instalacao::{self, Instalacao};
 use crate::pastas::{self, Pastas};
 use crate::{atendimento, log};
@@ -54,9 +55,10 @@ define_windows_service!(servico_ffi, servico_principal);
 
 fn servico_principal(_argumentos: Vec<OsString>) {
     let (parar, pedido) = mpsc::channel();
+    let acordar = parar.clone();
     let controle = move |evento| match evento {
         ServiceControl::Stop | ServiceControl::Shutdown => {
-            let _ = parar.send(());
+            let _ = parar.send(Sinal::Parar);
             ServiceControlHandlerResult::NoError
         }
         ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
@@ -79,7 +81,7 @@ fn servico_principal(_argumentos: Vec<OsString>) {
         ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN,
         ServiceExitCode::Win32(0),
     ));
-    let saida = match rodar(&pedido, false) {
+    let saida = match rodar(&pedido, acordar, false) {
         Ok(()) => ServiceExitCode::Win32(0),
         // O gerenciador de serviços guarda o código no log de eventos do Windows.
         Err(erro) => ServiceExitCode::ServiceSpecific(erro.raw_os_error().unwrap_or(1) as u32),
@@ -94,8 +96,8 @@ fn servico_principal(_argumentos: Vec<OsString>) {
 fn no_console() -> ExitCode {
     // Ninguém pede para parar: o Ctrl+C termina o processo, e o laço não deixa nada pela metade,
     // porque o disco só recebe o arquivo inteiro.
-    let (_parar, pedido) = mpsc::channel();
-    match rodar(&pedido, true) {
+    let (acordar, pedido) = mpsc::channel();
+    match rodar(&pedido, acordar, true) {
         Ok(()) => ExitCode::SUCCESS,
         Err(erro) => {
             eprintln!("{NOME_DO_SERVICO}: {erro}");
@@ -139,7 +141,7 @@ fn ler_a_configuracao(pastas: &Pastas) -> Option<ConfiguracaoGuardada> {
         .ok()
 }
 
-fn rodar(parar: &Receiver<()>, no_console: bool) -> io::Result<()> {
+fn rodar(sinais: &Receiver<Sinal>, acordar: Sender<Sinal>, no_console: bool) -> io::Result<()> {
     let pastas = pastas::preparar()?;
     log::iniciar(pastas.logs(), no_console);
     log::info(&format!("o serviço da aba {VERSAO} começou"));
@@ -151,25 +153,40 @@ fn rodar(parar: &Receiver<()>, no_console: bool) -> io::Result<()> {
     });
     let configuracao = ler_a_configuracao(&pastas);
     let api = ApiHttp::nova().map_err(io::Error::other)?;
-    let mut aparelho =
-        ServicoDoAparelho::novo(api, MaquinaDoWindows { pastas }, guardado, configuracao);
-    let retrato = Arc::new(Mutex::new(aparelho.retrato()));
+    let computador =
+        computador::este().and_then(|este| nome_no_cabecalho(&este.nome).map(str::to_owned));
+    let mut aparelho = ServicoDoAparelho::novo(
+        api.clone(),
+        MaquinaDoWindows { pastas },
+        guardado,
+        configuracao,
+    );
+    let contexto = Arc::new(Contexto {
+        retrato: Mutex::new(aparelho.retrato()),
+        credencial: Mutex::new(None),
+        api,
+        computador,
+        acordar,
+    });
     {
-        let retrato = Arc::clone(&retrato);
+        let contexto = Arc::clone(&contexto);
         thread::spawn(move || {
-            if let Err(erro) = atendimento::atender(retrato) {
+            if let Err(erro) = atendimento::atender(contexto) {
                 log::erro(&format!("o pipe da aba não abriu: {erro}"));
             }
         });
     }
     loop {
         let espera = aparelho.passo(Instant::now());
-        if let Ok(mut atual) = retrato.lock() {
+        if let Ok(mut atual) = contexto.retrato.lock() {
             *atual = aparelho.retrato();
         }
-        match parar.recv_timeout(espera) {
-            Err(RecvTimeoutError::Timeout) => {}
-            Ok(()) | Err(RecvTimeoutError::Disconnected) => break,
+        if let Ok(mut atual) = contexto.credencial.lock() {
+            *atual = aparelho.credencial();
+        }
+        match sinais.recv_timeout(espera) {
+            Err(RecvTimeoutError::Timeout) | Ok(Sinal::Acordar) => {}
+            Ok(Sinal::Parar) | Err(RecvTimeoutError::Disconnected) => break,
         }
     }
     log::info("o serviço da aba parou");

@@ -1,13 +1,15 @@
 //! O lado nativo da aba (change aba-dos-colaboradores, design, decisão 1): as janelas da tela, os
-//! comandos que ela chama e, nas tarefas seguintes, a conversa com o serviço pelo pipe.
+//! comandos que ela chama e a sessão, que ela pede ao serviço pelo pipe.
 
 mod aparencia;
 mod atalho;
+mod cofre;
 mod estado;
 mod foco;
 mod forma;
 mod janela;
 mod posicao;
+mod sessao;
 mod sistema;
 mod tela_maior;
 
@@ -72,6 +74,8 @@ pub fn rodar() {
             app.manage(janelas);
             janela::preparar(app.handle(), trocas)?;
             atalho::registrar(app.handle());
+            #[cfg(windows)]
+            sessao::iniciar(app.handle().clone());
             Ok(())
         })
         .on_window_event(janela::ao_mudar)

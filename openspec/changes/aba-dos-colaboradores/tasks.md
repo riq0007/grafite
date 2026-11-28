@@ -186,7 +186,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o serviço decide pelo `type` do problema, e não pelo status: só o `token-da-aba-recusado` é do computador, e os 401 da pessoa (`credenciais-invalidas`, `codigo-invalido`, `tentativas-esgotadas`, `pendente-da-aba-recusada`) e o `sessao-da-aba-recusada` voltam à aba.
 
   Verificar: os testes do Rust e o serviço instalado à mão neste computador, registrando o aparelho no `pnpm dev`.
-- [ ] 5.12 A sessão pelo Windows entregue à aba: o pedido pelo pipe, a renovação de hora em hora e o token da pessoa cifrado pelo DPAPI dela.
+- [x] 5.12 A sessão pelo Windows entregue à aba: o pedido pelo pipe, a renovação de hora em hora e o token da pessoa cifrado pelo DPAPI dela.
 
   Verificar: os testes do Rust e a aba no `tauri dev` contra o `pnpm dev`, com a entrada pelo Windows.
 - [ ] 5.13 A sessão pela senha entregue à aba:
