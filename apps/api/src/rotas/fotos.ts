@@ -178,7 +178,7 @@ export const rotasDasFotos: FastifyPluginAsyncZod<DependenciasDasFotos> = async 
   app.get(
     '/pessoas/:id/foto/:arquivo/:tamanho',
     {
-      config: { permissao: 'pessoas.ver' },
+      config: { permissao: 'pessoas.ver', chatDaAba: true },
       schema: {
         summary: 'Um tamanho da foto de uma pessoa',
         params: ParametrosDaEntrega,
@@ -258,7 +258,7 @@ export const rotasDasFotos: FastifyPluginAsyncZod<DependenciasDasFotos> = async 
   app.get(
     '/conta/foto/:arquivo/:tamanho',
     {
-      config: { semPermissao: 'propria-conta' },
+      config: { semPermissao: 'propria-conta', chatDaAba: true },
       preHandler: exigirAtiva,
       schema: {
         summary: 'Um tamanho da foto da própria pessoa',

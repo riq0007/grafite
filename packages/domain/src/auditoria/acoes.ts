@@ -274,6 +274,23 @@ export const ACOES_DA_AUDITORIA = {
   'canal.alterado': 'Canal alterado',
   'canal.arquivado': 'Canal arquivado',
   'canal.reativado': 'Canal reativado',
+  // A aba dos colaboradores (change aba-dos-colaboradores)
+  'chave-da-aba.criada': 'Chave da aba criada',
+  'chave-da-aba.trocada': 'Chave da aba trocada',
+  'aba.configurada': 'Aba configurada',
+  'entrada-do-aparelho.trocada': 'Entrada do computador na aba trocada',
+  'teto-do-aparelho.trocado': 'Teto de contas do computador trocado',
+  'aparelho-da-aba.bloqueado': 'Computador bloqueado na aba',
+  'aparelho-da-aba.desbloqueado': 'Computador desbloqueado na aba',
+  'aparelho-da-aba.registrado': 'Computador registrado na aba',
+  'aparelho-da-aba.registrado-com-outro-nome':
+    'Computador registrado de novo com outro nome em menos de 1 hora',
+  'chave-da-aba.recusada': 'Chave da aba recusada',
+  'token-da-aba.recusado': 'Token do computador na aba recusado',
+  'sessao-da-aba.aberta': 'Sessão da aba aberta',
+  'sessao-da-aba.recusada': 'Pessoa recusada na aba',
+  'sessao-da-aba.encerrada': 'Sessão da aba encerrada',
+  'sessao-do-chat-da-aba.aberta': 'Sessão do chat na aba aberta',
 } as const;
 
 export type AcaoDaAuditoria = keyof typeof ACOES_DA_AUDITORIA;

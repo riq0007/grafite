@@ -464,7 +464,7 @@ cor + texto + ícone.
   O destaque sai da matiz e do croma. O gerador move a luminosidade de cada papel até o mínimo da WCAG contra as superfícies em que ele aparece. Por isso, nenhuma escolha, nem o tema personalizado, deixa o texto ilegível.
 - **O destaque de fábrica é o Grafite, monocromático.** A ação principal fica num quase branco no escuro e num quase preto no claro. Com isso, as únicas cores da tela são as das situações, as do dado e a do destaque que o usuário escolheu.
 - **Um destaque só por tela.** O destaque marca a ação principal, a seleção e o foco. Ele não pinta títulos, ícones de seção nem fundos.
-- **O azul é a informação.** Com o destaque Grafite, o azul só aparece na situação de informação e nas séries de dados. A exceção nomeada é a aba dos chamados: as cores da aba (`--cor-aba-*`) são feitas na matiz da informação, como nos mockups aprovados, por decisão do usuário de 18/11/2026.
+- **O azul é a informação.** Com o destaque Grafite, o azul só aparece na situação de informação e nas séries de dados. A exceção nomeada é a aba dos chamados: as cores da aba (`--cor-aba-*`) são feitas na matiz da informação, como nos mockups aprovados, por decisão do usuário de 18/11/2026. A aba do Windows (`--cor-aba-flutuante-*`, change aba-dos-colaboradores) reaproveita o azul e o âmbar dela, como nos mockups aprovados da aba flutuante.
 
 ---
 
@@ -881,6 +881,7 @@ Duração máxima de **300 ms**. As exceções são nomeadas:
 
 - a mola dos avisos (~550 ms);
 - a sequência de boas-vindas, que sempre pode ser pulada, e a montagem da casca que vem depois dela, uma vez só;
+- a abertura da aba do Windows: a forma cresce em 220 ms e a cascata das opções acaba aos 340 ms, mas as opções já respondem ao clique aos 260 ms, e a pessoa não espera pela cascata (`movimento.aba`);
 - os visualizadores 3D.
 
 Durações, curvas e molas são tokens, nunca valores soltos no componente.

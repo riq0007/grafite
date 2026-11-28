@@ -14,6 +14,7 @@ const ATIVA: EstadoDaSessao = {
   conta: CONTA_DE_EXEMPLO,
   csrf: 'csrf-de-teste',
   expiraEm: '2099-01-01T00:00:00.000Z',
+  naAba: false,
   acesso: { permissoes: [] },
 };
 
@@ -36,6 +37,7 @@ const ESTA_SESSAO = {
   criadaEm: '2026-10-01T12:00:00.000Z',
   ultimoUsoEm: '2026-10-01T13:30:00.000Z',
   atual: true,
+  aviso: null,
 };
 const NO_CELULAR = {
   id: '0199a6e0-0000-7000-8000-000000000002',
@@ -44,6 +46,18 @@ const NO_CELULAR = {
   criadaEm: '2026-09-30T22:15:00.000Z',
   ultimoUsoEm: '2026-10-01T11:05:00.000Z',
   atual: false,
+  aviso: null,
+};
+/** A sessão da aba de Ana no computador do financeiro, pelo Windows. */
+const NA_ABA = {
+  id: '0199a6e0-0000-7000-8000-000000000003',
+  dispositivo: 'Aba · PC-FIN-09',
+  ip: '10.0.0.9',
+  criadaEm: '2026-10-01T08:00:00.000Z',
+  ultimoUsoEm: '2026-10-01T09:00:00.000Z',
+  atual: false,
+  aviso:
+    'Este computador entra na aba pelo Windows: encerrada a sessão, a aba abre outra na hora. Só o bloqueio do computador, feito pela TI, o para.',
 };
 
 /** Os aparelhos confiáveis de Ana: o computador, deste navegador, e o notebook. */
@@ -581,6 +595,15 @@ describe('sessões', () => {
     expect(within(esta).queryByRole('button', { name: /Encerrar/ })).toBeNull();
     const celular = await itemDe('Safari no iPhone');
     expect(within(celular).queryByText('Esta sessão')).toBeNull();
+  });
+
+  it('Sessão da aba na lista: o computador, com a frase do bloqueio', async () => {
+    abrir({ servidor: { 'GET /api/conta/sessoes': [json([ESTA_SESSAO, NA_ABA])] } });
+    const aba = await itemDe('Aba · PC-FIN-09');
+    expect(within(aba).getByText(NA_ABA.aviso)).toBeTruthy();
+    expect(within(aba).getByRole('button', { name: 'Encerrar' })).toBeTruthy();
+    const esta = await itemDe('Chrome no Windows');
+    expect(within(esta).queryByText(/abre outra sessão/)).toBeNull();
   });
 
   it('"Encerrar" encerra a sessão e a tira da lista', async () => {

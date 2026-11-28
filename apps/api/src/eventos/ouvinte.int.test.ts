@@ -70,6 +70,34 @@ describe('o ouvinte do banco', () => {
     });
   });
 
+  // O público da aba (change aba-dos-colaboradores, design, decisão 6) vem no aviso do banco, e não
+  // só na linha que a retomada lê.
+  it('entrega o público da aba: as sessões da aba, os aparelhos e todas as abas', async () => {
+    const { recebidos, ouvinte: ligado } = ouvir();
+    await ligado.iniciar();
+    const sessaoDaAba = '0199a3f0-0000-7000-c000-000000000001';
+    const aparelho = '0199a3f0-0000-7000-b000-000000000001';
+    await naOrganizacao(api.banco, org, async (tx) => {
+      await registrarEvento(tx, {
+        tipo: 'sessao.encerrada',
+        alvo: null,
+        publico: { sessoesDaAba: [sessaoDaAba] },
+      });
+      await registrarEvento(tx, {
+        tipo: 'sessao.encerrada',
+        alvo: null,
+        publico: { aparelhos: [aparelho] },
+      });
+      await registrarEvento(tx, { tipo: 'sessao.encerrada', alvo: null, publico: { abas: true } });
+    });
+    await vi.waitFor(() => expect(recebidos).toHaveLength(3), { timeout: 2000 });
+    expect(recebidos.map(({ publico }) => publico)).toEqual([
+      { sessoesDaAba: [sessaoDaAba] },
+      { aparelhos: [aparelho] },
+      { abas: true },
+    ]);
+  });
+
   it('a transação desfeita não entrega nada', async () => {
     const { recebidos, ouvinte: ligado } = ouvir();
     await ligado.iniciar();

@@ -63,6 +63,7 @@ export interface ApiDeTeste {
 export async function abrirApi({
   relogio = criarRelogio(),
   intervalosDosEventos,
+  intervalosDosEventosDaAba,
   tarefas,
   intervaloDaFila,
   agendarAlertas = false,
@@ -94,6 +95,8 @@ export async function abrirApi({
   operacao?: Dependencias['operacao'];
   /** Intervalos menores para a conexão de eventos, nos testes que esperam por eles. */
   intervalosDosEventos?: Dependencias['intervalosDosEventos'];
+  /** Intervalos menores para a conexão de eventos da aba. */
+  intervalosDosEventosDaAba?: Dependencias['intervalosDosEventosDaAba'];
   /** O catálogo da fila, nos testes que tratam dela; sem ele, a API não liga a fila. */
   tarefas?: NonNullable<Dependencias['fila']>['tarefas'];
   /** De quanto em quanto tempo a fila procura tarefas, em segundos, nos testes que esperam por elas. */
@@ -122,6 +125,7 @@ export async function abrirApi({
     canais,
     conectarOuvinte: () => new pg.Client({ connectionString: inject('urlApp') }),
     intervalosDosEventos,
+    intervalosDosEventosDaAba,
     prazoDoAcessoRemoto,
     ...(conectarDiretorio ? { conectarDiretorio } : {}),
     ...(acordarAgente ? { acordarAgente } : {}),

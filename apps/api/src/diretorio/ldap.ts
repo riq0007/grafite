@@ -75,6 +75,45 @@ const um = (entrada: Entry, atributo: string) => valores(entrada, atributo)[0] ?
 
 const ATRIBUTOS_DO_USUARIO = ['displayName', 'cn', 'mail', 'userAccountControl', 'memberOf'];
 
+/**
+ * O SID como o Windows o escreve: `S-1-5` e até 15 subautoridades, sem zeros à esquerda e de 32
+ * bits, só o da autoridade NT. O do computador só no Entra (`S-1-12-…`) fica de fora.
+ */
+const FORMA_DO_SID = /^S-1-5(-(0|[1-9]\d{0,9})){1,15}$/;
+
+export function sidValido(sid: string): boolean {
+  return (
+    FORMA_DO_SID.test(sid) &&
+    sid
+      .split('-')
+      .slice(3)
+      .every((parte) => Number(parte) <= 0xffffffff)
+  );
+}
+
+/**
+ * O `objectSid` binário do AD em texto (MS-DTYP, 2.4.2.2): a revisão, a quantidade de
+ * subautoridades, a autoridade em 48 bits big-endian e cada subautoridade em 32 bits little-endian.
+ * `null` quando os bytes não formam um SID.
+ */
+export function textoDoSid(bytes: Buffer): string | null {
+  if (bytes.length < 8 || bytes[0] !== 1) return null;
+  const quantas = bytes[1] ?? 0;
+  if (quantas > 15 || bytes.length !== 8 + 4 * quantas) return null;
+  const autoridade = bytes.readUIntBE(2, 6);
+  const partes = [`S-1-${autoridade}`];
+  for (let i = 0; i < quantas; i++) partes.push(String(bytes.readUInt32LE(8 + 4 * i)));
+  return partes.join('-');
+}
+
+/** O `objectSid` da entrada, pedido em `explicitBufferAttributes`, em texto. */
+function sidDa(entrada: Entry): string | null {
+  const chave = Object.keys(entrada).find((nome) => nome.toLowerCase() === 'objectsid');
+  const valor = chave ? entrada[chave] : undefined;
+  const bytes = Array.isArray(valor) ? valor[0] : valor;
+  return Buffer.isBuffer(bytes) ? textoDoSid(bytes) : null;
+}
+
 function usuarioDa(entrada: Entry, atributoDoUsuario: string): UsuarioDoDiretorio {
   const usuario = um(entrada, atributoDoUsuario) ?? '';
   const controle = Number(um(entrada, 'userAccountControl'));
@@ -162,6 +201,16 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
     });
   }
 
+  /** O único usuário com o atributo do usuário dado, pela conta de serviço. */
+  const peloUsuario = (usuario: string) =>
+    comServico(async (cliente) => {
+      const { searchEntries } = await buscar(cliente, filtroDoUsuario(acesso, usuario), 2);
+      const [unica] = searchEntries;
+      return searchEntries.length === 1 && unica
+        ? usuarioDa(unica, acesso.atributoDoUsuario)
+        : null;
+    });
+
   const doMembro = (operation: 'add' | 'delete', usuarioDn: string) =>
     new Change({ operation, modification: new Attribute({ type: 'member', values: [usuarioDn] }) });
 
@@ -181,16 +230,12 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
         return quantos;
       }),
 
+    buscarPeloUsuario: (usuario) => peloUsuario(usuario),
+
     async autenticar(usuario, senha) {
       // O AD aceita a senha vazia como entrada anônima: ela nunca chega ao bind.
       if (senha === '') return null;
-      const pessoa = await comServico(async (cliente) => {
-        const { searchEntries } = await buscar(cliente, filtroDoUsuario(acesso, usuario), 2);
-        const [unica] = searchEntries;
-        return searchEntries.length === 1 && unica
-          ? usuarioDa(unica, acesso.atributoDoUsuario)
-          : null;
-      });
+      const pessoa = await peloUsuario(usuario);
       if (!pessoa) return null;
       const cliente = abrir();
       try {
@@ -202,6 +247,24 @@ export const conectarPeloLdap: ConectarDiretorio = (acesso: AcessoAoDiretorio) =
       } finally {
         await cliente.unbind().catch(() => undefined);
       }
+    },
+
+    async buscarPeloSid(sid) {
+      if (!sidValido(sid)) return null;
+      return comServico(async (cliente) => {
+        const { searchEntries } = await cliente.search(acesso.baseDn, {
+          scope: 'sub',
+          filter: `(&${acesso.filtroDasPessoas}(objectSid=${escaparFiltro(sid)}))`,
+          attributes: [...atributos, 'objectSid'],
+          explicitBufferAttributes: ['objectSid'],
+          sizeLimit: 2,
+        });
+        const [unica] = searchEntries;
+        // Só o achado com o mesmo SID: o filtro pelo texto é do AD, e a conferência é daqui.
+        return searchEntries.length === 1 && unica && sidDa(unica) === sid
+          ? usuarioDa(unica, acesso.atributoDoUsuario)
+          : null;
+      });
     },
 
     buscarUsuarios: (termo, limite) =>

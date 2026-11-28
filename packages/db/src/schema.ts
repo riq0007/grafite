@@ -346,7 +346,177 @@ export const MOTIVOS_DO_FIM_DA_SESSAO = [
   'conta-inativada',
   'encerrada-pela-administracao',
   'dois-passos-removidos',
+  /** A sessão do chat na aba, que termina junto com a sessão da aba (change aba-dos-colaboradores). */
+  'sessao-da-aba-encerrada',
 ] as const;
+
+/** As formas da aba fechada (spec aba-dos-colaboradores, "Aba fechada"). */
+export const FORMAS_DA_ABA = ['pilula', 'entalhe'] as const;
+
+/** Como a pessoa entra na aba de um computador (change aba-dos-colaboradores, decisão 2). */
+export const ENTRADAS_DA_ABA = ['windows', 'senha'] as const;
+
+/** Por que uma sessão da aba terminou: os da sessão comum e os que só a aba tem. */
+export const MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA = [
+  ...MOTIVOS_DO_FIM_DA_SESSAO,
+  'aparelho-bloqueado',
+  'pessoa-recusada',
+  'sem-uso',
+  'outra-sessao-no-aparelho',
+] as const;
+
+/** Para onde o bilhete leva o chat da aba (decisão 8): o chat, ou um chamado pelo número. */
+export const DESTINOS_DO_BILHETE = ['chat', 'chamado'] as const;
+
+/** Onde a sessão comum vale: em tudo, ou só no chat da aba (decisão 8). */
+export const ALCANCES_DA_SESSAO = ['comum', 'chat-da-aba'] as const;
+
+/**
+ * A chave da aba da organização (spec aba-dos-colaboradores, "Aparelho registrado pela chave"):
+ * uma por organização, só em hash. Trocar a chave grava outro hash na mesma linha.
+ */
+export const chavesDaAba = orgScoped(
+  'chaves_da_aba',
+  {
+    hash: bytea('hash').notNull().unique('chaves_da_aba_hash_unico'),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+    trocadaEm: momento('trocada_em'),
+  },
+  (t) => [unique('chaves_da_aba_uma_por_organizacao').on(t.orgId)],
+);
+
+/** A configuração da aba da organização ("Configuração da aba"): uma linha, com a versão. */
+export const configuracoesDaAba = orgScoped(
+  'configuracoes_da_aba',
+  {
+    forma: text('forma', { enum: FORMAS_DA_ABA }).notNull().default('pilula'),
+    /** O contato de reserva, como "Ramal 2000, das 8h às 18h". */
+    contato: text('contato'),
+    versao: integer('versao').notNull().default(1),
+    atualizadaEm: momento('atualizada_em').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('configuracoes_da_aba_uma_por_organizacao').on(t.orgId),
+    check('configuracoes_da_aba_forma_valida', sql`${t.forma} in (${lista(FORMAS_DA_ABA)})`),
+    check(
+      'configuracoes_da_aba_contato_valido',
+      sql`${t.contato} is null or length(trim(${t.contato})) between 1 and 80`,
+    ),
+    check('configuracoes_da_aba_versao_valida', sql`${t.versao} >= 1`),
+  ],
+);
+
+/**
+ * Os computadores com a aba (decisão 3): identificados pelo `MachineGuid`, com o token do aparelho
+ * só em hash, a entrada que o servidor escolhe e o teto de contas por dia da entrada pelo Windows.
+ */
+export const aparelhosDaAba = orgScoped(
+  'aparelhos_da_aba',
+  {
+    identificadorDaMaquina: text('identificador_da_maquina').notNull(),
+    /** Os 6 caracteres do Crockford que o comando aceita quando o nome se repete. */
+    identificadorCurto: text('identificador_curto').notNull(),
+    nome: text('nome').notNull(),
+    versao: text('versao'),
+    entrada: text('entrada', { enum: ENTRADAS_DA_ABA }).notNull().default('windows'),
+    tetoDeContas: integer('teto_de_contas').notNull().default(5),
+    tokenHash: bytea('token_hash').notNull().unique('aparelhos_da_aba_token_hash_unico'),
+    /** O primeiro registro; o re-registro não o regrava. */
+    registradoEm: momento('registrado_em').notNull().defaultNow(),
+    /** O último registro, quando o token foi trocado. */
+    tokenTrocadoEm: momento('token_trocado_em').notNull().defaultNow(),
+    ultimoContatoEm: momento('ultimo_contato_em'),
+    bloqueadoEm: momento('bloqueado_em'),
+  },
+  (t) => [
+    unique('aparelhos_da_aba_maquina_unica').on(t.orgId, t.identificadorDaMaquina),
+    unique('aparelhos_da_aba_identificador_curto_unico').on(t.orgId, t.identificadorCurto),
+    check(
+      'aparelhos_da_aba_identificador_curto_valido',
+      sql`${t.identificadorCurto} ~ '^[0-9A-HJKMNP-TV-Z]{6}$'`,
+    ),
+    check(
+      'aparelhos_da_aba_identificador_da_maquina_valido',
+      sql`length(${t.identificadorDaMaquina}) between 1 and 64`,
+    ),
+    check('aparelhos_da_aba_nome_valido', sql`length(trim(${t.nome})) between 1 and 63`),
+    check('aparelhos_da_aba_versao_valida', sql`${t.versao} is null or length(${t.versao}) <= 40`),
+    check('aparelhos_da_aba_entrada_valida', sql`${t.entrada} in (${lista(ENTRADAS_DA_ABA)})`),
+    check('aparelhos_da_aba_teto_valido', sql`${t.tetoDeContas} between 1 and 500`),
+  ],
+);
+
+/**
+ * A sessão da aba (decisão 3): uma que vale por conta e aparelho, fora das `sessoes`, sem CSRF nem
+ * cofre. A renovação estende a mesma linha. Enquanto `ativada_em` é nula, a sessão é a pendente da
+ * entrada pela senha, que espera o código do app.
+ */
+export const sessoesDaAba = orgScoped(
+  'sessoes_da_aba',
+  {
+    contaId: uuid('conta_id').notNull(),
+    aparelhoId: uuid('aparelho_id').notNull(),
+    entrada: text('entrada', { enum: ENTRADAS_DA_ABA }).notNull(),
+    tokenHash: bytea('token_hash').notNull().unique('sessoes_da_aba_token_hash_unico'),
+    criadaEm: momento('criada_em').notNull().defaultNow(),
+    ativadaEm: momento('ativada_em'),
+    ultimoUsoEm: momento('ultimo_uso_em').notNull().defaultNow(),
+    expiraEm: momento('expira_em').notNull(),
+    tentativasDeCodigo: integer('tentativas_de_codigo').notNull().default(0),
+    encerradaEm: momento('encerrada_em'),
+    motivoDoFim: text('motivo_do_fim', { enum: MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA }),
+    ip: inet('ip'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'sessoes_da_aba_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    foreignKey({
+      name: 'sessoes_da_aba_aparelho_fk',
+      columns: [t.orgId, t.aparelhoId],
+      foreignColumns: [aparelhosDaAba.orgId, aparelhosDaAba.id],
+    }),
+    uniqueIndex('sessoes_da_aba_uma_aberta_por_conta_e_aparelho')
+      .on(t.orgId, t.contaId, t.aparelhoId)
+      .where(sql`${t.encerradaEm} is null`),
+    index('sessoes_da_aba_aparelho_idx').on(t.orgId, t.aparelhoId),
+    // Para a sessão do chat na aba se prender à mesma conta da sessão da aba.
+    unique('sessoes_da_aba_org_id_id_conta_unico').on(t.orgId, t.id, t.contaId),
+    check('sessoes_da_aba_entrada_valida', sql`${t.entrada} in (${lista(ENTRADAS_DA_ABA)})`),
+    check(
+      'sessoes_da_aba_fim_com_motivo',
+      sql`(${t.encerradaEm} is null) = (${t.motivoDoFim} is null) and (${t.motivoDoFim} is null or ${t.motivoDoFim} in (${lista(MOTIVOS_DO_FIM_DA_SESSAO_DA_ABA)}))`,
+    ),
+    check('sessoes_da_aba_tentativas_de_codigo', sql`${t.tentativasDeCodigo} >= 0`),
+  ],
+);
+
+/** O bilhete de uso único que leva o chat da aba à sessão dele (decisão 8), só em hash. */
+export const bilhetesDaAba = orgScoped(
+  'bilhetes_da_aba',
+  {
+    hash: bytea('hash').notNull().unique('bilhetes_da_aba_hash_unico'),
+    sessaoDaAbaId: uuid('sessao_da_aba_id').notNull(),
+    destino: text('destino', { enum: DESTINOS_DO_BILHETE }).notNull(),
+    chamadoNumero: integer('chamado_numero'),
+    criadoEm: momento('criado_em').notNull().defaultNow(),
+    expiraEm: momento('expira_em').notNull(),
+    usadoEm: momento('usado_em'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'bilhetes_da_aba_sessao_fk',
+      columns: [t.orgId, t.sessaoDaAbaId],
+      foreignColumns: [sessoesDaAba.orgId, sessoesDaAba.id],
+    }),
+    check(
+      'bilhetes_da_aba_destino_valido',
+      sql`${t.destino} in (${lista(DESTINOS_DO_BILHETE)}) and (${t.destino} = 'chamado') = (${t.chamadoNumero} is not null)`,
+    ),
+  ],
+);
 
 /**
  * Sessão de uma conta (spec entrada-e-sessoes). O token fica só em hash. Enquanto `ativada_em` é
@@ -376,8 +546,23 @@ export const sessoes = orgScoped(
      * diz qual é o deste navegador. Sem chave estrangeira: o aparelho esquecido só deixa de casar.
      */
     aparelhoId: uuid('aparelho_id'),
+    /**
+     * Onde a sessão vale (change aba-dos-colaboradores, decisão 8): em tudo, ou só no chat da aba,
+     * ligada à sessão da aba que a abriu, e não ao aparelho confiável do `aparelho_id`.
+     */
+    alcance: text('alcance', { enum: ALCANCES_DA_SESSAO }).notNull().default('comum'),
+    sessaoDaAbaId: uuid('sessao_da_aba_id'),
   },
   (t) => [
+    foreignKey({
+      name: 'sessoes_sessao_da_aba_fk',
+      columns: [t.orgId, t.sessaoDaAbaId, t.contaId],
+      foreignColumns: [sessoesDaAba.orgId, sessoesDaAba.id, sessoesDaAba.contaId],
+    }),
+    check(
+      'sessoes_alcance_valido',
+      sql`${t.alcance} in (${lista(ALCANCES_DA_SESSAO)}) and (${t.alcance} = 'chat-da-aba') = (${t.sessaoDaAbaId} is not null)`,
+    ),
     foreignKey({
       name: 'sessoes_conta_fk',
       columns: [t.orgId, t.contaId],
@@ -707,6 +892,13 @@ export const eventos = orgScoped(
     permissoes: text('permissoes').array(),
     contas: uuid('contas').array(),
     sessoes: uuid('sessoes').array(),
+    /**
+     * A aba dos colaboradores e o chat dentro dela: as sessões da aba, os aparelhos e todas as abas
+     * da organização (change aba-dos-colaboradores, design, decisão 6).
+     */
+    sessoesDaAba: uuid('sessoes_da_aba').array(),
+    aparelhosDaAba: uuid('aparelhos_da_aba').array(),
+    abas: boolean('abas').notNull().default(false),
   },
   (t) => [
     index('eventos_momento_idx').on(t.orgId, t.momento),
@@ -714,7 +906,8 @@ export const eventos = orgScoped(
     check(
       'eventos_publico_valido',
       sql`(${t.todas} or ${t.permissao} is not null or ${t.permissoes} is not null
-          or ${t.contas} is not null or ${t.sessoes} is not null)
+          or ${t.contas} is not null or ${t.sessoes} is not null
+          or ${t.sessoesDaAba} is not null or ${t.aparelhosDaAba} is not null or ${t.abas})
         and (${t.locais} is null or ${t.permissao} is not null)
         and (${t.grupos} is null or ${t.permissao} is not null)`,
     ),
@@ -724,7 +917,9 @@ export const eventos = orgScoped(
         and coalesce(cardinality(${t.grupos}), 0) <= 8
         and coalesce(cardinality(${t.permissoes}), 0) <= 8
         and coalesce(cardinality(${t.contas}), 0) <= 20
-        and coalesce(cardinality(${t.sessoes}), 0) <= 20`,
+        and coalesce(cardinality(${t.sessoes}), 0) <= 20
+        and coalesce(cardinality(${t.sessoesDaAba}), 0) <= 20
+        and coalesce(cardinality(${t.aparelhosDaAba}), 0) <= 20`,
     ),
   ],
 );
@@ -4581,6 +4776,33 @@ export const leiturasDosChamados = orgScoped(
       ],
     }),
     unique('leituras_dos_chamados_unica').on(t.orgId, t.contaId, t.chamadoId),
+  ],
+);
+
+/**
+ * A última vez que a pessoa abriu a conversa do chamado (spec chamados, "Resposta por ver"; change
+ * aba-dos-colaboradores, decisão 5): a resposta por ver é a nova escrita depois disso. Fica fora das
+ * `leituras_dos_chamados`, que só existem depois do primeiro "Marcar como vista".
+ */
+export const aberturasDosChamados = orgScoped(
+  'aberturas_dos_chamados',
+  {
+    chamadoId: uuid('chamado_id').notNull(),
+    contaId: uuid('conta_id').notNull(),
+    abertaEm: momento('aberta_em').notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'aberturas_dos_chamados_chamado_fk',
+      columns: [t.orgId, t.chamadoId],
+      foreignColumns: [chamados.orgId, chamados.id],
+    }),
+    foreignKey({
+      name: 'aberturas_dos_chamados_conta_fk',
+      columns: [t.orgId, t.contaId],
+      foreignColumns: [contas.orgId, contas.id],
+    }),
+    unique('aberturas_dos_chamados_unica').on(t.orgId, t.contaId, t.chamadoId),
   ],
 );
 

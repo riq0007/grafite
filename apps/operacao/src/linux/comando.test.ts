@@ -138,6 +138,9 @@ describe('organizacao e conta no Linux', () => {
     const daProducao = await lerConfigEnv(join(raiz, 'producao', 'config.env'));
     expect(producao?.env.GRAFITE_DATABASE_URL).toBe(daProducao.GRAFITE_DATABASE_URL);
     expect(producao?.env.GRAFITE_AMBIENTE).toBe('producao');
+    // O fuso do servidor vai ao contêiner do comando, para as horas que ele mostra.
+    expect(producao?.env.TZ).toBe(daProducao.TZ);
+    expect(producao?.env.TZ).toBeTruthy();
     expect(teste?.imagem).toBe('grafite/aplicacao:1.5.0');
     expect(teste?.env.GRAFITE_AMBIENTE).toBe('teste');
     expect(saida).toContain('conta criar feito.');

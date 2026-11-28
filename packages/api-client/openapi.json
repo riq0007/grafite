@@ -3937,6 +3937,42 @@
           "definicao"
         ]
       },
+      "DestinoDoBilheteInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "destino": {
+                "type": "string",
+                "const": "chat"
+              }
+            },
+            "required": [
+              "destino"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "destino": {
+                "type": "string",
+                "const": "chamado"
+              },
+              "numero": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "destino",
+              "numero"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "AcessoDaSessaoInput": {
         "type": "object",
         "properties": {
@@ -4168,6 +4204,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -4176,7 +4215,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -4203,6 +4243,11 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1024
+          },
+          "aba": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
           }
         },
         "required": [
@@ -4210,18 +4255,291 @@
           "senha"
         ]
       },
-      "AdministradoresDoAcessoInput": {
+      "PedidoDoBilheteInput": {
         "type": "object",
         "properties": {
-          "administradores": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "bilhete": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           }
         },
         "required": [
-          "administradores"
+          "bilhete"
+        ]
+      },
+      "SessaoPeloBilheteInput": {
+        "type": "object",
+        "properties": {
+          "ambiente": {
+            "type": "string",
+            "enum": [
+              "desenvolvimento",
+              "teste",
+              "producao"
+            ]
+          },
+          "organizacao": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "preferencias": {
+                "$ref": "#/components/schemas/AjustesDasPreferenciasInput"
+              },
+              "operaOServidor": {
+                "type": "boolean"
+              },
+              "modulosDesligados": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "nome",
+              "preferencias",
+              "operaOServidor",
+              "modulosDesligados"
+            ]
+          },
+          "sessao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "conta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "usuario": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "pessoaId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "foto": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/FotoDaPessoaInput"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "preferencias": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/AjustesDasPreferenciasInput"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "usuario",
+                      "nome",
+                      "pessoaId",
+                      "foto",
+                      "preferencias"
+                    ]
+                  },
+                  "pendencia": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "segundo-passo",
+                          "trocar-senha",
+                          "cadastrar-dois-passos"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "csrf": {
+                    "type": "string"
+                  },
+                  "expiraEm": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  "acesso": {
+                    "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "conta",
+                  "pendencia",
+                  "diasDeConfianca",
+                  "csrf",
+                  "expiraEm",
+                  "acesso",
+                  "naAba"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "destino": {
+            "$ref": "#/components/schemas/DestinoDoBilheteInput"
+          }
+        },
+        "required": [
+          "ambiente",
+          "organizacao",
+          "sessao",
+          "destino"
+        ]
+      },
+      "PedidoDeRegistroDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "chave": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "identificadorDaMaquina": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "versao": {
+            "type": "string",
+            "pattern": "^[\\x21-\\x7e]{1,40}$"
+          },
+          "entradaSugerida": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          }
+        },
+        "required": [
+          "chave",
+          "identificadorDaMaquina",
+          "nome"
+        ]
+      },
+      "RegistroDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "identificadorCurto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "entrada",
+          "identificadorCurto"
+        ]
+      },
+      "ConfiguracaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "forma": {
+            "type": "string",
+            "enum": [
+              "pilula",
+              "entalhe"
+            ]
+          },
+          "contato": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "versao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximaEm": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "forma",
+          "contato",
+          "entrada",
+          "versao",
+          "proximaEm"
         ]
       },
       "ConsumivelCompativelInput": {
@@ -4303,6 +4621,468 @@
           "cor",
           "rendimento",
           "saldo"
+        ]
+      },
+      "ContaDoChatInput": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoaInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ]
+      },
+      "ConversaNaListaInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "direta",
+              "equipe",
+              "canal"
+            ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "silenciada": {
+            "type": "boolean"
+          },
+          "ultimaMensagemEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDoChatInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "nome",
+          "naoLidas",
+          "silenciada",
+          "ultimaMensagemEm",
+          "outra"
+        ]
+      },
+      "ListaDoChatInput": {
+        "type": "object",
+        "properties": {
+          "equipesECanais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaListaInput"
+            }
+          },
+          "recentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaListaInput"
+            }
+          }
+        },
+        "required": [
+          "equipesECanais",
+          "recentes"
+        ]
+      },
+      "ResumoDoChatInput": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "chamadosComRespostaNova": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "naoLidas",
+          "chamadosComRespostaNova"
+        ]
+      },
+      "PessoasDoChatInput": {
+        "type": "object",
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "daTi": {
+                  "type": "boolean"
+                },
+                "foto": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FotoDaPessoaInput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "conversa": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "conta",
+                "nome",
+                "daTi",
+                "foto",
+                "conversa"
+              ]
+            }
+          }
+        },
+        "required": [
+          "pessoas"
+        ]
+      },
+      "EstadoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "respostasNovas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "porVer": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "quantas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "ultima": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "quem": {
+                            "type": "string"
+                          },
+                          "numero": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "titulo": {
+                            "type": "string"
+                          },
+                          "momento": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "quem",
+                          "numero",
+                          "titulo",
+                          "momento"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "quantas",
+                  "ultima"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "versaoDaConfiguracao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "naoLidas",
+          "respostasNovas",
+          "porVer",
+          "versaoDaConfiguracao"
+        ]
+      },
+      "PedidoDaSessaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "windows"
+          },
+          "sid": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "usuarioDoWindows": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "entrada",
+          "sid"
+        ]
+      },
+      "PedidoDaSessaoDaAbaPelaSenhaInput": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "usuario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "entrada",
+          "usuario",
+          "senha"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoCodigoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "pendente": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "entrada",
+          "pendente",
+          "codigo"
+        ],
+        "additionalProperties": false
+      },
+      "SessaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "pessoa": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nome"
+            ]
+          }
+        },
+        "required": [
+          "token",
+          "expiraEm",
+          "pessoa"
+        ]
+      },
+      "FaltaOCodigoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "faltaOCodigo": {
+            "type": "boolean",
+            "const": true
+          },
+          "pendente": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "faltaOCodigo",
+          "pendente",
+          "expiraEm"
+        ]
+      },
+      "PedidoDeRenovacaoDaSessaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "sid": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      },
+      "RenovacaoDaSessaoDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "expiraEm"
+        ]
+      },
+      "BilheteDaAbaInput": {
+        "type": "object",
+        "properties": {
+          "bilhete": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "bilhete",
+          "expiraEm"
+        ]
+      },
+      "AdministradoresDoAcessoInput": {
+        "type": "object",
+        "properties": {
+          "administradores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "administradores"
         ]
       },
       "AgenteDoGlpiInput": {
@@ -8408,6 +9188,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -8428,6 +9214,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm"
@@ -10189,38 +10976,6 @@
         "required": [
           "titulo",
           "campos"
-        ]
-      },
-      "ContaDoChatInput": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "daTi": {
-            "type": "boolean"
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoaInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "conta",
-          "nome",
-          "daTi",
-          "foto"
         ]
       },
       "CartaoDoAtivoInput": {
@@ -17266,163 +18021,6 @@
           "abertos"
         ]
       },
-      "ConversaNaListaInput": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "tipo": {
-            "type": "string",
-            "enum": [
-              "direta",
-              "equipe",
-              "canal"
-            ]
-          },
-          "nome": {
-            "type": "string"
-          },
-          "naoLidas": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "silenciada": {
-            "type": "boolean"
-          },
-          "ultimaMensagemEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "outra": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContaDoChatInput"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "tipo",
-          "nome",
-          "naoLidas",
-          "silenciada",
-          "ultimaMensagemEm",
-          "outra"
-        ]
-      },
-      "ListaDoChatInput": {
-        "type": "object",
-        "properties": {
-          "equipesECanais": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConversaNaListaInput"
-            }
-          },
-          "recentes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConversaNaListaInput"
-            }
-          }
-        },
-        "required": [
-          "equipesECanais",
-          "recentes"
-        ]
-      },
-      "ResumoDoChatInput": {
-        "type": "object",
-        "properties": {
-          "naoLidas": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "chamadosComRespostaNova": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "naoLidas",
-          "chamadosComRespostaNova"
-        ]
-      },
-      "PessoasDoChatInput": {
-        "type": "object",
-        "properties": {
-          "pessoas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "conta": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "nome": {
-                  "type": "string"
-                },
-                "daTi": {
-                  "type": "boolean"
-                },
-                "foto": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/FotoDaPessoaInput"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "conversa": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              },
-              "required": [
-                "conta",
-                "nome",
-                "daTi",
-                "foto",
-                "conversa"
-              ]
-            }
-          }
-        },
-        "required": [
-          "pessoas"
-        ]
-      },
       "AnexoDaMensagemInput": {
         "type": "object",
         "properties": {
@@ -20505,6 +21103,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -20513,7 +21114,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -21965,6 +22567,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -21973,7 +22578,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -27677,6 +28283,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessaoInput"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -27685,7 +28294,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ]
               },
               {
@@ -27716,6 +28326,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -27739,6 +28355,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm",
@@ -33648,6 +34265,42 @@
         ],
         "additionalProperties": false
       },
+      "DestinoDoBilhete": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "destino": {
+                "type": "string",
+                "const": "chat"
+              }
+            },
+            "required": [
+              "destino"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "destino": {
+                "type": "string",
+                "const": "chamado"
+              },
+              "numero": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "destino",
+              "numero"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "AcessoDaSessao": {
         "type": "object",
         "properties": {
@@ -33883,6 +34536,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -33891,7 +34547,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -33920,6 +34577,11 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1024
+          },
+          "aba": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
           }
         },
         "required": [
@@ -33928,18 +34590,298 @@
         ],
         "additionalProperties": false
       },
-      "AdministradoresDoAcesso": {
+      "PedidoDoBilhete": {
         "type": "object",
         "properties": {
-          "administradores": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "bilhete": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           }
         },
         "required": [
-          "administradores"
+          "bilhete"
+        ],
+        "additionalProperties": false
+      },
+      "SessaoPeloBilhete": {
+        "type": "object",
+        "properties": {
+          "ambiente": {
+            "type": "string",
+            "enum": [
+              "desenvolvimento",
+              "teste",
+              "producao"
+            ]
+          },
+          "organizacao": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              },
+              "preferencias": {
+                "$ref": "#/components/schemas/AjustesDasPreferencias"
+              },
+              "operaOServidor": {
+                "type": "boolean"
+              },
+              "modulosDesligados": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "nome",
+              "preferencias",
+              "operaOServidor",
+              "modulosDesligados"
+            ],
+            "additionalProperties": false
+          },
+          "sessao": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "conta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "usuario": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "pessoaId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "foto": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/FotoDaPessoa"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "preferencias": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/AjustesDasPreferencias"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "usuario",
+                      "nome",
+                      "pessoaId",
+                      "foto",
+                      "preferencias"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "pendencia": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "segundo-passo",
+                          "trocar-senha",
+                          "cadastrar-dois-passos"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "diasDeConfianca": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 90
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "csrf": {
+                    "type": "string"
+                  },
+                  "expiraEm": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  "acesso": {
+                    "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "conta",
+                  "pendencia",
+                  "diasDeConfianca",
+                  "csrf",
+                  "expiraEm",
+                  "acesso",
+                  "naAba"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "destino": {
+            "$ref": "#/components/schemas/DestinoDoBilhete"
+          }
+        },
+        "required": [
+          "ambiente",
+          "organizacao",
+          "sessao",
+          "destino"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeRegistroDaAba": {
+        "type": "object",
+        "properties": {
+          "chave": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "identificadorDaMaquina": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "versao": {
+            "type": "string",
+            "pattern": "^[\\x21-\\x7e]{1,40}$"
+          },
+          "entradaSugerida": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          }
+        },
+        "required": [
+          "chave",
+          "identificadorDaMaquina",
+          "nome"
+        ],
+        "additionalProperties": false
+      },
+      "RegistroDaAba": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "identificadorCurto": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "entrada",
+          "identificadorCurto"
+        ],
+        "additionalProperties": false
+      },
+      "ConfiguracaoDaAba": {
+        "type": "object",
+        "properties": {
+          "forma": {
+            "type": "string",
+            "enum": [
+              "pilula",
+              "entalhe"
+            ]
+          },
+          "contato": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entrada": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "senha"
+            ]
+          },
+          "versao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "proximaEm": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "forma",
+          "contato",
+          "entrada",
+          "versao",
+          "proximaEm"
         ],
         "additionalProperties": false
       },
@@ -34022,6 +34964,485 @@
           "cor",
           "rendimento",
           "saldo"
+        ],
+        "additionalProperties": false
+      },
+      "ContaDoChat": {
+        "type": "object",
+        "properties": {
+          "conta": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "daTi": {
+            "type": "boolean"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FotoDaPessoa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conta",
+          "nome",
+          "daTi",
+          "foto"
+        ],
+        "additionalProperties": false
+      },
+      "ConversaNaLista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "direta",
+              "equipe",
+              "canal"
+            ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "silenciada": {
+            "type": "boolean"
+          },
+          "ultimaMensagemEm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContaDoChat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "nome",
+          "naoLidas",
+          "silenciada",
+          "ultimaMensagemEm",
+          "outra"
+        ],
+        "additionalProperties": false
+      },
+      "ListaDoChat": {
+        "type": "object",
+        "properties": {
+          "equipesECanais": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaLista"
+            }
+          },
+          "recentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversaNaLista"
+            }
+          }
+        },
+        "required": [
+          "equipesECanais",
+          "recentes"
+        ],
+        "additionalProperties": false
+      },
+      "ResumoDoChat": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "chamadosComRespostaNova": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "naoLidas",
+          "chamadosComRespostaNova"
+        ],
+        "additionalProperties": false
+      },
+      "PessoasDoChat": {
+        "type": "object",
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "conta": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "daTi": {
+                  "type": "boolean"
+                },
+                "foto": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/FotoDaPessoa"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "conversa": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "conta",
+                "nome",
+                "daTi",
+                "foto",
+                "conversa"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "pessoas"
+        ],
+        "additionalProperties": false
+      },
+      "EstadoDaAba": {
+        "type": "object",
+        "properties": {
+          "naoLidas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "respostasNovas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "porVer": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "quantas": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "ultima": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "quem": {
+                            "type": "string"
+                          },
+                          "numero": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "titulo": {
+                            "type": "string"
+                          },
+                          "momento": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "quem",
+                          "numero",
+                          "titulo",
+                          "momento"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "quantas",
+                  "ultima"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "versaoDaConfiguracao": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "naoLidas",
+          "respostasNovas",
+          "porVer",
+          "versaoDaConfiguracao"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaSessaoDaAba": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "windows"
+          },
+          "sid": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "usuarioDoWindows": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "entrada",
+          "sid"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDaSessaoDaAbaPelaSenha": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "usuario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "entrada",
+          "usuario",
+          "senha"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDoCodigoDaAba": {
+        "type": "object",
+        "properties": {
+          "entrada": {
+            "type": "string",
+            "const": "senha"
+          },
+          "pendente": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "entrada",
+          "pendente",
+          "codigo"
+        ],
+        "additionalProperties": false
+      },
+      "SessaoDaAba": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "pessoa": {
+            "type": "object",
+            "properties": {
+              "nome": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nome"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "token",
+          "expiraEm",
+          "pessoa"
+        ],
+        "additionalProperties": false
+      },
+      "FaltaOCodigoDaAba": {
+        "type": "object",
+        "properties": {
+          "faltaOCodigo": {
+            "type": "boolean",
+            "const": true
+          },
+          "pendente": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "faltaOCodigo",
+          "pendente",
+          "expiraEm"
+        ],
+        "additionalProperties": false
+      },
+      "PedidoDeRenovacaoDaSessaoDaAba": {
+        "type": "object",
+        "properties": {
+          "sid": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "RenovacaoDaSessaoDaAba": {
+        "type": "object",
+        "properties": {
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "expiraEm"
+        ],
+        "additionalProperties": false
+      },
+      "BilheteDaAba": {
+        "type": "object",
+        "properties": {
+          "bilhete": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "bilhete",
+          "expiraEm"
+        ],
+        "additionalProperties": false
+      },
+      "AdministradoresDoAcesso": {
+        "type": "object",
+        "properties": {
+          "administradores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "administradores"
         ],
         "additionalProperties": false
       },
@@ -38267,6 +39688,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -38287,6 +39714,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm"
@@ -40097,39 +41525,6 @@
         "required": [
           "titulo",
           "campos"
-        ],
-        "additionalProperties": false
-      },
-      "ContaDoChat": {
-        "type": "object",
-        "properties": {
-          "conta": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "nome": {
-            "type": "string"
-          },
-          "daTi": {
-            "type": "boolean"
-          },
-          "foto": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FotoDaPessoa"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "conta",
-          "nome",
-          "daTi",
-          "foto"
         ],
         "additionalProperties": false
       },
@@ -47423,168 +48818,6 @@
         ],
         "additionalProperties": false
       },
-      "ConversaNaLista": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "tipo": {
-            "type": "string",
-            "enum": [
-              "direta",
-              "equipe",
-              "canal"
-            ]
-          },
-          "nome": {
-            "type": "string"
-          },
-          "naoLidas": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "silenciada": {
-            "type": "boolean"
-          },
-          "ultimaMensagemEm": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "outra": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ContaDoChat"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "tipo",
-          "nome",
-          "naoLidas",
-          "silenciada",
-          "ultimaMensagemEm",
-          "outra"
-        ],
-        "additionalProperties": false
-      },
-      "ListaDoChat": {
-        "type": "object",
-        "properties": {
-          "equipesECanais": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConversaNaLista"
-            }
-          },
-          "recentes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConversaNaLista"
-            }
-          }
-        },
-        "required": [
-          "equipesECanais",
-          "recentes"
-        ],
-        "additionalProperties": false
-      },
-      "ResumoDoChat": {
-        "type": "object",
-        "properties": {
-          "naoLidas": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "chamadosComRespostaNova": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "naoLidas",
-          "chamadosComRespostaNova"
-        ],
-        "additionalProperties": false
-      },
-      "PessoasDoChat": {
-        "type": "object",
-        "properties": {
-          "pessoas": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "conta": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                },
-                "nome": {
-                  "type": "string"
-                },
-                "daTi": {
-                  "type": "boolean"
-                },
-                "foto": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/FotoDaPessoa"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "conversa": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              },
-              "required": [
-                "conta",
-                "nome",
-                "daTi",
-                "foto",
-                "conversa"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "pessoas"
-        ],
-        "additionalProperties": false
-      },
       "AnexoDaMensagem": {
         "type": "object",
         "properties": {
@@ -50770,6 +52003,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -50778,7 +52014,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -52290,6 +53527,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -52298,7 +53538,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -58198,6 +59439,9 @@
                   },
                   "acesso": {
                     "$ref": "#/components/schemas/AcessoDaSessao"
+                  },
+                  "naAba": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -58206,7 +59450,8 @@
                   "diasDeConfianca",
                   "csrf",
                   "expiraEm",
-                  "acesso"
+                  "acesso",
+                  "naAba"
                 ],
                 "additionalProperties": false
               },
@@ -58239,6 +59484,12 @@
           "dispositivo": {
             "type": "string"
           },
+          "aviso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ip": {
             "type": [
               "string",
@@ -58262,6 +59513,7 @@
         "required": [
           "id",
           "dispositivo",
+          "aviso",
           "ip",
           "criadaEm",
           "ultimoUsoEm",
@@ -60382,6 +61634,83 @@
         "responses": {
           "204": {
             "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessao/bilhete": {
+      "post": {
+        "summary": "Trocar o bilhete da aba pela sessão do chat na aba",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDoBilheteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoPeloBilhete"
+                }
+              }
+            }
           },
           "400": {
             "description": "Default Response",
@@ -92368,6 +93697,78 @@
         }
       }
     },
+    "/chat/chamados/{numero}/aberta": {
+      "post": {
+        "summary": "A conversa do chamado apareceu na tela: tira a resposta por ver, e não a nova",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/chat/chamados/{numero}/resumo": {
       "get": {
         "summary": "O resumo do chip do chamado citado, a quem vê o resumo",
@@ -99751,6 +101152,620 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/aparelho": {
+      "post": {
+        "summary": "Registrar o computador na aba, com a chave da organização",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeRegistroDaAbaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroDaAba"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/configuracao": {
+      "get": {
+        "summary": "A configuração da aba deste computador: a forma, o contato e a entrada",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracaoDaAba"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/sessao": {
+      "post": {
+        "summary": "Abrir a sessão da aba, pelo Windows ou pela senha, com o token do aparelho",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PedidoDaSessaoDaAbaInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PedidoDaSessaoDaAbaPelaSenhaInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PedidoDoCodigoDaAbaInput"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessaoDaAba"
+                    },
+                    {
+                      "$ref": "#/components/schemas/FaltaOCodigoDaAba"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Sair da aba: encerra a sessão da aba no servidor",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/sessao/renovar": {
+      "post": {
+        "summary": "Renovar a sessão da aba, conferindo a pessoa de novo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeRenovacaoDaSessaoDaAbaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenovacaoDaSessaoDaAba"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/bilhete": {
+      "post": {
+        "summary": "Pedir o bilhete que leva o chat da aba à sessão dele, por 60 s e uma vez só",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DestinoDoBilheteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BilheteDaAba"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/uso": {
+      "post": {
+        "summary": "O uso da aba ou da tela maior com o foco, no máximo uma vez por minuto",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/estado": {
+      "get": {
+        "summary": "O estado da aba: as não lidas, as respostas novas e a versão da configuração",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoDaAba"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aba/eventos": {
+      "get": {
+        "summary": "A conexão de eventos da aba, em text/event-stream",
+        "responses": {
+          "200": {
+            "description": "O fluxo dos eventos da aba, com o sinal de vida",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              }
+            }
+          },
+          "429": {
             "description": "Default Response",
             "content": {
               "application/json": {

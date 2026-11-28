@@ -29,7 +29,7 @@ import { exigirEm, sessaoDa } from '../acesso/escopo.ts';
 import { inativarConta } from '../acesso/inativacao.ts';
 import { redefinirConta, zerarTentativas } from '../acesso/redefinicao.ts';
 import { gerarHashDaSenha } from '../acesso/senhas.ts';
-import { lerSessoesAbertas } from '../acesso/sessoes.ts';
+import { descreverSessao, lerSessoesAbertas } from '../acesso/sessoes.ts';
 import { lerArvore } from '../arvore.ts';
 import { registrarNaAuditoria, visaoDaConta } from '../auditoria.ts';
 import { violouUnicidade } from '../banco.ts';
@@ -73,8 +73,13 @@ const PedidoDeRedefinicao = z
 const SessaoAdministrada = z
   .object({
     id: z.uuid(),
-    /** O navegador e o sistema, como "Chrome no Windows". */
+    /** O navegador e o sistema, como "Chrome no Windows", ou o computador, como "Aba · PC-FIN-09". */
     dispositivo: z.string(),
+    /**
+     * Na sessão da aba pelo Windows: encerrá-la vale só até a aba abrir outra, e quem para o
+     * computador é o bloqueio (change aba-dos-colaboradores).
+     */
+    aviso: z.string().nullable(),
     ip: z.string().nullable(),
     criadaEm: z.iso.datetime(),
     ultimoUsoEm: z.iso.datetime(),
@@ -520,7 +525,7 @@ export const rotasDasContas: FastifyPluginAsyncZod<{ banco: Banco; agora: () => 
       );
       return resultado.map((sessao) => ({
         id: sessao.id,
-        dispositivo: descreverDispositivo(sessao.agente),
+        ...descreverSessao(sessao, descreverDispositivo),
         ip: sessao.ip,
         criadaEm: sessao.criadaEm.toISOString(),
         ultimoUsoEm: sessao.ultimoUsoEm.toISOString(),

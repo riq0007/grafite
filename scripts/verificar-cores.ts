@@ -8,7 +8,7 @@
 // o leitor de strings.
 //
 // O hex e as funções de cor contam em todo lugar. O nome de cor numa string só conta
-// no código das telas (apps/web, apps/painel e packages/ui): fora delas, ele é dado, como a cor
+// no código das telas (apps/web, apps/painel, apps/aba e packages/ui): fora delas, ele é dado, como a cor
 // "magenta" de um consumível (change p4b-consumiveis, design, decisão 8).
 
 import { readdir, readFile } from 'node:fs/promises';
@@ -144,7 +144,7 @@ export function encontrarCoresLiterais(
 }
 
 /** O código que desenha as telas, onde um nome de cor numa string é uma cor da tela. */
-const CODIGO_DAS_TELAS = ['apps/web/', 'apps/painel/', 'packages/ui/'];
+const CODIGO_DAS_TELAS = ['apps/web/', 'apps/painel/', 'apps/aba/', 'packages/ui/'];
 
 const DIRETORIOS_IGNORADOS = new Set([
   '.git',

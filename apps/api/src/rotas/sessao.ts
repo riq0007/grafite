@@ -12,6 +12,7 @@ import {
   tentativasDeEntrada,
 } from '@grafite/db';
 import {
+  type Acesso,
   type AjustesDasPreferencias as Ajustes,
   AMBIENTES,
   bloqueioDepois,
@@ -27,6 +28,12 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import {
+  DestinoDoBilhete,
+  daSessaoDaAba,
+  sessaoDaAbaPelaMarca,
+  trocarBilhete,
+} from '../aba/bilhete.ts';
 import { carregarAcesso, exigeDoisPassos } from '../acesso/acesso.ts';
 import {
   apagarCookieDoAparelho,
@@ -34,7 +41,7 @@ import {
   lerCookieDoAparelho,
   prazoDaConta,
 } from '../acesso/aparelhos.ts';
-import { comCredenciais } from '../acesso/credenciais.ts';
+import { type ContaComCredenciais, comCredenciais } from '../acesso/credenciais.ts';
 import { encerrarSessao } from '../acesso/encerramento.ts';
 import { concluirEntrada } from '../acesso/entrada.ts';
 import { exigirSessao } from '../acesso/escopo.ts';
@@ -50,7 +57,11 @@ import { FotoDaPessoa } from '../arquivos/esquemas.ts';
 import { registrarNaAuditoria } from '../auditoria.ts';
 import type { ChavesDoCofre } from '../cofre/cifra.ts';
 import type { ConectarDiretorio } from '../diretorio/cliente.ts';
-import { conferirNoDiretorio, contaPeloDiretorio } from '../diretorio/entrada.ts';
+import {
+  type ConferenciaNoDiretorio,
+  conferirNoDiretorio,
+  contaPeloDiretorio,
+} from '../diretorio/entrada.ts';
 import { AjustesDasPreferencias } from '../preferencias/esquemas.ts';
 import { enviarProblema, ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { LIMITE_DA_ENTRADA } from '../protecao.ts';
@@ -113,6 +124,11 @@ export const EstadoDaSessao = z
         expiraEm: z.iso.datetime(),
         /** Vazio enquanto a sessão está pendente. */
         acesso: AcessoDaSessao,
+        /**
+         * A sessão do chat na aba (change aba-dos-colaboradores, decisão 8): o chat esconde o que leva
+         * à casca, o "Andamento", a instalação e o push.
+         */
+        naAba: z.boolean(),
       })
       .nullable(),
   })
@@ -129,8 +145,31 @@ const PedidoDeEntrada = z
       .string({ error: 'Informe a senha.' })
       .min(1, { error: 'Informe a senha.' })
       .max(1024, { error: 'Use até 1024 caracteres.' }),
+    /**
+     * A marca da aba (change aba-dos-colaboradores, decisão 8): o identificador curto do computador,
+     * na página de entrada do chat aberta pela aba. A sessão nasce no alcance do chat da aba, ligada
+     * à sessão da aba da conta nele; sem ela, a entrada é recusada.
+     */
+    aba: z.string().trim().min(1).max(32).optional(),
   })
   .meta({ id: 'PedidoDeEntrada' });
+
+const PedidoDoBilhete = z
+  .object({ bilhete: z.string().min(1).max(200) })
+  .meta({ id: 'PedidoDoBilhete' });
+
+const SessaoPeloBilhete = EstadoDaSessao.extend({ destino: DestinoDoBilhete }).meta({
+  id: 'SessaoPeloBilhete',
+});
+
+/** O usado, o vencido e o desconhecido: a mesma resposta (decisão 8). */
+const bilheteRecusado = () =>
+  new ProblemaDaApi({
+    codigo: 'bilhete-recusado',
+    status: 401,
+    titulo: 'Bilhete recusado',
+    detalhe: 'O chat da aba não abriu. Feche e abra o chat de novo pela aba.',
+  });
 
 /** Os problemas que toda rota de acesso pode responder, além dos dela. */
 export const PROBLEMAS_DO_ACESSO = {
@@ -209,7 +248,7 @@ export function estadoDaSessao(
   dados: DadosDoEstado,
   sessao: Pick<
     SessaoDaRequisicao,
-    'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso'
+    'usuario' | 'nome' | 'pendencia' | 'tokenCsrf' | 'expiraEm' | 'acesso' | 'naAba'
   > | null,
 ) {
   const conta = sessao?.pendencia === null ? dados.conta : null;
@@ -234,6 +273,7 @@ export function estadoDaSessao(
       csrf: sessao.tokenCsrf,
       expiraEm: sessao.expiraEm.toISOString(),
       acesso: { permissoes: sessao.pendencia === null ? listarPermissoes(sessao.acesso) : [] },
+      naAba: sessao.naAba,
     },
   };
 }
@@ -243,7 +283,7 @@ export const origemDa = (requisicao: FastifyRequest) => ({
   codigoDeRastreio: requisicao.id,
 });
 
-const credenciaisInvalidas = () =>
+export const credenciaisInvalidas = () =>
   new ProblemaDaApi({
     codigo: 'credenciais-invalidas',
     status: 401,
@@ -293,6 +333,147 @@ export async function restanteDoBloqueio(
   return Math.max(0, restante);
 }
 
+/** O resultado da conferência do usuário e da senha, na entrada da web e na da aba pela senha. */
+export type ConferenciaDaEntrada =
+  | { tipo: 'bloqueada'; restante: number }
+  | { tipo: 'fora-do-ar' }
+  | { tipo: 'sem-acesso' }
+  | { tipo: 'recusada' }
+  | {
+      tipo: 'aceita';
+      conta: ContaComCredenciais;
+      nome: string;
+      doisPassosAtivos: boolean;
+      acesso: Acesso;
+    };
+
+/**
+ * Na transação da entrada, depois do `conferirNoDiretorio`: o bloqueio do usuário digitado, o AD
+ * fora do ar, a conta do diretório criada ou sincronizada, a senha, a situação da conta, as recusas
+ * com a auditoria e o bloqueio por tentativas, e a conta aceita com o acesso. A entrada da web e a
+ * da aba pela senha (change aba-dos-colaboradores, design, decisão 2) chamam a mesma.
+ *
+ * Com `daAba`, só a entrada pelo diretório vale: sem ela (a conta local ou o usuário que não serve
+ * de conta), a senha não é conferida, e a recusa é a das credenciais, para a aba não dizer quem
+ * tem conta local. Os `dados` dela vão junto nos registros da auditoria.
+ */
+export async function conferirAEntrada(
+  tx: Transacao,
+  {
+    orgId,
+    usuario,
+    senha,
+    peloDiretorio,
+    momento,
+    origem,
+    conferirDeEngano,
+    daAba,
+  }: {
+    orgId: string;
+    usuario: string;
+    senha: string;
+    peloDiretorio: ConferenciaNoDiretorio | null;
+    momento: Date;
+    origem: { ip: string; codigoDeRastreio: string };
+    conferirDeEngano: (senha: string) => Promise<false>;
+    daAba?: { dados: Record<string, unknown> };
+  },
+): Promise<ConferenciaDaEntrada> {
+  const extras = daAba?.dados ?? {};
+  const restante = await restanteDoBloqueio(tx, { usuario, momento });
+  if (restante > 0) {
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta' },
+      dados: { usuario, motivo: 'bloqueio', ...extras },
+      origem,
+      momento,
+    });
+    return { tipo: 'bloqueada', restante };
+  }
+  if (peloDiretorio?.tipo === 'fora-do-ar') {
+    // O AD fora do ar não conta para o bloqueio: a senha nem foi conferida.
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta' },
+      dados: { usuario, motivo: 'diretorio-fora-do-ar', ...extras },
+      origem,
+      momento,
+    });
+    return { tipo: 'fora-do-ar' };
+  }
+  // A primeira entrada pelo AD cria a conta, e cada uma sincroniza os grupos mapeados.
+  const contaDoDiretorio =
+    peloDiretorio?.tipo === 'aceita'
+      ? await contaPeloDiretorio(tx, { orgId, usuario, aceita: peloDiretorio, momento })
+      : null;
+  const [linha] = await tx
+    .select({ conta: contas, nome: pessoas.nome, doisPassosAtivadoEm: doisPassos.ativadoEm })
+    .from(contas)
+    .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
+    .leftJoin(doisPassos, eq(doisPassos.contaId, contas.id))
+    .where(contaDoDiretorio ? eq(contas.id, contaDoDiretorio) : eq(contas.usuario, usuario));
+  // Lida pelo usuário, a conta nunca é uma anonimizada, que não tem usuário.
+  const conta = linha ? comCredenciais(linha.conta) : undefined;
+  // Pelo diretório, a senha foi conferida no AD; a senha local da conta do diretório nunca
+  // confere. Na aba, a senha local nem é conferida.
+  const confere = peloDiretorio
+    ? peloDiretorio.tipo === 'aceita'
+    : conta && !daAba
+      ? await conferirSenha(senha, conta.hashSenha)
+      : await conferirDeEngano(senha);
+  if (!conta || !confere || conta.situacao !== 'ativa') {
+    const motivo =
+      peloDiretorio?.tipo === 'sem-acesso'
+        ? 'sem-acesso-no-diretorio'
+        : daAba && !peloDiretorio && conta?.origem === 'local'
+          ? 'conta-local'
+          : conta && confere
+            ? 'conta-inativa'
+            : 'credenciais';
+    await registrarNaAuditoria(tx, {
+      acao: 'entrada.recusada',
+      ator: { tipo: 'anonimo' },
+      alvo: { tipo: 'conta', id: conta?.id ?? null },
+      dados: { usuario, motivo, ...extras },
+      origem,
+      momento,
+    });
+    const ate = await registrarRecusa(tx, { usuario, momento });
+    if (ate) {
+      await registrarNaAuditoria(tx, {
+        acao: 'entrada.bloqueada',
+        ator: { tipo: 'anonimo' },
+        alvo: { tipo: 'conta', id: conta?.id ?? null },
+        dados: { usuario, ate: ate.toISOString(), ...extras },
+        origem,
+        momento,
+      });
+    }
+    return peloDiretorio?.tipo === 'sem-acesso' ? { tipo: 'sem-acesso' } : { tipo: 'recusada' };
+  }
+  await tx
+    .update(tentativasDeEntrada)
+    .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
+    .where(eq(tentativasDeEntrada.usuario, usuario));
+  // A senha do AD nunca vira o hash da conta.
+  if (!peloDiretorio && precisaRegravar(conta.hashSenha)) {
+    await tx
+      .update(contas)
+      .set({ hashSenha: await gerarHashDaSenha(senha) })
+      .where(eq(contas.id, conta.id));
+  }
+  return {
+    tipo: 'aceita',
+    conta,
+    nome: linha?.nome ?? '',
+    doisPassosAtivos: (linha?.doisPassosAtivadoEm ?? null) !== null,
+    acesso: await carregarAcesso(tx, conta.id),
+  };
+}
+
 export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async (
   app,
   { banco, agora, conferirDeEngano, diretorio },
@@ -300,7 +481,7 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
   app.get(
     '/sessao',
     {
-      config: { semPermissao: 'entrada' },
+      config: { semPermissao: 'entrada', chatDaAba: true },
       schema: {
         summary: 'Estado da sessão neste endereço',
         response: { 200: EstadoDaSessao, ...PROBLEMAS_DO_ACESSO },
@@ -350,92 +531,17 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           })
         : null;
       const resultado = await naOrganizacao(banco, orgId, async (tx) => {
-        const restante = await restanteDoBloqueio(tx, { usuario, momento });
-        if (restante > 0) {
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta' },
-            dados: { usuario, motivo: 'bloqueio' },
-            origem,
-            momento,
-          });
-          return { tipo: 'bloqueada', restante } as const;
-        }
-        if (peloDiretorio?.tipo === 'fora-do-ar') {
-          // O AD fora do ar não conta para o bloqueio: a senha nem foi conferida.
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta' },
-            dados: { usuario, motivo: 'diretorio-fora-do-ar' },
-            origem,
-            momento,
-          });
-          return { tipo: 'fora-do-ar' } as const;
-        }
-        // A primeira entrada pelo AD cria a conta, e cada uma sincroniza os grupos mapeados.
-        const contaDoDiretorio =
-          peloDiretorio?.tipo === 'aceita'
-            ? await contaPeloDiretorio(tx, { orgId, usuario, aceita: peloDiretorio, momento })
-            : null;
-        const [linha] = await tx
-          .select({ conta: contas, nome: pessoas.nome, doisPassosAtivadoEm: doisPassos.ativadoEm })
-          .from(contas)
-          .innerJoin(pessoas, and(eq(pessoas.orgId, contas.orgId), eq(pessoas.id, contas.pessoaId)))
-          .leftJoin(doisPassos, eq(doisPassos.contaId, contas.id))
-          .where(contaDoDiretorio ? eq(contas.id, contaDoDiretorio) : eq(contas.usuario, usuario));
-        // Lida pelo usuário, a conta nunca é uma anonimizada, que não tem usuário.
-        const conta = linha ? comCredenciais(linha.conta) : undefined;
-        // Pelo diretório, a senha foi conferida no AD; a senha local da conta do diretório nunca
-        // confere.
-        const confere = peloDiretorio
-          ? peloDiretorio.tipo === 'aceita'
-          : conta
-            ? await conferirSenha(senha, conta.hashSenha)
-            : await conferirDeEngano(senha);
-        if (!conta || !confere || conta.situacao !== 'ativa') {
-          const motivo =
-            peloDiretorio?.tipo === 'sem-acesso'
-              ? 'sem-acesso-no-diretorio'
-              : conta && confere
-                ? 'conta-inativa'
-                : 'credenciais';
-          await registrarNaAuditoria(tx, {
-            acao: 'entrada.recusada',
-            ator: { tipo: 'anonimo' },
-            alvo: { tipo: 'conta', id: conta?.id ?? null },
-            dados: { usuario, motivo },
-            origem,
-            momento,
-          });
-          const ate = await registrarRecusa(tx, { usuario, momento });
-          if (ate) {
-            await registrarNaAuditoria(tx, {
-              acao: 'entrada.bloqueada',
-              ator: { tipo: 'anonimo' },
-              alvo: { tipo: 'conta', id: conta?.id ?? null },
-              dados: { usuario, ate: ate.toISOString() },
-              origem,
-              momento,
-            });
-          }
-          return peloDiretorio?.tipo === 'sem-acesso'
-            ? ({ tipo: 'sem-acesso' } as const)
-            : ({ tipo: 'recusada' } as const);
-        }
-        await tx
-          .update(tentativasDeEntrada)
-          .set({ falhasSeguidas: 0, bloqueadaAte: null, atualizadaEm: momento })
-          .where(eq(tentativasDeEntrada.usuario, usuario));
-        // A senha do AD nunca vira o hash da conta.
-        if (!peloDiretorio && precisaRegravar(conta.hashSenha)) {
-          await tx
-            .update(contas)
-            .set({ hashSenha: await gerarHashDaSenha(senha) })
-            .where(eq(contas.id, conta.id));
-        }
-        const acesso = await carregarAcesso(tx, conta.id);
+        const conferida = await conferirAEntrada(tx, {
+          orgId,
+          usuario,
+          senha,
+          peloDiretorio,
+          momento,
+          origem,
+          conferirDeEngano,
+        });
+        if (conferida.tipo !== 'aceita') return conferida;
+        const { conta, nome, doisPassosAtivos, acesso } = conferida;
         // O aparelho confiável só é conferido aqui, depois da senha certa (change
         // aparelho-confiavel, design, decisão 2): antes dela, a resposta é a mesma com e sem o
         // cookie. O aparelho que confere dispensa o código; o cookie que não confere é apagado.
@@ -448,10 +554,30 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
               acesso,
             })
           : null;
+        // A página de entrada do chat aberta pela aba (decisão 8): a sessão nasce no alcance do chat
+        // da aba, ligada à sessão da aba da conta no computador da marca. A marca falsa não acha a
+        // sessão da aba: só reduz o alcance, ou a entrada é recusada.
+        const { aba: marca } = requisicao.body;
+        const aba = marca
+          ? await sessaoDaAbaPelaMarca(tx, { contaId: conta.id, marca, momento })
+          : null;
+        if (marca !== undefined && !aba) {
+          await registrarNaAuditoria(tx, {
+            acao: 'entrada.recusada',
+            ator: { tipo: 'anonimo' },
+            alvo: { tipo: 'conta', id: conta.id },
+            dados: { usuario, motivo: 'sem-sessao-da-aba', aba: marca },
+            origem,
+            momento,
+          });
+          return { tipo: 'sem-sessao-da-aba' } as const;
+        }
+        const doChat = aba ? daSessaoDaAba(aba) : null;
+        const segundoPassoEm = aparelho ? momento : (doChat?.segundoPassoEm ?? null);
         const pendencia = pendenciaDa({
           conta: { ...conta, exigeDoisPassos: exigeDoisPassos(conta, acesso) },
-          doisPassosAtivos: (linha?.doisPassosAtivadoEm ?? null) !== null,
-          segundoPassoEm: aparelho ? momento : null,
+          doisPassosAtivos,
+          segundoPassoEm,
         });
         const sessao = await criarSessao(tx, {
           contaId: conta.id,
@@ -460,12 +586,18 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           agente: requisicao.headers['user-agent'] ?? null,
           pendente: pendencia !== null,
           aparelhoId: aparelho?.id ?? null,
+          ...(doChat ? { chatDaAba: { ...doChat, segundoPassoEm } } : {}),
         });
         await registrarNaAuditoria(tx, {
           acao: 'sessao.iniciada',
           ator: { tipo: 'conta', contaId: conta.id },
           alvo: { tipo: 'sessao', id: sessao.id },
-          dados: { pendencia },
+          dados: {
+            pendencia,
+            ...(aba
+              ? { chatDaAba: { computador: aba.computador, identificador: aba.identificador } }
+              : {}),
+          },
           origem,
           momento,
         });
@@ -479,11 +611,12 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
           dados: await lerDadosDoEstado(tx, conta.id, pendencia),
           sessao: {
             usuario: conta.usuario,
-            nome: linha?.nome ?? '',
+            nome,
             pendencia,
             tokenCsrf: sessao.tokenCsrf,
             expiraEm: sessao.expiraEm,
             acesso,
+            naAba: aba !== null,
           },
         } as const;
       });
@@ -513,9 +646,62 @@ export const rotasDeSessao: FastifyPluginAsyncZod<DependenciasDaSessao> = async 
         });
       }
       if (resultado.tipo === 'recusada') throw credenciaisInvalidas();
+      if (resultado.tipo === 'sem-sessao-da-aba') {
+        return enviarProblema(requisicao, resposta, {
+          codigo: 'sem-sessao-da-aba',
+          status: 403,
+          titulo: 'Sem a sessão da aba',
+          detalhe: 'Abra o chat pela aba deste computador.',
+        });
+      }
       if (resultado.apagarAparelho) apagarCookieDoAparelho(resposta);
       gravarCookieDaSessao(resposta, resultado.token, resultado.sessao.expiraEm, momento);
       return estadoDaSessao(requisicao, resultado.dados, resultado.sessao);
+    },
+  );
+
+  app.post(
+    '/sessao/bilhete',
+    {
+      config: { rateLimit: LIMITE_DA_ENTRADA, semPermissao: 'entrada' },
+      schema: {
+        summary: 'Trocar o bilhete da aba pela sessão do chat na aba',
+        body: PedidoDoBilhete,
+        response: { 200: SessaoPeloBilhete, 401: RespostaDeProblema, ...PROBLEMAS_DO_ACESSO },
+      },
+    },
+    async (requisicao, resposta) => {
+      const orgId = requisicao.organizacao?.id ?? '';
+      const momento = agora();
+      const resultado = await naOrganizacao(banco, orgId, async (tx) => {
+        const trocado = await trocarBilhete(tx, {
+          bilhete: requisicao.body.bilhete,
+          momento,
+          ip: requisicao.ip,
+          agente: requisicao.headers['user-agent'] ?? null,
+          origem: origemDa(requisicao),
+        });
+        if (!trocado) return null;
+        return {
+          ...trocado,
+          dados: await lerDadosDoEstado(tx, trocado.contaId, trocado.pendencia),
+        };
+      });
+      if (!resultado) throw bilheteRecusado();
+      const { sessao } = resultado;
+      gravarCookieDaSessao(resposta, sessao.token, sessao.expiraEm, momento);
+      return {
+        ...estadoDaSessao(requisicao, resultado.dados, {
+          usuario: resultado.usuario,
+          nome: resultado.nome,
+          pendencia: resultado.pendencia,
+          tokenCsrf: sessao.tokenCsrf,
+          expiraEm: sessao.expiraEm,
+          acesso: resultado.acesso,
+          naAba: true,
+        }),
+        destino: resultado.destino,
+      };
     },
   );
 

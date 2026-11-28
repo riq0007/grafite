@@ -5,7 +5,7 @@
 // sessão é conferida sem contar como uso. A conexão termina com a sessão e com o fechamento da API.
 // Com o último evento recebido, pelo Last-Event-ID ou por ?desde=, ela começa pelos perdidos.
 import { type Banco, naOrganizacao } from '@grafite/db';
-import { type EventoDeSaida, podeReceber } from '@grafite/domain';
+import { type EventoDeSaida, podeReceber, type TipoDeEvento } from '@grafite/domain';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { carregarGrupos } from '../acesso/acesso.ts';
@@ -27,6 +27,23 @@ export interface IntervalosDosEventos {
 const INTERVALOS: IntervalosDosEventos = { sinalDeVida: 25_000, conferencia: 60_000 };
 
 export const CONEXOES_POR_SESSAO = 20;
+
+/**
+ * Os tipos que a conexão da sessão do chat na aba recebe (change aba-dos-colaboradores, decisão 8):
+ * os que o chat relê, os da sessão, das preferências e dos padrões que o `/api/sessao` traz, e o fim
+ * da sessão.
+ */
+export const TIPOS_DO_CHAT_NA_ABA: ReadonlySet<TipoDeEvento> = new Set<TipoDeEvento>([
+  'chat.mudou',
+  'chamados.mudaram',
+  'ajustes-dos-chamados.mudaram',
+  'pessoas.mudaram',
+  'acessos.mudaram',
+  'modulos.mudaram',
+  'preferencias.mudaram',
+  'padroes.mudaram',
+  'sessao.encerrada',
+]);
 
 const conexoesDemais = () =>
   new ProblemaDaApi({
@@ -68,7 +85,7 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
   app.get(
     '/eventos',
     {
-      config: { semPermissao: 'propria-conta', naoContaComoUso: true },
+      config: { semPermissao: 'propria-conta', naoContaComoUso: true, chatDaAba: true },
       preHandler: exigirAtiva,
       schema: {
         summary: 'A conexão de eventos da sessão, em text/event-stream',
@@ -112,6 +129,7 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
         if (!fechada) saida.write(texto);
       };
       const entregar = (evento: EventoDeSaida) => {
+        if (sessao.naAba && !TIPOS_DO_CHAT_NA_ABA.has(evento.tipo)) return;
         escrever(doEvento(evento));
         if (evento.tipo === 'sessao.encerrada' && evento.publico.sessoes?.includes(sessao.id)) {
           fechar();
@@ -136,12 +154,16 @@ export const rotasDosEventos: FastifyPluginAsyncZod<DependenciasDosEventos> = as
       const vivo = setInterval(() => escrever(': vivo\n\n'), sinalDeVida);
       // A sessão que expirou, ou que ficou pendente, encerra a conexão; a falha de leitura não.
       const conferir = setInterval(async () => {
-        const atual = await lerSessao(banco, { orgId, token, agora: agora(), tocar: false }).catch(
-          (erro: unknown) => {
-            requisicao.log.warn({ err: erro }, 'não foi possível conferir a sessão dos eventos');
-            return undefined;
-          },
-        );
+        const atual = await lerSessao(banco, {
+          orgId,
+          token,
+          agora: agora(),
+          tocar: false,
+          alcances: [sessao.naAba ? 'chat-da-aba' : 'comum'],
+        }).catch((erro: unknown) => {
+          requisicao.log.warn({ err: erro }, 'não foi possível conferir a sessão dos eventos');
+          return undefined;
+        });
         if (atual === null || (atual && atual.pendencia !== null)) {
           escrever(mensagem({ evento: 'sessao', dados: {} }));
           fechar();

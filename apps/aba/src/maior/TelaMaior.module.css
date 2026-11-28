@@ -1,0 +1,160 @@
+/*
+ * A tela maior (spec aba-dos-colaboradores, "Tela maior da aba"; m08): a moldura de raio 18, com o
+ * fio e a sombra da aba, a faixa no azul da aba e o corpo no tema do Grafite que segue o do Windows.
+ * A janela é transparente, com a folga da sombra em volta; fora da moldura, o clique passa.
+ */
+.raiz {
+  --folga-da-sombra: 20px;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  padding: 0 var(--folga-da-sombra) var(--folga-da-sombra);
+}
+
+.moldura {
+  --fio: 1.5px;
+  --anel-do-foco:
+    0 0 0 2px var(--cor-aba-flutuante-fundo-2), 0 0 0 5px var(--cor-aba-flutuante-foco),
+    0 0 0 6.5px var(--cor-aba-flutuante-fio-escuro);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: clip;
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  border-radius: 18px;
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 22px 44px -10px var(--cor-aba-flutuante-sombra);
+}
+
+/* ---------- A faixa: a trilha e o "Esc volta", no azul da aba ---------- */
+.faixa {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 4px 14px 4px 6px;
+  background-color: var(--cor-aba-flutuante-fundo);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-rotulo);
+  forced-color-adjust: none;
+}
+
+.voltar {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background-color: transparent;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition: background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.voltar:hover {
+  background-color: var(--cor-aba-flutuante-bloco);
+}
+
+.voltar:focus {
+  outline: 0;
+}
+
+.voltar:focus-visible {
+  box-shadow: var(--anel-do-foco);
+  transition: none;
+}
+
+.trilha {
+  min-width: 0;
+}
+
+.trilha ol {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.trilha li + li::before {
+  content: "›" / "";
+  margin-right: 6px;
+  color: var(--cor-aba-flutuante-segundo-tom);
+}
+
+.trilha li[aria-current] {
+  font-weight: var(--peso-forte);
+}
+
+.esc {
+  flex: none;
+  margin-left: auto;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+/* ---------- O corpo ---------- */
+.corpo {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* O lugar do chat, afastado dos cantos redondos da moldura, para o webview retangular caber nela. */
+.lugarDoChat {
+  position: absolute;
+  inset: 0 6px 6px;
+}
+
+.frase {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  max-width: 52ch;
+  padding: 20px 20px 24px;
+}
+
+.frase h1 {
+  margin: 0;
+  font-size: var(--texto-subtitulo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+}
+
+.frase p {
+  margin: 0 0 6px;
+  color: var(--cor-texto-2);
+  font-size: var(--texto-corpo);
+  line-height: var(--entrelinha-normal);
+}
+
+.frase .semConexao {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+}
+
+/* ---------- O alto contraste (m07): o fio de 2 px e nenhuma sombra ---------- */
+:global([data-windows-theme="alto-contraste"]) .moldura {
+  --fio: 2px;
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  :global(:root:not([data-windows-theme])) .moldura {
+    --fio: 2px;
+    box-shadow: none;
+  }
+}

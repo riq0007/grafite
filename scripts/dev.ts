@@ -154,6 +154,24 @@ export function completarCanaisDoDesenvolvimento(
   return completo;
 }
 
+/** A chave da aba de desenvolvimento, que o `pnpm dev` grava na organização pelo hash. */
+export const CHAVE_DA_ABA = 'GRAFITE_ABA_CHAVE_DE_DESENVOLVIMENTO';
+
+/**
+ * O diretório de desenvolvimento e a chave da aba (change aba-dos-colaboradores, design, decisão
+ * 13): o .env liga o AD simulado na API e ganha a chave da aba uma vez. A chave que já existe não é
+ * trocada: as abas registradas no computador de quem desenvolve não precisam dela de novo. O AD
+ * simulado só é ligado no .env do ambiente de desenvolvimento: no de outro ambiente, como o
+ * `teste`, a configuração recusaria a partida da API.
+ */
+export function completarAbaDoDesenvolvimento(conteudo: string, token: () => string): string {
+  const doDesenvolvimento = /^GRAFITE_AMBIENTE=desenvolvimento\s*$/m.test(conteudo);
+  const comDiretorio = doDesenvolvimento
+    ? completarVariavel(conteudo, 'GRAFITE_DIRETORIO_DE_DESENVOLVIMENTO', () => '1')
+    : conteudo;
+  return completarVariavel(comDiretorio, CHAVE_DA_ABA, token);
+}
+
 /**
  * Os argumentos do `pnpm grafite` que criam a organização de desenvolvimento na primeira vez: os
  * endereços locais da web e da API e a conta `admin`, sem exigir os dois passos. Nas execuções
@@ -325,12 +343,21 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const novaSenha = () => randomBytes(24).toString('hex');
   const novoToken = () => randomBytes(32).toString('base64url');
   if (!existsSync('.env')) {
-    writeFileSync('.env', gerarEnvDeDesenvolvimento(novaSenha, novaChave, novoToken));
+    writeFileSync(
+      '.env',
+      completarAbaDoDesenvolvimento(
+        gerarEnvDeDesenvolvimento(novaSenha, novaChave, novoToken),
+        novoToken,
+      ),
+    );
     console.log('.env criado com senhas aleatórias (fica fora do Git).');
   } else {
     const atual = readFileSync('.env', 'utf8');
-    const completo = completarCanaisDoDesenvolvimento(
-      completarEnvDeDesenvolvimento(atual, novaChave, novaSenha, novoToken),
+    const completo = completarAbaDoDesenvolvimento(
+      completarCanaisDoDesenvolvimento(
+        completarEnvDeDesenvolvimento(atual, novaChave, novaSenha, novoToken),
+      ),
+      novoToken,
     );
     if (completo !== atual) {
       writeFileSync('.env', completo);

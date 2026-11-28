@@ -1,0 +1,64 @@
+{
+  "rota": "POST /aba/sessao",
+  "pedidos": {
+    "pelo-windows": {
+      "entrada": "windows",
+      "sid": "S-1-5-21-1004336348-1177238915-682003330-1001",
+      "usuarioDoWindows": "EMPRESA\\carla.dias"
+    },
+    "pela-senha": {
+      "entrada": "senha",
+      "usuario": "carla.dias",
+      "senha": "senha-de-exemplo"
+    },
+    "codigo": {
+      "entrada": "senha",
+      "pendente": "pendente-de-exemplo",
+      "codigo": "123456"
+    }
+  },
+  "respostas": {
+    "200": {
+      "sessao": {
+        "token": "token-de-exemplo-da-sessao",
+        "expiraEm": "2026-11-28T20:00:00.000Z",
+        "pessoa": {
+          "nome": "Carla Dias"
+        }
+      },
+      "falta-o-codigo": {
+        "faltaOCodigo": true,
+        "pendente": "pendente-de-exemplo",
+        "expiraEm": "2026-11-28T12:05:00.000Z"
+      }
+    },
+    "401": {
+      "credenciais-invalidas": {
+        "type": "urn:grafite:problema:credenciais-invalidas",
+        "title": "Credenciais inválidas",
+        "status": 401,
+        "detail": "Usuário ou senha incorretos.",
+        "codigoDeRastreio": "R7K2-9QXM"
+      }
+    },
+    "403": {
+      "pessoa-recusada": {
+        "type": "urn:grafite:problema:pessoa-recusada-na-aba",
+        "title": "Pessoa recusada na aba",
+        "status": 403,
+        "detail": "Sua conta não está num grupo da aba. Fale com a TI.",
+        "codigoDeRastreio": "R7K2-9QXM",
+        "motivo": "sem-grupo"
+      }
+    },
+    "429": {
+      "muitas-requisicoes": {
+        "type": "urn:grafite:problema:muitas-requisicoes",
+        "title": "Muitas requisições",
+        "status": 429,
+        "detail": "Muitas requisições. Tente de novo em 42 s.",
+        "codigoDeRastreio": "R7K2-9QXM"
+      }
+    }
+  }
+}

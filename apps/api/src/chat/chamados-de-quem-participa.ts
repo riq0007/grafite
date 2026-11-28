@@ -9,6 +9,7 @@
 // traz o andamento, e quem participa pela TI lê o chamado como a TI (change
 // andamento-e-varias-mensagens, design, decisões 2 e 4; tarefa 3.1).
 import {
+  aberturasDosChamados,
   anexosDosChamados,
   arquivos,
   chamados,
@@ -47,7 +48,7 @@ import {
   ultimoDiaParaReabrir,
   veOChamado,
 } from '@grafite/domain';
-import { and, asc, desc, eq, inArray, ne, or, type SQL, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNotNull, ne, or, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { arquivoNaoEncontrado, MiniaturaDoAnexo } from '../arquivos/anexos-sem-dono.ts';
 import { lerArvore } from '../arvore.ts';
@@ -68,6 +69,7 @@ import {
 import { formularioDa } from '../chamados/formulario.ts';
 import { lerHorarioDaTi } from '../chamados/horario.ts';
 import { comOAlcanceDeAtender, daConta, pessoaUsaOChat } from '../chamados/quem-participa.ts';
+import { registrarEvento } from '../eventos/saida.ts';
 import { lerContas } from './contas.ts';
 import { conversasParaParticipar } from './conversa.ts';
 import type { ContaQueLeAsMensagens } from './mensagens.ts';
@@ -516,6 +518,66 @@ async function chamadoDeQuemParticipa(tx: Transacao, conta: ContaQueLeAsMensagen
     .where(eq(chamados.numero, numero));
   if (!lido || !participaDoChamado(daConta(conta), lido.chamado)) throw chamadoNaoEncontrado();
   return lido;
+}
+
+/**
+ * A abertura da conversa do chamado pela conta (change aba-dos-colaboradores, spec chamados,
+ * "Resposta por ver"; design, decisão 5): o momento da última, por conta e chamado, que tira a
+ * resposta por ver sem tirar a resposta nova. A gravação avisa só as telas e a aba da conta, e só
+ * quando tira a resposta por ver: com mensagem de outra conta depois da abertura anterior. A segunda
+ * abertura seguida não avisa, e a tela que grava a abertura ao reler não entra em laço.
+ */
+export async function gravarAberturaDaConversa(
+  tx: Transacao,
+  conta: ContaQueLeAsMensagens,
+  numero: number,
+  momento: Date,
+): Promise<void> {
+  const { chamado } = await chamadoDeQuemParticipa(tx, conta, numero);
+  const [anterior] = await tx
+    .select({ abertaEm: aberturasDosChamados.abertaEm })
+    .from(aberturasDosChamados)
+    .where(
+      and(
+        eq(aberturasDosChamados.chamadoId, chamado.id),
+        eq(aberturasDosChamados.contaId, conta.id),
+      ),
+    );
+  const [depois] = await tx
+    .select({ id: mensagensDosChamados.id })
+    .from(mensagensDosChamados)
+    .where(
+      and(
+        eq(mensagensDosChamados.chamadoId, chamado.id),
+        eq(mensagensDosChamados.especie, 'mensagem'),
+        isNotNull(mensagensDosChamados.autorConta),
+        ne(mensagensDosChamados.autorConta, conta.id),
+        anterior ? gt(mensagensDosChamados.criadaEm, anterior.abertaEm) : undefined,
+      ),
+    )
+    .limit(1);
+  await tx
+    .insert(aberturasDosChamados)
+    .values({
+      orgId: sql`app.current_org()`,
+      chamadoId: chamado.id,
+      contaId: conta.id,
+      abertaEm: momento,
+    })
+    .onConflictDoUpdate({
+      target: [
+        aberturasDosChamados.orgId,
+        aberturasDosChamados.contaId,
+        aberturasDosChamados.chamadoId,
+      ],
+      set: { abertaEm: momento },
+    });
+  if (!depois) return;
+  await registrarEvento(tx, {
+    tipo: 'chamados.mudaram',
+    alvo: { tipo: 'chamado', id: chamado.id },
+    publico: { contas: [conta.id] },
+  });
 }
 
 /** O formulário sem os campos só da TI, que a pessoa não lê, nem as respostas nem os anexos. */

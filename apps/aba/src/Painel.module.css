@@ -1,0 +1,550 @@
+/*
+ * O painel aberto (spec aba-dos-colaboradores, "Aba aberta"; mockups m01, m03, m08 e m12 da ideia
+ * 18): 293 px de largura, com a grade 2+1 (duas colunas de 128 px), ou 225 px na tela pequena (duas
+ * de 96 px). Na pílula, ele flutua; no entalhe, é a ilha que cresce da borda de cima.
+ */
+.painel {
+  --fio: 1.5px;
+  --respiro: 14px;
+  --vao: 12px;
+  --raio-do-painel: 28px;
+  --largura-da-opcao: 128px;
+  --altura-da-opcao: 108px;
+  --altura-da-larga: 100px;
+  --raio-da-opcao: 18px;
+  --simbolo-da-opcao: 38px;
+  --simbolo-da-larga: 40px;
+  /* O nome da opção é de 15 px, entre o corpo e o subtítulo (o LEIA da ideia 18). */
+  --texto-da-opcao: 15px;
+  --fundo: var(--cor-aba-flutuante-fundo);
+  --anel-do-foco:
+    0 0 0 2px var(--cor-aba-flutuante-fundo-2), 0 0 0 5px var(--cor-aba-flutuante-foco),
+    0 0 0 6.5px var(--cor-aba-flutuante-fio-escuro);
+  display: grid;
+  justify-items: center;
+  gap: var(--vao);
+  /* A forma que cresce da aba fechada corta o que ainda não cabe; no entalhe, o encaixe fica à vista. */
+  overflow: clip;
+  overflow-clip-margin: calc(var(--encaixe, 0px) + var(--fio));
+  /* A largura da spec (293 e 225), também quando o fio de 1,5 px arredonda para 1 px na tela. */
+  width: calc(2 * var(--largura-da-opcao) + 6px + 2 * var(--respiro) + 3px);
+  padding: var(--respiro);
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  background-color: var(--fundo);
+  color: var(--cor-aba-flutuante-texto);
+  user-select: none;
+  forced-color-adjust: none;
+}
+
+.flutuante {
+  border-radius: var(--raio-do-painel);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 22px 44px -10px var(--cor-aba-flutuante-sombra);
+}
+
+/* A ilha do entalhe: presa à borda, com o raio de baixo de 32 e o encaixe de 18 (m01). */
+.ilha {
+  --encaixe: 18px;
+  --vao: 10px;
+  padding-top: 12px;
+  border-top: 0;
+  border-radius: 0 0 32px 32px;
+  filter: drop-shadow(0 10px 14px var(--cor-aba-flutuante-sombra));
+}
+
+/* A tela pequena (m12): 225×247, opções de 96×96, a larga de 198×84 e o raio de 24. */
+.compacta {
+  --respiro: 12px;
+  --vao: 10px;
+  --raio-do-painel: 24px;
+  --largura-da-opcao: 96px;
+  --altura-da-opcao: 96px;
+  --altura-da-larga: 84px;
+  --raio-da-opcao: 16px;
+  --simbolo-da-opcao: 30px;
+  --simbolo-da-larga: 32px;
+  --texto-da-opcao: var(--texto-dado);
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- O abrir (m05): o logo dos 60 aos 200 ms, e a cascata das opções até os 340 ms ---------- */
+.logo,
+.linha {
+  animation: subir-o-logo var(--dur-aba-entrada) var(--curva-padrao) var(--dur-aba-inicio-do-logo)
+    backwards;
+}
+
+.opcao,
+.nota,
+.quem {
+  animation: subir-a-opcao var(--dur-aba-entrada) var(--curva-mola-suave)
+    calc(var(--dur-aba-inicio-da-cascata) + var(--ordem, 0) * var(--dur-aba-cascata)) backwards;
+}
+
+@keyframes subir-o-logo {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes subir-a-opcao {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* O fechar: o conteúdo some junto com a forma, que volta à aba fechada. */
+.fechando {
+  pointer-events: none;
+}
+
+.fechando > * {
+  opacity: 0;
+  transition: opacity var(--dur-aba-fechar) var(--curva-saida);
+}
+
+/* ---------- A linha da resposta, no alto (m02 e m04) ---------- */
+.linha {
+  appearance: none;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-fundo-2);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-rotulo);
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition: background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.linha:hover {
+  background-color: var(--cor-aba-flutuante-bloco);
+}
+
+.linha:focus {
+  outline: 0;
+}
+
+/* Lida com o painel aberto, a linha sai em 140 ms. */
+.saindo {
+  animation: sair var(--dur-aba-entrada) var(--curva-saida) forwards;
+}
+
+@keyframes sair {
+  to {
+    opacity: 0;
+  }
+}
+
+.ponto {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-aba-flutuante-atencao);
+}
+
+.textoDaLinha {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.quemRespondeu,
+.chamado {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quemRespondeu {
+  font-weight: var(--peso-forte);
+}
+
+.chamado {
+  color: var(--cor-aba-flutuante-segundo-tom);
+}
+
+.hora {
+  align-self: flex-start;
+  padding-top: 1px;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-family: var(--fonte-mono);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+/* A marca, na cor do texto da aba, e não na do tema do Grafite. */
+.logo svg {
+  color: var(--cor-aba-flutuante-texto);
+}
+
+.opcoes {
+  display: grid;
+  grid-template-columns: repeat(2, var(--largura-da-opcao));
+  gap: 6px;
+}
+
+.opcao {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: var(--altura-da-opcao);
+  margin: 0;
+  padding: 8px 6px 10px;
+  border: 0;
+  border-radius: var(--raio-da-opcao);
+  background-color: var(--cor-aba-flutuante-bloco);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-da-opcao);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition:
+    background-color var(--dur-aba-entalhe) var(--curva-padrao),
+    transform var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.opcao svg {
+  --tom-do-simbolo: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--simbolo-da-opcao);
+}
+
+.opcao:hover {
+  background-color: var(--cor-aba-flutuante-bloco-sob-mouse);
+}
+
+.opcao:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-aba-pressionada);
+  transition-timing-function: var(--curva-saida);
+}
+
+.opcao:focus,
+.sair:focus {
+  outline: 0;
+}
+
+/* O anel do foco, sempre visível pelo teclado; no foco dado pelo atalho, também (m08). */
+.opcao:focus-visible,
+.sair:focus-visible,
+.linha:focus-visible,
+.painel[data-teclado] .opcao:focus,
+.painel[data-teclado] .sair:focus,
+.painel[data-teclado] .linha:focus {
+  box-shadow: var(--anel-do-foco);
+  transition: none;
+}
+
+/* "Abrir chamado": larga e clara, em cima. */
+.larga {
+  grid-column: 1 / -1;
+  height: var(--altura-da-larga);
+  background-color: var(--cor-aba-flutuante-opcao-larga);
+  color: var(--cor-aba-flutuante-sobre-opcao-larga);
+}
+
+.larga svg {
+  --tom-do-simbolo: currentColor;
+  --opacidade-do-tom: 0.22;
+  font-size: var(--simbolo-da-larga);
+}
+
+.larga:hover {
+  background-color: color-mix(
+    in oklch,
+    var(--cor-aba-flutuante-opcao-larga) 84%,
+    var(--cor-aba-flutuante-contorno)
+  );
+}
+
+/* "Abrir chat" e "Visualizar chamados": uma palavra por linha. */
+.empilhado {
+  width: min-content;
+}
+
+/* Com um selo, as opções de baixo crescem 8 px, e o símbolo desce para o selo não cobri-lo. */
+.comSelos .opcao:not(.larga) {
+  height: calc(var(--altura-da-opcao) + 8px);
+  padding-top: 26px;
+}
+
+.selo {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background-color: var(--cor-aba-flutuante-atencao);
+  color: var(--cor-aba-flutuante-sobre-atencao);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nota {
+  max-width: calc(2 * var(--largura-da-opcao) + 6px);
+  margin: 0;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-justa);
+  text-align: center;
+}
+
+/* Na entrada pela senha: quem está na aba, com "Sair". */
+.quem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: calc(2 * var(--largura-da-opcao) + 6px);
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--texto-dado);
+}
+
+.nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sair {
+  appearance: none;
+  flex: none;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 14px;
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-fundo);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-weight: var(--peso-forte);
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition: background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.sair:hover {
+  background-color: var(--cor-aba-flutuante-bloco);
+}
+
+/* Com a linha da resposta (m02 e m04): 372 px, ou 300 na tela pequena, até fechar. */
+.largo {
+  --altura-da-larga: 92px;
+  width: 372px;
+}
+
+.largo.compacta {
+  --altura-da-larga: 80px;
+  width: 300px;
+}
+
+.largo .opcoes {
+  justify-self: stretch;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.largo .quem,
+.largo .nota {
+  justify-self: stretch;
+  width: auto;
+  max-width: none;
+}
+
+/* ---------- A tela maior aberta (m08): o painel atrás, recuado, com a opção de origem marcada ---------- */
+.painel {
+  transform-origin: 50% 0;
+  transition:
+    transform var(--dur-aba-abrir) var(--curva-padrao),
+    opacity var(--dur-aba-abrir) var(--curva-padrao);
+}
+
+.atras {
+  transform: scale(0.94);
+  opacity: 0.9;
+}
+
+.atras .opcao[aria-current],
+.atras .linha[aria-current] {
+  box-shadow: var(--anel-do-foco);
+}
+
+/* ---------- Sem conexão (m09): o tom neutro, o motivo, o que precisa de rede e o contato ---------- */
+.semConexao {
+  --fundo: var(--cor-aba-flutuante-neutro);
+  --contorno: var(--cor-aba-flutuante-neutro-contorno);
+  border-color: var(--cor-aba-flutuante-neutro-contorno);
+  background-color: var(--fundo);
+  transition: background-color var(--dur-media) var(--curva-padrao);
+}
+
+.semConexao .opcao:not(.larga) {
+  height: calc(var(--altura-da-opcao) + 8px);
+  background-color: var(--cor-aba-flutuante-neutro-bloco);
+}
+
+.semConexao .opcao:not(.larga):hover {
+  background-color: color-mix(
+    in oklch,
+    var(--cor-aba-flutuante-neutro-bloco) 85%,
+    var(--cor-aba-flutuante-neutro-contorno)
+  );
+}
+
+.semConexao .linha {
+  background-color: var(--cor-aba-flutuante-neutro-2);
+}
+
+/* Sem conexão, sem o amarelo: o ponto fica no tom do que está indisponível. */
+.semConexao .linha .ponto {
+  background-color: var(--cor-aba-flutuante-texto-indisponivel);
+}
+
+.semConexao .linha .hora {
+  font-family: inherit;
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+.motivo {
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-neutro-2);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  animation: subir-o-logo var(--dur-aba-entrada) var(--curva-padrao) var(--dur-aba-inicio-do-logo)
+    backwards;
+}
+
+.motivo svg {
+  --tom-do-simbolo: currentColor;
+  flex: none;
+  font-size: 22px;
+}
+
+.contato {
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--raio-da-opcao);
+  background-color: var(--cor-aba-flutuante-neutro-bloco);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+  animation: subir-a-opcao var(--dur-aba-entrada) var(--curva-mola-suave)
+    calc(var(--dur-aba-inicio-da-cascata) + var(--ordem, 0) * var(--dur-aba-cascata)) backwards;
+}
+
+.contato svg {
+  --tom-do-simbolo: currentColor;
+  flex: none;
+  font-size: 24px;
+}
+
+.contato > span {
+  display: grid;
+}
+
+/* O que precisa de rede fica tracejado, com o motivo escrito: não depende só da cor. */
+.semConexao .opcao.indisponivel,
+.semConexao .linha.indisponivel {
+  gap: 6px;
+  border: var(--fio) dashed var(--cor-aba-flutuante-neutro-contorno);
+  background-color: var(--cor-aba-flutuante-neutro-2);
+  color: var(--cor-aba-flutuante-texto-indisponivel);
+  cursor: default;
+}
+
+.semConexao .opcao.indisponivel:active {
+  transform: none;
+}
+
+.semConexao .opcao.indisponivel svg {
+  font-size: 32px;
+}
+
+.motivoDaOpcao {
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+/* ---------- O alto contraste (m07): fio de 2 px, opções contornadas e nenhuma sombra ---------- */
+:global([data-windows-theme="alto-contraste"]) .painel {
+  --fio: 2px;
+  filter: none;
+}
+
+:global([data-windows-theme="alto-contraste"]) .opcao,
+:global([data-windows-theme="alto-contraste"]) .linha {
+  border: 2px solid var(--cor-aba-flutuante-contorno);
+}
+
+:global([data-windows-theme="alto-contraste"]) .larga {
+  border-color: var(--cor-aba-flutuante-opcao-larga);
+}
+
+@media (forced-colors: active) {
+  :global(:root:not([data-windows-theme])) .painel {
+    --fio: 2px;
+    filter: none;
+  }
+
+  :global(:root:not([data-windows-theme])) .opcao,
+  :global(:root:not([data-windows-theme])) .linha {
+    border: 2px solid var(--cor-aba-flutuante-contorno);
+  }
+
+  :global(:root:not([data-windows-theme])) .larga {
+    border-color: var(--cor-aba-flutuante-opcao-larga);
+  }
+}
+
+/* ---------- Sem animações no Windows: a escala sai ---------- */
+:global([data-motion="reduzido"]) .opcao:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(:root:not([data-motion])) .opcao:active {
+    transform: none;
+  }
+}

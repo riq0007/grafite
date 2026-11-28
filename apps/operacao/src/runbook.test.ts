@@ -28,7 +28,23 @@ const COM_ACAO = new Set([
   'conta',
   'cofre',
   'email',
+  'aba',
 ]);
+
+/** Os comandos com uma segunda ação, como `aba chave criar`. */
+const COM_DUAS_ACOES = new Set(['aba chave']);
+
+/** O comando de uma linha, sem os argumentos: uma, duas ou três palavras. */
+function comandoDaLinha(depois: string): string | undefined {
+  const [primeiro = '', segundo = '', terceiro = ''] = depois.trim().split(/\s+/);
+  if (primeiro.startsWith('-')) return undefined;
+  const acao = (palavra: string) => palavra !== '' && !palavra.startsWith('-');
+  if (!COM_ACAO.has(primeiro) || !acao(segundo)) return primeiro;
+  const doisPrimeiros = `${primeiro} ${segundo}`;
+  return COM_DUAS_ACOES.has(doisPrimeiros) && acao(terceiro)
+    ? `${doisPrimeiros} ${terceiro}`
+    : doisPrimeiros;
+}
 
 /**
  * Os comandos do grafite.ps1 nos blocos de código do runbook, sem os argumentos. O instalar.ps1 é o
@@ -44,11 +60,8 @@ async function comandosDoRunbook(): Promise<string[]> {
       continue;
     }
     const depois = /grafite\.ps1\s+(.+)$/.exec(linha)?.[1];
-    if (depois === undefined) continue;
-    const [primeiro = '', segundo = ''] = depois.trim().split(/\s+/);
-    if (primeiro.startsWith('-')) continue;
-    const comAcao = COM_ACAO.has(primeiro) && segundo !== '' && !segundo.startsWith('-');
-    comandos.add(comAcao ? `${primeiro} ${segundo}` : primeiro);
+    const comando = depois === undefined ? undefined : comandoDaLinha(depois);
+    if (comando !== undefined) comandos.add(comando);
   }
   return [...comandos].sort();
 }
@@ -86,6 +99,14 @@ it('o runbook cobre cada comando da ajuda', async () => {
     'cofre trocar-chave',
     'email configurar',
     'email testar',
+    'aba chave criar',
+    'aba chave trocar',
+    'aba configurar',
+    'aba aparelhos',
+    'aba entrada',
+    'aba teto',
+    'aba bloquear',
+    'aba desbloquear',
   ]) {
     expect(comandos, comando).toContain(comando);
   }
@@ -115,11 +136,8 @@ it('cada comando do Linux no runbook existe na ajuda do grafite do Linux', async
   const comandos = new Set<string>();
   for (const linha of blocos.join('\n').split('\n')) {
     const depois = /^sudo grafite\s+(.+)$/.exec(linha.trim())?.[1];
-    if (depois === undefined) continue;
-    const [primeiro = '', segundo = ''] = depois.trim().split(/\s+/);
-    if (primeiro.startsWith('-')) continue;
-    const comAcao = COM_ACAO.has(primeiro) && segundo !== '' && !segundo.startsWith('-');
-    comandos.add(comAcao ? `${primeiro} ${segundo}` : primeiro);
+    const comando = depois === undefined ? undefined : comandoDaLinha(depois);
+    if (comando !== undefined) comandos.add(comando);
   }
   expect(comandos.size).toBeGreaterThan(8);
   const ajuda = ajudaDe('linux');

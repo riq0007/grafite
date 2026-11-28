@@ -41,6 +41,9 @@ export const TIPOS_DE_EVENTO = [
   'chamados.mudaram',
   'ajustes-dos-chamados.mudaram',
   'chat.mudou',
+  'configuracao-da-aba.mudou',
+  'entrada-da-aba.mudou',
+  'bloqueio-da-aba.mudou',
 ] as const;
 
 export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
@@ -55,7 +58,9 @@ export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
  *   grupo dela (change chat-com-chamados, design, decisão 4); com os `locais`, valem os dois;
  * - `permissoes`: quem tem uma delas, em algum escopo, sem os locais (change chamados-da-ti,
  *   design, decisão 13);
- * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão.
+ * - `contas` e `sessoes`: essas contas e essas sessões, tenham ou não a permissão;
+ * - `sessoesDaAba`, `aparelhos` e `abas`: a aba dos colaboradores e o chat dentro dela, pela
+ *   sessão da aba, pelo aparelho ou em todos os aparelhos (change aba-dos-colaboradores).
  */
 export interface PublicoDoEvento {
   todas?: boolean;
@@ -65,6 +70,9 @@ export interface PublicoDoEvento {
   permissoes?: readonly Permissao[];
   contas?: readonly string[];
   sessoes?: readonly string[];
+  sessoesDaAba?: readonly string[];
+  aparelhos?: readonly string[];
+  abas?: boolean;
 }
 
 export interface AlvoDoEvento {
@@ -355,6 +363,24 @@ export const EVENTO_DA_ACAO = {
   'canal.alterado': 'chat.mudou',
   'canal.arquivado': 'chat.mudou',
   'canal.reativado': 'chat.mudou',
+  // A aba (change aba-dos-colaboradores, design, decisão 6): a configuração vai a todas as abas, e a
+  // entrada e o bloqueio, às do aparelho. O desbloqueio não tem a quem ir: o aparelho bloqueado não
+  // tem sessão. O fim da sessão da aba vai pelo `sessao.encerrada`, com o público dado.
+  'chave-da-aba.criada': null,
+  'chave-da-aba.trocada': null,
+  'aba.configurada': 'configuracao-da-aba.mudou',
+  'entrada-do-aparelho.trocada': 'entrada-da-aba.mudou',
+  'teto-do-aparelho.trocado': null,
+  'aparelho-da-aba.bloqueado': 'bloqueio-da-aba.mudou',
+  'aparelho-da-aba.desbloqueado': null,
+  'aparelho-da-aba.registrado': null,
+  'aparelho-da-aba.registrado-com-outro-nome': null,
+  'chave-da-aba.recusada': null,
+  'token-da-aba.recusado': null,
+  'sessao-da-aba.aberta': null,
+  'sessao-da-aba.recusada': null,
+  'sessao-da-aba.encerrada': null,
+  'sessao-do-chat-da-aba.aberta': null,
 } as const satisfies Record<AcaoDaAuditoria, TipoDeEvento | null>;
 
 /** Os tipos de evento em que quem grava diz o público (`publicoDerivado` devolve `null`). */
@@ -431,6 +457,11 @@ export function publicoDerivado(
     // dos chamados (change chamados-da-ti, design, decisão 13).
     case 'ajustes-dos-chamados.mudaram':
       return { permissoes: ['chamados.ver', 'chamados.atender', 'chamados.configurar'] };
+    case 'configuracao-da-aba.mudou':
+      return { abas: true };
+    case 'entrada-da-aba.mudou':
+    case 'bloqueio-da-aba.mudou':
+      return alvo?.id ? { aparelhos: [alvo.id] } : null;
     case 'pessoas.mudaram':
     case 'preferencias.mudaram':
     case 'ativos.mudaram':
@@ -458,6 +489,26 @@ export interface ConexaoQueRecebe {
   acesso: Acesso;
   /** Os grupos ativos de que a conta é agora, lidos com o acesso (change chat-com-chamados). */
   grupos: readonly string[];
+  /** Na aba e no chat da aba: a sessão da aba e o aparelho dela. */
+  sessaoDaAbaId?: string;
+  aparelhoId?: string;
+}
+
+/**
+ * Se o evento chega à conexão por muita gente de uma vez, como a configuração da aba e a mensagem
+ * num canal, e não pela conta, pela sessão ou pelo aparelho dela (change aba-dos-colaboradores,
+ * design, decisão 6): a aba relê o estado com um atraso sorteado, para 500 abas não lerem juntas.
+ */
+export function eventoDeMuitos(
+  publico: PublicoDoEvento,
+  conexao: Pick<ConexaoQueRecebe, 'contaId' | 'sessaoId' | 'sessaoDaAbaId' | 'aparelhoId'>,
+): boolean {
+  const { contas, sessoes, sessoesDaAba, aparelhos } = publico;
+  if (contas?.includes(conexao.contaId) || sessoes?.includes(conexao.sessaoId)) return false;
+  if (conexao.sessaoDaAbaId !== undefined && sessoesDaAba?.includes(conexao.sessaoDaAbaId)) {
+    return false;
+  }
+  return !(conexao.aparelhoId !== undefined && aparelhos?.includes(conexao.aparelhoId));
 }
 
 /** Se a conexão pode receber o evento: a mesma organização e uma das partes do público. */
@@ -470,6 +521,13 @@ export function podeReceber(
   const { todas, permissao, locais, grupos, permissoes, contas, sessoes } = evento.publico;
   if (todas) return true;
   if (sessoes?.includes(conexao.sessaoId)) return true;
+  const { sessoesDaAba, aparelhos, abas } = evento.publico;
+  if (conexao.sessaoDaAbaId !== undefined && sessoesDaAba?.includes(conexao.sessaoDaAbaId)) {
+    return true;
+  }
+  if (conexao.aparelhoId !== undefined) {
+    if (abas || aparelhos?.includes(conexao.aparelhoId)) return true;
+  }
   if (contas?.includes(conexao.contaId)) return true;
   if (permissoes?.some((chave) => pode(conexao.acesso, chave))) return true;
   if (!permissao) return false;

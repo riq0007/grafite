@@ -1,0 +1,37 @@
+/* Os símbolos da aba: 1em, o traço na cor do texto e o segundo tom na --tom-do-simbolo. */
+.simbolo {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+}
+
+.tom {
+  fill: var(--tom-do-simbolo, currentColor);
+  fill-opacity: var(--opacidade-do-tom, 0.32);
+  stroke: none;
+}
+
+.traco {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ponto {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* No alto contraste, o símbolo fica só no traço (m07). */
+:global([data-windows-theme="alto-contraste"]) .tom {
+  fill-opacity: 0;
+}
+
+@media (forced-colors: active) {
+  :global(:root:not([data-windows-theme])) .tom {
+    fill-opacity: 0;
+  }
+}

@@ -8,7 +8,8 @@
 // com mais de 90 dias, lidas ou não (design do P3b, decisão 12), os alertas resolvidos há mais de
 // 13 meses (design do P3d, decisão 5), os rascunhos dos cadastros parados há mais de 30 dias
 // (change cadastro-em-etapas, decisão 10) e os aparelhos confiáveis marcados há mais de 90 dias, o
-// teto do prazo (change aparelho-confiavel, design, decisão 5). Antes de apagar os arquivos, ela
+// teto do prazo (change aparelho-confiavel, design, decisão 5), e os bilhetes da aba vencidos há mais
+// de 24 horas (change aba-dos-colaboradores, design, decisão 3). Antes de apagar os arquivos, ela
 // remove os anexos dos chamados esquecidos sem dono há mais de 24 h, que saem do armazenamento na
 // mesma volta (change chamados-da-ti, design, decisão 10). Apagar o que já não existe não é erro, e
 // agregar de novo regrava o mesmo, então rodar de novo dá o mesmo resultado. Não grava auditoria,
@@ -27,6 +28,7 @@ import {
 import { PRAZO_DA_CONFIANCA } from '@grafite/domain';
 import { and, asc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { apagarBilhetesVencidos } from '../aba/bilhete.ts';
 import { chaveDoArquivo, VARIANTES, type Variante } from '../arquivos/armazenamento.ts';
 import { removerAnexosEsquecidos } from '../chamados/anexos.ts';
 import { removerAnexosDoChatEsquecidos } from '../chat/anexos.ts';
@@ -349,6 +351,9 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
       const rascunhosDescartados = await descartarRascunhosEsquecidos(banco, orgId, momento);
       const cadastrosParados = await apagarRascunhosDeCadastroParados(banco, orgId, momento);
       const aparelhosVencidos = await apagarAparelhosVencidos(banco, orgId, momento);
+      const bilhetesVencidos = await naOrganizacao(banco, orgId, (tx) =>
+        apagarBilhetesVencidos(tx, momento),
+      );
       // Os agregados antes: a leitura apagada já está no agregado da hora dela.
       const agregados = await agregarLeituras(banco, orgId, momento);
       const daColeta = await apagarLeiturasAntigas(banco, orgId, momento, sinal);
@@ -366,6 +371,7 @@ export function tarefasDaManutencao(contexto: ContextoDasTarefas): DefinicaoDeTa
           rascunhos: rascunhosDescartados,
           rascunhosDeCadastro: cadastrosParados,
           aparelhos: aparelhosVencidos,
+          bilhetes: bilhetesVencidos,
           leituras: daColeta.leituras,
           lotes: daColeta.lotes,
           agregados,

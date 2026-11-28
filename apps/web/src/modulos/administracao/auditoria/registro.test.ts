@@ -109,6 +109,63 @@ describe('o registro de um segredo na auditoria', () => {
     expect(textoDoAlvo(doSegredo({}).alvo)).toBe('Segredo: Switch do CPD');
   });
 
+  it('o computador da aba, e a entrada e o teto pelos rótulos', () => {
+    const registro = doAtivo({
+      acao: 'entrada-do-aparelho.trocada',
+      rotulo: 'Entrada do computador na aba trocada',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-PROD-03 (D4E5F6)', usuario: null },
+      antes: { entrada: 'windows', tetoDeContas: 5 },
+      depois: { entrada: 'senha', tetoDeContas: 12 },
+      dados: { computador: 'PC-PROD-03' },
+    });
+    expect(textoDoAlvo(registro.alvo)).toBe('Computador com a aba: PC-PROD-03 (D4E5F6)');
+    const rotulos = camposDoDetalhe(registro, formatar).map((campo) => campo.rotulo);
+    expect(rotulos).toEqual(expect.arrayContaining(['Entrada', 'Contas por dia', 'Computador']));
+    const entrada = camposDoDetalhe(registro, formatar).find((campo) => campo.rotulo === 'Entrada');
+    expect(entrada?.valor).toBe('Pelo Windows → Pela senha');
+  });
+
+  it('a pessoa recusada na aba, com o motivo e o caso em texto', () => {
+    const registro = doAtivo({
+      acao: 'sessao-da-aba.recusada',
+      rotulo: 'Pessoa recusada na aba',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-FIN-09 (D4E5F6)', usuario: null },
+      antes: null,
+      depois: null,
+      dados: {
+        computador: 'PC-FIN-09',
+        pessoa: 'S-1-5-21-1-2-3-1107',
+        motivo: 'sem-grupo',
+        detalhe: 'desativada-no-ad',
+        usuario: 'carla.dias',
+        usuarioDoWindows: 'EMPRESA\\carla.dias',
+      },
+    });
+    const valores = Object.fromEntries(
+      camposDoDetalhe(registro, formatar).map((campo) => [campo.rotulo, campo.valor]),
+    );
+    expect(valores).toMatchObject({
+      'Pessoa pedida': 'S-1-5-21-1-2-3-1107',
+      Motivo: 'Sem acesso pelo AD',
+      Caso: 'Conta desativada no AD',
+      Usuário: 'carla.dias',
+      'Usuário do Windows': 'EMPRESA\\carla.dias',
+    });
+  });
+
+  it('o fim da sessão da aba pelo bloqueio, com o motivo em texto', () => {
+    const registro = doAtivo({
+      acao: 'sessao-da-aba.encerrada',
+      rotulo: 'Sessão da aba encerrada',
+      alvo: { tipo: 'aparelho-da-aba', id: 'p1', nome: 'PC-FIN-09 (D4E5F6)', usuario: null },
+      antes: null,
+      depois: null,
+      dados: { computador: 'PC-FIN-09', usuario: 'fernanda.lima', motivo: 'aparelho-bloqueado' },
+    });
+    const motivo = camposDoDetalhe(registro, formatar).find((campo) => campo.rotulo === 'Motivo');
+    expect(motivo?.valor).toBe('Computador bloqueado');
+  });
+
   it('os dados do segredo pelo rótulo, com o tipo e a classificação em texto', () => {
     const registro = doSegredo({
       antes: { tipo: 'usuario-e-senha', classificacao: 'pessoal', identificador: 'adm' },

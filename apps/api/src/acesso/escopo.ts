@@ -49,6 +49,11 @@ declare module 'fastify' {
     semPermissao?: ExcecaoDePermissao;
     /** A rota que nunca conta como uso da sessão, como a conexão de eventos. */
     naoContaComoUso?: true;
+    /**
+     * A rota que a sessão do chat na aba também usa (change aba-dos-colaboradores, decisão 8). As de
+     * `/chat/` a ganham sozinhas; as outras da lista a declaram.
+     */
+    chatDaAba?: true;
   }
 }
 
@@ -73,8 +78,24 @@ export function instalarAcesso(
     const tocar =
       requisicao.routeOptions.config?.naoContaComoUso !== true &&
       requisicao.headers[CABECALHO_DO_SEGUNDO_PLANO] !== '1';
-    requisicao.sessao =
-      token && orgId ? await lerSessao(banco, { orgId, token, agora: agora(), tocar }) : null;
+    const sessao =
+      token && orgId
+        ? await lerSessao(banco, {
+            orgId,
+            token,
+            agora: agora(),
+            tocar,
+            alcances: ['comum', 'chat-da-aba'],
+          })
+        : null;
+    // A sessão do chat na aba fora das rotas da lista: nas de entrada, como sem sessão; nas outras,
+    // o 403, e não o 401, para o chat não voltar à entrada em laço com o bilhete.
+    if (sessao?.naAba && requisicao.routeOptions.config?.chatDaAba !== true) {
+      if (requisicao.routeOptions.config?.semPermissao !== 'entrada') throw foraDoAlcanceDaAba();
+      requisicao.sessao = null;
+      return;
+    }
+    requisicao.sessao = sessao;
   });
   protegerEscritas(escopo, { tokenEsperado: (requisicao) => requisicao.sessao?.tokenCsrf ?? null });
   escopo.addHook('onRoute', aplicarGuardas);
@@ -116,6 +137,12 @@ export function instalarAcesso(
 function aplicarGuardas(rota: RouteOptions) {
   const { permissao, semPermissao } = rota.config ?? {};
   const nome = `A rota ${[rota.method].flat().join(', ')} ${rota.url}`;
+  if (rota.url.startsWith('/chat/')) rota.config = { ...rota.config, chatDaAba: true };
+  if (rota.config?.chatDaAba === true) {
+    for (const metodo of [rota.method].flat()) {
+      if (metodo !== 'HEAD') ROTAS_DO_CHAT_DA_ABA.add(`${metodo} ${rota.url}`);
+    }
+  }
   if (permissao !== undefined && semPermissao !== undefined) {
     throw new Error(`${nome} declara a permissão e a exceção ao mesmo tempo.`);
   }
@@ -141,6 +168,21 @@ function aplicarGuardas(rota: RouteOptions) {
   const existentes = rota.preValidation ?? [];
   rota.preValidation = [...guardas, ...(Array.isArray(existentes) ? existentes : [existentes])];
 }
+
+/**
+ * As rotas do alcance `chat-da-aba`, como "MÉTODO /caminho", juntadas no registro delas: o teste
+ * da API fixa a lista (change aba-dos-colaboradores, decisão 8).
+ */
+export const ROTAS_DO_CHAT_DA_ABA = new Set<string>();
+
+/** A sessão do chat na aba numa rota fora da lista dela. */
+export const foraDoAlcanceDaAba = () =>
+  new ProblemaDaApi({
+    codigo: 'fora-do-alcance-da-aba',
+    status: 403,
+    titulo: 'Fora do chat da aba',
+    detalhe: 'O chat da aba não abre esta parte do Grafite. Abra o Grafite no navegador.',
+  });
 
 export const semSessao = () =>
   new ProblemaDaApi({

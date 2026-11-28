@@ -102,6 +102,7 @@ describe('validar', () => {
       conta: CONTA,
       csrf: 'csrf-ativa',
       expiraEm: '2099-01-01T00:00:00.000Z',
+      naAba: false,
       acesso: { permissoes: [] },
     };
     const aberta = criarLojaDaSessao({ buscar, estado: ativa });

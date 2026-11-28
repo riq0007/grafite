@@ -6,15 +6,20 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { encerrarSessao, encerrarSessoesDaConta } from '../acesso/encerramento.ts';
 import { exigirAtiva } from '../acesso/escopo.ts';
-import { apagarCookieDaSessao, lerSessoesAbertas } from '../acesso/sessoes.ts';
+import { apagarCookieDaSessao, descreverSessao, lerSessoesAbertas } from '../acesso/sessoes.ts';
 import { ProblemaDaApi, RespostaDeProblema } from '../problemas.ts';
 import { origemDa, PROBLEMAS_DO_ACESSO } from './sessao.ts';
 
 const SessaoDaConta = z
   .object({
     id: z.uuid(),
-    /** O navegador e o sistema, como "Chrome no Windows". */
+    /** O navegador e o sistema, como "Chrome no Windows", ou o computador, como "Aba · PC-FIN-09". */
     dispositivo: z.string(),
+    /**
+     * Na sessão da aba pelo Windows: encerrá-la vale só até a aba abrir outra, e quem para o
+     * computador é o bloqueio (change aba-dos-colaboradores).
+     */
+    aviso: z.string().nullable(),
     ip: z.string().nullable(),
     criadaEm: z.iso.datetime(),
     ultimoUsoEm: z.iso.datetime(),
@@ -57,7 +62,7 @@ export const rotasDasSessoesDaConta: FastifyPluginAsyncZod<{
       );
       return linhas.map((linha) => ({
         id: linha.id,
-        dispositivo: descreverDispositivo(linha.agente),
+        ...descreverSessao(linha, descreverDispositivo),
         ip: linha.ip,
         criadaEm: linha.criadaEm.toISOString(),
         ultimoUsoEm: linha.ultimoUsoEm.toISOString(),

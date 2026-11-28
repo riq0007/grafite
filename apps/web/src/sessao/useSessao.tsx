@@ -22,6 +22,15 @@ export function useSessao(): EstadoDaSessao {
 }
 
 /**
+ * A sessão é a do chat na aba (change aba-dos-colaboradores, decisão 8): o chat esconde o que leva à
+ * casca e o que pede rotas fora do alcance dela.
+ */
+export function useNaAba(): boolean {
+  const sessao = useSessao();
+  return 'naAba' in sessao && sessao.naAba;
+}
+
+/**
  * O que o servidor diz de si: o ambiente, que a barra e a entrada mostram no teste, e se a
  * organização opera o servidor. `null` enquanto o servidor não respondeu.
  */

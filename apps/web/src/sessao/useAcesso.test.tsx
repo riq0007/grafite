@@ -77,6 +77,7 @@ describe('useAcesso', () => {
       conta: CONTA_DE_EXEMPLO,
       csrf: 'csrf',
       expiraEm: '2099-01-01T00:00:00.000Z',
+      naAba: false,
       acesso: { permissoes: PERMISSOES },
     });
     expect(acesso.current.pode('pessoas.ver')).toBe(true);
@@ -92,6 +93,7 @@ describe('useAcesso', () => {
       conta: CONTA_DE_EXEMPLO,
       csrf: 'csrf',
       expiraEm: '2099-01-01T00:00:00.000Z',
+      naAba: false,
       acesso: {
         permissoes: [
           { chave: 'backup.administrar', organizacao: true, locais: [] },
@@ -128,6 +130,7 @@ describe('useAcesso', () => {
       conta: CONTA_DE_EXEMPLO,
       csrf: 'csrf',
       expiraEm: '2099-01-01T00:00:00.000Z',
+      naAba: false,
       acesso: { permissoes: PERMISSOES },
     });
     expect(acesso.current.pode('pessoas.ver')).toBe(false);

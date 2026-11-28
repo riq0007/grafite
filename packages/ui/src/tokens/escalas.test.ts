@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { destaques } from './destaques.ts';
-import { densidades, escalaDeRaio } from './escalas.ts';
+import { densidades, escalaDeRaio, movimento } from './escalas.ts';
 import { temas } from './temas.ts';
 
 describe('escalaDeRaio', () => {
@@ -32,6 +32,16 @@ describe('escalaDeRaio', () => {
     expect(raios.controle).toBe(13);
     expect(raios.janela).toBe(24);
     expect(raios.dock).toBe(34.8);
+  });
+});
+
+describe('o movimento da aba do Windows', () => {
+  it('a cascata das três opções acaba aos 340 ms, a exceção nomeada da aba', () => {
+    const { abrir, entrada, inicioDoLogo, inicioDaCascata, cascata } = movimento.aba;
+    expect(abrir).toBe(220);
+    expect(inicioDoLogo + entrada).toBe(200);
+    expect(inicioDaCascata + entrada).toBe(260);
+    expect(inicioDaCascata + 2 * cascata + entrada).toBe(340);
   });
 });
 

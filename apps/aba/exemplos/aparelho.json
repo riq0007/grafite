@@ -1,0 +1,30 @@
+{
+  "rota": "POST /aba/aparelho",
+  "pedidos": {
+    "registro": {
+      "chave": "chave-de-exemplo-da-organizacao",
+      "identificadorDaMaquina": "identificador-de-exemplo-da-maquina",
+      "nome": "PC-FIN-09",
+      "versao": "0.1.0",
+      "entradaSugerida": "windows"
+    }
+  },
+  "respostas": {
+    "200": {
+      "registro": {
+        "token": "token-de-exemplo-do-aparelho",
+        "entrada": "windows",
+        "identificadorCurto": "K7M2QX"
+      }
+    },
+    "401": {
+      "chave-recusada": {
+        "type": "urn:grafite:problema:chave-da-aba-recusada",
+        "title": "Chave recusada",
+        "status": 401,
+        "detail": "Chave da aba recusada.",
+        "codigoDeRastreio": "R7K2-9QXM"
+      }
+    }
+  }
+}

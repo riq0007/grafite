@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "aba",
+  "description": "O que a tela da aba e a moldura da tela maior podem chamar no lado nativo. O webview do chat, com a página remota, não entra aqui.",
+  "windows": ["aba", "maior"],
+  "permissions": ["core:default"]
+}

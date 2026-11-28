@@ -1,0 +1,6 @@
+/* A janela da aba é transparente: só a forma aparece sobre as outras janelas. */
+html,
+body {
+  overflow: hidden;
+  background: transparent;
+}

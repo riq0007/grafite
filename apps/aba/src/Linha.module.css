@@ -1,0 +1,13 @@
+/* A linha da apresentação (m10): 96×4, presa à borda, com o raio de baixo de 4, no fio claro. */
+.linha {
+  width: 96px;
+  height: 4px;
+  border-radius: 0 0 4px 4px;
+  background-color: var(--cor-aba-flutuante-contorno);
+  pointer-events: none;
+  forced-color-adjust: none;
+}
+
+.semConexao {
+  background-color: var(--cor-aba-flutuante-neutro-contorno);
+}

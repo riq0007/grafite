@@ -7,6 +7,7 @@ import {
   type ConexaoQueRecebe,
   EVENTO_DA_ACAO,
   type EventoDeSaida,
+  eventoDeMuitos,
   podeReceber,
   publicoDerivado,
   TIPOS_DE_EVENTO,
@@ -106,6 +107,9 @@ describe('tipos de evento', () => {
       'chamados.mudaram',
       'ajustes-dos-chamados.mudaram',
       'chat.mudou',
+      'configuracao-da-aba.mudou',
+      'entrada-da-aba.mudou',
+      'bloqueio-da-aba.mudou',
     ]);
   });
 
@@ -303,6 +307,41 @@ describe('publicoDerivado', () => {
     // chat-com-chamados).
     expect(publicoDerivado('chat.mudou', { tipo: 'conversa', id: 'c1' })).toBeNull();
   });
+
+  it('a configuração da aba vai a todas as abas; a entrada e o bloqueio, às do aparelho', () => {
+    expect(publicoDerivado('configuracao-da-aba.mudou', null)).toEqual({ abas: true });
+    expect(
+      publicoDerivado('entrada-da-aba.mudou', { tipo: 'aparelho-da-aba', id: 'pc-fin-09' }),
+    ).toEqual({ aparelhos: ['pc-fin-09'] });
+    expect(
+      publicoDerivado('bloqueio-da-aba.mudou', { tipo: 'aparelho-da-aba', id: 'pc-fin-09' }),
+    ).toEqual({ aparelhos: ['pc-fin-09'] });
+    expect(publicoDerivado('bloqueio-da-aba.mudou', null)).toBeNull();
+  });
+});
+
+describe('eventoDeMuitos', () => {
+  const naAba = conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc' });
+
+  it('o que vai a muitas abas de uma vez, como a configuração e o canal, é de muitos', () => {
+    expect(eventoDeMuitos({ abas: true }, naAba)).toBe(true);
+    expect(eventoDeMuitos({ todas: true }, naAba)).toBe(true);
+    expect(eventoDeMuitos({ permissao: 'chat.usar' }, naAba)).toBe(true);
+    expect(eventoDeMuitos({ permissao: 'chat.usar', grupos: ['financeiro'] }, naAba)).toBe(true);
+  });
+
+  it('o que chega pela conta, pela sessão da aba ou pelo aparelho é da pessoa', () => {
+    expect(eventoDeMuitos({ contas: [naAba.contaId, 'conta-ana'] }, naAba)).toBe(false);
+    expect(eventoDeMuitos({ sessoesDaAba: ['aba-fernanda'] }, naAba)).toBe(false);
+    expect(eventoDeMuitos({ aparelhos: ['pc'] }, naAba)).toBe(false);
+    // A resposta no chamado vai a quem vê os chamados e à pessoa: para a pessoa, é dela.
+    expect(
+      eventoDeMuitos(
+        { permissao: 'chamados.ver', locais: ['exp'], contas: [naAba.contaId] },
+        naAba,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe('podeReceber', () => {
@@ -320,6 +359,38 @@ describe('podeReceber', () => {
     const fim = evento({ sessoes: ['sessao-bruno'] }, { tipo: 'sessao.encerrada' });
     expect(podeReceber(fim, conexao(SEM_PERMISSOES), ARVORE)).toBe(true);
     expect(podeReceber(fim, conexao(SEM_PERMISSOES, { sessaoId: 'outra' }), ARVORE)).toBe(false);
+  });
+
+  it('entrega o evento da sessão da aba à aba e ao chat da aba dela, e a nenhuma outra', () => {
+    const fim = evento({ sessoesDaAba: ['aba-fernanda'] }, { tipo: 'sessao.encerrada' });
+    const daAba = { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc-fin-09' };
+    expect(podeReceber(fim, conexao(SEM_PERMISSOES, daAba), ARVORE)).toBe(true);
+    expect(
+      podeReceber(fim, conexao(SEM_PERMISSOES, { ...daAba, sessaoDaAbaId: 'aba-paulo' }), ARVORE),
+    ).toBe(false);
+    expect(podeReceber(fim, conexao(SEM_PERMISSOES), ARVORE)).toBe(false);
+  });
+
+  it('entrega o evento do aparelho só às abas dele', () => {
+    const bloqueio = evento({ aparelhos: ['pc-fin-09'] }, { tipo: 'sessao.encerrada' });
+    const naAba = (aparelhoId: string) =>
+      conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-qualquer', aparelhoId });
+    expect(podeReceber(bloqueio, naAba('pc-fin-09'), ARVORE)).toBe(true);
+    expect(podeReceber(bloqueio, naAba('pc-rh-02'), ARVORE)).toBe(false);
+    expect(podeReceber(bloqueio, conexao(SEM_PERMISSOES), ARVORE)).toBe(false);
+  });
+
+  it('a conexão da aba segue recebendo pela conta e por toda a organização', () => {
+    const naAba = conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc' });
+    expect(podeReceber(evento({ todas: true }), naAba, ARVORE)).toBe(true);
+    expect(podeReceber(evento({ contas: [naAba.contaId] }), naAba, ARVORE)).toBe(true);
+  });
+
+  it('entrega o evento de todas as abas só às conexões das abas', () => {
+    const configuracao = evento({ abas: true });
+    const naAba = conexao(SEM_PERMISSOES, { sessaoDaAbaId: 'aba-fernanda', aparelhoId: 'pc' });
+    expect(podeReceber(configuracao, naAba, ARVORE)).toBe(true);
+    expect(podeReceber(configuracao, conexao(PESSOAS_NA_ORGANIZACAO), ARVORE)).toBe(false);
   });
 
   it('entrega à conta da pessoa, mesmo sem a permissão', () => {

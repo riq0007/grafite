@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  O fragmento do MSI da aba (change aba-dos-colaboradores, design, decisão 12), que o modelo do Tauri
+  junta pelo ComponentGroup "ServicoDaAba":
+  - o serviço GrafiteAba, que roda como o sistema e começa com o Windows;
+  - as três propriedades em HKLM\SOFTWARE\Grafite\Aba. A permissão só do sistema e dos
+    administradores é do serviço, que a põe ao começar (instalacao.rs): o MsiLockPermissionsEx pede o
+    Windows Installer 5, que o modelo do Tauri não declara, e o LockPermissions não chega à chave que já
+    existe. A chave é Hidden e vai ao registro depois do StartServices, já protegido, por uma ação sem
+    log (WixSilentExec64 com HideTarget): a linha da tabela Registry iria ao log detalhado no
+    RegAddValue. A propriedade que a linha de comando não traz vem do registro: a troca de versão
+    remove o produto antigo, com os valores dele, e o novo os grava de novo;
+  - a aba no Run da máquina;
+  - na desinstalação de verdade, a limpeza do %ProgramData%\Grafite\Aba. A troca de versão não limpa:
+    o aparelho segue com o mesmo token.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Fragment>
+    <Property Id="GRAFITE_SERVIDOR" Secure="yes" />
+    <Property Id="GRAFITE_ENTRADA" Secure="yes" />
+    <Property Id="GRAFITE_CHAVE" Secure="yes" Hidden="yes" />
+
+    <Property Id="SERVIDOR_GUARDADO" Secure="yes">
+      <RegistrySearch Id="ServidorGuardado" Root="HKLM" Key="SOFTWARE\Grafite\Aba" Name="Servidor" Type="raw" Win64="yes" />
+    </Property>
+    <Property Id="ENTRADA_GUARDADA" Secure="yes">
+      <RegistrySearch Id="EntradaGuardada" Root="HKLM" Key="SOFTWARE\Grafite\Aba" Name="Entrada" Type="raw" Win64="yes" />
+    </Property>
+    <Property Id="CHAVE_GUARDADA" Secure="yes" Hidden="yes">
+      <RegistrySearch Id="ChaveGuardada" Root="HKLM" Key="SOFTWARE\Grafite\Aba" Name="Chave" Type="raw" Win64="yes" />
+    </Property>
+    <SetProperty Id="GRAFITE_SERVIDOR" Value="[SERVIDOR_GUARDADO]" After="AppSearch" Sequence="both">NOT GRAFITE_SERVIDOR AND SERVIDOR_GUARDADO</SetProperty>
+    <SetProperty Id="GRAFITE_ENTRADA" Value="[ENTRADA_GUARDADA]" After="AppSearch" Sequence="both">NOT GRAFITE_ENTRADA AND ENTRADA_GUARDADA</SetProperty>
+    <SetProperty Id="GRAFITE_CHAVE" Value="[CHAVE_GUARDADA]" After="AppSearch" Sequence="both">NOT GRAFITE_CHAVE AND CHAVE_GUARDADA</SetProperty>
+
+    <ComponentGroup Id="ServicoDaAba">
+      <Component Id="ServicoExe" Directory="INSTALLDIR" Guid="{94E6578D-3727-4657-971C-28DC1F6C26E8}">
+        <File Id="ServicoExe" Source="$(sys.SOURCEFILEDIR)..\..\target\release\grafite-aba-servico.exe" KeyPath="yes" Checksum="yes" />
+        <ServiceInstall Id="ServicoDaAba" Name="GrafiteAba" DisplayName="Grafite Aba"
+                        Description="Registra o computador no Grafite e abre a sessão da aba dos colaboradores."
+                        Type="ownProcess" Start="auto" Account="LocalSystem" ErrorControl="normal" Vital="yes" />
+        <ServiceControl Id="ServicoDaAba" Name="GrafiteAba" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+      </Component>
+
+      <Component Id="RegistroDaAba" Directory="INSTALLDIR" Guid="{D8774874-99C7-45DC-9791-856CB96F5C9D}">
+        <CreateFolder />
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Grafite\Aba" Action="createAndRemoveOnUninstall" />
+      </Component>
+      <Component Id="RegistroDoServidor" Directory="INSTALLDIR" Guid="{98331878-5CD7-42BA-9D44-BE7D34D78176}">
+        <Condition>GRAFITE_SERVIDOR</Condition>
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Grafite\Aba" Name="Servidor" Type="string" Value="[GRAFITE_SERVIDOR]" KeyPath="yes" />
+      </Component>
+      <Component Id="RegistroDaEntrada" Directory="INSTALLDIR" Guid="{C2A7BA8A-5FEC-40D3-BA6A-36AF3EC71464}">
+        <Condition>GRAFITE_ENTRADA</Condition>
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Grafite\Aba" Name="Entrada" Type="string" Value="[GRAFITE_ENTRADA]" KeyPath="yes" />
+      </Component>
+
+      <Component Id="AbaAoEntrar" Directory="INSTALLDIR" Guid="{0CFE1D89-71EA-4BEA-AF07-942EA5AC51FC}">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Name="GrafiteAba" Type="string" Value="&quot;[INSTALLDIR]grafite-aba.exe&quot;" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- A chave, depois de o serviço proteger a chave do registro, sem ir ao log. -->
+    <Property Id="GravarAChave" Hidden="yes" />
+    <CustomAction Id="GravarAChave" BinaryKey="WixCA" DllEntry="WixSilentExec64" Execute="deferred" Return="check" Impersonate="no" HideTarget="yes" />
+    <SetProperty Id="GravarAChave" Before="GravarAChave" Sequence="execute"
+                 Value="&quot;[System64Folder]reg.exe&quot; add &quot;HKLM\SOFTWARE\Grafite\Aba&quot; /v Chave /t REG_SZ /d &quot;[GRAFITE_CHAVE]&quot; /f">GRAFITE_CHAVE AND NOT REMOVE~="ALL"</SetProperty>
+
+    <!-- A limpeza da desinstalação de verdade, como o sistema, depois de o serviço sair. -->
+    <CustomAction Id="LimparOsDados" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Return="ignore" Impersonate="no" />
+    <SetProperty Id="LimparOsDados" Before="LimparOsDados" Sequence="execute"
+                 Value="&quot;[System64Folder]cmd.exe&quot; /c rd /s /q &quot;[CommonAppDataFolder]Grafite\Aba&quot; &amp; rd &quot;[CommonAppDataFolder]Grafite&quot;">REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</SetProperty>
+    <InstallExecuteSequence>
+      <Custom Action="GravarAChave" After="StartServices">GRAFITE_CHAVE AND NOT REMOVE~="ALL"</Custom>
+      <Custom Action="LimparOsDados" After="DeleteServices">REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

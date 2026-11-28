@@ -4,6 +4,7 @@
 import { comAlfa, compor, contraste } from './contraste.ts';
 import { destaqueDoTema, destaques } from './destaques.ts';
 import { TINTA_DO_ROTULO_NEUTRO } from './escalas.ts';
+import { gerarAbaFlutuante, type TemaDoWindows } from './gerador.ts';
 import { camadasDeEstado, coresDoCursor, temas } from './temas.ts';
 
 export type Cores = Record<string, string>;
@@ -369,5 +370,127 @@ export function avaliarTudo(): Array<Resultado & { tema: string; destaque: strin
     (Object.keys(destaques) as Array<keyof typeof destaques>).flatMap((destaque) =>
       avaliar(coresDaCombinacao(tema, destaque), PARES).map((r) => ({ ...r, tema, destaque })),
     ),
+  );
+}
+
+/**
+ * A aba do Windows (change aba-dos-colaboradores, design, decisão 9), medida nos três temas do
+ * Windows, fora das 24 combinações. A área é o fundo das janelas do Windows 11 no tema; no alto
+ * contraste, as cores do sistema são as do Alto Contraste Preto.
+ */
+export const AREA_DO_WINDOWS: Record<TemaDoWindows, string> = {
+  escuro: '#202020',
+  claro: '#f3f3f3',
+  altoContraste: '#000000',
+};
+
+export const CORES_DO_SISTEMA_DE_REFERENCIA: Record<string, string> = {
+  Canvas: '#000000',
+  CanvasText: '#ffffff',
+  Highlight: '#1aebff',
+  HighlightText: '#000000',
+  LinkText: '#ffff00',
+  GrayText: '#3ff23f',
+  transparent: 'rgba(0, 0, 0, 0)',
+};
+
+export const NOMES_DOS_TEMAS_DO_WINDOWS: Record<TemaDoWindows, string> = {
+  escuro: 'Escuro',
+  claro: 'Claro',
+  altoContraste: 'Alto contraste',
+};
+
+export interface ParDaAba extends Par {
+  /** Os temas do Windows em que o par existe; sem a lista, nos três. */
+  temas?: TemaDoWindows[];
+}
+
+const daAba = (
+  uso: string,
+  frente: string,
+  fundo: string,
+  minimo: number,
+  temas?: TemaDoWindows[],
+): ParDaAba => ({
+  uso,
+  frente: (c) => c[frente] ?? '',
+  fundo: (c) => c[fundo] ?? '',
+  minimo,
+  ...(temas ? { temas } : {}),
+});
+
+/**
+ * Onde a forma encontra a área: no escuro, o fio claro e o anel do foco a separam; no claro, o
+ * azul, com o fio escuro por fora. O azul sozinho sobre a área escura e o fio claro sobre a área
+ * clara não precisam passar, e não entram.
+ */
+export const PARES_DA_ABA_FLUTUANTE: ParDaAba[] = [
+  daAba('texto sobre o azul', 'texto', 'fundo', TEXTO),
+  daAba(
+    'texto sobre o fundo 2 (a linha da resposta, a pílula pressionada)',
+    'texto',
+    'fundo2',
+    TEXTO,
+  ),
+  daAba('texto sobre a opção', 'texto', 'bloco', TEXTO),
+  daAba('texto sobre a opção sob o mouse', 'texto', 'blocoSobMouse', TEXTO),
+  daAba('segundo tom sobre o azul (quem respondeu)', 'segundoTom', 'fundo', TEXTO),
+  daAba(
+    'segundo tom sobre o fundo 2 (o título e a hora da resposta)',
+    'segundoTom',
+    'fundo2',
+    TEXTO,
+  ),
+  daAba('texto da opção larga ("Abrir chamado")', 'sobreOpcaoLarga', 'opcaoLarga', TEXTO),
+  daAba('texto sobre o âmbar (selo)', 'sobreAtencao', 'atencao', TEXTO),
+  daAba('ponto do aviso sobre o azul', 'atencao', 'fundo', COMPONENTE),
+  daAba('fio sobre o azul', 'contorno', 'fundo', COMPONENTE),
+  daAba('anel do foco sobre a folga (fundo 2)', 'foco', 'fundo2', COMPONENTE),
+  daAba('texto sobre o neutro (sem conexão)', 'texto', 'neutro', TEXTO),
+  daAba('texto sobre a opção neutra', 'texto', 'neutroBloco', TEXTO),
+  daAba('segundo tom sobre o neutro', 'segundoTom', 'neutro', TEXTO),
+  daAba('indisponível sobre a opção desligada (neutro 2)', 'textoIndisponivel', 'neutro2', TEXTO),
+  daAba('fio neutro sobre o neutro', 'neutroContorno', 'neutro', COMPONENTE),
+  daAba('fio claro sobre a área', 'contorno', 'area', COMPONENTE, ['escuro', 'altoContraste']),
+  daAba('fio neutro sobre a área', 'neutroContorno', 'area', COMPONENTE, [
+    'escuro',
+    'altoContraste',
+  ]),
+  daAba('anel do foco sobre a área', 'foco', 'area', COMPONENTE, ['escuro', 'altoContraste']),
+  daAba('azul sobre a área', 'fundo', 'area', COMPONENTE, ['claro']),
+  daAba('neutro sobre a área', 'neutro', 'area', COMPONENTE, ['claro']),
+  {
+    uso: 'fio escuro por fora sobre a área',
+    frente: (c) => c.fioEscuro ?? '',
+    fundo: (c) => c.area ?? '',
+    minimo: COMPONENTE,
+    temas: ['claro'],
+  },
+  {
+    uso: 'anel do foco contra o fio escuro por fora',
+    frente: (c) => c.foco ?? '',
+    fundo: (c) => sobre(c.fioEscuro ?? '', c.area ?? ''),
+    minimo: COMPONENTE,
+    temas: ['escuro', 'claro'],
+  },
+];
+
+/** As cores da aba num tema do Windows, com as do sistema trocadas pelas de referência. */
+export function coresDaAbaNoWindows(tema: TemaDoWindows): Cores {
+  const cores = Object.fromEntries(
+    Object.entries(gerarAbaFlutuante(tema)).map(([nome, cor]) => [
+      nome,
+      CORES_DO_SISTEMA_DE_REFERENCIA[cor] ?? cor,
+    ]),
+  );
+  return { ...cores, area: AREA_DO_WINDOWS[tema] };
+}
+
+export function avaliarAbaFlutuante(): Array<Resultado & { tema: TemaDoWindows }> {
+  return (Object.keys(AREA_DO_WINDOWS) as TemaDoWindows[]).flatMap((tema) =>
+    avaliar(
+      coresDaAbaNoWindows(tema),
+      PARES_DA_ABA_FLUTUANTE.filter((par) => !par.temas || par.temas.includes(tema)),
+    ).map((r) => ({ ...r, tema })),
   );
 }

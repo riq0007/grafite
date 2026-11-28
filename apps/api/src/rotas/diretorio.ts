@@ -349,9 +349,9 @@ export const rotasDoDiretorio: FastifyPluginAsyncZod<{
       }
       if (!conta) throw dadosInvalidos({ segredoId: MENSAGENS_DO_DIRETORIO.contaDeServico });
       try {
-        const quantos = await conectar(acessoAoDiretorio(configuracao, conta)).contarUsuarios(
-          LIMITE_DA_CONTAGEM_NO_DIRETORIO,
-        );
+        const quantos = await conectar(
+          acessoAoDiretorio({ ...configuracao, orgId }, conta),
+        ).contarUsuarios(LIMITE_DA_CONTAGEM_NO_DIRETORIO);
         return { ok: true, mensagem: textoDaContagem(quantos) };
       } catch (erro) {
         if (erro instanceof FalhaDoDiretorio) return { ok: false, mensagem: erro.message };

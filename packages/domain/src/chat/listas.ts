@@ -175,7 +175,17 @@ export function respostaNova(pedido: {
   vistaAte: string | null;
   pelaTi: boolean;
 }): number {
-  if (pedido.pelaTi || !chamadoAberto(pedido.situacao)) return 0;
+  return linhasDaRespostaNova(pedido).length;
+}
+
+function linhasDaRespostaNova<L extends LinhaParaARespostaNova>(pedido: {
+  situacao: SituacaoDoChamado;
+  linhas: readonly L[];
+  contaId: string;
+  vistaAte: string | null;
+  pelaTi: boolean;
+}): L[] {
+  if (pedido.pelaTi || !chamadoAberto(pedido.situacao)) return [];
   const vistaAte = pedido.vistaAte?.toLowerCase() ?? null;
   return pedido.linhas.filter(
     ({ id, especie, autorConta }) =>
@@ -183,7 +193,33 @@ export function respostaNova(pedido: {
       autorConta !== null &&
       autorConta !== pedido.contaId &&
       (vistaAte === null || id.toLowerCase() > vistaAte),
-  ).length;
+  );
+}
+
+/**
+ * A resposta por ver (change aba-dos-colaboradores, spec chamados, "Resposta por ver"): as
+ * mensagens da resposta nova escritas depois da última abertura da conversa pela pessoa, na ordem
+ * da conversa. Sem abertura, é a resposta nova inteira; tudo o que tira a resposta nova tira também
+ * esta. A mensagem do mesmo instante da abertura conta como vista. A última da lista é a que o
+ * estado da aba mostra: quem respondeu e a hora.
+ */
+export function linhasPorVer<L extends LinhaParaARespostaNova & { criadaEm: Date }>(pedido: {
+  situacao: SituacaoDoChamado;
+  linhas: readonly L[];
+  contaId: string;
+  vistaAte: string | null;
+  pelaTi: boolean;
+  abertaEm: Date | null;
+}): L[] {
+  const { abertaEm } = pedido;
+  const novas = linhasDaRespostaNova(pedido);
+  if (abertaEm === null) return novas;
+  return novas.filter(({ criadaEm }) => criadaEm.getTime() > abertaEm.getTime());
+}
+
+/** Quantas mensagens estão por ver: o tamanho das `linhasPorVer`. */
+export function respostaPorVer(pedido: Parameters<typeof linhasPorVer>[0]): number {
+  return linhasPorVer(pedido).length;
 }
 
 /** Os chamados com resposta nova, para a trilha: conta os chamados, e não as mensagens. */

@@ -397,6 +397,17 @@ A versão que traz o chat (S7) acrescenta o módulo Chat, ligado, sem equipes ne
 
 Na volta à versão anterior, o Chat e o app dele deixam de aparecer, e as conversas ficam no banco até a versão nova voltar. A volta tem uma exceção para esta versão: veja [Volta à versão anterior](#volta-à-versão-anterior).
 
+### A versão com a aba
+
+A versão que traz a aba dos colaboradores (S8) acrescenta as rotas da aba, os computadores, as sessões da aba e a resposta por ver, sem mudar os dados que já existem. Nenhuma aba conecta antes de a organização ter a chave, e ela só aparece nos computadores em que o Intune a instala. Depois de atualizar:
+1. confira o diretório: a aba acha cada pessoa no AD, pela conta de serviço, com as regras da entrada pelo AD (veja [Diretório (AD)](#diretório-ad)), e o chat dentro dela pede o perfil "Colaborador" no grupo de todos (veja [A versão com o chat](#a-versão-com-o-chat));
+2. crie a chave e monte o app no Intune, como diz [Aba dos colaboradores](#aba-dos-colaboradores), primeiro num grupo pequeno de computadores;
+3. troque a chave depois de cada onda de instalação.
+
+**O primeiro dia da resposta por ver.** A aba avisa a resposta da TI que a pessoa ainda não viu, e a versão nova começa sem saber que conversas cada pessoa já abriu. No primeiro dia, a resposta nova que a pessoa já leu pela web, sem responder nem marcar como vista, aparece na aba como resposta por ver. É a resposta que segue sem a resposta dela, e o aviso sai quando ela abre a conversa.
+
+Na volta à versão anterior, as abas ficam sem conexão e voltam sozinhas com a versão nova: os computadores, os tokens e a configuração ficam no banco. Na entrada pela senha, a sessão que venceu nesse tempo pede a senha de novo.
+
 ### Atualização que falhou
 
 Uma falha antes da parada não muda nada. Depois da parada, o app e o coletor ficam parados, e a mensagem diz o que falhou e onde está o backup de antes. Então:
@@ -527,6 +538,8 @@ Confira a produção com quem pediu a restauração. Com tudo certo, apague o ba
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h 127.0.0.1 -U postgres -c 'DROP DATABASE grafite_antes_AAAAMMDDHHmm'
 Remove-Item -Recurse C:\Grafite\producao\arquivos-antes-AAAAMMDDHHmm
 ```
+
+As abas dos computadores registrados depois do backup ficam sem conexão até a chave voltar a elas, e os comandos da aba feitos depois dele se perdem: veja [A aba depois da restauração](#a-aba-depois-da-restauração).
 
 Se for preciso voltar ao que estava, pare a produção, renomeie `grafite` para outro nome e `grafite_antes_AAAAMMDDHHmm` para `grafite`, troque as pastas dos arquivos e inicie a produção.
 
@@ -772,6 +785,149 @@ A API de cada ambiente avalia as regras de alerta de cada organização a cada m
 **Transformar em chamado.** A mensagem vira chamado pelo menu dela, com `chamados.pedir` e o módulo Chamados ligado. O atalho Ctrl+Shift+T vale só no app instalado: na aba do navegador, o Chrome o guarda para reabrir a aba fechada.
 
 **Equipes e canais.** Quem tem `chat.configurar` os cria em **Chat › Equipes e canais**. A equipe tem as pessoas de um grupo do Grafite, e o AD a preenche pelos grupos mapeados. O canal é de todos que usam o chat, com quem escreve escolhido, como só a TI nos "Avisos da TI". O "Avisar a cada mensagem", da equipe e do canal, começa desligado: sem ele, a mensagem fica só no contador das não lidas. Ligado, cada mensagem notifica as contas da equipe ou do canal e põe o push de cada aparelho na fila. A organização tem até 100 equipes e canais ativos, somados.
+
+## Aba dos colaboradores
+
+A aba é o programa do Windows que fica no alto da tela de cada colaborador, com as respostas da TI e o chat do Grafite dentro dela. Ela roda no Windows 10 e 11 de 64 bits, instalada por máquina pelo MSI, com o serviço "Grafite Aba" (`GrafiteAba`), que roda como o sistema. O serviço registra o computador no Grafite pela chave da organização e guarda o token dele; a aba abre quando a pessoa entra no Windows. Nesta versão, "Abrir chamado" e "Visualizar chamados" avisam que chegam numa versão seguinte e oferecem o chat.
+
+O `Grafite-Aba.msi` ainda não vai na release. Ele sai do CI, no artefato `Grafite-Aba` de cada run, guardado por 30 dias: use o do último run da branch principal.
+
+### A chave e o Intune
+
+1. Crie a chave da organização:
+   ```powershell
+   C:\Grafite\grafite.ps1 aba chave criar --ambiente producao --endereco grafite.empresa.com.br
+   ```
+   A chave aparece uma vez só, com o exemplo da linha de comando do MSI, e o banco guarda só o hash dela.
+2. No Intune, crie um app do tipo **Aplicativo do Windows (Win32)** com o `Grafite-Aba.msi`, empacotado pelo `IntuneWinAppUtil.exe`:
+   - o comando de instalação é o do exemplo, como `msiexec /i Grafite-Aba.msi GRAFITE_SERVIDOR=https://grafite.empresa.com.br GRAFITE_CHAVE=<chave> GRAFITE_ENTRADA=windows /qn`;
+   - o comportamento da instalação é **Sistema**;
+   - a regra de detecção é a do MSI, pelo código do produto, que o Intune preenche.
+3. Atribua o app ao grupo dos computadores.
+
+| Propriedade do MSI | O que é |
+|---|---|
+| `GRAFITE_SERVIDOR` | O endereço da produção, com o `https://` |
+| `GRAFITE_CHAVE` | A chave da organização, com que o serviço registra o computador. O MSI a grava sem ela ir ao log da instalação, e o serviço a apaga do registro depois de registrar |
+| `GRAFITE_ENTRADA` | A entrada sugerida para o computador, `windows` ou `senha` (veja abaixo). Sem ela, a entrada é pelo Windows |
+
+O MSI grava as três em `HKLM\SOFTWARE\Grafite\Aba`, que só o sistema e os administradores do computador leem. Na troca de versão, a propriedade que a linha de comando não traz fica como estava. A instalação sem o endereço ou sem a chave deixa a aba instalada e sem conexão, com "A aba não foi configurada. Fale com a TI.".
+
+**A troca da chave depois de cada onda.** A linha de comando, com a chave, fica nas propriedades do app no Intune, em **Programa**, que os administradores do Intune leem. Conte também que ela vai aos logs do agente do Intune em cada computador, em `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs`, que os administradores do computador leem. Por isso, depois de cada onda de instalação, troque a chave e mude a linha de comando do app no Intune no mesmo passo:
+
+```powershell
+C:\Grafite\grafite.ps1 aba chave trocar --ambiente producao --endereco grafite.empresa.com.br
+```
+
+A chave anterior deixa de registrar computadores, e os já registrados seguem com o token deles. O computador que instalou com a chave anterior nesse meio-tempo fica sem registro, e o Intune não o instala de novo, porque o MSI já está nele: ponha a chave nova nele pelo [script do Intune](#a-chave-pelo-script-do-intune).
+
+**A forma e o contato.** A forma de fábrica é a pílula. A forma e o contato de reserva, de até 80 caracteres, que a aba mostra quando fica sem conexão, valem para todos os computadores da organização em até 30 s:
+
+```powershell
+C:\Grafite\grafite.ps1 aba configurar --ambiente producao --endereco grafite.empresa.com.br --forma entalhe --contato "Ramal 2000, das 8h às 18h"
+```
+
+### A entrada por computador
+
+A entrada diz como a pessoa entra na aba daquele computador:
+- **pelo Windows** (`windows`), a de fábrica: a aba entra sozinha com o usuário do Windows, que o Grafite acha no AD pelo SID, sem senha;
+- **pela senha** (`senha`): a aba pede o usuário e a senha do AD, e o "Sair" esquece a pessoa. É a do computador de perfil genérico, que várias pessoas usam com o mesmo usuário do Windows, como os da produção.
+
+A sugerida pelo MSI vale no primeiro registro. Depois, vale a do servidor, que o comando muda, e a aba passa a ela em até 30 s:
+
+```powershell
+C:\Grafite\grafite.ps1 aba entrada PC-PROD-03 senha --ambiente producao --endereco grafite.empresa.com.br
+```
+
+Para os computadores de perfil genérico, use um segundo app no Intune, atribuído só ao grupo deles, com `GRAFITE_ENTRADA=senha`. Com a entrada pelo Windows até o comando, a aba entraria com o usuário genérico, se ele for do AD e de um grupo mapeado.
+
+**O computador ingressado só no Entra.** Quem entra no Windows de um computador ingressado só no Microsoft Entra, sem o AD, tem o SID `S-1-12-…`, que o AD não conhece, e a entrada pelo Windows o recusa com "Entre no Windows com o seu usuário da empresa para usar a aba.". Nesses computadores, use a entrada pela senha, com o usuário e a senha do AD. O ingressado no AD, só nele ou também no Entra, entra pelo Windows.
+
+**O teto de contas.** Com a entrada pelo Windows, o computador abre a aba para até 5 contas diferentes em 24 horas. A sexta é recusada com "Este computador abriu a aba para muitas pessoas hoje. Fale com a TI.", com a auditoria. Para o computador que muitas pessoas usam, cada uma com o próprio usuário do Windows, como a sala de treinamento ou o servidor de área de trabalho remota, suba o teto, de 1 a 500:
+
+```powershell
+C:\Grafite\grafite.ps1 aba teto PC-TREINO-01 30 --ambiente producao --endereco grafite.empresa.com.br
+```
+
+A entrada pela senha não tem teto.
+
+**Os downloads no perfil genérico.** O "Sair" encerra a sessão e limpa os dados do chat da aba, mas o anexo que a pessoa baixou pelo chat fica na pasta Downloads do usuário do Windows, à vista de quem usa o computador depois. Nesses computadores, oriente as pessoas a apagar o que baixaram, ou limpe a pasta no fim de cada turno.
+
+### Os computadores e o bloqueio
+
+```powershell
+C:\Grafite\grafite.ps1 aba aparelhos --ambiente producao --endereco grafite.empresa.com.br
+```
+
+A lista traz cada computador com o identificador de 6 caracteres, o nome, a entrada, o teto, o último contato, a versão e a situação, e marca os registrados nas últimas 24 horas: depois de cada onda, confira que são os dela. Os comandos de um computador o escolhem pelo nome ou pelo identificador; com o nome repetido, como o do computador reinstalado, eles recusam e listam os identificadores.
+
+O computador perdido, roubado ou que não devia ter a aba é bloqueado:
+
+```powershell
+C:\Grafite\grafite.ps1 aba bloquear PC-FIN-09 --ambiente producao --endereco grafite.empresa.com.br
+C:\Grafite\grafite.ps1 aba desbloquear PC-FIN-09 --ambiente producao --endereco grafite.empresa.com.br
+```
+
+Em até 30 s, a aba dele fica sem conexão, com "Este computador foi bloqueado na aba. Fale com a TI.", e as sessões da aba e as do chat na aba dele terminam. O bloqueio vale também para o registro de novo com a chave.
+
+Em **Administração › Auditoria**, o alvo "Computador com a aba" junta o registro, as recusas, as sessões e os comandos de cada computador.
+
+### A chave pelo script do Intune
+
+O serviço lê a chave do registro sempre que não tem um token que valha, e a apaga no contato seguinte com o token. O script de plataforma do Intune põe a chave nos computadores que já têm a aba, depois de restaurar um backup, no computador que instalou com uma chave anterior e na mudança do endereço:
+1. troque a chave (`aba chave trocar`, acima);
+2. no Intune, em **Dispositivos › Scripts e correções › Scripts de plataforma** (em inglês, Devices › Scripts and remediations › Platform scripts), acrescente um script do Windows 10 e posterior com o texto abaixo e a chave nova. Deixe "Executar este script usando as credenciais conectadas" (Run this script using the logged on credentials) em **Não**, para ele rodar como o sistema, e atribua ao grupo dos computadores com a aba;
+3. depois que o Intune mostrar o script rodado nos computadores, troque a chave de novo, como depois de uma onda: o script também fica no Intune com a chave.
+
+```powershell
+# A chave da aba no registro de 64 bits; com o $servidor, também o endereço.
+$chave = 'cole-aqui-a-chave'
+$servidor = ''
+$maquina = [Microsoft.Win32.RegistryKey]::OpenBaseKey('LocalMachine', 'Registry64')
+$aba = $maquina.OpenSubKey('SOFTWARE\Grafite\Aba', $true)
+if ($null -eq $aba) { exit 0 }
+if ($servidor -ne '') { $aba.SetValue('Servidor', $servidor) }
+$aba.SetValue('Chave', $chave)
+$aba.Close()
+```
+
+O Intune roda o script uma vez em cada computador. Para rodar de novo, como numa próxima restauração, suba o script de novo, com a chave nova. Nos computadores que seguem registrados, o serviço apaga a chave no contato seguinte.
+
+### A aba depois da restauração
+
+O banco restaurado não conhece os computadores registrados depois do backup, nem o token que os outros trocaram depois dele: as abas desses computadores ficam sem conexão, com "Este computador precisa ser registrado de novo. Fale com a TI.". A chave do banco restaurado também é a do backup. Depois de restaurar a produção:
+1. troque a chave e ponha-a nos computadores pelo [script do Intune](#a-chave-pelo-script-do-intune). Cada um registra de novo, e o que já existia no backup segue com a entrada, o teto e o bloqueio que tinha nele;
+2. refaça os comandos da aba feitos depois do backup, como um bloqueio, uma entrada ou um teto: eles voltam ao que eram no backup.
+
+### Imagens do Windows
+
+Deixe a aba fora da imagem do Windows e instale-a pelo Intune, depois que o computador entra nele. A imagem que leva a aba precisa ser generalizada com o sysprep e tirada antes de a aba registrar o computador: a tirada depois do registro leva o token do computador, e os clones entram todos como ele. Os clones com o mesmo identificador da máquina (`MachineGuid`), como os de uma imagem sem o sysprep, se derrubam um ao outro a cada registro, e a auditoria mostra o "Computador registrado de novo com outro nome em menos de 1 hora".
+
+### Rede, certificado e logs
+
+**O certificado.** A aba e o serviço conferem o certificado do servidor pelo repositório de certificados do Windows. Com a AC interna, a raiz dela precisa estar nos computadores, distribuída pelo Intune num perfil de certificado confiável; ela sai do `proxy raiz` (veja [AC interna](#ac-interna)).
+
+**O proxy.** O serviço usa o proxy da máquina, o do `netsh winhttp`, e a aba usa a configuração manual do proxy da pessoa, com as exceções. O script de configuração (o PAC) e a detecção automática ficam fora, e com eles a aba e o serviço vão direto ao servidor. O proxy que pede autenticação também fica fora: por ele, a aba não conecta. Na rede que só chega ao servidor pelo proxy, configure o da máquina, e o manual das pessoas por política:
+
+```powershell
+netsh winhttp set proxy proxy-server="proxy.empresa.local:8080" bypass-list="<local>"
+```
+
+O chat dentro da aba segue o proxy do Windows inteiro, com o PAC.
+
+**Os logs.** O do serviço fica em `%ProgramData%\Grafite\Aba\logs`, que só o sistema e os administradores escrevem, e o da aba, no `%LOCALAPPDATA%\Grafite\Aba\logs` de cada pessoa, cada um com até 5 arquivos de 1 MB. Eles têm os contatos, as recusas e os erros, sem a chave, os tokens, as senhas e as mensagens.
+
+### A mudança do endereço
+
+O token do computador vale só no endereço que o deu: com outro `Servidor` no registro, o serviço registra de novo com a chave, como o mesmo computador, com a entrada, o teto e o bloqueio dele. Para passar as abas a outro endereço:
+1. acrescente o endereço novo (veja [Endereços](#endereços));
+2. troque a chave e mande o [script do Intune](#a-chave-pelo-script-do-intune) com a chave nova e o endereço novo no `$servidor`, como `'https://grafite-novo.empresa.com.br'`;
+3. mude a linha de comando do app no Intune, com o endereço novo, para os computadores que ainda vão instalar;
+4. depois que o Intune mostrar o script rodado nos computadores, troque a chave de novo, com a linha do Intune, e tire o endereço antigo.
+
+### Desinstalação
+
+O MSI desinstalado pelo Intune para o serviço e apaga o `%ProgramData%\Grafite\Aba` e o `HKLM\SOFTWARE\Grafite\Aba`. O `%LOCALAPPDATA%\Grafite\Aba` de cada pessoa, com os dados do WebView2, o token da sessão, cifrado, e o log da aba, fica: o MSI por máquina não alcança o perfil de cada uma. O computador continua no `aba aparelhos`: bloqueie-o, se ele não deve voltar.
 
 ## E-mail e push
 
@@ -1070,5 +1226,8 @@ Por um SSH, ou num servidor sem interface gráfica, o comando diz que o painel p
 | `cofre trocar-chave` | Troca a chave mestra do cofre nos dois ambientes |
 | `email configurar --smtp <endereço> --remetente <remetente>`, `email testar --para <e-mail>` | Configura o e-mail da produção; manda o e-mail de teste |
 | `organizacao criar`, `conta criar`, `conta redefinir` | Os comandos do app, com `--ambiente` |
+| `aba chave criar`, `aba chave trocar` | Cria ou troca a chave da aba da organização, mostrada uma vez, com `--ambiente` e `--endereco` |
+| `aba configurar`, `aba aparelhos` | Muda a forma e o contato da aba; lista os computadores com a aba |
+| `aba entrada`, `aba teto`, `aba bloquear`, `aba desbloquear` | A entrada, o teto de contas e o bloqueio de um computador, pelo nome ou pelo identificador |
 
 As opções `--raiz <pasta>` (outra pasta de instalação) e `--confirmar <texto>` (o texto de uma confirmação, num roteiro) valem para todos.

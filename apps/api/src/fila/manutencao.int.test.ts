@@ -11,9 +11,11 @@ import { createHash } from 'node:crypto';
 import {
   alertas,
   aparelhosConfiaveis,
+  aparelhosDaAba,
   arquivos,
   ativos,
   auditoria,
+  bilhetesDaAba,
   coletores,
   contas,
   estadoDosAtivos,
@@ -27,6 +29,7 @@ import {
   pessoas,
   rascunhosDeCadastro,
   sessoes,
+  sessoesDaAba,
   tiposDeAtivo,
 } from '@grafite/db';
 import { asc, eq, sql } from 'drizzle-orm';
@@ -465,6 +468,54 @@ describe('a manutenção diária', () => {
       );
     await manter();
     expect(await restantes()).toEqual([{ dispositivo: 'Edge no Windows' }]);
+  });
+
+  // Change aba-dos-colaboradores, design, decisão 3: o bilhete vale 60 s, e o vencido há mais de 24
+  // horas sai, usado ou não.
+  it('apaga os bilhetes da aba vencidos há mais de 24 h e deixa os mais novos', async () => {
+    const agora = api.relogio.agora().getTime();
+    const hash = (texto: string) => createHash('sha256').update(texto).digest();
+    await naOrganizacao(api.banco, org, async (tx) => {
+      const [aparelho] = await tx
+        .insert(aparelhosDaAba)
+        .values({
+          orgId: org,
+          identificadorDaMaquina: 'guid-da-manutencao',
+          identificadorCurto: 'MNT0A1',
+          nome: 'PC-MANUTENCAO',
+          tokenHash: hash('aparelho-da-manutencao'),
+        })
+        .returning({ id: aparelhosDaAba.id });
+      const [sessao] = await tx
+        .insert(sessoesDaAba)
+        .values({
+          orgId: org,
+          contaId: anaId,
+          aparelhoId: aparelho?.id ?? '',
+          entrada: 'windows',
+          tokenHash: hash('sessao-da-manutencao'),
+          ativadaEm: new Date(agora - 2 * 24 * HORA),
+          expiraEm: new Date(agora + HORA),
+        })
+        .returning({ id: sessoesDaAba.id });
+      for (const [nome, horas] of [
+        ['vencido-ha-25-h', 25],
+        ['vencido-ha-23-h', 23],
+      ] as const) {
+        await tx.insert(bilhetesDaAba).values({
+          orgId: org,
+          hash: hash(nome),
+          sessaoDaAbaId: sessao?.id ?? '',
+          destino: 'chat',
+          expiraEm: new Date(agora - horas * HORA),
+        });
+      }
+    });
+    await manter();
+    const restantes = await naOrganizacao(api.banco, org, (tx) =>
+      tx.select({ hash: bilhetesDaAba.hash }).from(bilhetesDaAba),
+    );
+    expect(restantes).toEqual([{ hash: hash('vencido-ha-23-h') }]);
   });
 
   it('a segunda execução não dá erro e não muda nada', async () => {

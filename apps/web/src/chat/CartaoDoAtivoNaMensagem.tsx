@@ -11,7 +11,7 @@ import { type DataHora, Icone, Medidor, MiniaturaDeAtivo, RotuloDeSituacao } fro
 import { ArrowUpRight, CircleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useAcesso } from '../sessao/useAcesso.ts';
-import { useServidor } from '../sessao/useSessao.tsx';
+import { useNaAba, useServidor } from '../sessao/useSessao.tsx';
 import estilos from './CartaoDoAtivoNaMensagem.module.css';
 import { type CartaoDoAtivo, momentoDaEtapa } from './chamado.ts';
 import { LinkDoChat } from './LinkDoChat.tsx';
@@ -38,7 +38,9 @@ export function CartaoDoAtivoNaMensagem({
 }) {
   const { pode } = useAcesso();
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
-  const abrirAFicha = abrir ?? (pode('ativos.ver') && !desligados.includes('ativos'));
+  // No chat da aba, a ficha, que é da casca, não aparece (change aba-dos-colaboradores, decisão 8).
+  const naAba = useNaAba();
+  const abrirAFicha = !naAba && (abrir ?? (pode('ativos.ver') && !desligados.includes('ativos')));
   const { suprimento } = cartao;
   const sobre = [cartao.modelo, cartao.patrimonio].filter(Boolean).join(' · ');
   return (

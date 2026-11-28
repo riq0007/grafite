@@ -1,7 +1,8 @@
 // A consulta da auditoria (spec consulta-da-auditoria; design do F2b, decisões 12 e 13): do mais
 // recente ao mais antigo, ou ao contrário, com o cursor que não pula nem repete, os filtros, o total
 // com teto, os nomes atuais de quem fez e do alvo, e só para quem tem auditoria.ver.
-import { naOrganizacao, type Transacao } from '@grafite/db';
+import { createHash } from 'node:crypto';
+import { aparelhosDaAba, naOrganizacao, type Transacao } from '@grafite/db';
 import type { AcaoDaAuditoria } from '@grafite/domain';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -19,6 +20,7 @@ import {
   SENHA_DE_TESTE,
 } from '../../test/integracao.ts';
 import { type EventoDeAuditoria, registrarNaAuditoria } from '../auditoria.ts';
+import { executarComando } from '../comando/executar.ts';
 
 const host = 'grafite.consulta-auditoria.local';
 const BASE = new Date('2026-09-01T12:00:00.000Z').getTime();
@@ -243,6 +245,36 @@ describe('nomes, dispositivo e total', () => {
       'João Pedro da Silva',
       'João Pedro da Silva',
     ]);
+  });
+
+  it('mostra o computador da aba pelo nome e pelo identificador, com os dados daquele momento', async () => {
+    const [aparelho] = await naOrganizacao(api.banco, org, (tx) =>
+      tx
+        .insert(aparelhosDaAba)
+        .values({
+          orgId: sql`app.current_org()`,
+          identificadorDaMaquina: 'maquina-da-auditoria',
+          identificadorCurto: '7K3Q9P',
+          nome: 'PC-FIN-09',
+          tokenHash: createHash('sha256').update('token-da-auditoria').digest(),
+        })
+        .returning({ id: aparelhosDaAba.id }),
+    );
+    const codigo = await executarComando(['aba', 'bloquear', 'PC-FIN-09', '--endereco', host], {
+      banco: () => api.banco,
+      agora: api.relogio.agora,
+      escrever: () => {},
+      escreverErro: () => {},
+    });
+    expect(codigo).toBe(0);
+    const pagina = await consultar({ alvo: `aparelho-da-aba:${aparelho?.id}` });
+    expect(pagina.itens[0]).toMatchObject({
+      acao: 'aparelho-da-aba.bloqueado',
+      rotulo: 'Computador bloqueado na aba',
+      ator: { tipo: 'sistema', descricao: 'comando no servidor: aba bloquear' },
+      alvo: { tipo: 'aparelho-da-aba', nome: 'PC-FIN-09 (7K3Q9P)' },
+      dados: { computador: 'PC-FIN-09', identificador: '7K3Q9P' },
+    });
   });
 
   it('mostra quem fez como o comando no servidor ou sem sessão', async () => {

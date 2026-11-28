@@ -61,6 +61,64 @@ const TIPOS_DO_ALVO: Record<string, string> = {
   'horario-da-ti': 'Horário da TI',
   // As equipes e os canais do chat (change chat-com-chamados), que saem pelo tipo da ação.
   conversa: 'Conversa',
+  // A aba dos colaboradores (change aba-dos-colaboradores).
+  'chave-da-aba': 'Chave da aba',
+  'configuracao-da-aba': 'Configuração da aba',
+  'aparelho-da-aba': 'Computador com a aba',
+};
+
+/** A entrada e a forma da aba como o comando no servidor as escreve. */
+const ENTRADAS_DA_ABA: Record<string, string> = { windows: 'Pelo Windows', senha: 'Pela senha' };
+const FORMAS_DA_ABA: Record<string, string> = { pilula: 'Pílula', entalhe: 'Entalhe' };
+
+/** Os nomes dos campos nos registros do computador com a aba: a `pessoa` é a pedida pela aba. */
+const CAMPOS_DA_ABA: Record<string, string> = {
+  pessoa: 'Pessoa pedida',
+  sid: 'SID',
+  usuarioDoWindows: 'Usuário do Windows',
+  usuario: 'Usuário',
+  nome: 'Nome',
+  motivo: 'Motivo',
+  recusa: 'Recusa',
+  detalhe: 'Caso',
+  identificador: 'Identificador',
+  tentativa: 'Tentativa',
+};
+
+/** Os motivos da recusa e do fim da sessão da aba, e o caso de cada recusa, em pt-BR. */
+const MOTIVOS_DA_ABA: Record<string, string> = {
+  'usuario-de-fora': 'Usuário de fora da empresa',
+  'conta-local': 'Conta local do Grafite',
+  'conta-inativa': 'Conta inativa no Grafite',
+  'sem-grupo': 'Sem acesso pelo AD',
+  'ti-fora-do-alcance': 'AD fora do alcance',
+  'teto-do-aparelho': 'Teto de contas do computador',
+  'pessoa-recusada': 'Pessoa recusada na renovação',
+  'outra-sessao-no-aparelho': 'Outra sessão no computador',
+  'sem-uso': 'Sem uso',
+  'diretorio-desligado': 'Diretório desligado',
+  'sid-fora-da-forma': 'SID fora da forma',
+  'ad-fora-do-ar': 'AD fora do ar',
+  'sid-fora-do-diretorio': 'SID fora do diretório',
+  'usuario-fora-do-diretorio': 'Usuário fora do diretório',
+  'usuario-nao-serve': 'Usuário do AD que não serve no Grafite',
+  'desativada-no-ad': 'Conta desativada no AD',
+  'sem-grupo-mapeado': 'Sem grupo mapeado',
+  'outra-pessoa-no-windows': 'Outra pessoa no Windows',
+  'cadastrar-o-codigo': 'Sem o código do app cadastrado',
+  'sem-o-codigo': 'Exige o código do app, sem o ter cadastrado',
+  saida: 'Saída pela pessoa',
+  'tentativas-esgotadas': 'Códigos errados demais',
+  teto: 'Teto de contas do computador',
+  'aparelho-bloqueado': 'Computador bloqueado',
+  'encerrada-pela-administracao': 'Encerrada pela administração',
+  'encerrada-pelo-usuario': 'Encerrada pela pessoa',
+  'outras-encerradas': 'Encerrada com as outras, pela pessoa',
+  'senha-trocada': 'Senha trocada',
+  'dois-passos-ativados': 'Verificação em dois passos ativada',
+  redefinicao: 'Acesso redefinido',
+  'conta-inativada': 'Conta inativada',
+  'dois-passos-removidos': 'Verificação em dois passos removida',
 };
 
 /** O tipo da conversa do alvo pela ação: as `equipe.*` e as `canal.*`. */
@@ -78,6 +136,11 @@ const CAMPOS: Record<string, string> = {
   tipo: 'Tipo',
   situacao: 'Situação',
   usuario: 'Usuário',
+  entrada: 'Entrada',
+  tetoDeContas: 'Contas por dia',
+  forma: 'Forma',
+  computador: 'Computador',
+  primeiro: 'Primeiro registro',
   senhaTemporaria: 'Senha temporária',
   exigeDoisPassos: 'Exige verificação em dois passos',
   descricao: 'Descrição',
@@ -587,6 +650,8 @@ function textoDoValor(campo: string, valor: unknown, formatarData: (data: Date) 
       ];
     }
     if (campo === 'motivo' && valor in MOTIVOS) return MOTIVOS[valor] ?? valor;
+    if (campo === 'entrada' && valor in ENTRADAS_DA_ABA) return ENTRADAS_DA_ABA[valor] ?? valor;
+    if (campo === 'forma' && valor in FORMAS_DA_ABA) return FORMAS_DA_ABA[valor] ?? valor;
     if (/Em$|Ate$/.test(campo) && !Number.isNaN(Date.parse(valor))) {
       return formatarData(new Date(valor));
     }
@@ -630,13 +695,18 @@ export function camposDoDetalhe(
   const dosChamados = ALVOS_DOS_CHAMADOS.has(alvo);
   const doChat = alvo === 'conversa';
   const noCanal = doChat && tipoDaConversa(registro.acao) === 'Canal';
+  const daAba = alvo === 'aparelho-da-aba';
   const nome = (campo: string) => {
     if (doChat) return CAMPOS_DO_CHAT[campo] ?? nomeDoCampo(campo);
+    if (daAba) return CAMPOS_DA_ABA[campo] ?? nomeDoCampo(campo);
     if (!dosChamados) return nomeDoCampo(campo);
     if (campo === 'ordem' && LISTAS_DOS_CHAMADOS.has(alvo)) return 'Ordem';
     return CAMPOS_DOS_CHAMADOS[campo] ?? nomeDoCampo(campo);
   };
   const texto = (campo: string, valor: unknown) =>
+    (daAba && ['motivo', 'recusa', 'detalhe'].includes(campo) && typeof valor === 'string'
+      ? (MOTIVOS_DA_ABA[valor] ?? null)
+      : null) ??
     (dosChamados ? textoNosChamados(alvo, campo, valor) : null) ??
     (doChat ? textoNoChat(campo, valor, noCanal) : null) ??
     textoDoValor(campo, valor, formatarData);

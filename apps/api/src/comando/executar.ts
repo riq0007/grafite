@@ -5,6 +5,19 @@ import type { Banco } from '@grafite/db';
 import { lerFaixas } from '@grafite/domain';
 import { novoTokenDoColetor } from '../coleta/coletores.ts';
 import { CHAVE_DE_32_BYTES } from '../config.ts';
+import {
+  configurarAba,
+  dataLocal,
+  exemploDoMsi,
+  gravarChaveDaAba,
+  lerContato,
+  lerEntrada,
+  lerForma,
+  lerTeto,
+  listarAparelhos,
+  type MudancaDoAparelho,
+  mudarAparelho,
+} from './aba.ts';
 import { trocarChaveDoCofre } from './cofre.ts';
 import { criarColetorPeloComando } from './coletor.ts';
 import { criarConta, redefinirAcesso } from './conta.ts';
@@ -83,6 +96,31 @@ Comandos:
                       e-mail respondeu, sem mostrar a senha. Não abre o banco.
     --para <e-mail>             Para quem vai o e-mail de teste.
 
+  aba chave criar     Cria a chave da aba da organização e a mostra uma vez, com o exemplo das
+                      propriedades do MSI para o Intune. Recusa quando a organização já tem chave.
+  aba chave trocar    Troca a chave da aba: a anterior deixa de registrar computadores novos; os
+                      já registrados seguem com o token deles.
+    --endereco <endereço>       Um endereço de acesso da organização (em todos os comandos da aba).
+
+  aba configurar      Muda a forma e o contato de reserva que a aba mostra.
+    --forma pilula|entalhe      A forma da aba na borda da tela.
+    --contato <texto>           O contato de reserva, como "Ramal 2000, das 8h às 18h".
+    --sem-contato               Tira o contato de reserva.
+
+  aba aparelhos       Lista os computadores com a aba: o identificador, o nome, a entrada, o teto,
+                      o último contato, a versão e a situação; marca os registrados nas últimas 24 h.
+
+  aba entrada <computador> windows|senha
+                      Como as pessoas entram na aba desse computador: pelo usuário do Windows ou
+                      pelo usuário e pela senha do AD (o computador de perfil genérico).
+  aba teto <computador> <número>
+                      Quantas contas por dia entram pelo Windows nesse computador (de 1 a 500).
+  aba bloquear <computador>
+  aba desbloquear <computador>
+                      Bloqueia ou desbloqueia a aba desse computador.
+                      O computador é o nome ou o identificador de 6 caracteres do aba aparelhos;
+                      com o nome repetido, use o identificador.
+
 A conexão com o banco vem de GRAFITE_DATABASE_URL (papel grafite_app).`;
 
 const OPCOES = {
@@ -101,6 +139,9 @@ const OPCOES = {
   'token-do-ambiente': { type: 'boolean' },
   para: { type: 'string' },
   novo: { type: 'string' },
+  forma: { type: 'string' },
+  contato: { type: 'string' },
+  'sem-contato': { type: 'boolean' },
 } as const;
 
 function obrigatoria(valor: string | undefined, opcao: string): string {
@@ -353,6 +394,144 @@ async function emailTestar(
   ambiente.escrever(await testarEmail((nome) => ambiente.variavel?.(nome), para));
 }
 
+async function abaChave(lidos: ReturnType<typeof lerArgumentos>, ambiente: AmbienteDoComando) {
+  const acao = lidos.positionals[2];
+  if (acao !== 'criar' && acao !== 'trocar') throw new ErroDoComando(2, AJUDA);
+  const endereco = enderecoValido(obrigatoria(lidos.values.endereco?.[0], 'endereco'));
+  const trocar = acao === 'trocar';
+  const chave = await gravarChaveDaAba(ambiente.banco(), ambiente.agora, { endereco, trocar });
+  ambiente.escrever(
+    trocar
+      ? `Chave da aba trocada na organização do endereço ${endereco}: a anterior não registra mais computadores.`
+      : `Chave da aba criada na organização do endereço ${endereco}.`,
+  );
+  ambiente.escrever(`Chave da aba: ${chave}`);
+  ambiente.escrever(
+    'Guarde esta chave agora: ela não aparece de novo. Ela vai na propriedade GRAFITE_CHAVE do MSI, como no Intune:',
+  );
+  ambiente.escrever(`  ${exemploDoMsi(endereco, chave)}`);
+  ambiente.escrever(
+    'Com GRAFITE_ENTRADA=senha, o computador pede o usuário e a senha do AD, como no perfil genérico.',
+  );
+}
+
+async function abaConfigurar(
+  { values }: ReturnType<typeof lerArgumentos>,
+  ambiente: AmbienteDoComando,
+) {
+  const endereco = enderecoValido(obrigatoria(values.endereco?.[0], 'endereco'));
+  if (values.contato !== undefined && values['sem-contato']) {
+    throw new ErroDoComando(2, 'Use --contato ou --sem-contato, não os dois.');
+  }
+  const forma = values.forma === undefined ? undefined : lerForma(values.forma);
+  const contato = values['sem-contato']
+    ? null
+    : values.contato === undefined
+      ? undefined
+      : lerContato(values.contato);
+  if (forma === undefined && contato === undefined) {
+    throw new ErroDoComando(2, 'Diga o que muda: --forma, --contato ou --sem-contato.');
+  }
+  const feita = await configurarAba(ambiente.banco(), ambiente.agora, {
+    endereco,
+    ...(forma ? { forma } : {}),
+    ...(contato !== undefined ? { contato } : {}),
+  });
+  if (!feita.mudou) {
+    ambiente.escrever(
+      `A aba já está com a forma ${feita.forma} e ${
+        feita.contato ? `o contato "${feita.contato}"` : 'sem contato de reserva'
+      }; nada mudou.`,
+    );
+    return;
+  }
+  ambiente.escrever(
+    `Aba configurada (versão ${feita.versao}): forma ${feita.forma}, ${
+      feita.contato ? `contato "${feita.contato}"` : 'sem contato de reserva'
+    }. As abas abertas mudam em até 30 s.`,
+  );
+}
+
+const ENTRADA_ESCRITA = { windows: 'pelo Windows', senha: 'pela senha' } as const;
+
+async function abaAparelhos(
+  { values }: ReturnType<typeof lerArgumentos>,
+  ambiente: AmbienteDoComando,
+) {
+  const endereco = enderecoValido(obrigatoria(values.endereco?.[0], 'endereco'));
+  const aparelhos = await listarAparelhos(ambiente.banco(), ambiente.agora, { endereco });
+  if (aparelhos.length === 0) {
+    ambiente.escrever('Nenhum computador registrou a aba nesta organização.');
+    return;
+  }
+  for (const a of aparelhos) {
+    const partes = [
+      a.identificadorCurto,
+      a.nome,
+      `entrada ${ENTRADA_ESCRITA[a.entrada]}`,
+      ...(a.entrada === 'windows' ? [`teto ${a.tetoDeContas} por dia`] : []),
+      a.ultimoContatoEm ? `último contato ${dataLocal(a.ultimoContatoEm)}` : 'sem contato ainda',
+      a.versao ? `versão ${a.versao}` : 'versão desconhecida',
+      a.bloqueado ? 'bloqueado' : 'liberado',
+      ...(a.registro === 'novo' ? ['registrado nas últimas 24 h'] : []),
+      ...(a.registro === 'de-novo' ? ['registrado de novo nas últimas 24 h'] : []),
+    ];
+    ambiente.escrever(partes.join(' · '));
+  }
+}
+
+async function abaAparelho(
+  lidos: ReturnType<typeof lerArgumentos>,
+  ambiente: AmbienteDoComando,
+  mudanca: (valor: string | undefined) => MudancaDoAparelho,
+) {
+  const [, acao, quem, valor, ...sobra] = lidos.positionals;
+  if (!quem?.trim())
+    throw new ErroDoComando(2, `Falta o computador: grafite aba ${acao} <computador>.`);
+  const comValor = acao === 'entrada' || acao === 'teto';
+  if (sobra.length > 0 || (!comValor && valor !== undefined)) throw new ErroDoComando(2, AJUDA);
+  const endereco = enderecoValido(obrigatoria(lidos.values.endereco?.[0], 'endereco'));
+  const pedida = mudanca(valor);
+  const r = await mudarAparelho(ambiente.banco(), ambiente.agora, {
+    endereco,
+    aparelho: quem,
+    mudanca: pedida,
+  });
+  const quemE = `${r.nome} (${r.identificadorCurto})`;
+  const frase = {
+    entrada: pedida.tipo === 'entrada' ? `entra ${ENTRADA_ESCRITA[pedida.entrada]}` : '',
+    teto: pedida.tipo === 'teto' ? `tem o teto de ${pedida.teto} contas por dia` : '',
+    bloquear: 'está bloqueado',
+    desbloquear: 'está desbloqueado',
+  }[pedida.tipo];
+  ambiente.escrever(
+    r.mudou
+      ? `O computador ${quemE} agora ${frase}.`
+      : `O computador ${quemE} já ${frase}; nada mudou.`,
+  );
+}
+
+async function aba(lidos: ReturnType<typeof lerArgumentos>, ambiente: AmbienteDoComando) {
+  const acao = lidos.positionals[1];
+  switch (acao) {
+    case 'chave':
+      return abaChave(lidos, ambiente);
+    case 'configurar':
+    case 'aparelhos':
+      if (lidos.positionals.length > 2) throw new ErroDoComando(2, AJUDA);
+      return acao === 'configurar' ? abaConfigurar(lidos, ambiente) : abaAparelhos(lidos, ambiente);
+    case 'entrada':
+      return abaAparelho(lidos, ambiente, (v) => ({ tipo: 'entrada', entrada: lerEntrada(v) }));
+    case 'teto':
+      return abaAparelho(lidos, ambiente, (v) => ({ tipo: 'teto', teto: lerTeto(v) }));
+    case 'bloquear':
+    case 'desbloquear':
+      return abaAparelho(lidos, ambiente, () => ({ tipo: acao }));
+    default:
+      throw new ErroDoComando(2, AJUDA);
+  }
+}
+
 /** Executa o comando e devolve o código de saída: 0 deu certo, 1 foi recusado e 2 é uso errado. */
 export async function executarComando(
   argumentos: string[],
@@ -375,6 +554,10 @@ export async function executarComando(
       'cofre trocar-chave': cofreTrocarChave,
       'email testar': emailTestar,
     };
+    if (comando === 'aba') {
+      await aba(lidos, ambiente);
+      return 0;
+    }
     const executor = executores[`${comando} ${acao}`];
     if (executor) {
       await executor(lidos, ambiente);

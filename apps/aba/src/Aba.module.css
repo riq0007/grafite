@@ -1,0 +1,9 @@
+/* A janela da aba: a forma fica no alto e no meio, e o resto é transparente. */
+.raiz {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: var(--topo);
+}

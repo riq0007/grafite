@@ -79,6 +79,7 @@ export function SessoesDaConta({ pessoa, conta }: { pessoa: Ficha; conta: Conta 
                   { rotulo: 'Último uso', valor: formatarHorario(new Date(sessao.ultimoUsoEm)) },
                 ]}
               />
+              {sessao.aviso && <p className={estilos.informacao}>{sessao.aviso}</p>}
             </li>
           ))}
         </ul>

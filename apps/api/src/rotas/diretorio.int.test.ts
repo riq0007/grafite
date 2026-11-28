@@ -7,7 +7,6 @@ import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { AC_DE_TESTE } from '../../test/ac-de-teste.ts';
 import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
-import { CONTA_DE_SERVICO_DE_TESTE, criarAdDeTeste } from '../../test/diretorio.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -20,9 +19,10 @@ import {
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
 import { cifrarSegredo } from '../cofre/cifra.ts';
+import { CONTA_DE_SERVICO_SIMULADA, criarDiretorioSimulado } from '../diretorio/simulado.ts';
 
 const host = 'grafite.diretorio.local';
-const ad = criarAdDeTeste();
+const ad = criarDiretorioSimulado();
 let api: ApiDeTeste;
 let org = '';
 let cliente: ReturnType<typeof clienteDaApi>;
@@ -72,10 +72,10 @@ beforeAll(async () => {
   for (const usuario of ['ana', 'bruno']) entradas[usuario] = await cliente.entrar(usuario);
   ids.servico = await login(
     'Conta do Grafite no AD',
-    CONTA_DE_SERVICO_DE_TESTE.usuario,
-    CONTA_DE_SERVICO_DE_TESTE.senha,
+    CONTA_DE_SERVICO_SIMULADA.usuario,
+    CONTA_DE_SERVICO_SIMULADA.senha,
   );
-  ids.errado = await login('Conta com senha velha', CONTA_DE_SERVICO_DE_TESTE.usuario, 'velha');
+  ids.errado = await login('Conta com senha velha', CONTA_DE_SERVICO_SIMULADA.usuario, 'velha');
   ids.semUsuario = await login('Senha solta', '', 'qualquer');
   // A conta do AD cadastrada como Conta de serviço serve; a chave de API, não (change
   // conta-de-servico-no-diretorio).
@@ -141,7 +141,7 @@ describe('a configuração', () => {
       acDoServidor: null,
       ligado: true,
     });
-    expect(r.body).not.toContain(CONTA_DE_SERVICO_DE_TESTE.senha);
+    expect(r.body).not.toContain(CONTA_DE_SERVICO_SIMULADA.senha);
     const [registro] = await naOrganizacao(api.banco, org, (tx) =>
       tx.select().from(auditoria).where(eq(auditoria.acao, 'diretorio.configurado')),
     );
@@ -149,7 +149,7 @@ describe('a configuração', () => {
       contaDeServico: 'Conta do Grafite no AD',
       acDoServidor: 'sem a AC',
     });
-    expect(JSON.stringify(registro)).not.toContain(CONTA_DE_SERVICO_DE_TESTE.senha);
+    expect(JSON.stringify(registro)).not.toContain(CONTA_DE_SERVICO_SIMULADA.senha);
     const gravados = await naOrganizacao(api.banco, org, (tx) =>
       tx.select({ tipo: eventos.tipo }).from(eventos),
     );
@@ -244,7 +244,7 @@ describe('o teste da conexão', () => {
     expect(r.json()).toEqual({ ok: true, mensagem: 'Conectado: 3 usuários na base.' });
     expect(ad.estado.acessos.at(-1)).toMatchObject({
       servidor: 'ldaps://dc01.empresa.local',
-      conta: CONTA_DE_SERVICO_DE_TESTE,
+      conta: CONTA_DE_SERVICO_SIMULADA,
     });
   });
 

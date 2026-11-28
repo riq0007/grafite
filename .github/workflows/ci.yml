@@ -166,6 +166,82 @@ jobs:
           path: packages/ui/visual/test-results
           retention-days: 7
 
+  # A aba dos colaboradores (change aba-dos-colaboradores, tarefa 6.2): o workspace Cargo da aba, os
+  # exemplos do cliente em Rust contra o OpenAPI e o MSI. O MSI fica como artefato, com o nome do
+  # exemplo do `grafite aba chave` e do runbook, depois da conferência de que ele não leva endereço,
+  # chave nem token. O Rust é o fixado aqui, e não o da imagem, para o clippy não mudar sozinho.
+  aba:
+    name: A aba no Windows
+    needs: mudancas
+    if: needs.mudancas.outputs.codigo == 'true'
+    runs-on: windows-2022
+    # O MSI compila a aba e o serviço em release, com o LTO: 60 min, com folga sobre os ~10 min do
+    # primeiro run, sem o cache.
+    timeout-minutes: 60
+    env:
+      RUST_DA_ABA: '1.100.0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar
+
+      - name: O Rust fixado, com o fmt e o clippy
+        run: |
+          rustup toolchain install "$RUST_DA_ABA" --profile minimal --component rustfmt,clippy
+          rustup default "$RUST_DA_ABA"
+
+      # Só os downloads do Cargo, pelo Cargo.lock. O target, com o debug do clippy e dos testes e o
+      # release do MSI, é grande para o cache do repositório, de 10 GB para todas as branches.
+      - name: O cache do Cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-${{ runner.os }}-${{ hashFiles('apps/aba/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      # O generate_context! do Tauri embute a tela compilada, e o clippy e os testes já a pedem.
+      - name: A tela compilada, que o programa embute
+        run: pnpm --filter @grafite/aba build:tela
+
+      - name: Formatação do Rust
+        working-directory: apps/aba
+        run: cargo fmt --all --check
+
+      - name: Clippy, sem aviso
+        working-directory: apps/aba
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Testes do Rust, com os exemplos do cliente
+        working-directory: apps/aba
+        run: cargo test --workspace --locked
+
+      - name: Os exemplos do cliente em Rust contra o OpenAPI gerado
+        run: pnpm --filter @grafite/aba exec vitest run exemplos
+
+      - name: O MSI
+        run: pnpm --filter @grafite/aba build
+
+      - name: Grafite-Aba.msi, sem endereço, chave nem token
+        run: |
+          shopt -s nullglob
+          msis=(apps/aba/target/release/bundle/msi/*.msi)
+          if [ "${#msis[@]}" -ne 1 ]; then
+            echo "::error::O build devia gerar um MSI, e gerou ${#msis[@]}."
+            exit 1
+          fi
+          cp "${msis[0]}" Grafite-Aba.msi
+          node apps/aba/scripts/conferir-msi.ts Grafite-Aba.msi
+
+      - name: Guardar o MSI
+        uses: actions/upload-artifact@v7
+        with:
+          name: Grafite-Aba
+          path: Grafite-Aba.msi
+          if-no-files-found: error
+          retention-days: 30
+
   segredos:
     name: Segredos no histórico (gitleaks)
     runs-on: ubuntu-24.04

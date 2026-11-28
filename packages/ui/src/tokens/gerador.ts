@@ -418,6 +418,126 @@ export function gerarAba(tema: Pick<TemaGerado, 'tom'>): CoresDaAbaGerada {
   };
 }
 
+/**
+ * A aba do Windows (change aba-dos-colaboradores, design, decisão 9). Ela segue o tema do Windows, e
+ * não o do Grafite: o escuro, o claro e o alto contraste, que usa só as cores do sistema.
+ */
+export type TemaDoWindows = 'escuro' | 'claro' | 'altoContraste';
+
+/**
+ * As cores da aba do Windows. O azul, o texto e o âmbar são os da aba dos chamados; o que é novo:
+ * - a opção sob o mouse, o fio claro (nos dois temas) e o segundo tom do ícone e do texto secundário;
+ * - a opção larga ("Abrir chamado") e o texto dela, que no alto contraste são a seleção do sistema;
+ * - o neutro do sem conexão, no mesmo L do azul, e o texto do que fica indisponível;
+ * - o anel do foco, o fio escuro por fora, a sombra e o anel do mouse em cima.
+ */
+export interface CoresDaAbaFlutuante {
+  fundo: string;
+  fundo2: string;
+  bloco: string;
+  blocoSobMouse: string;
+  texto: string;
+  segundoTom: string;
+  contorno: string;
+  opcaoLarga: string;
+  sobreOpcaoLarga: string;
+  atencao: string;
+  sobreAtencao: string;
+  neutro: string;
+  neutro2: string;
+  neutroBloco: string;
+  neutroContorno: string;
+  textoIndisponivel: string;
+  foco: string;
+  fioEscuro: string;
+  sombra: string;
+  anel: string;
+}
+
+/** A luminosidade e o croma do que a aba do Windows traz de novo, como no `aba3.css` do mockup. */
+export const LUZ_DA_ABA_FLUTUANTE = {
+  blocoSobMouse: { l: 0.52, c: 0.165 },
+  segundoTom: { l: 0.975, c: 0.025 },
+  neutro: { l: 0.42, c: 0.018 },
+  neutro2: { l: 0.34, c: 0.014 },
+  neutroBloco: { l: 0.49, c: 0.02 },
+  neutroContorno: { l: 0.8, c: 0.014 },
+} as const;
+
+/**
+ * O fio escuro por fora e a sombra: no Windows escuro, o azul quase preto do texto sobre a
+ * informação; no claro, uma tinta do texto do Papel. O anel do mouse em cima é o fio claro no
+ * escuro e o azul no claro.
+ */
+export const SOMBRA_DA_ABA_FLUTUANTE = {
+  escuro: { cor: { l: 0.17, c: 0.03 }, fio: 0.85, sombra: 0.62, anel: 0.28 },
+  claro: { cor: { l: 0.18, c: 0.009, h: 85 }, fio: 0.62, sombra: 0.3, anel: 0.34 },
+} as const;
+
+/**
+ * No alto contraste, só as cores do sistema: o fundo é o `Canvas`, o texto e o fio são o
+ * `CanvasText`, a opção larga e o aviso são a seleção, o indisponível é o `GrayText` e o foco é o
+ * `LinkText`, o amarelo do Alto Contraste Preto do mockup. Sem sombra nem anel.
+ */
+export const ABA_FLUTUANTE_NO_ALTO_CONTRASTE: CoresDaAbaFlutuante = {
+  fundo: 'Canvas',
+  fundo2: 'Canvas',
+  bloco: 'Canvas',
+  blocoSobMouse: 'Canvas',
+  texto: 'CanvasText',
+  segundoTom: 'CanvasText',
+  contorno: 'CanvasText',
+  opcaoLarga: 'Highlight',
+  sobreOpcaoLarga: 'HighlightText',
+  atencao: 'Highlight',
+  sobreAtencao: 'HighlightText',
+  neutro: 'Canvas',
+  neutro2: 'Canvas',
+  neutroBloco: 'Canvas',
+  neutroContorno: 'CanvasText',
+  textoIndisponivel: 'GrayText',
+  foco: 'LinkText',
+  fioEscuro: 'Canvas',
+  sombra: 'transparent',
+  anel: 'transparent',
+};
+
+export function gerarAbaFlutuante(tema: TemaDoWindows): CoresDaAbaFlutuante {
+  if (tema === 'altoContraste') return ABA_FLUTUANTE_NO_ALTO_CONTRASTE;
+  const info = MATIZES_DAS_SITUACOES.info.matiz;
+  const atencao = MATIZES_DAS_SITUACOES.atencao.matiz;
+  const na = (luz: { l: number; c: number }, matiz = info) =>
+    oklchParaHexCortando({ ...luz, h: matiz });
+  const fundo = na(LUZ_DA_ABA.fundo);
+  const fundo2 = na(LUZ_DA_ABA.fundo2);
+  const texto = na(LUZ_DA_ABA.texto);
+  const contorno = na(LUZ_DA_ABA.contorno);
+  const sombra = SOMBRA_DA_ABA_FLUTUANTE[tema];
+  const escura = oklchParaHexCortando({ h: info, ...sombra.cor });
+  return {
+    fundo,
+    fundo2,
+    bloco: na(LUZ_DA_ABA.bloco),
+    blocoSobMouse: na(LUZ_DA_ABA_FLUTUANTE.blocoSobMouse),
+    texto,
+    segundoTom: na(LUZ_DA_ABA_FLUTUANTE.segundoTom),
+    contorno,
+    opcaoLarga: texto,
+    sobreOpcaoLarga: fundo2,
+    atencao: na(LUZ_DA_ABA.atencao, atencao),
+    sobreAtencao: na(LUZ_DA_ABA.sobreAtencao, atencao),
+    neutro: na(LUZ_DA_ABA_FLUTUANTE.neutro),
+    neutro2: na(LUZ_DA_ABA_FLUTUANTE.neutro2),
+    neutroBloco: na(LUZ_DA_ABA_FLUTUANTE.neutroBloco),
+    neutroContorno: na(LUZ_DA_ABA_FLUTUANTE.neutroContorno),
+    textoIndisponivel: texto,
+    foco: texto,
+    fioEscuro: comAlfa(escura, sombra.fio),
+    sombra: comAlfa(escura, sombra.sombra),
+    anel: comAlfa(tema === 'escuro' ? contorno : fundo, sombra.anel),
+  };
+}
+
 /** Matizes das séries, numa ordem que alterna o quente e o frio (decisão 8). */
 export const MATIZES_DAS_SERIES = [258, 55, 175, 340, 125, 25, 210, 85] as const;
 

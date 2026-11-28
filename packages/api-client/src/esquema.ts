@@ -259,6 +259,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessao/bilhete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trocar o bilhete da aba pela sessão do chat na aba */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDoBilheteInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoPeloBilhete"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessao/segundo-passo": {
         parameters: {
             query?: never;
@@ -31123,6 +31208,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/chamados/{numero}/aberta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A conversa do chamado apareceu na tela: tira a resposta por ver, e não a nova */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    numero: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/chamados/{numero}/resumo": {
         parameters: {
             query?: never;
@@ -38565,6 +38731,704 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aba/aparelho": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registrar o computador na aba, com a chave da organização */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeRegistroDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RegistroDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/configuracao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A configuração da aba deste computador: a forma, o contato e a entrada */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConfiguracaoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/sessao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir a sessão da aba, pelo Windows ou pela senha, com o token do aparelho */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDaSessaoDaAbaInput"] | components["schemas"]["PedidoDaSessaoDaAbaPelaSenhaInput"] | components["schemas"]["PedidoDoCodigoDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoDaAba"] | components["schemas"]["FaltaOCodigoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        /** Sair da aba: encerra a sessão da aba no servidor */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/sessao/renovar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Renovar a sessão da aba, conferindo a pessoa de novo */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PedidoDeRenovacaoDaSessaoDaAbaInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RenovacaoDaSessaoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/bilhete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pedir o bilhete que leva o chat da aba à sessão dele, por 60 s e uma vez só */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DestinoDoBilheteInput"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BilheteDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/uso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O uso da aba ou da tela maior com o foco, no máximo uma vez por minuto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O estado da aba: as não lidas, as respostas novas e a versão da configuração */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EstadoDaAba"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/aba/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conexão de eventos da aba, em text/event-stream */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description O fluxo dos eventos da aba, com o sinal de vida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/event-stream": string;
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Problema"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -39362,6 +40226,14 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        DestinoDoBilheteInput: {
+            /** @constant */
+            destino: "chat";
+        } | {
+            /** @constant */
+            destino: "chamado";
+            numero: number;
+        };
         AcessoDaSessaoInput: {
             permissoes: {
                 /** @enum {string} */
@@ -39394,14 +40266,67 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
         };
         PedidoDeEntradaInput: {
             usuario: string;
             senha: string;
+            aba?: string;
         };
-        AdministradoresDoAcessoInput: {
-            administradores: string[];
+        PedidoDoBilheteInput: {
+            bilhete: string;
+        };
+        SessaoPeloBilheteInput: {
+            /** @enum {string} */
+            ambiente: "desenvolvimento" | "teste" | "producao";
+            organizacao: {
+                nome: string;
+                preferencias: components["schemas"]["AjustesDasPreferenciasInput"];
+                operaOServidor: boolean;
+                modulosDesligados: string[];
+            };
+            sessao: {
+                conta: {
+                    id: string | null;
+                    usuario: string;
+                    nome: string;
+                    pessoaId: string | null;
+                    foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                    preferencias: components["schemas"]["AjustesDasPreferenciasInput"] | null;
+                };
+                pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
+                csrf: string;
+                /** Format: date-time */
+                expiraEm: string;
+                acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
+            } | null;
+            destino: components["schemas"]["DestinoDoBilheteInput"];
+        };
+        PedidoDeRegistroDaAbaInput: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAbaInput: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAbaInput: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         ConsumivelCompativelInput: {
             /** Format: uuid */
@@ -39413,6 +40338,105 @@ export interface components {
             cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
             rendimento: number | null;
             saldo: number | null;
+        };
+        ContaDoChatInput: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoaInput"] | null;
+        };
+        ConversaNaListaInput: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChatInput"] | null;
+        };
+        ListaDoChatInput: {
+            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
+            recentes: components["schemas"]["ConversaNaListaInput"][];
+        };
+        ResumoDoChatInput: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChatInput: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoaInput"] | null;
+                conversa: string | null;
+            }[];
+        };
+        EstadoDaAbaInput: {
+            naoLidas: number | null;
+            respostasNovas: number | null;
+            porVer: {
+                quantas: number;
+                ultima: {
+                    quem: string;
+                    numero: number;
+                    titulo: string;
+                    /** Format: date-time */
+                    momento: string;
+                } | null;
+            } | null;
+            versaoDaConfiguracao: number;
+        };
+        PedidoDaSessaoDaAbaInput: {
+            /** @constant */
+            entrada: "windows";
+            sid: string;
+            usuarioDoWindows?: string;
+        };
+        PedidoDaSessaoDaAbaPelaSenhaInput: {
+            /** @constant */
+            entrada: "senha";
+            usuario: string;
+            senha: string;
+        };
+        PedidoDoCodigoDaAbaInput: {
+            /** @constant */
+            entrada: "senha";
+            pendente: string;
+            codigo: string;
+        };
+        SessaoDaAbaInput: {
+            token: string;
+            /** Format: date-time */
+            expiraEm: string;
+            pessoa: {
+                nome: string;
+            };
+        };
+        FaltaOCodigoDaAbaInput: {
+            /** @constant */
+            faltaOCodigo: true;
+            pendente: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        PedidoDeRenovacaoDaSessaoDaAbaInput: {
+            sid?: string;
+        };
+        RenovacaoDaSessaoDaAbaInput: {
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        BilheteDaAbaInput: {
+            bilhete: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        AdministradoresDoAcessoInput: {
+            administradores: string[];
         };
         AgenteDoGlpiInput: {
             /** Format: uuid */
@@ -40239,6 +41263,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -40610,13 +41635,6 @@ export interface components {
                     valor: boolean;
                 })[];
             }[];
-        };
-        ContaDoChatInput: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoaInput"] | null;
         };
         CartaoDoAtivoInput: {
             /** Format: uuid */
@@ -41989,35 +43007,6 @@ export interface components {
             pedeOAtivo: boolean;
             abertos: number;
         };
-        ConversaNaListaInput: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            tipo: "direta" | "equipe" | "canal";
-            nome: string;
-            naoLidas: number;
-            silenciada: boolean;
-            ultimaMensagemEm: string | null;
-            outra: components["schemas"]["ContaDoChatInput"] | null;
-        };
-        ListaDoChatInput: {
-            equipesECanais: components["schemas"]["ConversaNaListaInput"][];
-            recentes: components["schemas"]["ConversaNaListaInput"][];
-        };
-        ResumoDoChatInput: {
-            naoLidas: number;
-            chamadosComRespostaNova: number | null;
-        };
-        PessoasDoChatInput: {
-            pessoas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-                daTi: boolean;
-                foto: components["schemas"]["FotoDaPessoaInput"] | null;
-                conversa: string | null;
-            }[];
-        };
         AnexoDaMensagemInput: {
             /** Format: uuid */
             id: string;
@@ -42629,6 +43618,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             sessoesEncerradas: number;
         };
@@ -42940,6 +43930,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             codigosDeRecuperacao: string[];
             sessoesEncerradas: number;
@@ -44091,6 +45082,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessaoInput"];
+                naAba: boolean;
             } | null;
             codigosRestantes?: number;
         };
@@ -44098,6 +45090,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -45288,6 +46281,14 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        DestinoDoBilhete: {
+            /** @constant */
+            destino: "chat";
+        } | {
+            /** @constant */
+            destino: "chamado";
+            numero: number;
+        };
         AcessoDaSessao: {
             permissoes: {
                 /** @enum {string} */
@@ -45320,14 +46321,67 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
         };
         PedidoDeEntrada: {
             usuario: string;
             senha: string;
+            aba?: string;
         };
-        AdministradoresDoAcesso: {
-            administradores: string[];
+        PedidoDoBilhete: {
+            bilhete: string;
+        };
+        SessaoPeloBilhete: {
+            /** @enum {string} */
+            ambiente: "desenvolvimento" | "teste" | "producao";
+            organizacao: {
+                nome: string;
+                preferencias: components["schemas"]["AjustesDasPreferencias"];
+                operaOServidor: boolean;
+                modulosDesligados: string[];
+            };
+            sessao: {
+                conta: {
+                    id: string | null;
+                    usuario: string;
+                    nome: string;
+                    pessoaId: string | null;
+                    foto: components["schemas"]["FotoDaPessoa"] | null;
+                    preferencias: components["schemas"]["AjustesDasPreferencias"] | null;
+                };
+                pendencia: ("segundo-passo" | "trocar-senha" | "cadastrar-dois-passos") | null;
+                diasDeConfianca: number | null;
+                csrf: string;
+                /** Format: date-time */
+                expiraEm: string;
+                acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
+            } | null;
+            destino: components["schemas"]["DestinoDoBilhete"];
+        };
+        PedidoDeRegistroDaAba: {
+            chave: string;
+            identificadorDaMaquina: string;
+            nome: string;
+            versao?: string;
+            /** @enum {string} */
+            entradaSugerida?: "windows" | "senha";
+        };
+        RegistroDaAba: {
+            token: string;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            identificadorCurto: string;
+        };
+        ConfiguracaoDaAba: {
+            /** @enum {string} */
+            forma: "pilula" | "entalhe";
+            contato: string | null;
+            /** @enum {string} */
+            entrada: "windows" | "senha";
+            versao: number;
+            proximaEm: number;
         };
         ConsumivelCompativel: {
             /** Format: uuid */
@@ -45339,6 +46393,105 @@ export interface components {
             cor: ("preto" | "ciano" | "magenta" | "amarelo" | "colorido") | null;
             rendimento: number | null;
             saldo: number | null;
+        };
+        ContaDoChat: {
+            /** Format: uuid */
+            conta: string;
+            nome: string;
+            daTi: boolean;
+            foto: components["schemas"]["FotoDaPessoa"] | null;
+        };
+        ConversaNaLista: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "direta" | "equipe" | "canal";
+            nome: string;
+            naoLidas: number;
+            silenciada: boolean;
+            ultimaMensagemEm: string | null;
+            outra: components["schemas"]["ContaDoChat"] | null;
+        };
+        ListaDoChat: {
+            equipesECanais: components["schemas"]["ConversaNaLista"][];
+            recentes: components["schemas"]["ConversaNaLista"][];
+        };
+        ResumoDoChat: {
+            naoLidas: number;
+            chamadosComRespostaNova: number | null;
+        };
+        PessoasDoChat: {
+            pessoas: {
+                /** Format: uuid */
+                conta: string;
+                nome: string;
+                daTi: boolean;
+                foto: components["schemas"]["FotoDaPessoa"] | null;
+                conversa: string | null;
+            }[];
+        };
+        EstadoDaAba: {
+            naoLidas: number | null;
+            respostasNovas: number | null;
+            porVer: {
+                quantas: number;
+                ultima: {
+                    quem: string;
+                    numero: number;
+                    titulo: string;
+                    /** Format: date-time */
+                    momento: string;
+                } | null;
+            } | null;
+            versaoDaConfiguracao: number;
+        };
+        PedidoDaSessaoDaAba: {
+            /** @constant */
+            entrada: "windows";
+            sid: string;
+            usuarioDoWindows?: string;
+        };
+        PedidoDaSessaoDaAbaPelaSenha: {
+            /** @constant */
+            entrada: "senha";
+            usuario: string;
+            senha: string;
+        };
+        PedidoDoCodigoDaAba: {
+            /** @constant */
+            entrada: "senha";
+            pendente: string;
+            codigo: string;
+        };
+        SessaoDaAba: {
+            token: string;
+            /** Format: date-time */
+            expiraEm: string;
+            pessoa: {
+                nome: string;
+            };
+        };
+        FaltaOCodigoDaAba: {
+            /** @constant */
+            faltaOCodigo: true;
+            pendente: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        PedidoDeRenovacaoDaSessaoDaAba: {
+            sid?: string;
+        };
+        RenovacaoDaSessaoDaAba: {
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        BilheteDaAba: {
+            bilhete: string;
+            /** Format: date-time */
+            expiraEm: string;
+        };
+        AdministradoresDoAcesso: {
+            administradores: string[];
         };
         AgenteDoGlpi: {
             /** Format: uuid */
@@ -46165,6 +47318,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;
@@ -46537,13 +47691,6 @@ export interface components {
                     valor: boolean;
                 })[];
             }[];
-        };
-        ContaDoChat: {
-            /** Format: uuid */
-            conta: string;
-            nome: string;
-            daTi: boolean;
-            foto: components["schemas"]["FotoDaPessoa"] | null;
         };
         CartaoDoAtivo: {
             /** Format: uuid */
@@ -47916,35 +49063,6 @@ export interface components {
             pedeOAtivo: boolean;
             abertos: number;
         };
-        ConversaNaLista: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            tipo: "direta" | "equipe" | "canal";
-            nome: string;
-            naoLidas: number;
-            silenciada: boolean;
-            ultimaMensagemEm: string | null;
-            outra: components["schemas"]["ContaDoChat"] | null;
-        };
-        ListaDoChat: {
-            equipesECanais: components["schemas"]["ConversaNaLista"][];
-            recentes: components["schemas"]["ConversaNaLista"][];
-        };
-        ResumoDoChat: {
-            naoLidas: number;
-            chamadosComRespostaNova: number | null;
-        };
-        PessoasDoChat: {
-            pessoas: {
-                /** Format: uuid */
-                conta: string;
-                nome: string;
-                daTi: boolean;
-                foto: components["schemas"]["FotoDaPessoa"] | null;
-                conversa: string | null;
-            }[];
-        };
         AnexoDaMensagem: {
             /** Format: uuid */
             id: string;
@@ -48556,6 +49674,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             sessoesEncerradas: number;
         };
@@ -48867,6 +49986,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             codigosDeRecuperacao: string[];
             sessoesEncerradas: number;
@@ -50018,6 +51138,7 @@ export interface components {
                 /** Format: date-time */
                 expiraEm: string;
                 acesso: components["schemas"]["AcessoDaSessao"];
+                naAba: boolean;
             } | null;
             codigosRestantes?: number;
         };
@@ -50025,6 +51146,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             dispositivo: string;
+            aviso: string | null;
             ip: string | null;
             /** Format: date-time */
             criadaEm: string;

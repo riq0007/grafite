@@ -7,6 +7,8 @@ import { type FalhaDoPedido, pedir as pedirAApi, type RespostaDaApi } from '../a
 import { vigiarInteracao } from '../api/segundoPlano.ts';
 
 type EstadoDaApi = components['schemas']['EstadoDaSessao'];
+/** Para onde o bilhete da aba leva o chat (change aba-dos-colaboradores, decisão 8). */
+export type DestinoDoBilhete = components['schemas']['DestinoDoBilhete'];
 type SessaoDaApi = NonNullable<EstadoDaApi['sessao']>;
 
 /** O passo que falta para a sessão valer, como a API o diz. */
@@ -36,6 +38,11 @@ interface DadosDaSessao {
   csrf: string;
   expiraEm: string;
   acesso: AcessoDaSessao;
+  /**
+   * A sessão do chat na aba (change aba-dos-colaboradores, decisão 8): o chat esconde o que leva à
+   * casca, o "Andamento", os avisos e o menu da conta, que pedem rotas fora do alcance dela.
+   */
+  naAba: boolean;
 }
 
 export type EstadoDaSessao =
@@ -105,6 +112,8 @@ export interface LojaDaSessao {
   /** Consulta a sessão no servidor, esperando no máximo 5 s; nunca falha. */
   validar(): Promise<void>;
   entrar(credenciais: { usuario: string; senha: string }): Promise<{ ok: true } | Recusa>;
+  /** Troca o bilhete da aba pela sessão do chat na aba e diz para onde ele leva. */
+  entrarPeloBilhete(bilhete: string): Promise<{ ok: true; destino: DestinoDoBilhete } | Recusa>;
   /** O código do app ou de recuperação; com o de recuperação, diz quantos restam. */
   /** Manda o código; com `confiar`, o navegador fica como aparelho confiável. */
   mandarCodigo(
@@ -132,6 +141,11 @@ export interface OpcoesDaLoja {
   estado?: EstadoDaSessao;
   /** O que o servidor diz de si, nos testes que abrem o app depois da chegada. */
   servidor?: ServidorDaSessao;
+  /**
+   * A marca da aba, da página de entrada do chat aberta por ela (`/chat/entrar?aba=<id>`): a entrada
+   * a leva, e a sessão nasce no alcance do chat da aba.
+   */
+  marcaDaAba?: string;
 }
 
 type Pedido<T> = { dados: T } | { recusa: Recusa; codigo: string | null };
@@ -143,6 +157,7 @@ export function criarLojaDaSessao({
   buscar,
   estado: inicial = { tipo: 'validando' },
   servidor: servidorInicial,
+  marcaDaAba,
 }: OpcoesDaLoja = {}): LojaDaSessao {
   let estado = inicial;
   /** O usuário da última sessão que valeu nesta página: a casca, se montada, é dele. */
@@ -239,8 +254,8 @@ export function criarLojaDaSessao({
     guardarServidor(dadosDaApi);
     padroes = (preferencias ?? {}) as AjustesDasPreferencias;
     if (!sessao) return definir(semSessao(nome));
-    const { conta, pendencia, csrf, expiraEm, acesso, diasDeConfianca } = sessao;
-    const dados = { organizacao: nome, conta, csrf, expiraEm, acesso };
+    const { conta, pendencia, csrf, expiraEm, acesso, diasDeConfianca, naAba } = sessao;
+    const dados = { organizacao: nome, conta, csrf, expiraEm, acesso, naAba };
     if (pendencia) {
       // O cadastro que surge com a casca aberta da mesma conta diz por que apareceu.
       const surgiu =
@@ -350,10 +365,21 @@ export function criarLojaDaSessao({
     validar,
 
     async entrar(credenciais) {
-      const pedido = await pedir(() => cliente.POST('/sessao', { body: credenciais }), 'entrar');
+      const corpo = marcaDaAba ? { ...credenciais, aba: marcaDaAba } : credenciais;
+      const pedido = await pedir(() => cliente.POST('/sessao', { body: corpo }), 'entrar');
       if ('recusa' in pedido) return pedido.recusa;
       aplicar(pedido.dados);
       return { ok: true };
+    },
+
+    async entrarPeloBilhete(bilhete) {
+      const pedido = await pedir(
+        () => cliente.POST('/sessao/bilhete', { body: { bilhete } }),
+        'abrir o chat',
+      );
+      if ('recusa' in pedido) return pedido.recusa;
+      aplicar(pedido.dados);
+      return { ok: true, destino: pedido.dados.destino };
     },
 
     async mandarCodigo(codigo, { confiar } = { confiar: false }) {
@@ -394,7 +420,7 @@ export function criarLojaDaSessao({
       if ('recusa' in pedido) return pedido.recusa;
       const { organizacao, sessao, codigosDeRecuperacao: codigos } = pedido.dados;
       if (naEntrada && sessao && !sessao.pendencia) {
-        const { conta, csrf, expiraEm, acesso } = sessao;
+        const { conta, csrf, expiraEm, acesso, naAba } = sessao;
         padroes = (organizacao.preferencias ?? {}) as AjustesDasPreferencias;
         guardarServidor(pedido.dados);
         definir({
@@ -406,6 +432,7 @@ export function criarLojaDaSessao({
           csrf,
           expiraEm,
           acesso,
+          naAba,
         });
       } else {
         aplicar(pedido.dados);
@@ -415,8 +442,8 @@ export function criarLojaDaSessao({
 
     continuar() {
       if (estado.tipo !== 'pendente' || estado.pendencia !== 'guardar-codigos') return;
-      const { organizacao, conta, csrf, expiraEm, acesso } = estado;
-      ativa({ organizacao, conta, csrf, expiraEm, acesso });
+      const { organizacao, conta, csrf, expiraEm, acesso, naAba } = estado;
+      ativa({ organizacao, conta, csrf, expiraEm, acesso, naAba });
     },
 
     async sair() {

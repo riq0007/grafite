@@ -380,6 +380,7 @@ export async function simularChat(pagina: Page) {
   const pedidos: PedidoDeMensagem[] = [];
   const aberturas: PedidoDeAbertura[] = [];
   const andamentos: PedidoDoAndamento[] = [];
+  const aberturasDaConversa: number[] = [];
   /** O número do próximo chamado aberto de mensagens. */
   let proximoChamado = 1050;
 
@@ -561,6 +562,10 @@ export async function simularChat(pagina: Page) {
       conversa.respostaNova = { quantas: 0, desde: null };
       return rota.fulfill({ json: conversa });
     }
+    if (parte === 'aberta' && metodo === 'POST') {
+      aberturasDaConversa.push(Number(numero));
+      return rota.fulfill({ status: 204 });
+    }
     return rota.fallback();
   });
 
@@ -630,6 +635,24 @@ export async function simularChat(pagina: Page) {
     aberturas,
     /** As ações do "Andamento" que a API aceitou, na ordem. */
     andamentos,
+    /** As aberturas da conversa de um chamado que o chat gravou, pelo número, na ordem. */
+    aberturasDaConversa,
+    /** A TI escreve no chamado: a mensagem entra no fim da conversa dele. */
+    respostaDaTi: (numero: number, texto: string) => {
+      const conversa = conversasDosChamados.get(numero);
+      if (!conversa) throw new Error(`Nenhum chamado #${numero}.`);
+      conversa.conversa.push({
+        especie: 'mensagem',
+        id: novoId(),
+        em: new Date().toISOString(),
+        autor: DA_TI,
+        texto,
+        anexos: [],
+        opcoes: null,
+        escolhida: null,
+        cartao: null,
+      });
+    },
     /** A mensagem da conversa, por um trecho, vira o chamado por outra conta. */
     virouChamado: (conversa: string, trecho: string, numero: number) => {
       const alvo = conversas[conversa]?.mensagens.find(({ texto }) => texto?.includes(trecho));

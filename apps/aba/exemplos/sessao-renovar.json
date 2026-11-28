@@ -1,0 +1,25 @@
+{
+  "rota": "POST /aba/sessao/renovar",
+  "pedidos": {
+    "renovacao": {
+      "sid": "S-1-5-21-1004336348-1177238915-682003330-1001"
+    }
+  },
+  "respostas": {
+    "200": {
+      "renovada": {
+        "expiraEm": "2026-11-28T20:00:00.000Z"
+      }
+    },
+    "401": {
+      "sessao-encerrada": {
+        "type": "urn:grafite:problema:sessao-da-aba-recusada",
+        "title": "Sessão da aba terminada",
+        "status": 401,
+        "detail": "A sessão da aba terminou.",
+        "codigoDeRastreio": "R7K2-9QXM",
+        "motivoDoFim": "sem-uso"
+      }
+    }
+  }
+}

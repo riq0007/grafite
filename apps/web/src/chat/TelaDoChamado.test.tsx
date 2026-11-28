@@ -320,3 +320,80 @@ const paraQuemAtende = (numero: number): Notificacao => ({
   titulo: `Fernanda Rocha respondeu o #${numero}`,
   destino: `/chamados/${numero}`,
 });
+
+describe('a abertura da conversa gravada', () => {
+  // Spec modulo-chat, "Abertura do chamado gravada pelo chat" (change aba-dos-colaboradores, tarefa
+  // 4.2): a conversa que aparece à vista grava a abertura, e de novo a mensagem de outra pessoa que
+  // chega com ela à vista; a lida sem o foco, não.
+  const EU = { nome: 'Ana Souza', daTi: false, minha: true };
+  const minha = (n: number, texto: string): ItemDaConversa => ({
+    especie: 'mensagem',
+    id: id(n),
+    em: EM,
+    autor: EU,
+    texto,
+    anexos: [],
+    opcoes: null,
+    escolhida: null,
+    cartao: null,
+  });
+
+  it('à vista, grava ao aparecer e na mensagem da TI que chega, e não na que a conta manda', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    const canal = criarCanalDeEventos();
+    let do1045 = conversa(1045, IMPRESSORA_MANCHANDO, {
+      conversa: [mensagem(1, 'Vou olhar a impressora.')],
+    });
+    const aberturas: number[] = [];
+    abrirOChat(
+      '/chat/chamados/1045',
+      comOChat({
+        'GET /api/chat/chamados/1045': () => Response.json(do1045),
+        'POST /api/chat/chamados/1045/aberta': () => {
+          aberturas.push(1045);
+          return new Response(null, { status: 204 });
+        },
+      }),
+      { canal },
+    );
+    expect(await screen.findByText('Vou olhar a impressora.')).toBeTruthy();
+    await waitFor(() => expect(aberturas).toEqual([1045]));
+
+    do1045 = { ...do1045, conversa: [...do1045.conversa, minha(2, 'A bandeja 2 também mancha.')] };
+    act(() => canal.publicar(mudou('chamados.mudaram')));
+    expect(await screen.findByText('A bandeja 2 também mancha.')).toBeTruthy();
+
+    do1045 = { ...do1045, conversa: [...do1045.conversa, mensagem(3, 'Já troquei o toner.')] };
+    act(() => canal.publicar(mudou('chamados.mudaram')));
+    expect(await screen.findByText('Já troquei o toner.')).toBeTruthy();
+    await waitFor(() => expect(aberturas).toEqual([1045, 1045]));
+  });
+
+  it('lida sem o foco, não grava; com o foco de volta, grava', async () => {
+    const foco = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    const aberturas: number[] = [];
+    abrirOChat(
+      '/chat/chamados/1045',
+      comOChat({
+        'GET /api/chat/chamados/1045': () =>
+          Response.json(
+            conversa(1045, IMPRESSORA_MANCHANDO, {
+              conversa: [mensagem(1, 'Vou olhar a impressora.')],
+            }),
+          ),
+        'POST /api/chat/chamados/1045/aberta': () => {
+          aberturas.push(1045);
+          return new Response(null, { status: 204 });
+        },
+      }),
+    );
+    expect(await screen.findByText('Vou olhar a impressora.')).toBeTruthy();
+    expect(aberturas).toEqual([]);
+
+    foco.mockReturnValue(true);
+    act(() => {
+      window.dispatchEvent(new FocusEvent('focus'));
+    });
+    await waitFor(() => expect(aberturas).toEqual([1045]));
+  });
+});

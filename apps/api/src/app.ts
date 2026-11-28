@@ -16,6 +16,7 @@ import {
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { z } from 'zod';
+import { instalarAba } from './aba/escopo.ts';
 import { carregarAcesso, carregarGrupos } from './acesso/acesso.ts';
 import { instalarAcesso } from './acesso/escopo.ts';
 import { exigirModuloLigado } from './acesso/modulos.ts';
@@ -47,6 +48,9 @@ import {
 import { criarPonteDosPaineis } from './paineis/ponte.ts';
 import { gerarCodigoDeRastreio, registrarProblemas } from './problemas.ts';
 import { registrarLimiteDeRequisicoes } from './protecao.ts';
+import { rotasDaAba } from './rotas/aba.ts';
+import { type IntervalosDosEventosDaAba, rotasDoEstadoDaAba } from './rotas/aba-estado.ts';
+import { rotasDaSessaoDaAba } from './rotas/aba-sessao.ts';
 import { rotasDoAcesso } from './rotas/acesso.ts';
 import { rotasDoAcessoRemoto } from './rotas/acesso-remoto.ts';
 import { rotasDosAgentes } from './rotas/agentes.ts';
@@ -165,6 +169,8 @@ export interface Dependencias {
   conectarOuvinte?: () => pg.Client;
   /** Os intervalos da conexão de eventos, menores nos testes. */
   intervalosDosEventos?: Partial<IntervalosDosEventos>;
+  /** Os intervalos da conexão de eventos da aba, menores nos testes. */
+  intervalosDosEventosDaAba?: Partial<IntervalosDosEventosDaAba>;
   /** O prazo da primeira resposta da máquina no acesso remoto, em ms (padrão: 10 s), menor nos testes. */
   prazoDoAcessoRemoto?: number;
   /** Quem conecta ao diretório da organização (padrão: o ldapts); os testes usam um AD em memória. */
@@ -216,6 +222,7 @@ export async function criarApp({
   canais = {},
   conectarOuvinte,
   intervalosDosEventos,
+  intervalosDosEventosDaAba,
   prazoDoAcessoRemoto,
   conectarDiretorio = conectarPeloLdap,
   acordarAgente = acordarPeloHttp,
@@ -504,6 +511,25 @@ export async function criarApp({
   await app.register(async (escopo) => {
     instalarColeta(escopo, { banco, agora, resolver, organizacaoOperadora });
     await escopo.register(rotasDaColeta, { banco, agora, chavesDoCofre, armazenamento });
+  });
+  // As rotas do serviço da aba (change aba-dos-colaboradores, design, decisão 3): a organização pelo
+  // endereço e o aparelho pelo token, fora da sessão e da proteção contra outros sites.
+  await app.register(async (escopo) => {
+    instalarAba(escopo, { banco, agora, resolver, organizacaoOperadora });
+    await escopo.register(rotasDaAba, { banco, agora });
+    await escopo.register(rotasDaSessaoDaAba, {
+      banco,
+      agora,
+      chaveDoisPassos,
+      conferirDeEngano,
+      diretorio: { chavesDoCofre, conectar: conectarDiretorio },
+    });
+    await escopo.register(rotasDoEstadoDaAba, {
+      banco,
+      agora,
+      distribuidor,
+      intervalos: intervalosDosEventosDaAba,
+    });
   });
   // O agente do GLPI (change inventario-pelo-agente-glpi): o protocolo dele, pelo token do caminho.
   await instalarAgentesDoGlpi(app, { banco, agora, resolver, armazenamento, organizacaoOperadora });

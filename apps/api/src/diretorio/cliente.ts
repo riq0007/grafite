@@ -24,6 +24,8 @@ export interface GrupoDoDiretorio {
 
 /** A configuração do diretório com a conta de serviço já aberta do Cofre. */
 export interface AcessoAoDiretorio {
+  /** A organização dona da configuração, que o diretório de desenvolvimento confere. */
+  orgId: string;
   servidor: string;
   baseDn: string;
   atributoDoUsuario: string;
@@ -39,6 +41,16 @@ export interface ClienteDoDiretorio {
   contarUsuarios(limite: number): Promise<number>;
   /** O usuário com a senha conferida no AD, ou `null` sem o usuário ou com a senha errada. */
   autenticar(usuario: string, senha: string): Promise<UsuarioDoDiretorio | null>;
+  /**
+   * O usuário com o `objectSid` dado, em texto (`S-1-5-…`), dentro da base e do filtro das pessoas,
+   * ou `null` sem ele (change aba-dos-colaboradores, design, decisão 4).
+   */
+  buscarPeloSid(sid: string): Promise<UsuarioDoDiretorio | null>;
+  /**
+   * O usuário pelo atributo do usuário, sem a senha, dentro da base e do filtro das pessoas, ou
+   * `null` sem ele ou com mais de um: a renovação da sessão da aba pela senha (decisão 2).
+   */
+  buscarPeloUsuario(usuario: string): Promise<UsuarioDoDiretorio | null>;
   buscarUsuarios(termo: string, limite: number): Promise<UsuarioDoDiretorio[]>;
   usuario(dn: string): Promise<UsuarioDoDiretorio | null>;
   buscarGrupos(termo: string, limite: number): Promise<GrupoDoDiretorio[]>;

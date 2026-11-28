@@ -486,6 +486,7 @@ describe('inativação, reativação e sessões da conta', () => {
     expect(sessoesAbertas.length).toBeGreaterThanOrEqual(2);
     for (const sessao of sessoesAbertas) {
       expect(Object.keys(sessao).sort()).toEqual([
+        'aviso',
         'criadaEm',
         'dispositivo',
         'id',

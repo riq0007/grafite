@@ -13,7 +13,6 @@ import { normalizarDn, normalizarTexto } from '@grafite/domain';
 import { eq, like, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CHAVES_DO_COFRE_DE_TESTE } from '../../test/dependencias.ts';
-import { CONTA_DE_SERVICO_DE_TESTE, criarAdDeTeste } from '../../test/diretorio.ts';
 import {
   type ApiDeTeste,
   abrirApi,
@@ -27,9 +26,10 @@ import {
   SEM_ENTRADA,
 } from '../../test/integracao.ts';
 import { cifrarSegredo } from '../cofre/cifra.ts';
+import { CONTA_DE_SERVICO_SIMULADA, criarDiretorioSimulado } from '../diretorio/simulado.ts';
 
 const host = 'grafite.gerencia-ad.local';
-const ad = criarAdDeTeste();
+const ad = criarDiretorioSimulado();
 let api: ApiDeTeste;
 let org = '';
 let cliente: ReturnType<typeof clienteDaApi>;
@@ -81,8 +81,8 @@ beforeAll(async () => {
       nomeNormalizado: normalizarTexto('Conta do Grafite no AD'),
       tipo: 'conta-administrativa',
       classificacao: 'equipamento',
-      identificador: CONTA_DE_SERVICO_DE_TESTE.usuario,
-      ...cifrarSegredo({ valor: CONTA_DE_SERVICO_DE_TESTE.senha }, CHAVES_DO_COFRE_DE_TESTE, {
+      identificador: CONTA_DE_SERVICO_SIMULADA.usuario,
+      ...cifrarSegredo({ valor: CONTA_DE_SERVICO_SIMULADA.senha }, CHAVES_DO_COFRE_DE_TESTE, {
         orgId: org,
         segredoId,
       }),

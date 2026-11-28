@@ -5,9 +5,11 @@ import {
   contadorDoChat,
   gruposDaVistaChamados,
   type LinhaParaARespostaNova,
+  linhasPorVer,
   ordemDasEquipesECanais,
   ordemDasRecentes,
   respostaNova,
+  respostaPorVer,
   secoesDoChat,
   totalDoChat,
 } from './listas.ts';
@@ -272,5 +274,98 @@ describe('a resposta nova', () => {
     expect(
       chamadosComRespostaNova([{ respostaNova: 3 }, { respostaNova: 0 }, { respostaNova: 1 }]),
     ).toBe(2);
+  });
+});
+
+describe('a resposta por ver', () => {
+  const FERNANDA = 'conta-fernanda';
+  const ANA = 'conta-ana';
+  const id = (n: number) => `019a7f00-0000-7000-8000-${String(n).padStart(12, '0')}`;
+  const linha = (
+    n: number,
+    hora: string,
+    autorConta: string | null,
+    especie: LinhaParaARespostaNova['especie'] = 'mensagem',
+  ) => ({ id: id(n), especie, autorConta, criadaEm: as(hora) });
+
+  const porVer = (
+    linhas: ReturnType<typeof linha>[],
+    abertaEm: Date | null,
+    extra: { vistaAte?: string | null; situacao?: ChamadoNaLista['situacao'] } = {},
+  ) =>
+    respostaPorVer({
+      situacao: extra.situacao ?? 'em-atendimento',
+      linhas,
+      contaId: FERNANDA,
+      vistaAte: extra.vistaAte ?? null,
+      pelaTi: false,
+      abertaEm,
+    });
+
+  it('Vista sem responder: abrir a conversa tira a resposta por ver, e a resposta nova fica', () => {
+    const conversa = [linha(1, '09:00', null), linha(2, '09:21', ANA)];
+    expect(porVer(conversa, null)).toBe(1);
+    expect(porVer(conversa, as('10:12'))).toBe(0);
+    expect(
+      respostaNova({
+        situacao: 'em-atendimento',
+        linhas: conversa,
+        contaId: FERNANDA,
+        vistaAte: null,
+        pelaTi: false,
+      }),
+    ).toBe(1);
+  });
+
+  it('Outra resposta depois de vista: a mensagem das 10:20 volta a estar por ver', () => {
+    const conversa = [linha(1, '09:21', ANA), linha(2, '10:20', ANA)];
+    expect(porVer(conversa, as('10:12'))).toBe(1);
+  });
+
+  it('o que tira a resposta nova tira também a resposta por ver', () => {
+    const conversa = [linha(1, '09:21', ANA), linha(2, '09:30', ANA)];
+    expect(porVer(conversa, null, { vistaAte: id(2) })).toBe(0);
+    expect(porVer(conversa, null, { situacao: 'resolvido' })).toBe(0);
+  });
+
+  it('a mensagem do mesmo instante da abertura conta como vista', () => {
+    expect(porVer([linha(1, '10:12', ANA)], as('10:12'))).toBe(0);
+  });
+
+  it('quem atende pela TI não tem resposta por ver', () => {
+    expect(
+      respostaPorVer({
+        situacao: 'em-atendimento',
+        linhas: [linha(1, '09:21', ANA)],
+        contaId: FERNANDA,
+        vistaAte: null,
+        pelaTi: true,
+        abertaEm: null,
+      }),
+    ).toBe(0);
+  });
+
+  it('as linhas por ver vêm na ordem da conversa, com a última no fim', () => {
+    const conversa = [
+      linha(1, '09:21', ANA),
+      linha(2, '09:00', null),
+      linha(3, '10:20', 'conta-bruno'),
+    ];
+    expect(
+      linhasPorVer({
+        situacao: 'em-atendimento',
+        linhas: conversa,
+        contaId: FERNANDA,
+        vistaAte: null,
+        pelaTi: false,
+        abertaEm: null,
+      }).map(({ autorConta }) => autorConta),
+    ).toEqual([ANA, 'conta-bruno']);
+  });
+
+  it('a nota e o evento da TI não ficam por ver', () => {
+    expect(porVer([linha(1, '09:21', ANA, 'nota'), linha(2, '09:22', ANA, 'evento')], null)).toBe(
+      0,
+    );
   });
 });
