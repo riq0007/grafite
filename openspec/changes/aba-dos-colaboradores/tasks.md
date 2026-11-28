@@ -239,7 +239,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 7. Fechamento
 
-- [ ] 7.1 A documentação:
+- [x] 7.1 A documentação:
   - a linha do S8 e a exceção da seção 2.4 na spec mestre;
   - a exceção dos 340 ms no `docs/ANTISLOP.md`;
   - o runbook:

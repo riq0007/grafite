@@ -102,6 +102,14 @@ describe('a ajuda e os argumentos', () => {
       'organizacao criar --ambiente teste|producao',
       'conta criar --ambiente teste|producao',
       'conta redefinir --ambiente teste|producao',
+      'aba chave criar --ambiente teste|producao',
+      'aba chave trocar --ambiente teste|producao',
+      'aba configurar --ambiente teste|producao',
+      'aba aparelhos --ambiente teste|producao',
+      'aba entrada --ambiente teste|producao',
+      'aba teto --ambiente teste|producao',
+      'aba bloquear --ambiente teste|producao',
+      'aba desbloquear --ambiente teste|producao',
     ]) {
       expect(AJUDA).toContain(`  ${comando}`);
     }
