@@ -219,6 +219,18 @@ O formulário fica no painel de sempre, no lugar das opções: o usuário, com a
 
 A janela do e2e passou a 440×560, a do painel mais alto com a sombra (sem conexão, com a resposta e o "Sair": 372×506), e as referências foram gravadas de novo, com a sobra embaixo e nada mais. A janela do lado nativo (tarefa 5.8) tem essa medida.
 
+A janela da aba no lado nativo (tarefa 5.8) tem o tamanho fixo do painel mais alto, 440×560 px lógicos, e não muda entre a aba fechada e o painel: o movimento não espera o Windows, e fora da forma o clique passa. O lado nativo:
+- **o clique:** a cada 16 ms, o `GetCursorPos` leva o ponteiro aos px CSS da janela, e o `set_ignore_cursor_events` só é chamado quando o ponteiro entra ou sai da forma. A origem e a escala de cada janela ficam guardadas nos eventos de lugar e de tamanho, sem perguntar ao laço do Tauri a cada passo. Até a forma chegar, todo clique passa, como na forma vazia da apresentação;
+- **a posição:** o `primary_monitor` do Tauri dá o monitor principal em px físicos, com a escala dele, e a janela fica presa ao alto e no meio. O `WM_DISPLAYCHANGE` chega por um subclass da janela (`SetWindowSubclass`), porque o Tauri não o passa adiante, e o `WM_DPICHANGED` chega como o `ScaleFactorChanged`. As trocas em rajada viram uma recolocação, 250 ms depois, e a tela nova vai no `aparencia-mudou`;
+- **ao abrir:** a janela aparece pelo Tauri, que liga também o WebView2, e a frente volta a quem estava nela. O `ShowWindow` sem ativar deixava o WebView2 desligado, sem a aba e sem a forma.
+
+A tela maior é a segunda janela, `maior`, criada no `abrir_tela_maior` e destruída no `fechar_tela_maior`; os dois comandos são assíncronos, porque criar uma janela num comando síncrono trava no Windows. Ela tem 760×560 px lógicos, com a folga da sombra, e fica no meio, 160 px abaixo do topo da aba, por cima da parte de baixo do painel, como o m08; numa tela que não a cabe, ela fica menor. O `informar_corpo` só guarda o lugar do chat, para a tarefa 5.15. As capabilities da tela passam a valer também para a moldura. A aparência é a de fábrica, com a tela principal de agora: o tema, o movimento e a apresentação entram na 5.9, e a forma e o contato da configuração, na 5.14.
+
+No `tauri dev`, numa tela de 1920×1080:
+- com o ponteiro longe, o `WindowFromPoint` no meio da aba e ao lado dela dá a janela de baixo;
+- com o ponteiro na aba, dá a aba, e ao sair dela volta à de baixo;
+- o clique abre o painel, "Abrir chamado" abre a tela maior em 580,168, e o Esc a fecha.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

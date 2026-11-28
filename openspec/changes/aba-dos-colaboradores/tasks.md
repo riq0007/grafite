@@ -164,7 +164,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o formulário do usuário, da senha e do código.
 
   Verificar: o e2e e a tela contra o m09 e o m10.
-- [ ] 5.8 A janela no lado nativo (decisão 7): transparente, por cima e fora da barra de tarefas; o clique que passa fora da forma; a posição no monitor principal com a escala e a troca dela.
+- [x] 5.8 A janela no lado nativo (decisão 7): transparente, por cima e fora da barra de tarefas; o clique que passa fora da forma; a posição no monitor principal com a escala e a troca dela.
 
   Verificar: os testes do Rust e a aba no `tauri dev`, com o clique ao lado dela chegando à janela de baixo.
 - [ ] 5.9 O foco, a instância única, o tema, a apresentação e o atalho no lado nativo:

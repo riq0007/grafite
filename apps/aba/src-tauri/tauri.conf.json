@@ -13,10 +13,19 @@
     "windows": [
       {
         "label": "aba",
-        "title": "Grafite",
-        "width": 360,
-        "height": 120,
-        "resizable": false
+        "title": "Suporte da TI",
+        "width": 440,
+        "height": 560,
+        "transparent": true,
+        "decorations": false,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "visible": false,
+        "focus": false
       }
     ],
     "security": {
