@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useDoNativo } from './doNativo.ts';
 import { type Aparencia, lerAparencia, ouvirAparencia, type TemaDoWindows } from './nativo.ts';
 
 /** A aparência sem o lado nativo responder: a pílula, no Windows escuro, numa tela grande. */
@@ -43,32 +44,7 @@ export function aplicarNaRaiz(tema: TemaDoWindows, movimentoReduzido: boolean, r
  * configuração, o tema trocado e a tela principal trocada. Sem resposta dele, a de fábrica.
  */
 export function useAparencia(): Aparencia | null {
-  const [aparencia, setAparencia] = useState<Aparencia | null>(null);
-
-  useEffect(() => {
-    let ativo = true;
-    let deixarDeOuvir: (() => void) | undefined;
-    ouvirAparencia((nova) => {
-      if (ativo) setAparencia(nova);
-    })
-      .then((parar) => {
-        if (ativo) deixarDeOuvir = parar;
-        else parar();
-      })
-      .catch(() => undefined);
-    // O aviso que chegou antes da leitura é o mais novo, e fica.
-    lerAparencia()
-      .then((lida) => {
-        if (ativo) setAparencia((atual) => atual ?? lida);
-      })
-      .catch(() => {
-        if (ativo) setAparencia((atual) => atual ?? APARENCIA_DE_FABRICA);
-      });
-    return () => {
-      ativo = false;
-      deixarDeOuvir?.();
-    };
-  }, []);
+  const aparencia = useDoNativo(lerAparencia, ouvirAparencia, APARENCIA_DE_FABRICA);
 
   const tema = aparencia?.tema;
   const movimentoReduzido = aparencia?.movimentoReduzido;

@@ -183,6 +183,13 @@ Na tela (tarefa 5.3), o contrato com o lado nativo fica em `apps/aba/src/nativo.
 
 A janela é transparente, e a tela põe a forma no alto e no meio dela. A pílula fica a 8 px do alto, ou a 36 px numa tela de até 800 px de altura, abaixo da barra de título do programa maximizado (m12); o entalhe fica a 0. A pílula tem a largura mínima da spec (162 e 160 px), porque a fonte deixava a de 162 com 161. A aba pressionada leva o `aba.pressionada` (80 ms), que entrou no `movimento`, e o mouse em cima da pílula usa o `aba.entalhe`. As referências visuais da aba fechada (as duas formas nos três temas) são do Windows: o e2e as pula nos outros sistemas, como o CI. Os comandos do Rust entram na 5.8 e na 5.9; até lá, a tela usa a aparência de fábrica.
 
+No painel (tarefa 5.4), o contrato cresce:
+- o comando `estado` e o evento `estado-mudou` dão as não lidas, as respostas novas, quem está na aba (com o `pelaSenha`) e o atalho ocupado;
+- o evento `atalho` abre o painel com o foco em "Abrir chamado", e o `fechar-o-painel` é o clique fora, que o lado nativo vê na perda do foco: a tela não usa o `blur`, porque a tela maior também tira o foco da janela da aba sem fechar o painel;
+- os comandos `abrir_tela_maior` (com o destino), `devolver_o_foco`, no Esc, e `sair`.
+
+O logo é a `Marca` do `@grafite/ui`, na cor do texto da aba, e não o "g" desenhado do mockup. Com um selo, as opções de baixo crescem 8 px para o selo não cobrir o símbolo, como o painel da notificação do m04. Quem está na aba, com "Sair", fica embaixo das opções, e o "Sair" entra na grade e no Tab. O fio de 1,5 px arredonda para 1 px na tela de escala 1, e o painel tem a largura da spec escrita.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

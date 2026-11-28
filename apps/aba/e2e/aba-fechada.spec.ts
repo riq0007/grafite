@@ -1,48 +1,17 @@
 import { expect, type Page, test } from '@playwright/test';
-import { chamadasDe, emitir, simularOTauri } from './tauri.ts';
+import { type Aparencia, abrirATela, aparencia, JANELA, ultimaForma } from './aparencia.ts';
+import { emitir } from './tauri.ts';
 
 // A aba fechada (change aba-dos-colaboradores, tarefa 5.3; spec "Aba fechada" e "Temas do Windows"):
 // a pílula e o entalhe, os quatro estados, a tela pequena, os três temas do Windows e a forma
 // informada ao lado nativo, que deixa o clique passar fora dela.
 
-const JANELA = { width: 440, height: 480 };
 test.use({ viewport: JANELA });
 
-interface Aparencia {
-  forma: 'pilula' | 'entalhe';
-  tema: 'escuro' | 'claro' | 'alto-contraste';
-  movimentoReduzido: boolean;
-  tela: { largura: number; altura: number };
-}
-
-const aparencia = (mudanca: Partial<Aparencia> = {}): Aparencia => ({
-  forma: 'pilula',
-  tema: 'escuro',
-  movimentoReduzido: false,
-  tela: { largura: 1440, altura: 900 },
-  ...mudanca,
-});
-
 async function abrir(page: Page, mudanca: Partial<Aparencia> = {}) {
-  await simularOTauri(page, { aparencia: aparencia(mudanca), informar_forma: null });
-  await page.goto('/');
-  const aba = page.getByRole('button', { name: 'Suporte da TI' });
+  const aba = await abrirATela(page, { aparencia: mudanca });
   await expect(aba).toBeVisible();
   return aba;
-}
-
-interface Retangulo {
-  x: number;
-  y: number;
-  largura: number;
-  altura: number;
-  raioDeCima: number;
-  raioDeBaixo: number;
-}
-
-async function ultimaForma(page: Page): Promise<Retangulo | undefined> {
-  const chamadas = (await chamadasDe(page, 'informar_forma')) as Array<{ retangulos: Retangulo[] }>;
-  return chamadas.at(-1)?.retangulos[0];
 }
 
 test('a pílula de fábrica: 162×34, a 8 px do alto e no meio, sem o logo, e a forma informada', async ({
@@ -123,9 +92,11 @@ test('os quatro estados da pílula: repouso, mouse em cima, pressionada e foco',
   await page.mouse.down();
   await expect(aba).toHaveCSS('transform', 'matrix(0.96, 0, 0, 0.96, 0, 0)');
   await expect(aba).toHaveCSS('background-color', 'rgb(0, 57, 117)');
-  await page.mouse.up();
-
+  // Solta fora da pílula: sem o clique, o painel não abre.
   await page.mouse.move(0, JANELA.height - 1);
+  await page.mouse.up();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
   await aba.blur();
   await page.keyboard.press('Tab');
   await expect(aba).toBeFocused();

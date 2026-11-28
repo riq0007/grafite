@@ -147,7 +147,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a forma informada ao lado nativo.
 
   Verificar: o e2e, as referências visuais, a tela contra o m01, o m03, o m07 e o m12, o lint e o typecheck.
-- [ ] 5.4 O painel e o teclado: o painel 2+1, com o logo, os números e o "Sair" da entrada pela senha; as setas, o Enter e o Esc dentro dele.
+- [x] 5.4 O painel e o teclado: o painel 2+1, com o logo, os números e o "Sair" da entrada pela senha; as setas, o Enter e o Esc dentro dele.
 
   Verificar: o e2e, as referências visuais e a tela contra o m01 e o m08.
 - [ ] 5.5 O aviso e o movimento:

@@ -16,6 +16,7 @@ test('a tela da aba abre sem erro', async ({ page }) => {
       movimentoReduzido: false,
       tela: { largura: 1920, altura: 1080 },
     },
+    estado: { naoLidas: 0, respostasNovas: 0, pessoa: null, atalhoOcupado: false },
     informar_forma: null,
   });
   await page.goto('/');

@@ -1,0 +1,275 @@
+/*
+ * O painel aberto (spec aba-dos-colaboradores, "Aba aberta"; mockups m01, m03, m08 e m12 da ideia
+ * 18): 293 px de largura, com a grade 2+1 (duas colunas de 128 px), ou 225 px na tela pequena (duas
+ * de 96 px). Na pílula, ele flutua; no entalhe, é a ilha que cresce da borda de cima.
+ */
+.painel {
+  --fio: 1.5px;
+  --respiro: 14px;
+  --vao: 12px;
+  --raio-do-painel: 28px;
+  --largura-da-opcao: 128px;
+  --altura-da-opcao: 108px;
+  --altura-da-larga: 100px;
+  --raio-da-opcao: 18px;
+  --simbolo-da-opcao: 38px;
+  --simbolo-da-larga: 40px;
+  /* O nome da opção é de 15 px, entre o corpo e o subtítulo (o LEIA da ideia 18). */
+  --texto-da-opcao: 15px;
+  --fundo: var(--cor-aba-flutuante-fundo);
+  --anel-do-foco:
+    0 0 0 2px var(--cor-aba-flutuante-fundo-2), 0 0 0 5px var(--cor-aba-flutuante-foco),
+    0 0 0 6.5px var(--cor-aba-flutuante-fio-escuro);
+  display: grid;
+  justify-items: center;
+  gap: var(--vao);
+  /* A largura da spec (293 e 225), também quando o fio de 1,5 px arredonda para 1 px na tela. */
+  width: calc(2 * var(--largura-da-opcao) + 6px + 2 * var(--respiro) + 3px);
+  padding: var(--respiro);
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  background-color: var(--fundo);
+  color: var(--cor-aba-flutuante-texto);
+  user-select: none;
+  forced-color-adjust: none;
+}
+
+.flutuante {
+  border-radius: var(--raio-do-painel);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 22px 44px -10px var(--cor-aba-flutuante-sombra);
+}
+
+/* A ilha do entalhe: presa à borda, com o raio de baixo de 32 e o encaixe de 18 (m01). */
+.ilha {
+  --encaixe: 18px;
+  --vao: 10px;
+  padding-top: 12px;
+  border-top: 0;
+  border-radius: 0 0 32px 32px;
+  filter: drop-shadow(0 10px 14px var(--cor-aba-flutuante-sombra));
+}
+
+/* A tela pequena (m12): 225×247, opções de 96×96, a larga de 198×84 e o raio de 24. */
+.compacta {
+  --respiro: 12px;
+  --vao: 10px;
+  --raio-do-painel: 24px;
+  --largura-da-opcao: 96px;
+  --altura-da-opcao: 96px;
+  --altura-da-larga: 84px;
+  --raio-da-opcao: 16px;
+  --simbolo-da-opcao: 30px;
+  --simbolo-da-larga: 32px;
+  --texto-da-opcao: var(--texto-dado);
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+}
+
+/* A marca, na cor do texto da aba, e não na do tema do Grafite. */
+.logo svg {
+  color: var(--cor-aba-flutuante-texto);
+}
+
+.opcoes {
+  display: grid;
+  grid-template-columns: repeat(2, var(--largura-da-opcao));
+  gap: 6px;
+}
+
+.opcao {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: var(--altura-da-opcao);
+  margin: 0;
+  padding: 8px 6px 10px;
+  border: 0;
+  border-radius: var(--raio-da-opcao);
+  background-color: var(--cor-aba-flutuante-bloco);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-da-opcao);
+  font-weight: var(--peso-forte);
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition:
+    background-color var(--dur-aba-entalhe) var(--curva-padrao),
+    transform var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.opcao svg {
+  --tom-do-simbolo: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--simbolo-da-opcao);
+}
+
+.opcao:hover {
+  background-color: var(--cor-aba-flutuante-bloco-sob-mouse);
+}
+
+.opcao:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-aba-pressionada);
+  transition-timing-function: var(--curva-saida);
+}
+
+.opcao:focus,
+.sair:focus {
+  outline: 0;
+}
+
+/* O anel do foco, sempre visível pelo teclado; no foco dado pelo atalho, também (m08). */
+.opcao:focus-visible,
+.sair:focus-visible,
+.painel[data-teclado] .opcao:focus,
+.painel[data-teclado] .sair:focus {
+  box-shadow: var(--anel-do-foco);
+  transition: none;
+}
+
+/* "Abrir chamado": larga e clara, em cima. */
+.larga {
+  grid-column: 1 / -1;
+  height: var(--altura-da-larga);
+  background-color: var(--cor-aba-flutuante-opcao-larga);
+  color: var(--cor-aba-flutuante-sobre-opcao-larga);
+}
+
+.larga svg {
+  --tom-do-simbolo: currentColor;
+  --opacidade-do-tom: 0.22;
+  font-size: var(--simbolo-da-larga);
+}
+
+.larga:hover {
+  background-color: color-mix(
+    in oklch,
+    var(--cor-aba-flutuante-opcao-larga) 84%,
+    var(--cor-aba-flutuante-contorno)
+  );
+}
+
+/* "Abrir chat" e "Visualizar chamados": uma palavra por linha. */
+.empilhado {
+  width: min-content;
+}
+
+/* Com um selo, as opções de baixo crescem 8 px, e o símbolo desce para o selo não cobri-lo. */
+.comSelos .opcao:not(.larga) {
+  height: calc(var(--altura-da-opcao) + 8px);
+  padding-top: 26px;
+}
+
+.selo {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background-color: var(--cor-aba-flutuante-atencao);
+  color: var(--cor-aba-flutuante-sobre-atencao);
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-forte);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nota {
+  max-width: calc(2 * var(--largura-da-opcao) + 6px);
+  margin: 0;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-justa);
+  text-align: center;
+}
+
+/* Na entrada pela senha: quem está na aba, com "Sair". */
+.quem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: calc(2 * var(--largura-da-opcao) + 6px);
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--texto-dado);
+}
+
+.nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sair {
+  appearance: none;
+  flex: none;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 14px;
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-fundo);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-weight: var(--peso-forte);
+  cursor: pointer;
+  forced-color-adjust: none;
+  transition: background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.sair:hover {
+  background-color: var(--cor-aba-flutuante-bloco);
+}
+
+/* ---------- O alto contraste (m07): fio de 2 px, opções contornadas e nenhuma sombra ---------- */
+:global([data-windows-theme="alto-contraste"]) .painel {
+  --fio: 2px;
+  filter: none;
+}
+
+:global([data-windows-theme="alto-contraste"]) .opcao {
+  border: 2px solid var(--cor-aba-flutuante-contorno);
+}
+
+:global([data-windows-theme="alto-contraste"]) .larga {
+  border-color: var(--cor-aba-flutuante-opcao-larga);
+}
+
+@media (forced-colors: active) {
+  :global(:root:not([data-windows-theme])) .painel {
+    --fio: 2px;
+    filter: none;
+  }
+
+  :global(:root:not([data-windows-theme])) .opcao {
+    border: 2px solid var(--cor-aba-flutuante-contorno);
+  }
+
+  :global(:root:not([data-windows-theme])) .larga {
+    border-color: var(--cor-aba-flutuante-opcao-larga);
+  }
+}
+
+/* ---------- Sem animações no Windows: a escala sai ---------- */
+:global([data-motion="reduzido"]) .opcao:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(:root:not([data-motion])) .opcao:active {
+    transform: none;
+  }
+}

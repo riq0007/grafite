@@ -46,3 +46,50 @@ export interface RetanguloDaForma {
 export function informarForma(retangulos: RetanguloDaForma[]): Promise<void> {
   return invoke(COMANDO_DA_FORMA, { retangulos });
 }
+
+/**
+ * O que a aba mostra da pessoa: as não lidas do chat, as respostas novas dos chamados, quem está na
+ * aba (com a entrada pela senha, ela tem o "Sair") e se o atalho ficou com outro programa.
+ */
+export interface EstadoDaAba {
+  naoLidas: number;
+  respostasNovas: number;
+  pessoa: { nome: string; pelaSenha: boolean } | null;
+  atalhoOcupado: boolean;
+}
+
+export const COMANDO_DO_ESTADO = 'estado';
+export const EVENTO_DO_ESTADO = 'estado-mudou';
+/** O Ctrl+Alt+T, de qualquer programa: abre o painel com o foco em "Abrir chamado". */
+export const EVENTO_DO_ATALHO = 'atalho';
+/** A janela da aba perdeu o foco para outro programa: é o clique fora, e o painel fecha. */
+export const EVENTO_DE_FECHAR_O_PAINEL = 'fechar-o-painel';
+
+export function lerEstado(): Promise<EstadoDaAba> {
+  return invoke<EstadoDaAba>(COMANDO_DO_ESTADO);
+}
+
+export function ouvirEstado(aoMudar: (estado: EstadoDaAba) => void): Promise<UnlistenFn> {
+  return listen<EstadoDaAba>(EVENTO_DO_ESTADO, (evento) => aoMudar(evento.payload));
+}
+
+export function ouvir(evento: string, aoChegar: () => void): Promise<UnlistenFn> {
+  return listen(evento, () => aoChegar());
+}
+
+export type OpcaoDaAba = 'abrir-chamado' | 'abrir-chat' | 'visualizar-chamados';
+
+/** Abre a tela maior, embaixo da aba, na opção escolhida. */
+export function abrirTelaMaior(destino: OpcaoDaAba): Promise<void> {
+  return invoke('abrir_tela_maior', { destino });
+}
+
+/** Devolve o foco à janela que estava na frente antes do atalho; sem atalho, não faz nada. */
+export function devolverOFoco(): Promise<void> {
+  return invoke('devolver_o_foco');
+}
+
+/** O "Sair" da entrada pela senha: termina a sessão da aba no servidor, com a do chat. */
+export function sair(): Promise<void> {
+  return invoke('sair');
+}

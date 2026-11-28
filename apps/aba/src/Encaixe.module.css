@@ -1,0 +1,41 @@
+/*
+ * O encaixe do entalhe (m01): a curva côncava de cada lado sai tangente à borda da tela e chega
+ * tangente ao lado da forma, com o fio claro até ela. A forma dá o --encaixe, o --fio e o --fundo.
+ */
+.encaixe {
+  position: relative;
+}
+
+.encaixe::before,
+.encaixe::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--encaixe);
+  height: var(--encaixe);
+  pointer-events: none;
+}
+
+.encaixe::before {
+  right: 100%;
+  margin-right: var(--fio);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent calc(var(--encaixe) - 0.5px),
+    var(--cor-aba-flutuante-contorno) var(--encaixe),
+    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
+    var(--fundo) calc(var(--encaixe) + 2px)
+  );
+}
+
+.encaixe::after {
+  left: 100%;
+  margin-left: var(--fio);
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent calc(var(--encaixe) - 0.5px),
+    var(--cor-aba-flutuante-contorno) var(--encaixe),
+    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
+    var(--fundo) calc(var(--encaixe) + 2px)
+  );
+}

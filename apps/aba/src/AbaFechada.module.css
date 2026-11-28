@@ -114,7 +114,6 @@
   --raio: 16px;
   --encaixe: 14px;
   --fundo: var(--cor-aba-flutuante-fundo);
-  position: relative;
   justify-content: center;
   min-width: 184px;
   height: 32px;
@@ -132,41 +131,6 @@
   width: 20px;
   height: 20px;
   font-size: 15px;
-}
-
-/* A curva côncava de cada lado sai tangente à borda da tela e chega tangente ao lado da forma. */
-.entalhe::before,
-.entalhe::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: var(--encaixe);
-  height: var(--encaixe);
-  pointer-events: none;
-}
-
-.entalhe::before {
-  right: 100%;
-  margin-right: var(--fio);
-  background: radial-gradient(
-    circle at 0 100%,
-    transparent calc(var(--encaixe) - 0.5px),
-    var(--cor-aba-flutuante-contorno) var(--encaixe),
-    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
-    var(--fundo) calc(var(--encaixe) + 2px)
-  );
-}
-
-.entalhe::after {
-  left: 100%;
-  margin-left: var(--fio);
-  background: radial-gradient(
-    circle at 100% 100%,
-    transparent calc(var(--encaixe) - 0.5px),
-    var(--cor-aba-flutuante-contorno) var(--encaixe),
-    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
-    var(--fundo) calc(var(--encaixe) + 2px)
-  );
 }
 
 .entalhe:hover {
