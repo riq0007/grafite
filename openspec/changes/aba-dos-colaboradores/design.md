@@ -133,6 +133,8 @@ A tabela `aberturas_dos_chamados` guarda, por conta e chamado, o momento da últ
 - quando a conversa aparece na tela;
 - quando chega uma mensagem com ela à vista: `document.visibilityState` visível e `document.hasFocus()`.
 
+Na web (tarefa 4.2), a tela do chamado grava a abertura quando fica à vista (`useJanelaAVista`, o mesmo que cala as notificações dele) e de novo quando muda a última mensagem de outra pessoa com ela à vista; a da própria conta não grava. Ao sair da vista, a próxima aparição grava de novo. A gravação não mostra nada: a falha fica calada, e a seguinte grava.
+
 Fechar a tela maior destrói o webview do chat (decisão 8). Assim, a conversa que ficou aberta na aba não marca como vista a resposta que chega depois, e 500 computadores não mantêm uma segunda conexão de eventos à toa.
 
 A gravação manda o evento da leitura à pessoa. O domínio ganha a conta das duas respostas, a nova e a por ver. A por ver só vai ao estado da aba: a web segue com a resposta nova.

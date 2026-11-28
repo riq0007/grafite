@@ -1612,6 +1612,11 @@ interface DadosDaSessao {
   csrf: string;
   expiraEm: string;
   acesso: AcessoDaSessao;
+  /**
+   * A sessão do chat na aba (change aba-dos-colaboradores, decisão 8): o chat esconde o que leva à
+   * casca, o "Andamento", os avisos e o menu da conta, que pedem rotas fora do alcance dela.
+   */
+  naAba: boolean;
 }
 
 export type EstadoDaSessao =

@@ -121,7 +121,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a página de entrada do chat com a marca da aba, e o que ela diz à conta que precisa trocar a senha temporária ou ativar os dois passos, que ficam no `/conta`, fora do alcance: abrir o Grafite no navegador.
 
   Verificar: o e2e da web simulada, com os pedidos que saem do app do chat todos dentro da lista do alcance, o caso da PWA com o service worker, o lint e o typecheck.
-- [ ] 4.2 A abertura do chamado gravada pelo chat, na conversa que aparece e na mensagem que chega com ela à vista e com o foco.
+- [x] 4.2 A abertura do chamado gravada pelo chat, na conversa que aparece e na mensagem que chega com ela à vista e com o foco.
 
   Verificar: o e2e da web simulada e a tela no `pnpm dev`.
 

@@ -486,6 +486,29 @@ test.describe('na conversa aberta', () => {
     expect(chat.aberturas).toEqual([]);
   });
 
+  // Change aba-dos-colaboradores, tarefa 4.2: a abertura da conversa do chamado, que tira a resposta
+  // por ver, gravada quando ela aparece e de novo com a mensagem da TI que chega à vista.
+  test('o chamado à vista grava a abertura, e de novo com a resposta da TI que chega', async ({
+    page,
+    servidor,
+  }) => {
+    const chat = await simularChat(page);
+    await page.goto('/chat/chamados/1041');
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Sem acesso à pasta do Financeiro' }),
+    ).toBeVisible();
+    await expect.poll(() => chat.aberturasDaConversa).toEqual([1041]);
+
+    chat.respostaDaTi(1041, 'Achei a pasta Financeiro 2026. Já liberei.');
+    servidor.eventos.push({ tipo: 'chamados.mudaram' });
+    await expect(
+      page
+        .getByRole('region', { name: 'Conversa do chamado' })
+        .getByText('Achei a pasta Financeiro 2026. Já liberei.'),
+    ).toBeVisible();
+    await expect.poll(() => chat.aberturasDaConversa).toEqual([1041, 1041]);
+  });
+
   test('no chamado em que ela participa pela TI, o "Andamento" assume, e a etapa muda', async ({
     page,
   }) => {

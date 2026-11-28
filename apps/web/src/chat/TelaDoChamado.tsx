@@ -42,6 +42,7 @@ import {
   type DialogoDoAndamentoAberto,
   DialogosDoAndamento,
 } from './AndamentoDoChamado.tsx';
+import { useAberturaDoChamado } from './aberturaDoChamado.ts';
 import { CaixaDoChat } from './CaixaDoChat.tsx';
 import {
   type ConversaDoChamado,
@@ -157,7 +158,9 @@ function ChamadoNaTela({
   const celular = usePostura() === 'celular';
   // As notificações deste chamado, nos dois endereços dele, como a resposta da TI, não viram aviso
   // enquanto ele está à vista.
-  useChamadoAVista(numero, useJanelaAVista());
+  const aVista = useJanelaAVista();
+  useChamadoAVista(numero, aVista);
+  useAberturaDoChamado(chamado, aVista);
   const daConta = useChamadosDoChat(true);
   // Na ordem da seção CHAMADOS da lista do Chat: os que aguardam a pessoa e depois o aberto mais
   // novo. A API não ordena os abertos.

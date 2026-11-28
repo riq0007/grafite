@@ -141,6 +141,10 @@ function buscarNoServidorDeTeste(servidor: ServidorDeTeste) {
     if (caminho === 'GET /api/chat/resumo') {
       return Response.json({ naoLidas: 0, chamadosComRespostaNova: 0 });
     }
+    // A abertura da conversa do chamado, que o chat grava sem mostrar nada.
+    if (/^POST \/api\/chat\/chamados\/\d+\/aberta$/.test(caminho)) {
+      return new Response(null, { status: 204 });
+    }
     throw new Error(`O teste não preparou o servidor para ${caminho}.`);
   };
 }
