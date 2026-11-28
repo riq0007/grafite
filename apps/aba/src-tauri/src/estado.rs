@@ -1,6 +1,6 @@
 //! O estado que a tela lê pelo comando `estado` e recebe no evento `estado-mudou`, com o formato do
-//! `GET /api/aba/estado` (design, decisão 6). A sessão pelo Windows dá a pessoa e o motivo da aba sem
-//! conexão; a rede entra na tarefa 5.14.
+//! `GET /api/aba/estado` (design, decisão 6). A sessão dá a pessoa, o motivo da aba sem conexão e,
+//! na entrada pela senha, o formulário; a rede entra na tarefa 5.14.
 
 use std::sync::Mutex;
 
@@ -40,7 +40,6 @@ pub struct SemConexao {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
-#[allow(dead_code, reason = "a entrada pela senha entra na tarefa 5.13")]
 pub enum Passo {
     Senha,
     Codigo,
@@ -48,11 +47,21 @@ pub enum Passo {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code, reason = "a entrada pela senha entra na tarefa 5.13")]
 pub struct Formulario {
     pub passo: Passo,
     pub erro: Option<String>,
     pub espera_ate: Option<String>,
+}
+
+impl Formulario {
+    /// O usuário e a senha, sem recusa nem espera.
+    pub fn senha() -> Self {
+        Self {
+            passo: Passo::Senha,
+            erro: None,
+            espera_ate: None,
+        }
+    }
 }
 
 /// O estado da aba, como o `EstadoDaAba` da tela.

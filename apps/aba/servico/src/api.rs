@@ -37,6 +37,20 @@ pub struct Renovacao {
     pub expira_em: String,
 }
 
+/// A resposta da entrada pela senha: a sessão, ou a pendente do código.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum Aberta {
+    #[serde(rename_all = "camelCase")]
+    FaltaOCodigo {
+        #[allow(dead_code, reason = "só a forma da resposta, que o serde confere")]
+        falta_o_codigo: bool,
+        pendente: Segredo,
+        expira_em: String,
+    },
+    Sessao(SessaoAberta),
+}
+
 /// Os pedidos da sessão pelo Windows, que o pipe faz em nome de quem chama.
 pub trait ApiDaSessao {
     fn abrir_pelo_windows(
@@ -55,6 +69,28 @@ pub trait ApiDaSessao {
         sid: &str,
         computador: Option<&str>,
     ) -> Result<Renovacao, Falha>;
+
+    fn abrir_pela_senha(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        usuario: &str,
+        senha: &Segredo,
+        computador: Option<&str>,
+    ) -> Result<Aberta, Falha>;
+
+    fn codigo(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        pendente: &Segredo,
+        codigo: &Segredo,
+        computador: Option<&str>,
+    ) -> Result<Aberta, Falha>;
+
+    fn sair(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha>;
+
+    fn uso(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha>;
 }
 
 #[derive(Clone)]
@@ -84,6 +120,22 @@ fn cabecalhos(pedido: RequestBuilder, computador: Option<&str>) -> RequestBuilde
 }
 
 fn resposta<T: DeserializeOwned>(enviado: reqwest::Result<Response>) -> Result<T, Falha> {
+    let resposta = sem_erro(enviado)?;
+    let status = resposta.status();
+    resposta.json::<T>().map_err(|erro| Falha {
+        decisao: Decisao::TentarDepois,
+        status: status.as_u16(),
+        problema: None,
+        para_o_log: format!("resposta estranha da API: {erro}"),
+    })
+}
+
+/// O `204`, sem corpo.
+fn resposta_vazia(enviado: reqwest::Result<Response>) -> Result<(), Falha> {
+    sem_erro(enviado).map(drop)
+}
+
+fn sem_erro(enviado: reqwest::Result<Response>) -> Result<Response, Falha> {
     let resposta = enviado.map_err(|erro| Falha {
         decisao: Decisao::TentarDepois,
         status: 0,
@@ -93,12 +145,7 @@ fn resposta<T: DeserializeOwned>(enviado: reqwest::Result<Response>) -> Result<T
     })?;
     let status = resposta.status();
     if status.is_success() {
-        return resposta.json::<T>().map_err(|erro| Falha {
-            decisao: Decisao::TentarDepois,
-            status: status.as_u16(),
-            problema: None,
-            para_o_log: format!("resposta estranha da API: {erro}"),
-        });
+        return Ok(resposta);
     }
     let retry_after = resposta
         .headers()
@@ -190,5 +237,93 @@ impl ApiDaSessao for ApiHttp {
         .json(&json!({ "sid": sid }))
         .send();
         resposta(enviado)
+    }
+
+    fn abrir_pela_senha(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        usuario: &str,
+        senha: &Segredo,
+        computador: Option<&str>,
+    ) -> Result<Aberta, Falha> {
+        let enviado = cabecalhos(
+            self.cliente.post(format!("{servidor}/api/aba/sessao")),
+            computador,
+        )
+        .bearer_auth(token_do_aparelho.expor())
+        .json(&json!({
+            "entrada": "senha",
+            "usuario": usuario,
+            "senha": senha.expor(),
+        }))
+        .send();
+        resposta(enviado)
+    }
+
+    fn codigo(
+        &self,
+        servidor: &str,
+        token_do_aparelho: &Segredo,
+        pendente: &Segredo,
+        codigo: &Segredo,
+        computador: Option<&str>,
+    ) -> Result<Aberta, Falha> {
+        let enviado = cabecalhos(
+            self.cliente.post(format!("{servidor}/api/aba/sessao")),
+            computador,
+        )
+        .bearer_auth(token_do_aparelho.expor())
+        .json(&json!({
+            "entrada": "senha",
+            "pendente": pendente.expor(),
+            "codigo": codigo.expor(),
+        }))
+        .send();
+        resposta(enviado)
+    }
+
+    fn sair(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha> {
+        let enviado = cabecalhos(
+            self.cliente.delete(format!("{servidor}/api/aba/sessao")),
+            None,
+        )
+        .bearer_auth(token_da_sessao.expor())
+        .send();
+        resposta_vazia(enviado)
+    }
+
+    fn uso(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha> {
+        let enviado = cabecalhos(self.cliente.post(format!("{servidor}/api/aba/uso")), None)
+            .bearer_auth(token_da_sessao.expor())
+            .send();
+        resposta_vazia(enviado)
+    }
+}
+
+#[cfg(test)]
+mod testes {
+    use super::*;
+
+    #[test]
+    fn a_resposta_da_senha_e_a_sessao_ou_a_pendente() {
+        let sessao: Aberta = serde_json::from_value(json!({
+            "token": "tok",
+            "expiraEm": "2026-11-28T04:00:00.000Z",
+            "pessoa": { "nome": "Carla Dias" },
+        }))
+        .expect("a sessão");
+        assert!(
+            matches!(sessao, Aberta::Sessao(SessaoAberta { pessoa, .. }) if pessoa.nome == "Carla Dias")
+        );
+        let pendente: Aberta = serde_json::from_value(json!({
+            "faltaOCodigo": true,
+            "pendente": "pend",
+            "expiraEm": "2026-11-28T04:05:00.000Z",
+        }))
+        .expect("a pendente");
+        assert!(
+            matches!(pendente, Aberta::FaltaOCodigo { pendente, .. } if pendente.expor() == "pend")
+        );
     }
 }

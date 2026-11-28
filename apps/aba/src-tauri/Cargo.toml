@@ -21,7 +21,8 @@ tauri-plugin-global-shortcut = "2.4.1"
 grafite-aba-pipe = { path = "../pipe" }
 
 # O ponteiro, o foco, o tema, a apresentação e os avisos da troca da tela e dos ajustes, que o Tauri
-# não passa adiante (design, decisão 7), e o DPAPI da pessoa, que guarda o token da sessão. A mesma
+# não passa adiante (design, decisão 7), o DPAPI da pessoa, que guarda o token da sessão, e o aviso da
+# tela bloqueada e da saída do Windows, que terminam a sessão pela senha. A mesma
 # versão que o Tauri usa, para o HWND dele servir aqui.
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [
@@ -29,6 +30,7 @@ windows = { version = "0.62", features = [
   "Win32_Security",
   "Win32_Security_Cryptography",
   "Win32_System_Registry",
+  "Win32_System_RemoteDesktop",
   "Win32_System_Threading",
   "Win32_UI_Accessibility",
   "Win32_UI_Shell",

@@ -148,12 +148,12 @@ impl CofreDaPessoa {
     }
 }
 
-impl crate::sessao::Cofre for CofreDaPessoa {
-    fn ler(&self) -> Option<SessaoGuardada> {
+impl CofreDaPessoa {
+    pub fn ler(&self) -> Option<SessaoGuardada> {
         ler(self.caminho.as_deref()?)
     }
 
-    fn gravar(&self, sessao: &SessaoGuardada) -> io::Result<()> {
+    pub fn gravar(&self, sessao: &SessaoGuardada) -> io::Result<()> {
         let caminho = self
             .caminho
             .as_deref()
@@ -161,7 +161,7 @@ impl crate::sessao::Cofre for CofreDaPessoa {
         gravar(caminho, sessao)
     }
 
-    fn apagar(&self) {
+    pub fn apagar(&self) {
         if let Some(caminho) = self.caminho.as_deref() {
             apagar(caminho);
         }

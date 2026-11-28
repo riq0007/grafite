@@ -18,7 +18,7 @@ use grafite_aba_pipe::{
 };
 
 use crate::aparelho::Falha;
-use crate::api::ApiDaSessao;
+use crate::api::{Aberta, ApiDaSessao};
 use crate::log;
 use crate::problema::Decisao;
 use crate::segredo::Segredo;
@@ -92,7 +92,7 @@ impl<A: ApiDaSessao> Contexto<A> {
                     Ok(sessao) => {
                         log::info(&format!("a sessão de {} foi aberta", chamador.nome));
                         Resposta::Sessao {
-                            token: sessao.token.expor().to_owned(),
+                            token: sessao.token.expor().into(),
                             expira_em: sessao.expira_em,
                             nome: sessao.pessoa.nome,
                         }
@@ -107,7 +107,7 @@ impl<A: ApiDaSessao> Contexto<A> {
                 let Some(chamador) = quem_chama() else {
                     return Resposta::PedidoRecusado;
                 };
-                let token = Segredo::novo(token);
+                let token = Segredo::novo(token.expor());
                 match self
                     .api
                     .renovar(&servidor, &token, &chamador.sid, computador)
@@ -117,6 +117,81 @@ impl<A: ApiDaSessao> Contexto<A> {
                     },
                     Err(falha) => self.recusa(&falha, &chamador, "a renovação"),
                 }
+            }
+            // A entrada pela senha não lê quem chama: no perfil genérico, o usuário do Windows é
+            // o mesmo para todos, e o log não leva o usuário digitado, que às vezes é a senha.
+            Pedido::SessaoPelaSenha { usuario, senha } => {
+                let Some((servidor, token)) = self.credencial() else {
+                    return Resposta::Aparelho(retrato);
+                };
+                let senha = Segredo::novo(senha.expor());
+                let aberta = self
+                    .api
+                    .abrir_pela_senha(&servidor, &token, &usuario, &senha, computador);
+                self.da_senha(aberta)
+            }
+            Pedido::Codigo { pendente, codigo } => {
+                let Some((servidor, token)) = self.credencial() else {
+                    return Resposta::Aparelho(retrato);
+                };
+                let pendente = Segredo::novo(pendente.expor());
+                let codigo = Segredo::novo(codigo.expor());
+                let aberta = self
+                    .api
+                    .codigo(&servidor, &token, &pendente, &codigo, computador);
+                self.da_senha(aberta)
+            }
+            Pedido::Sair { token } => {
+                let Some(servidor) = retrato.servidor.clone() else {
+                    return Resposta::Aparelho(retrato);
+                };
+                match self.api.sair(&servidor, &Segredo::novo(token.expor())) {
+                    Ok(()) => {
+                        log::info("uma sessão pela senha terminou");
+                        Resposta::Feito
+                    }
+                    Err(falha) => Resposta::Recusa(falha.para_a_aba()),
+                }
+            }
+            Pedido::Uso { token } => {
+                let Some(servidor) = retrato.servidor.clone() else {
+                    return Resposta::Aparelho(retrato);
+                };
+                match self.api.uso(&servidor, &Segredo::novo(token.expor())) {
+                    Ok(()) => Resposta::Feito,
+                    Err(falha) => Resposta::Recusa(falha.para_a_aba()),
+                }
+            }
+        }
+    }
+
+    fn da_senha(&self, aberta: Result<Aberta, Falha>) -> Resposta {
+        match aberta {
+            Ok(Aberta::Sessao(sessao)) => {
+                log::info("uma sessão pela senha foi aberta");
+                Resposta::Sessao {
+                    token: sessao.token.expor().into(),
+                    expira_em: sessao.expira_em,
+                    nome: sessao.pessoa.nome,
+                }
+            }
+            Ok(Aberta::FaltaOCodigo {
+                pendente,
+                expira_em,
+                ..
+            }) => Resposta::FaltaOCodigo {
+                pendente: pendente.expor().into(),
+                expira_em,
+            },
+            Err(falha) => {
+                log::aviso(&format!(
+                    "a entrada pela senha foi recusada: {}",
+                    falha.para_o_log
+                ));
+                if matches!(falha.decisao, Decisao::TokenRecusado | Decisao::Bloqueado) {
+                    let _ = self.acordar.send(Sinal::Acordar);
+                }
+                Resposta::Recusa(falha.para_a_aba())
             }
         }
     }
@@ -273,6 +348,68 @@ mod testes {
                 expira_em: "2026-11-28T05:00:00.000Z".into(),
             })
         }
+
+        fn abrir_pela_senha(
+            &self,
+            servidor: &str,
+            token_do_aparelho: &Segredo,
+            usuario: &str,
+            senha: &Segredo,
+            _computador: Option<&str>,
+        ) -> Result<Aberta, Falha> {
+            self.chamadas.lock().expect("as chamadas").push(format!(
+                "senha {servidor} {} {usuario} {}",
+                token_do_aparelho.expor(),
+                senha.expor()
+            ));
+            if let Some(falha) = &self.recusar {
+                return Err(falha.clone());
+            }
+            Ok(Aberta::FaltaOCodigo {
+                falta_o_codigo: true,
+                pendente: Segredo::novo("pend"),
+                expira_em: "2026-11-28T04:05:00.000Z".into(),
+            })
+        }
+
+        fn codigo(
+            &self,
+            servidor: &str,
+            token_do_aparelho: &Segredo,
+            pendente: &Segredo,
+            codigo: &Segredo,
+            _computador: Option<&str>,
+        ) -> Result<Aberta, Falha> {
+            self.chamadas.lock().expect("as chamadas").push(format!(
+                "codigo {servidor} {} {} {}",
+                token_do_aparelho.expor(),
+                pendente.expor(),
+                codigo.expor()
+            ));
+            Ok(Aberta::Sessao(SessaoAberta {
+                token: Segredo::novo("tok_da_carla"),
+                expira_em: "2026-11-28T04:00:00.000Z".into(),
+                pessoa: PessoaDaSessao {
+                    nome: "Carla Dias".into(),
+                },
+            }))
+        }
+
+        fn sair(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha> {
+            self.chamadas
+                .lock()
+                .expect("as chamadas")
+                .push(format!("sair {servidor} {}", token_da_sessao.expor()));
+            Ok(())
+        }
+
+        fn uso(&self, servidor: &str, token_da_sessao: &Segredo) -> Result<(), Falha> {
+            self.chamadas
+                .lock()
+                .expect("as chamadas")
+                .push(format!("uso {servidor} {}", token_da_sessao.expor()));
+            Ok(())
+        }
     }
 
     fn retrato() -> Aparelho {
@@ -421,6 +558,69 @@ mod testes {
             [format!(
                 "renovar {SERVIDOR} tok_da_sessao S-1-5-21-1-2-3-1104"
             )]
+        );
+    }
+
+    #[test]
+    fn a_senha_e_o_codigo_vao_com_o_token_do_aparelho() {
+        let (contexto, _) = contexto(ApiFalsa::default(), credencial());
+        let lido = RefCell::new(false);
+        let resposta = contexto.responder(
+            br#"{"pedido":"sessao-pela-senha","usuario":"carla.dias","senha":"aba123"}"#,
+            || {
+                *lido.borrow_mut() = true;
+                fernanda()
+            },
+        );
+        assert_eq!(
+            resposta,
+            Resposta::FaltaOCodigo {
+                pendente: "pend".into(),
+                expira_em: "2026-11-28T04:05:00.000Z".into()
+            }
+        );
+        assert!(!*lido.borrow(), "a entrada pela senha não lê quem chama");
+        let resposta = contexto.responder(
+            br#"{"pedido":"codigo","pendente":"pend","codigo":"123456"}"#,
+            fernanda,
+        );
+        assert!(matches!(resposta, Resposta::Sessao { nome, .. } if nome == "Carla Dias"));
+        assert_eq!(
+            contexto
+                .api
+                .chamadas
+                .lock()
+                .expect("as chamadas")
+                .as_slice(),
+            [
+                format!("senha {SERVIDOR} tok_do_aparelho carla.dias aba123"),
+                format!("codigo {SERVIDOR} tok_do_aparelho pend 123456"),
+            ]
+        );
+    }
+
+    #[test]
+    fn o_sair_e_o_uso_vao_com_o_token_da_pessoa() {
+        let (contexto, _) = contexto(ApiFalsa::default(), credencial());
+        assert_eq!(
+            contexto.responder(br#"{"pedido":"sair","token":"tok_da_carla"}"#, || None),
+            Resposta::Feito
+        );
+        assert_eq!(
+            contexto.responder(br#"{"pedido":"uso","token":"tok_da_carla"}"#, || None),
+            Resposta::Feito
+        );
+        assert_eq!(
+            contexto
+                .api
+                .chamadas
+                .lock()
+                .expect("as chamadas")
+                .as_slice(),
+            [
+                format!("sair {SERVIDOR} tok_da_carla"),
+                format!("uso {SERVIDOR} tok_da_carla"),
+            ]
         );
     }
 

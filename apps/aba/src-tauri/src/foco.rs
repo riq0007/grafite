@@ -29,6 +29,11 @@ pub fn guardar_a_frente(app: &AppHandle) {
     }
 }
 
+/// Uma janela nossa na frente: a aba ou a tela maior com o foco.
+pub fn nossa_na_frente() -> bool {
+    nativo::nossa_na_frente()
+}
+
 /// O Esc do painel: devolve o foco à janela que estava na frente antes da aba.
 #[tauri::command]
 pub fn devolver_o_foco(foco: tauri::State<'_, Foco>) {
@@ -73,6 +78,19 @@ mod nativo {
         }
     }
 
+    pub fn nossa_na_frente() -> bool {
+        // SAFETY: só leituras do Windows; o processo da janela vem num número nosso.
+        unsafe {
+            let frente = GetForegroundWindow();
+            if frente.is_invalid() {
+                return false;
+            }
+            let mut processo = 0;
+            GetWindowThreadProcessId(frente, Some(&raw mut processo));
+            processo == GetCurrentProcessId()
+        }
+    }
+
     pub fn por_na_frente(janela: isize) {
         let janela = HWND(janela as *mut _);
         // SAFETY: a janela pode ter fechado; o IsWindow confere antes, e a chamada só falha.
@@ -88,6 +106,10 @@ mod nativo {
 mod nativo {
     pub fn frente_de_fora() -> Option<isize> {
         None
+    }
+
+    pub fn nossa_na_frente() -> bool {
+        false
     }
 
     pub fn por_na_frente(_janela: isize) {}

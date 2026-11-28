@@ -14,7 +14,7 @@ use tauri::{
 use crate::aparencia::{Aparencia, EVENTO_DA_APARENCIA};
 use crate::forma::{self, Retangulo};
 use crate::posicao::{Lugar, Monitor, Origem, Tela};
-use crate::{foco, sistema};
+use crate::{foco, sessao, sistema};
 
 pub const JANELA_DA_ABA: &str = "aba";
 pub const JANELA_DA_TELA_MAIOR: &str = "maior";
@@ -269,6 +269,7 @@ pub fn ao_mudar(janela: &Window, evento: &WindowEvent) {
         // O WM_DPICHANGED: a escala do monitor mudou, ou a janela passou a outro.
         WindowEvent::ScaleFactorChanged { .. } => estado.avisar_a_troca(),
         WindowEvent::Focused(false) => foco::ao_perder_o_foco(janela.app_handle()),
+        WindowEvent::Focused(true) => sessao::usar(janela.app_handle()),
         WindowEvent::Destroyed => {
             if let Ok(mut cliques) = estado.cliques.lock() {
                 cliques.remove(janela.label());

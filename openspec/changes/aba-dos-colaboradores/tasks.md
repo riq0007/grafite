@@ -189,7 +189,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [x] 5.12 A sessão pelo Windows entregue à aba: o pedido pelo pipe, a renovação de hora em hora e o token da pessoa cifrado pelo DPAPI dela.
 
   Verificar: os testes do Rust e a aba no `tauri dev` contra o `pnpm dev`, com a entrada pelo Windows.
-- [ ] 5.13 A sessão pela senha entregue à aba:
+- [x] 5.13 A sessão pela senha entregue à aba:
   - o usuário, a senha e o código pelo pipe;
   - o token só na memória;
   - o uso informado;

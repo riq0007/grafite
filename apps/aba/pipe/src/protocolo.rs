@@ -2,7 +2,38 @@
 //! serviço guarda o que é do computador, para todas as pessoas: a situação do aparelho e a última
 //! configuração que a API mandou.
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
+
+/// A senha, o código e os tokens no pipe: o `Debug` não os mostra.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Oculto(String);
+
+impl Oculto {
+    pub fn expor(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<String> for Oculto {
+    fn from(valor: String) -> Self {
+        Self(valor)
+    }
+}
+
+impl From<&str> for Oculto {
+    fn from(valor: &str) -> Self {
+        Self(valor.to_owned())
+    }
+}
+
+impl fmt::Debug for Oculto {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Oculto(…)")
+    }
+}
 
 /// A entrada do aparelho, que é do servidor (design, decisão 2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,9 +116,16 @@ pub enum Pedido {
     Aparelho,
     /// A sessão de quem chama, pelo SID que o Windows dá ao serviço, e não pelo que a aba diz.
     SessaoPeloWindows,
+    /// A sessão pela senha do AD, no aparelho com a entrada pela senha.
+    SessaoPelaSenha { usuario: String, senha: Oculto },
+    /// O código do app, com a pendente da primeira chamada.
+    Codigo { pendente: Oculto, codigo: Oculto },
     /// A renovação da sessão de quem chama, com o SID dela.
-    #[serde(rename_all = "camelCase")]
-    Renovar { token: String },
+    Renovar { token: Oculto },
+    /// O "Sair", a tela bloqueada e a saída do Windows: a sessão termina no servidor.
+    Sair { token: Oculto },
+    /// A aba ou a tela maior com o foco, no máximo uma vez por minuto.
+    Uso { token: Oculto },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -97,14 +135,22 @@ pub enum Resposta {
     /// A sessão aberta: o token vai só a quem pediu, pela conexão dele.
     #[serde(rename_all = "camelCase")]
     Sessao {
-        token: String,
+        token: Oculto,
         expira_em: String,
         nome: String,
+    },
+    /// A conta com os dois passos: a aba pede o código, que volta com a pendente.
+    #[serde(rename_all = "camelCase")]
+    FaltaOCodigo {
+        pendente: Oculto,
+        expira_em: String,
     },
     #[serde(rename_all = "camelCase")]
     Renovada {
         expira_em: String,
     },
+    /// O "Sair" e o uso, que a API respondeu sem corpo.
+    Feito,
     Recusa(Recusa),
     /// O pedido que o serviço não entendeu.
     PedidoRecusado,
@@ -132,6 +178,28 @@ mod testes {
             Some(Pedido::Renovar {
                 token: "tok".into()
             })
+        );
+        let pela_senha = Pedido::SessaoPelaSenha {
+            usuario: "carla.dias".into(),
+            senha: "aba123".into(),
+        };
+        assert_eq!(
+            serde_json::to_value(&pela_senha).ok(),
+            Some(
+                json!({"pedido": "sessao-pela-senha", "usuario": "carla.dias", "senha": "aba123"})
+            )
+        );
+        assert!(
+            !format!("{pela_senha:?}").contains("aba123"),
+            "o Debug esconde a senha"
+        );
+        assert_eq!(
+            serde_json::to_value(Pedido::Codigo {
+                pendente: "pend".into(),
+                codigo: "123456".into()
+            })
+            .ok(),
+            Some(json!({"pedido": "codigo", "pendente": "pend", "codigo": "123456"}))
         );
     }
 
@@ -204,6 +272,22 @@ mod testes {
         assert_eq!(
             serde_json::to_value(Resposta::PedidoRecusado).ok(),
             Some(json!({"resposta": "pedido-recusado"}))
+        );
+        assert_eq!(
+            serde_json::to_value(Resposta::Feito).ok(),
+            Some(json!({"resposta": "feito"}))
+        );
+        assert_eq!(
+            serde_json::to_value(Resposta::FaltaOCodigo {
+                pendente: "pend".into(),
+                expira_em: "2026-11-28T04:05:00.000Z".into()
+            })
+            .ok(),
+            Some(json!({
+                "resposta": "falta-o-codigo",
+                "pendente": "pend",
+                "expiraEm": "2026-11-28T04:05:00.000Z",
+            }))
         );
         assert_eq!(
             serde_json::to_value(Situacao::RegistrarDeNovo).ok(),

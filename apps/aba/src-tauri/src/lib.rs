@@ -19,6 +19,7 @@ use aparencia::Aparencia;
 use estado::Estado;
 use foco::Foco;
 use janela::{JANELA_DA_ABA, Janelas};
+use sessao::Comandos;
 use tela_maior::EstadoDaTelaMaior;
 
 #[tauri::command]
@@ -60,6 +61,10 @@ pub fn rodar() {
             tela_maior::abrir_tela_maior,
             tela_maior::fechar_tela_maior,
             tela_maior::informar_corpo,
+            sessao::entrar,
+            sessao::enviar_o_codigo,
+            sessao::recomecar_a_entrada,
+            sessao::sair,
         ])
         .setup(|app| {
             let tela = janela::tela_principal(app.handle());
@@ -74,8 +79,17 @@ pub fn rodar() {
             app.manage(janelas);
             janela::preparar(app.handle(), trocas)?;
             atalho::registrar(app.handle());
+            let (comandos, da_sessao) = Comandos::nova();
             #[cfg(windows)]
-            sessao::iniciar(app.handle().clone());
+            {
+                if let Some(aba) = app.get_webview_window(JANELA_DA_ABA) {
+                    sessao::ouvir_os_fins(&aba, comandos.copia());
+                }
+                sessao::iniciar(app.handle().clone(), da_sessao);
+            }
+            #[cfg(not(windows))]
+            drop(da_sessao);
+            app.manage(comandos);
             Ok(())
         })
         .on_window_event(janela::ao_mudar)
