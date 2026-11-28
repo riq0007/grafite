@@ -1,17 +1,16 @@
 //! O estado que a tela lê pelo comando `estado` e recebe no evento `estado-mudou`, com o formato do
 //! `GET /api/aba/estado` (design, decisão 6). A sessão dá a pessoa, o motivo da aba sem conexão e,
-//! na entrada pela senha, o formulário; a rede entra na tarefa 5.14.
+//! na entrada pela senha, o formulário; a rede dá as contagens, as respostas por ver e a queda.
 
 use std::sync::Mutex;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 pub const EVENTO_DO_ESTADO: &str = "estado-mudou";
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code, reason = "o estado da API entra na tarefa 5.14")]
 pub struct RespostaPorVer {
     pub quem: String,
     pub numero: u32,
@@ -19,8 +18,7 @@ pub struct RespostaPorVer {
     pub momento: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[allow(dead_code, reason = "o estado da API entra na tarefa 5.14")]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PorVer {
     pub quantas: u32,
     pub ultima: Option<RespostaPorVer>,
@@ -75,6 +73,23 @@ pub struct EstadoDaAba {
     pub atalho_ocupado: bool,
     pub sem_conexao: Option<SemConexao>,
     pub formulario: Option<Formulario>,
+    /// O motivo que a sessão dá, do aparelho ou da pessoa, que vem antes da rede.
+    #[serde(skip)]
+    pub motivo_da_sessao: Option<String>,
+    /// A conexão de eventos sem o sinal de vida por 30 s.
+    #[serde(skip)]
+    pub rede_caida: bool,
+}
+
+impl EstadoDaAba {
+    /// O `semConexao` da tela, do motivo da sessão ou da rede caída.
+    pub fn recompor(&mut self) {
+        self.sem_conexao = self
+            .motivo_da_sessao
+            .clone()
+            .or_else(|| self.rede_caida.then(|| crate::sessao::SEM_REDE.to_owned()))
+            .map(|motivo| SemConexao { motivo });
+    }
 }
 
 impl Default for EstadoDaAba {
@@ -88,6 +103,8 @@ impl Default for EstadoDaAba {
             atalho_ocupado: false,
             sem_conexao: None,
             formulario: None,
+            motivo_da_sessao: None,
+            rede_caida: false,
         }
     }
 }
@@ -138,6 +155,30 @@ mod testes {
                 "formulario": null,
             })
         );
+    }
+
+    #[test]
+    fn o_motivo_da_sessao_vem_antes_da_rede_caida() {
+        let mut estado = EstadoDaAba {
+            rede_caida: true,
+            ..EstadoDaAba::default()
+        };
+        estado.recompor();
+        assert_eq!(
+            estado.sem_conexao.as_ref().map(|sem| sem.motivo.as_str()),
+            Some(crate::sessao::SEM_REDE)
+        );
+        estado.motivo_da_sessao =
+            Some("Este computador foi bloqueado na aba. Fale com a TI.".into());
+        estado.recompor();
+        assert_eq!(
+            estado.sem_conexao.as_ref().map(|sem| sem.motivo.as_str()),
+            Some("Este computador foi bloqueado na aba. Fale com a TI.")
+        );
+        estado.motivo_da_sessao = None;
+        estado.rede_caida = false;
+        estado.recompor();
+        assert_eq!(estado.sem_conexao, None);
     }
 
     #[test]

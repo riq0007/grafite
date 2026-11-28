@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use grafite_aba_pipe::{
     Aparelho, Chamador, Erro, Instancia, NOME_DO_PIPE, Pedido, Resposta, Situacao, com_prazo,
@@ -42,7 +42,13 @@ pub struct Contexto<A> {
     pub computador: Option<String>,
     /// O token do aparelho recusado num pedido da sessão acorda o laço do aparelho.
     pub acordar: Sender<Sinal>,
+    /// O último `conferir` que acordou o laço: um a cada 10 s, para a aba não levar o serviço a
+    /// gastar o limite do token na API.
+    pub conferido_em: Mutex<Option<Instant>>,
 }
+
+/// O intervalo mínimo entre dois `conferir` que acordam o laço do aparelho.
+pub const ENTRE_CONFERENCIAS: Duration = Duration::from_secs(10);
 
 impl<A: ApiDaSessao> Contexto<A> {
     fn retrato(&self) -> Aparelho {
@@ -152,6 +158,16 @@ impl<A: ApiDaSessao> Contexto<A> {
                     }
                     Err(falha) => Resposta::Recusa(falha.para_a_aba()),
                 }
+            }
+            Pedido::Conferir => {
+                let agora = Instant::now();
+                if let Ok(mut conferido_em) = self.conferido_em.lock()
+                    && conferido_em.is_none_or(|em| agora >= em + ENTRE_CONFERENCIAS)
+                {
+                    *conferido_em = Some(agora);
+                    let _ = self.acordar.send(Sinal::Acordar);
+                }
+                Resposta::Feito
             }
             Pedido::Uso { token } => {
                 let Some(servidor) = retrato.servidor.clone() else {
@@ -437,6 +453,7 @@ mod testes {
             api,
             computador: Some("PC-FIN-09".into()),
             acordar,
+            conferido_em: Mutex::new(None),
         };
         (contexto, sinais)
     }
@@ -596,6 +613,30 @@ mod testes {
                 format!("senha {SERVIDOR} tok_do_aparelho carla.dias aba123"),
                 format!("codigo {SERVIDOR} tok_do_aparelho pend 123456"),
             ]
+        );
+    }
+
+    #[test]
+    fn o_conferir_acorda_o_laco_no_maximo_a_cada_10_s() {
+        let (contexto, sinais) = contexto(ApiFalsa::default(), credencial());
+        for _ in 0..3 {
+            assert_eq!(
+                contexto.responder(br#"{"pedido":"conferir"}"#, || None),
+                Resposta::Feito
+            );
+        }
+        assert!(matches!(sinais.try_recv(), Ok(Sinal::Acordar)));
+        assert!(
+            sinais.try_recv().is_err(),
+            "os seguidos não acordam de novo"
+        );
+        assert!(
+            contexto
+                .api
+                .chamadas
+                .lock()
+                .expect("as chamadas")
+                .is_empty()
         );
     }
 

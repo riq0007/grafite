@@ -1,6 +1,6 @@
 //! A aparência que a tela lê pelo comando `aparencia` e recebe no evento `aparencia-mudou` (design,
 //! decisão 7): a forma, o tema e as animações do Windows, a tela principal, o contato de reserva e a
-//! apresentação. O tema e a apresentação entram na tarefa 5.9, e a configuração, na 5.14.
+//! apresentação. A forma e o contato vêm da configuração que o serviço guarda.
 
 use serde::Serialize;
 
@@ -15,8 +15,16 @@ const ALTURA_DA_TELA_BAIXA: u32 = 800;
 #[serde(rename_all = "kebab-case")]
 pub enum Forma {
     Pilula,
-    #[allow(dead_code, reason = "a forma da configuração entra na tarefa 5.14")]
     Entalhe,
+}
+
+impl From<grafite_aba_pipe::Forma> for Forma {
+    fn from(forma: grafite_aba_pipe::Forma) -> Self {
+        match forma {
+            grafite_aba_pipe::Forma::Pilula => Self::Pilula,
+            grafite_aba_pipe::Forma::Entalhe => Self::Entalhe,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

@@ -27,10 +27,13 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::Manager;
 
-use grafite_aba_pipe::{Aparelho, Entrada, Oculto, Pedido, Recusa, Resposta, Situacao};
+use grafite_aba_pipe::{
+    Aparelho, Configuracao, Entrada, Oculto, Pedido, Recusa, Resposta, Situacao,
+};
 
 use crate::cofre::SessaoGuardada;
 use crate::estado::{Formulario, Passo};
+use crate::rede::Credencial;
 
 /// As frases do `FRASES_SEM_CONEXAO` do domínio que a aba usa sem a API.
 pub const NAO_CONFIGURADA: &str = "A aba não foi configurada. Fale com a TI.";
@@ -84,6 +87,10 @@ pub struct Sessao<S, C> {
     uso_em: Option<Instant>,
     /// Sem o uso até aqui, a API já encerrou a sessão pela senha.
     conferir_o_uso_em: Option<Instant>,
+    /// A versão da configuração que a aba já pediu ao serviço para buscar.
+    versao_pedida: Option<i64>,
+    /// A última configuração do serviço: a forma, o contato e a entrada.
+    pub configuracao: Option<Configuracao>,
     /// Quem está na aba.
     pub nome: Option<String>,
     /// A sessão é da entrada pela senha, com o "Sair".
@@ -110,6 +117,8 @@ impl<S: Servico, C: Cofre> Sessao<S, C> {
             esperar_ate: None,
             uso_em: None,
             conferir_o_uso_em: None,
+            versao_pedida: None,
+            configuracao: None,
             nome: None,
             pela_senha: false,
             motivo: None,
@@ -117,10 +126,39 @@ impl<S: Servico, C: Cofre> Sessao<S, C> {
         }
     }
 
-    /// O token da sessão que vale agora, para os pedidos da aba à API.
-    #[allow(dead_code, reason = "os pedidos da aba à API entram na tarefa 5.14")]
-    pub fn atual(&self) -> Option<&SessaoGuardada> {
-        self.atual.as_ref()
+    /// O servidor e o token da sessão que vale agora, para o estado e os eventos.
+    pub fn credencial(&self) -> Option<Credencial> {
+        self.atual.as_ref().map(|sessao| Credencial {
+            servidor: sessao.servidor.clone(),
+            token: sessao.token.clone(),
+        })
+    }
+
+    /// O `sessao` dos eventos e o 401 do estado: a renovação vai já, e a recusa dela dá o motivo.
+    pub fn conferir_ja(&mut self, agora: Instant) {
+        if self.atual.is_some() {
+            self.renovar_em = Some(agora);
+        }
+    }
+
+    /// A configuração, a entrada ou o bloqueio mudaram: o serviço fala com a API já.
+    pub fn conferir_o_aparelho(&mut self) {
+        let _ = self.servico.pedir(&Pedido::Conferir);
+    }
+
+    /// A versão da configuração do estado: outra que a do serviço pede a ele que a busque, uma vez
+    /// por versão. Devolve se pediu.
+    pub fn versao(&mut self, versao: i64) -> bool {
+        let guardada = self
+            .configuracao
+            .as_ref()
+            .map(|configuracao| configuracao.versao);
+        if guardada == Some(versao) || self.versao_pedida == Some(versao) {
+            return false;
+        }
+        self.versao_pedida = Some(versao);
+        self.conferir_o_aparelho();
+        true
     }
 
     /// Esquece a sessão: a do Windows sai do disco, e a da senha leva os dados do chat.
@@ -161,6 +199,9 @@ impl<S: Servico, C: Cofre> Sessao<S, C> {
                 return UM_MINUTO;
             }
         };
+        if aparelho.configuracao.is_some() {
+            self.configuracao.clone_from(&aparelho.configuracao);
+        }
         let Some(servidor) = aparelho.servidor.clone() else {
             self.esquecer();
             self.do_aparelho(&aparelho);
@@ -685,6 +726,12 @@ pub enum Acao {
     /// O "Sair", a tela bloqueada e a saída do Windows.
     Sair,
     Uso,
+    /// O `sessao` dos eventos e o 401 do estado.
+    ConferirASessao,
+    /// Os eventos da configuração, da entrada e do bloqueio.
+    ConferirOAparelho,
+    /// A versão da configuração que o estado deu.
+    Versao(i64),
 }
 
 pub struct Comando {
@@ -695,6 +742,12 @@ pub struct Comando {
 
 /// A entrada da linha da sessão, que a tela e a janela da aba usam.
 pub struct Comandos(Sender<Comando>);
+
+impl Comando {
+    pub fn sem_resposta(acao: Acao) -> Self {
+        Self { acao, feito: None }
+    }
+}
 
 impl Comandos {
     pub fn nova() -> (Self, Receiver<Comando>) {
@@ -728,6 +781,9 @@ impl Comandos {
 
 /// O pipe leva até 5 s em cada sentido, e a API, até 30 s.
 const PRAZO_DO_PEDIDO: Duration = Duration::from_secs(40);
+/// O serviço acordado fala com a API; a aba relê a situação dele depois disto.
+#[cfg(windows)]
+const DEPOIS_DO_SERVICO: Duration = Duration::from_secs(3);
 
 async fn pedir_e_esperar(app: tauri::AppHandle, acao: Acao) {
     let _ = tauri::async_runtime::spawn_blocking(move || {
@@ -812,22 +868,30 @@ fn publicar<S: Servico, C: Cofre>(app: &tauri::AppHandle, sessao: &Sessao<S, C>)
         nome,
         pela_senha: sessao.pela_senha,
     });
-    let sem_conexao = sessao
-        .motivo
-        .clone()
-        .map(|motivo| crate::estado::SemConexao { motivo });
+    let motivo = sessao.motivo.clone();
     let formulario = sessao.formulario.clone();
     crate::estado::mudar(app, |estado| {
         estado.pessoa = pessoa;
-        estado.sem_conexao = sem_conexao;
+        estado.motivo_da_sessao = motivo;
         estado.formulario = formulario;
+        estado.recompor();
     });
+    if let Some(configuracao) = sessao.configuracao.clone() {
+        crate::janela::mudar_a_aparencia(app, |aparencia| {
+            aparencia.forma = configuracao.forma.into();
+            aparencia.contato = configuracao.contato;
+        });
+    }
 }
 
 /// A linha da sessão: os passos, de no máximo 1 minuto, para a situação do aparelho chegar à tela,
 /// e entre eles o que a tela e o Windows pedem. A cada passo com uma janela nossa na frente, o uso.
 #[cfg(windows)]
-pub fn iniciar(app: tauri::AppHandle, comandos: Receiver<Comando>) {
+pub fn iniciar(
+    app: tauri::AppHandle,
+    comandos: Receiver<Comando>,
+    credenciais: tokio::sync::watch::Sender<Option<Credencial>>,
+) {
     std::thread::spawn(move || {
         let mut sessao = Sessao::nova(
             ServicoPeloPipe,
@@ -846,6 +910,14 @@ pub fn iniciar(app: tauri::AppHandle, comandos: Receiver<Comando>) {
                 }
             }
             publicar(&app, &sessao);
+            let credencial = sessao.credencial();
+            credenciais.send_if_modified(|atual| {
+                let mudou = *atual != credencial;
+                if mudou {
+                    atual.clone_from(&credencial);
+                }
+                mudou
+            });
             let comando =
                 match comandos.recv_timeout(proximo.saturating_duration_since(Instant::now())) {
                     Ok(comando) => comando,
@@ -868,6 +940,15 @@ pub fn iniciar(app: tauri::AppHandle, comandos: Receiver<Comando>) {
                     sessao.uso(agora);
                     None
                 }
+                Acao::ConferirASessao => {
+                    sessao.conferir_ja(agora);
+                    Some(Duration::ZERO)
+                }
+                Acao::ConferirOAparelho => {
+                    sessao.conferir_o_aparelho();
+                    Some(DEPOIS_DO_SERVICO)
+                }
+                Acao::Versao(versao) => sessao.versao(versao).then_some(DEPOIS_DO_SERVICO),
             };
             if let Some(espera) = logo {
                 proximo = proximo.min(agora + espera);
@@ -1611,6 +1692,47 @@ mod testes {
         assert_eq!(aba.formulario, None);
         assert!(!aba.pela_senha);
         assert_eq!(aba.nome.as_deref(), Some("Fernanda Lima"));
+    }
+
+    #[test]
+    fn o_fim_dos_eventos_renova_ja() {
+        let servico = ServicoFalso::com(registrado(Entrada::Windows));
+        servico.depois(sessao("tok_1"));
+        let cofre = CofreFalso::default();
+        let mut aba = Sessao::nova(&servico, &cofre);
+        let agora = Instant::now();
+        aba.passo(agora);
+        assert_eq!(
+            aba.credencial().map(|credencial| credencial.token),
+            Some("tok_1".to_owned())
+        );
+        aba.conferir_ja(agora + UM_MINUTO);
+        servico.depois(Resposta::Recusa(Recusa {
+            motivo_do_fim: Some("saiu".into()),
+            ..recusa("sessao-da-aba-recusada")
+        }));
+        servico.depois(sessao("tok_2"));
+        aba.passo(agora + UM_MINUTO);
+        assert_eq!(aba.credencial(), None, "a recusa esquece a sessão");
+        aba.passo(agora + UM_MINUTO);
+        assert_eq!(
+            aba.credencial().map(|credencial| credencial.token),
+            Some("tok_2".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_versao_nova_pede_ao_servico_uma_vez() {
+        let servico = ServicoFalso::com(registrado(Entrada::Windows));
+        servico.depois(sessao("tok_1"));
+        let cofre = CofreFalso::default();
+        let mut aba = Sessao::nova(&servico, &cofre);
+        aba.passo(Instant::now());
+        assert!(!aba.versao(1), "a do serviço");
+        servico.depois(Resposta::Feito);
+        assert!(aba.versao(2));
+        assert!(!aba.versao(2), "uma vez por versão");
+        assert_eq!(servico.da_sessao().last(), Some(&Pedido::Conferir));
     }
 
     #[test]

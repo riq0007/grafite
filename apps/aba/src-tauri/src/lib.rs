@@ -1,5 +1,5 @@
 //! O lado nativo da aba (change aba-dos-colaboradores, design, decisão 1): as janelas da tela, os
-//! comandos que ela chama e a sessão, que ela pede ao serviço pelo pipe.
+//! comandos que ela chama, a sessão, que ela pede ao serviço pelo pipe, e a rede do estado.
 
 mod aparencia;
 mod atalho;
@@ -9,6 +9,7 @@ mod foco;
 mod forma;
 mod janela;
 mod posicao;
+mod rede;
 mod sessao;
 mod sistema;
 mod tela_maior;
@@ -85,7 +86,9 @@ pub fn rodar() {
                 if let Some(aba) = app.get_webview_window(JANELA_DA_ABA) {
                     sessao::ouvir_os_fins(&aba, comandos.copia());
                 }
-                sessao::iniciar(app.handle().clone(), da_sessao);
+                let (credenciais, da_rede) = tokio::sync::watch::channel(None);
+                sessao::iniciar(app.handle().clone(), da_sessao, credenciais);
+                rede::iniciar(app.handle().clone(), da_rede, comandos.copia());
             }
             #[cfg(not(windows))]
             drop(da_sessao);

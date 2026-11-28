@@ -15,6 +15,7 @@ mod cliente;
 #[cfg(windows)]
 mod prazo;
 mod protocolo;
+pub mod proxy;
 #[cfg(windows)]
 mod seguranca;
 #[cfg(windows)]

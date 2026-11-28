@@ -126,6 +126,8 @@ pub enum Pedido {
     Sair { token: Oculto },
     /// A aba ou a tela maior com o foco, no máximo uma vez por minuto.
     Uso { token: Oculto },
+    /// A configuração, a entrada ou o bloqueio mudaram: o serviço fala com a API já.
+    Conferir,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

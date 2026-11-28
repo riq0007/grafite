@@ -167,6 +167,7 @@ fn rodar(sinais: &Receiver<Sinal>, acordar: Sender<Sinal>, no_console: bool) -> 
         api,
         computador,
         acordar,
+        conferido_em: Mutex::new(None),
     });
     {
         let contexto = Arc::clone(&contexto);

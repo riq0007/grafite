@@ -201,7 +201,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - os dois 429 com a espera: o `entrada-bloqueada`, do usuário, com o `retry-after`, e o `muitas-requisicoes`, do computador, com a espera no `detail`.
 
   Verificar: os testes do Rust e, com a entrada trocada pelo comando, a aba no `tauri dev` com a senha `aba123`: o "Sair" encerra a sessão no servidor.
-- [ ] 5.14 A rede e o estado (decisão 10):
+- [x] 5.14 A rede e o estado (decisão 10):
   - o `reqwest` com o schannel e os dois proxies;
   - os comandos da tela;
   - os eventos passados à tela, com o atraso sorteado só nos de muita gente, a releitura a cada 60 s e o sem conexão em 30 s;

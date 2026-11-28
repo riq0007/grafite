@@ -1,6 +1,6 @@
 //! A API pelo `reqwest`, com o schannel do Windows (design, decisão 10): o certificado conferido
-//! pelo repositório do Windows, que tem a autoridade interna da empresa. Sem seguir redirecionamento,
-//! para o token não ir a outro endereço.
+//! pelo repositório do Windows, que tem a autoridade interna da empresa, e o proxy da máquina, do
+//! `netsh winhttp`. Sem seguir redirecionamento, para o token não ir a outro endereço.
 
 use std::time::Duration;
 
@@ -100,13 +100,25 @@ pub struct ApiHttp {
 
 impl ApiHttp {
     pub fn nova() -> reqwest::Result<Self> {
-        let cliente = Client::builder()
+        let construtor = Client::builder()
             .connect_timeout(Duration::from_secs(10))
             .timeout(Duration::from_secs(30))
             .redirect(Policy::none())
             .user_agent(format!("grafite-aba-servico/{VERSAO}"))
-            .build()?;
-        Ok(Self { cliente })
+            // Só o proxy da máquina, e não o das variáveis de ambiente.
+            .no_proxy();
+        #[cfg(windows)]
+        let construtor = match grafite_aba_pipe::proxy::da_maquina() {
+            Some(proxy) => construtor.proxy(reqwest::Proxy::custom(move |url| {
+                proxy
+                    .para(url.scheme(), url.host_str()?, url.port_or_known_default())
+                    .and_then(|servidor| reqwest::Url::parse(&servidor).ok())
+            })),
+            None => construtor,
+        };
+        Ok(Self {
+            cliente: construtor.build()?,
+        })
     }
 }
 

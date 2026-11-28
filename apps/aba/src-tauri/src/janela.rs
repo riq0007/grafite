@@ -104,7 +104,7 @@ fn colocar(janela: &WebviewWindow, lugar: Lugar) {
 }
 
 /// Muda a aparência e avisa a tela, só quando ela muda.
-fn mudar_a_aparencia(app: &AppHandle, mudanca: impl FnOnce(&mut Aparencia)) {
+pub fn mudar_a_aparencia(app: &AppHandle, mudanca: impl FnOnce(&mut Aparencia)) {
     let janelas = app.state::<Janelas>();
     let nova = {
         let Ok(mut atual) = janelas.aparencia.lock() else {
