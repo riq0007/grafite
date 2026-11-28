@@ -1,6 +1,8 @@
 //! O foco (design, decisão 7): a janela da frente, guardada para o Esc a devolver, e a perda do foco,
 //! que fecha o painel. A tela não usa o `blur`: a tela maior também tira o foco da janela da aba sem
-//! fechar o painel, e só uma janela de outro programa na frente fecha.
+//! fechar o painel, e só uma janela de outro programa na frente fecha. A janela que é dona de uma
+//! nossa conta como nossa: o menu do botão direito, a lista do `select` e o seletor de arquivos do
+//! chat são do processo do WebView2, donos da tela maior.
 
 use std::sync::Mutex;
 use std::thread;
@@ -61,34 +63,39 @@ mod nativo {
     use windows::Win32::Foundation::HWND;
     use windows::Win32::System::Threading::GetCurrentProcessId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetForegroundWindow, GetWindowThreadProcessId, IsWindow, SetForegroundWindow,
+        GA_ROOTOWNER, GetAncestor, GetForegroundWindow, GetWindowThreadProcessId, IsWindow,
+        SetForegroundWindow,
     };
+
+    fn processo_de(janela: HWND) -> u32 {
+        let mut processo = 0;
+        // SAFETY: só leitura do Windows; o processo vem num número nosso.
+        unsafe { GetWindowThreadProcessId(janela, Some(&raw mut processo)) };
+        processo
+    }
+
+    /// A janela é nossa, ou tem uma nossa como dona, como os popups do WebView2 do chat.
+    fn nossa(janela: HWND) -> bool {
+        // SAFETY: só leituras do Windows.
+        let (nosso, dona) = unsafe { (GetCurrentProcessId(), GetAncestor(janela, GA_ROOTOWNER)) };
+        processo_de(janela) == nosso || (!dona.is_invalid() && processo_de(dona) == nosso)
+    }
+
+    fn frente() -> Option<HWND> {
+        // SAFETY: só leitura do Windows.
+        let frente = unsafe { GetForegroundWindow() };
+        (!frente.is_invalid()).then_some(frente)
+    }
 
     /// A janela da frente, se ela é de outro programa.
     pub fn frente_de_fora() -> Option<isize> {
-        // SAFETY: só leituras do Windows; o processo da janela vem num número nosso.
-        unsafe {
-            let frente = GetForegroundWindow();
-            if frente.is_invalid() {
-                return None;
-            }
-            let mut processo = 0;
-            GetWindowThreadProcessId(frente, Some(&raw mut processo));
-            (processo != GetCurrentProcessId()).then_some(frente.0 as isize)
-        }
+        frente()
+            .filter(|&janela| !nossa(janela))
+            .map(|janela| janela.0 as isize)
     }
 
     pub fn nossa_na_frente() -> bool {
-        // SAFETY: só leituras do Windows; o processo da janela vem num número nosso.
-        unsafe {
-            let frente = GetForegroundWindow();
-            if frente.is_invalid() {
-                return false;
-            }
-            let mut processo = 0;
-            GetWindowThreadProcessId(frente, Some(&raw mut processo));
-            processo == GetCurrentProcessId()
-        }
+        frente().is_some_and(nossa)
     }
 
     pub fn por_na_frente(janela: isize) {

@@ -13,6 +13,7 @@
     "windows": [
       {
         "label": "aba",
+        "create": false,
         "title": "Suporte da TI",
         "width": 440,
         "height": 560,

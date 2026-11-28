@@ -1,11 +1,12 @@
 //! A tela maior (design, decisão 8): a segunda janela, embaixo da aba, com a moldura local
-//! (`maior.html`). O webview do chat entra nela na tarefa 5.15, no lugar que o `informar_corpo` diz.
+//! (`maior.html`). O webview do chat (`chat.rs`) entra nela no lugar que o `informar_corpo` diz.
 
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
+use crate::chat;
 use crate::janela::{self, JANELA_DA_ABA, JANELA_DA_TELA_MAIOR, Janelas};
 
 pub const EVENTO_DA_TELA_MAIOR: &str = "tela-maior-mudou";
@@ -28,6 +29,11 @@ pub struct TelaMaior {
 }
 
 impl TelaMaior {
+    /// O chat fica no corpo, como o `comOChat` da moldura; as outras opções ainda não têm conteúdo.
+    pub fn com_o_chat(self) -> bool {
+        matches!(self.destino, Destino::AbrirChat | Destino::Chamado)
+    }
+
     /// O destino com o número só no chamado, e o chamado sempre com ele.
     pub fn nova(destino: Destino, numero: Option<u32>) -> Result<Self, String> {
         match (destino, numero) {
@@ -80,7 +86,13 @@ pub async fn abrir_tela_maior(
         criar(&app).map_err(|erro| erro.to_string())?;
     }
     app.emit(EVENTO_DA_TELA_MAIOR, Some(tela))
-        .map_err(|erro| erro.to_string())
+        .map_err(|erro| erro.to_string())?;
+    // Com o chat já aberto, como na linha da resposta, ele vai ao destino novo; sem ele, o corpo
+    // informado o cria já no destino.
+    if tela.com_o_chat() {
+        chat::ir_ao_destino(&app, tela).await;
+    }
+    Ok(())
 }
 
 /// O Esc da moldura e o voltar da trilha: a tela maior fecha, e o foco volta ao painel.
@@ -100,6 +112,7 @@ pub fn fechar(app: &AppHandle, devolver_a_aba: bool) {
     if let Ok(mut corpo) = estado.corpo.lock() {
         *corpo = None;
     }
+    chat::fechar(app);
     if let Some(maior) = app.get_webview_window(JANELA_DA_TELA_MAIOR) {
         let _ = maior.destroy();
     }
@@ -112,13 +125,18 @@ pub fn fechar(app: &AppHandle, devolver_a_aba: bool) {
     let _ = app.emit(EVENTO_DA_TELA_MAIOR, None::<TelaMaior>);
 }
 
+/// O lugar do chat na moldura: o chat aparece ali, ou sai, sem ele. Assíncrono, como o abrir: o
+/// webview nasce aqui.
 #[tauri::command]
-pub fn informar_corpo(
-    estado: tauri::State<'_, EstadoDaTelaMaior>,
-    retangulo: Option<RetanguloDoCorpo>,
-) {
+pub async fn informar_corpo(app: AppHandle, retangulo: Option<RetanguloDoCorpo>) {
+    let estado = app.state::<EstadoDaTelaMaior>();
     if let Ok(mut corpo) = estado.corpo.lock() {
         *corpo = retangulo;
+    }
+    let tela = estado.tela.lock().ok().and_then(|tela| *tela);
+    match (tela, retangulo) {
+        (Some(tela), Some(corpo)) if tela.com_o_chat() => chat::mostrar(&app, tela, corpo).await,
+        _ => chat::fechar(&app),
     }
 }
 
@@ -137,7 +155,11 @@ fn criar(app: &AppHandle) -> tauri::Result<()> {
     .resizable(false)
     .maximizable(false)
     .minimizable(false)
-    .visible(false)
+    .visible(false);
+    let maior = match janela::pasta_do_webview2() {
+        Some(pasta) => maior.data_directory(pasta),
+        None => maior,
+    }
     .build()?;
     if let Some(monitor) = janela::monitor_principal(app) {
         let topo = app
@@ -169,6 +191,15 @@ mod testes {
                 numero: None
             }
         );
+    }
+
+    #[test]
+    fn o_chat_fica_no_chat_e_no_chamado() {
+        let com = |destino, numero| TelaMaior::nova(destino, numero).map(TelaMaior::com_o_chat);
+        assert_eq!(com(Destino::AbrirChat, None), Ok(true));
+        assert_eq!(com(Destino::Chamado, Some(7)), Ok(true));
+        assert_eq!(com(Destino::AbrirChamado, None), Ok(false));
+        assert_eq!(com(Destino::VisualizarChamados, None), Ok(false));
     }
 
     #[test]

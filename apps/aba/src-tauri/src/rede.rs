@@ -230,7 +230,7 @@ pub fn espera_da_falha(falhas: u32) -> Duration {
 
 /// O cliente da aba: o schannel, sem seguir redirecionamento, e o proxy manual da pessoa. Sem o
 /// prazo total, que cortaria a conexão de eventos: o prazo vai em cada leitura do estado.
-fn cliente() -> reqwest::Result<reqwest::Client> {
+pub fn cliente() -> reqwest::Result<reqwest::Client> {
     let construtor = reqwest::Client::builder()
         .connect_timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::none())

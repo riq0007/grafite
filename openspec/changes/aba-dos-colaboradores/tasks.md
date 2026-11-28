@@ -210,7 +210,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o aviso novo da resposta por ver seguro por cerca de 1 s e mostrado só se o estado seguir com ela: com a conversa à vista na web, a abertura chega logo depois da mensagem, e a aba não alarga nem pulsa por um instante.
 
   Verificar: a aba no `tauri dev` contra o `pnpm dev`: a resposta no chamado chega à aba, e a API parada a deixa sem conexão.
-- [ ] 5.15 O chat na tela maior (decisão 8):
+- [x] 5.15 O chat na tela maior (decisão 8):
   - o webview remoto sem permissão do Tauri, só em `/chat`, com o resto no navegador;
   - criado ao abrir e destruído ao fechar;
   - os dois endereços do canal (`/chat/entrar` sem o fragmento e `/chat/fechar-a-aba`), com o teste do Rust do `on_navigation`;

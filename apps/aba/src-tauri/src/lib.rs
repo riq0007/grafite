@@ -1,8 +1,10 @@
 //! O lado nativo da aba (change aba-dos-colaboradores, design, decisão 1): as janelas da tela, os
-//! comandos que ela chama, a sessão, que ela pede ao serviço pelo pipe, e a rede do estado.
+//! comandos que ela chama, a sessão, que ela pede ao serviço pelo pipe, a rede do estado e o chat da
+//! tela maior.
 
 mod aparencia;
 mod atalho;
+mod chat;
 mod cofre;
 mod estado;
 mod foco;
@@ -78,6 +80,7 @@ pub fn rodar() {
             };
             let (janelas, trocas) = Janelas::nova(aparencia);
             app.manage(janelas);
+            janela::criar_a_aba(app.handle())?;
             janela::preparar(app.handle(), trocas)?;
             atalho::registrar(app.handle());
             let (comandos, da_sessao) = Comandos::nova();
@@ -87,6 +90,7 @@ pub fn rodar() {
                     sessao::ouvir_os_fins(&aba, comandos.copia());
                 }
                 let (credenciais, da_rede) = tokio::sync::watch::channel(None);
+                app.manage(chat::Chat::novo(da_rede.clone()));
                 sessao::iniciar(app.handle().clone(), da_sessao, credenciais);
                 rede::iniciar(app.handle().clone(), da_rede, comandos.copia());
             }

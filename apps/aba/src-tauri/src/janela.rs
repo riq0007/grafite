@@ -155,6 +155,34 @@ fn origem_de(janela: Window) -> Option<Origem> {
 
 /// Põe a janela da aba no monitor principal, mostra-a sem tirar o foco de ninguém e começa a
 /// acompanhar o ponteiro e as trocas da tela.
+/// O perfil do WebView2 da aba inteira, da pessoa do Windows: as duas janelas e o chat usam o mesmo,
+/// e limpar os dados por uma limpa os do chat.
+pub fn pasta_do_webview2() -> Option<std::path::PathBuf> {
+    std::env::var_os("LOCALAPPDATA").map(|pasta| {
+        std::path::PathBuf::from(pasta)
+            .join("Grafite")
+            .join("Aba")
+            .join("WebView2")
+    })
+}
+
+/// Cria a janela da aba, da configuração, no perfil da aba.
+pub fn criar_a_aba(app: &AppHandle) -> tauri::Result<()> {
+    let configuracao = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|janela| janela.label == JANELA_DA_ABA)
+        .ok_or(tauri::Error::WindowNotFound)?
+        .clone();
+    let mut construtor = tauri::WebviewWindowBuilder::from_config(app, &configuracao)?;
+    if let Some(pasta) = pasta_do_webview2() {
+        construtor = construtor.data_directory(pasta);
+    }
+    construtor.build().map(|_| ())
+}
+
 pub fn preparar(app: &AppHandle, trocas: Receiver<()>) -> tauri::Result<()> {
     let aba = app
         .get_webview_window(JANELA_DA_ABA)
