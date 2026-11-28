@@ -446,6 +446,7 @@ export {
   type ResultadoDoPasso,
 } from './entrada/PassoDasCredenciais.tsx';
 export { PassoDoCodigo, type PropsDoPassoDoCodigo } from './entrada/PassoDoCodigo.tsx';
+export { PassoNoNavegador, type PropsDoPassoNoNavegador } from './entrada/PassoNoNavegador.tsx';
 export { type PropsDaTelaDeEntrada, TelaDeEntrada } from './entrada/TelaDeEntrada.tsx';
 export { iconeDoTipo, iconesDeAtivo, type TipoComIconeProprio } from './icones/ativos.ts';
 export {

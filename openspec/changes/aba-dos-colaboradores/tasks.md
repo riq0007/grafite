@@ -114,7 +114,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 4. Web
 
-- [ ] 4.1 O chat na aba:
+- [x] 4.1 O chat na aba:
   - a entrada pelo bilhete em `/chat/entrar`, com a troca, o endereço limpo e o destino;
   - o `naAba`, sem o que leva à casca, o "Andamento", a instalação e o push;
   - o 401 que navega para `/chat/entrar` sem o fragmento, o 403 do alcance tratado como o pedido que falhou e o Esc não consumido que navega para `/chat/fechar-a-aba`;

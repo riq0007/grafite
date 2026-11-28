@@ -23,7 +23,7 @@ import { SemPermissao } from '../modulos/administracao/SemPermissao.tsx';
 import { useNotificacoes } from '../notificacoes/useNotificacoes.tsx';
 import type { EstadoDaSessao } from '../sessao/loja.ts';
 import { useAcesso } from '../sessao/useAcesso.ts';
-import { useServidor, useSessao } from '../sessao/useSessao.tsx';
+import { useNaAba, useServidor, useSessao } from '../sessao/useSessao.tsx';
 import { rotaComoNoApp, useOndeEstaOChat } from './base.tsx';
 import { Contador, contagemEmTexto, nomeParaOLeitor, type TomDoContador } from './Contador.tsx';
 import { useChamadoNovo } from './chamadoNovo.tsx';
@@ -159,6 +159,7 @@ const NENHUM_DESLIGADO: readonly string[] = [];
 export function MolduraDoChat() {
   const naCasca = useOndeEstaOChat() === 'casca';
   const sessao = useSessao();
+  const naAba = useNaAba();
   const desligados = useServidor()?.modulosDesligados ?? NENHUM_DESLIGADO;
   const { pode } = useAcesso();
   const motivo = motivoSemOChat({
@@ -178,11 +179,13 @@ export function MolduraDoChat() {
     vistaDeAntes.current = atual;
   }, [atual, marcar]);
   // A vista Chamados só existe com o módulo Chamados ligado, e os Avisos, só no app: na casca, eles
-  // ficam no sino dela.
+  // ficam no sino dela. No chat da aba (change aba-dos-colaboradores, decisão 8), nem os Avisos nem o
+  // menu da conta: as notificações, o push, o tema gravado na conta e o "Sair" pedem rotas fora do
+  // alcance da sessão, e a aba já avisa das respostas.
   const vistas = VISTAS.filter(
     (vista) =>
       (vista.id !== 'chamados' || !desligados.includes('chamados')) &&
-      (vista.id !== 'avisos' || !naCasca),
+      (vista.id !== 'avisos' || (!naCasca && !naAba)),
   );
   let conteudo: ReactNode;
   if (motivo !== null) {
@@ -233,7 +236,8 @@ export function MolduraDoChat() {
         {naCasca ? (
           <AbrirNoAppDoChat />
         ) : (
-          sessao.tipo === 'ativa' && <MenuDaConta conta={sessao.conta} naBarraDeBaixo={celular} />
+          sessao.tipo === 'ativa' &&
+          !naAba && <MenuDaConta conta={sessao.conta} naBarraDeBaixo={celular} />
         )}
       </nav>
       <Conteudo className={estilos.conteudo} data-coluna={coluna}>

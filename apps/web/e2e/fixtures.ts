@@ -56,6 +56,7 @@ export const sessaoDe = (
     csrf: 'csrf-de-teste',
     expiraEm: '2099-01-01T00:00:00.000Z',
     acesso: { permissoes },
+    naAba: false,
   },
 });
 

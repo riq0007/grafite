@@ -8,9 +8,12 @@ import {
   PassoDaSenhaNova,
   PassoDasCredenciais,
   PassoDoCodigo,
+  PassoNoNavegador,
   TelaDeEntrada,
 } from '@grafite/ui';
 import { useEffect, useState } from 'react';
+import { abrirForaDoChat } from '../chat/janela.ts';
+import { FECHAR_A_ABA } from '../chat/naAba.ts';
 import { useChegada } from '../chegada/avisos.tsx';
 import { CadastroComChave } from './CadastroComChave.tsx';
 import type { EstadoDaSessao } from './loja.ts';
@@ -23,6 +26,23 @@ export type EstadoNaEntrada = Extract<
 >;
 
 const SESSAO_TERMINOU = 'Sua sessão terminou. Entre de novo para continuar.';
+
+/**
+ * Os passos que o chat da aba não resolve, porque ficam na conta, fora do alcance dele (change
+ * aba-dos-colaboradores, decisão 8): a pessoa abre o Grafite no navegador, que pede o mesmo passo.
+ */
+const FORA_DA_ABA = {
+  'trocar-senha': {
+    titulo: 'Troque a senha temporária',
+    texto:
+      'A troca da senha temporária fica na sua conta, no Grafite. Abra o Grafite no navegador, troque a senha e volte ao chat pela aba.',
+  },
+  'cadastrar-dois-passos': {
+    titulo: 'Ative a verificação em dois passos',
+    texto:
+      'A sua conta precisa da verificação em dois passos, que se ativa na sua conta, no Grafite. Abra o Grafite no navegador, ative e volte ao chat pela aba.',
+  },
+} as const;
 
 export function Entrada({ sessao }: { sessao: EstadoNaEntrada }) {
   const { telaDesenhada } = useChegada();
@@ -75,9 +95,13 @@ function PassoDaVez({
   const loja = useLojaDaSessao();
   // A senha digitada nesta entrada: o passo da senha temporária não a pede de novo.
   const [senhaDigitada, definirSenhaDigitada] = useState<string>();
+  const naAba = sessao.tipo === 'pendente' && sessao.naAba;
+  // No chat da aba, o "Sair" do passo fecha a tela maior: o fim da sessão fica fora do alcance dela,
+  // e a pendente vence sozinha (change aba-dos-colaboradores, decisão 8).
   const sair = () => {
     definirSenhaDigitada(undefined);
-    void loja.sair();
+    if (naAba) window.location.assign(FECHAR_A_ABA);
+    else void loja.sair();
   };
 
   if (sessao.tipo === 'sem-sessao') {
@@ -89,6 +113,19 @@ function PassoDaVez({
         }}
         usuarioInicial={sessao.usuarioAnterior}
         aviso={sessao.mensagem ?? (sessao.terminou ? SESSAO_TERMINOU : undefined)}
+      />
+    );
+  }
+  // A senha temporária e os dois passos se resolvem na conta, fora do alcance do chat da aba.
+  if (
+    naAba &&
+    (sessao.pendencia === 'trocar-senha' || sessao.pendencia === 'cadastrar-dois-passos')
+  ) {
+    return (
+      <PassoNoNavegador
+        {...FORA_DA_ABA[sessao.pendencia]}
+        rotulo="Abrir o Grafite no navegador"
+        aoAbrir={() => abrirForaDoChat('/conta')}
       />
     );
   }

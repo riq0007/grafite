@@ -129,6 +129,12 @@ export interface PropsDoProvedorDeNotificacoes {
   children: ReactNode;
 }
 
+/** A sessão ativa, fora do chat da aba, que não lê as notificações. */
+function useSessaoComAsNotificacoes(): boolean {
+  const sessao = useSessao();
+  return sessao.tipo === 'ativa' && !sessao.naAba;
+}
+
 export function ProvedorDeNotificacoes({
   fila = filaDeAvisos,
   navegar,
@@ -137,7 +143,8 @@ export function ProvedorDeNotificacoes({
   const api = useApi();
   const canal = useCanal();
   const consultas = useQueryClient();
-  const ativa = useSessao().tipo === 'ativa';
+  // No chat da aba, as notificações ficam fora do alcance da sessão (change aba-dos-colaboradores).
+  const ativa = useSessaoComAsNotificacoes();
   const escolhas = usePreferencias().preferencias.notificacoes;
 
   // O tempo dos avisos temporários segue a preferência, também nos retornos de operação.
@@ -313,7 +320,8 @@ export function useNotificacoes(): ControleDasNotificacoes {
  */
 export function useNotificacoesDaCentral(aberta: boolean) {
   const api = useApi();
-  const ativa = useSessao().tipo === 'ativa';
+  // No chat da aba, as notificações ficam fora do alcance da sessão (change aba-dos-colaboradores).
+  const ativa = useSessaoComAsNotificacoes();
   const [filtros, definirFiltros] = useState<FiltrosDaCentral>(SEM_FILTROS);
   useEffect(() => {
     if (aberta) definirFiltros(SEM_FILTROS);

@@ -36,7 +36,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useAcoesDoAtendimento } from '../modulos/chamados/acoes.ts';
 import { ajudaDoCampo } from '../modulos/chamados/chamado/escrever.ts';
 import { useChamadoAVista } from '../notificacoes/destinosAVista.tsx';
-import { useServidor } from '../sessao/useSessao.tsx';
+import { useNaAba, useServidor } from '../sessao/useSessao.tsx';
 import {
   AndamentoDoChamado,
   type DialogoDoAndamentoAberto,
@@ -168,6 +168,9 @@ function ChamadoNaTela({
   // A quem participa pela TI, a caixa escreve pela rota da TI; o tipo gerado não liga o `pelaTi` ao
   // `andamento`, que vem a ela.
   const daTi = chamado.pelaTi ? chamado.andamento : null;
+  // No chat da aba, o "Andamento" fica escondido: as ações dele são do módulo Chamados, fora do
+  // alcance da sessão (change aba-dos-colaboradores, decisão 8).
+  const andamento = useNaAba() ? null : chamado.andamento;
   const doChat = useAndamentoNoChat(numero);
   const reler = useRelerOsChamadosDoChat();
   const atendimento = useAcoesDoAtendimento({ aoMudar: reler });
@@ -223,10 +226,10 @@ function ChamadoNaTela({
                 {chamado.titulo}
               </h2>
               <span className={estilos.botoesDoTitulo}>
-                {chamado.andamento && (
+                {andamento && (
                   <AndamentoDoChamado
                     numero={numero}
-                    andamento={chamado.andamento}
+                    andamento={andamento}
                     celular
                     aoPedir={definirDialogo}
                   />
@@ -260,11 +263,11 @@ function ChamadoNaTela({
               {chamado.titulo}
             </h2>
             <SeloDoChamado texto={chamado.situacaoEmTexto} />
-            {chamado.andamento && (
+            {andamento && (
               <span className={estilos.andamento}>
                 <AndamentoDoChamado
                   numero={numero}
-                  andamento={chamado.andamento}
+                  andamento={andamento}
                   celular={false}
                   aoPedir={definirDialogo}
                 />
@@ -367,10 +370,10 @@ function ChamadoNaTela({
         </h2>
         {neste}
       </aside>
-      {chamado.andamento && (
+      {andamento && (
         <DialogosDoAndamento
           numero={numero}
-          andamento={chamado.andamento}
+          andamento={andamento}
           aberto={dialogo}
           aoFechar={() => definirDialogo(null)}
         />

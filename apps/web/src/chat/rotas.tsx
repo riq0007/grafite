@@ -8,6 +8,9 @@ import {
   createRouter,
   type RouterHistory,
 } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { useNaAba } from '../sessao/useSessao.tsx';
+import { useIrNoChat } from './base.tsx';
 import { MolduraDoChat } from './MolduraDoChat.tsx';
 import { TelaDosAvisos } from './TelaDosAvisos.tsx';
 import {
@@ -78,11 +81,35 @@ const rotaDaEquipe = createRoute({
   component: EquipeDoEndereco,
 });
 
-/** Os avisos, sem a lista ao lado: a tela ocupa a largura. */
+/** Troca o endereço pelo começo do chat, sem deixar o de agora no histórico. */
+function AoComecoDoChat() {
+  const irNoChat = useIrNoChat();
+  useEffect(() => irNoChat('/chat', { replace: true }), [irNoChat]);
+  return null;
+}
+
+/**
+ * A página de entrada do chat aberta pela aba, com a marca dela (change aba-dos-colaboradores,
+ * decisão 8): depois da entrada, o chat abre no começo.
+ */
+const rotaDaEntradaPelaAba = createRoute({
+  getParentRoute: () => chat,
+  path: 'entrar',
+  component: AoComecoDoChat,
+});
+
+/**
+ * Os avisos, sem a lista ao lado: a tela ocupa a largura. No chat da aba, que não tem os avisos, o
+ * endereço leva ao começo do chat.
+ */
+function AvisosDoApp() {
+  return useNaAba() ? <AoComecoDoChat /> : <TelaDosAvisos />;
+}
+
 const vistaAvisos = createRoute({
   getParentRoute: () => chat,
   path: 'avisos',
-  component: TelaDosAvisos,
+  component: AvisosDoApp,
 });
 
 const arvoreDoChat = raiz.addChildren([
@@ -95,6 +122,7 @@ const arvoreDoChat = raiz.addChildren([
     vistaEquipes,
     rotaDaEquipe,
     vistaAvisos,
+    rotaDaEntradaPelaAba,
   ]),
 ]);
 
