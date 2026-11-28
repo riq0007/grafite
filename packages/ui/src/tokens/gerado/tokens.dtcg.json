@@ -19,6 +19,11 @@
         "compacta": "Compacta",
         "normal": "Normal",
         "confortavel": "Confortável"
+      },
+      "tema-do-windows": {
+        "escuro": "Escuro",
+        "claro": "Claro",
+        "alto-contraste": "Alto contraste"
       }
     }
   },
@@ -1058,6 +1063,286 @@
           }
         },
         "grafite.css": "--cor-aba-sobre-atencao"
+      }
+    },
+    "aba-flutuante-fundo": {
+      "$type": "color",
+      "$value": "#004f9d",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#004f9d",
+            "claro": "#004f9d",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-fundo"
+      }
+    },
+    "aba-flutuante-fundo-2": {
+      "$type": "color",
+      "$value": "#003975",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#003975",
+            "claro": "#003975",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-fundo-2"
+      }
+    },
+    "aba-flutuante-bloco": {
+      "$type": "color",
+      "$value": "#0064b6",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#0064b6",
+            "claro": "#0064b6",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-bloco"
+      }
+    },
+    "aba-flutuante-bloco-sob-mouse": {
+      "$type": "color",
+      "$value": "#006dc0",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#006dc0",
+            "claro": "#006dc0",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-bloco-sob-mouse"
+      }
+    },
+    "aba-flutuante-texto": {
+      "$type": "color",
+      "$value": "#f4fbff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#f4fbff",
+            "claro": "#f4fbff",
+            "alto-contraste": "CanvasText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-texto"
+      }
+    },
+    "aba-flutuante-segundo-tom": {
+      "$type": "color",
+      "$value": "#e9f9ff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#e9f9ff",
+            "claro": "#e9f9ff",
+            "alto-contraste": "CanvasText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-segundo-tom"
+      }
+    },
+    "aba-flutuante-contorno": {
+      "$type": "color",
+      "$value": "#86c5fa",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#86c5fa",
+            "claro": "#86c5fa",
+            "alto-contraste": "CanvasText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-contorno"
+      }
+    },
+    "aba-flutuante-opcao-larga": {
+      "$type": "color",
+      "$value": "#f4fbff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#f4fbff",
+            "claro": "#f4fbff",
+            "alto-contraste": "Highlight"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-opcao-larga"
+      }
+    },
+    "aba-flutuante-sobre-opcao-larga": {
+      "$type": "color",
+      "$value": "#003975",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#003975",
+            "claro": "#003975",
+            "alto-contraste": "HighlightText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-sobre-opcao-larga"
+      }
+    },
+    "aba-flutuante-atencao": {
+      "$type": "color",
+      "$value": "#f4af41",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#f4af41",
+            "claro": "#f4af41",
+            "alto-contraste": "Highlight"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-atencao"
+      }
+    },
+    "aba-flutuante-sobre-atencao": {
+      "$type": "color",
+      "$value": "#201301",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#201301",
+            "claro": "#201301",
+            "alto-contraste": "HighlightText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-sobre-atencao"
+      }
+    },
+    "aba-flutuante-neutro": {
+      "$type": "color",
+      "$value": "#454e56",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#454e56",
+            "claro": "#454e56",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-neutro"
+      }
+    },
+    "aba-flutuante-neutro-2": {
+      "$type": "color",
+      "$value": "#32393f",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#32393f",
+            "claro": "#32393f",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-neutro-2"
+      }
+    },
+    "aba-flutuante-neutro-bloco": {
+      "$type": "color",
+      "$value": "#57626b",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#57626b",
+            "claro": "#57626b",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-neutro-bloco"
+      }
+    },
+    "aba-flutuante-neutro-contorno": {
+      "$type": "color",
+      "$value": "#b7bfc6",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#b7bfc6",
+            "claro": "#b7bfc6",
+            "alto-contraste": "CanvasText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-neutro-contorno"
+      }
+    },
+    "aba-flutuante-texto-indisponivel": {
+      "$type": "color",
+      "$value": "#f4fbff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#f4fbff",
+            "claro": "#f4fbff",
+            "alto-contraste": "GrayText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-texto-indisponivel"
+      }
+    },
+    "aba-flutuante-foco": {
+      "$type": "color",
+      "$value": "#f4fbff",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "#f4fbff",
+            "claro": "#f4fbff",
+            "alto-contraste": "LinkText"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-foco"
+      }
+    },
+    "aba-flutuante-fio-escuro": {
+      "$type": "color",
+      "$value": "rgba(4, 17, 28, 0.85)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "rgba(4, 17, 28, 0.85)",
+            "claro": "rgba(19, 17, 13, 0.62)",
+            "alto-contraste": "Canvas"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-fio-escuro"
+      }
+    },
+    "aba-flutuante-sombra": {
+      "$type": "color",
+      "$value": "rgba(4, 17, 28, 0.62)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "rgba(4, 17, 28, 0.62)",
+            "claro": "rgba(19, 17, 13, 0.3)",
+            "alto-contraste": "transparent"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-sombra"
+      }
+    },
+    "aba-flutuante-anel": {
+      "$type": "color",
+      "$value": "rgba(134, 197, 250, 0.28)",
+      "$extensions": {
+        "grafite.modos": {
+          "tema-do-windows": {
+            "escuro": "rgba(134, 197, 250, 0.28)",
+            "claro": "rgba(0, 79, 157, 0.34)",
+            "alto-contraste": "transparent"
+          }
+        },
+        "grafite.css": "--cor-aba-flutuante-anel"
       }
     },
     "neutro": {

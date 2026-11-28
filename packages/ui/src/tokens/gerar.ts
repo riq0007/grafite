@@ -11,6 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   coresDaAba,
+  coresDaAbaFlutuante,
   coresDaSituacao,
   coresDoDestaque,
   coresDosDados,
@@ -36,6 +37,7 @@ import {
   TINTA_DO_ROTULO_NEUTRO,
   tipografia,
 } from './escalas.ts';
+import { type CoresDaAbaFlutuante, gerarAbaFlutuante, type TemaDoWindows } from './gerador.ts';
 import { primitivos } from './primitivos.ts';
 import {
   type CoresDoTema,
@@ -111,6 +113,10 @@ function escalasFixas(): Declaracoes {
       `--atraso-${kebab(nome)}`,
       `${ms}ms`,
     ]),
+    ...Object.entries(movimento.aba).map(([nome, ms]): [string, string] => [
+      `--dur-aba-${kebab(nome)}`,
+      `${ms}ms`,
+    ]),
     ['--dur-deslocamento', 'var(--dur-media)'],
     // A folha de baixo do celular sobe em 300 ms (spec modulo-chat, "Selos e movimento do chat").
     ['--dur-folha', 'var(--dur-lenta)'],
@@ -161,7 +167,47 @@ const MOVIMENTO_REDUZIDO: Declaracoes = [
   ['--dur-montagem-dock', '0ms'],
   ['--atraso-montagem-janela', '0ms'],
   ['--atraso-montagem-dock', '0ms'],
+  // A aba do Windows troca de estado em 1 ms, sem cascata, e o ponto do aviso fica parado.
+  ...Object.keys(movimento.aba).map((nome): [string, string] => [
+    `--dur-aba-${kebab(nome)}`,
+    nome === 'abrir' || nome === 'entrada' || nome === 'fechar' || nome === 'entalhe'
+      ? '1ms'
+      : '0ms',
+  ]),
 ];
+
+/**
+ * A aba do Windows segue o tema do Windows, que a parte nativa põe no `data-windows-theme` do
+ * <html>. Sem o atributo, valem o `prefers-color-scheme` e o `forced-colors`.
+ */
+const TODOS_OS_TEMAS_DO_WINDOWS: TemaDoWindows[] = ['escuro', 'claro', 'altoContraste'];
+
+const TEMAS_DO_WINDOWS: Array<[TemaDoWindows, string]> = [
+  ['claro', 'claro'],
+  ['altoContraste', 'alto-contraste'],
+];
+
+function abaFlutuanteDoTema(tema: TemaDoWindows): Declaracoes {
+  const escuro = new Map(coresDaAbaFlutuante(gerarAbaFlutuante('escuro')));
+  return coresDaAbaFlutuante(gerarAbaFlutuante(tema)).filter(
+    ([nome, valor]) => escuro.get(nome) !== valor,
+  );
+}
+
+function cssDaAbaFlutuante(): string {
+  const media: Record<string, string> = {
+    claro: '(prefers-color-scheme: light)',
+    'alto-contraste': '(forced-colors: active)',
+  };
+  let css = '';
+  for (const [tema, atributo] of TEMAS_DO_WINDOWS) {
+    css += `\n${regra(`[data-windows-theme="${atributo}"]`, abaFlutuanteDoTema(tema))}`;
+  }
+  for (const [tema, atributo] of TEMAS_DO_WINDOWS) {
+    css += `\n@media ${media[atributo]} {\n${regra(':root:not([data-windows-theme])', abaFlutuanteDoTema(tema), '  ')}}\n`;
+  }
+  return css;
+}
 
 const TRANSPARENCIA_REDUZIDA: Declaracoes = [
   ['--cor-material', 'var(--cor-material-solido)'],
@@ -178,6 +224,7 @@ export function gerarCss(): string {
     ...coresDaSituacao(padrao),
     ...coresDosDados(padrao),
     ...coresDaAba(padrao),
+    ...coresDaAbaFlutuante(gerarAbaFlutuante('escuro')),
     ...coresDoDestaque(destaqueDoTema('grafite', DESTAQUE_PADRAO)),
     ...medidasDaDensidade(densidades.normal),
   ]);
@@ -205,6 +252,7 @@ export function gerarCss(): string {
   css += `\n@media (prefers-reduced-motion: reduce) {\n${regra(':root:not([data-motion])', MOVIMENTO_REDUZIDO, '  ')}}\n`;
   css += `\n${regra('[data-transparency="reduzida"]', TRANSPARENCIA_REDUZIDA)}`;
   css += `\n@media (prefers-reduced-transparency: reduce) {\n${regra(':root:not([data-transparency])', TRANSPARENCIA_REDUZIDA, '  ')}}\n`;
+  css += cssDaAbaFlutuante();
   return css;
 }
 
@@ -352,6 +400,19 @@ export function gerarDtcg() {
       porTema((id) => temas[id].aba[nome]),
     );
   }
+  const abaFlutuante = gerarAbaFlutuante('escuro');
+  for (const nome of Object.keys(abaFlutuante) as Array<keyof CoresDaAbaFlutuante>) {
+    cor[`aba-flutuante-${kebab(nome)}`] = token(
+      'color',
+      abaFlutuante[nome],
+      `--cor-aba-flutuante-${kebab(nome)}`,
+      {
+        'tema-do-windows': Object.fromEntries(
+          TODOS_OS_TEMAS_DO_WINDOWS.map((tema) => [kebab(tema), gerarAbaFlutuante(tema)[nome]]),
+        ),
+      },
+    );
+  }
   cor.neutro = token('color', '{cor.texto-2}', '--cor-neutro');
   for (const nome of PARTES_DO_DESTAQUE) {
     cor[kebab(nome)] = token(
@@ -448,6 +509,7 @@ export function gerarDtcg() {
         tema: Object.fromEntries(idsDeTema.map((id) => [id, temas[id].nome])),
         destaque: nomesDosDestaques,
         densidade: nomesDasDensidades,
+        'tema-do-windows': { escuro: 'Escuro', claro: 'Claro', 'alto-contraste': 'Alto contraste' },
       },
     },
     cor,

@@ -167,6 +167,50 @@ describe('gerarCss', () => {
     expect(bloco(css, '[data-motion="reduzido"]')['--dur-ciclo']).toBe('0ms');
   });
 
+  it('a aba do Windows abre em 220 ms, com a cascata até 340 ms, e fecha em 160 ms', () => {
+    const raiz = bloco(css, ':root');
+    expect(raiz['--dur-aba-abrir']).toBe('220ms');
+    expect(raiz['--dur-aba-cascata']).toBe('40ms');
+    expect(raiz['--dur-aba-fechar']).toBe('160ms');
+    expect(raiz['--dur-aba-entalhe']).toBe('120ms');
+    expect(raiz['--dur-aba-ponto']).toBe('1400ms');
+  });
+
+  it('com movimento reduzido, a aba do Windows troca em 1 ms, sem cascata, e o ponto para', () => {
+    const reduzido = bloco(css, '[data-motion="reduzido"]');
+    for (const nome of ['abrir', 'entrada', 'fechar', 'entalhe']) {
+      expect(reduzido[`--dur-aba-${nome}`], nome).toBe('1ms');
+    }
+    for (const nome of ['inicio-do-logo', 'inicio-da-cascata', 'cascata', 'ponto']) {
+      expect(reduzido[`--dur-aba-${nome}`], nome).toBe('0ms');
+    }
+  });
+
+  it('a aba do Windows nasce no escuro e segue o atributo do tema do Windows', () => {
+    expect(bloco(css, ':root')['--cor-aba-flutuante-fundo']).toBe(temas.grafite.aba.fundo);
+    const claro = bloco(css, '[data-windows-theme="claro"]');
+    expect(Object.keys(claro).sort()).toEqual([
+      '--cor-aba-flutuante-anel',
+      '--cor-aba-flutuante-fio-escuro',
+      '--cor-aba-flutuante-sombra',
+    ]);
+    const altoContraste = bloco(css, '[data-windows-theme="alto-contraste"]');
+    expect(altoContraste['--cor-aba-flutuante-fundo']).toBe('Canvas');
+    expect(altoContraste['--cor-aba-flutuante-texto']).toBe('CanvasText');
+    expect(altoContraste['--cor-aba-flutuante-foco']).toBe('LinkText');
+  });
+
+  it('sem o atributo, a aba do Windows segue o prefers-color-scheme e o forced-colors', () => {
+    const claro = css.indexOf('@media (prefers-color-scheme: light)');
+    const forcado = css.indexOf('@media (forced-colors: active)');
+    expect(claro).toBeGreaterThan(0);
+    // O alto contraste vem depois, e ganha quando o Windows está claro e em alto contraste.
+    expect(forcado).toBeGreaterThan(claro);
+    expect(
+      bloco(css.slice(forcado), ':root:not([data-windows-theme])')['--cor-aba-flutuante-fundo'],
+    ).toBe('Canvas');
+  });
+
   it('o giro do indicador de carregando tem duração própria e para com movimento reduzido', () => {
     expect(bloco(css, ':root')['--dur-giro']).toBe('900ms');
     expect(bloco(css, '[data-motion="reduzido"]')['--dur-giro']).toBe('0ms');
@@ -292,7 +336,7 @@ describe('gerarDtcg', () => {
   const dtcg = gerarDtcg();
   const tema = (token: TokenDtcg | undefined) => token?.$extensions?.['grafite.modos']?.tema;
 
-  it('nomeia os modos de tema, destaque e densidade como aparecem para o usuário', () => {
+  it('nomeia os modos de tema, destaque, densidade e tema do Windows como aparecem para o usuário', () => {
     expect(dtcg.$extensions['grafite.modos']).toEqual({
       tema: {
         grafite: 'Grafite',
@@ -304,6 +348,20 @@ describe('gerarDtcg', () => {
       },
       destaque: { azul: 'Azul', verde: 'Verde', laranja: 'Laranja', grafite: 'Grafite' },
       densidade: { compacta: 'Compacta', normal: 'Normal', confortavel: 'Confortável' },
+      'tema-do-windows': { escuro: 'Escuro', claro: 'Claro', 'alto-contraste': 'Alto contraste' },
+    });
+  });
+
+  it('a aba do Windows traz o valor de cada tema do Windows', () => {
+    expect(dtcg.cor['aba-flutuante-fundo']?.$extensions).toEqual({
+      'grafite.modos': {
+        'tema-do-windows': {
+          escuro: temas.grafite.aba.fundo,
+          claro: temas.grafite.aba.fundo,
+          'alto-contraste': 'Canvas',
+        },
+      },
+      'grafite.css': '--cor-aba-flutuante-fundo',
     });
   });
 

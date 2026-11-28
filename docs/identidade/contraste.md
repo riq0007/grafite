@@ -77,3 +77,35 @@ Entre as 24 combinações. Texto exige 4,5:1, e o texto secundário sobre a afun
 Desde o D1 (change fundamentos-v3), as cores saem do gerador em OKLCH (`gerador.ts`). Ele move a luminosidade de cada papel, sem mudar a matiz, até o mínimo contra as superfícies em que o papel aparece.
 
 Este relatório confere os pares de uso nas 24 combinações. Os testes do gerador conferem também a varredura de entradas: as matizes de 0 a 360, o croma da base de 0 a 0,06 e o contraste de 0 a 100. Os ajustes feitos à mão no F0 ficam no histórico do repositório.
+
+## A aba do Windows
+
+A aba dos colaboradores segue o tema do Windows, e não o do Grafite, e fica fora das 24 combinações. A área é o fundo das janelas do Windows 11 no tema: escuro #202020, claro #f3f3f3, alto contraste #000000. No alto contraste, a aba usa só as cores do sistema, aqui as do Alto Contraste Preto: `Canvas` #000000, `CanvasText` #ffffff, `Highlight` #1aebff, `HighlightText` #000000, `LinkText` #ffff00, `GrayText` #3ff23f.
+
+No escuro, o fio claro e o anel do foco separam a forma da área; no claro, o azul, com o fio escuro por fora. O azul sozinho sobre a área escura e o fio claro sobre a área clara não precisam passar, e não entram. O travessão marca o par que não existe naquele tema.
+
+| Uso | Mínimo | Escuro | Claro | Alto contraste |
+|---|---|---|---|---|
+| texto sobre o azul | 4,50:1 | 7,71:1 | 7,71:1 | 21,00:1 |
+| texto sobre o fundo 2 (a linha da resposta, a pílula pressionada) | 4,50:1 | 10,90:1 | 10,90:1 | 21,00:1 |
+| texto sobre a opção | 4,50:1 | 5,74:1 | 5,74:1 | 21,00:1 |
+| texto sobre a opção sob o mouse | 4,50:1 | 5,08:1 | 5,08:1 | 21,00:1 |
+| segundo tom sobre o azul (quem respondeu) | 4,50:1 | 7,46:1 | 7,46:1 | 21,00:1 |
+| segundo tom sobre o fundo 2 (o título e a hora da resposta) | 4,50:1 | 10,56:1 | 10,56:1 | 21,00:1 |
+| texto da opção larga ("Abrir chamado") | 4,50:1 | 10,90:1 | 10,90:1 | 14,37:1 |
+| texto sobre o âmbar (selo) | 4,50:1 | 9,57:1 | 9,57:1 | 14,37:1 |
+| ponto do aviso sobre o azul | 3,00:1 | 4,24:1 | 4,24:1 | 14,37:1 |
+| fio sobre o azul | 3,00:1 | 4,36:1 | 4,36:1 | 21,00:1 |
+| anel do foco sobre a folga (fundo 2) | 3,00:1 | 10,90:1 | 10,90:1 | 19,55:1 |
+| texto sobre o neutro (sem conexão) | 4,50:1 | 8,10:1 | 8,10:1 | 21,00:1 |
+| texto sobre a opção neutra | 4,50:1 | 5,97:1 | 5,97:1 | 21,00:1 |
+| segundo tom sobre o neutro | 4,50:1 | 7,85:1 | 7,85:1 | 21,00:1 |
+| indisponível sobre a opção desligada (neutro 2) | 4,50:1 | 11,20:1 | 11,20:1 | 13,98:1 |
+| fio neutro sobre o neutro | 3,00:1 | 4,55:1 | 4,55:1 | 21,00:1 |
+| fio claro sobre a área | 3,00:1 | 8,82:1 | — | 21,00:1 |
+| fio neutro sobre a área | 3,00:1 | 8,75:1 | — | 21,00:1 |
+| anel do foco sobre a área | 3,00:1 | 15,58:1 | — | 19,55:1 |
+| azul sobre a área | 3,00:1 | — | 7,26:1 | — |
+| neutro sobre a área | 3,00:1 | — | 7,63:1 | — |
+| fio escuro por fora sobre a área | 3,00:1 | — | 5,09:1 | — |
+| anel do foco contra o fio escuro por fora | 3,00:1 | 17,91:1 | 5,41:1 | — |

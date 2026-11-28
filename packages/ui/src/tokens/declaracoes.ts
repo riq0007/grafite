@@ -1,7 +1,7 @@
 // As declarações de cor de um tema e de um destaque, como o tokens.css as escreve (change
 // tema-personalizado, design, decisão 2). Sem o node:fs: servem ao gerador do CSS e ao navegador, que
 // aplica o tema e o destaque personalizados.
-import type { DestaqueGerado } from './gerador.ts';
+import type { CoresDaAbaFlutuante, DestaqueGerado } from './gerador.ts';
 import { camadasDeEstado, coresDoCursor, type Tema } from './temas.ts';
 
 export type Declaracoes = Array<[string, string]>;
@@ -65,6 +65,14 @@ export function coresDosDados(tema: Tema): Declaracoes {
 export function coresDaAba(tema: Tema): Declaracoes {
   return Object.entries(tema.aba).map(([nome, cor]): [string, string] => [
     `--cor-aba-${kebab(nome)}`,
+    cor,
+  ]);
+}
+
+/** As cores da aba do Windows, todas no `--cor-aba-flutuante-*`. */
+export function coresDaAbaFlutuante(cores: CoresDaAbaFlutuante): Declaracoes {
+  return Object.entries(cores).map(([nome, cor]): [string, string] => [
+    `--cor-aba-flutuante-${kebab(nome)}`,
     cor,
   ]);
 }

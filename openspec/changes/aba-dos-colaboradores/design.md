@@ -236,6 +236,15 @@ A aba do Windows não segue os temas do Grafite: ela segue o tema do Windows, qu
 
 As durações entram no `movimento` (`escalas.ts`) como `aba.abrir`, `aba.cascata`, `aba.fechar`, `aba.entalhe` e `aba.ponto`. A exceção dos 340 ms entra na lista nomeada do `docs/ANTISLOP.md`.
 
+No `packages/ui` (tarefa 5.2), as cores são o `--cor-aba-flutuante-*` (`gerarAbaFlutuante`, em `gerador.ts`). Além das da lista, entram as peças que o mockup pinta e que o alto contraste troca: a opção sob o mouse, a opção larga e o texto dela, o texto do indisponível, o anel do foco e o anel do mouse em cima. O fio claro vale nos dois temas do Windows, e do escuro para o claro mudam só o fio escuro por fora, a sombra e o anel do mouse. No alto contraste:
+- o fundo é o `Canvas`, e o texto e o fio são o `CanvasText`;
+- a opção larga e o aviso são a seleção (`Highlight` e `HighlightText`);
+- o indisponível é o `GrayText`;
+- o foco é o `LinkText`, o amarelo do Alto Contraste Preto do mockup;
+- não há sombra nem anel.
+
+A parte nativa põe o tema no `data-windows-theme` do `<html>` (`claro` ou `alto-contraste`; sem ele, o escuro); sem o atributo, valem o `prefers-color-scheme` e o `forced-colors`. Para a soma dos 340 ms ficar nos tokens, o `movimento.aba` traz também a `entrada` de cada peça (140 ms), o `inicioDoLogo` (60 ms) e o `inicioDaCascata` (120 ms). Com o movimento reduzido, as durações valem 1 ms, os começos e a cascata 0 ms, e o ponto para. A tabela do `tokens:contraste` mede a área no fundo das janelas do Windows 11 (`#202020` e `#f3f3f3`) e o alto contraste nas cores do Alto Contraste Preto.
+
 ### 10. A rede no lado nativo
 
 As chamadas do serviço e da aba saem do Rust, pelo `reqwest` com o `native-tls` (o schannel), e assim vale a autoridade interna. O proxy:

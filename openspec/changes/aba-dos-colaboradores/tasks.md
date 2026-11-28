@@ -135,7 +135,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a estrutura no `CLAUDE.md`.
 
   Verificar: `cargo test`, `pnpm --filter @grafite/aba build`, o e2e vazio e a janela abrindo no `tauri dev`.
-- [ ] 5.2 Os tokens da aba (decisão 9) no `packages/ui`:
+- [x] 5.2 Os tokens da aba (decisão 9) no `packages/ui`:
   - o `abaFlutuante.*`, que reaproveita o azul e o âmbar;
   - as durações da aba no `movimento`;
   - a tabela dos três temas do Windows no `tokens:contraste`.

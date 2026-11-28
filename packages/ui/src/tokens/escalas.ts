@@ -152,6 +152,22 @@ export const movimento = {
     montagemJanela: 80,
     montagemDock: 160,
   },
+  /**
+   * A aba do Windows (change aba-dos-colaboradores, design, decisão 9), em ms. A forma abre em 220;
+   * o logo entra aos 60 e as opções a partir dos 120, uma 40 depois da outra, cada uma em 140: a
+   * terceira acaba aos 340, a exceção nomeada da aba aos 300 do ANTISLOP (seção 28). As opções já
+   * respondem ao clique quando a primeira acaba, aos 260. O ponto do aviso pulsa em ciclos de 1.400.
+   */
+  aba: {
+    abrir: 220,
+    entrada: 140,
+    inicioDoLogo: 60,
+    inicioDaCascata: 120,
+    cascata: 40,
+    fechar: 160,
+    entalhe: 120,
+    ponto: 1400,
+  },
   curvas: {
     padrao: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
     saida: 'cubic-bezier(0.4, 0, 1, 1)',

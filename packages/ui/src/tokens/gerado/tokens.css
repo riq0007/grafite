@@ -60,6 +60,14 @@
   --atraso-subtitulo-boas-vindas: 2100ms;
   --atraso-montagem-janela: 80ms;
   --atraso-montagem-dock: 160ms;
+  --dur-aba-abrir: 220ms;
+  --dur-aba-entrada: 140ms;
+  --dur-aba-inicio-do-logo: 60ms;
+  --dur-aba-inicio-da-cascata: 120ms;
+  --dur-aba-cascata: 40ms;
+  --dur-aba-fechar: 160ms;
+  --dur-aba-entalhe: 120ms;
+  --dur-aba-ponto: 1400ms;
   --dur-deslocamento: var(--dur-media);
   --dur-folha: var(--dur-lenta);
   --dur-opacidade: var(--dur-rapida);
@@ -152,6 +160,26 @@
   --cor-aba-contorno: #86c5fa;
   --cor-aba-atencao: #f4af41;
   --cor-aba-sobre-atencao: #201301;
+  --cor-aba-flutuante-fundo: #004f9d;
+  --cor-aba-flutuante-fundo-2: #003975;
+  --cor-aba-flutuante-bloco: #0064b6;
+  --cor-aba-flutuante-bloco-sob-mouse: #006dc0;
+  --cor-aba-flutuante-texto: #f4fbff;
+  --cor-aba-flutuante-segundo-tom: #e9f9ff;
+  --cor-aba-flutuante-contorno: #86c5fa;
+  --cor-aba-flutuante-opcao-larga: #f4fbff;
+  --cor-aba-flutuante-sobre-opcao-larga: #003975;
+  --cor-aba-flutuante-atencao: #f4af41;
+  --cor-aba-flutuante-sobre-atencao: #201301;
+  --cor-aba-flutuante-neutro: #454e56;
+  --cor-aba-flutuante-neutro-2: #32393f;
+  --cor-aba-flutuante-neutro-bloco: #57626b;
+  --cor-aba-flutuante-neutro-contorno: #b7bfc6;
+  --cor-aba-flutuante-texto-indisponivel: #f4fbff;
+  --cor-aba-flutuante-foco: #f4fbff;
+  --cor-aba-flutuante-fio-escuro: rgba(4, 17, 28, 0.85);
+  --cor-aba-flutuante-sombra: rgba(4, 17, 28, 0.62);
+  --cor-aba-flutuante-anel: rgba(134, 197, 250, 0.28);
   --cor-destaque: #eeeff1;
   --cor-destaque-texto: #eeeff1;
   --cor-sobre-destaque: #0c0e10;
@@ -827,6 +855,14 @@
   --dur-montagem-dock: 0ms;
   --atraso-montagem-janela: 0ms;
   --atraso-montagem-dock: 0ms;
+  --dur-aba-abrir: 1ms;
+  --dur-aba-entrada: 1ms;
+  --dur-aba-inicio-do-logo: 0ms;
+  --dur-aba-inicio-da-cascata: 0ms;
+  --dur-aba-cascata: 0ms;
+  --dur-aba-fechar: 1ms;
+  --dur-aba-entalhe: 1ms;
+  --dur-aba-ponto: 0ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -847,6 +883,14 @@
     --dur-montagem-dock: 0ms;
     --atraso-montagem-janela: 0ms;
     --atraso-montagem-dock: 0ms;
+    --dur-aba-abrir: 1ms;
+    --dur-aba-entrada: 1ms;
+    --dur-aba-inicio-do-logo: 0ms;
+    --dur-aba-inicio-da-cascata: 0ms;
+    --dur-aba-cascata: 0ms;
+    --dur-aba-fechar: 1ms;
+    --dur-aba-entalhe: 1ms;
+    --dur-aba-ponto: 0ms;
   }
 }
 
@@ -861,5 +905,67 @@
     --cor-material: var(--cor-material-solido);
     --cor-barra: var(--cor-superficie);
     --filtro-material: none;
+  }
+}
+
+[data-windows-theme="claro"] {
+  --cor-aba-flutuante-fio-escuro: rgba(19, 17, 13, 0.62);
+  --cor-aba-flutuante-sombra: rgba(19, 17, 13, 0.3);
+  --cor-aba-flutuante-anel: rgba(0, 79, 157, 0.34);
+}
+
+[data-windows-theme="alto-contraste"] {
+  --cor-aba-flutuante-fundo: Canvas;
+  --cor-aba-flutuante-fundo-2: Canvas;
+  --cor-aba-flutuante-bloco: Canvas;
+  --cor-aba-flutuante-bloco-sob-mouse: Canvas;
+  --cor-aba-flutuante-texto: CanvasText;
+  --cor-aba-flutuante-segundo-tom: CanvasText;
+  --cor-aba-flutuante-contorno: CanvasText;
+  --cor-aba-flutuante-opcao-larga: Highlight;
+  --cor-aba-flutuante-sobre-opcao-larga: HighlightText;
+  --cor-aba-flutuante-atencao: Highlight;
+  --cor-aba-flutuante-sobre-atencao: HighlightText;
+  --cor-aba-flutuante-neutro: Canvas;
+  --cor-aba-flutuante-neutro-2: Canvas;
+  --cor-aba-flutuante-neutro-bloco: Canvas;
+  --cor-aba-flutuante-neutro-contorno: CanvasText;
+  --cor-aba-flutuante-texto-indisponivel: GrayText;
+  --cor-aba-flutuante-foco: LinkText;
+  --cor-aba-flutuante-fio-escuro: Canvas;
+  --cor-aba-flutuante-sombra: transparent;
+  --cor-aba-flutuante-anel: transparent;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-windows-theme]) {
+    --cor-aba-flutuante-fio-escuro: rgba(19, 17, 13, 0.62);
+    --cor-aba-flutuante-sombra: rgba(19, 17, 13, 0.3);
+    --cor-aba-flutuante-anel: rgba(0, 79, 157, 0.34);
+  }
+}
+
+@media (forced-colors: active) {
+  :root:not([data-windows-theme]) {
+    --cor-aba-flutuante-fundo: Canvas;
+    --cor-aba-flutuante-fundo-2: Canvas;
+    --cor-aba-flutuante-bloco: Canvas;
+    --cor-aba-flutuante-bloco-sob-mouse: Canvas;
+    --cor-aba-flutuante-texto: CanvasText;
+    --cor-aba-flutuante-segundo-tom: CanvasText;
+    --cor-aba-flutuante-contorno: CanvasText;
+    --cor-aba-flutuante-opcao-larga: Highlight;
+    --cor-aba-flutuante-sobre-opcao-larga: HighlightText;
+    --cor-aba-flutuante-atencao: Highlight;
+    --cor-aba-flutuante-sobre-atencao: HighlightText;
+    --cor-aba-flutuante-neutro: Canvas;
+    --cor-aba-flutuante-neutro-2: Canvas;
+    --cor-aba-flutuante-neutro-bloco: Canvas;
+    --cor-aba-flutuante-neutro-contorno: CanvasText;
+    --cor-aba-flutuante-texto-indisponivel: GrayText;
+    --cor-aba-flutuante-foco: LinkText;
+    --cor-aba-flutuante-fio-escuro: Canvas;
+    --cor-aba-flutuante-sombra: transparent;
+    --cor-aba-flutuante-anel: transparent;
   }
 }
