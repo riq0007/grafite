@@ -267,6 +267,34 @@ Os testes criam o pipe com um nome só deles e com a DACL do serviço mais o usu
 - a outra instância recusada a quem não é o sistema;
 - a mensagem grande.
 
+O serviço (tarefa 5.11) é o `grafite-aba-servico`, com o `grafite-aba-pipe`. Sem argumentos, ele é o serviço `GrafiteAba` do gerenciador de serviços; com o `--console`, roda no terminal de um administrador, com o log repetido no stderr. Ele guarda:
+- **no registro do Windows:** o MSI grava em `HKLM\SOFTWARE\Grafite\Aba` os valores `Servidor`, `Chave` e `Entrada`, lidos na visão de 64 bits a cada passo. O endereço que não é `https://`, fora do `http://` do próprio computador, vale como nenhum: a aba não foi configurada;
+- **o token:** o arquivo `aparelho`, cifrado pelo DPAPI da máquina, com um sal do serviço. Ele leva o servidor que deu o token, e o token de outro servidor não vai ao novo: com outro `GRAFITE_SERVIDOR`, o serviço registra de novo com a chave. O arquivo que não abre, como o de uma imagem copiada de outra máquina, vale como nenhum;
+- **a configuração:** o `configuracao.json`, com o servidor, gravado só quando muda. A aba de cada pessoa a recebe pelo pipe, e não pelo disco;
+- **as pastas:** a que falta nasce já com a permissão (`CreateDirectoryW` com o descritor), e a que existe ganha de novo, a cada início, o dono nos administradores e a DACL protegida: o `Grafite` com os usuários só lendo, e o `Aba` e os `logs` só do sistema e dos administradores. A pasta que é um atalho é recusada, e o serviço não começa. Cada arquivo é gravado inteiro, ao lado, e trocado depois;
+- **o log:** os 5 arquivos de 1 MB, com o momento em UTC e a linha sem os caracteres de controle. A chave e os tokens são do tipo `Segredo`, sem o `Display` e com o `Debug` que os esconde.
+
+O passo do aparelho roda numa linha só, e o registro é um por vez:
+- o contato com o token vem primeiro. A chave sai do registro do Windows só depois de um contato que deu certo e com o token já no disco: o serviço que reinicia antes disso ainda tem a chave;
+- sem um token que valha, a chave registra. O 429 do registro espera e tenta de novo com a mesma chave. A chave recusada não volta à API por 10 minutos, e a chave nova no registro do Windows registra no passo seguinte, que relê o `HKLM` a cada minuto;
+- o token recusado volta à API a cada 10 minutos. Sem a chave, a aba fica com "Este computador precisa ser registrado de novo. Fale com a TI.";
+- o bloqueado espera 10 minutos. O `proximaEm` da API fica entre 10 s e 1 hora;
+- a decisão é pelo `type`: só o `token-da-aba-recusado` é do computador. As recusas da pessoa voltam à aba, e as outras respostas e a rede caída deixam o aparelho sem conexão, com a configuração guardada.
+
+O pipe responde um pedido por conexão, em JSON: o `{"pedido":"aparelho"}` recebe a situação (`nao-configurada`, `registrada`, `sem-conexao`, `registrar-de-novo` ou `bloqueada`), o motivo e a configuração guardada.
+- **as linhas:** uma por conexão, até 64 ao mesmo tempo. A próxima instância é criada antes de a atual ir à linha dela;
+- **o prazo:** 5 s. O `ReadFile` e o `FlushFileBuffers` sem o modo sobreposto esperariam a aba parada para sempre, então uma vigia chama o `CancelSynchronousIo` na linha passado o prazo, e segue chamando até o fim, para a E/S seguinte não escapar entre duas chamadas;
+- **no `--console`:** só o sistema cria a segunda instância, e o administrador atende uma aba por vez.
+
+A rede, por enquanto, é a do `reqwest` como vem, com o schannel, sem seguir redirecionamento e com 10 s para conectar e 30 s no total. Os dois proxies entram na 5.14.
+
+Na verificação, o serviço foi instalado à mão com o `sc.exe`, do `C:\Program Files\Grafite\Aba`, com o `http://localhost:5173` e a chave de desenvolvimento no `HKLM`. Contra o `pnpm dev`:
+- o aparelho foi registrado no primeiro passo e aparece no `aba aparelhos` com o nome e a versão;
+- a chave saiu do `HKLM`;
+- a pasta e o `aparelho` ficaram só do sistema e dos administradores, e nem a chave nem o token aparecem abertos no disco ou no log;
+- o serviço reiniciado leu o token do disco e não registrou de novo;
+- o exemplo `aparelho` do `grafite-aba-pipe`, pelo `Cliente::abrir`, conferiu o serviço no gerenciador de serviços e recebeu a situação `registrada` com a configuração de fábrica.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

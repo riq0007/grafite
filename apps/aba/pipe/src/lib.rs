@@ -5,7 +5,7 @@
 //! sem aceitar o que a tela diz. A aba abre o pipe só para a identificação e confere, pelo
 //! `GetNamedPipeServerProcessId`, que do outro lado está o processo do serviço `GrafiteAba`, rodando
 //! como o sistema: o pipe falso de outro usuário é recusado. As mensagens vão inteiras, no modo de
-//! mensagem do pipe, até 64 KiB; o que elas dizem entra com o serviço (tarefas 5.11 a 5.13).
+//! mensagem do pipe, até 64 KiB, um pedido e uma resposta em JSON por conexão (`protocolo`).
 
 use std::fmt;
 use std::io;
@@ -13,12 +13,20 @@ use std::io;
 #[cfg(windows)]
 mod cliente;
 #[cfg(windows)]
+mod prazo;
+mod protocolo;
+#[cfg(windows)]
 mod seguranca;
 #[cfg(windows)]
 mod servidor;
 
 #[cfg(windows)]
 pub use cliente::{Cliente, conferir_o_servico};
+#[cfg(windows)]
+pub use prazo::com_prazo;
+pub use protocolo::{Aparelho, Configuracao, Entrada, Forma, Pedido, Resposta, Situacao};
+#[cfg(windows)]
+pub use seguranca::Descritor;
 #[cfg(windows)]
 pub use servidor::Instancia;
 

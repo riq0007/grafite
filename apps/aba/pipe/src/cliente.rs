@@ -292,6 +292,30 @@ mod testes {
     }
 
     #[test]
+    fn a_aba_parada_nao_segura_o_servico() {
+        let nome = nome_do_teste("parada");
+        let instancia =
+            Instancia::criar_com(&nome, true, &dacl_do_teste()).expect("o pipe do teste");
+        let (pronto, esperar) = mpsc::channel();
+        let linha = thread::spawn(move || {
+            instancia.esperar()?;
+            let _ = pronto.send(());
+            let inicio = Instant::now();
+            let lido = crate::com_prazo(Duration::from_millis(300), || instancia.ler())?;
+            Ok::<_, Erro>((lido.is_err(), inicio.elapsed()))
+        });
+        let proprio = std::process::id();
+        // A aba abre o pipe e não manda nada.
+        let _cliente =
+            Cliente::abrir_com(&nome, |processo| conferir(processo, proprio, "LocalSystem"))
+                .expect("o pipe conferido");
+        esperar.recv().expect("o servidor conectado");
+        let (falhou, levou) = linha.join().expect("a linha do servidor").expect("o prazo");
+        assert!(falhou, "a leitura parada é cancelada");
+        assert!(levou < Duration::from_secs(3), "levou {levou:?}");
+    }
+
+    #[test]
     fn a_dacl_do_servico_e_valida() {
         assert!(crate::seguranca::Descritor::da_sddl(DACL_DO_PIPE).is_ok());
     }

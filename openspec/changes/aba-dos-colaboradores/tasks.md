@@ -176,7 +176,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [x] 5.10 O pipe do serviço (decisão 1): o servidor com a DACL e as flags, a aba que confere o processo do serviço, e quem chama pelo `ImpersonateNamedPipeClient`.
 
   Começa pelos testes do Rust, com o servidor falso recusado. Verificar: esses testes e o `clippy`.
-- [ ] 5.11 O serviço do Windows:
+- [x] 5.11 O serviço do Windows:
   - o token do aparelho cifrado no `%ProgramData%`, com a permissão só do sistema e dos administradores;
   - a chave lida do `HKLM` sempre que aparece, com o registro, um por vez, e apagada só depois de um contato com o token dar certo; o 429 do registro é "tentar depois", e não a chave recusada;
   - o nome do computador no `x-grafite-computador` só em ASCII, porque o Node lê o cabeçalho em latin1: o nome com acento omite o cabeçalho, sem transliterar, e vai só pelo corpo do registro;
