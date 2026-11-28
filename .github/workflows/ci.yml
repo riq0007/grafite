@@ -175,7 +175,8 @@ jobs:
     needs: mudancas
     if: needs.mudancas.outputs.codigo == 'true'
     runs-on: windows-2022
-    # O MSI compila a aba e o serviço em release, com o LTO: 60 min, com folga sobre os ~25 min.
+    # O MSI compila a aba e o serviço em release, com o LTO: 60 min, com folga sobre os ~10 min do
+    # primeiro run, sem o cache.
     timeout-minutes: 60
     env:
       RUST_DA_ABA: '1.100.0'
@@ -187,6 +188,18 @@ jobs:
         run: |
           rustup toolchain install "$RUST_DA_ABA" --profile minimal --component rustfmt,clippy
           rustup default "$RUST_DA_ABA"
+
+      # Só os downloads do Cargo, pelo Cargo.lock. O target, com o debug do clippy e dos testes e o
+      # release do MSI, é grande para o cache do repositório, de 10 GB para todas as branches.
+      - name: O cache do Cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-${{ runner.os }}-${{ hashFiles('apps/aba/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
 
       # O generate_context! do Tauri embute a tela compilada, e o clippy e os testes já a pedem.
       - name: A tela compilada, que o programa embute
