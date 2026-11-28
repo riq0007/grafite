@@ -67,6 +67,7 @@ export const variaveis = [
   '--dur-aba-cascata',
   '--dur-aba-fechar',
   '--dur-aba-entalhe',
+  '--dur-aba-pressionada',
   '--dur-aba-ponto',
   '--dur-deslocamento',
   '--dur-folha',

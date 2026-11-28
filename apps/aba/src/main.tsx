@@ -1,6 +1,7 @@
 import '@grafite/ui/fontes.css';
 import '@grafite/ui/tokens.css';
 import '@grafite/ui/base.css';
+import './janela.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Aba } from './Aba.tsx';

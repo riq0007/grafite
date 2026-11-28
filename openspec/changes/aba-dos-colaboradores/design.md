@@ -176,6 +176,13 @@ A janela da aba é uma só, transparente, sem borda, sempre por cima e fora da b
 - **a apresentação:** lê o `SHQueryUserNotificationState` a cada 2 s. Os estados `QUNS_BUSY`, `QUNS_RUNNING_D3D_FULL_SCREEN` e `QUNS_PRESENTATION_MODE` encolhem a aba. A leitura não diz o monitor: um programa em tela cheia em qualquer tela encolhe a aba;
 - **o atalho:** o plugin `global-shortcut` do Tauri. A falha no registro vira a frase do painel.
 
+Na tela (tarefa 5.3), o contrato com o lado nativo fica em `apps/aba/src/nativo.ts`:
+- o comando `aparencia` e o evento `aparencia-mudou` dão a forma da configuração, o tema e as animações do Windows e a tela principal em px lógicos;
+- a tela põe o tema no `data-windows-theme` e o reduzir movimento no `data-motion`;
+- o comando `informar_forma` recebe os retângulos da forma, em px CSS da janela, com o raio de cima e o de baixo, a cada mudança de tamanho ou de lugar. Ele mede pela caixa do layout, sem a escala do mouse em cima.
+
+A janela é transparente, e a tela põe a forma no alto e no meio dela. A pílula fica a 8 px do alto, ou a 36 px numa tela de até 800 px de altura, abaixo da barra de título do programa maximizado (m12); o entalhe fica a 0. A pílula tem a largura mínima da spec (162 e 160 px), porque a fonte deixava a de 162 com 161. A aba pressionada leva o `aba.pressionada` (80 ms), que entrou no `movimento`, e o mouse em cima da pílula usa o `aba.entalhe`. As referências visuais da aba fechada (as duas formas nos três temas) são do Windows: o e2e as pula nos outros sistemas, como o CI. Os comandos do Rust entram na 5.8 e na 5.9; até lá, a tela usa a aparência de fábrica.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

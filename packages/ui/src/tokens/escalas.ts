@@ -157,6 +157,7 @@ export const movimento = {
    * o logo entra aos 60 e as opções a partir dos 120, uma 40 depois da outra, cada uma em 140: a
    * terceira acaba aos 340, a exceção nomeada da aba aos 300 do ANTISLOP (seção 28). As opções já
    * respondem ao clique quando a primeira acaba, aos 260. O ponto do aviso pulsa em ciclos de 1.400.
+   * O mouse em cima, no entalhe e na pílula, leva 120, e a aba pressionada, 80.
    */
   aba: {
     abrir: 220,
@@ -166,6 +167,7 @@ export const movimento = {
     cascata: 40,
     fechar: 160,
     entalhe: 120,
+    pressionada: 80,
     ponto: 1400,
   },
   curvas: {

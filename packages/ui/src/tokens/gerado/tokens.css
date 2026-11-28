@@ -67,6 +67,7 @@
   --dur-aba-cascata: 40ms;
   --dur-aba-fechar: 160ms;
   --dur-aba-entalhe: 120ms;
+  --dur-aba-pressionada: 80ms;
   --dur-aba-ponto: 1400ms;
   --dur-deslocamento: var(--dur-media);
   --dur-folha: var(--dur-lenta);
@@ -862,6 +863,7 @@
   --dur-aba-cascata: 0ms;
   --dur-aba-fechar: 1ms;
   --dur-aba-entalhe: 1ms;
+  --dur-aba-pressionada: 1ms;
   --dur-aba-ponto: 0ms;
 }
 
@@ -890,6 +892,7 @@
     --dur-aba-cascata: 0ms;
     --dur-aba-fechar: 1ms;
     --dur-aba-entalhe: 1ms;
+    --dur-aba-pressionada: 1ms;
     --dur-aba-ponto: 0ms;
   }
 }

@@ -1,0 +1,211 @@
+/*
+ * A aba fechada (spec aba-dos-colaboradores, "Aba fechada"; mockups m01, m03, m07 e m12 da ideia 18):
+ * a pílula de fábrica, de 162×34 (160×32 na tela pequena), ou o entalhe preso à borda de cima, de
+ * 184×32, que cresce para 36 com o mouse em cima. Só as cores --cor-aba-flutuante-* e as durações
+ * --dur-aba-*, que o tema e o movimento do Windows trocam.
+ */
+.aba {
+  --fio: 1.5px;
+  --anel-do-foco:
+    0 0 0 2px var(--cor-aba-flutuante-fundo-2), 0 0 0 5px var(--cor-aba-flutuante-foco),
+    0 0 0 6.5px var(--cor-aba-flutuante-fio-escuro);
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  background-color: var(--cor-aba-flutuante-fundo);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  /* As cores do alto contraste já são as do sistema: o navegador não as força de novo. */
+  forced-color-adjust: none;
+}
+
+.aba:focus-visible {
+  outline: 0;
+  /* O foco aparece na hora, sem transição (m03). */
+  transition: none;
+}
+
+.disco {
+  --tom-do-simbolo: var(--cor-aba-flutuante-fundo);
+  --opacidade-do-tom: 0.25;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--cor-aba-flutuante-texto);
+  color: var(--cor-aba-flutuante-fundo);
+}
+
+.seta {
+  font-size: 14px;
+  color: var(--cor-aba-flutuante-contorno);
+}
+
+/* ---------- A pílula (m03): flutua a 8 px do alto, ou a 36 px na tela baixa ---------- */
+.pilula {
+  --altura: 34px;
+  min-width: 162px;
+  height: var(--altura);
+  padding: 0 16px 0 5px;
+  border-radius: calc(var(--altura) / 2);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 10px 20px -6px var(--cor-aba-flutuante-sombra);
+  transition:
+    transform var(--dur-aba-entalhe) var(--curva-padrao),
+    background-color var(--dur-aba-entalhe) var(--curva-padrao),
+    box-shadow var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.pilula .disco {
+  width: 24px;
+  height: 24px;
+  font-size: 17px;
+}
+
+/* A tela pequena (m12): 160×32. */
+.compacta {
+  --altura: 32px;
+  min-width: 160px;
+}
+
+.compacta .disco {
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+}
+
+.pilula:hover {
+  transform: translateY(-1px) scale(1.07);
+  background-color: var(--cor-aba-flutuante-bloco);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 0 0 5px var(--cor-aba-flutuante-anel),
+    0 12px 22px -6px var(--cor-aba-flutuante-sombra);
+}
+
+.pilula:active {
+  transform: scale(0.96);
+  background-color: var(--cor-aba-flutuante-fundo-2);
+  box-shadow:
+    0 0 0 1px var(--cor-aba-flutuante-fio-escuro),
+    0 4px 8px -4px var(--cor-aba-flutuante-sombra);
+  transition-duration: var(--dur-aba-pressionada);
+  transition-timing-function: var(--curva-saida);
+}
+
+.pilula:focus-visible {
+  box-shadow:
+    var(--anel-do-foco),
+    0 10px 20px -6px var(--cor-aba-flutuante-sombra);
+}
+
+/* ---------- O entalhe (m01): preso à borda, com o fio claro até a curva de encaixe ---------- */
+.entalhe {
+  --raio: 16px;
+  --encaixe: 14px;
+  --fundo: var(--cor-aba-flutuante-fundo);
+  position: relative;
+  justify-content: center;
+  min-width: 184px;
+  height: 32px;
+  padding: 0 14px 0 8px;
+  border-top: 0;
+  border-radius: 0 0 var(--raio) var(--raio);
+  background-color: var(--fundo);
+  filter: drop-shadow(0 10px 14px var(--cor-aba-flutuante-sombra));
+  transition:
+    height var(--dur-aba-entalhe) var(--curva-padrao),
+    background-color var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.entalhe .disco {
+  width: 20px;
+  height: 20px;
+  font-size: 15px;
+}
+
+/* A curva côncava de cada lado sai tangente à borda da tela e chega tangente ao lado da forma. */
+.entalhe::before,
+.entalhe::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--encaixe);
+  height: var(--encaixe);
+  pointer-events: none;
+}
+
+.entalhe::before {
+  right: 100%;
+  margin-right: var(--fio);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent calc(var(--encaixe) - 0.5px),
+    var(--cor-aba-flutuante-contorno) var(--encaixe),
+    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
+    var(--fundo) calc(var(--encaixe) + 2px)
+  );
+}
+
+.entalhe::after {
+  left: 100%;
+  margin-left: var(--fio);
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent calc(var(--encaixe) - 0.5px),
+    var(--cor-aba-flutuante-contorno) var(--encaixe),
+    var(--cor-aba-flutuante-contorno) calc(var(--encaixe) + var(--fio)),
+    var(--fundo) calc(var(--encaixe) + 2px)
+  );
+}
+
+.entalhe:hover {
+  --fundo: var(--cor-aba-flutuante-bloco);
+  height: 36px;
+}
+
+.entalhe:active {
+  --fundo: var(--cor-aba-flutuante-fundo-2);
+  transition-duration: var(--dur-aba-pressionada);
+  transition-timing-function: var(--curva-saida);
+}
+
+.entalhe:focus-visible {
+  box-shadow: var(--anel-do-foco);
+}
+
+/* ---------- O alto contraste (m07): fio de 2 px e nenhuma sombra ---------- */
+:global([data-windows-theme="alto-contraste"]) .aba {
+  --fio: 2px;
+  filter: none;
+}
+
+@media (forced-colors: active) {
+  :global(:root:not([data-windows-theme])) .aba {
+    --fio: 2px;
+    filter: none;
+  }
+}
+
+/* ---------- Sem animações no Windows: a escala e o deslocamento saem; fica a troca de fundo ---------- */
+:global([data-motion="reduzido"]) .pilula:hover,
+:global([data-motion="reduzido"]) .pilula:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(:root:not([data-motion])) .pilula:hover,
+  :global(:root:not([data-motion])) .pilula:active {
+    transform: none;
+  }
+}

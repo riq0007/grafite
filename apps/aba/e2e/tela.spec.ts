@@ -9,7 +9,15 @@ test('a tela da aba abre sem erro', async ({ page }) => {
   page.on('console', (mensagem) => {
     if (mensagem.type() === 'error') erros.push(mensagem.text());
   });
-  await simularOTauri(page);
+  await simularOTauri(page, {
+    aparencia: {
+      forma: 'pilula',
+      tema: 'escuro',
+      movimentoReduzido: false,
+      tela: { largura: 1920, altura: 1080 },
+    },
+    informar_forma: null,
+  });
   await page.goto('/');
   await expect(page.locator('[data-aba]')).toBeAttached();
   expect(erros).toEqual([]);

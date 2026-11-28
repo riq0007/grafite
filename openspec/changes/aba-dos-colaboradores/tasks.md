@@ -141,7 +141,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a tabela dos três temas do Windows no `tokens:contraste`.
 
   Verificar: `pnpm tokens:verificar`, `pnpm tokens:contraste` e o lint.
-- [ ] 5.3 A aba fechada, na tela:
+- [x] 5.3 A aba fechada, na tela:
   - a pílula e o entalhe;
   - os quatro estados, o tamanho no 1366 e os três temas;
   - a forma informada ao lado nativo.

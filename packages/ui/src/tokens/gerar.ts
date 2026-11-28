@@ -149,6 +149,9 @@ function escalasFixas(): Declaracoes {
   ];
 }
 
+/** Os começos, a cascata e o ponto do aviso: sem movimento, nada espera e o ponto não pulsa. */
+const PARADOS_NA_ABA = new Set(['inicioDoLogo', 'inicioDaCascata', 'cascata', 'ponto']);
+
 const MOVIMENTO_REDUZIDO: Declaracoes = [
   ['--dur-deslocamento', '0ms'],
   ['--dur-folha', '0ms'],
@@ -170,9 +173,7 @@ const MOVIMENTO_REDUZIDO: Declaracoes = [
   // A aba do Windows troca de estado em 1 ms, sem cascata, e o ponto do aviso fica parado.
   ...Object.keys(movimento.aba).map((nome): [string, string] => [
     `--dur-aba-${kebab(nome)}`,
-    nome === 'abrir' || nome === 'entrada' || nome === 'fechar' || nome === 'entalhe'
-      ? '1ms'
-      : '0ms',
+    PARADOS_NA_ABA.has(nome) ? '0ms' : '1ms',
   ]),
 ];
 
