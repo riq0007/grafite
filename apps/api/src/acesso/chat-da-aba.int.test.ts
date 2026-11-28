@@ -215,6 +215,19 @@ describe('as rotas do alcance', () => {
     expect(foto.json()).toMatchObject({ type: 'urn:grafite:problema:fora-do-alcance-da-aba' });
   });
 
+  it('a entrada com o cookie do chat na aba abre como sem sessão', async () => {
+    const chat = await abrirChatNaAba(await abrirAba());
+    const r = await api.app.inject({
+      method: 'POST',
+      url: '/api/sessao',
+      remoteAddress: novoIp(),
+      headers: { host, cookie: chat.entrada.cookie },
+      payload: { usuario: 'fernanda.lima', senha: 'senha-da-fernanda' },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ sessao: { naAba: false, pendencia: null } });
+  });
+
   it('a sessão comum segue sem o naAba', async () => {
     const navegador = await cliente.entrar('fernanda.lima', 'senha-da-fernanda');
     expect((await cliente.consultar('/sessao', navegador)).json()).toMatchObject({
@@ -238,6 +251,11 @@ describe('a sessão da aba ligada, conferida ao vivo', () => {
       { encerradaEm: new Date('2026-01-01T00:00:00Z'), motivoDoFim: 'encerrada-pelo-usuario' },
     ],
     ['vencida', { expiraEm: new Date('2026-01-01T00:00:00Z') }],
+    ['pendente', { ativadaEm: null }],
+    [
+      'pela senha parada há 30 min',
+      { entrada: 'senha', ultimoUsoEm: new Date('2026-01-01T00:00:00Z') },
+    ],
   ] as const)('a sessão da aba %s leva a do chat junto', async (_, mudanca) => {
     const aba = await abrirAba();
     const chat = await abrirChatNaAba(aba);

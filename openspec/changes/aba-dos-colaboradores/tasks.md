@@ -6,7 +6,6 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
   As suítes inteiras rodam no CI do PR rascunho `dev` → `main`, aberto com o primeiro commit de tarefa.
 - **A rota nova** entra no OpenAPI na mesma tarefa, com o `pnpm contrato:verificar`.
-- **A revisora** lê o diff do commit, depois dele.
 - **Os casos raros** vão para `.grafite/revisoes/aba-dos-colaboradores-pendencias.md`.
 - **O mesmo commit** acerta as pontas a ponta e as referências da regressão visual que a tarefa muda.
 
@@ -106,7 +105,8 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [ ] 3.11 O bilhete:
   - o `POST /api/aba/bilhete`, com o destino fechado e a recusa da conta com os dois passos na entrada pelo Windows;
   - o `POST /api/sessao/bilhete`, com o uso único, os 60 s, a mesma resposta para o usado, o vencido e o desconhecido, a pendência calculada de novo e o `LIMITE_DA_ENTRADA`;
-  - a entrada do chat com a marca da aba, que nasce no alcance;
+  - a entrada do chat com a marca da aba, que nasce no alcance, com o `POST /sessao/segundo-passo` na lista do alcance (a sessão pendente do chat na aba chega ao código), com o teste, e o que a página diz à conta que precisa trocar a senha temporária ou ativar os dois passos, que ficam no `/conta`, fora do alcance: abrir o Grafite no navegador;
+  - o `naAba` passado ao `estadoDaSessao` na resposta da entrada com a marca e na do bilhete (opcional ali, esquecê-lo compila e diz `false`);
   - a auditoria;
   - a limpeza dos bilhetes vencidos há mais de 24 horas, na manutenção diária.
 

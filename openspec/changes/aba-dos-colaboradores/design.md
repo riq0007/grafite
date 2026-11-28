@@ -201,7 +201,7 @@ A troca calcula de novo a pendência da conta e confere a sessão da aba e o apa
 
 A sessão do chat na aba é uma linha nas `sessoes`, com `alcance = 'chat-da-aba'` e o `sessao_da_aba_id`. O alcance é recusado por padrão:
 - **O `lerSessao` recebe os alcances que o chamador aceita** e, sem eles, só devolve a sessão comum. Os três chamadores:
-  - o gancho do escopo passa o `chatDaAba` da rota;
+  - o gancho do escopo lê com os dois alcances e decide pela rota: na que não tem o `chatDaAba`, a de entrada trata a sessão do chat na aba como sem sessão, e as outras recebem o 403;
   - a conferência da conexão de eventos (`rotas/eventos.ts`) passa o da própria conexão;
   - a ponte dos painéis (`paineis/ponte.ts`) não passa nada.
 - **O `lerSessao` confere ao vivo a sessão da aba ligada:** vencida, terminada ou com o aparelho bloqueado, a do chat também vale como terminada.
