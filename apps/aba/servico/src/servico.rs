@@ -76,6 +76,9 @@ fn servico_principal(_argumentos: Vec<OsString>) {
         wait_hint: Duration::default(),
         process_id: None,
     };
+    // Antes do Running: o MSI espera por ele para gravar a chave da organização no registro, que já
+    // precisa estar protegido. O `rodar` protege de novo, com o log.
+    let _ = instalacao::proteger();
     let _ = estado.set_service_status(situacao(
         ServiceState::Running,
         ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN,
@@ -145,6 +148,11 @@ fn rodar(sinais: &Receiver<Sinal>, acordar: Sender<Sinal>, no_console: bool) -> 
     let pastas = pastas::preparar()?;
     log::iniciar(pastas.logs(), no_console);
     log::info(&format!("o serviço da aba {VERSAO} começou"));
+    if let Err(erro) = instalacao::proteger() {
+        log::aviso(&format!(
+            "a chave do registro da aba ficou sem a permissão do serviço: {erro}"
+        ));
+    }
     let guardado = cofre::ler(&pastas.aparelho()).unwrap_or_else(|erro| {
         log::aviso(&format!(
             "o token guardado não abriu, e vale como nenhum: {erro}"

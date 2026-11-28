@@ -1,5 +1,6 @@
 //! O que o Windows diz da pessoa (design, decisão 7): o tema dos apps, o alto contraste, as animações
-//! e a apresentação. As leituras são do Windows; o que elas decidem é puro, com testes.
+//! e a apresentação. As leituras são do Windows; o que elas decidem é puro, com testes. E o registro
+//! no Restart Manager, que reabre a aba depois de o MSI a fechar para trocar a versão.
 
 use crate::aparencia::Tema;
 
@@ -29,7 +30,7 @@ pub fn em_apresentacao(estado: i32) -> bool {
 }
 
 #[cfg(windows)]
-pub use nativo::{apresentacao, ler};
+pub use nativo::{apresentacao, ler, voltar_depois_da_troca};
 
 #[cfg(windows)]
 mod nativo {
@@ -37,6 +38,9 @@ mod nativo {
     use std::mem::size_of;
 
     use windows::Win32::Foundation::ERROR_SUCCESS;
+    use windows::Win32::System::Recovery::{
+        RESTART_NO_CRASH, RESTART_NO_HANG, RESTART_NO_REBOOT, RegisterApplicationRestart,
+    };
     use windows::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};
     use windows::Win32::UI::Accessibility::{HCF_HIGHCONTRASTON, HIGHCONTRASTW};
     use windows::Win32::UI::Shell::SHQueryUserNotificationState;
@@ -44,9 +48,21 @@ mod nativo {
         SPI_GETCLIENTAREAANIMATION, SPI_GETHIGHCONTRAST, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
         SystemParametersInfoW,
     };
-    use windows::core::{BOOL, w};
+    use windows::core::{BOOL, PCWSTR, w};
 
     use super::{DoWindows, em_apresentacao, tema};
+
+    /// O MSI fecha a aba aberta para trocar a versão, pelo Restart Manager, que só reabre o programa
+    /// registrado. Só a troca: a falha, o travamento e a volta do Windows ficam com o `Run`.
+    pub fn voltar_depois_da_troca() {
+        // SAFETY: sem linha de comando; o Windows só guarda o pedido.
+        let _ = unsafe {
+            RegisterApplicationRestart(
+                PCWSTR::null(),
+                RESTART_NO_CRASH | RESTART_NO_HANG | RESTART_NO_REBOOT,
+            )
+        };
+    }
 
     /// O `AppsUseLightTheme`. Sem o valor, o Windows usa o claro.
     fn apps_no_claro() -> bool {
@@ -126,6 +142,9 @@ pub fn ler() -> DoWindows {
 pub fn apresentacao() -> bool {
     false
 }
+
+#[cfg(not(windows))]
+pub fn voltar_depois_da_troca() {}
 
 #[cfg(test)]
 mod testes {

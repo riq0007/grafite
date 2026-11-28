@@ -83,6 +83,7 @@ pub fn rodar() {
             janela::criar_a_aba(app.handle())?;
             janela::preparar(app.handle(), trocas)?;
             atalho::registrar(app.handle());
+            sistema::voltar_depois_da_troca();
             let (comandos, da_sessao) = Comandos::nova();
             #[cfg(windows)]
             {

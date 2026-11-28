@@ -1,5 +1,8 @@
 //! O que o MSI grava em `HKLM\SOFTWARE\Grafite\Aba` (design, decisão 12), com a permissão só do
-//! sistema e dos administradores: o servidor, a chave e a entrada sugerida.
+//! sistema e dos administradores: o servidor, a chave e a entrada sugerida. A permissão é do serviço,
+//! que a põe ao começar, antes de se dizer pronto: o MSI do Tauri declara o Windows Installer 4.5, sem
+//! o `MsiLockPermissionsEx`, e o `LockPermissions` não chega à chave que já existe. O MSI grava a
+//! chave da organização depois do `StartServices`, que espera o serviço ficar pronto.
 
 pub use grafite_aba_pipe::Entrada;
 
@@ -9,6 +12,9 @@ pub const CHAVE_DO_REGISTRO: &str = r"SOFTWARE\Grafite\Aba";
 pub const VALOR_DO_SERVIDOR: &str = "Servidor";
 pub const VALOR_DA_CHAVE: &str = "Chave";
 pub const VALOR_DA_ENTRADA: &str = "Entrada";
+/// A chave do registro: o sistema e os administradores com tudo, sem herdar, e o dono nos
+/// administradores.
+pub const SDDL_DA_CHAVE: &str = "O:BAD:P(A;CI;KA;;;SY)(A;CI;KA;;;BA)";
 
 /// A entrada sugerida que o MSI grava, `windows` ou `senha`.
 pub fn entrada_do_texto(texto: &str) -> Option<Entrada> {
@@ -42,23 +48,34 @@ pub fn endereco_valido(endereco: &str) -> Option<String> {
 }
 
 #[cfg(windows)]
-pub use nativo::{apagar_a_chave, ler, texto as texto_da_maquina};
+pub use nativo::{apagar_a_chave, ler, proteger, texto as texto_da_maquina};
 
 #[cfg(windows)]
 mod nativo {
     use std::io;
 
-    use windows::Win32::Foundation::ERROR_FILE_NOT_FOUND;
-    use windows::Win32::System::Registry::{
-        HKEY, HKEY_LOCAL_MACHINE, KEY_READ, KEY_SET_VALUE, KEY_WOW64_64KEY, REG_SAM_FLAGS,
-        RRF_RT_REG_SZ, RegCloseKey, RegDeleteValueW, RegGetValueW, RegOpenKeyExW,
+    use grafite_aba_pipe::Descritor;
+    use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, HANDLE};
+    use windows::Win32::Security::Authorization::{SE_REGISTRY_KEY, SetSecurityInfo};
+    use windows::Win32::Security::{
+        ACL, DACL_SECURITY_INFORMATION, GetSecurityDescriptorDacl, GetSecurityDescriptorOwner,
+        OWNER_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR,
+        PSID, SECURITY_ATTRIBUTES,
     };
-    use windows::core::HSTRING;
+    use windows::Win32::System::Registry::{
+        HKEY, HKEY_LOCAL_MACHINE, KEY_READ, KEY_SET_VALUE, KEY_WOW64_64KEY,
+        REG_OPTION_NON_VOLATILE, REG_SAM_FLAGS, RRF_RT_REG_SZ, RegCloseKey, RegCreateKeyExW,
+        RegDeleteValueW, RegGetValueW, RegOpenKeyExW,
+    };
+    use windows::core::{BOOL, HSTRING, PCWSTR};
 
     use super::{
-        CHAVE_DO_REGISTRO, Instalacao, VALOR_DA_CHAVE, VALOR_DA_ENTRADA, VALOR_DO_SERVIDOR,
-        entrada_do_texto,
+        CHAVE_DO_REGISTRO, Instalacao, SDDL_DA_CHAVE, VALOR_DA_CHAVE, VALOR_DA_ENTRADA,
+        VALOR_DO_SERVIDOR, entrada_do_texto,
     };
+
+    /// O `WRITE_DAC` e o `WRITE_OWNER`, para trocar a permissão e o dono da chave.
+    const TROCAR_A_PERMISSAO: REG_SAM_FLAGS = REG_SAM_FLAGS(0x0004_0000 | 0x0008_0000);
     use crate::segredo::Segredo;
 
     struct Chave(HKEY);
@@ -131,6 +148,62 @@ mod nativo {
                 .as_deref()
                 .and_then(entrada_do_texto),
         }
+    }
+
+    /// Cria a chave do registro, se falta, já protegida, e põe de novo a permissão e o dono na que
+    /// existe: o MSI a cria herdando a de `SOFTWARE`, que os usuários leem.
+    pub fn proteger() -> io::Result<()> {
+        let descritor = Descritor::da_sddl(SDDL_DA_CHAVE)?;
+        let atributos = SECURITY_ATTRIBUTES {
+            nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
+            lpSecurityDescriptor: descritor.ponteiro(),
+            bInheritHandle: false.into(),
+        };
+        let mut chave = HKEY::default();
+        // SAFETY: o caminho e os atributos vivem durante a chamada; a chave fica com o `Chave`.
+        unsafe {
+            RegCreateKeyExW(
+                HKEY_LOCAL_MACHINE,
+                &HSTRING::from(CHAVE_DO_REGISTRO),
+                None,
+                PCWSTR::null(),
+                REG_OPTION_NON_VOLATILE,
+                KEY_WOW64_64KEY | TROCAR_A_PERMISSAO,
+                Some(&raw const atributos),
+                &raw mut chave,
+                None,
+            )
+        }
+        .ok()?;
+        let chave = Chave(chave);
+        let sd = PSECURITY_DESCRIPTOR(descritor.ponteiro());
+        let mut dono = PSID::default();
+        let mut dono_padrao = BOOL::default();
+        let mut presente = BOOL::default();
+        let mut dacl: *mut ACL = std::ptr::null_mut();
+        let mut dacl_padrao = BOOL::default();
+        // SAFETY: o descritor vive até o fim da função; os ponteiros apontam para dentro dele.
+        unsafe {
+            GetSecurityDescriptorOwner(sd, &raw mut dono, &raw mut dono_padrao)?;
+            GetSecurityDescriptorDacl(sd, &raw mut presente, &raw mut dacl, &raw mut dacl_padrao)?;
+        }
+        // SAFETY: a chave está aberta com o WRITE_DAC e o WRITE_OWNER; o dono e a DACL vivem
+        // durante a chamada.
+        unsafe {
+            SetSecurityInfo(
+                HANDLE(chave.0.0),
+                SE_REGISTRY_KEY,
+                OWNER_SECURITY_INFORMATION
+                    | DACL_SECURITY_INFORMATION
+                    | PROTECTED_DACL_SECURITY_INFORMATION,
+                Some(dono),
+                None,
+                Some(dacl),
+                None,
+            )
+        }
+        .ok()
+        .map_err(io::Error::from)
     }
 
     /// Apaga a chave do registro, depois de o token do aparelho ter dado certo.

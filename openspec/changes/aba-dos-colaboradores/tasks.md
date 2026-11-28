@@ -224,7 +224,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 
 ## 6. Pacote
 
-- [ ] 6.1 O MSI (decisão 12):
+- [x] 6.1 O MSI (decisão 12):
   - o fragmento do WiX, com o serviço, as três propriedades no `HKLM` (a chave `Hidden`) e o `Run`;
   - o WebView2 embutido;
   - a desinstalação de verdade, que limpa o `%ProgramData%` e o `HKLM`, e a troca de versão, que não limpa.
