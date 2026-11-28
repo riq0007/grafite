@@ -233,7 +233,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - a instalação com as propriedades conecta ao `pnpm dev`;
   - a instalação por cima, com a aba aberta: o aparelho segue com o mesmo identificador, sem precisar da chave;
   - a desinstalação, sem sobra fora do `%LOCALAPPDATA%` de cada pessoa.
-- [ ] 6.2 O job `aba` do CI no `windows-2022`: o fmt, o clippy, os testes do Rust, os exemplos do cliente em Rust contra o OpenAPI gerado, o MSI como artefato, com o nome `Grafite-Aba.msi`, e a conferência de que ele não leva endereço, chave nem token. Ele passa no teste-guarda dos executores.
+- [x] 6.2 O job `aba` do CI no `windows-2022`: o fmt, o clippy, os testes do Rust, os exemplos do cliente em Rust contra o OpenAPI gerado, o MSI como artefato, com o nome `Grafite-Aba.msi`, e a conferência de que ele não leva endereço, chave nem token. Ele passa no teste-guarda dos executores.
 
   Verificar: o job verde no PR rascunho e `scripts/ci/executores.test.ts`.
 

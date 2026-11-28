@@ -6,7 +6,12 @@
       "outputs": ["dist/**", "target/release/bundle/msi/**"]
     },
     "test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/ui/src/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/ui/src/**",
+        "$TURBO_ROOT$/packages/api-client/openapi.json",
+        "$TURBO_ROOT$/apps/api/src/**"
+      ]
     }
   }
 }

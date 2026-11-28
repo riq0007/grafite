@@ -573,6 +573,26 @@ mod testes {
     use crate::estado::RespostaPorVer;
 
     #[test]
+    fn o_estado_dos_exemplos_e_lido() {
+        // O exemplo que o teste de `exemplos/exemplos.test.ts` confere contra o OpenAPI.
+        let exemplos: serde_json::Value =
+            serde_json::from_str(include_str!("../../exemplos/estado.json")).expect("os exemplos");
+        let respostas = &exemplos["respostas"]["200"];
+        let com: EstadoDaApi =
+            serde_json::from_value(respostas["com-a-resposta"].clone()).expect("com a resposta");
+        assert_eq!(com.respostas_novas, Some(1));
+        assert_eq!(
+            com.por_ver
+                .and_then(|por_ver| por_ver.ultima)
+                .map(|ultima| ultima.numero),
+            Some(1041)
+        );
+        let sem: EstadoDaApi =
+            serde_json::from_value(respostas["sem-nada"].clone()).expect("sem nada");
+        assert_eq!((sem.nao_lidas, sem.por_ver), (None, None));
+    }
+
+    #[test]
     fn o_leitor_junta_a_linha_partida_e_pula_o_sinal_de_vida() {
         let mut leitor = Leitor::default();
         assert!(

@@ -4,8 +4,6 @@
   "version": "0.1.0",
   "identifier": "app.grafite.aba",
   "build": {
-    "beforeDevCommand": "pnpm dev:tela",
-    "devUrl": "http://localhost:5176",
     "beforeBuildCommand": "pnpm build:tela",
     "beforeBundleCommand": "cargo build --release -p grafite-aba-servico",
     "frontendDist": "../dist"

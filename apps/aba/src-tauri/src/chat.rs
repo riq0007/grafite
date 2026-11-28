@@ -523,6 +523,33 @@ mod testes {
     }
 
     #[test]
+    fn o_bilhete_segue_os_exemplos() {
+        // Os exemplos que o teste de `exemplos/exemplos.test.ts` confere contra o OpenAPI.
+        let exemplos: serde_json::Value =
+            serde_json::from_str(include_str!("../../exemplos/bilhete.json")).expect("os exemplos");
+        let chat = TelaMaior {
+            destino: Destino::AbrirChat,
+            numero: None,
+        };
+        assert_eq!(destino_do_bilhete(chat), exemplos["pedidos"]["chat"]);
+        let pedido = &exemplos["pedidos"]["chamado"];
+        let chamado = TelaMaior {
+            destino: Destino::Chamado,
+            numero: pedido["numero"]
+                .as_u64()
+                .and_then(|numero| u32::try_from(numero).ok()),
+        };
+        assert_eq!(&destino_do_bilhete(chamado), pedido);
+        let bilhete: Bilhete =
+            serde_json::from_value(exemplos["respostas"]["200"]["bilhete"].clone())
+                .expect("o bilhete");
+        assert!(!bilhete.bilhete.is_empty());
+        let recusa = &exemplos["respostas"]["403"]["pede-a-entrada"];
+        let corpo = serde_json::to_vec(recusa).expect("o corpo");
+        assert_eq!(marca_da_recusa(&corpo).as_deref(), recusa["aba"].as_str());
+    }
+
+    #[test]
     fn o_bilhete_pedido_pela_pagina_muda_o_endereco() {
         let primeiro = endereco_do_bilhete(SERVIDOR, "b1lh3t3", false).expect("o endereço");
         assert_eq!(

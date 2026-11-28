@@ -1,0 +1,30 @@
+{
+  "rota": "POST /aba/bilhete",
+  "pedidos": {
+    "chat": {
+      "destino": "chat"
+    },
+    "chamado": {
+      "destino": "chamado",
+      "numero": 1041
+    }
+  },
+  "respostas": {
+    "200": {
+      "bilhete": {
+        "bilhete": "bilhete-de-exemplo",
+        "expiraEm": "2026-11-28T12:01:00.000Z"
+      }
+    },
+    "403": {
+      "pede-a-entrada": {
+        "type": "urn:grafite:problema:bilhete-pede-a-entrada",
+        "title": "Entre no chat",
+        "status": 403,
+        "detail": "Esta conta entra no chat da aba com a senha e o código.",
+        "codigoDeRastreio": "R7K2-9QXM",
+        "aba": "K7M2QX"
+      }
+    }
+  }
+}

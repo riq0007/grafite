@@ -1,0 +1,27 @@
+{
+  "rota": "GET /aba/estado",
+  "respostas": {
+    "200": {
+      "com-a-resposta": {
+        "naoLidas": 2,
+        "respostasNovas": 1,
+        "porVer": {
+          "quantas": 1,
+          "ultima": {
+            "quem": "Rafael Lima",
+            "numero": 1041,
+            "titulo": "Impressora do financeiro",
+            "momento": "2026-11-28T13:10:00.000Z"
+          }
+        },
+        "versaoDaConfiguracao": 3
+      },
+      "sem-nada": {
+        "naoLidas": null,
+        "respostasNovas": null,
+        "porVer": null,
+        "versaoDaConfiguracao": 0
+      }
+    }
+  }
+}

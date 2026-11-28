@@ -1,0 +1,39 @@
+{
+  "rota": "GET /aba/configuracao",
+  "respostas": {
+    "200": {
+      "configurada": {
+        "forma": "entalhe",
+        "contato": "Ramal 4040",
+        "entrada": "senha",
+        "versao": 3,
+        "proximaEm": 300
+      },
+      "de-fabrica": {
+        "forma": "pilula",
+        "contato": null,
+        "entrada": "windows",
+        "versao": 0,
+        "proximaEm": 300
+      }
+    },
+    "401": {
+      "token-recusado": {
+        "type": "urn:grafite:problema:token-da-aba-recusado",
+        "title": "Computador sem registro",
+        "status": 401,
+        "detail": "Este computador precisa ser registrado de novo. Fale com a TI.",
+        "codigoDeRastreio": "R7K2-9QXM"
+      }
+    },
+    "403": {
+      "bloqueado": {
+        "type": "urn:grafite:problema:aparelho-da-aba-bloqueado",
+        "title": "Computador bloqueado",
+        "status": 403,
+        "detail": "Este computador foi bloqueado na aba. Fale com a TI.",
+        "codigoDeRastreio": "R7K2-9QXM"
+      }
+    }
+  }
+}
