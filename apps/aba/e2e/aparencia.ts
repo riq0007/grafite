@@ -109,6 +109,7 @@ export async function abrirATela(
     abrir_tela_maior: null,
     devolver_o_foco: null,
     sair: null,
+    tela_maior: null,
   });
   await page.goto('/');
   const aba = page.getByRole('button', { name: 'Suporte da TI' });

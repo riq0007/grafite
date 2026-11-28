@@ -101,6 +101,44 @@ export function abrirChamado(numero: number): Promise<void> {
   return invoke('abrir_tela_maior', { destino: 'chamado', numero });
 }
 
+/** O que a tela maior mostra: uma das opções ou o chamado da linha da resposta, no chat. */
+export type DestinoDaTelaMaior = OpcaoDaAba | 'chamado';
+
+export interface TelaMaior {
+  destino: DestinoDaTelaMaior;
+  /** O número do chamado, com o destino `chamado`. */
+  numero?: number;
+}
+
+export const COMANDO_DA_TELA_MAIOR = 'tela_maior';
+/** A tela maior que abriu, mudou de destino ou fechou (`null`), às duas janelas: a da aba e a dela. */
+export const EVENTO_DA_TELA_MAIOR = 'tela-maior-mudou';
+
+export function lerTelaMaior(): Promise<TelaMaior | null> {
+  return invoke<TelaMaior | null>(COMANDO_DA_TELA_MAIOR);
+}
+
+export function ouvirTelaMaior(aoMudar: (tela: TelaMaior | null) => void): Promise<UnlistenFn> {
+  return listen<TelaMaior | null>(EVENTO_DA_TELA_MAIOR, (evento) => aoMudar(evento.payload));
+}
+
+/** O "Esc volta" e o voltar da trilha: fecha a tela maior, e o foco volta ao painel. */
+export function fecharTelaMaior(): Promise<void> {
+  return invoke('fechar_tela_maior');
+}
+
+/** Onde o chat fica na tela maior, em px CSS da janela; `null` sem o chat. */
+export interface RetanguloDoCorpo {
+  x: number;
+  y: number;
+  largura: number;
+  altura: number;
+}
+
+export function informarCorpo(retangulo: RetanguloDoCorpo | null): Promise<void> {
+  return invoke('informar_corpo', { retangulo });
+}
+
 /** Devolve o foco à janela que estava na frente antes do atalho; sem atalho, não faz nada. */
 export function devolverOFoco(): Promise<void> {
   return invoke('devolver_o_foco');

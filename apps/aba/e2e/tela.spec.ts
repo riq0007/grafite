@@ -18,6 +18,7 @@ test('a tela da aba abre sem erro', async ({ page }) => {
     },
     estado: { naoLidas: 0, respostasNovas: 0, porVer: null, pessoa: null, atalhoOcupado: false },
     informar_forma: null,
+    tela_maior: null,
   });
   await page.goto('/');
   await expect(page.locator('[data-aba]')).toBeAttached();

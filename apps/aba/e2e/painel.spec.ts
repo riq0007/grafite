@@ -191,6 +191,24 @@ test('no entalhe, o painel é a ilha presa à borda de cima', async ({ page }) =
     });
 });
 
+test('com a tela maior aberta, o painel fica atrás, recuado, com a opção de origem marcada', async ({
+  page,
+}) => {
+  const painel = await abrirOPainel(page);
+  await emitir(page, 'tela-maior-mudou', { destino: 'abrir-chat' });
+  await expect(opcao(page, 'Abrir chat')).toHaveAttribute('aria-current', 'true');
+  await esperarOMovimento(page);
+  await expect(painel).toHaveCSS('transform', 'matrix(0.94, 0, 0, 0.94, 0, 0)');
+  await expect(painel).toHaveCSS('opacity', '0.9');
+
+  // O Esc da tela maior volta um nível: o painel volta, com o foco na opção de onde ela saiu.
+  await emitir(page, 'tela-maior-mudou', null);
+  await expect(opcao(page, 'Abrir chat')).toBeFocused();
+  await expect(opcao(page, 'Abrir chat')).not.toHaveAttribute('aria-current');
+  await esperarOMovimento(page);
+  await expect(painel).toHaveCSS('transform', 'none');
+});
+
 test.describe('as referências visuais', () => {
   test.skip(
     process.platform !== 'win32',
@@ -214,6 +232,15 @@ test.describe('as referências visuais', () => {
     await expect(opcao(page, 'Abrir chat')).toBeFocused();
     await page.evaluate(() => document.fonts.ready);
     await expect(page).toHaveScreenshot('ilha-pelo-teclado.png', { omitBackground: true });
+  });
+
+  test('o painel atrás da tela maior, com "Abrir chamado" marcada', async ({ page }) => {
+    await abrirOPainel(page);
+    await emitir(page, 'tela-maior-mudou', { destino: 'abrir-chamado' });
+    await page.mouse.move(0, JANELA.height - 1);
+    await esperarOMovimento(page);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page).toHaveScreenshot('painel-atras.png', { omitBackground: true });
   });
 
   test('o painel na tela de 1366, com o "Sair"', async ({ page }) => {

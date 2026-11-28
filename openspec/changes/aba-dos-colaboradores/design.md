@@ -198,6 +198,14 @@ No aviso (tarefa 5.5), o estado que a tela lê tem o formato do `GET /api/aba/es
 
 As referências da 5.4 foram gravadas de novo: as opções que sobem na cascata mudam a suavização do texto, e nada mais.
 
+A moldura da tela maior (tarefa 5.6) é a página `maior.html`, a segunda entrada do build, para a segunda janela do Tauri, que o lado nativo cria (tarefas 5.8 e 5.15). O contrato:
+- o comando `tela_maior` e o evento `tela-maior-mudou`, às duas janelas, com o destino (as três opções ou o `chamado` com o número) ou `null` ao fechar;
+- o `fechar_tela_maior`, no Esc que chega à moldura e no voltar da trilha;
+- o `informar_corpo`, com o lugar do chat em px da janela, ou `null` sem o chat; e o `informar_forma` de sempre, pela janela que chama;
+- "Abrir no chat" pede `abrir_tela_maior` com o `abrir-chat`, e a mesma tela maior troca de destino.
+
+A janela é transparente, com a folga da sombra dos lados e embaixo. A faixa fica no azul da aba, e o corpo, no tema do Grafite que segue o do Windows: o escuro é o Grafite, o claro é o Papel e o alto contraste é o Alto contraste. O lugar do chat fica 6 px para dentro dos cantos redondos, e o webview retangular cabe na moldura. A trilha da linha da resposta é "Aba › Abrir chat › #1041". Com a tela maior aberta, o painel fica atrás, recuado a 0,94 em 220 ms, com a opção de origem marcada pelo anel (`aria-current`), e o foco volta a ela quando a tela maior fecha.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

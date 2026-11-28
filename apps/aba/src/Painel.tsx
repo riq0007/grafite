@@ -14,7 +14,7 @@ import encaixe from './Encaixe.module.css';
 import { horaDa, seloDasNaoLidas, seloDasNovas } from './estado.ts';
 import { type Grade, proximaNaGrade, seguinteNoTab } from './grade.ts';
 import { curva, duracaoDaAba, useComSaida, useLarguraAnimada } from './movimento.ts';
-import type { EstadoDaAba, FormaDaAba, OpcaoDaAba } from './nativo.ts';
+import type { EstadoDaAba, FormaDaAba, OpcaoDaAba, TelaMaior } from './nativo.ts';
 import estilos from './Painel.module.css';
 import { Simbolo } from './Simbolo.tsx';
 
@@ -46,6 +46,8 @@ interface Props {
   estado: EstadoDaAba;
   /** A aba fechada de onde ele cresce e para onde ele volta. */
   origem: Origem | null;
+  /** A tela maior aberta: o painel fica atrás, recuado, com a opção de origem marcada (m08). */
+  telaMaior: TelaMaior | null;
   fechando: boolean;
   /** Aberto pelo atalho ou usado pelo teclado: o anel do foco aparece também no foco dado pela tela. */
   teclado: boolean;
@@ -71,6 +73,7 @@ export function Painel({
   compacta,
   estado,
   origem,
+  telaMaior,
   fechando,
   teclado,
   pedidoDeFoco,
@@ -97,6 +100,25 @@ export function Painel({
   if (comSair) grade.push(['sair']);
   const naoLidas = seloDasNaoLidas(estado.naoLidas);
   const novas = seloDasNovas(estado.respostasNovas);
+
+  // A opção de onde a tela maior saiu: a linha leva ao chamado, ou "Abrir chat" se ela já saiu.
+  const marcada = telaMaior
+    ? telaMaior.destino === 'chamado'
+      ? resposta.valor
+        ? 'resposta'
+        : 'abrir-chat'
+      : telaMaior.destino
+    : null;
+  // Ao fechar a tela maior, o foco volta à opção de onde ela saiu.
+  const ultimaMarcada = useRef<string | null>(null);
+  useEffect(() => {
+    if (marcada) ultimaMarcada.current = marcada;
+    else if (ultimaMarcada.current) {
+      const alvo = botoes.current.get(ultimaMarcada.current) ?? botoes.current.get('abrir-chamado');
+      ultimaMarcada.current = null;
+      alvo?.focus();
+    }
+  }, [marcada]);
 
   const guardarPainel = (elemento: HTMLDivElement | null) => {
     proprio.current = elemento;
@@ -185,6 +207,7 @@ export function Painel({
     largo && estilos.largo,
     (naoLidas || novas) && estilos.comSelos,
     fechando && estilos.fechando,
+    marcada && estilos.atras,
   ]
     .filter(Boolean)
     .join(' ');
@@ -204,6 +227,7 @@ export function Painel({
       className={estilos.opcao}
       style={ordem(n)}
       data-opcao={id}
+      aria-current={marcada === id || undefined}
       onClick={() => aoEscolher(id)}
     >
       <Simbolo nome={simbolo} />
@@ -232,6 +256,7 @@ export function Painel({
           type="button"
           className={`${estilos.linha} ${resposta.saindo ? estilos.saindo : ''}`}
           data-opcao="resposta"
+          aria-current={marcada === 'resposta' || undefined}
           disabled={resposta.saindo}
           onClick={() => resposta.valor && aoEscolherResposta(resposta.valor.numero)}
         >
@@ -254,6 +279,7 @@ export function Painel({
           className={`${estilos.opcao} ${estilos.larga}`}
           style={ordem(0)}
           data-opcao="abrir-chamado"
+          aria-current={marcada === 'abrir-chamado' || undefined}
           onClick={() => aoEscolher('abrir-chamado')}
         >
           <Simbolo nome="chamado" />

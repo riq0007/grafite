@@ -155,7 +155,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
   - o abrir, a cascata e o fechar, com o reduzir movimento.
 
   Verificar: o e2e, as referências visuais e a tela contra o m02, o m04, o m05 e o m06.
-- [ ] 5.6 A tela maior: a moldura, com a trilha e o "Esc volta", e a frase das duas opções que ainda não têm conteúdo, com "Abrir no chat".
+- [x] 5.6 A tela maior: a moldura, com a trilha e o "Esc volta", e a frase das duas opções que ainda não têm conteúdo, com "Abrir no chat".
 
   Verificar: o e2e e a tela contra o m08.
 - [ ] 5.7 O sem conexão, a apresentação e a entrada pela senha, na tela:

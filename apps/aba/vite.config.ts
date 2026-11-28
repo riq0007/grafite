@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -8,7 +9,18 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
-  build: { outDir: 'dist', emptyOutDir: true, sourcemap: false },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: false,
+    // Duas páginas, uma por janela: a aba e a moldura da tela maior.
+    rollupOptions: {
+      input: {
+        aba: fileURLToPath(new URL('index.html', import.meta.url)),
+        maior: fileURLToPath(new URL('maior.html', import.meta.url)),
+      },
+    },
+  },
   server: {
     port: 5176,
     strictPort: true,

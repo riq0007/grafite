@@ -17,6 +17,7 @@ const SIMBOLOS = {
     </>
   ),
   baixo: <path className={estilos.traco} d="M9 13l7 7 7-7" />,
+  voltar: <path className={estilos.traco} d="M19 9l-7 7 7 7" />,
   chamado: (
     <>
       <path className={estilos.tom} d={BILHETE} />

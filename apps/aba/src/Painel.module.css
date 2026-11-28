@@ -380,6 +380,24 @@
   max-width: none;
 }
 
+/* ---------- A tela maior aberta (m08): o painel atrás, recuado, com a opção de origem marcada ---------- */
+.painel {
+  transform-origin: 50% 0;
+  transition:
+    transform var(--dur-aba-abrir) var(--curva-padrao),
+    opacity var(--dur-aba-abrir) var(--curva-padrao);
+}
+
+.atras {
+  transform: scale(0.94);
+  opacity: 0.9;
+}
+
+.atras .opcao[aria-current],
+.atras .linha[aria-current] {
+  box-shadow: var(--anel-do-foco);
+}
+
 /* ---------- O alto contraste (m07): fio de 2 px, opções contornadas e nenhuma sombra ---------- */
 :global([data-windows-theme="alto-contraste"]) .painel {
   --fio: 2px;

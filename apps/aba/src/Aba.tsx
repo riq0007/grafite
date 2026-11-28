@@ -2,7 +2,7 @@ import { type CSSProperties, useCallback, useEffect, useRef, useState } from 're
 import estilos from './Aba.module.css';
 import { AbaFechada } from './AbaFechada.tsx';
 import { medidasDaAbaFechada, useAparencia } from './aparencia.ts';
-import { useAvisoDoNativo } from './doNativo.ts';
+import { useAvisoDoNativo, useDoNativo } from './doNativo.ts';
 import { avisoDaResposta, useEstado } from './estado.ts';
 import { useFormaInformada } from './forma.ts';
 import {
@@ -11,8 +11,11 @@ import {
   devolverOFoco,
   EVENTO_DE_FECHAR_O_PAINEL,
   EVENTO_DO_ATALHO,
+  lerTelaMaior,
   ouvir,
+  ouvirTelaMaior,
   sair,
+  type TelaMaior,
 } from './nativo.ts';
 import { type Origem, Painel } from './Painel.tsx';
 
@@ -31,10 +34,11 @@ function origemDe(aba: HTMLElement): Origem {
 
 // A aba dos colaboradores (spec aba-dos-colaboradores), na janela transparente do lado nativo, que
 // fica no alto e no meio da tela principal: a aba fechada, com o aviso da resposta, e o painel, que
-// cresce dela e volta a ela. A tela maior entra na tarefa seguinte.
+// cresce dela e volta a ela, e fica atrás, recuado, com a tela maior aberta embaixo.
 export function Aba() {
   const aparencia = useAparencia();
   const estado = useEstado();
+  const telaMaior = useDoNativo<TelaMaior | null>(lerTelaMaior, ouvirTelaMaior, null);
   const aviso = avisoDaResposta(estado.porVer);
   const [aberta, setAberta] = useState(false);
   const [fechando, setFechando] = useState(false);
@@ -93,6 +97,7 @@ export function Aba() {
           compacta={medidas.compacta}
           estado={estado}
           origem={origem}
+          telaMaior={telaMaior}
           fechando={fechando}
           teclado={teclado}
           pedidoDeFoco={pedidoDeFoco}
