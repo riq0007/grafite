@@ -50,6 +50,48 @@ export function useLarguraAnimada(
   }, [chave, semAnimar]);
 }
 
+/** Uma forma medida: o tamanho, o raio e a distância ao alto da janela. */
+export interface FormaMedida {
+  largura: number;
+  altura: number;
+  raio: string;
+  topo: number;
+}
+
+/**
+ * A forma que entra cresce, ou encolhe, a partir da que saiu: a aba que vira a linha da apresentação
+ * e a linha que volta a ser a aba.
+ */
+export function useEntradaDaForma(
+  ref: RefObject<HTMLElement | null>,
+  de: FormaMedida | null,
+  duracao: 'abrir' | 'fechar',
+) {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: anima uma vez, ao montar.
+  useLayoutEffect(() => {
+    const elemento = ref.current;
+    if (!elemento || !de) return;
+    const topo = elemento.getBoundingClientRect().top;
+    elemento.animate(
+      [
+        {
+          width: `${de.largura}px`,
+          height: `${de.altura}px`,
+          borderRadius: de.raio,
+          transform: `translateY(${de.topo - topo}px)`,
+        },
+        {
+          width: `${elemento.offsetWidth}px`,
+          height: `${elemento.offsetHeight}px`,
+          borderRadius: getComputedStyle(elemento).borderRadius,
+          transform: 'none',
+        },
+      ],
+      { duration: duracaoDaAba(duracao), easing: curva(duracao === 'abrir' ? 'padrao' : 'saida') },
+    );
+  }, []);
+}
+
 /**
  * O valor que some fica mais um pouco, para a saída dele: devolve o último valor e se ele está saindo.
  */

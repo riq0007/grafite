@@ -158,7 +158,7 @@ Vale o modo rápido do `docs/agentes.md` até a `chamados-da-ti` ir para a produ
 - [x] 5.6 A tela maior: a moldura, com a trilha e o "Esc volta", e a frase das duas opções que ainda não têm conteúdo, com "Abrir no chat".
 
   Verificar: o e2e e a tela contra o m08.
-- [ ] 5.7 O sem conexão, a apresentação e a entrada pela senha, na tela:
+- [x] 5.7 O sem conexão, a apresentação e a entrada pela senha, na tela:
   - o tom neutro, o motivo e o contato de reserva;
   - a linha de 96×4 e o "chegou às";
   - o formulário do usuário, da senha e do código.

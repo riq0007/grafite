@@ -398,6 +398,115 @@
   box-shadow: var(--anel-do-foco);
 }
 
+/* ---------- Sem conexão (m09): o tom neutro, o motivo, o que precisa de rede e o contato ---------- */
+.semConexao {
+  --fundo: var(--cor-aba-flutuante-neutro);
+  --contorno: var(--cor-aba-flutuante-neutro-contorno);
+  border-color: var(--cor-aba-flutuante-neutro-contorno);
+  background-color: var(--fundo);
+  transition: background-color var(--dur-media) var(--curva-padrao);
+}
+
+.semConexao .opcao:not(.larga) {
+  height: calc(var(--altura-da-opcao) + 8px);
+  background-color: var(--cor-aba-flutuante-neutro-bloco);
+}
+
+.semConexao .opcao:not(.larga):hover {
+  background-color: color-mix(
+    in oklch,
+    var(--cor-aba-flutuante-neutro-bloco) 85%,
+    var(--cor-aba-flutuante-neutro-contorno)
+  );
+}
+
+.semConexao .linha {
+  background-color: var(--cor-aba-flutuante-neutro-2);
+}
+
+/* Sem conexão, sem o amarelo: o ponto fica no tom do que está indisponível. */
+.semConexao .linha .ponto {
+  background-color: var(--cor-aba-flutuante-texto-indisponivel);
+}
+
+.semConexao .linha .hora {
+  font-family: inherit;
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
+.motivo {
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background-color: var(--cor-aba-flutuante-neutro-2);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-dado);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  animation: subir-o-logo var(--dur-aba-entrada) var(--curva-padrao) var(--dur-aba-inicio-do-logo)
+    backwards;
+}
+
+.motivo svg {
+  --tom-do-simbolo: currentColor;
+  flex: none;
+  font-size: 22px;
+}
+
+.contato {
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--raio-da-opcao);
+  background-color: var(--cor-aba-flutuante-neutro-bloco);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-dado);
+  line-height: var(--entrelinha-justa);
+  animation: subir-a-opcao var(--dur-aba-entrada) var(--curva-mola-suave)
+    calc(var(--dur-aba-inicio-da-cascata) + var(--ordem, 0) * var(--dur-aba-cascata)) backwards;
+}
+
+.contato svg {
+  --tom-do-simbolo: currentColor;
+  flex: none;
+  font-size: 24px;
+}
+
+.contato > span {
+  display: grid;
+}
+
+/* O que precisa de rede fica tracejado, com o motivo escrito: não depende só da cor. */
+.semConexao .opcao.indisponivel,
+.semConexao .linha.indisponivel {
+  gap: 6px;
+  border: var(--fio) dashed var(--cor-aba-flutuante-neutro-contorno);
+  background-color: var(--cor-aba-flutuante-neutro-2);
+  color: var(--cor-aba-flutuante-texto-indisponivel);
+  cursor: default;
+}
+
+.semConexao .opcao.indisponivel:active {
+  transform: none;
+}
+
+.semConexao .opcao.indisponivel svg {
+  font-size: 32px;
+}
+
+.motivoDaOpcao {
+  font-size: var(--texto-legenda);
+  font-weight: var(--peso-medio);
+}
+
 /* ---------- O alto contraste (m07): fio de 2 px, opções contornadas e nenhuma sombra ---------- */
 :global([data-windows-theme="alto-contraste"]) .painel {
   --fio: 2px;

@@ -16,7 +16,15 @@ test('a tela da aba abre sem erro', async ({ page }) => {
       movimentoReduzido: false,
       tela: { largura: 1920, altura: 1080 },
     },
-    estado: { naoLidas: 0, respostasNovas: 0, porVer: null, pessoa: null, atalhoOcupado: false },
+    estado: {
+      naoLidas: 0,
+      respostasNovas: 0,
+      porVer: null,
+      pessoa: null,
+      atalhoOcupado: false,
+      semConexao: null,
+      formulario: null,
+    },
     informar_forma: null,
     tela_maior: null,
   });

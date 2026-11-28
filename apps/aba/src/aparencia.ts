@@ -8,6 +8,8 @@ export const APARENCIA_DE_FABRICA: Aparencia = {
   tema: 'escuro',
   movimentoReduzido: false,
   tela: { largura: 1920, altura: 1080 },
+  contato: null,
+  apresentacao: false,
 };
 
 /** A tela pequena (spec aba-dos-colaboradores, "Aba fechada"; mockup m12). */

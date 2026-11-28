@@ -12,6 +12,7 @@ import {
 import { ROTULO_DA_ABA } from './AbaFechada.tsx';
 import encaixe from './Encaixe.module.css';
 import { horaDa, seloDasNaoLidas, seloDasNovas } from './estado.ts';
+import { Formulario } from './Formulario.tsx';
 import { type Grade, proximaNaGrade, seguinteNoTab } from './grade.ts';
 import { curva, duracaoDaAba, useComSaida, useLarguraAnimada } from './movimento.ts';
 import type { EstadoDaAba, FormaDaAba, OpcaoDaAba, TelaMaior } from './nativo.ts';
@@ -19,6 +20,8 @@ import estilos from './Painel.module.css';
 import { Simbolo } from './Simbolo.tsx';
 
 export const FRASE_DO_ATALHO_OCUPADO = 'O atalho Ctrl+Alt+T está com outro programa.';
+/** O motivo das partes que dependem da rede, sem conexão. */
+export const PRECISA_DE_CONEXAO = 'precisa de conexão';
 
 /** O encaixe do entalhe: 14 px fechado e 18 px aberto (m05). */
 const ENCAIXE_FECHADO = '14px';
@@ -48,6 +51,8 @@ interface Props {
   origem: Origem | null;
   /** A tela maior aberta: o painel fica atrás, recuado, com a opção de origem marcada (m08). */
   telaMaior: TelaMaior | null;
+  /** O contato de reserva da configuração, que o painel sem conexão mostra. */
+  contato: string | null;
   fechando: boolean;
   /** Aberto pelo atalho ou usado pelo teclado: o anel do foco aparece também no foco dado pela tela. */
   teclado: boolean;
@@ -74,6 +79,7 @@ export function Painel({
   estado,
   origem,
   telaMaior,
+  contato,
   fechando,
   teclado,
   pedidoDeFoco,
@@ -89,17 +95,22 @@ export function Painel({
   const botoes = useRef(new Map<string, HTMLButtonElement>());
   const porVer = estado.porVer && estado.porVer.quantas > 0 ? estado.porVer.ultima : null;
   const resposta = useComSaida(porVer, 'entrada');
-  // Com a linha da resposta, o painel alarga para 372 px (300 na tela pequena) e fica assim até fechar.
-  const [largo, setLargo] = useState(resposta.valor !== null);
+  const semConexao = estado.semConexao;
+  // Na entrada pela senha, sem sessão, o painel é o formulário.
+  const formulario = semConexao ? null : estado.formulario;
+  // Com a linha da resposta, ou sem conexão, o painel alarga para 372 px (300 na tela pequena) e fica
+  // assim até fechar.
+  const [largo, setLargo] = useState(resposta.valor !== null || semConexao !== null);
   useEffect(() => {
-    if (resposta.valor && !resposta.saindo) setLargo(true);
-  }, [resposta.valor, resposta.saindo]);
-  const comSair = estado.pessoa?.pelaSenha === true;
-  const grade: Grade = [['abrir-chamado'], ['abrir-chat', 'visualizar-chamados']];
-  if (resposta.valor && !resposta.saindo) grade.unshift(['resposta']);
+    if ((resposta.valor && !resposta.saindo) || semConexao) setLargo(true);
+  }, [resposta.valor, resposta.saindo, semConexao]);
+  const comSair = estado.pessoa?.pelaSenha === true && !formulario;
+  const grade: Grade = formulario ? [] : [['abrir-chamado'], ['abrir-chat', 'visualizar-chamados']];
+  if (!formulario && resposta.valor && !resposta.saindo) grade.unshift(['resposta']);
   if (comSair) grade.push(['sair']);
-  const naoLidas = seloDasNaoLidas(estado.naoLidas);
-  const novas = seloDasNovas(estado.respostasNovas);
+  // Sem conexão, os números são de antes, e saem.
+  const naoLidas = semConexao ? null : seloDasNaoLidas(estado.naoLidas);
+  const novas = semConexao ? null : seloDasNovas(estado.respostasNovas);
 
   // A opção de onde a tela maior saiu: a linha leva ao chamado, ou "Abrir chat" se ela já saiu.
   const marcada = telaMaior
@@ -167,7 +178,7 @@ export function Painel({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: o foco volta a "Abrir chamado" a cada pedido.
   useEffect(() => {
-    botoes.current.get('abrir-chamado')?.focus();
+    if (!formulario) botoes.current.get('abrir-chamado')?.focus();
   }, [pedidoDeFoco]);
 
   // A linha lida sai: o foco que estava nela vai a "Abrir chamado".
@@ -190,6 +201,8 @@ export function Painel({
       aoFecharPeloEsc();
       return;
     }
+    // No formulário, as setas andam no texto, e o Tab segue a ordem dos campos.
+    if (formulario) return;
     const destino =
       evento.key === 'Tab'
         ? seguinteNoTab(grade, atual, evento.shiftKey)
@@ -206,6 +219,7 @@ export function Painel({
     compacta && estilos.compacta,
     largo && estilos.largo,
     (naoLidas || novas) && estilos.comSelos,
+    semConexao && estilos.semConexao,
     fechando && estilos.fechando,
     marcada && estilos.atras,
   ]
@@ -220,18 +234,23 @@ export function Painel({
     simbolo: 'chat' | 'lista',
     selo: string | null,
     n: number,
+    indisponivel = false,
   ) => (
     <button
       ref={guardar(id)}
       type="button"
-      className={estilos.opcao}
+      className={`${estilos.opcao} ${indisponivel ? estilos.indisponivel : ''}`}
       style={ordem(n)}
       data-opcao={id}
       aria-current={marcada === id || undefined}
-      onClick={() => aoEscolher(id)}
+      aria-disabled={indisponivel || undefined}
+      onClick={() => {
+        if (!indisponivel) aoEscolher(id);
+      }}
     >
       <Simbolo nome={simbolo} />
       <span className={estilos.empilhado}>{rotulo}</span>
+      {indisponivel && <span className={estilos.motivoDaOpcao}>{PRECISA_DE_CONEXAO}</span>}
       {selo && <span className={estilos.selo}>{selo}</span>}
     </button>
   );
@@ -250,15 +269,30 @@ export function Painel({
       <div className={estilos.logo}>
         <Marca altura={compacta ? 24 : 26} />
       </div>
-      {resposta.valor && (
+      {semConexao && (
+        <p className={estilos.motivo} role="status">
+          <Simbolo nome="semRede" />
+          <span>{semConexao.motivo}</span>
+        </p>
+      )}
+      {resposta.valor && !formulario && (
         <button
           ref={guardar('resposta')}
           type="button"
-          className={`${estilos.linha} ${resposta.saindo ? estilos.saindo : ''}`}
+          className={[
+            estilos.linha,
+            resposta.saindo && estilos.saindo,
+            semConexao && estilos.indisponivel,
+          ]
+            .filter(Boolean)
+            .join(' ')}
           data-opcao="resposta"
           aria-current={marcada === 'resposta' || undefined}
+          aria-disabled={semConexao ? true : undefined}
           disabled={resposta.saindo}
-          onClick={() => resposta.valor && aoEscolherResposta(resposta.valor.numero)}
+          onClick={() => {
+            if (resposta.valor && !semConexao) aoEscolherResposta(resposta.valor.numero);
+          }}
         >
           <span className={estilos.ponto} />
           <span className={estilos.textoDaLinha}>
@@ -267,27 +301,49 @@ export function Painel({
               #{resposta.valor.numero} · {resposta.valor.titulo}
             </span>
           </span>
-          <time className={estilos.hora} dateTime={resposta.valor.momento}>
-            {horaDa(resposta.valor.momento)}
-          </time>
+          {semConexao ? (
+            <span className={estilos.hora}>{PRECISA_DE_CONEXAO}</span>
+          ) : (
+            <time className={estilos.hora} dateTime={resposta.valor.momento}>
+              {horaDa(resposta.valor.momento)}
+            </time>
+          )}
         </button>
       )}
-      <div className={estilos.opcoes}>
-        <button
-          ref={guardar('abrir-chamado')}
-          type="button"
-          className={`${estilos.opcao} ${estilos.larga}`}
-          style={ordem(0)}
-          data-opcao="abrir-chamado"
-          aria-current={marcada === 'abrir-chamado' || undefined}
-          onClick={() => aoEscolher('abrir-chamado')}
-        >
-          <Simbolo nome="chamado" />
-          <span>Abrir chamado</span>
-        </button>
-        {opcao('abrir-chat', 'Abrir chat', 'chat', naoLidas, 1)}
-        {opcao('visualizar-chamados', 'Visualizar chamados', 'lista', novas, 2)}
-      </div>
+      {formulario ? (
+        <Formulario
+          formulario={formulario}
+          compacta={compacta}
+          teclado={teclado}
+          pedidoDeFoco={pedidoDeFoco}
+        />
+      ) : (
+        <div className={estilos.opcoes}>
+          <button
+            ref={guardar('abrir-chamado')}
+            type="button"
+            className={`${estilos.opcao} ${estilos.larga}`}
+            style={ordem(0)}
+            data-opcao="abrir-chamado"
+            aria-current={marcada === 'abrir-chamado' || undefined}
+            onClick={() => aoEscolher('abrir-chamado')}
+          >
+            <Simbolo nome="chamado" />
+            <span>Abrir chamado</span>
+          </button>
+          {opcao('abrir-chat', 'Abrir chat', 'chat', naoLidas, 1, semConexao !== null)}
+          {opcao('visualizar-chamados', 'Visualizar chamados', 'lista', novas, 2)}
+        </div>
+      )}
+      {semConexao && contato && (
+        <p className={estilos.contato} style={ordem(2)}>
+          <Simbolo nome="telefone" />
+          <span>
+            <strong>Urgente? Fale com a TI</strong>
+            <span>{contato}</span>
+          </span>
+        </p>
+      )}
       {estado.atalhoOcupado && (
         <p className={estilos.nota} style={ordem(2)}>
           {FRASE_DO_ATALHO_OCUPADO}

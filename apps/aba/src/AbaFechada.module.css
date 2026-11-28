@@ -168,7 +168,7 @@
     backwards;
 }
 
-.quem {
+.detalhe {
   color: var(--cor-aba-flutuante-segundo-tom);
   font-weight: var(--peso-medio);
 }
@@ -237,6 +237,39 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* ---------- Sem conexão (m09): o mesmo L do azul, quase sem croma, sem pulso; a troca leva 200 ms ---------- */
+.semConexao {
+  --fundo: var(--cor-aba-flutuante-neutro);
+  --contorno: var(--cor-aba-flutuante-neutro-contorno);
+  border-color: var(--cor-aba-flutuante-neutro-contorno);
+  background-color: var(--fundo);
+}
+
+.semConexao .disco {
+  --tom-do-simbolo: var(--cor-aba-flutuante-neutro);
+  background-color: var(--cor-aba-flutuante-texto);
+  color: var(--cor-aba-flutuante-neutro);
+}
+
+.pilula.semConexao {
+  transition:
+    transform var(--dur-aba-entalhe) var(--curva-padrao),
+    background-color var(--dur-media) var(--curva-padrao),
+    box-shadow var(--dur-aba-entalhe) var(--curva-padrao);
+}
+
+.pilula.semConexao:hover,
+.entalhe.semConexao:hover {
+  --fundo: var(--cor-aba-flutuante-neutro-bloco);
+  background-color: var(--fundo);
+}
+
+.pilula.semConexao:active,
+.entalhe.semConexao:active {
+  --fundo: var(--cor-aba-flutuante-neutro-2);
+  background-color: var(--fundo);
 }
 
 /* ---------- O alto contraste (m07): fio de 2 px e nenhuma sombra ---------- */

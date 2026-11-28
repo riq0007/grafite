@@ -2,6 +2,7 @@ import { Botao } from '@grafite/ui';
 import { type RefObject, useEffect, useRef } from 'react';
 import { useAparencia } from '../aparencia.ts';
 import { useDoNativo } from '../doNativo.ts';
+import { useEstado } from '../estado.ts';
 import { useFormaInformada } from '../forma.ts';
 import {
   abrirTelaMaior,
@@ -55,9 +56,11 @@ function useCorpoInformado(ref: RefObject<HTMLElement | null>, comChat: boolean)
 export function TelaMaior() {
   const aparencia = useAparencia();
   const tela = useDoNativo<TelaDoNativo | null>(lerTelaMaior, ouvirTelaMaior, null);
+  // Sem conexão, o chat da tela maior fica indisponível, com o motivo.
+  const { semConexao } = useEstado();
   const moldura = useRef<HTMLElement>(null);
   const lugarDoChat = useRef<HTMLDivElement>(null);
-  const comChat = tela !== null && comOChat(tela);
+  const comChat = tela !== null && comOChat(tela) && !semConexao;
   useFormaInformada(moldura, `${tela?.destino}`);
   useCorpoInformado(lugarDoChat, comChat);
 
@@ -119,10 +122,22 @@ export function TelaMaior() {
               <Botao
                 nivel="primario"
                 autoFocus
+                isDisabled={semConexao !== null}
+                aria-describedby={semConexao ? 'chat-sem-conexao' : undefined}
                 onPress={() => abrirTelaMaior('abrir-chat').catch(semFalha)}
               >
                 Abrir no chat
               </Botao>
+              {semConexao && (
+                <p id="chat-sem-conexao" className={estilos.semConexao}>
+                  O chat precisa de conexão. {semConexao.motivo}
+                </p>
+              )}
+            </section>
+          ) : semConexao ? (
+            <section className={estilos.frase} aria-labelledby="titulo-da-frase">
+              <h1 id="titulo-da-frase">O chat precisa de conexão</h1>
+              <p>{semConexao.motivo} A aba tenta de novo sozinha.</p>
             </section>
           ) : (
             <div ref={lugarDoChat} className={estilos.lugarDoChat} data-chat="" />

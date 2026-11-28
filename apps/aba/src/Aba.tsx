@@ -1,10 +1,19 @@
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import estilos from './Aba.module.css';
 import { AbaFechada } from './AbaFechada.tsx';
 import { medidasDaAbaFechada, useAparencia } from './aparencia.ts';
 import { useAvisoDoNativo, useDoNativo } from './doNativo.ts';
-import { avisoDaResposta, useEstado } from './estado.ts';
+import { avisoDaResposta, avisoDaVolta, useEstado } from './estado.ts';
 import { useFormaInformada } from './forma.ts';
+import { Linha } from './Linha.tsx';
+import type { FormaMedida } from './movimento.ts';
 import {
   abrirChamado,
   abrirTelaMaior,
@@ -23,6 +32,11 @@ const ouvirOAtalho = (aoChegar: () => void) => ouvir(EVENTO_DO_ATALHO, aoChegar)
 const ouvirOFechar = (aoChegar: () => void) => ouvir(EVENTO_DE_FECHAR_O_PAINEL, aoChegar);
 const semFalha = () => undefined;
 
+/** A linha da apresentação, de onde a aba volta: 96×4, presa à borda. */
+const FORMA_DA_LINHA: FormaMedida = { largura: 96, altura: 4, raio: '0px 0px 4px 4px', topo: 0 };
+/** Depois da apresentação, o aviso diz a hora da chegada por 1 minuto. */
+const DURACAO_DA_VOLTA = 60_000;
+
 /** A forma da aba fechada, sem a escala do mouse em cima, de onde o painel cresce. */
 function origemDe(aba: HTMLElement): Origem {
   return {
@@ -39,7 +53,12 @@ export function Aba() {
   const aparencia = useAparencia();
   const estado = useEstado();
   const telaMaior = useDoNativo<TelaMaior | null>(lerTelaMaior, ouvirTelaMaior, null);
-  const aviso = avisoDaResposta(estado.porVer);
+  const semConexao = estado.semConexao !== null;
+  const apresentando = aparencia?.apresentacao ?? false;
+  const [volta, setVolta] = useState(false);
+  const avisoDeSempre = avisoDaResposta(estado.porVer);
+  // Sem conexão, o aviso sai: os números são de antes.
+  const aviso = semConexao ? null : volta ? avisoDaVolta(estado.porVer) : avisoDeSempre;
   const [aberta, setAberta] = useState(false);
   const [fechando, setFechando] = useState(false);
   const [teclado, setTeclado] = useState(false);
@@ -50,14 +69,40 @@ export function Aba() {
   // A chegada que a pessoa já viu, ao abrir o painel: o ponto não pulsa de novo por ela.
   const [chegadaVista, setChegadaVista] = useState<string | null>(null);
   const chegada = useRef<string | null>(null);
-  chegada.current = aviso?.chegada ?? null;
+  chegada.current = avisoDeSempre?.chegada ?? null;
+  // A aba fechada medida a cada render, para a linha da apresentação encolher dela.
+  const ultimaForma = useRef<FormaMedida | null>(null);
+  const [saiuDaLinha, setSaiuDaLinha] = useState(false);
   const forma = useRef<HTMLElement>(null);
   const aba = useRef<HTMLButtonElement>(null);
   const medidas = aparencia ? medidasDaAbaFechada(aparencia) : null;
-  useFormaInformada(forma, `${aberta} ${aparencia?.forma} ${medidas?.compacta} ${medidas?.topo}`);
+  const naLinha = apresentando && !aberta;
+  // A apresentação, derivada no render, para a aba que volta da linha já montar com o aviso certo:
+  // com respostas que chegaram durante ela, a hora da chegada por 1 minuto.
+  const chegadaAtual = avisoDeSempre?.chegada ?? null;
+  const [apresentandoAntes, setApresentandoAntes] = useState(apresentando);
+  const [chegadaNoInicio, setChegadaNoInicio] = useState<string | null>(null);
+  if (apresentando !== apresentandoAntes) {
+    setApresentandoAntes(apresentando);
+    if (apresentando) {
+      setChegadaNoInicio(chegadaAtual);
+      setVolta(false);
+    } else if (chegadaAtual && chegadaAtual !== chegadaNoInicio) setVolta(true);
+  }
+  const [naLinhaAntes, setNaLinhaAntes] = useState(naLinha);
+  if (naLinha !== naLinhaAntes) {
+    setNaLinhaAntes(naLinha);
+    setSaiuDaLinha(!naLinha && !aberta);
+  }
+  useFormaInformada(
+    forma,
+    `${aberta} ${naLinha} ${aparencia?.forma} ${medidas?.compacta} ${medidas?.topo}`,
+    !naLinha,
+  );
 
   const abrir = useCallback((peloTeclado: boolean) => {
     if (aba.current) setOrigem(origemDe(aba.current));
+    setSaiuDaLinha(false);
     setAberta(true);
     setFechando(false);
     setTeclado(peloTeclado);
@@ -68,6 +113,17 @@ export function Aba() {
   const fecharFora = useCallback(() => setFechando(true), []);
   useAvisoDoNativo(ouvirOAtalho, abrirPeloAtalho);
   useAvisoDoNativo(ouvirOFechar, fecharFora);
+
+  useLayoutEffect(() => {
+    if (aba.current)
+      ultimaForma.current = { ...origemDe(aba.current), topo: aba.current.offsetTop };
+  });
+
+  useEffect(() => {
+    if (!volta) return;
+    const espera = setTimeout(() => setVolta(false), DURACAO_DA_VOLTA);
+    return () => clearTimeout(espera);
+  }, [volta]);
 
   useEffect(() => {
     if (!aberta && focarAAba) {
@@ -88,7 +144,7 @@ export function Aba() {
     <div
       data-aba=""
       className={estilos.raiz}
-      style={{ '--topo': `${medidas.topo}px` } as CSSProperties}
+      style={{ '--topo': `${naLinha ? 0 : medidas.topo}px` } as CSSProperties}
     >
       {aberta ? (
         <Painel
@@ -98,6 +154,7 @@ export function Aba() {
           estado={estado}
           origem={origem}
           telaMaior={telaMaior}
+          contato={aparencia.contato}
           fechando={fechando}
           teclado={teclado}
           pedidoDeFoco={pedidoDeFoco}
@@ -116,6 +173,8 @@ export function Aba() {
           aoSair={() => sair().catch(semFalha)}
           aoUsar={setTeclado}
         />
+      ) : naLinha ? (
+        <Linha ref={guardarForma} de={ultimaForma.current} semConexao={semConexao} />
       ) : (
         <AbaFechada
           ref={guardarAba}
@@ -124,6 +183,8 @@ export function Aba() {
           aviso={aviso}
           pulsar={aviso !== null && aviso.chegada !== chegadaVista}
           deLargura={deLargura}
+          deLinha={saiuDaLinha ? FORMA_DA_LINHA : null}
+          semConexao={semConexao}
           aoAbrir={() => abrir(false)}
         />
       )}

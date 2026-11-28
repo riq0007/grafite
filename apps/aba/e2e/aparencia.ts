@@ -8,6 +8,8 @@ export interface Aparencia {
   tema: 'escuro' | 'claro' | 'alto-contraste';
   movimentoReduzido: boolean;
   tela: { largura: number; altura: number };
+  contato: string | null;
+  apresentacao: boolean;
 }
 
 export interface RespostaPorVer {
@@ -23,6 +25,12 @@ export interface Estado {
   porVer: { quantas: number; ultima: RespostaPorVer | null } | null;
   pessoa: { nome: string; pelaSenha: boolean } | null;
   atalhoOcupado: boolean;
+  semConexao: { motivo: string } | null;
+  formulario: {
+    passo: 'senha' | 'codigo';
+    erro: string | null;
+    esperaAte: string | null;
+  } | null;
 }
 
 export const aparencia = (mudanca: Partial<Aparencia> = {}): Aparencia => ({
@@ -30,6 +38,8 @@ export const aparencia = (mudanca: Partial<Aparencia> = {}): Aparencia => ({
   tema: 'escuro',
   movimentoReduzido: false,
   tela: { largura: 1440, altura: 900 },
+  contato: 'Ramal 2000, das 8h às 18h',
+  apresentacao: false,
   ...mudanca,
 });
 
@@ -39,6 +49,8 @@ export const estado = (mudanca: Partial<Estado> = {}): Estado => ({
   porVer: { quantas: 0, ultima: null },
   pessoa: { nome: 'Fernanda Rocha', pelaSenha: false },
   atalhoOcupado: false,
+  semConexao: null,
+  formulario: null,
   ...mudanca,
 });
 
@@ -94,8 +106,20 @@ export async function animacoes(page: Page): Promise<AnimacaoGravada[]> {
   return page.evaluate(() => (window as unknown as { __animacoes: AnimacaoGravada[] }).__animacoes);
 }
 
+/** A cor de um token na página, como o navegador a calcula, para comparar com a de um elemento. */
+export async function corDoToken(page: Page, token: string): Promise<string> {
+  return page.evaluate((nome) => {
+    const amostra = document.createElement('div');
+    amostra.style.backgroundColor = `var(${nome})`;
+    document.body.append(amostra);
+    const cor = getComputedStyle(amostra).backgroundColor;
+    amostra.remove();
+    return cor;
+  }, token);
+}
+
 /** A janela da aba: do tamanho do painel maior, com a sombra. */
-export const JANELA = { width: 440, height: 480 };
+export const JANELA = { width: 440, height: 560 };
 
 /** Abre a tela da aba com o lado nativo simulado e devolve a aba fechada. */
 export async function abrirATela(
@@ -110,6 +134,9 @@ export async function abrirATela(
     devolver_o_foco: null,
     sair: null,
     tela_maior: null,
+    entrar: null,
+    enviar_o_codigo: null,
+    recomecar_a_entrada: null,
   });
   await page.goto('/');
   const aba = page.getByRole('button', { name: 'Suporte da TI' });

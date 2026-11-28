@@ -141,6 +141,11 @@
   line-height: var(--entrelinha-normal);
 }
 
+.frase .semConexao {
+  margin: 0;
+  font-size: var(--texto-rotulo);
+}
+
 /* ---------- O alto contraste (m07): o fio de 2 px e nenhuma sombra ---------- */
 :global([data-windows-theme="alto-contraste"]) .moldura {
   --fio: 2px;

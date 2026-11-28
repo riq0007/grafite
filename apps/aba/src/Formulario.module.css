@@ -1,0 +1,129 @@
+/*
+ * O formulário da entrada pela senha, no painel de 293 px (225 na tela pequena): os campos na
+ * largura da grade, no azul da aba, com o anel do foco de sempre.
+ */
+.formulario {
+  --largura-do-formulario: 265px;
+  display: grid;
+  gap: 8px;
+  width: var(--largura-do-formulario);
+  animation: subir var(--dur-aba-entrada) var(--curva-mola-suave) var(--dur-aba-inicio-da-cascata)
+    backwards;
+}
+
+.compacta {
+  --largura-do-formulario: 198px;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.titulo {
+  margin: 0 0 2px;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  line-height: var(--entrelinha-justa);
+  text-align: center;
+}
+
+.campo {
+  display: grid;
+  gap: 4px;
+  font-size: var(--texto-rotulo);
+  font-weight: var(--peso-forte);
+}
+
+.campo input {
+  height: 36px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 12px;
+  border: var(--fio) solid var(--cor-aba-flutuante-contorno);
+  border-radius: 12px;
+  background-color: var(--cor-aba-flutuante-fundo-2);
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-normal);
+  forced-color-adjust: none;
+}
+
+.campo input:focus {
+  outline: 0;
+  box-shadow: var(--anel-do-foco);
+}
+
+.dica {
+  margin: -2px 0 2px;
+  color: var(--cor-aba-flutuante-segundo-tom);
+  font-size: var(--texto-legenda);
+  line-height: var(--entrelinha-justa);
+}
+
+/* A recusa é escrita: não depende só da cor. */
+.erro {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background-color: var(--cor-aba-flutuante-fundo-2);
+  color: var(--cor-aba-flutuante-texto);
+  font-size: var(--texto-rotulo);
+  line-height: var(--entrelinha-justa);
+}
+
+.entrar {
+  appearance: none;
+  height: 40px;
+  margin: 4px 0 0;
+  border: 0;
+  border-radius: 14px;
+  background-color: var(--cor-aba-flutuante-opcao-larga);
+  color: var(--cor-aba-flutuante-sobre-opcao-larga);
+  font: inherit;
+  font-size: var(--texto-corpo);
+  font-weight: var(--peso-forte);
+  cursor: pointer;
+  forced-color-adjust: none;
+}
+
+.entrar[aria-disabled] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.recomecar {
+  appearance: none;
+  justify-self: center;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 16px;
+  background-color: transparent;
+  color: var(--cor-aba-flutuante-texto);
+  font: inherit;
+  font-size: var(--texto-rotulo);
+  text-decoration: underline;
+  cursor: pointer;
+  forced-color-adjust: none;
+}
+
+.entrar:focus,
+.recomecar:focus {
+  outline: 0;
+}
+
+.entrar:focus-visible,
+.recomecar:focus-visible,
+.formulario[data-teclado] .entrar:focus,
+.formulario[data-teclado] .recomecar:focus {
+  box-shadow: var(--anel-do-foco);
+}
+
+:global([data-windows-theme="alto-contraste"]) .campo input {
+  border-width: 2px;
+}

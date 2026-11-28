@@ -16,6 +16,10 @@ export interface Aparencia {
   tema: TemaDoWindows;
   movimentoReduzido: boolean;
   tela: { largura: number; altura: number };
+  /** O contato de reserva da configuração, como "Ramal 2000, das 8h às 18h"; sem ele, `null`. */
+  contato: string | null;
+  /** Um programa em tela cheia ou o Windows no modo de apresentação: a aba vira a linha de 96×4. */
+  apresentacao: boolean;
 }
 
 export const COMANDO_DA_APARENCIA = 'aparencia';
@@ -60,6 +64,18 @@ export interface EstadoDaAba {
   porVer: { quantas: number; ultima: RespostaPorVer | null } | null;
   pessoa: { nome: string; pelaSenha: boolean } | null;
   atalhoOcupado: boolean;
+  /** Sem a API, ou a pessoa recusada: o motivo, como "Sem conexão com o Grafite.". */
+  semConexao: { motivo: string } | null;
+  /** Na entrada pela senha, sem sessão: o formulário, no passo do usuário e da senha ou do código. */
+  formulario: FormularioDaEntrada | null;
+}
+
+export interface FormularioDaEntrada {
+  passo: 'senha' | 'codigo';
+  /** A recusa da tentativa anterior, como o lado nativo a recebeu da API. */
+  erro: string | null;
+  /** Com as tentativas esgotadas, o momento em que o "Entrar" volta, em ISO 8601. */
+  esperaAte: string | null;
 }
 
 /** A última resposta por ver: quem respondeu, o chamado e o momento, em ISO 8601. */
@@ -142,6 +158,21 @@ export function informarCorpo(retangulo: RetanguloDoCorpo | null): Promise<void>
 /** Devolve o foco à janela que estava na frente antes do atalho; sem atalho, não faz nada. */
 export function devolverOFoco(): Promise<void> {
   return invoke('devolver_o_foco');
+}
+
+/** A entrada pela senha: o usuário e a senha vão ao serviço, e a resposta volta pelo estado. */
+export function entrar(usuario: string, senha: string): Promise<void> {
+  return invoke('entrar', { usuario, senha });
+}
+
+/** O código do app, ou um de recuperação, para a conta com os dois passos. */
+export function enviarOCodigo(codigo: string): Promise<void> {
+  return invoke('enviar_o_codigo', { codigo });
+}
+
+/** Volta do passo do código ao do usuário e da senha. */
+export function recomecarAEntrada(): Promise<void> {
+  return invoke('recomecar_a_entrada');
 }
 
 /** O "Sair" da entrada pela senha: termina a sessão da aba no servidor, com a do chat. */

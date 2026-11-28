@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { type Aparencia, aparencia } from './aparencia.ts';
+import { type Aparencia, aparencia, type Estado, estado } from './aparencia.ts';
 import { chamadasDe, emitir, simularOTauri } from './tauri.ts';
 
 // A tela maior (change aba-dos-colaboradores, tarefa 5.6; spec "Tela maior da aba"; m08): a moldura,
@@ -14,9 +14,15 @@ interface Tela {
   numero?: number;
 }
 
-async function abrirATelaMaior(page: Page, tela: Tela, mudanca: Partial<Aparencia> = {}) {
+async function abrirATelaMaior(
+  page: Page,
+  tela: Tela,
+  mudanca: Partial<Aparencia> = {},
+  doEstado: Partial<Estado> = {},
+) {
   await simularOTauri(page, {
     aparencia: aparencia(mudanca),
+    estado: estado(doEstado),
     tela_maior: tela,
     informar_forma: null,
     informar_corpo: null,
@@ -122,6 +128,35 @@ test('o corpo segue o tema do Windows nos temas do Grafite', async ({ page }) =>
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'grafite');
   await emitir(page, 'aparencia-mudou', aparencia({ tema: 'alto-contraste' }));
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'alto-contraste');
+});
+
+test('sem conexão, o chat fica indisponível, com o motivo', async ({ page }) => {
+  const semConexao = { motivo: 'Sem conexão com o Grafite.' };
+  await abrirATelaMaior(page, { destino: 'abrir-chat' }, {}, { semConexao });
+  await expect(page.getByRole('heading', { name: 'O chat precisa de conexão' })).toBeVisible();
+  await expect(
+    page.getByText('Sem conexão com o Grafite. A aba tenta de novo sozinha.'),
+  ).toBeVisible();
+  await expect(page.locator('[data-chat]')).toHaveCount(0);
+  await expect
+    .poll(async () => (await chamadasDe(page, 'informar_corpo')).at(-1))
+    .toEqual({
+      retangulo: null,
+    });
+
+  // A rede volta: o lugar do chat volta, sem a pessoa fazer nada.
+  await emitir(page, 'estado-mudou', estado());
+  await expect(page.locator('[data-chat]')).toHaveCount(1);
+});
+
+test('sem conexão, "Abrir no chat" fica desligado, com o motivo', async ({ page }) => {
+  const semConexao = { motivo: 'Sem conexão com o Grafite.' };
+  await abrirATelaMaior(page, { destino: 'abrir-chamado' }, {}, { semConexao });
+  const noChat = page.getByRole('button', { name: 'Abrir no chat' });
+  await expect(noChat).toBeDisabled();
+  await expect(noChat).toHaveAccessibleDescription(
+    'O chat precisa de conexão. Sem conexão com o Grafite.',
+  );
 });
 
 test.describe('as referências visuais', () => {

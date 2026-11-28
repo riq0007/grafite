@@ -206,6 +206,19 @@ A moldura da tela maior (tarefa 5.6) é a página `maior.html`, a segunda entrad
 
 A janela é transparente, com a folga da sombra dos lados e embaixo. A faixa fica no azul da aba, e o corpo, no tema do Grafite que segue o do Windows: o escuro é o Grafite, o claro é o Papel e o alto contraste é o Alto contraste. O lugar do chat fica 6 px para dentro dos cantos redondos, e o webview retangular cabe na moldura. A trilha da linha da resposta é "Aba › Abrir chat › #1041". Com a tela maior aberta, o painel fica atrás, recuado a 0,94 em 220 ms, com a opção de origem marcada pelo anel (`aria-current`), e o foco volta a ela quando a tela maior fecha.
 
+O sem conexão, a apresentação e a entrada pela senha (tarefa 5.7) chegam pelo estado e pela aparência que o lado nativo manda. O contrato:
+- no estado, o `semConexao` com o motivo, ou `null`, e o `formulario` da entrada pela senha, com o passo (`senha` ou `codigo`), a recusa escrita e o `esperaAte` das tentativas esgotadas, ou `null`; sem conexão vence o formulário;
+- na aparência, o `contato` de reserva da configuração guardada, `null` na de fábrica, e o `apresentacao`;
+- os comandos `entrar`, com o usuário e a senha, `enviar_o_codigo` e `recomecar_a_entrada`; a recusa e o passo seguinte voltam pelo estado.
+
+Sem conexão, a tela segue a spec, e não o m09, onde ele vai além dela: a pessoa não escreve o chamado para enviar depois, e "Visualizar chamados" não mostra uma cópia, porque as duas opções ainda abrem a frase da versão seguinte; o contato diz "Urgente? Fale com a TI" e o texto da configuração, sem o "Atendendo agora", que a aba não sabe sem a rede. O painel sem conexão tem a largura do painel com a resposta (372 px, ou 300 na tela pequena), e o que precisa de rede fica tracejado, com "precisa de conexão" escrito: o "Abrir chat", a linha da resposta, com o ponto no tom do indisponível, e o chat da tela maior, com o "Abrir no chat" desligado. Os números e o aviso saem, porque são de antes. As setas passam pelo que está indisponível (`aria-disabled`), para o motivo ser lido. A aba fechada troca o azul pelo neutro em 200 ms, com o contorno e o encaixe no tom dele.
+
+Na apresentação, a linha de 96×4 não leva a contagem do m10: a spec diz que a aba não avisa. A forma informada é vazia, e o clique passa; o atalho abre o painel, e o Esc volta à linha. A aba encolhe para a linha em 160 ms (`--dur-aba-fechar`, a curva de saída) e volta dela em 220 ms; a resposta que chegou durante a apresentação diz "chegou às 09:21" por 1 minuto, e a de antes volta com o aviso de sempre.
+
+O formulário fica no painel de sempre, no lugar das opções: o usuário, com a dica de sem o domínio, e a senha, ou o código do app, com o "Voltar ao usuário". A senha sai da tela depois de cada tentativa, a recusa é escrita (`role="alert"`) e o foco vai ao campo que falta. O "Entrar" fica desligado até o `esperaAte` e volta sozinho.
+
+A janela do e2e passou a 440×560, a do painel mais alto com a sombra (sem conexão, com a resposta e o "Sair": 372×506), e as referências foram gravadas de novo, com a sobra embaixo e nada mais. A janela do lado nativo (tarefa 5.8) tem essa medida.
+
 O ponto do aviso pulsa por 1.400 ms e para, e não até a pessoa abrir, como o LEIA do m06 descreve. O ANTISLOP só deixa o movimento contínuo para o que está carregando. O texto do aviso fica, e o 5.4 confere o m06 com essa diferença escrita.
 
 ### 8. A tela maior e o chat

@@ -2,7 +2,7 @@ import { type Ref, type RefObject, useRef } from 'react';
 import estilos from './AbaFechada.module.css';
 import encaixe from './Encaixe.module.css';
 import type { AvisoDaResposta } from './estado.ts';
-import { useLarguraAnimada } from './movimento.ts';
+import { type FormaMedida, useEntradaDaForma, useLarguraAnimada } from './movimento.ts';
 import type { FormaDaAba } from './nativo.ts';
 import { Simbolo } from './Simbolo.tsx';
 
@@ -17,6 +17,10 @@ interface Props {
   pulsar?: boolean;
   /** A largura do painel que acabou de fechar: a aba anima dela para a sua. */
   deLargura?: number | null;
+  /** A linha da apresentação que acabou: a aba volta dela em 220 ms. */
+  deLinha?: FormaMedida | null;
+  /** Sem a API, ou a pessoa recusada: o tom neutro, com "Sem conexão" escrito. */
+  semConexao?: boolean;
   ref?: Ref<HTMLButtonElement>;
   aoAbrir?: () => void;
 }
@@ -32,6 +36,8 @@ export function AbaFechada({
   aviso = null,
   pulsar = false,
   deLargura = null,
+  deLinha = null,
+  semConexao = false,
   ref,
   aoAbrir,
 }: Props) {
@@ -41,15 +47,17 @@ export function AbaFechada({
     if (typeof ref === 'function') ref(elemento);
     else if (ref) (ref as RefObject<HTMLButtonElement | null>).current = elemento;
   };
-  const textoDoAviso = aviso ? `${aviso.resumo}|${aviso.quem ?? ''}` : '';
+  const textoDoAviso = aviso ? `${aviso.resumo}|${aviso.detalhe ?? ''}` : '';
   useLarguraAnimada(propria, textoDoAviso, `${forma} ${compacta}`, deLargura);
+  useEntradaDaForma(propria, deLinha, 'abrir');
 
   const classes = [
     estilos.aba,
     estilos[forma],
     forma === 'entalhe' && encaixe.encaixe,
     compacta && forma === 'pilula' && estilos.compacta,
-    aviso && estilos.comAviso,
+    aviso && !semConexao && estilos.comAviso,
+    semConexao && estilos.semConexao,
   ]
     .filter(Boolean)
     .join(' ');
@@ -63,7 +71,15 @@ export function AbaFechada({
       aria-expanded={false}
       onClick={aoAbrir}
     >
-      {aviso ? (
+      {semConexao ? (
+        <>
+          <span className={estilos.soParaOLeitor}>{ROTULO_DA_ABA}: </span>
+          <span className={estilos.disco}>
+            <Simbolo nome="semRede" />
+          </span>
+          Sem conexão
+        </>
+      ) : aviso ? (
         <>
           <span className={estilos.soParaOLeitor}>{ROTULO_DA_ABA}: </span>
           <span
@@ -72,7 +88,7 @@ export function AbaFechada({
           />
           <span key={textoDoAviso} className={estilos.aviso}>
             <span className={estilos.resumo}>{aviso.resumo}</span>
-            {aviso.quem && <span className={estilos.quem}> · {aviso.quem}</span>}
+            {aviso.detalhe && <span className={estilos.detalhe}> · {aviso.detalhe}</span>}
           </span>
         </>
       ) : (

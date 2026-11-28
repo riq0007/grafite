@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { avisoDaResposta, horaDa, seloDasNaoLidas, seloDasNovas } from './estado.ts';
+import { avisoDaResposta, avisoDaVolta, horaDa, seloDasNaoLidas, seloDasNovas } from './estado.ts';
 
 const ANA = {
   quem: 'Ana Souza',
@@ -17,7 +17,7 @@ describe('avisoDaResposta', () => {
   it('com uma, diz quem respondeu por último', () => {
     expect(avisoDaResposta({ quantas: 1, ultima: ANA })).toEqual({
       resumo: '1 resposta nova',
-      quem: 'Ana Souza',
+      detalhe: 'Ana Souza',
       chegada: '1041 2026-11-11T12:21:00.000Z',
     });
   });
@@ -25,7 +25,7 @@ describe('avisoDaResposta', () => {
   it('com mais, conta os chamados e tira o nome', () => {
     expect(avisoDaResposta({ quantas: 3, ultima: ANA })).toMatchObject({
       resumo: '3 respostas novas',
-      quem: null,
+      detalhe: null,
     });
   });
 
@@ -36,6 +36,18 @@ describe('avisoDaResposta', () => {
       ultima: { ...ANA, momento: '2026-11-11T12:30:00.000Z' },
     });
     expect(depois?.chegada).not.toBe(antes?.chegada);
+  });
+});
+
+describe('avisoDaVolta', () => {
+  it('depois da apresentação, diz a hora em que a resposta chegou', () => {
+    const hora = horaDa(ANA.momento);
+    expect(avisoDaVolta({ quantas: 1, ultima: ANA })?.detalhe).toBe(`chegou às ${hora}`);
+    expect(avisoDaVolta({ quantas: 3, ultima: ANA })).toMatchObject({
+      resumo: '3 respostas novas',
+      detalhe: `a última às ${hora}`,
+    });
+    expect(avisoDaVolta(null)).toBeNull();
   });
 });
 
